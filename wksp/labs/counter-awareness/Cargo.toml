@@ -1,0 +1,16 @@
+[package]
+name = "counter-awareness"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Detection/counter-detection matrix formalization for multi-spectral awareness resistance"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"

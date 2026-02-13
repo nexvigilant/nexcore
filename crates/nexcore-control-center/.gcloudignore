@@ -1,0 +1,6 @@
+# Ignore large/unnecessary directories
+target/
+node_modules/
+.git/
+.claude/
+style/

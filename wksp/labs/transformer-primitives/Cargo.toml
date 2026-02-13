@@ -1,0 +1,23 @@
+[package]
+name = "transformer-primitives"
+version = "0.1.0"
+edition = "2024"
+description = "Transformer attention mechanism modeled as data pipeline: token embedding → self-attention → feed-forward → prediction"
+authors = ["Matthew Campion, PharmD; NexVigilant"]
+license = "MIT"
+
+[dependencies]
+tokio = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+polars = { version = "0.46", features = ["lazy", "json", "parquet"] }
+
+[dev-dependencies]
+proptest = "1.5"
+tempfile = "3.14"
+

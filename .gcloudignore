@@ -1,0 +1,45 @@
+# Exclude build artifacts (largest)
+target/
+**/target/
+
+# Exclude large crates with embedded targets
+crates/nexcore-hooks/
+crates/nexcore-vigil/
+crates/nexcore-control-center/
+crates/nexcore-tov-proofs/
+crates/nexcore-skill-verify/
+
+# Exclude git
+.git/
+
+# Exclude IDE files
+.idea/
+.vscode/
+*.swp
+
+# Exclude large data files
+*.db
+*.sqlite
+*.parquet
+
+# Exclude archive
+archive/
+
+# Exclude Claude state files (large)
+.claude/brain/
+.claude/projects/
+.claude/implicit/
+.claude/metrics/
+.claude/decision-audit/
+.claude/verified/
+.claude/plugins/
+
+# Exclude env files
+.env
+.env.local
+*.pem
+*.key
+
+# Exclude profiling data
+*.profraw
+*.profdata

@@ -1,0 +1,24 @@
+[workspace]
+
+[package]
+name = "nexcore-core"
+version = "1.0.0"
+edition = "2021"
+authors = ["NexVigilant Team"]
+description = "NexVigilant Core Unified PV Execution Kernel"
+
+[dependencies]
+nexcore-vigilance = { version = "1.0.0", path = "../nexcore-vigilance", registry = "nexcore" }
+nexcore-brain = { version = "1.0.0", path = "../nexcore-brain", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "1.0"
+nexcore-id = { version = "0.1.0", path = "../nexcore-id", registry = "nexcore", features = ["serde"] }
+duckdb = { version = "1.4.4", features = ["bundled", "chrono"] }
+utoipa = { version = "5.3", features = ["axum_extras", "chrono", "uuid"] }
+uuid = { version = "1.10.0", features = ["v4", "serde"] }
+
+[dev-dependencies]
+tokio = { version = "1.0", features = ["full"] }

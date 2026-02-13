@@ -1,0 +1,159 @@
+[workspace]
+
+[package]
+name = "nexcore-vigilance"
+version = "1.0.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+repository = "https://github.com/nexvigilant/nexcore"
+rust-version = "1.85"
+description = "NexVigilant Core: The Vigilance Kernel - Theory of Vigilance, Guardian-AV, and consolidated domain modules"
+
+[dependencies]
+nexcore-constants = { version = "1.0.0", path = "../nexcore-constants", registry = "nexcore" }
+nexcore-tov = { version = "1.0.0", path = "../nexcore-tov", registry = "nexcore" }
+nexcore-harm-taxonomy = { version = "1.0.0", path = "../nexcore-harm-taxonomy", registry = "nexcore" }
+nexcore-pv-core = { version = "1.0.0", path = "../nexcore-pv-core", registry = "nexcore" }
+nexcore-pvdsl = { version = "1.0.0", path = "../nexcore-pvdsl", registry = "nexcore" }
+nexcore-pvos = { version = "1.0.0", path = "../nexcore-pvos", registry = "nexcore" }
+nexcore-skills-engine = { version = "1.0.0", path = "../nexcore-skills-engine", registry = "nexcore" }
+nexcore-guardian-engine = { version = "1.0.0", path = "../nexcore-guardian-engine", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = "1.0.120"
+thiserror = "1.0.61"
+chrono = { version = "0.4.38", features = ["serde"] }
+nexcore-id = { version = "0.1.0", path = "../nexcore-id", features = ["serde"], registry = "nexcore" }
+anyhow = "1.0.86"
+
+# AI clients (consolidated from nexcore-ai)
+async-trait = "0.1.81"
+reqwest = { version = "0.12.5", features = ["json"] }
+
+# Cloud integrations (consolidated from nexcore-cloud)
+tokio = { version = "1.38.0", features = ["full"] }
+
+# Orchestrator (consolidated from nexcore-orchestrator)
+futures = "0.3.30"
+
+# Quiz platform (consolidated from nexcore-quiz)
+dashmap = "6.0.1"
+rand = "0.9.0"
+
+# Guardian compliance (consolidated from nexcore-guardian)
+regex = "1.10.5"
+sha2 = "0.10.8"
+hex = "0.4.3"
+
+# Command Center (consolidated from nexcore-command-center)
+rust_decimal = { version = "1.37", features = ["serde", "serde-with-str"] }
+
+# Vocabulary intelligence (consolidated from nexcore-vocab)
+phf = { version = "0.11.2", features = ["macros"] }
+
+# CTVP framework (consolidated from nexcore-ctvp)
+toml = "0.8.15"
+dirs = "5.0.1"
+
+# Validation engine (consolidated from nexcore-validation)
+serde_yaml = "0.9.34"
+walkdir = "2.5.0"
+glob = "0.3.1"
+colored = "3.0.0"
+
+# UI Mapper (consolidated from nexcore-ui-mapper)
+clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
+indexmap = { version = "2.2", features = ["serde"] }
+
+# Crypto (consolidated from nexcore-crypto)
+tracing = "0.1.40"
+
+# Medical coding (consolidated from nexcore-coding)
+rayon = "1.10.0"
+
+# Decision tree engine (CART)
+nexcore-dtree = { version = "1.0.0", path = "../nexcore-dtree", registry = "nexcore" }
+
+# nexcore-foundation = { workspace = true }  # CONSOLIDATED into vigilance::foundation
+
+# Foundation dependencies (consolidated from nexcore-foundation)
+flate2 = "1.0.30"
+
+# Test taxonomy (Rust AST parsing)
+syn = { version = "2.0.71", features = ["full"] }
+base64 = "0.22.1"
+once_cell = "1.19.0"
+
+# Browser sensing (for BrowserSensor)
+nexcore-browser = { version = "0.1.0", path = "../nexcore-browser", registry = "nexcore" }
+
+# Cytokine signaling (for CytokineSensor/Actuator)
+nexcore-cytokine = { version = "1.0.0", path = "../nexcore-cytokine", registry = "nexcore" }
+
+# Ribosome (schema contract registry, for RibosomeDampSensor)
+nexcore-ribosome = { version = "1.0.0", path = "../nexcore-ribosome", registry = "nexcore" }
+# Biological pipeline crates (for GroundsTo impls)
+nexcore-transcriptase = { version = "1.0.0", path = "../nexcore-transcriptase", registry = "nexcore" }
+nexcore-phenotype = { version = "1.0.0", path = "../nexcore-phenotype", registry = "nexcore" }
+nexcore-hormones = { version = "1.0.0", path = "../nexcore-hormones", registry = "nexcore" }
+signal = { version = "1.0.0", path = "../signal", registry = "nexcore" }
+nexcore-signal-types = { version = "1.0.0", path = "../nexcore-signal-types", registry = "nexcore" }
+nexcore-primitives = { version = "1.0.0", path = "../nexcore-primitives", registry = "nexcore" }
+nexcore-measure = { version = "1.0.0", path = "../nexcore-measure", registry = "nexcore" }
+stem-math = { version = "0.1.0", path = "../stem-math", registry = "nexcore" }
+nexcore-labs = { version = "1.0.0", path = "../nexcore-labs", registry = "nexcore" }
+
+[dev-dependencies]
+tempfile = "3.10.1"
+tokio = { version = "1.38.0", features = ["rt-multi-thread", "macros"] }
+criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1.6.0"
+
+[features]
+default = []
+# CTVP Phase 1: Chaos engineering tests for fault injection
+# Run with: cargo test --features chaos-tests -p nexcore-vigilance
+chaos-tests = []
+
+[[bench]]
+name = "signal_benchmarks"
+harness = false
+
+[[bench]]
+name = "foundation_benchmarks"
+harness = false
+
+[[bin]]
+name = "audit-confidence"
+path = "src/bin/audit_confidence.rs"
+
+# TODO: sentinel-scan requires nexcore_faers_etl (cyclic dependency)
+# [[bin]]
+# name = "sentinel-scan"
+# path = "src/bin/sentinel_scan.rs"
+
+[lints.rust]
+async_fn_in_trait = "allow"
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+unused_mut = "allow"
+unused_assignments = "allow"
+unused_must_use = "allow"
+
+[lints.clippy]
+all = "allow"
+pedantic = "allow"
+nursery = "allow"
+cargo = "allow"
+map_unwrap_or = "allow"
+manual_map = "allow"
+option_map_or_none = "allow"
+derivable_impls = "allow"
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"
+todo = "allow"
+unimplemented = "allow"
+unreachable = "allow"

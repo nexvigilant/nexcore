@@ -1,0 +1,14 @@
+[package]
+name = "word-spectroscopy"
+version = "0.1.0"
+edition = "2024"
+description = "Virtual laboratory for word/concept spectroscopy via primitive decomposition"
+license = "MIT"
+
+[dependencies]
+nexcore-laboratory = { workspace = true }
+nexcore-lex-primitiva = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+clap = { workspace = true }
+

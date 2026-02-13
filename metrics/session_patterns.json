@@ -1,0 +1,14 @@
+{
+  "execute": {
+    "nodes": [],
+    "analysis": {
+      "intent": "execute",
+      "domain": "general",
+      "complexity": "simple",
+      "keywords_extracted": [
+        "vigilance"
+      ]
+    },
+    "confidence": 0.8
+  }
+}

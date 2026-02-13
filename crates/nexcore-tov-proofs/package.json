@@ -1,0 +1,11 @@
+{
+  "name": "logic-proofs",
+  "version": "0.1.0",
+  "description": "Curry-Howard encoding of Theory of Vigilance - delegates to Cargo",
+  "scripts": {
+    "test": "bash -c 'cargo test'",
+    "build": "cargo build",
+    "check": "cargo check"
+  },
+  "private": true
+}

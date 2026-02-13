@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NexVigilant — Primitive HUD</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --green: #00ff88;
+  --red: #ff0044;
+  --yellow: #ffaa00;
+  --cyan: #00ffff;
+  --dim: #333;
+  --bg: #0a0a0a;
+  --panel: #111;
+  --border: #1a1a1a;
+}
+body { background: var(--bg); font-family: 'Courier New', monospace; color: var(--green); min-height: 100vh; padding: 16px; }
+h1 { font-size: 18px; letter-spacing: 6px; text-transform: uppercase; text-align: center; margin-bottom: 4px; text-shadow: 0 0 10px #00ff8844; }
+.subtitle { text-align: center; font-size: 11px; color: #666; margin-bottom: 16px; }
+.mode-toggle { text-align: center; margin-bottom: 16px; }
+.mode-btn { background: none; border: 2px solid var(--dim); color: #666; font-family: inherit; font-size: 13px; padding: 6px 18px; cursor: pointer; letter-spacing: 2px; transition: all 0.2s; }
+.mode-btn.active { border-color: var(--green); color: var(--green); text-shadow: 0 0 8px #00ff8844; }
+.mode-btn:hover { border-color: var(--green); }
+
+/* Top Stats Bar */
+.stats-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding: 10px 16px; border: 1px solid var(--border); background: var(--panel); }
+.stat { text-align: center; }
+.stat-label { font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 1px; }
+.stat-value { font-size: 26px; font-weight: bold; }
+.stat-value.danger { color: var(--red); }
+.stat-value.warn { color: var(--yellow); }
+.stat-value.good { color: var(--green); }
+.stat-value.info { color: var(--cyan); }
+
+/* Countdown */
+.countdown { text-align: center; margin-bottom: 16px; padding: 8px; border: 1px solid var(--border); background: var(--panel); }
+.countdown-label { font-size: 10px; color: #555; }
+.countdown-bar { height: 8px; background: var(--dim); margin-top: 4px; border-radius: 4px; overflow: hidden; }
+.countdown-fill { height: 100%; transition: width 0.5s; border-radius: 4px; }
+
+/* Main Layout */
+.main { display: grid; grid-template-columns: 1fr 320px; gap: 16px; }
+@media (max-width: 900px) { .main { grid-template-columns: 1fr; } }
+
+/* Primitive Grid */
+.prim-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.prim-card { border: 1px solid var(--border); background: var(--panel); padding: 10px; cursor: pointer; transition: all 0.2s; position: relative; min-height: 100px; }
+.prim-card:hover { border-color: var(--green); }
+.prim-card.quartet { border-left: 3px solid var(--cyan); }
+.prim-symbol { font-size: 22px; margin-bottom: 2px; }
+.prim-name { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+.prim-bar { height: 6px; background: var(--dim); margin-top: 8px; border-radius: 3px; overflow: hidden; }
+.prim-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+.prim-score { position: absolute; top: 8px; right: 10px; font-size: 18px; font-weight: bold; }
+.prim-tag { font-size: 8px; color: #555; margin-top: 4px; }
+.prim-card.absent .prim-symbol { opacity: 0.3; }
+.prim-card.weak .prim-fill { background: var(--red); }
+.prim-card.moderate .prim-fill { background: var(--yellow); }
+.prim-card.strong .prim-fill { background: var(--green); }
+
+/* Slider (hidden by default, shown on click) */
+.prim-slider { display: none; margin-top: 8px; }
+.prim-card.editing .prim-slider { display: block; }
+input[type="range"] { width: 100%; accent-color: var(--green); background: transparent; cursor: pointer; }
+
+/* Right Sidebar */
+.sidebar { display: flex; flex-direction: column; gap: 12px; }
+
+/* Critical Quartet Panel */
+.quartet-panel { border: 2px solid var(--cyan); background: var(--panel); padding: 12px; }
+.quartet-title { font-size: 11px; color: var(--cyan); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
+.quartet-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--border); }
+.quartet-row:last-child { border-bottom: none; }
+.quartet-sym { font-size: 16px; width: 24px; }
+.quartet-name { font-size: 11px; color: #888; flex: 1; }
+.quartet-val { font-size: 16px; font-weight: bold; width: 30px; text-align: right; }
+.quartet-min { margin-top: 10px; padding-top: 8px; border-top: 2px solid var(--cyan); text-align: center; }
+.quartet-min-label { font-size: 9px; color: #555; }
+.quartet-min-value { font-size: 36px; font-weight: bold; }
+
+/* Weekly Quest */
+.quest-panel { border: 1px solid var(--yellow); background: var(--panel); padding: 12px; }
+.quest-title { font-size: 11px; color: var(--yellow); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+.quest-week { font-size: 13px; color: var(--yellow); margin-bottom: 4px; }
+.quest-prim { font-size: 11px; color: #888; margin-bottom: 6px; }
+.quest-task { font-size: 11px; color: #ccc; padding: 4px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.quest-task:last-child { border-bottom: none; }
+.quest-check { width: 14px; height: 14px; border: 1px solid var(--dim); display: inline-flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+.quest-check.done { border-color: var(--green); color: var(--green); }
+.quest-task.done { color: #555; text-decoration: line-through; }
+
+/* Log */
+.log-panel { border: 1px solid var(--border); background: var(--panel); padding: 12px; max-height: 200px; overflow-y: auto; }
+.log-title { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+.log-entry { font-size: 10px; color: #666; padding: 2px 0; }
+.log-entry .time { color: #444; }
+.log-entry .action { color: var(--green); }
+
+/* Endurance Formula */
+.formula-panel { border: 1px solid var(--border); background: var(--panel); padding: 12px; text-align: center; }
+.formula-label { font-size: 9px; color: #555; text-transform: uppercase; }
+.formula-text { font-size: 11px; color: #888; margin-top: 4px; }
+.formula-result { font-size: 20px; font-weight: bold; margin-top: 4px; }
+
+/* Game Over / Level Up overlays */
+.overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; flex-direction: column; }
+.overlay.show { display: flex; }
+.overlay h2 { font-size: 32px; letter-spacing: 6px; margin-bottom: 8px; }
+.overlay p { font-size: 14px; color: #888; }
+.overlay button { margin-top: 16px; background: none; border: 2px solid var(--green); color: var(--green); font-family: inherit; font-size: 14px; padding: 8px 24px; cursor: pointer; }
+
+/* Reset button */
+.reset-btn { position: fixed; bottom: 8px; right: 12px; background: none; border: 1px solid var(--dim); color: #444; font-family: inherit; font-size: 9px; padding: 4px 8px; cursor: pointer; }
+.reset-btn:hover { border-color: var(--red); color: var(--red); }
+</style>
+</head>
+<body>
+
+<h1>NexVigilant Primitive HUD</h1>
+<div class="subtitle">T1-Complete Company Management System &mdash; 16 Primitives, One Mission</div>
+
+<div class="mode-toggle">
+  <button class="mode-btn" id="mode-build" onclick="setMode('BUILD')">BUILD</button>
+  <button class="mode-btn active" id="mode-ship" onclick="setMode('SHIP')">SHIP</button>
+</div>
+
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-label">Coverage</div>
+    <div class="stat-value info" id="coverage">0/16</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Mean Strength</div>
+    <div class="stat-value" id="mean-str">0.0</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Quartet Min</div>
+    <div class="stat-value" id="quartet-min">0</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Endurance</div>
+    <div class="stat-value" id="endurance">0.00</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Level</div>
+    <div class="stat-value info" id="level">1</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Week</div>
+    <div class="stat-value info" id="week-num">1</div>
+  </div>
+</div>
+
+<div class="countdown">
+  <div class="countdown-label">G1: SHARPSIGNAL MVP LAUNCH &mdash; <span id="days-left">70</span> DAYS &mdash; APR 20, 2026</div>
+  <div class="countdown-bar"><div class="countdown-fill" id="countdown-fill"></div></div>
+</div>
+
+<div class="main">
+  <div class="prim-grid" id="prim-grid"></div>
+  <div class="sidebar">
+    <div class="quartet-panel">
+      <div class="quartet-title">Critical Quartet: ∝ + π + Σ + ×</div>
+      <div id="quartet-rows"></div>
+      <div class="quartet-min">
+        <div class="quartet-min-label">BOTTLENECK (min)</div>
+        <div class="quartet-min-value" id="quartet-min-big">0</div>
+      </div>
+    </div>
+
+    <div class="quest-panel">
+      <div class="quest-title">Weekly Quest</div>
+      <div class="quest-week" id="quest-week">WEEK 1</div>
+      <div class="quest-prim" id="quest-prim">Activate: ∃ Existence</div>
+      <div id="quest-tasks"></div>
+    </div>
+
+    <div class="formula-panel">
+      <div class="formula-label">Endurance Score</div>
+      <div class="formula-text">E = (coverage/16) × mean × min(∝,π,Σ,×)</div>
+      <div class="formula-result" id="endurance-big">0.00</div>
+      <div class="formula-text" id="endurance-class">REDUCIBLE</div>
+    </div>
+
+    <div class="log-panel">
+      <div class="log-title">Activity Log</div>
+      <div id="log-entries"></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="level-up-overlay">
+  <h2 style="color: var(--green)">LEVEL UP</h2>
+  <p id="level-up-msg">New primitive activated!</p>
+  <button onclick="dismissOverlay()">CONTINUE</button>
+</div>
+
+<button class="reset-btn" onclick="if(confirm('Reset all progress?')){localStorage.clear();location.reload();}">RESET</button>
+
+<script>
+// ============================================================================
+// PRIMITIVES DATABASE
+// ============================================================================
+const PRIMITIVES = [
+  { sym: 'σ', name: 'Sequence', key: 'sigma', quartet: false,
+    desc: 'Ordered operations, pipeline, process',
+    biz: 'Delivery process, onboarding flow, shipping cadence' },
+  { sym: 'μ', name: 'Mapping', key: 'mu', quartet: false,
+    desc: 'Input → output transformation',
+    biz: 'Value proposition: we take X, produce Y' },
+  { sym: 'ς', name: 'State', key: 'sigma_s', quartet: false,
+    desc: 'Operating mode awareness',
+    biz: 'BUILD vs SHIP mode, crisis vs growth' },
+  { sym: 'ρ', name: 'Recursion', key: 'rho', quartet: false,
+    desc: 'Feedback loops, iteration, flywheel',
+    biz: 'Customer feedback → product → more customers' },
+  { sym: '∅', name: 'Void', key: 'void', quartet: false,
+    desc: 'Strategic absence, what you don\'t do',
+    biz: 'Say no to adjacent markets, feature creep' },
+  { sym: '∂', name: 'Boundary', key: 'boundary', quartet: false,
+    desc: 'Moat, defensibility, constraints',
+    biz: 'Regulatory expertise, IP, network effects' },
+  { sym: 'ν', name: 'Frequency', key: 'nu', quartet: false,
+    desc: 'Cadence, rate, tempo',
+    biz: 'Weekly releases, customer touchpoints' },
+  { sym: '∃', name: 'Existence', key: 'exists', quartet: false,
+    desc: 'Market presence, discoverability',
+    biz: 'Landing page, product URL, brand awareness' },
+  { sym: 'π', name: 'Persistence', key: 'pi', quartet: true,
+    desc: 'Institutional knowledge, durable assets',
+    biz: 'Documentation, brand equity, customer data' },
+  { sym: '→', name: 'Causality', key: 'causality', quartet: false,
+    desc: 'Cause and effect understanding',
+    biz: 'Validated chain: action → customer → revenue' },
+  { sym: 'κ', name: 'Comparison', key: 'kappa', quartet: false,
+    desc: 'Differentiation, benchmarking',
+    biz: 'Positioning vs competitors, unique value' },
+  { sym: 'N', name: 'Quantity', key: 'quantity', quartet: false,
+    desc: 'Metrics, measurement, KPIs',
+    biz: 'MRR, pipeline, conversion rate, churn' },
+  { sym: 'λ', name: 'Location', key: 'lambda', quartet: false,
+    desc: 'Market position, niche, channel',
+    biz: '"The X for Y people" — clear positioning' },
+  { sym: '∝', name: 'Irreversibility', key: 'irrev', quartet: true,
+    desc: 'Switching costs, lock-in, commitments',
+    biz: 'Customer data invested, regulatory submissions' },
+  { sym: 'Σ', name: 'Sum', key: 'sum', quartet: true,
+    desc: 'Compound growth, accumulation',
+    biz: 'Revenue compounds, expertise compounds' },
+  { sym: '×', name: 'Product', key: 'product', quartet: true,
+    desc: 'Leverage, multiplicative returns',
+    biz: 'Build once, sell many. Platform economics.' },
+];
+
+// ============================================================================
+// WEEKLY QUESTS
+// ============================================================================
+const QUESTS = [
+  { week: 1, prim: '∃ Existence', tasks: [
+    'Register sharpsignal.com (or subdomain)',
+    'Deploy landing page with value prop',
+    'Add email capture / waitlist form',
+    'Write the one-sentence pitch',
+  ]},
+  { week: 2, prim: '→ Causality', tasks: [
+    'List 20 target PV professionals on LinkedIn',
+    'Send 10 outreach messages',
+    'Book 5 discovery calls',
+    'Document: "What would you pay for?"',
+  ]},
+  { week: 3, prim: 'κ Comparison', tasks: [
+    'Research Argus Safety pricing + features',
+    'Research Oracle AERS / ArisGlobal',
+    'Write positioning doc: SharpSignal vs alternatives',
+    'Identify the wedge: where you win clearly',
+  ]},
+  { week: 4, prim: 'μ Mapping (external)', tasks: [
+    'Record 60-second demo video',
+    'Show: raw data → signal → alert flow',
+    'Post demo to landing page',
+    'Share on LinkedIn with PV hashtags',
+  ]},
+  { week: 5, prim: 'ν Frequency', tasks: [
+    'Set up newsletter (Substack/Buttondown)',
+    'Write + send first issue',
+    'Publish first blog post on PV + AI',
+    'Commit to weekly cadence publicly',
+  ]},
+  { week: 6, prim: '∂ Boundary', tasks: [
+    'Define SharpSignal v1 scope (what\'s IN)',
+    'Define what\'s explicitly NOT in v1',
+    'Document the regulatory moat',
+    'Write the "why us" page',
+  ]},
+  { week: 7, prim: 'σ Sequence', tasks: [
+    'Build signup → configure → first signal flow',
+    'Time it: must be under 5 minutes',
+    'Test with 3 beta users',
+    'Document the onboarding sequence',
+  ]},
+  { week: 8, prim: 'N Quantity', tasks: [
+    'Set pricing: 3 tiers on the page',
+    'Define KPIs: pipeline size, conversion, MRR',
+    'Set up tracking dashboard',
+    'Calculate: need 24 subscribers at $200/mo',
+  ]},
+  { week: 9, prim: 'π Persistence (external)', tasks: [
+    'Beta customer uploads real data',
+    'Generate first audit trail for customer',
+    'Customer\'s signals are persisted and accessible',
+    'Send first automated alert to customer',
+  ]},
+  { week: 10, prim: '∝ Irreversibility', tasks: [
+    'First customer signs up and pays',
+    'Customer has data invested in the system',
+    'MRR > $0 — primitive activated',
+    'G1 ACHIEVED: SharpSignal MVP launched',
+  ]},
+];
+
+// ============================================================================
+// STATE MANAGEMENT
+// ============================================================================
+const STORAGE_KEY = 'nexvigilant-hud-v1';
+const G1_DATE = new Date('2026-04-20');
+
+function defaultState() {
+  const scores = {};
+  PRIMITIVES.forEach(p => {
+    scores[p.key] = 0;
+  });
+  // Pre-fill known strong internal primitives
+  scores.sigma = 8;    // σ Sequence — 12-stage pipeline
+  scores.mu = 8;       // μ Mapping — 260+ MCP tools
+  scores.sigma_s = 4;  // ς State — Guardian modes but single company mode
+  scores.rho = 7;      // ρ Recursion — MINE→GEN→VAL→REF
+  scores.void = 8;     // ∅ Void — 100% Rust, PV-only
+  scores.boundary = 5; // ∂ Boundary — PharmD + domain, no structural moat yet
+  scores.nu = 2;       // ν Frequency — no external cadence
+  scores.exists = 4;   // ∃ Existence — Landing page + demo + waitlist built (deploy pending)
+  scores.pi = 7;       // π Persistence — 224 KUs, but founder-local
+  scores.causality = 2;// → Causality — no validated revenue chain
+  scores.kappa = 6;    // κ Comparison — 4-competitor comparison table built
+  scores.quantity = 5; // N Quantity — 3 pricing tiers, breakeven math defined
+  scores.lambda = 5;   // λ Location — "PV-grade sports betting signal detection" crystallized
+  scores.irrev = 0;    // ∝ Irreversibility — zero switching costs
+  scores.sum = 3;      // Σ Sum — internal compounds, external zero
+  scores.product = 2;  // × Product — 3-tier pricing structured, platform economics defined
+
+  return {
+    scores,
+    mode: 'SHIP',
+    questsDone: {},  // { "1-0": true, "1-2": true }
+    log: [],
+    currentWeek: 1,
+    startDate: new Date().toISOString(),
+  };
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return defaultState();
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+let state = loadState();
+let editingCard = null;
+
+// ============================================================================
+// CALCULATIONS
+// ============================================================================
+function coverage() {
+  return PRIMITIVES.filter(p => state.scores[p.key] > 0).length;
+}
+
+function meanStrength() {
+  const active = PRIMITIVES.filter(p => state.scores[p.key] > 0);
+  if (active.length === 0) return 0;
+  return active.reduce((s, p) => s + state.scores[p.key], 0) / active.length / 10;
+}
+
+function quartetScores() {
+  return {
+    irrev: state.scores.irrev,
+    pi: state.scores.pi,
+    sum: state.scores.sum,
+    product: state.scores.product,
+  };
+}
+
+function quartetMin() {
+  const q = quartetScores();
+  return Math.min(q.irrev, q.pi, q.sum, q.product);
+}
+
+function endurance() {
+  const cov = coverage() / 16;
+  const mean = meanStrength();
+  const qmin = quartetMin() / 10;
+  return cov * mean * (0.3 + 0.7 * qmin); // weighted so quartet matters more
+}
+
+function level() {
+  const e = endurance();
+  if (e >= 0.8) return 10;
+  if (e >= 0.7) return 9;
+  if (e >= 0.6) return 8;
+  if (e >= 0.5) return 7;
+  if (e >= 0.4) return 6;
+  if (e >= 0.3) return 5;
+  if (e >= 0.2) return 4;
+  if (e >= 0.15) return 3;
+  if (e >= 0.1) return 2;
+  return 1;
+}
+
+function enduranceClass(e) {
+  if (e >= 0.8) return 'IRREDUCIBLE';
+  if (e >= 0.6) return 'DURABLE';
+  if (e >= 0.4) return 'VIABLE';
+  if (e >= 0.2) return 'FRAGILE';
+  return 'REDUCIBLE';
+}
+
+function strengthClass(score) {
+  if (score === 0) return 'absent';
+  if (score <= 3) return 'weak';
+  if (score <= 6) return 'moderate';
+  return 'strong';
+}
+
+function daysUntilG1() {
+  const now = new Date();
+  const diff = G1_DATE - now;
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+}
+
+function currentWeekNumber() {
+  const start = new Date('2026-02-10'); // Week 1 starts
+  const now = new Date();
+  const diff = now - start;
+  const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7)) + 1;
+  return Math.max(1, Math.min(10, weeks));
+}
+
+// ============================================================================
+// RENDERING
+// ============================================================================
+function render() {
+  renderGrid();
+  renderStats();
+  renderCountdown();
+  renderQuartet();
+  renderQuest();
+  renderLog();
+  renderFormula();
+  renderMode();
+}
+
+function renderGrid() {
+  const grid = document.getElementById('prim-grid');
+  grid.innerHTML = '';
+  PRIMITIVES.forEach((p, i) => {
+    const score = state.scores[p.key];
+    const cls = strengthClass(score);
+    const card = document.createElement('div');
+    card.className = `prim-card ${cls} ${p.quartet ? 'quartet' : ''} ${editingCard === i ? 'editing' : ''}`;
+    card.innerHTML = `
+      <div class="prim-symbol">${p.sym}</div>
+      <div class="prim-name">${p.name}</div>
+      <div class="prim-score" style="color: ${score === 0 ? '#333' : score <= 3 ? 'var(--red)' : score <= 6 ? 'var(--yellow)' : 'var(--green)'}">${score}</div>
+      <div class="prim-bar"><div class="prim-fill" style="width: ${score * 10}%"></div></div>
+      <div class="prim-tag">${state.mode === 'SHIP' ? p.biz : p.desc}</div>
+      <div class="prim-slider">
+        <input type="range" min="0" max="10" value="${score}" oninput="updateScore('${p.key}', this.value, '${p.sym} ${p.name}')">
+      </div>
+    `;
+    card.addEventListener('click', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      editingCard = editingCard === i ? null : i;
+      render();
+    });
+    grid.appendChild(card);
+  });
+}
+
+function renderStats() {
+  const cov = coverage();
+  const mean = meanStrength();
+  const qmin = quartetMin();
+  const e = endurance();
+  const lvl = level();
+  const wk = currentWeekNumber();
+
+  document.getElementById('coverage').textContent = `${cov}/16`;
+  document.getElementById('coverage').className = `stat-value ${cov >= 14 ? 'good' : cov >= 10 ? 'warn' : 'danger'}`;
+
+  document.getElementById('mean-str').textContent = mean.toFixed(2);
+  document.getElementById('mean-str').className = `stat-value ${mean >= 0.6 ? 'good' : mean >= 0.3 ? 'warn' : 'danger'}`;
+
+  document.getElementById('quartet-min').textContent = qmin;
+  document.getElementById('quartet-min').className = `stat-value ${qmin >= 5 ? 'good' : qmin >= 2 ? 'warn' : 'danger'}`;
+
+  document.getElementById('endurance').textContent = e.toFixed(2);
+  document.getElementById('endurance').className = `stat-value ${e >= 0.6 ? 'good' : e >= 0.3 ? 'warn' : 'danger'}`;
+
+  document.getElementById('level').textContent = lvl;
+  document.getElementById('level').className = `stat-value info`;
+
+  document.getElementById('week-num').textContent = wk;
+  state.currentWeek = wk;
+}
+
+function renderCountdown() {
+  const days = daysUntilG1();
+  const total = 70; // approximate total days
+  const elapsed = total - days;
+  const pct = Math.min(100, (elapsed / total) * 100);
+  document.getElementById('days-left').textContent = days;
+  const fill = document.getElementById('countdown-fill');
+  fill.style.width = pct + '%';
+  fill.style.background = days > 40 ? 'var(--green)' : days > 20 ? 'var(--yellow)' : 'var(--red)';
+}
+
+function renderQuartet() {
+  const q = quartetScores();
+  const rows = document.getElementById('quartet-rows');
+  const items = [
+    { sym: '∝', name: 'Irreversibility', val: q.irrev },
+    { sym: 'π', name: 'Persistence', val: q.pi },
+    { sym: 'Σ', name: 'Sum', val: q.sum },
+    { sym: '×', name: 'Product', val: q.product },
+  ];
+  rows.innerHTML = items.map(it => `
+    <div class="quartet-row">
+      <span class="quartet-sym">${it.sym}</span>
+      <span class="quartet-name">${it.name}</span>
+      <span class="quartet-val" style="color: ${it.val === 0 ? 'var(--red)' : it.val <= 3 ? 'var(--yellow)' : 'var(--green)'}">${it.val}</span>
+    </div>
+  `).join('');
+
+  const qmin = quartetMin();
+  const minEl = document.getElementById('quartet-min-big');
+  minEl.textContent = qmin;
+  minEl.style.color = qmin === 0 ? 'var(--red)' : qmin <= 3 ? 'var(--yellow)' : 'var(--green)';
+}
+
+function renderQuest() {
+  const wk = Math.min(state.currentWeek, 10);
+  const quest = QUESTS[wk - 1];
+  document.getElementById('quest-week').textContent = `WEEK ${wk} OF 10`;
+  document.getElementById('quest-prim').textContent = `Activate: ${quest.prim}`;
+
+  const container = document.getElementById('quest-tasks');
+  container.innerHTML = quest.tasks.map((task, i) => {
+    const key = `${wk}-${i}`;
+    const done = state.questsDone[key] || false;
+    return `<div class="quest-task ${done ? 'done' : ''}" onclick="toggleQuest('${key}')">
+      <span class="quest-check ${done ? 'done' : ''}">${done ? '✓' : ''}</span>
+      <span>${task}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderLog() {
+  const container = document.getElementById('log-entries');
+  const recent = state.log.slice(-15).reverse();
+  container.innerHTML = recent.map(entry =>
+    `<div class="log-entry"><span class="time">${entry.time}</span> <span class="action">${entry.action}</span></div>`
+  ).join('');
+}
+
+function renderFormula() {
+  const e = endurance();
+  document.getElementById('endurance-big').textContent = e.toFixed(3);
+  document.getElementById('endurance-big').style.color = e >= 0.6 ? 'var(--green)' : e >= 0.3 ? 'var(--yellow)' : 'var(--red)';
+  document.getElementById('endurance-class').textContent = enduranceClass(e);
+}
+
+function renderMode() {
+  document.getElementById('mode-build').className = `mode-btn ${state.mode === 'BUILD' ? 'active' : ''}`;
+  document.getElementById('mode-ship').className = `mode-btn ${state.mode === 'SHIP' ? 'active' : ''}`;
+}
+
+// ============================================================================
+// ACTIONS
+// ============================================================================
+function updateScore(key, value, name) {
+  const oldVal = state.scores[key];
+  const newVal = parseInt(value);
+  state.scores[key] = newVal;
+
+  if (oldVal === 0 && newVal > 0) {
+    addLog(`${name} ACTIVATED (0 → ${newVal})`);
+    checkLevelUp();
+  } else if (oldVal !== newVal) {
+    addLog(`${name}: ${oldVal} → ${newVal}`);
+  }
+
+  saveState();
+  render();
+}
+
+function toggleQuest(key) {
+  state.questsDone[key] = !state.questsDone[key];
+  const [wk, idx] = key.split('-');
+  const quest = QUESTS[parseInt(wk) - 1];
+  const task = quest.tasks[parseInt(idx)];
+  if (state.questsDone[key]) {
+    addLog(`Quest done: ${task.substring(0, 40)}`);
+  }
+  saveState();
+  render();
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  addLog(`Mode → ${mode}`);
+  saveState();
+  render();
+}
+
+function addLog(action) {
+  const now = new Date();
+  const time = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
+               now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+  state.log.push({ time, action });
+  if (state.log.length > 100) state.log = state.log.slice(-100);
+}
+
+let lastLevel = 0;
+function checkLevelUp() {
+  const lvl = level();
+  if (lvl > lastLevel && lastLevel > 0) {
+    document.getElementById('level-up-msg').textContent = `Level ${lastLevel} → ${lvl}! Endurance: ${endurance().toFixed(3)}`;
+    document.getElementById('level-up-overlay').classList.add('show');
+  }
+  lastLevel = lvl;
+}
+
+function dismissOverlay() {
+  document.getElementById('level-up-overlay').classList.remove('show');
+}
+
+// ============================================================================
+// INIT
+// ============================================================================
+lastLevel = level();
+render();
+
+// Auto-refresh countdown every minute
+setInterval(() => {
+  renderCountdown();
+  renderStats();
+}, 60000);
+</script>
+</body>
+</html>

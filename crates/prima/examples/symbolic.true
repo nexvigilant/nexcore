@@ -1,0 +1,46 @@
+// symbolic.true — Prima with Pure Symbolic Syntax
+//
+// Every keyword maps to its primitive:
+//   μ (Mapping)   = fn      — function definition
+//   λ (Location)  = let     — variable binding
+//   ∂ (Boundary)  = if      — conditional
+//   Σ (Sum)       = match   — pattern dispatch
+//   σ (Sequence)  = for     — iteration
+//   → (Causality) = return  — value production
+//   ∅ (Void)      = void    — no value
+
+// μ defines a mapping (function)
+μ factorial(n: N) → N {
+    ∂ n κ< 2 {
+        1
+    } else {
+        n × factorial(n − 1)
+    }
+}
+
+// λ binds a location (variable)
+λ result = factorial(5)
+
+// Print using symbolic operators
+print("factorial(5) =", result)
+
+// Σ dispatches on sum types (match)
+λ grade = Σ result {
+    120 → "exact!",
+    _   → "computed"
+}
+print("Grade:", grade)
+
+// σ iterates over sequences
+print("Counting:")
+σ i in σ[1, 2, 3, 4, 5] {
+    print(i)
+}
+
+// ∂ is a boundary check (conditional)
+∂ result κ> 100 {
+    print("Large result!")
+}
+
+// Final grounding: all values trace to {0, 1}
+print("∎ Grounded to mathematical truth")

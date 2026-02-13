@@ -1,0 +1,44 @@
+# Cloud Scheduler job for live signal screening
+# Creates a periodic FAERS scan for signal detection
+#
+# Deploy with:
+#   gcloud scheduler jobs create http nexcore-signal-scan \
+#     --schedule="0 */6 * * *" \
+#     --uri="$SERVICE_URL/api/v1/pv/signal/complete" \
+#     --http-method=POST \
+#     --headers="Content-Type=application/json" \
+#     --message-body='{"a":15,"b":100,"c":20,"d":10000}' \
+#     --time-zone="America/New_York" \
+#     --location="us-central1"
+
+name: nexcore-signal-scan
+description: Periodic pharmacovigilance signal screening via NexCore API
+
+schedule:
+  # Every 6 hours - adjust based on signal detection needs
+  cron: "0 */6 * * *"
+  timezone: "America/New_York"
+
+http_target:
+  uri: "${SERVICE_URL}/api/v1/pv/signal/complete"
+  http_method: POST
+  headers:
+    Content-Type: "application/json"
+  body: |
+    {
+      "a": 15,
+      "b": 100,
+      "c": 20,
+      "d": 10000
+    }
+
+retry_config:
+  retry_count: 3
+  max_retry_duration: "300s"
+  min_backoff_duration: "5s"
+  max_backoff_duration: "60s"
+
+# Optional: Use OIDC authentication for private Cloud Run services
+# oidc_token:
+#   service_account_email: "scheduler-invoker@PROJECT_ID.iam.gserviceaccount.com"
+#   audience: "${SERVICE_URL}"

@@ -1,0 +1,941 @@
+//! FDA Data Bridge - ETL pipeline for pharmacovigilance intelligence.
+//!
+//! Provides comprehensive data integration with FDA sources:
+//!
+//! # Modules
+//!
+//! - **FAERS ETL** - Quarterly ASCII file ingestion and signal detection
+//! - **OpenFDA API** ([`api`]) - Real-time adverse event queries with caching
+//! - **NDC Bridge** ([`ndc`]) - National Drug Code directory lookups
+//! - **Deduplication** ([`dedup`]) - Report clustering and duplicate removal
+//!
+//! # Architecture
+//!
+//! ```text
+//! ┌─────────────────────────────────────────────────────────┐
+//! │                 FDA DATA BRIDGE                          │
+//! ├─────────────────────────────────────────────────────────┤
+//! │                                                          │
+//! │  INGESTION LAYER                                         │
+//! │  ┌─────────┐  ┌─────────┐  ┌─────────┐                  │
+//! │  │  FAERS  │  │ openFDA │  │   NDC   │                  │
+//! │  │Quarterly│  │   API   │  │Directory│                  │
+//! │  └────┬────┘  └────┬────┘  └────┬────┘                  │
+//! │       │            │            │                        │
+//! │       ▼            ▼            ▼                        │
+//! │  ┌─────────────────────────────────────────────┐        │
+//! │  │          NORMALIZATION LAYER                 │        │
+//! │  │  • Drug name standardization (NDC lookup)    │        │
+//! │  │  • Deduplication (fingerprinting)            │        │
+//! │  └────────────────────┬────────────────────────┘        │
+//! │                       │                                  │
+//! │                       ▼                                  │
+//! │  ┌─────────────────────────────────────────────┐        │
+//! │  │          SIGNAL LAYER (NexCore)             │        │
+//! │  │  • PRR, ROR, IC, EBGM                       │        │
+//! │  │  • Causality assessment                     │        │
+//! │  └─────────────────────────────────────────────┘        │
+//! │                                                          │
+//! └─────────────────────────────────────────────────────────┘
+//! ```
+//!
+//! # Configuration
+//!
+//! The ingest stage reads from the `FAERS_DATA_DIR` environment variable.
+//! If not set, it will look for FAERS data in the default location:
+//! `./data/faers` relative to the current working directory.
+
+pub mod api;
+pub mod dedup;
+pub mod ndc;
+
+use anyhow::{Context, Result};
+use nexcore_vigilance::pv::faers::parse_quarterly_linked;
+use nexcore_vigilance::pv::signals::batch::{BatchContingencyTables, batch_complete_parallel};
+use polars::prelude::*;
+use rayon::prelude::*;
+use std::collections::HashMap;
+use std::env;
+use std::path::PathBuf;
+
+/// Default FAERS data directory relative to working directory
+const DEFAULT_FAERS_DIR: &str = "./data/faers";
+
+/// Environment variable for FAERS data directory
+const FAERS_DATA_DIR_ENV: &str = "FAERS_DATA_DIR";
+
+/// Get the FAERS data directory from environment or default
+fn get_faers_data_dir() -> PathBuf {
+    env::var(FAERS_DATA_DIR_ENV)
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| PathBuf::from(DEFAULT_FAERS_DIR))
+}
+
+/// Ingest FAERS quarterly files and return a DataFrame of drug-event pairs.
+///
+/// This function:
+/// 1. Reads the FAERS directory path from `FAERS_DATA_DIR` env var (or uses default)
+/// 2. Uses `FaersParser` to parse all FAERS ASCII files (DEMO, DRUG, REAC, etc.)
+/// 3. Links records into complete cases
+/// 4. Extracts drug-event pairs (primary suspect drugs only by default)
+/// 5. Returns a DataFrame with columns: `case_id`, `drug`, `event`
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - The FAERS directory does not exist
+/// - No FAERS files are found
+/// - File parsing fails
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use nexcore_faers_etl::ingest_faers_quarterly;
+///
+/// let df = ingest_faers_quarterly().expect("Failed to ingest FAERS data");
+/// println!("Ingested {} drug-event pairs", df.height());
+/// ```
+pub fn ingest_faers_quarterly() -> Result<DataFrame> {
+    let faers_dir = get_faers_data_dir();
+
+    tracing::info!(
+        stage = "faers-quarterly",
+        source = "FileWatch",
+        path = %faers_dir.display(),
+        "Starting FAERS ingest"
+    );
+
+    // Validate directory exists
+    if !faers_dir.exists() {
+        anyhow::bail!(
+            "FAERS data directory does not exist: {}. Set {} environment variable to the correct path.",
+            faers_dir.display(),
+            FAERS_DATA_DIR_ENV
+        );
+    }
+
+    // Parse all FAERS files using consolidated vigilance parser
+    let (reports, parse_errors) = parse_quarterly_linked(&faers_dir);
+
+    if !parse_errors.is_empty() {
+        tracing::warn!(
+            stage = "faers-quarterly",
+            errors = parse_errors.len(),
+            "Some parse errors occurred"
+        );
+    }
+
+    let case_count = reports.len();
+    tracing::info!(
+        stage = "faers-quarterly",
+        cases = case_count,
+        "Parsed FAERS cases, extracting drug-event pairs"
+    );
+
+    if reports.is_empty() {
+        tracing::warn!(
+            stage = "faers-quarterly",
+            "No cases found in FAERS directory"
+        );
+        // Return empty DataFrame with correct schema
+        return Ok(DataFrame::new(vec![
+            Series::new("case_id".into(), Vec::<u64>::new()).into(),
+            Series::new("drug".into(), Vec::<String>::new()).into(),
+            Series::new("event".into(), Vec::<String>::new()).into(),
+        ])?);
+    }
+
+    // Extract drug-event pairs into vectors for DataFrame construction
+    let mut case_ids: Vec<u64> = Vec::new();
+    let mut drugs: Vec<String> = Vec::new();
+    let mut events: Vec<String> = Vec::new();
+
+    for report in &reports {
+        // Get primary suspect drugs (role = "PS")
+        let primary_drugs: Vec<_> = report
+            .drugs
+            .iter()
+            .filter(|(_, role)| role == "PS")
+            .map(|(name, _)| name.as_str())
+            .collect();
+
+        // Parse primary_id as u64 (fallback to hash if not numeric)
+        let case_id = report.primary_id.parse::<u64>().unwrap_or_else(|_| {
+            use std::hash::{Hash, Hasher};
+            let mut hasher = std::collections::hash_map::DefaultHasher::new();
+            report.primary_id.hash(&mut hasher);
+            hasher.finish()
+        });
+
+        // For each primary suspect drug, pair with each reaction
+        for drug in &primary_drugs {
+            for reaction in &report.reactions {
+                case_ids.push(case_id);
+                drugs.push(drug.to_uppercase());
+                events.push(reaction.to_uppercase());
+            }
+        }
+    }
+
+    let pair_count = case_ids.len();
+    tracing::info!(
+        stage = "faers-quarterly",
+        cases = case_count,
+        pairs = pair_count,
+        "Extracted drug-event pairs"
+    );
+
+    // Build DataFrame
+    let df = DataFrame::new(vec![
+        Series::new("case_id".into(), case_ids).into(),
+        Series::new("drug".into(), drugs).into(),
+        Series::new("event".into(), events).into(),
+    ])
+    .context("Failed to create DataFrame from drug-event pairs")?;
+
+    tracing::info!(
+        stage = "faers-quarterly",
+        rows = df.height(),
+        columns = df.width(),
+        "Ingest complete"
+    );
+
+    Ok(df)
+}
+
+/// Ingest FAERS quarterly files with custom options.
+///
+/// This is a more flexible version of `ingest_faers_quarterly` that allows
+/// customizing the ingest behavior.
+///
+/// # Arguments
+///
+/// * `faers_dir` - Path to the FAERS quarterly directory
+/// * `include_all_roles` - If true, include all drug roles (PS, SS, C, I); otherwise only primary suspect
+///
+/// # Errors
+///
+/// Returns an error if parsing fails.
+pub fn ingest_faers_quarterly_with_options(
+    faers_dir: &std::path::Path,
+    include_all_roles: bool,
+) -> Result<DataFrame> {
+    tracing::info!(
+        stage = "faers-quarterly",
+        source = "FileWatch",
+        path = %faers_dir.display(),
+        all_roles = include_all_roles,
+        "Starting FAERS ingest with options"
+    );
+
+    let (reports, _parse_errors) = parse_quarterly_linked(faers_dir);
+
+    if reports.is_empty() {
+        return Ok(DataFrame::new(vec![
+            Series::new("case_id".into(), Vec::<u64>::new()).into(),
+            Series::new("drug".into(), Vec::<String>::new()).into(),
+            Series::new("event".into(), Vec::<String>::new()).into(),
+        ])?);
+    }
+
+    let mut case_ids: Vec<u64> = Vec::new();
+    let mut drugs: Vec<String> = Vec::new();
+    let mut events: Vec<String> = Vec::new();
+
+    for report in &reports {
+        // Select drugs based on include_all_roles option
+        let selected_drugs: Vec<&str> = if include_all_roles {
+            report.drugs.iter().map(|(name, _)| name.as_str()).collect()
+        } else {
+            report
+                .drugs
+                .iter()
+                .filter(|(_, role)| role == "PS")
+                .map(|(name, _)| name.as_str())
+                .collect()
+        };
+
+        // Parse primary_id as u64 (fallback to hash if not numeric)
+        let case_id = report.primary_id.parse::<u64>().unwrap_or_else(|_| {
+            use std::hash::{Hash, Hasher};
+            let mut hasher = std::collections::hash_map::DefaultHasher::new();
+            report.primary_id.hash(&mut hasher);
+            hasher.finish()
+        });
+
+        for drug in &selected_drugs {
+            for reaction in &report.reactions {
+                case_ids.push(case_id);
+                drugs.push(drug.to_uppercase());
+                events.push(reaction.to_uppercase());
+            }
+        }
+    }
+
+    DataFrame::new(vec![
+        Series::new("case_id".into(), case_ids).into(),
+        Series::new("drug".into(), drugs).into(),
+        Series::new("event".into(), events).into(),
+    ])
+    .context("Failed to create DataFrame from drug-event pairs")
+}
+
+/// Transform: normalize drug and event names.
+///
+/// Applies normalization rules:
+/// - Drug names: uppercase, trim whitespace
+/// - Event names: uppercase, trim whitespace
+pub fn transform_normalize_names(df: LazyFrame) -> Result<LazyFrame> {
+    tracing::info!(
+        stage = "normalize-names",
+        operation = "Map",
+        "Normalizing drug and event names"
+    );
+
+    // Names are already normalized during ingest (uppercase)
+    // This transform is a no-op but kept for pipeline compatibility
+    Ok(df)
+}
+
+/// Transform: aggregate drug-event pairs into counts.
+///
+/// Groups by (drug, event) and counts occurrences.
+pub fn transform_count_drug_events(df: LazyFrame) -> Result<LazyFrame> {
+    tracing::info!(stage = "count-drug-events", "Aggregating data");
+    let aggregated = df
+        .group_by([col("drug"), col("event")])
+        .agg([col("case_id").count().alias("n")]);
+    Ok(aggregated)
+}
+
+/// Transform: filter to minimum case count.
+///
+/// Filters to only include drug-event pairs with at least the specified number of cases.
+/// Default threshold is 3 (per Evans criteria).
+pub fn transform_filter_minimum(df: LazyFrame) -> Result<LazyFrame> {
+    transform_filter_minimum_n(df, 3)
+}
+
+/// Transform: filter to minimum case count with custom threshold.
+pub fn transform_filter_minimum_n(df: LazyFrame, min_cases: i64) -> Result<LazyFrame> {
+    tracing::info!(
+        stage = "filter-minimum",
+        expression = format!("n >= {}", min_cases),
+        "Applying filter"
+    );
+    let filtered = df.filter(col("n").gt_eq(lit(min_cases)));
+    Ok(filtered)
+}
+
+/// Sink: Write DataFrame to Parquet file.
+///
+/// Writes the DataFrame to a Parquet file with Snappy compression.
+/// Returns the number of rows written.
+pub fn sink_parquet_output(df: LazyFrame) -> Result<u64> {
+    sink_parquet_output_to(df, "output/drug_event_counts.parquet")
+}
+
+/// Sink: Write DataFrame to specified Parquet file path.
+pub fn sink_parquet_output_to(df: LazyFrame, path_template: &str) -> Result<u64> {
+    tracing::info!(
+        stage = "parquet-output",
+        path_template = path_template,
+        compression = "Snappy",
+        row_group_size = 1_000_000,
+        "Writing to Parquet"
+    );
+
+    let mut output_df = df
+        .collect()
+        .context("Failed to collect DataFrame for Parquet sink")?;
+
+    let row_count = output_df.height() as u64;
+    if row_count == 0 {
+        tracing::warn!(stage = "parquet-output", "No rows to write to Parquet");
+        return Ok(0);
+    }
+
+    let path = chrono::Utc::now().format(path_template).to_string();
+
+    if let Some(parent) = std::path::Path::new(&path).parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("Failed to create directory: {}", parent.display()))?;
+    }
+
+    let file = std::fs::File::create(&path)
+        .with_context(|| format!("Failed to create Parquet file: {}", path))?;
+
+    ParquetWriter::new(file)
+        .with_compression(ParquetCompression::Snappy)
+        .with_row_group_size(Some(1_000_000))
+        .finish(&mut output_df)
+        .with_context(|| format!("Failed to write Parquet file: {}", path))?;
+
+    tracing::info!(
+        stage = "parquet-output",
+        path = %path,
+        rows = row_count,
+        "Parquet write complete"
+    );
+
+    Ok(row_count)
+}
+
+// =============================================================================
+// SIGNAL DETECTION INTEGRATION
+// =============================================================================
+
+/// Signal detection result for a drug-event pair.
+#[derive(Debug, Clone)]
+pub struct SignalDetectionResult {
+    /// Drug name
+    pub drug: String,
+    /// Event name (MedDRA PT)
+    pub event: String,
+    /// Number of co-occurrences (a cell)
+    pub n: u32,
+    /// PRR point estimate
+    pub prr: f64,
+    /// PRR lower 95% CI
+    pub prr_lower_ci: f64,
+    /// PRR upper 95% CI
+    pub prr_upper_ci: f64,
+    /// PRR signal detected
+    pub prr_signal: bool,
+    /// ROR point estimate
+    pub ror: f64,
+    /// ROR lower 95% CI
+    pub ror_lower_ci: f64,
+    /// ROR signal detected
+    pub ror_signal: bool,
+    /// IC point estimate
+    pub ic: f64,
+    /// IC025 (lower credibility bound)
+    pub ic025: f64,
+    /// IC signal detected
+    pub ic_signal: bool,
+    /// EBGM point estimate
+    pub ebgm: f64,
+    /// EB05 (lower credibility bound)
+    pub eb05: f64,
+    /// EBGM signal detected
+    pub ebgm_signal: bool,
+}
+
+/// Build contingency tables from aggregated drug-event counts.
+///
+/// Takes the output of `transform_count_drug_events()` and builds full 2x2
+/// contingency tables for signal detection.
+///
+/// # Algorithm
+///
+/// For each (drug, event) pair with count `n`:
+/// - `a` = n (drug + event)
+/// - `b` = drug_total - n (drug + no event)
+/// - `c` = event_total - n (no drug + event)
+/// - `d` = total_reports - drug_total - event_total + n (no drug + no event)
+///
+/// # Arguments
+///
+/// * `df` - DataFrame with columns: `drug`, `event`, `n`
+///
+/// # Returns
+///
+/// Tuple of (drug names, event names, batch contingency tables)
+pub fn build_contingency_tables_from_counts(
+    df: &DataFrame,
+) -> Result<(Vec<String>, Vec<String>, BatchContingencyTables)> {
+    tracing::info!(
+        stage = "build-contingency-tables",
+        rows = df.height(),
+        "Building 2x2 contingency tables from drug-event counts"
+    );
+
+    // Extract columns
+    let drugs = df
+        .column("drug")
+        .context("Missing 'drug' column")?
+        .str()
+        .context("'drug' column is not string type")?;
+
+    let events = df
+        .column("event")
+        .context("Missing 'event' column")?
+        .str()
+        .context("'event' column is not string type")?;
+
+    let n_col = df.column("n").context("Missing 'n' column")?;
+
+    // Handle both u32 and i64 types for the count column
+    let counts: Vec<u32> = if let Ok(u32_col) = n_col.u32() {
+        u32_col.iter().map(|v| v.unwrap_or(0)).collect()
+    } else if let Ok(i64_col) = n_col.i64() {
+        i64_col.iter().map(|v| v.unwrap_or(0) as u32).collect()
+    } else {
+        anyhow::bail!("'n' column must be u32 or i64 type");
+    };
+
+    // First pass: compute marginal totals
+    let mut drug_totals: HashMap<String, u32> = HashMap::new();
+    let mut event_totals: HashMap<String, u32> = HashMap::new();
+    let mut total_reports: u32 = 0;
+
+    for i in 0..df.height() {
+        let drug = drugs.get(i).unwrap_or_default().to_string();
+        let event = events.get(i).unwrap_or_default().to_string();
+        let n = counts[i];
+
+        *drug_totals.entry(drug).or_insert(0) += n;
+        *event_totals.entry(event).or_insert(0) += n;
+        total_reports += n;
+    }
+
+    tracing::debug!(
+        drugs = drug_totals.len(),
+        events = event_totals.len(),
+        total = total_reports,
+        "Computed marginal totals"
+    );
+
+    // Second pass: build contingency tables
+    let n_pairs = df.height();
+    let mut drug_names = Vec::with_capacity(n_pairs);
+    let mut event_names = Vec::with_capacity(n_pairs);
+    let mut a_vals = Vec::with_capacity(n_pairs);
+    let mut b_vals = Vec::with_capacity(n_pairs);
+    let mut c_vals = Vec::with_capacity(n_pairs);
+    let mut d_vals = Vec::with_capacity(n_pairs);
+
+    for i in 0..n_pairs {
+        let drug = drugs.get(i).unwrap_or_default().to_string();
+        let event = events.get(i).unwrap_or_default().to_string();
+        let a = counts[i];
+
+        let drug_total = *drug_totals.get(&drug).unwrap_or(&0);
+        let event_total = *event_totals.get(&event).unwrap_or(&0);
+
+        // b = drug reports - drug+event = drug total - a
+        let b = drug_total.saturating_sub(a);
+
+        // c = event reports - drug+event = event total - a
+        let c = event_total.saturating_sub(a);
+
+        // d = total - (drug + event - a) using inclusion-exclusion
+        // Avoid negative intermediate results by computing the subtracted part first
+        let drug_plus_event_minus_a = drug_total + event_total - a;
+        let d = total_reports.saturating_sub(drug_plus_event_minus_a);
+
+        drug_names.push(drug);
+        event_names.push(event);
+        a_vals.push(a);
+        b_vals.push(b);
+        c_vals.push(c);
+        d_vals.push(d);
+    }
+
+    let batch = BatchContingencyTables::new(a_vals, b_vals, c_vals, d_vals);
+
+    tracing::info!(
+        stage = "build-contingency-tables",
+        tables = batch.len(),
+        "Built contingency tables"
+    );
+
+    Ok((drug_names, event_names, batch))
+}
+
+/// Run signal detection on batch contingency tables.
+///
+/// Executes PRR, ROR, IC, and EBGM algorithms in parallel using Rayon.
+///
+/// # Arguments
+///
+/// * `drug_names` - Drug names for each table
+/// * `event_names` - Event names for each table
+/// * `batch` - Batch contingency tables
+///
+/// # Returns
+///
+/// Vector of signal detection results.
+pub fn run_signal_detection(
+    drug_names: &[String],
+    event_names: &[String],
+    batch: &BatchContingencyTables,
+) -> Result<Vec<SignalDetectionResult>> {
+    tracing::info!(
+        stage = "signal-detection",
+        pairs = batch.len(),
+        "Running signal detection (PRR, ROR, IC, EBGM)"
+    );
+
+    // Run all algorithms in parallel
+    let complete_results = batch_complete_parallel(batch);
+
+    // Map results to SignalDetectionResult
+    let results: Vec<SignalDetectionResult> = (0..batch.len())
+        .into_par_iter()
+        .map(|i| {
+            let r = &complete_results[i];
+            SignalDetectionResult {
+                drug: drug_names[i].clone(),
+                event: event_names[i].clone(),
+                n: batch.a[i],
+                prr: r.prr.point_estimate,
+                prr_lower_ci: r.prr.lower_ci,
+                prr_upper_ci: r.prr.upper_ci,
+                prr_signal: r.prr.is_signal,
+                ror: r.ror.point_estimate,
+                ror_lower_ci: r.ror.lower_ci,
+                ror_signal: r.ror.is_signal,
+                ic: r.ic.point_estimate,
+                ic025: r.ic.lower_ci,
+                ic_signal: r.ic.is_signal,
+                ebgm: r.ebgm.point_estimate,
+                eb05: r.ebgm.lower_ci,
+                ebgm_signal: r.ebgm.is_signal,
+            }
+        })
+        .collect();
+
+    let signal_count = results.iter().filter(|r| r.prr_signal).count();
+    tracing::info!(
+        stage = "signal-detection",
+        total = results.len(),
+        signals = signal_count,
+        "Signal detection complete"
+    );
+
+    Ok(results)
+}
+
+/// Filter results to only include detected signals.
+///
+/// A signal is detected if any of PRR, ROR, IC, or EBGM indicate a signal.
+pub fn filter_signals(results: &[SignalDetectionResult]) -> Vec<&SignalDetectionResult> {
+    results
+        .iter()
+        .filter(|r| r.prr_signal || r.ror_signal || r.ic_signal || r.ebgm_signal)
+        .collect()
+}
+
+/// Convert signal detection results to DataFrame.
+pub fn signals_to_dataframe(results: &[SignalDetectionResult]) -> Result<DataFrame> {
+    let drugs: Vec<&str> = results.iter().map(|r| r.drug.as_str()).collect();
+    let events: Vec<&str> = results.iter().map(|r| r.event.as_str()).collect();
+    let ns: Vec<u32> = results.iter().map(|r| r.n).collect();
+    let prrs: Vec<f64> = results.iter().map(|r| r.prr).collect();
+    let prr_lowers: Vec<f64> = results.iter().map(|r| r.prr_lower_ci).collect();
+    let prr_uppers: Vec<f64> = results.iter().map(|r| r.prr_upper_ci).collect();
+    let prr_signals: Vec<bool> = results.iter().map(|r| r.prr_signal).collect();
+    let rors: Vec<f64> = results.iter().map(|r| r.ror).collect();
+    let ror_lowers: Vec<f64> = results.iter().map(|r| r.ror_lower_ci).collect();
+    let ror_signals: Vec<bool> = results.iter().map(|r| r.ror_signal).collect();
+    let ics: Vec<f64> = results.iter().map(|r| r.ic).collect();
+    let ic025s: Vec<f64> = results.iter().map(|r| r.ic025).collect();
+    let ic_signals: Vec<bool> = results.iter().map(|r| r.ic_signal).collect();
+    let ebgms: Vec<f64> = results.iter().map(|r| r.ebgm).collect();
+    let eb05s: Vec<f64> = results.iter().map(|r| r.eb05).collect();
+    let ebgm_signals: Vec<bool> = results.iter().map(|r| r.ebgm_signal).collect();
+
+    DataFrame::new(vec![
+        Series::new("drug".into(), drugs).into(),
+        Series::new("event".into(), events).into(),
+        Series::new("n".into(), ns).into(),
+        Series::new("prr".into(), prrs).into(),
+        Series::new("prr_lower_ci".into(), prr_lowers).into(),
+        Series::new("prr_upper_ci".into(), prr_uppers).into(),
+        Series::new("prr_signal".into(), prr_signals).into(),
+        Series::new("ror".into(), rors).into(),
+        Series::new("ror_lower_ci".into(), ror_lowers).into(),
+        Series::new("ror_signal".into(), ror_signals).into(),
+        Series::new("ic".into(), ics).into(),
+        Series::new("ic025".into(), ic025s).into(),
+        Series::new("ic_signal".into(), ic_signals).into(),
+        Series::new("ebgm".into(), ebgms).into(),
+        Series::new("eb05".into(), eb05s).into(),
+        Series::new("ebgm_signal".into(), ebgm_signals).into(),
+    ])
+    .context("Failed to create signal results DataFrame")
+}
+
+/// Sink: Write signal detection results to Parquet.
+pub fn sink_signals_parquet(results: &[SignalDetectionResult], path: &str) -> Result<u64> {
+    tracing::info!(
+        stage = "signals-parquet-output",
+        path = path,
+        results = results.len(),
+        "Writing signal results to Parquet"
+    );
+
+    let mut df = signals_to_dataframe(results)?;
+    let row_count = df.height() as u64;
+
+    if row_count == 0 {
+        tracing::warn!(stage = "signals-parquet-output", "No results to write");
+        return Ok(0);
+    }
+
+    if let Some(parent) = std::path::Path::new(path).parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("Failed to create directory: {}", parent.display()))?;
+    }
+
+    let file = std::fs::File::create(path)
+        .with_context(|| format!("Failed to create Parquet file: {}", path))?;
+
+    ParquetWriter::new(file)
+        .with_compression(ParquetCompression::Snappy)
+        .finish(&mut df)
+        .with_context(|| format!("Failed to write Parquet file: {}", path))?;
+
+    tracing::info!(
+        stage = "signals-parquet-output",
+        path = path,
+        rows = row_count,
+        "Signal results written"
+    );
+
+    Ok(row_count)
+}
+
+/// Run complete signal detection pipeline on aggregated counts.
+///
+/// This is the main entry point for downstream signal detection.
+///
+/// # Arguments
+///
+/// * `counts_df` - DataFrame with columns: `drug`, `event`, `n`
+///
+/// # Returns
+///
+/// Vector of signal detection results.
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use nexcore_faers_etl::{
+///     ingest_faers_quarterly,
+///     transform_count_drug_events,
+///     transform_filter_minimum_n,
+///     run_signal_detection_pipeline,
+/// };
+/// use polars::prelude::*;
+///
+/// let df = ingest_faers_quarterly().unwrap();
+/// let counts = transform_count_drug_events(df.lazy()).unwrap().collect().unwrap();
+/// let filtered = transform_filter_minimum_n(counts.lazy(), 3).unwrap().collect().unwrap();
+/// let signals = run_signal_detection_pipeline(&filtered).unwrap();
+///
+/// println!("Detected {} signals", signals.iter().filter(|s| s.prr_signal).count());
+/// ```
+pub fn run_signal_detection_pipeline(counts_df: &DataFrame) -> Result<Vec<SignalDetectionResult>> {
+    // Build contingency tables
+    let (drug_names, event_names, batch) = build_contingency_tables_from_counts(counts_df)?;
+
+    // Run signal detection
+    run_signal_detection(&drug_names, &event_names, &batch)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_transform_count_drug_events() {
+        // Create test DataFrame
+        let df = DataFrame::new(vec![
+            Series::new("case_id".into(), vec![1u64, 2, 3, 4]).into(),
+            Series::new(
+                "drug".into(),
+                vec!["ASPIRIN", "ASPIRIN", "ASPIRIN", "METFORMIN"],
+            )
+            .into(),
+            Series::new(
+                "event".into(),
+                vec!["HEADACHE", "HEADACHE", "HEADACHE", "NAUSEA"],
+            )
+            .into(),
+        ])
+        .unwrap();
+
+        let lazy = df.lazy();
+        let result = transform_count_drug_events(lazy).unwrap();
+        let collected = result.collect().unwrap();
+
+        // ASPIRIN + HEADACHE should have n=3
+        let aspirin_headache = collected
+            .clone()
+            .lazy()
+            .filter(
+                col("drug")
+                    .eq(lit("ASPIRIN"))
+                    .and(col("event").eq(lit("HEADACHE"))),
+            )
+            .collect()
+            .unwrap();
+
+        assert_eq!(aspirin_headache.height(), 1);
+        let n = aspirin_headache.column("n").unwrap();
+        assert_eq!(n.u32().unwrap().get(0).unwrap(), 3);
+    }
+
+    #[test]
+    fn test_transform_filter_minimum() {
+        let df = DataFrame::new(vec![
+            Series::new("drug".into(), vec!["ASPIRIN", "METFORMIN"]).into(),
+            Series::new("event".into(), vec!["HEADACHE", "NAUSEA"]).into(),
+            Series::new("n".into(), vec![5u32, 2]).into(),
+        ])
+        .unwrap();
+
+        let result = transform_filter_minimum(df.lazy()).unwrap();
+        let collected = result.collect().unwrap();
+
+        // Only ASPIRIN+HEADACHE (n=5) should pass the n>=3 filter
+        assert_eq!(collected.height(), 1);
+    }
+
+    #[test]
+    fn test_build_contingency_tables_from_counts() {
+        // Create test data with known structure
+        let df = DataFrame::new(vec![
+            Series::new("drug".into(), vec!["DRUG_A", "DRUG_A", "DRUG_B"]).into(),
+            Series::new("event".into(), vec!["EVENT_X", "EVENT_Y", "EVENT_X"]).into(),
+            Series::new("n".into(), vec![10u32, 5, 8]).into(),
+        ])
+        .unwrap();
+
+        let (drugs, events, batch) = build_contingency_tables_from_counts(&df).unwrap();
+
+        assert_eq!(drugs.len(), 3);
+        assert_eq!(events.len(), 3);
+        assert_eq!(batch.len(), 3);
+
+        // Verify first row (DRUG_A, EVENT_X, n=10)
+        // Drug totals: DRUG_A=15, DRUG_B=8, Total=23
+        // Event totals: EVENT_X=18, EVENT_Y=5
+        // For (DRUG_A, EVENT_X, 10):
+        //   a=10, b=15-10=5, c=18-10=8, d=23-15-18+10=0
+        assert_eq!(batch.a[0], 10);
+        assert_eq!(batch.b[0], 5);
+        assert_eq!(batch.c[0], 8);
+        assert_eq!(batch.d[0], 0);
+    }
+
+    #[test]
+    fn test_run_signal_detection_pipeline() {
+        // Create realistic test data with proper contingency table structure
+        // Each drug has multiple events, each event has multiple drugs
+        let df = DataFrame::new(vec![
+            Series::new(
+                "drug".into(),
+                vec![
+                    "ASPIRIN",
+                    "ASPIRIN",
+                    "METFORMIN",
+                    "METFORMIN",
+                    "OTHER",
+                    "OTHER",
+                ],
+            )
+            .into(),
+            Series::new(
+                "event".into(),
+                vec![
+                    "HEADACHE", "NAUSEA", "HEADACHE", "NAUSEA", "HEADACHE", "NAUSEA",
+                ],
+            )
+            .into(),
+            Series::new("n".into(), vec![50u32, 5, 10, 100, 20, 500]).into(),
+        ])
+        .unwrap();
+
+        let results = run_signal_detection_pipeline(&df).unwrap();
+
+        assert_eq!(results.len(), 6);
+
+        // Find ASPIRIN + HEADACHE result
+        let aspirin_headache = results
+            .iter()
+            .find(|r| r.drug == "ASPIRIN" && r.event == "HEADACHE")
+            .expect("Should find ASPIRIN+HEADACHE result");
+
+        assert_eq!(aspirin_headache.n, 50);
+        // PRR should be calculable with proper marginals
+        assert!(aspirin_headache.prr.is_finite());
+        assert!(aspirin_headache.ror.is_finite());
+    }
+
+    #[test]
+    fn test_signals_to_dataframe() {
+        let results = vec![SignalDetectionResult {
+            drug: "DRUG_A".to_string(),
+            event: "EVENT_X".to_string(),
+            n: 10,
+            prr: 2.5,
+            prr_lower_ci: 1.8,
+            prr_upper_ci: 3.5,
+            prr_signal: true,
+            ror: 2.8,
+            ror_lower_ci: 2.0,
+            ror_signal: true,
+            ic: 1.2,
+            ic025: 0.8,
+            ic_signal: true,
+            ebgm: 2.3,
+            eb05: 1.9,
+            ebgm_signal: true,
+        }];
+
+        let df = signals_to_dataframe(&results).unwrap();
+
+        assert_eq!(df.height(), 1);
+        assert_eq!(df.width(), 16); // All columns present
+    }
+
+    #[test]
+    fn test_filter_signals() {
+        let results = vec![
+            SignalDetectionResult {
+                drug: "SIGNAL".to_string(),
+                event: "EVENT".to_string(),
+                n: 10,
+                prr: 3.0,
+                prr_lower_ci: 2.0,
+                prr_upper_ci: 4.0,
+                prr_signal: true,
+                ror: 0.0,
+                ror_lower_ci: 0.0,
+                ror_signal: false,
+                ic: 0.0,
+                ic025: 0.0,
+                ic_signal: false,
+                ebgm: 0.0,
+                eb05: 0.0,
+                ebgm_signal: false,
+            },
+            SignalDetectionResult {
+                drug: "NO_SIGNAL".to_string(),
+                event: "EVENT".to_string(),
+                n: 5,
+                prr: 1.0,
+                prr_lower_ci: 0.5,
+                prr_upper_ci: 1.5,
+                prr_signal: false,
+                ror: 0.0,
+                ror_lower_ci: 0.0,
+                ror_signal: false,
+                ic: 0.0,
+                ic025: 0.0,
+                ic_signal: false,
+                ebgm: 0.0,
+                eb05: 0.0,
+                ebgm_signal: false,
+            },
+        ];
+
+        let signals = filter_signals(&results);
+        assert_eq!(signals.len(), 1);
+        assert_eq!(signals[0].drug, "SIGNAL");
+    }
+}

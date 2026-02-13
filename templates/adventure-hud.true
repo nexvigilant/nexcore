@@ -1,0 +1,102 @@
+// Adventure HUD — Prima template for NexBrowser
+// Data arrives as pre-bound λ variables from Rust host
+
+μ format_duration(mins: N) → N {
+  ∂ mins > 59 {
+    to_string(mins / 60) + "h " + to_string(mins % 60) + "m"
+  } else {
+    to_string(mins) + "m"
+  }
+}
+
+μ format_tokens(n: N) → N {
+  ∂ n > 999999 {
+    to_string(n / 1000000) + "M"
+  } else {
+    ∂ n > 999 {
+      to_string(n / 1000) + "K"
+    } else {
+      to_string(n)
+    }
+  }
+}
+
+μ task_icon(status: N) → N {
+  Σ status {
+    "completed" → "&#10003;",
+    "in_progress" → "&#10227;",
+    _ → "&#9675;"
+  }
+}
+
+μ task_color(status: N) → N {
+  Σ status {
+    "completed" → "#4ade80",
+    "in_progress" → "#facc15",
+    _ → "#9ca3af"
+  }
+}
+
+μ render_task(t: N) → N {
+  λ status = head(tail(tail(t)))
+  λ icon = task_icon(status)
+  λ color = task_color(status)
+  λ subject = head(tail(t))
+  "<div style=\"padding:8px;background:#1f2937;border-radius:6px;margin:4px 0;\">" +
+    "<span style=\"color:" + color + ";\">" + icon + "</span> " + subject + "</div>"
+}
+
+μ render_skill(s: N) → N {
+  λ name = head(s)
+  λ count = head(tail(s))
+  "<div style=\"display:flex;justify-content:space-between;padding:6px;\">" +
+    "<span>" + name + "</span>" +
+    "<span style=\"background:#3b82f6;padding:2px 8px;border-radius:10px;\">" + count + "</span></div>"
+}
+
+μ render_milestone(m: N) → N {
+  "<div style=\"padding:8px;border-left:3px solid #f59e0b;margin:4px 0;\">" +
+    "<strong>" + head(m) + "</strong><br/>" +
+    "<span style=\"color:#9ca3af;\">" + head(tail(m)) + "</span></div>"
+}
+
+// Compute derived values
+λ completed = len(filter(tasks, |t| head(tail(tail(t))) == "completed"))
+λ total = len(tasks)
+λ pct = ∂ total > 0 { (completed * 100) / total } else { 0 }
+
+// Build sections via map + join
+λ task_html = join(map(tasks, render_task), "")
+λ skill_html = join(map(skills, render_skill), "")
+λ milestone_html = join(map(milestones, render_milestone), "")
+
+// Assemble full page
+"<html><head><title>Adventure HUD</title></head>" +
+"<body style=\"background:#111827;color:#e5e7eb;font-family:sans-serif;padding:24px;\">" +
+"<h1 style=\"color:#7eb8ff;\">Adventure HUD</h1>" +
+"<h2 style=\"color:#22d3ee;\">" + session_name + "</h2>" +
+"<div style=\"display:flex;gap:16px;\">" +
+  "<div style=\"flex:1;background:#1f2937;border-radius:8px;padding:16px;\">" +
+    "<h3 style=\"color:#22d3ee;\">Session Stats</h3>" +
+    "<p>Duration: " + format_duration(duration_mins) + "</p>" +
+    "<p>Tools: " + to_string(tools_called) + "</p>" +
+    "<p>Tokens: " + format_tokens(tokens_used) + "</p>" +
+  "</div>" +
+  "<div style=\"flex:1;background:#1f2937;border-radius:8px;padding:16px;\">" +
+    "<h3 style=\"color:#60a5fa;\">Tasks</h3>" +
+    "<div style=\"background:#374151;border-radius:4px;height:8px;margin:8px 0;\">" +
+      "<div style=\"background:#4ade80;height:8px;border-radius:4px;width:" + to_string(pct) + "%;\"></div>" +
+    "</div>" +
+    "<p style=\"color:#9ca3af;\">" + to_string(completed) + "/" + to_string(total) + " completed</p>" +
+    task_html +
+  "</div>" +
+  "<div style=\"flex:1;background:#1f2937;border-radius:8px;padding:16px;\">" +
+    "<h3 style=\"color:#a78bfa;\">Skills Used</h3>" +
+    skill_html +
+  "</div>" +
+"</div>" +
+"<div style=\"background:#1f2937;border-radius:8px;padding:16px;margin-top:16px;\">" +
+  "<h3 style=\"color:#f59e0b;\">Milestones</h3>" +
+  milestone_html +
+"</div>" +
+"</body></html>"

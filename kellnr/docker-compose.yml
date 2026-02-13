@@ -1,0 +1,15 @@
+services:
+  kellnr:
+    image: ghcr.io/kellnr/kellnr:6
+    ports:
+      - "8000:8000"
+    volumes:
+      - kellnr-data:/opt/kdata
+    environment:
+      - KELLNR_ORIGIN__HOSTNAME=localhost
+      - KELLNR_ORIGIN__PORT=8000
+      - KELLNR_REGISTRY__AUTH_REQUIRED=false
+    restart: unless-stopped
+
+volumes:
+  kellnr-data:

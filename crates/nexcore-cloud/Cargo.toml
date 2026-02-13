@@ -1,0 +1,45 @@
+[workspace]
+
+[package]
+name = "nexcore-cloud"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Cloud computing primitives: 35 types grounded to Lex Primitiva (6 T1 + 14 T2-P + 10 T2-C + 5 T3)"
+license = "MIT"
+repository = "https://github.com/nexvigilant/nexcore"
+keywords = ["cloud", "primitives", "grounding", "infrastructure"]
+categories = ["data-structures"]
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = { version = "1.0.120" }
+
+[lints.rust]
+async_fn_in_trait = "allow"
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+unused_mut = "allow"
+unused_assignments = "allow"
+unused_must_use = "allow"
+
+[lints.clippy]
+all = "allow"
+pedantic = "allow"
+nursery = "allow"
+cargo = "allow"
+map_unwrap_or = "allow"
+manual_map = "allow"
+option_map_or_none = "allow"
+derivable_impls = "allow"
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"
+todo = "allow"
+unimplemented = "allow"
+unreachable = "allow"

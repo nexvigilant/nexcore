@@ -1,0 +1,111 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/*",
+    "apps/*",
+    "tools/*",
+    "labs/*",
+]
+exclude = [
+    ".nexcore/crates/nexcore-pvos",
+    ".nexcore/crates/nexcore-laboratory",
+    ".nexcore/crates/nexcore-lex-primitiva",
+]
+
+[workspace.package]
+edition = "2024"
+version = "0.1.0"
+rust-version = "1.85"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+description = "Ferrostack Unified Workspace — NexVigilant frontend and experimental applications"
+license = "LicenseRef-Proprietary"
+repository = "https://github.com/nexvigilant/nexcore"
+
+[workspace.dependencies]
+# Ferrostack UI (0.7 Stack)
+leptos = { version = "0.7" }
+leptos_router = { version = "0.7" }
+leptos_meta = { version = "0.7" }
+leptos_axum = { version = "0.7" }
+
+# Integrated Shared Infrastructure
+wksp-core = { path = "crates/wksp-core" }
+wksp-api-client = { path = "crates/wksp-api-client" }
+wksp-components = { path = "crates/wksp-components" }
+wksp-types = { path = "crates/wksp-types" }
+nexcore-watch-core = { path = "tools/nexcore-watch-core" }
+nexcore-pvos = { path = ".nexcore/crates/nexcore-pvos" }
+
+# Lab Dependencies
+nexcore-laboratory = { path = ".nexcore/crates/nexcore-laboratory" }
+nexcore-lex-primitiva = { path = ".nexcore/crates/nexcore-lex-primitiva" }
+
+# WASM & UI Ecosystem (Required by Ferrostack)
+wasm-bindgen = { version = "0.2" }
+web-sys = { version = "0.3" }
+js-sys = { version = "0.3" }
+console_error_panic_hook = { version = "0.1" }
+gloo-net = { version = "0.6" }
+gloo-storage = { version = "0.3" }
+
+# Common Utilities
+directories = "6"
+proptest = "1"
+rustyline = "15"
+tempfile = "3"
+clap = { version = "4", features = ["derive"] }
+sha2 = "0.10.8"
+hex = "0.4.3"
+
+# Watch & Android Ecosystem
+android-activity = { version = "0.6", features = ["native-activity"] }
+ndk = "0.9"
+slint = { version = "1.9", default-features = false, features = ["renderer-software", "backend-android-activity-06", "compat-1-2"] }
+slint-build = "1.9"
+
+# Unified Dependency Layer
+axum = { version = "0.7", features = ["macros"] }
+tokio = { version = "1.38.0", features = ["full"] }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = "1.0.120"
+chrono = { version = "0.4.38", features = ["serde"] }
+uuid = { version = "1.10.0", features = ["v4", "serde", "js"] }
+anyhow = "1.0.86"
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tower = { version = "0.4.13", features = ["full"] }
+tower-http = { version = "0.5.2", features = ["cors", "trace", "compression-full"] }
+reqwest = { version = "0.12.5", features = ["json"] }
+futures = "0.3.30"
+lazy_static = "1.5.0"
+regex = "1.10.5"
+dashmap = "6.0.1"
+thiserror = "1.0.61"
+async-trait = "0.1.81"
+dirs = "5.0.1"
+url = "2.5.2"
+indexmap = "2.2.6"
+http = "1.1.0"
+
+[workspace.lints.rust]
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+# Relax lints for nexcore path dependencies
+should_implement_trait = "allow"
+if_same_then_else = "allow"
+needless_borrow = "allow"
+collapsible_if = "allow"
+unnecessary_map_or = "allow"
+too_many_arguments = "allow"
+map_clone = "allow"
+vec_init_then_push = "allow"
+map_entry = "allow"
+derivable_impls = "allow"
+double_ended_iterator_last = "allow"
+manual_div_ceil = "allow"

@@ -1,0 +1,175 @@
+// Prima Capability Multiplier — FULL SEND Demo
+// Shows: How domain transfer MULTIPLIES capabilities
+
+ωn("═══════════════════════════════════════════════════════════════")
+ωn("     PRIMA CAPABILITY MULTIPLIER — FULL SEND EDITION")
+ωn("═══════════════════════════════════════════════════════════════")
+ωn("")
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CAPABILITY MULTIPLICATION FUNCTION
+// Uses >= for comparison (κ> for strict greater-than)
+// ═══════════════════════════════════════════════════════════════════════════
+
+μ multiply_capability(source_mastery: N, transfer: N, target_base: N) → N {
+    λ transferred = source_mastery * transfer
+    ∂ transfer >= 0.7 {
+        target_base + (transferred * 1.5)
+    } {
+        target_base + transferred
+    }
+}
+
+μ classify_transfer(t: N) → String {
+    ∂ t >= 0.9 {
+        "T1 (Universal)"
+    } ∂ t >= 0.7 {
+        "T2-P (Multiplier)"
+    } ∂ t >= 0.5 {
+        "T2-C (Transfer)"
+    } {
+        "T3 (Domain)"
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DOMAIN AFFINITIES
+// ═══════════════════════════════════════════════════════════════════════════
+
+ωn("DOMAIN AFFINITIES (T >= 0.7 = Multiplication Zone)")
+ωn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+λ math_physics = 0.90
+λ math_cs = 0.85
+λ math_stats = 0.95
+λ chem_pharma = 0.82
+λ pharma_tox = 0.92
+λ nursing_med = 0.65
+
+ωn("  math→physics:  ", math_physics, " ", classify_transfer(math_physics))
+ωn("  math→cs:       ", math_cs, " ", classify_transfer(math_cs))
+ωn("  math→stats:    ", math_stats, " ", classify_transfer(math_stats))
+ωn("  chem→pharma:   ", chem_pharma, " ", classify_transfer(chem_pharma))
+ωn("  pharma→tox:    ", pharma_tox, " ", classify_transfer(pharma_tox))
+ωn("  nursing→med:   ", nursing_med, " ", classify_transfer(nursing_med))
+ωn("")
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PHARMD CAPABILITY MULTIPLICATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+ωn("EXAMPLE: PharmD → Signal Detection")
+ωn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+ωn("")
+
+λ pharmd_chem = 0.90
+λ pharmd_pharm = 0.95
+λ pharmd_stats = 0.80
+
+λ transfer_chem = 0.75
+λ transfer_pharm = 0.88
+λ transfer_stats = 0.85
+
+λ signal_base = 0.20
+
+λ from_chem = multiply_capability(pharmd_chem, transfer_chem, 0.0)
+λ from_pharm = multiply_capability(pharmd_pharm, transfer_pharm, 0.0)
+λ from_stats = multiply_capability(pharmd_stats, transfer_stats, 0.0)
+
+ωn("  Chemistry (", pharmd_chem, ") × transfer (", transfer_chem, "):")
+ωn("    → ", from_chem)
+ωn("")
+ωn("  Pharmacology (", pharmd_pharm, ") × transfer (", transfer_pharm, "):")
+ωn("    → ", from_pharm)
+ωn("")
+ωn("  Statistics (", pharmd_stats, ") × transfer (", transfer_stats, "):")
+ωn("    → ", from_stats)
+ωn("")
+
+λ total = signal_base + from_chem + from_pharm + from_stats
+ωn("  TOTAL SIGNAL DETECTION CAPABILITY:")
+ωn("    Base: ", signal_base)
+ωn("    + Chemistry:    ", from_chem)
+ωn("    + Pharmacology: ", from_pharm)
+ωn("    + Statistics:   ", from_stats)
+ωn("    ────────────────────────")
+ωn("    = ", total)
+ωn("")
+
+// ═══════════════════════════════════════════════════════════════════════════
+// KNOWLEDGE FUNNEL
+// ═══════════════════════════════════════════════════════════════════════════
+
+ωn("KNOWLEDGE FUNNEL INVERSION")
+ωn("━━━━━━━━━━━━━━━━━━━━━━━━━━")
+ωn("")
+ωn("  Level │ Tier │ Transfer │ Multiplier?")
+ωn("  ──────┼──────┼──────────┼───────────")
+ωn("  100   │ T3   │   0.40   │  No")
+ωn("  200   │ T3   │   0.40   │  No")
+ωn("  300   │ T2-C │   0.70   │  Threshold")
+ωn("  500   │ T2-P │   0.90   │  YES")
+ωn("  600+  │ T1   │   1.00   │  MAXIMUM")
+ωn("")
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PIPELINE MULTIPLICATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+ωn("CAPABILITY PIPELINE")
+ωn("━━━━━━━━━━━━━━━━━━━")
+
+λ pipeline = 5.0
+    |> |x| x * 2.0
+    |> |x| x * 3.0
+    |> |x| x * 4.0
+
+ωn("  5.0 × 2.0 × 3.0 × 4.0 = ", pipeline)
+ωn("")
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MULTIPLY vs ADD
+// ═══════════════════════════════════════════════════════════════════════════
+
+ωn("MULTIPLICATION vs ADDITION")
+ωn("━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+λ a = 0.8
+λ b = 0.7
+λ c = 0.9
+
+λ added = a + b + c
+λ multiplied = a * b * c * 10.0
+
+ωn("  Skills: ", a, ", ", b, ", ", c)
+ωn("  ADDED:      ", added)
+ωn("  MULTIPLIED: ", multiplied)
+ωn("  → Multiplication = COMPOUND growth!")
+ωn("")
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE INSIGHT
+// ═══════════════════════════════════════════════════════════════════════════
+
+ωn("═══════════════════════════════════════════════════════════════")
+ωn("               THE MULTIPLICATION INSIGHT")
+ωn("═══════════════════════════════════════════════════════════════")
+ωn("")
+ωn("  SINGLE-DOMAIN: Value = Mastery (capped at 1.0)")
+ωn("")
+ωn("  CROSS-DOMAIN:  Value = Sum(Mastery × Transfer × 1.5)")
+ωn("                 When Transfer >= 0.7 (T2-P zone)")
+ωn("")
+ωn("  EXPONENTIAL PATH:")
+ωn("     1. Master T1 primitives (math, logic)")
+ωn("     2. Transfer at 0.9+ to adjacent domains")
+ωn("     3. Each mastery MULTIPLIES all previous")
+ωn("")
+ωn("  THE PHARMD ADVANTAGE:")
+ωn("     Chem × Bio × Pharma × Stats")
+ωn("     = Signal × Causality × Risk")
+ωn("     = PHARMACOVIGILANCE MASTERY")
+ωn("")
+ωn("═══════════════════════════════════════════════════════════════")
+ωn("  FULL SEND: Multiply capabilities, don't just add them.")
+ωn("═══════════════════════════════════════════════════════════════")

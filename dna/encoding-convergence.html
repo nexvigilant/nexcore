@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Encoding System Convergence Map — nexcore-dna</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0f; color: #e0e0e0; font-family: 'Courier New', monospace; overflow: hidden; }
+
+  svg { width: 100vw; height: 100vh; }
+
+  .system-node { cursor: pointer; }
+  .system-node circle { stroke-width: 2; }
+  .system-node text { font-size: 11px; fill: #ccc; text-anchor: middle; }
+  .system-node .label { font-size: 13px; font-weight: bold; fill: #fff; }
+  .system-node .bits { font-size: 10px; fill: #88f; }
+
+  .convergence-line { stroke-opacity: 0.3; fill: none; }
+  .convergence-line.strong { stroke-opacity: 0.7; stroke-width: 2; }
+
+  .property-badge { font-size: 9px; }
+
+  .center-label { font-size: 18px; fill: #ffcc00; text-anchor: middle; font-weight: bold; }
+  .center-sub { font-size: 11px; fill: #aa8800; text-anchor: middle; }
+
+  .intersection-zone { fill-opacity: 0.08; stroke-width: 1; stroke-dasharray: 4,4; }
+
+  .legend { font-size: 10px; fill: #888; }
+  .legend-title { font-size: 12px; fill: #aaa; font-weight: bold; }
+
+  .glyph-table { font-size: 10px; }
+  .glyph-cell { stroke: #333; stroke-width: 0.5; }
+  .glyph-label { font-size: 9px; fill: #ddd; text-anchor: middle; dominant-baseline: central; }
+  .glyph-header { font-size: 10px; fill: #ffcc00; text-anchor: middle; font-weight: bold; }
+
+  .title { font-size: 22px; fill: #ffcc00; text-anchor: middle; font-weight: bold; }
+  .subtitle { font-size: 12px; fill: #888; text-anchor: middle; }
+
+  .primitive-ring text { font-size: 14px; fill: #ffcc00; text-anchor: middle; dominant-baseline: central; }
+  .primitive-ring circle { fill: none; stroke: #ffcc0033; stroke-width: 1; }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glow-gold" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#ffcc00;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#ffcc00;stop-opacity:0"/>
+    </radialGradient>
+    <radialGradient id="glow-blue" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#4488ff;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#4488ff;stop-opacity:0"/>
+    </radialGradient>
+    <radialGradient id="glow-green" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#44ff88;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#44ff88;stop-opacity:0"/>
+    </radialGradient>
+    <filter id="blur-sm"><feGaussianBlur in="SourceGraphic" stdDeviation="2"/></filter>
+  </defs>
+
+  <!-- Title -->
+  <text x="600" y="30" class="title">Encoding System Convergence Map</text>
+  <text x="600" y="48" class="subtitle">8 systems × 6 convergence properties → nexcore-dna v3 glyph design</text>
+
+  <!-- Central convergence point -->
+  <circle cx="600" cy="400" r="80" fill="url(#glow-gold)"/>
+  <circle cx="600" cy="400" r="40" fill="none" stroke="#ffcc0066" stroke-width="2"/>
+  <text x="600" y="393" class="center-label">64</text>
+  <text x="600" y="410" class="center-sub">Universal Codespace</text>
+  <text x="600" y="425" class="center-sub">2⁶ = 4³ = 8²</text>
+
+  <!-- Convergence zones (background) -->
+  <!-- Zone 1: "64-code systems" (DNA, Braille, I Ching) -->
+  <ellipse cx="520" cy="340" rx="200" ry="120" class="intersection-zone" fill="#ffcc00" stroke="#ffcc00" transform="rotate(-15 520 340)"/>
+  <text x="380" y="270" class="legend" fill="#aa8800">64-code convergence</text>
+
+  <!-- Zone 2: "Determinative systems" (Hieroglyphs, Chinese, Cuneiform, Music) -->
+  <ellipse cx="680" cy="350" rx="220" ry="130" class="intersection-zone" fill="#44ff88" stroke="#44ff88" transform="rotate(10 680 350)"/>
+  <text x="830" y="260" class="legend" fill="#44aa66">Determinative systems</text>
+
+  <!-- Zone 3: "Positional semantics" (All except Morse) -->
+  <ellipse cx="600" cy="430" rx="280" ry="100" class="intersection-zone" fill="#4488ff" stroke="#4488ff"/>
+  <text x="600" y="545" class="legend" fill="#4488aa">Positional semantics (7/8)</text>
+
+  <!-- Convergence lines -->
+  <!-- DNA ↔ Braille (both 64, both positional) -->
+  <line x1="430" y1="310" x2="520" y2="520" class="convergence-line strong" stroke="#ffcc00"/>
+  <!-- DNA ↔ I Ching (both 64, both positional, both hierarchical) -->
+  <line x1="430" y1="310" x2="780" y2="500" class="convergence-line strong" stroke="#ffcc00"/>
+  <!-- DNA ↔ Hieroglyphs (both have determinatives, both error-tolerant) -->
+  <line x1="430" y1="310" x2="770" y2="280" class="convergence-line strong" stroke="#44ff88"/>
+  <!-- DNA ↔ Chinese (both compositional, both have category markers) -->
+  <line x1="430" y1="310" x2="850" y2="370" class="convergence-line" stroke="#44ff88"/>
+  <!-- DNA ↔ Music (parallel channels, positional, frame markers) -->
+  <line x1="430" y1="310" x2="720" y2="550" class="convergence-line" stroke="#4488ff"/>
+  <!-- DNA ↔ Cuneiform (positional semantics, determinatives) -->
+  <line x1="430" y1="310" x2="380" y2="500" class="convergence-line" stroke="#4488ff"/>
+  <!-- DNA ↔ Morse (frequency optimization = codon usage bias) -->
+  <line x1="430" y1="310" x2="300" y2="400" class="convergence-line" stroke="#886644"/>
+
+  <!-- Braille ↔ I Ching (both exactly 64, both 6-bit) -->
+  <line x1="520" y1="520" x2="780" y2="500" class="convergence-line strong" stroke="#ffcc00"/>
+
+  <!-- Hieroglyphs ↔ Chinese (both have radicals/determinatives) -->
+  <line x1="770" y1="280" x2="850" y2="370" class="convergence-line strong" stroke="#44ff88"/>
+  <!-- Hieroglyphs ↔ Cuneiform (both have determinatives) -->
+  <line x1="770" y1="280" x2="380" y2="500" class="convergence-line" stroke="#44ff88"/>
+
+  <!-- System nodes (arranged around center) -->
+
+  <!-- 1. DNA Codons (top-left, our system) -->
+  <g class="system-node" transform="translate(430,310)">
+    <circle r="45" fill="#1a1a2e" stroke="#ffcc00" stroke-width="3"/>
+    <circle r="45" fill="url(#glow-gold)" filter="url(#blur-sm)"/>
+    <text y="-15" class="label" fill="#ffcc00">DNA</text>
+    <text y="0" class="bits">4³ = 64</text>
+    <text y="12" style="font-size:9px;fill:#aaa;">6 bits/codon</text>
+    <text y="24" style="font-size:8px;fill:#666;">Degenerate</text>
+  </g>
+
+  <!-- 2. Hieroglyphs (right) -->
+  <g class="system-node" transform="translate(770,280)">
+    <circle r="40" fill="#1a2e1a" stroke="#44ff88"/>
+    <text y="-12" class="label" fill="#44ff88">Hieroglyphs</text>
+    <text y="2" class="bits">~1000 signs</text>
+    <text y="14" style="font-size:9px;fill:#aaa;">Triple channel</text>
+    <text y="26" style="font-size:8px;fill:#666;">Det+Phon+Ideo</text>
+  </g>
+
+  <!-- 3. Chinese Characters (far right) -->
+  <g class="system-node" transform="translate(850,370)">
+    <circle r="35" fill="#1a2e1a" stroke="#44cc66"/>
+    <text y="-10" class="label" fill="#44cc66">漢字</text>
+    <text y="4" class="bits">214 radicals</text>
+    <text y="16" style="font-size:9px;fill:#aaa;">Rad+Phonetic</text>
+  </g>
+
+  <!-- 4. I Ching (lower right) -->
+  <g class="system-node" transform="translate(780,500)">
+    <circle r="38" fill="#1a1a2e" stroke="#ffaa00"/>
+    <text y="-12" class="label" fill="#ffaa00">易經</text>
+    <text y="2" class="bits">2⁶ = 64</text>
+    <text y="14" style="font-size:9px;fill:#aaa;">6 bits/hexagram</text>
+    <text y="26" style="font-size:8px;fill:#666;">Trigram pairs</text>
+  </g>
+
+  <!-- 5. Braille (lower left) -->
+  <g class="system-node" transform="translate(520,520)">
+    <circle r="35" fill="#1a1a2e" stroke="#ffaa44"/>
+    <text y="-10" class="label" fill="#ffaa44">⠿ Braille</text>
+    <text y="4" class="bits">2⁶ = 64</text>
+    <text y="16" style="font-size:9px;fill:#aaa;">6 bits/cell</text>
+  </g>
+
+  <!-- 6. Cuneiform (left) -->
+  <g class="system-node" transform="translate(380,500)">
+    <circle r="35" fill="#2e1a1a" stroke="#ff8844"/>
+    <text y="-10" class="label" fill="#ff8844">𒀀 Cuneiform</text>
+    <text y="4" class="bits">Base-60</text>
+    <text y="16" style="font-size:9px;fill:#aaa;">5.9 bits/digit</text>
+  </g>
+
+  <!-- 7. Musical Notation (bottom) -->
+  <g class="system-node" transform="translate(720,550)">
+    <circle r="33" fill="#1a1a2e" stroke="#8888ff"/>
+    <text y="-10" class="label" fill="#8888ff">♪ Music</text>
+    <text y="4" class="bits">5+ channels</text>
+    <text y="16" style="font-size:9px;fill:#aaa;">7-15 bits/event</text>
+  </g>
+
+  <!-- 8. Morse Code (far left) -->
+  <g class="system-node" transform="translate(300,400)">
+    <circle r="30" fill="#2e2e1a" stroke="#886644"/>
+    <text y="-8" class="label" fill="#886644">·−· Morse</text>
+    <text y="6" class="bits">Var. length</text>
+    <text y="18" style="font-size:9px;fill:#aaa;">4.5 bits/char</text>
+  </g>
+
+  <!-- The 6 Convergence Properties (bottom panel) -->
+  <g transform="translate(50, 620)">
+    <text x="0" y="0" class="legend-title">6 Universal Convergence Properties</text>
+
+    <rect x="0" y="10" width="170" height="60" rx="4" fill="#1a1a2e" stroke="#ffcc0044"/>
+    <text x="85" y="28" style="font-size:11px;fill:#ffcc00;text-anchor:middle;font-weight:bold;">①  64 Codespace</text>
+    <text x="85" y="42" style="font-size:9px;fill:#aaa;text-anchor:middle;">2⁶ = 4³ = 8² = 64</text>
+    <text x="85" y="55" style="font-size:8px;fill:#666;text-anchor:middle;">DNA, Braille, I Ching, Cuneiform(≈60)</text>
+
+    <rect x="185" y="10" width="170" height="60" rx="4" fill="#1a2e1a" stroke="#44ff8844"/>
+    <text x="270" y="28" style="font-size:11px;fill:#44ff88;text-anchor:middle;font-weight:bold;">②  Determinatives</text>
+    <text x="270" y="42" style="font-size:9px;fill:#aaa;text-anchor:middle;">Category metadata channel</text>
+    <text x="270" y="55" style="font-size:8px;fill:#666;text-anchor:middle;">Hieroglyph, Chinese, Cuneiform, Music, DNA</text>
+
+    <rect x="370" y="10" width="170" height="60" rx="4" fill="#1a1a2e" stroke="#4488ff44"/>
+    <text x="455" y="28" style="font-size:11px;fill:#4488ff;text-anchor:middle;font-weight:bold;">③  Positional Weight</text>
+    <text x="455" y="42" style="font-size:9px;fill:#aaa;text-anchor:middle;">Unequal semantic load/pos</text>
+    <text x="455" y="55" style="font-size:8px;fill:#666;text-anchor:middle;">ALL 7 systems (not Morse)</text>
+
+    <rect x="555" y="10" width="170" height="60" rx="4" fill="#2e1a2e" stroke="#ff44ff44"/>
+    <text x="640" y="28" style="font-size:11px;fill:#ff88ff;text-anchor:middle;font-weight:bold;">④  Hierarchical Factor</text>
+    <text x="640" y="42" style="font-size:9px;fill:#aaa;text-anchor:middle;">Intermediate groupings</text>
+    <text x="640" y="55" style="font-size:8px;fill:#666;text-anchor:middle;">DNA(doublet), I Ching(trigram), Chinese(rad)</text>
+
+    <rect x="740" y="10" width="170" height="60" rx="4" fill="#2e2e1a" stroke="#ffaa0044"/>
+    <text x="825" y="28" style="font-size:11px;fill:#ffaa00;text-anchor:middle;font-weight:bold;">⑤  Error Tolerance</text>
+    <text x="825" y="42" style="font-size:9px;fill:#aaa;text-anchor:middle;">Graceful degradation</text>
+    <text x="825" y="55" style="font-size:8px;fill:#666;text-anchor:middle;">DNA(degeneracy), Hieroglyph(triple), Music</text>
+
+    <rect x="925" y="10" width="170" height="60" rx="4" fill="#1a2e2e" stroke="#44ffff44"/>
+    <text x="1010" y="28" style="font-size:11px;fill:#44ffff;text-anchor:middle;font-weight:bold;">⑥  5-10 bits/symbol</text>
+    <text x="1010" y="42" style="font-size:9px;fill:#aaa;text-anchor:middle;">Information density range</text>
+    <text x="1010" y="55" style="font-size:8px;fill:#666;text-anchor:middle;">ALL 8 systems converge here</text>
+  </g>
+
+  <!-- The Glyph Table (right panel) — our v3 synthesis -->
+  <g transform="translate(950, 80)">
+    <text x="100" y="0" class="legend-title" style="fill:#ffcc00;text-anchor:middle;">v3 Glyph Synthesis</text>
+    <text x="100" y="15" style="font-size:9px;fill:#888;text-anchor:middle;">8×8 = 64 (takes from all systems)</text>
+
+    <!-- Column headers (P1 glyphs) -->
+    <text x="35" y="38" class="glyph-header">σ</text>
+    <text x="60" y="38" class="glyph-header">μ</text>
+    <text x="85" y="38" class="glyph-header">ς</text>
+    <text x="110" y="38" class="glyph-header">ρ</text>
+    <text x="135" y="38" class="glyph-header">∂</text>
+    <text x="160" y="38" class="glyph-header">→</text>
+    <text x="185" y="38" class="glyph-header">κ</text>
+    <text x="210" y="38" class="glyph-header">N</text>
+
+    <!-- Row 0: σ family (Data) -->
+    <text x="15" y="57" class="glyph-header">σ</text>
+    <rect x="22" y="44" width="24" height="18" class="glyph-cell" fill="#1a1a2e"/>
+    <text x="34" y="55" class="glyph-label" style="font-size:7px;">nop</text>
+    <rect x="47" y="44" width="24" height="18" class="glyph-cell" fill="#1a1a2e"/>
+    <text x="59" y="55" class="glyph-label" style="font-size:7px;">dup</text>
+    <rect x="72" y="44" width="24" height="18" class="glyph-cell" fill="#1a1a2e"/>
+    <text x="84" y="55" class="glyph-label" style="font-size:7px;">swp</text>
+    <rect x="97" y="44" width="24" height="18" class="glyph-cell" fill="#1a1a2e"/>
+    <text x="109" y="55" class="glyph-label" style="font-size:7px;">pop</text>
+    <rect x="122" y="44" width="24" height="18" class="glyph-cell" fill="#1a1a2e"/>
+    <text x="134" y="55" class="glyph-label" style="font-size:7px;">rot</text>
+    <rect x="147" y="44" width="24" height="18" class="glyph-cell" fill="#1a1a2e"/>
+    <text x="159" y="55" class="glyph-label" style="font-size:7px;">ovr</text>
+    <rect x="172" y="44" width="24" height="18" class="glyph-cell" fill="#1a1a2e"/>
+    <text x="184" y="55" class="glyph-label" style="font-size:7px;">pck</text>
+    <rect x="197" y="44" width="24" height="18" class="glyph-cell" fill="#1a1a2e"/>
+    <text x="209" y="55" class="glyph-label" style="font-size:7px;">dep</text>
+
+    <!-- Row 1: μ family (Transform) -->
+    <text x="15" y="75" class="glyph-header">μ</text>
+    <rect x="22" y="62" width="24" height="18" class="glyph-cell" fill="#1a2e1a"/>
+    <text x="34" y="73" class="glyph-label" style="font-size:7px;">add</text>
+    <rect x="47" y="62" width="24" height="18" class="glyph-cell" fill="#1a2e1a"/>
+    <text x="59" y="73" class="glyph-label" style="font-size:7px;">sub</text>
+    <rect x="72" y="62" width="24" height="18" class="glyph-cell" fill="#1a2e1a"/>
+    <text x="84" y="73" class="glyph-label" style="font-size:7px;">mul</text>
+    <rect x="97" y="62" width="24" height="18" class="glyph-cell" fill="#1a2e1a"/>
+    <text x="109" y="73" class="glyph-label" style="font-size:7px;">div</text>
+    <rect x="122" y="62" width="24" height="18" class="glyph-cell" fill="#1a2e1a"/>
+    <text x="134" y="73" class="glyph-label" style="font-size:7px;">mod</text>
+    <rect x="147" y="62" width="24" height="18" class="glyph-cell" fill="#1a2e1a"/>
+    <text x="159" y="73" class="glyph-label" style="font-size:7px;">neg</text>
+    <rect x="172" y="62" width="24" height="18" class="glyph-cell" fill="#1a2e1a"/>
+    <text x="184" y="73" class="glyph-label" style="font-size:7px;">abs</text>
+    <rect x="197" y="62" width="24" height="18" class="glyph-cell" fill="#1a2e1a"/>
+    <text x="209" y="73" class="glyph-label" style="font-size:7px;">inc</text>
+
+    <!-- Row 2: ς family (State) -->
+    <text x="15" y="93" class="glyph-header">ς</text>
+    <rect x="22" y="80" width="24" height="18" class="glyph-cell" fill="#2e1a1a"/>
+    <text x="34" y="91" class="glyph-label" style="font-size:7px;">lod</text>
+    <rect x="47" y="80" width="24" height="18" class="glyph-cell" fill="#2e1a1a"/>
+    <text x="59" y="91" class="glyph-label" style="font-size:7px;">sto</text>
+    <rect x="72" y="80" width="24" height="18" class="glyph-cell" fill="#2e1a1a"/>
+    <text x="84" y="91" class="glyph-label" style="font-size:7px;">ps0</text>
+    <rect x="97" y="80" width="24" height="18" class="glyph-cell" fill="#2e1a1a"/>
+    <text x="109" y="91" class="glyph-label" style="font-size:7px;">ps1</text>
+    <rect x="122" y="80" width="24" height="18" class="glyph-cell" fill="#2e1a1a"/>
+    <text x="134" y="91" class="glyph-label" style="font-size:7px;">pN1</text>
+    <rect x="147" y="80" width="24" height="18" class="glyph-cell" fill="#2e1a1a"/>
+    <text x="159" y="91" class="glyph-label" style="font-size:7px;">pac</text>
+    <rect x="172" y="80" width="24" height="18" class="glyph-cell" fill="#2e1a1a"/>
+    <text x="184" y="91" class="glyph-label" style="font-size:7px;">sac</text>
+    <rect x="197" y="80" width="24" height="18" class="glyph-cell" fill="#2e1a1a"/>
+    <text x="209" y="91" class="glyph-label" style="font-size:7px;">pek</text>
+
+    <!-- Row 3-7 abbreviated labels -->
+    <text x="15" y="111" class="glyph-header">ρ</text>
+    <rect x="22" y="98" width="203" height="18" class="glyph-cell" fill="#1a1a1a"/>
+    <text x="123" y="109" class="glyph-label" style="font-size:8px;fill:#888;">dec sign clamp min max pow sqrt log2</text>
+
+    <text x="15" y="129" class="glyph-header">∂</text>
+    <rect x="22" y="116" width="203" height="18" class="glyph-cell" fill="#1a1a1a"/>
+    <text x="123" y="127" class="glyph-label" style="font-size:8px;fill:#888;">ent halt err yld ast out msz mcl</text>
+
+    <text x="15" y="147" class="glyph-header">→</text>
+    <rect x="22" y="134" width="203" height="18" class="glyph-cell" fill="#1a1a1a"/>
+    <text x="123" y="145" class="glyph-label" style="font-size:8px;fill:#888;">jmp jif jiz jbk cal ret ife cmp</text>
+
+    <text x="15" y="165" class="glyph-header">κ</text>
+    <rect x="22" y="152" width="203" height="18" class="glyph-cell" fill="#1a1a1a"/>
+    <text x="123" y="163" class="glyph-label" style="font-size:8px;fill:#888;">eq neq lt gt and or dp2 emp</text>
+
+    <text x="15" y="183" class="glyph-header">N</text>
+    <rect x="22" y="170" width="203" height="18" class="glyph-cell" fill="#1a1a1a"/>
+    <text x="123" y="181" class="glyph-label" style="font-size:8px;fill:#888;">shl shr ban bor bxr bnt cin crd</text>
+
+    <!-- What each system contributed -->
+    <text x="100" y="210" style="font-size:10px;fill:#ffcc00;text-anchor:middle;font-weight:bold;">Borrowed From:</text>
+    <text x="100" y="225" style="font-size:8px;fill:#44ff88;text-anchor:middle;">Hieroglyphs → Determinative (P0 = family marker)</text>
+    <text x="100" y="237" style="font-size:8px;fill:#ffaa00;text-anchor:middle;">I Ching → 8×8 factoring (trigram = glyph)</text>
+    <text x="100" y="249" style="font-size:8px;fill:#ffcc00;text-anchor:middle;">DNA → Positional weighting + degeneracy</text>
+    <text x="100" y="261" style="font-size:8px;fill:#44cc66;text-anchor:middle;">Chinese → Radical = semantic classifier</text>
+    <text x="100" y="273" style="font-size:8px;fill:#8888ff;text-anchor:middle;">Music → Parallel channels (family + variant)</text>
+    <text x="100" y="285" style="font-size:8px;fill:#886644;text-anchor:middle;">Morse → Freq-weighted (common ops in σ/μ rows)</text>
+    <text x="100" y="297" style="font-size:8px;fill:#ff8844;text-anchor:middle;">Cuneiform → Positional value (P0×8 + P1)</text>
+    <text x="100" y="309" style="font-size:8px;fill:#ffaa44;text-anchor:middle;">Braille → 6-bit max utilization (64/64 used)</text>
+  </g>
+
+  <!-- Primitive ring around center -->
+  <g class="primitive-ring" transform="translate(600,400)">
+    <circle r="65"/>
+    <text x="0" y="-72" style="font-size:12px;fill:#ffcc0088;">σ</text>
+    <text x="51" y="-51" style="font-size:12px;fill:#ffcc0088;">μ</text>
+    <text x="72" y="0" style="font-size:12px;fill:#ffcc0088;">ς</text>
+    <text x="51" y="51" style="font-size:12px;fill:#ffcc0088;">ρ</text>
+    <text x="0" y="72" style="font-size:12px;fill:#ffcc0088;">∂</text>
+    <text x="-51" y="51" style="font-size:12px;fill:#ffcc0088;">→</text>
+    <text x="-72" y="0" style="font-size:12px;fill:#ffcc0088;">κ</text>
+    <text x="-51" y="-51" style="font-size:12px;fill:#ffcc0088;">N</text>
+  </g>
+
+  <!-- Score card -->
+  <g transform="translate(50,80)">
+    <text x="0" y="0" class="legend-title">Intersection Matrix</text>
+    <text x="0" y="18" style="font-size:9px;fill:#aaa;">Properties shared with DNA:</text>
+    <text x="0" y="34" style="font-size:9px;fill:#ffcc00;">I Ching    ████████ 5/6  (64, positional, hierarchical, 6-bit, factored)</text>
+    <text x="0" y="48" style="font-size:9px;fill:#44ff88;">Hieroglyph ███████░ 4/6  (determinative, error-tolerant, positional, 5-10bit)</text>
+    <text x="0" y="62" style="font-size:9px;fill:#ffaa44;">Braille    ██████░░ 4/6  (64 codes, 6 bits, positional, factored)</text>
+    <text x="0" y="76" style="font-size:9px;fill:#44cc66;">Chinese    █████░░░ 3/6  (determinative, positional, compositional)</text>
+    <text x="0" y="90" style="font-size:9px;fill:#8888ff;">Music      █████░░░ 3/6  (parallel channels, positional, error-tolerant)</text>
+    <text x="0" y="104" style="font-size:9px;fill:#ff8844;">Cuneiform  ████░░░░ 3/6  (determinative, positional, ~60 codes)</text>
+    <text x="0" y="118" style="font-size:9px;fill:#886644;">Morse      ██░░░░░░ 2/6  (freq-optimized, 5-10 bit range)</text>
+
+    <text x="0" y="145" style="font-size:10px;fill:#fff;font-weight:bold;">→ nexcore-dna v3 Glyph: 6/6 properties</text>
+    <text x="0" y="160" style="font-size:9px;fill:#ffcc00;">64 codes + determinative(P0) + positional + hierarchical(8×8) + error-tolerant + 6-bit</text>
+  </g>
+</svg>
+</body>
+</html>

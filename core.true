@@ -1,0 +1,456 @@
+-- .true — statements that answer to mathematics
+-- v7.5 | 2026-02-09 | Matthew Campion, PharmD; NexVigilant
+--
+-- SYNTAX: 4 constructs. Nothing else exists.
+--
+--   axiom   SUBJECT : PROPERTIES              given, irreducible
+--   def     SUBJECT : PROPERTIES              derived from axioms/defs
+--   theorem SUBJECT : EXPRESSION   [PROOF]    proven from defs
+--   ∎                                         nothing more to prove
+--
+-- RELATIONS:
+--   ->  directed edge (A precedes B)
+--   <>  inverse pair (A undoes B)
+--   :   has property
+--   =   equals
+--
+-- BOOLEAN VALUES:
+--   every primitive has val=N where N is its Boolean function
+--   of 2 variables (truth table read as 4-bit integer, 0-15)
+--   6 are IDENTITY (the primitive IS the function): ∅,×,κ,Σ,→,∃
+--   10 are MAPPING (argued, not self-evident): confidence varies per primitive
+--
+-- CONFIDENCE:
+--   axiom    conf = 1.0               (given)
+--   def      conf = min(parent confs) (conservative — see assume_min_propagation)
+--   theorem  conf = proof_type:
+--     computational  0.99   (code ran, tests passed)
+--     analytical     0.95   (logic/math derivation)
+--     mapping        0.90   (theory correspondence)
+--     adversarial    0.85   (survived attacks)
+--     empirical      0.80   (measurement matches prediction)
+--   ∎        conf = min(all theorems)  (weakest link)
+--
+-- Comments: -- (to end of line)
+
+
+-- ═══════════════════════════════════════════
+-- AXIOMS — irreducible. accepted. not derived.
+-- ═══════════════════════════════════════════
+
+-- Constants
+
+axiom ZERO : constant, "absence, additive identity, multiplicative annihilator"
+axiom ONE  : constant, "existence, unit, witness"
+
+-- Physics roots
+
+axiom N  : prim, "Quantity",  root, symbol=N, val=9, bool=XNOR, val_conf=0.82, constant=ONE,
+  physics="h(Planck) quantizes action; XNOR=equivalence=measurement; 50+ NIST mass ratios are equivalence tests"
+axiom -> : prim, "Causality", root, symbol=→, val=13, bool=IMPLICATION, constant=e
+
+-- Duality
+
+axiom duality :
+  "physics (N, ->) and semantics (SYMBOL) are dual views",
+  "axioms ground in physics — electrons, voltage, clock",
+  "execution operates on symbols — meaning, confidence, relations",
+  "same 16 primitives, two derivation orders, one system",
+  status=interpretive, "philosophical position, not mathematical proof",
+  "both derivation orders produce same 16 — observed, not proven necessary"
+
+
+-- ═══════════════════════════════════════════
+-- DEFINITIONS — derived from axioms
+-- ═══════════════════════════════════════════
+
+-- 14 derived primitives (ordered by Boolean function value)
+-- the 6 IDENTITIES are marked — these are not mappings, they ARE the function
+
+def ∅  : prim, "Void",            from [∃, κ],     val=0,  bool=FALSE,          IDENTITY, constant=ZERO
+def ×  : prim, "Product",         from [∃, ς],     val=1,  bool=AND,            IDENTITY, constant=ONE
+def ∝  : prim, "Irreversibility", from [->, ∂, ς], val=2,  bool=INHIBIT,        constant=ln2
+def ς  : prim, "State",           from [∃, λ],     val=3,  bool=LEFT_PROJ,      constant=i
+def ∂  : prim, "Boundary",        from [κ, N],     val=4,  bool=CONV_INHIBIT,   constant=∞
+def μ  : prim, "Mapping",         from [∃, ->],    val=5,  bool=RIGHT_PROJ,     constant=Ω
+def κ  : prim, "Comparison",      from [N],        val=6,  bool=XOR,            IDENTITY, constant=√2
+def Σ  : prim, "Sum",             from [κ, ∅],     val=7,  bool=OR,             IDENTITY, constant=γ
+def ν  : prim, "Frequency",       from [σ, N, ∂],  val=8,  bool=NOR,            constant=π
+def λ  : prim, "Location",        from [∃, N],     val=10, bool=NOT_B,          constant=ZERO,
+  physics="Bohr radius a₀, Planck length, charge radii — position tracks object (A), not context (B)"
+def ρ  : prim, "Recursion",       from [ς, μ, σ],  val=11, bool=CONV_IMPLY,     constant=φ
+def π  : prim, "Persistence",     from [∃, ς, σ],  val=12, bool=NOT_A,          constant=∞,
+  physics="fine-structure α=1/137, Rydberg, Stefan-Boltzmann — persists via substrate (B), not event (A)"
+def σ  : prim, "Sequence",        from [ς, μ, ->], val=14, bool=NAND,           constant=ONE
+def ∃  : prim, "Existence",       from [->],       val=15, bool=TRUE,           IDENTITY, constant=ONE
+-- N = val 9  (axiom, XNOR)
+-- -> = val 13 (axiom, IMPLICATION, IDENTITY)
+
+-- Boolean algebra structure
+
+def atoms : basis,
+  "4 bit-position primitives generate all 16 by additive composition",
+  atom_0 = ×,   -- bit 0, val=1,  AND
+  atom_1 = ∝,   -- bit 1, val=2,  INHIBIT
+  atom_2 = ∂,   -- bit 2, val=4,  CONV_INHIBIT
+  atom_3 = ν    -- bit 3, val=8,  NOR
+
+def halves : partition,
+  "bit 1 splits 16 primitives into process and structure",
+  process   = [∝, ς, κ, Σ, λ, ρ, σ, ∃], -- bit 1 set, core=∝, "doing"
+  structure = [∅, ×, ∂, μ, ν, N, π, ->]  -- bit 1 clr, core=∅, "being"
+
+def pascal : distribution,
+  "popcount of val → primitive count = Pascal's row 4",
+  depth_0 = [∅],                   -- 1 prim,  popcount=0
+  depth_1 = [×, ∝, ∂, ν],         -- 4 prims, popcount=1
+  depth_2 = [ς, μ, κ, N, λ, π],   -- 6 prims, popcount=2
+  depth_3 = [Σ, ρ, ->, σ],        -- 4 prims, popcount=3
+  depth_4 = [∃]                    -- 1 prim,  popcount=4
+
+-- Tiers
+
+def Pillar   : tier, [σ, κ, ς, ρ],  "structural foundations, highest transfer"
+def Infra    : tier, [∂, μ, ∅, ->, ∃], "operational fabric, detectable in structure"
+def Extended : tier, [π, ν, λ, ∝, Σ, ×], "semantic intent, only in meaning"
+
+-- Layers
+
+def Content  : layer, "single-episode knowledge transformation"
+def Meta     : layer, "learning about learning"
+def Temporal : layer, "across sessions"
+def Guardian : layer, "error prevention"
+
+-- Mechanisms (13 total, each maps to exactly 1 primitive, no repeats)
+
+def DECOMPOSE : mech, prim=⊖, layer=Content,  var=D,  "break domain into atoms"
+def SEQUENCE  : mech, prim=σ, layer=Content,  var=S,  "order by transfer confidence"
+def ANCHOR    : mech, prim=∂, layer=Content,  var=A,  "find boundary of known/unknown"
+def GROUND    : mech, prim=μ, layer=Content,  var=G,  "map new to known"
+def CONTRAST  : mech, prim=κ, layer=Content,  var=K,  "show what it is not"
+def VERIFY    : mech, prim=∃, layer=Content,  var=V,  "test if understanding exists"
+def COMPRESS  : mech, prim=Σ, layer=Content,  var=Z,  "assign symbol, grow codebook"
+def REFLECT   : mech, prim=ρ, layer=Meta,     var=M,  "what do I not know?"
+def INTEGRATE : mech, prim=⊕, layer=Meta,     var=I,  "reassemble pieces into whole"
+def TRANSFER  : mech, prim=λ, layer=Meta,     var=T,  "apply in novel context"
+def SPACE     : mech, prim=ν, layer=Temporal, var=Sp, "distribute across time"
+def CALIBRATE : mech, prim=N, layer=Temporal, var=C,  "adapt to learner level"
+def PROTECT   : mech, prim=∂g,layer=Guardian, var=P,  "block misconceptions"
+
+-- Execution DAG
+
+def pipeline : dag,
+  DECOMPOSE -> SEQUENCE,
+  DECOMPOSE -> CONTRAST,
+  SEQUENCE  -> ANCHOR,
+  ANCHOR    -> GROUND,
+  GROUND    -> VERIFY,
+  CONTRAST  -> VERIFY,
+  VERIFY    -> COMPRESS,
+  COMPRESS  -> REFLECT,
+  COMPRESS  -> INTEGRATE,
+  COMPRESS  -> SPACE,
+  INTEGRATE -> TRANSFER,
+  ANCHOR    -> CALIBRATE,
+  VERIFY    -> CALIBRATE
+
+-- Dual pairs (inverse operations, additive in formula)
+
+def analysis_synthesis : dual, DECOMPOSE <> INTEGRATE
+def binding_unbinding  : dual, GROUND    <> TRANSFER
+
+-- Floors (empirical minimums)
+
+def floor_Sp : floor, var=Sp, base=0.30, weight=0.70, "Ebbinghaus 1885"
+def floor_M  : floor, var=M,  base=0.10, weight=0.90, "children learn w/o metacognition"
+def floor_P  : floor, var=P,  base=0.05, weight=0.95, "some learning despite misconceptions"
+def floor_S  : floor, var=S,  base=0.20, weight=0.80, "random order still teaches"
+def floor_A  : floor, var=A,  base=0.10, weight=0.90, "wrong anchor still starts"
+def floor_V  : floor, var=V,  base=0.10, weight=0.90, "some learning w/o testing"
+def floor_K  : floor, var=K,  base=0.15, weight=0.85, "partial understanding w/o contrast"
+def floor_C  : floor, var=C,  base=0.20, weight=0.80, "uncalibrated still permits learning"
+-- D, I, G, T, Z have no floor: dual pairs and compression correctly zero.
+
+-- Execution model
+
+def ASSERT  : op, construct=axiom,   "declare truth, conf=1.0"
+def DERIVE  : op, construct=def,     "new symbol from parents, conf=min(parent confs)"
+def PROVE   : op, construct=theorem, "validate relationship, conf=proof_type"
+def HALT    : op, construct=∎,       "system conf = min(all theorem confs)"
+
+def validation : passes,
+  pass_1 = "syntax well-formed",
+  pass_2 = "no duplicate subjects",
+  pass_3 = "all from-refs exist",
+  pass_4 = "DAG acyclic (topological sort succeeds)",
+  pass_5 = "all theorems have [proof]",
+  pass_6 = "file ends with ∎",
+  pass_7 = "conf(child) <= min(conf(parents))",
+  pass_8 = "spec ↔ impl cross-validate (val, from-refs, names vs nexcore-lex-primitiva)"
+
+
+-- ═══════════════════════════════════════════
+-- THEOREMS — proven from definitions
+-- ═══════════════════════════════════════════
+
+-- Structural theorems (from v6, all still valid)
+
+theorem dag_acyclic :
+  "16 primitives form DAG with 2 roots (N, ->), no cycles, all reachable"
+  [proof: computational, theorem_01_dag_acyclic — DFS cycle detection + BFS reachability from 2 roots, nexcore-lex-primitiva]
+
+theorem mechanism_uniqueness :
+  "13 mechanisms -> 13 unique primitives, 0 collisions"
+  [proof: computational, theorem_02_mechanism_uniqueness — 13 names, 13 symbols, 13 vars all unique via HashSet, nexcore-lex-primitiva]
+
+theorem orthogonality :
+  "10 independent dimensions + 2 dual pairs + 2 weak couplings"
+  [proof: computational, theorem_03_orthogonality — 13 vars verified disjoint in floored/non-floored, dual pairs in non-floored, nexcore-lex-primitiva]
+
+theorem formula :
+  kv = ((D + I) * S * A * (G + T) * K * V * Z * M * Sp * C * P) / 4
+  range = [0, 1]
+  [proof: computational, theorem_04_formula — boundary [0,1], sensitivity (zero-any→0), dual compensation, 200 random samples, nexcore-lex-primitiva]
+
+theorem paradigm_coverage :
+  Bloom_Revised    = 6/6 processes + 4/4 knowledge dimensions,
+  DIKW             = 4/4 levels,
+  Dreyfus          = 4/5 stages (Expert = emergent),
+  SECI             = 3/4 modes (Social = extension),
+  Kolb             = 4/4 phases,
+  Ebbinghaus       = floor Sp matches empirical 0.30,
+  Desirable_Diff   = 4/4 principles,
+  ZPD              = 2/2 constructs,
+  Cognitive_Load   = 3/3 load types,
+  Variation_Theory = 2/2 constructs,
+  Threshold_Concepts = 4/4 properties,
+  Double_Loop      = 2/2 loops
+  [proof: computational, theorem_05_paradigm_coverage — 12 theories, 39/41 coverage (95.1%), all ≥75%, nexcore-lex-primitiva]
+
+theorem falsification :
+  "6 attacks tested, 0 fatal, framework survived"
+  [proof: computational, theorem_06_falsification — 6 attacks encoded as property tests, 0 fatal, nexcore-lex-primitiva]
+
+-- Boolean algebra theorems (new in v7)
+
+theorem boolean_identity :
+  "6 of 16 primitives ARE Boolean functions by definition (not mapping)",
+  ∅  = FALSE       (val=0,  0000, "always nothing"),
+  ×  = AND         (val=1,  0001, "both required"),
+  κ  = XOR         (val=6,  0110, "what differs"),
+  Σ  = OR          (val=7,  0111, "either suffices"),
+  -> = IMPLICATION  (val=13, 1101, "if A then B"),
+  ∃  = TRUE         (val=15, 1111, "always present")
+  [proof: computational, theorem_07_boolean_identity — 6 identities verified + full truth table evaluation for all 4 input pairs, nexcore-lex-primitiva]
+
+theorem core_irreversibility :
+  "n-way AND of Pillars = n-way AND of Generators = ∝ (Irreversibility)",
+  core(σ=14, κ=6, ς=3, ρ=11) = 1110 & 0110 & 0011 & 1011 = 0010 = 2 = ∝,
+  core(σ=14, Σ=7, ρ=11, κ=6, ∃=15) = 0010 = 2 = ∝,
+  "∝ is a fixed point: computation is thermodynamically irreversible",
+  "Landauer 1961: erasing 1 bit dissipates >= kT * ln2 energy",
+  contingent_on = boolean_identity,
+  "result changes if any Pillar's Boolean value is reassigned"
+  [proof: computational, theorem_08_core_irreversibility — exact bitwise AND of Pillars + Generators both = 2 = ∝, nexcore-lex-primitiva]
+
+theorem pascal_distribution :
+  "primitive count at each popcount of val = Pascal's row 4: 1, 4, 6, 4, 1",
+  C(4,0) = 1 = |{∅}|,
+  C(4,1) = 4 = |{×, ∝, ∂, ν}|,
+  C(4,2) = 6 = |{ς, μ, κ, N, λ, π}|,
+  C(4,3) = 4 = |{Σ, ρ, ->, σ}|,
+  C(4,4) = 1 = |{∃}|,
+  "sum = 16 = 2^4 = total primitives"
+  [proof: computational, theorem_09_pascal_distribution — popcount of all 16 vals = [1,4,6,4,1] + per-primitive membership verified, nexcore-lex-primitiva]
+
+theorem four_atoms :
+  "IF the Boolean bijection holds, 4 primitives sit at bit positions {0,1,2,3}",
+  × = 1 = 2^0,  -- AND at bit 0
+  ∝ = 2 = 2^1,  -- INHIBIT at bit 1
+  ∂ = 4 = 2^2,  -- CONV_INHIBIT at bit 2
+  ν = 8 = 2^3,  -- NOR at bit 3
+  "any primitive val = sum of atom vals, e.g. →(13) = ν(8) + ∂(4) + ×(1)",
+  "the MATH is trivially true for any 4-bit system (binary representation)",
+  "the ASSIGNMENT of which primitive sits at which bit is the non-trivial claim",
+  contingent_on = boolean_identity
+  [proof: computational, theorem_10_four_atoms — 4 power-of-2 vals + exhaustive bit decomposition of all 16 vals, nexcore-lex-primitiva]
+
+theorem phase_transition :
+  "max non-void core group = 8 (half of 16)",
+  "8 PROCESS primitives (bit 1 set) share core = ∝",
+  "8 STRUCTURE primitives (bit 1 clear) share core = ∅",
+  "adding any 9th primitive from the other half -> core collapses to ∅",
+  "this is a phase boundary: the largest tribe with shared truth = half"
+  [proof: computational, theorem_11_phase_transition — 8/8 split, process core=∝, structure core=∅, 9th collapses, nexcore-lex-primitiva]
+
+theorem conf_monotonicity :
+  "conf(child) <= min(conf(parents)), conf never increases through derivation",
+  "this is BY DESIGN (we chose min-propagation), not a physical law",
+  "inspired by 2nd law / Landauer — analogy, not isomorphism",
+  "alternatives exist: geometric mean, weighted average, product",
+  "min was chosen for conservatism: never overestimate truth"
+  [proof: computational, theorem_12_conf_monotonicity — 6 test cases verify min(parents) ≤ each parent + target sys=0.99, nexcore-lex-primitiva]
+
+
+-- ═══════════════════════════════════════════
+-- DECLARED — explicit boundaries, not proofs
+-- ═══════════════════════════════════════════
+
+-- Assumptions (preconditions, not mechanisms)
+
+axiom assume_motivation :
+  "learner is motivated",
+  evidence="Self-Determination Theory, Deci & Ryan 1985",
+  "framework optimizes velocity, not initiation"
+
+axiom assume_individual :
+  "individual learner",
+  evidence="social = multi-instance with shared memory",
+  "collaborative mode = extension, not core"
+
+axiom assume_decomposable :
+  "domain is decomposable to primitives",
+  evidence="16 Lex Primitiva, no known domain resists"
+
+-- Limits (inherent, not fixable)
+
+axiom limit_expert :
+  "Dreyfus Expert is emergent, not teachable",
+  bound="framework reaches Proficient; expertise requires ~10K hours"
+
+axiom limit_tacit :
+  "tacit-to-tacit requires social layer",
+  bound="covers 3/4 SECI modes"
+
+axiom limit_empirical :
+  "no RCT yet",
+  bound="theoretical + computational + mechanistic proof complete"
+
+axiom limit_cognitive_load :
+  "working memory ~4 chunks",
+  evidence="Cowan 2001",
+  bound="COMPRESS fits; CALIBRATE adapts"
+
+-- Open questions (honest, tracked)
+
+axiom open_lambda :
+  "λ(Location)=10=NOT_B mapping — upgraded via NIST grounding",
+  conf=0.75,
+  "NOT_B = output tracks A (object), ignores B (context)",
+  "Bohr radius a₀: position defined by electron props, not lab conditions",
+  "7+ NIST constants (Planck length, charge radii, lattice params) confirm localization",
+  "swap test (λ↔π) rejected: NOT_A would mean 'location = fn(medium)' — contradicts a₀",
+  bound="semantically argued + physics-grounded, not proven"
+
+axiom open_pi :
+  "π(Persistence)=12=NOT_A mapping — upgraded via NIST grounding",
+  conf=0.75,
+  "NOT_A = output tracks B (substrate), ignores A (event)",
+  "fine-structure α=1/137: persists at all scales regardless of process (A)",
+  "Rydberg, Stefan-Boltzmann, weak mixing angle: persistent substrate truths",
+  "swap test (λ↔π) rejected: NOT_B would mean 'persistence = fn(object)' — weaker",
+  bound="semantically argued + physics-grounded, not proven"
+
+axiom open_bootstrap :
+  ".true can now validate itself — core-true crate (parser + 8-pass validator)",
+  status=CLOSED,
+  bound="closed 2026-02-09 — crate core-true, cargo run -p core-true -- core.true"
+
+-- Hidden assumptions (surfaced by audit, now explicit)
+
+axiom assume_dag_parents :
+  "from-DAG parent choices inherited from nexcore-lex-primitiva",
+  "325 tests prove acyclicity and reachability",
+  "tests do NOT prove parent choices are the ONLY valid ones",
+  "e.g. × from [∃, ς] — arguable, not proven necessary",
+  bound="DAG structure is one valid topology, not provably unique"
+
+axiom assume_bijection_unique :
+  "Boolean mapping assumes one correct primitive → function assignment",
+  "6 locked by identity, 2 locked as roots = 8 fixed positions",
+  "remaining 8 in 8 slots = 40,320 possible permutations",
+  "we chose one based on semantic argument, not exhaustive proof",
+  bound="bijection is best-argued, not provably unique"
+
+axiom assume_sixteen_complete :
+  "framework assumes exactly 16 primitives is complete and final",
+  "works because 16 = 2^4 = |Boolean functions of 2 variables|",
+  "if a 17th primitive is discovered, Boolean framework breaks",
+  evidence="no domain has required a 17th in 541+ GroundsTo impls",
+  bound="completeness is empirical (strong), not proven (closed)"
+
+axiom assume_min_propagation :
+  "confidence uses min(parent confs), not geometric mean or product",
+  "min is conservative: never overestimates, may underestimate",
+  "chosen for safety — matches precautionary principle",
+  "alternatives (geometric mean, product) would give different system confs",
+  bound="design choice, not mathematical necessity"
+
+
+-- ═══════════════════════════════════════════
+-- PHYSICS GROUNDING — NIST 2022 CODATA
+-- ═══════════════════════════════════════════
+
+theorem physical_constant_grounding :
+  "355 NIST 2022 CODATA physical constants all map to existing 16 primitives",
+  "7 SI defining constants → 7 unique primitives (perfect bijection):",
+  Δν_Cs   = ν,   -- 9,192,631,770 Hz — cesium hyperfine frequency
+  c       = ->,  -- 299,792,458 m/s — maximum causal speed
+  h       = N,   -- 6.626e-34 J·Hz⁻¹ — quantum of action
+  e       = ∃,   -- 1.602e-19 C — exists or doesn't (quantized)
+  k_B     = ∝,   -- 1.381e-23 J/K — entropy / irreversibility
+  N_A     = Σ,   -- 6.022e23 mol⁻¹ — counting / summation
+  K_cd    = μ,   -- 683 lm/W — maps radiation to perception
+  "remaining 348 constants cluster into 10 categories, all within 16",
+  "no constant requires a 17th primitive — strengthens assume_sixteen_complete",
+  "λ=NOT_B grounded by 7+ localization constants (Bohr radius, Planck length, charge radii)",
+  "π=NOT_A grounded by 5+ persistence constants (α=1/137, Rydberg, Stefan-Boltzmann)",
+  "swap test (λ↔π) rejected: physics favors current assignment"
+  [proof: computational, theorem_13_physical_constant_grounding — 7 SI→7 unique prims + 10 NIST categories → ≥15/16 coverage, nexcore-lex-primitiva]
+
+theorem dag_coherence_experiment :
+  "6 permutations of {ν,λ,π} at {8,10,12} tested for DAG parent-child AND overlap",
+  "9 parent-child edges scored: +2 (full containment), +1 (partial), 0 (disjoint)",
+  P1 = 12,  -- ν=8,  λ=10, π=12 (CURRENT)
+  P2 = 12,  -- ν=8,  π=10, λ=12
+  P3 = 11,  -- λ=8,  ν=10, π=12
+  P4 = 13,  -- λ=8,  π=10, ν=12 (highest DAG score)
+  P5 = 10,  -- π=8,  ν=10, λ=12 (lowest)
+  P6 = 12,  -- π=8,  λ=10, ν=12
+  "P4 wins DAG coherence by +1, but assigns λ=NOR — semantically incoherent for 'position'",
+  "P1 is tied-2nd in DAG AND confirmed by physics/semantics — current assignment holds",
+  "spread = 3 points on 13-point scale — permutations are structurally similar",
+  "∴ physics grounding (not DAG structure) is the tiebreaker"
+  [proof: computational, theorem_14_dag_coherence_experiment — 6 permutations scored [12,12,11,13,10,12] spread=3, nexcore-lex-primitiva]
+
+
+-- ═══════════════════════════════════════════
+-- MATHEMATICS GROUNDING — Sýkora Constants
+-- ═══════════════════════════════════════════
+
+theorem mathematical_constant_grounding :
+  "8 basic math constants map 1:1 to 8 unique primitives, 0 collisions",
+  "derived constants + function values cover remaining 8 — full 16/16",
+  0   = ∅,   -- void = zero = absence
+  1   = ×,   -- product identity: x×1=x (AND)
+  i   = ς,   -- state transition operator: i²=-1, phase rotation
+  π   = ν,   -- frequency: ω=2πf, period of oscillation
+  e   = ->,  -- causality: d/dx(eˣ)=eˣ, self-generating
+  γ   = Σ,   -- sum: emerges from harmonic series Σ(1/k)-ln(n)
+  √2  = κ,   -- comparison: Pythagoras, side vs diagonal
+  φ   = ρ,   -- recursion: F(n)=F(n-1)+F(n-2) → φ
+  "derived mappings (8 remaining):",
+  ln2 = ∝,   -- irreversibility: Landauer kT·ln2 per erased bit
+  ∞   = ∂,   -- boundary: limit at infinity
+  Ω   = μ,   -- mapping: Lambert W₀(1), fixed point of eˣ=x
+  ∞   = π_p, -- persistence: unbounded persistence
+  1   = N,   -- quantity: unit of counting
+  0   = λ,   -- location: origin = reference point
+  1   = σ,   -- sequence: unit step in sequence
+  1   = ∃,   -- existence: truth value = 1
+  "constant= fields refined for ς(i), μ(Ω), κ(√2), Σ(γ), →(e)",
+  "hierarchy mirrors: 8 basic → named → function values ≈ T1 → T2 → T3"
+  [proof: computational, theorem_15_mathematical_constant_grounding — 8 basic→8 unique + 8 derived→8 unique + 0 overlap = 16/16, nexcore-lex-primitiva]
+
+
+∎

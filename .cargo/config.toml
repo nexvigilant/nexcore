@@ -1,0 +1,57 @@
+# NexCore Build Optimization Config
+# Reduces build times 2-5x through linker, caching, and parallelism
+
+[build]
+# Use sccache for compilation caching (available on system)
+rustc-wrapper = "sccache"
+
+# Parallel code generation units for faster incremental builds
+jobs = 16  # Leave 4 cores for system (20 total)
+
+[target.x86_64-unknown-linux-gnu]
+# Use mold linker (10-20x faster than ld, 2-5x faster than lld)
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+[profile.dev]
+# Faster dev builds - disable debug info for dependencies
+debug = 1  # Line tables only (faster than full debug)
+split-debuginfo = "unpacked"  # Faster incremental linking
+
+[profile.dev.package."*"]
+# No debug info for dependencies (major speedup)
+debug = 0
+opt-level = 1  # Slight optimization for dep code
+
+[profile.test]
+# Match dev for consistency
+debug = 1
+
+[profile.test.package."*"]
+debug = 0
+opt-level = 1
+
+[profile.release]
+# Optimized release builds
+lto = "thin"  # Link-time optimization (faster than fat LTO)
+codegen-units = 4  # Balance between speed and optimization
+
+[env]
+# sccache configuration
+SCCACHE_CACHE_SIZE = "10G"
+RUSTC_WRAPPER = "sccache"
+
+[alias]
+# Quick aliases (cargo c, cargo t, cargo b, etc.)
+c = "check --workspace"
+t = "test --workspace"
+b = "build --workspace"
+cl = "clippy --workspace -- -D warnings"
+tc = "test -p nexcore-vigilance --lib"
+nt = "nextest run --workspace"
+
+[registries.nexcore]
+index = "sparse+http://localhost:8000/api/v1/crates/"
+
+[registry]
+default = "nexcore"

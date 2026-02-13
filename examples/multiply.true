@@ -1,0 +1,126 @@
+// Prima Multiplication Capabilities Demo
+// File: multiply.true
+// Demonstrates: N × N → N (grounded to BinOp::Mul)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 1. BASIC MULTIPLICATION (Int × Int → Int)
+// Grounding: N × N → N → 0,1
+// ═══════════════════════════════════════════════════════════════════════════
+
+λ a = 6
+λ b = 7
+λ product = a * b
+ωn("Basic: 6 * 7 =", product)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 2. FLOAT MULTIPLICATION (N.float × N.float → N.float)
+// ═══════════════════════════════════════════════════════════════════════════
+
+λ pi = 3.14159
+λ radius = 5.0
+λ area = pi * radius * radius
+ωn("Circle area: π * 5² =", area)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 3. SEQUENCE MULTIPLICATION (map with λ)
+// Pattern: σ |> Φ(|x| x * factor) — multiply each element
+// ═══════════════════════════════════════════════════════════════════════════
+
+λ nums = σ[1, 2, 3, 4, 5]
+λ doubled = Φ(nums, |x| x * 2)
+ωn("Doubled: [1,2,3,4,5] * 2 =", doubled)
+
+λ tripled = Φ(nums, |x| x * 3)
+ωn("Tripled: [1,2,3,4,5] * 3 =", tripled)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 4. FOLD-PRODUCT (σ → N via Ω)
+// Pattern: Ω(seq, 1, |acc, x| acc * x) — multiply all elements
+// ═══════════════════════════════════════════════════════════════════════════
+
+λ factorial_input = σ[1, 2, 3, 4, 5]
+λ factorial = Ω(factorial_input, 1, |acc, x| acc * x)
+ωn("Product of [1,2,3,4,5] = 5! =", factorial)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 5. FUNCTION: Multiply Function Definition
+// Pattern: μ multiply(a, b) → a * b
+// ═══════════════════════════════════════════════════════════════════════════
+
+μ multiply(x: N, y: N) → N {
+    x * y
+}
+
+ωn("Function: multiply(12, 13) =", multiply(12, 13))
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 6. CHAINED MULTIPLICATION
+// Pattern: a * b * c * d
+// ═══════════════════════════════════════════════════════════════════════════
+
+λ chained = 2 * 3 * 4 * 5
+ωn("Chained: 2 * 3 * 4 * 5 =", chained)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 7. MATRIX-STYLE SCALING (Nested sequences)
+// ═══════════════════════════════════════════════════════════════════════════
+
+λ row1 = σ[1, 2, 3]
+λ row2 = σ[4, 5, 6]
+λ scalar = 10
+
+λ scaled_row1 = Φ(row1, |x| x * scalar)
+λ scaled_row2 = Φ(row2, |x| x * scalar)
+
+ωn("Scaled row1 × 10 =", scaled_row1)
+ωn("Scaled row2 × 10 =", scaled_row2)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 8. COMPOUND GROWTH (Financial multiplication)
+// ═══════════════════════════════════════════════════════════════════════════
+
+λ principal = 1000.0
+λ rate = 0.05
+λ growth_factor = 1.0 + rate
+
+λ year1 = principal * growth_factor
+λ year2 = year1 * growth_factor
+λ year3 = year2 * growth_factor
+
+ωn("Compound: $1000 at 5% for 3 years =", year3)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 9. PRIMITIVE GROUNDING CHECK
+// ═══════════════════════════════════════════════════════════════════════════
+
+λ result = 7 * 8
+ωn("Tier of 7*8:", T(result))
+ωn("Composition:", C(result))
+ωn("Transfer confidence:", X(result))
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 10. PIPELINE MULTIPLICATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+λ pipeline_result = 5
+    |> |x| x * 2
+    |> |x| x * 3
+    |> |x| x * 4
+
+ωn("Pipeline: 5 * 2 * 3 * 4 =", pipeline_result)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SUMMARY
+// ═══════════════════════════════════════════════════════════════════════════
+
+ωn("")
+ωn("═══════════════════════════════════════════════════")
+ωn("Prima Multiplication Summary:")
+ωn("  • Integer: N × N → N")
+ωn("  • Float: N.float × N.float → N.float")
+ωn("  • Map: Φ(σ, |x| x * k)")
+ωn("  • Fold: Ω(σ, 1, |a,b| a*b)")
+ωn("  • Function: μ f(x,y) → x*y")
+ωn("  • Pipeline: x |> |v| v*k")
+ωn("═══════════════════════════════════════════════════")
+ωn("Grounding: * → BinOp::Mul → N → {0,1}")

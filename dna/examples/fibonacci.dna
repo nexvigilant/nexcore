@@ -1,0 +1,48 @@
+; fibonacci.dna — output first 8 Fibonacci numbers
+; Uses memory: mem[0]=a, mem[1]=b, mem[2]=count
+.data
+    0               ; mem[0] = a (fib current)
+    1               ; mem[1] = b (fib next)
+    8               ; mem[2] = remaining count
+
+.code
+    entry
+
+loop:
+    ; Output current (a = mem[0])
+    push0
+    load
+    out
+
+    ; next = a + b
+    push0
+    load            ; a
+    push1
+    load            ; b
+    add             ; a + b
+
+    ; a = b
+    push1
+    load            ; old b
+    push0
+    store           ; mem[0] = old b
+
+    ; b = next
+    push1
+    store           ; mem[1] = a + b (next)
+
+    ; count--
+    lit 2
+    load            ; count
+    dec
+    dup
+    lit 2
+    store           ; mem[2] = count - 1
+
+    ; if count > 0, loop
+    push0
+    gt
+    lit @loop
+    jmpif
+
+    halt

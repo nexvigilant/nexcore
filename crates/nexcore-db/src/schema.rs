@@ -1,0 +1,505 @@
+//! Database schema definition and migration.
+//!
+//! Schema version is tracked in a `schema_version` table.
+//! Each version bump adds a migration function.
+
+use rusqlite::Connection;
+
+use crate::error::{DbError, Result};
+
+/// Current schema version. Increment when adding migrations.
+pub const CURRENT_SCHEMA_VERSION: u32 = 3;
+
+/// Initialize the database schema (create all tables if they don't exist).
+///
+/// # Errors
+///
+/// Returns an error if tables cannot be created.
+pub fn initialize(conn: &Connection) -> Result<()> {
+    // Enable WAL mode for concurrent read access
+    conn.execute_batch("PRAGMA journal_mode=WAL;")?;
+    conn.execute_batch("PRAGMA foreign_keys=ON;")?;
+
+    // Schema versioning table
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS schema_version (
+            version INTEGER NOT NULL
+        );",
+    )?;
+
+    let current: Option<u32> = conn
+        .query_row("SELECT version FROM schema_version LIMIT 1", [], |row| {
+            row.get(0)
+        })
+        .ok();
+
+    match current {
+        None => {
+            // Fresh database — apply full schema (all versions)
+            apply_v1(conn)?;
+            apply_v2(conn)?;
+            conn.execute(
+                "INSERT INTO schema_version (version) VALUES (?1)",
+                [CURRENT_SCHEMA_VERSION],
+            )?;
+        }
+        Some(v) if v == CURRENT_SCHEMA_VERSION => {
+            // Already up to date
+        }
+        Some(v) if v < CURRENT_SCHEMA_VERSION => {
+            // Run incremental migrations
+            migrate(conn, v)?;
+        }
+        Some(v) => {
+            return Err(DbError::VersionMismatch {
+                expected: CURRENT_SCHEMA_VERSION,
+                found: v,
+            });
+        }
+    }
+
+    Ok(())
+}
+
+/// Apply the V1 schema (initial full creation).
+fn apply_v1(conn: &Connection) -> Result<()> {
+    conn.execute_batch(
+        "
+        -- Brain sessions
+        CREATE TABLE IF NOT EXISTS sessions (
+            id              TEXT PRIMARY KEY,
+            project         TEXT NOT NULL DEFAULT '',
+            git_commit      TEXT,
+            description     TEXT NOT NULL DEFAULT '',
+            created_at      TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_sessions_project ON sessions(project);
+        CREATE INDEX IF NOT EXISTS idx_sessions_created ON sessions(created_at);
+
+        -- Session artifacts (mutable current state)
+        CREATE TABLE IF NOT EXISTS artifacts (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id      TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+            name            TEXT NOT NULL,
+            artifact_type   TEXT NOT NULL DEFAULT 'custom',
+            content         TEXT NOT NULL DEFAULT '',
+            summary         TEXT NOT NULL DEFAULT '',
+            current_version INTEGER NOT NULL DEFAULT 0,
+            tags            TEXT NOT NULL DEFAULT '[]',
+            custom_meta     TEXT NOT NULL DEFAULT 'null',
+            created_at      TEXT NOT NULL,
+            updated_at      TEXT NOT NULL,
+            UNIQUE(session_id, name)
+        );
+        CREATE INDEX IF NOT EXISTS idx_artifacts_session ON artifacts(session_id);
+        CREATE INDEX IF NOT EXISTS idx_artifacts_type ON artifacts(artifact_type);
+
+        -- Immutable resolved artifact versions
+        CREATE TABLE IF NOT EXISTS artifact_versions (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id      TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+            artifact_name   TEXT NOT NULL,
+            version         INTEGER NOT NULL,
+            content         TEXT NOT NULL,
+            resolved_at     TEXT NOT NULL,
+            UNIQUE(session_id, artifact_name, version)
+        );
+
+        -- Code tracker: content-addressable file snapshots
+        CREATE TABLE IF NOT EXISTS tracked_files (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            project         TEXT NOT NULL,
+            file_path       TEXT NOT NULL,
+            content_hash    TEXT NOT NULL,
+            file_size       INTEGER NOT NULL DEFAULT 0,
+            tracked_at      TEXT NOT NULL,
+            mtime           TEXT NOT NULL,
+            UNIQUE(project, file_path)
+        );
+        CREATE INDEX IF NOT EXISTS idx_tracked_project ON tracked_files(project);
+
+        -- Implicit knowledge: preferences
+        CREATE TABLE IF NOT EXISTS preferences (
+            key             TEXT PRIMARY KEY,
+            value           TEXT NOT NULL DEFAULT 'null',
+            description     TEXT,
+            confidence      REAL NOT NULL DEFAULT 0.5,
+            reinforcement_count INTEGER NOT NULL DEFAULT 1,
+            updated_at      TEXT NOT NULL
+        );
+
+        -- Implicit knowledge: patterns
+        CREATE TABLE IF NOT EXISTS patterns (
+            id              TEXT PRIMARY KEY,
+            pattern_type    TEXT NOT NULL,
+            description     TEXT NOT NULL DEFAULT '',
+            examples        TEXT NOT NULL DEFAULT '[]',
+            detected_at     TEXT NOT NULL,
+            updated_at      TEXT NOT NULL,
+            confidence      REAL NOT NULL DEFAULT 0.5,
+            occurrence_count INTEGER NOT NULL DEFAULT 1,
+            t1_grounding    TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_patterns_type ON patterns(pattern_type);
+        CREATE INDEX IF NOT EXISTS idx_patterns_grounding ON patterns(t1_grounding);
+
+        -- Implicit knowledge: corrections
+        CREATE TABLE IF NOT EXISTS corrections (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            mistake         TEXT NOT NULL,
+            correction      TEXT NOT NULL,
+            context         TEXT,
+            learned_at      TEXT NOT NULL,
+            application_count INTEGER NOT NULL DEFAULT 0
+        );
+
+        -- Implicit knowledge: beliefs (PROJECT GROUNDED)
+        CREATE TABLE IF NOT EXISTS beliefs (
+            id              TEXT PRIMARY KEY,
+            proposition     TEXT NOT NULL,
+            category        TEXT NOT NULL DEFAULT '',
+            confidence      REAL NOT NULL DEFAULT 0.5,
+            evidence        TEXT NOT NULL DEFAULT '[]',
+            t1_grounding    TEXT,
+            formed_at       TEXT NOT NULL,
+            updated_at      TEXT NOT NULL,
+            validation_count INTEGER NOT NULL DEFAULT 0,
+            user_confirmed  INTEGER NOT NULL DEFAULT 0
+        );
+        CREATE INDEX IF NOT EXISTS idx_beliefs_category ON beliefs(category);
+        CREATE INDEX IF NOT EXISTS idx_beliefs_grounding ON beliefs(t1_grounding);
+
+        -- Trust accumulators per domain (PROJECT GROUNDED)
+        CREATE TABLE IF NOT EXISTS trust_accumulators (
+            domain          TEXT PRIMARY KEY,
+            demonstrations  INTEGER NOT NULL DEFAULT 0,
+            failures        INTEGER NOT NULL DEFAULT 0,
+            created_at      TEXT NOT NULL,
+            updated_at      TEXT NOT NULL,
+            t1_grounding    TEXT
+        );
+
+        -- Belief implication graph edges (PROJECT GROUNDED)
+        CREATE TABLE IF NOT EXISTS belief_implications (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            from_belief     TEXT NOT NULL REFERENCES beliefs(id) ON DELETE CASCADE,
+            to_belief       TEXT NOT NULL REFERENCES beliefs(id) ON DELETE CASCADE,
+            strength        TEXT NOT NULL DEFAULT 'moderate',
+            established_at  TEXT NOT NULL,
+            UNIQUE(from_belief, to_belief)
+        );
+        CREATE INDEX IF NOT EXISTS idx_implications_from ON belief_implications(from_belief);
+        CREATE INDEX IF NOT EXISTS idx_implications_to ON belief_implications(to_belief);
+        ",
+    )?;
+
+    Ok(())
+}
+
+/// Run incremental migrations from `from_version` to `CURRENT_SCHEMA_VERSION`.
+fn migrate(conn: &Connection, from_version: u32) -> Result<()> {
+    if from_version < 2 {
+        apply_v2(conn)?;
+    }
+    if from_version < 3 {
+        apply_v3(conn)?;
+    }
+    // Future: if from_version < 4 { apply_v4(conn)?; }
+
+    conn.execute(
+        "UPDATE schema_version SET version = ?1",
+        [CURRENT_SCHEMA_VERSION],
+    )?;
+
+    Ok(())
+}
+
+/// V2 schema: operational telemetry and accumulated knowledge tables.
+///
+/// New tables:
+/// - `decision_audit` — tool usage decisions captured by hooks
+/// - `tool_usage` — aggregated tool call statistics
+/// - `token_efficiency` — per-session token efficiency metrics
+/// - `tasks_history` — completed/pending task snapshots across sessions
+/// - `handoffs` — session handoff summaries
+/// - `antibodies` — antipattern immunity registry entries
+fn apply_v2(conn: &Connection) -> Result<()> {
+    conn.execute_batch(
+        "
+        -- Decision audit log (from hooks decision-journal)
+        CREATE TABLE IF NOT EXISTS decision_audit (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp       TEXT NOT NULL,
+            session_id      TEXT NOT NULL,
+            tool            TEXT NOT NULL,
+            action          TEXT NOT NULL DEFAULT '',
+            target          TEXT NOT NULL DEFAULT '',
+            risk_level      TEXT NOT NULL DEFAULT 'LOW',
+            reversible      INTEGER NOT NULL DEFAULT 1
+        );
+        CREATE INDEX IF NOT EXISTS idx_decision_session ON decision_audit(session_id);
+        CREATE INDEX IF NOT EXISTS idx_decision_tool ON decision_audit(tool);
+        CREATE INDEX IF NOT EXISTS idx_decision_risk ON decision_audit(risk_level);
+        CREATE INDEX IF NOT EXISTS idx_decision_ts ON decision_audit(timestamp);
+
+        -- Tool usage telemetry (aggregated counts)
+        CREATE TABLE IF NOT EXISTS tool_usage (
+            tool_name       TEXT PRIMARY KEY,
+            total_calls     INTEGER NOT NULL DEFAULT 0,
+            success_count   INTEGER NOT NULL DEFAULT 0,
+            failure_count   INTEGER NOT NULL DEFAULT 0,
+            last_used       INTEGER NOT NULL DEFAULT 0
+        );
+
+        -- Token efficiency per session
+        CREATE TABLE IF NOT EXISTS token_efficiency (
+            session_id      TEXT PRIMARY KEY,
+            action_count    INTEGER NOT NULL DEFAULT 0,
+            total_tokens    INTEGER NOT NULL DEFAULT 0,
+            started_at      INTEGER NOT NULL DEFAULT 0
+        );
+
+        -- Task history (snapshots from ~/.claude/tasks/)
+        CREATE TABLE IF NOT EXISTS tasks_history (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id      TEXT NOT NULL,
+            task_id         TEXT NOT NULL,
+            subject         TEXT NOT NULL DEFAULT '',
+            description     TEXT NOT NULL DEFAULT '',
+            active_form     TEXT NOT NULL DEFAULT '',
+            status          TEXT NOT NULL DEFAULT 'pending',
+            blocks          TEXT NOT NULL DEFAULT '[]',
+            blocked_by      TEXT NOT NULL DEFAULT '[]',
+            UNIQUE(session_id, task_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_tasks_session ON tasks_history(session_id);
+        CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks_history(status);
+
+        -- Session handoff summaries
+        CREATE TABLE IF NOT EXISTS handoffs (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            project         TEXT NOT NULL,
+            handoff_number  INTEGER NOT NULL DEFAULT 0,
+            session_id      TEXT NOT NULL DEFAULT '',
+            generated_at    TEXT NOT NULL DEFAULT '',
+            status          TEXT NOT NULL DEFAULT '',
+            duration        TEXT NOT NULL DEFAULT '',
+            files_modified  INTEGER NOT NULL DEFAULT 0,
+            lines_written   INTEGER NOT NULL DEFAULT 0,
+            commits         INTEGER NOT NULL DEFAULT 0,
+            uncommitted     INTEGER NOT NULL DEFAULT 0,
+            content         TEXT NOT NULL DEFAULT '',
+            UNIQUE(project, handoff_number)
+        );
+        CREATE INDEX IF NOT EXISTS idx_handoffs_project ON handoffs(project);
+        CREATE INDEX IF NOT EXISTS idx_handoffs_session ON handoffs(session_id);
+
+        -- Antipattern immunity antibodies
+        CREATE TABLE IF NOT EXISTS antibodies (
+            id              TEXT PRIMARY KEY,
+            name            TEXT NOT NULL,
+            threat_type     TEXT NOT NULL DEFAULT 'DAMP',
+            severity        TEXT NOT NULL DEFAULT 'medium',
+            description     TEXT NOT NULL DEFAULT '',
+            detection       TEXT NOT NULL DEFAULT '{}',
+            response        TEXT NOT NULL DEFAULT '{}',
+            confidence      REAL NOT NULL DEFAULT 0.5,
+            applications    INTEGER NOT NULL DEFAULT 0,
+            false_positives INTEGER NOT NULL DEFAULT 0,
+            learned_from    TEXT NOT NULL DEFAULT '',
+            t1_grounding    TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_antibodies_severity ON antibodies(severity);
+        CREATE INDEX IF NOT EXISTS idx_antibodies_threat ON antibodies(threat_type);
+        ",
+    )?;
+
+    Ok(())
+}
+
+/// V3 schema: deduplicate `decision_audit` and add UNIQUE constraint.
+///
+/// The V2 schema used plain `INSERT` for decisions, so `brain_db_sync`
+/// created duplicates on every re-run. This migration:
+/// 1. Deletes duplicate rows (keeps the lowest rowid per unique combo).
+/// 2. Creates a UNIQUE index on `(timestamp, session_id, tool, target)`.
+fn apply_v3(conn: &Connection) -> Result<()> {
+    // Step 1: Remove duplicates, keeping the first occurrence (lowest rowid).
+    conn.execute_batch(
+        "DELETE FROM decision_audit
+         WHERE rowid NOT IN (
+             SELECT MIN(rowid)
+             FROM decision_audit
+             GROUP BY timestamp, session_id, tool, target
+         );",
+    )?;
+
+    // Step 2: Add unique index to prevent future duplicates.
+    conn.execute_batch(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_decision_audit_dedup
+         ON decision_audit(timestamp, session_id, tool, target);",
+    )?;
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_initialize_fresh_db() {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        let result = initialize(&conn);
+        assert!(result.is_ok());
+
+        // Verify schema version
+        let version: u32 = conn
+            .query_row("SELECT version FROM schema_version", [], |row| row.get(0))
+            .expect("query version");
+        assert_eq!(version, CURRENT_SCHEMA_VERSION);
+    }
+
+    #[test]
+    fn test_initialize_idempotent() {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        initialize(&conn).expect("first init");
+        initialize(&conn).expect("second init should be idempotent");
+    }
+
+    #[test]
+    fn test_migrate_v1_to_current() {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        // Manually apply V1 only
+        conn.execute_batch("PRAGMA journal_mode=WAL;").expect("wal");
+        conn.execute_batch("PRAGMA foreign_keys=ON;").expect("fk");
+        conn.execute_batch("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL);")
+            .expect("sv");
+        apply_v1(&conn).expect("v1");
+        conn.execute("INSERT INTO schema_version (version) VALUES (1)", [])
+            .expect("insert v1");
+
+        // Now run full initialize — should migrate through V2 and V3
+        initialize(&conn).expect("migrate to current");
+
+        let version: u32 = conn
+            .query_row("SELECT version FROM schema_version", [], |row| row.get(0))
+            .expect("version");
+        assert_eq!(version, CURRENT_SCHEMA_VERSION);
+
+        // V2 tables should exist
+        let exists: bool = conn
+            .query_row(
+                "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='table' AND name='decision_audit'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("check");
+        assert!(exists, "decision_audit table should exist after migration");
+
+        // V3 dedup index should exist
+        let idx_exists: bool = conn
+            .query_row(
+                "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='index' AND name='idx_decision_audit_dedup'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("check dedup index");
+        assert!(idx_exists, "dedup index should exist after V3 migration");
+    }
+
+    #[test]
+    fn test_v3_dedup_migration() {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        // Set up V2 schema
+        conn.execute_batch("PRAGMA journal_mode=WAL;").expect("wal");
+        conn.execute_batch("PRAGMA foreign_keys=ON;").expect("fk");
+        conn.execute_batch("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL);")
+            .expect("sv");
+        apply_v1(&conn).expect("v1");
+        apply_v2(&conn).expect("v2");
+        conn.execute("INSERT INTO schema_version (version) VALUES (2)", [])
+            .expect("insert v2");
+
+        // Insert 3 duplicate rows
+        for _ in 0..3 {
+            conn.execute(
+                "INSERT INTO decision_audit (timestamp, session_id, tool, action, target, risk_level, reversible)
+                 VALUES ('2025-01-01T00:00:00Z', 'sess-1', 'Edit', 'structural', '/foo/lib.rs', 'LOW', 1)",
+                [],
+            )
+            .expect("insert dup");
+        }
+        // And one unique row
+        conn.execute(
+            "INSERT INTO decision_audit (timestamp, session_id, tool, action, target, risk_level, reversible)
+             VALUES ('2025-01-01T00:00:01Z', 'sess-1', 'Write', 'dependency', '/foo/Cargo.toml', 'MEDIUM', 1)",
+            [],
+        )
+        .expect("insert unique");
+
+        let before: i64 = conn
+            .query_row("SELECT COUNT(*) FROM decision_audit", [], |row| row.get(0))
+            .expect("count before");
+        assert_eq!(before, 4); // 3 dupes + 1 unique
+
+        // Run V3 migration
+        apply_v3(&conn).expect("v3 migration");
+
+        let after: i64 = conn
+            .query_row("SELECT COUNT(*) FROM decision_audit", [], |row| row.get(0))
+            .expect("count after");
+        assert_eq!(after, 2); // 1 deduped + 1 unique
+
+        // Verify that inserting a duplicate is now silently ignored
+        let inserted = conn.execute(
+            "INSERT OR IGNORE INTO decision_audit (timestamp, session_id, tool, action, target, risk_level, reversible)
+             VALUES ('2025-01-01T00:00:00Z', 'sess-1', 'Edit', 'structural', '/foo/lib.rs', 'LOW', 1)",
+            [],
+        )
+        .expect("insert or ignore");
+        assert_eq!(inserted, 0); // 0 rows changed = ignored
+
+        let still: i64 = conn
+            .query_row("SELECT COUNT(*) FROM decision_audit", [], |row| row.get(0))
+            .expect("count still");
+        assert_eq!(still, 2); // unchanged
+    }
+
+    #[test]
+    fn test_tables_exist() {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        initialize(&conn).expect("init");
+
+        let tables = [
+            "sessions",
+            "artifacts",
+            "artifact_versions",
+            "tracked_files",
+            "preferences",
+            "patterns",
+            "corrections",
+            "beliefs",
+            "trust_accumulators",
+            "belief_implications",
+            // V2 tables
+            "decision_audit",
+            "tool_usage",
+            "token_efficiency",
+            "tasks_history",
+            "handoffs",
+            "antibodies",
+        ];
+
+        for table in tables {
+            let exists: bool = conn
+                .query_row(
+                    "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='table' AND name=?1",
+                    [table],
+                    |row| row.get(0),
+                )
+                .expect("check table");
+            assert!(exists, "Table '{}' should exist", table);
+        }
+    }
+}

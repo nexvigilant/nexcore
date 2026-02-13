@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # The Mind: Signal Detection & Intelligence API
+  nexcore-api:
+    build:
+      context: ./.nexcore
+      dockerfile: Dockerfile
+    ports:
+      - "3030:3030"
+    environment:
+      - RUST_LOG=info
+      - FAERS_DATA_DIR=/app/data/faers/faers_ascii_2025Q4/ASCII
+      - QDRANT_URL=http://qdrant:6333
+    volumes:
+      - ./.nexcore/data:/app/data
+      - /home/matthew/data/faers:/app/data/faers
+      - ./.claude/brain:/root/.claude/brain
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+
+  # Vigil Memory Layer: Vector Database
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  # Telemetry: Metrics Collection
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
+  # Visualization: Dashboard
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  qdrant_data:

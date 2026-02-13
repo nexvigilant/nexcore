@@ -1,0 +1,61 @@
+[workspace]
+
+[package]
+name = "nexcore-integrity"
+description = "KSB assessment integrity via AI text detection — statistical fingerprints aggregated through chemistry primitives with Bloom-level threshold adaptation"
+version = "1.0.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+rust-version = "1.85"
+
+[dependencies]
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = { version = "1.0.120" }
+thiserror = { version = "1.0.61" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+
+[dev-dependencies]
+proptest = { version = "1.6.0" }
+
+[features]
+default = []
+# Expose KSB test fixtures for examples and integration tests
+fixtures = []
+
+[[example]]
+name = "experiment_1"
+required-features = ["fixtures"]
+
+[[example]]
+name = "recalibrate"
+required-features = ["fixtures"]
+
+[[example]]
+name = "recalibrate_deep"
+required-features = ["fixtures"]
+
+[lints.rust]
+async_fn_in_trait = "allow"
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+unused_mut = "allow"
+unused_assignments = "allow"
+unused_must_use = "allow"
+
+[lints.clippy]
+all = "allow"
+pedantic = "allow"
+nursery = "allow"
+cargo = "allow"
+map_unwrap_or = "allow"
+manual_map = "allow"
+option_map_or_none = "allow"
+derivable_impls = "allow"
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"
+todo = "allow"
+unimplemented = "allow"
+unreachable = "allow"

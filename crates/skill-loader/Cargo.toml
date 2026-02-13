@@ -1,0 +1,16 @@
+[workspace]
+
+[package]
+name = "skill-loader"
+version = "0.1.0"
+edition = "2024"
+description = "Load SKILL.md files and bridge to Rust skill crates"
+license = "MIT"
+
+[dependencies]
+skill-core = { version = "0.1.0", path = "../skill-core", registry = "nexcore"}
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+thiserror = "2.0"
+walkdir = "2.5"
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore"}

@@ -1,0 +1,813 @@
+{
+  "version": "1.0.0",
+  "name": "pv-guidelines",
+  "description": "Pharmacovigilance Guidelines Index - ICH, CIOMS, and EMA GVP",
+  "last_updated": "2026-01-14",
+  "sources": {
+    "ich": {
+      "name": "International Council for Harmonisation",
+      "url": "https://www.ich.org",
+      "categories": ["Q", "S", "E", "M"]
+    },
+    "cioms": {
+      "name": "Council for International Organizations of Medical Sciences",
+      "url": "https://cioms.ch",
+      "categories": ["pharmacovigilance", "ethics", "other"]
+    },
+    "ema": {
+      "name": "European Medicines Agency",
+      "url": "https://www.ema.europa.eu",
+      "categories": ["gvp_modules", "gvp_addenda", "gvp_product_specific", "gvp_annexes"]
+    }
+  },
+  "documents": {
+    "ich": {
+      "quality": [
+        {
+          "id": "Q1",
+          "title": "Stability Testing for Drug Substances and Drug Products",
+          "description": "Consolidated revision superseding ICH Q1A-F and Q5C. Covers stability testing principles.",
+          "status": "step2",
+          "url": "https://database.ich.org/sites/default/files/ICH_Q1EWG_Step2_Draft_Guideline_2025_0411.pdf",
+          "keywords": ["stability", "drug substance", "drug product", "storage", "shelf life"]
+        },
+        {
+          "id": "Q2(R2)",
+          "title": "Validation of Analytical Procedures",
+          "description": "Guidance on selection and evaluation of validation tests for analytical procedures.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/ICH_Q2(R2)_Guideline_2023_1130.pdf",
+          "keywords": ["validation", "analytical", "method", "specificity", "accuracy", "precision"]
+        },
+        {
+          "id": "Q3C(R9)",
+          "title": "Impurities: Guideline for Residual Solvents",
+          "description": "Recommendations on use of less toxic solvents and pharmaceutical limits for residual solvents.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/ICH_Q3C(R9)_Guideline_MinorRevision_2024_2024_Approved.pdf",
+          "keywords": ["solvents", "impurities", "residual", "toxicity", "limits"]
+        },
+        {
+          "id": "Q3D(R2)",
+          "title": "Elemental Impurities",
+          "description": "Control of elemental impurities in drug products. Establishes Permitted Daily Exposures (PDEs).",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/Q3D-R2_Guideline_Step4_2022_0308.pdf",
+          "keywords": ["elemental", "impurities", "metals", "PDE", "oral", "parenteral", "inhalation"]
+        },
+        {
+          "id": "Q5E",
+          "title": "Comparability of Biotechnological/Biological Products",
+          "description": "Quality issues when manufacturing process changes affect biotechnological products.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/Q5E%20Guideline.pdf",
+          "keywords": ["biotechnology", "biological", "comparability", "manufacturing", "process change"]
+        },
+        {
+          "id": "Q6A",
+          "title": "Specifications: Test Procedures and Acceptance Criteria for New Drug Substances",
+          "description": "Guidance on setting specifications for new drug substances and products (chemical entities).",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/Q6A%20Guideline.pdf",
+          "keywords": ["specifications", "test procedures", "acceptance criteria", "drug substance"]
+        },
+        {
+          "id": "Q6B",
+          "title": "Specifications: Biotechnological/Biological Products",
+          "description": "Test procedures and acceptance criteria for biotechnological/biological products.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/Q6B%20Guideline.pdf",
+          "keywords": ["specifications", "biotechnology", "biological", "characterization"]
+        },
+        {
+          "id": "Q7",
+          "title": "Good Manufacturing Practice for Active Pharmaceutical Ingredients",
+          "description": "GMP guidance for manufacturing APIs by chemical synthesis, extraction, fermentation, etc.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/Q7%20Guideline.pdf",
+          "keywords": ["GMP", "API", "manufacturing", "quality", "active pharmaceutical ingredient"]
+        },
+        {
+          "id": "Q8(R2)",
+          "title": "Pharmaceutical Development",
+          "description": "Guidance on contents of Module 3.2.P.2 (Pharmaceutical Development) of the CTD.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/Q8_R2_Guideline.pdf",
+          "keywords": ["development", "design space", "QbD", "formulation", "process"]
+        },
+        {
+          "id": "Q9(R1)",
+          "title": "Quality Risk Management",
+          "description": "Systematic approach to quality risk management throughout the product lifecycle.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/ICH_Q9(R1)_Guideline_Step4_2023_0126.pdf",
+          "keywords": ["risk", "management", "QRM", "FMEA", "hazard", "lifecycle"]
+        },
+        {
+          "id": "Q10",
+          "title": "Pharmaceutical Quality System",
+          "description": "Model for effective pharmaceutical quality system based on ISO and GMP concepts.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/Q10%20Guideline.pdf",
+          "keywords": ["quality system", "PQS", "management", "CAPA", "continuous improvement"]
+        },
+        {
+          "id": "Q11",
+          "title": "Development and Manufacture of Drug Substances",
+          "description": "Guidance on development and manufacture of drug substances (chemical and biotechnological).",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/Q11%20Guideline.pdf",
+          "keywords": ["drug substance", "development", "manufacture", "API", "design space"]
+        },
+        {
+          "id": "Q12",
+          "title": "Technical and Regulatory Considerations for Pharmaceutical Product Lifecycle Management",
+          "description": "Framework for managing post-approval CMC changes with regulatory flexibility.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/Q12_Guideline_Step4_2019_1119.pdf",
+          "keywords": ["lifecycle", "post-approval", "CMC", "change management", "PACMP"]
+        },
+        {
+          "id": "Q13",
+          "title": "Continuous Manufacturing of Drug Substances and Drug Products",
+          "description": "Scientific and regulatory considerations for continuous manufacturing.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/ICH_Q13_Step4_Guideline_2022_1116.pdf",
+          "keywords": ["continuous manufacturing", "batch", "process", "control strategy"]
+        },
+        {
+          "id": "Q14",
+          "title": "Analytical Procedure Development",
+          "description": "Enhanced approach to analytical procedure development using QbD principles.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/ICH_Q14_Guideline_2023_1116_1.pdf",
+          "keywords": ["analytical", "development", "QbD", "method", "validation", "MODR"]
+        }
+      ],
+      "safety": [
+        {
+          "id": "S1A",
+          "title": "Need for Carcinogenicity Studies of Pharmaceuticals",
+          "description": "Guidance on when carcinogenicity studies are needed for pharmaceuticals.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/S1A%20Guideline.pdf",
+          "keywords": ["carcinogenicity", "cancer", "studies", "requirements"]
+        },
+        {
+          "id": "S1B",
+          "title": "Testing for Carcinogenicity of Pharmaceuticals",
+          "description": "Recommendations for testing pharmaceuticals for carcinogenic potential.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/S1B%20Guideline.pdf",
+          "keywords": ["carcinogenicity", "testing", "rodent", "bioassay"]
+        },
+        {
+          "id": "S1C(R2)",
+          "title": "Dose Selection for Carcinogenicity Studies of Pharmaceuticals",
+          "description": "Principles for selection of high dose in carcinogenicity studies.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/S1C_R2__Guideline.pdf",
+          "keywords": ["carcinogenicity", "dose selection", "MTD", "high dose"]
+        },
+        {
+          "id": "S2(R1)",
+          "title": "Genotoxicity Testing and Data Interpretation",
+          "description": "Guidance on genotoxicity testing and data interpretation for human pharmaceuticals.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/S2_R1_Guideline.pdf",
+          "keywords": ["genotoxicity", "mutagenicity", "Ames", "micronucleus", "chromosomal"]
+        },
+        {
+          "id": "S3A",
+          "title": "Toxicokinetics: Assessment of Systemic Exposure in Toxicity Studies",
+          "description": "Assessment of systemic exposure in toxicity studies.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/S3A_Guideline.pdf",
+          "keywords": ["toxicokinetics", "exposure", "AUC", "Cmax", "systemic"]
+        },
+        {
+          "id": "S5(R3)",
+          "title": "Detection of Reproductive and Developmental Toxicity",
+          "description": "Detection of toxicity to reproduction for human pharmaceuticals.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/S5-R3_Step4_Guideline_2020_0218.pdf",
+          "keywords": ["reproductive", "developmental", "fertility", "teratogenicity", "embryo-fetal"]
+        },
+        {
+          "id": "S6(R1)",
+          "title": "Preclinical Safety Evaluation of Biotechnology-Derived Pharmaceuticals",
+          "description": "Preclinical safety evaluation of biotechnology-derived pharmaceuticals.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/S6_R1_Guideline_0.pdf",
+          "keywords": ["biotechnology", "preclinical", "safety", "immunogenicity", "biological"]
+        },
+        {
+          "id": "S7A",
+          "title": "Safety Pharmacology Studies for Human Pharmaceuticals",
+          "description": "Core battery of safety pharmacology studies.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/S7A_Guideline.pdf",
+          "keywords": ["safety pharmacology", "CNS", "cardiovascular", "respiratory"]
+        },
+        {
+          "id": "S7B",
+          "title": "Nonclinical Evaluation of QT Interval Prolongation",
+          "description": "Nonclinical evaluation of potential for delayed ventricular repolarization.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/S7B_Guideline.pdf",
+          "keywords": ["QT", "hERG", "cardiac", "arrhythmia", "proarrhythmic"]
+        },
+        {
+          "id": "S8",
+          "title": "Immunotoxicity Studies for Human Pharmaceuticals",
+          "description": "Nonclinical testing approaches to evaluate immunotoxicity.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/S8_Guideline_0.pdf",
+          "keywords": ["immunotoxicity", "immune system", "immunosuppression", "immunomodulation"]
+        },
+        {
+          "id": "S9",
+          "title": "Nonclinical Evaluation for Anticancer Pharmaceuticals",
+          "description": "Nonclinical evaluation of anticancer pharmaceuticals.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/S9_Guideline.pdf",
+          "keywords": ["anticancer", "oncology", "nonclinical", "cytotoxic", "genotoxic"]
+        },
+        {
+          "id": "S10",
+          "title": "Photosafety Evaluation of Pharmaceuticals",
+          "description": "Photosafety evaluation of pharmaceuticals.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/S10_Guideline.pdf",
+          "keywords": ["photosafety", "phototoxicity", "photosensitivity", "UV", "skin"]
+        },
+        {
+          "id": "S11",
+          "title": "Nonclinical Pediatric Safety",
+          "description": "Nonclinical safety testing to support pediatric drug development.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/S11_Step4_FinalGuideline_2020_0310.pdf",
+          "keywords": ["pediatric", "juvenile", "nonclinical", "development", "children"]
+        },
+        {
+          "id": "S12",
+          "title": "Nonclinical Biodistribution for Gene Therapy Products",
+          "description": "Nonclinical biodistribution considerations for gene therapy products.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/ICH_S12_Step4_Guideline_2023_0314.pdf",
+          "keywords": ["gene therapy", "biodistribution", "vector", "shedding", "persistence"]
+        }
+      ],
+      "efficacy": [
+        {
+          "id": "E1",
+          "title": "Population Exposure for Clinical Safety Assessment",
+          "description": "Extent of population exposure to assess clinical safety for long-term treatment drugs.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/E1_Guideline.pdf",
+          "keywords": ["population", "exposure", "clinical safety", "long-term", "database"]
+        },
+        {
+          "id": "E2A",
+          "title": "Clinical Safety Data Management: Definitions and Standards",
+          "description": "Definitions and standards for expedited reporting of adverse drug reactions.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/E2A_Guideline.pdf",
+          "keywords": ["adverse reaction", "expedited reporting", "serious", "unexpected", "ICSR"]
+        },
+        {
+          "id": "E2B(R3)",
+          "title": "Clinical Safety Data Management: Data Elements for Transmission",
+          "description": "Data elements for electronic transmission of individual case safety reports.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/E2B_R3_Q&As_Q&As.pdf",
+          "keywords": ["ICSR", "E2B", "data elements", "electronic", "transmission", "pharmacovigilance"]
+        },
+        {
+          "id": "E2C(R2)",
+          "title": "Periodic Benefit-Risk Evaluation Report (PBRER)",
+          "description": "Format and content of periodic benefit-risk evaluation reports.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/E2C_R2_Guideline.pdf",
+          "keywords": ["PBRER", "PSUR", "periodic", "benefit-risk", "safety update"]
+        },
+        {
+          "id": "E2D",
+          "title": "Post-Approval Safety Data Management",
+          "description": "Definitions and standards for post-approval safety data management.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/E2D_Guideline.pdf",
+          "keywords": ["post-approval", "safety", "reporting", "pharmacovigilance"]
+        },
+        {
+          "id": "E2E",
+          "title": "Pharmacovigilance Planning",
+          "description": "Safety specification and pharmacovigilance planning.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/E2E_Guideline.pdf",
+          "keywords": ["pharmacovigilance", "planning", "safety specification", "RMP"]
+        },
+        {
+          "id": "E2F",
+          "title": "Development Safety Update Report (DSUR)",
+          "description": "Format and content of development safety update reports during clinical development.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/E2F_Guideline.pdf",
+          "keywords": ["DSUR", "development", "safety update", "clinical trials", "IND"]
+        },
+        {
+          "id": "E3",
+          "title": "Structure and Content of Clinical Study Reports",
+          "description": "Structure and content of clinical study reports for regulatory submission.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/E3_Guideline.pdf",
+          "keywords": ["clinical study report", "CSR", "format", "structure", "submission"]
+        },
+        {
+          "id": "E6(R2)",
+          "title": "Good Clinical Practice (GCP)",
+          "description": "International ethical and scientific quality standard for clinical trials.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/E6_R2_Addendum.pdf",
+          "keywords": ["GCP", "clinical trial", "ethics", "informed consent", "IRB", "investigator"]
+        },
+        {
+          "id": "E6(R3)",
+          "title": "Good Clinical Practice (R3)",
+          "description": "Updated GCP guideline with focus on quality, proportionality, and technology.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/ICH_E6(R3)_Step4_FinalGuideline_2025_0106.pdf",
+          "keywords": ["GCP", "clinical trial", "quality", "decentralized", "technology"]
+        },
+        {
+          "id": "E8(R1)",
+          "title": "General Considerations for Clinical Studies",
+          "description": "General considerations and framework for designing clinical studies.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/E8-R1_Guideline_Step4_2021_1006.pdf",
+          "keywords": ["clinical studies", "design", "quality", "framework", "objectives"]
+        },
+        {
+          "id": "E9(R1)",
+          "title": "Statistical Principles for Clinical Trials (R1)",
+          "description": "Statistical principles for clinical trial design, conduct, and analysis.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/E9-R1_Step4_Guideline_2019_1203.pdf",
+          "keywords": ["statistics", "estimands", "clinical trial", "analysis", "intercurrent events"]
+        },
+        {
+          "id": "E11A",
+          "title": "Pediatric Extrapolation",
+          "description": "Recommendations for pediatric extrapolation approaches.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/ICH_E11A_Guideline_Step4_2024_0821.pdf",
+          "keywords": ["pediatric", "extrapolation", "children", "development", "bridging"]
+        },
+        {
+          "id": "E14/S7B",
+          "title": "Clinical and Nonclinical Evaluation of QT/QTc Prolongation",
+          "description": "Questions and answers on clinical and nonclinical QT evaluation.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/E14-S7B_QAs_Step4_2022_0221.pdf",
+          "keywords": ["QT", "QTc", "cardiac", "proarrhythmic", "TQT", "CiPA"]
+        },
+        {
+          "id": "E17",
+          "title": "General Principles for Planning Multi-Regional Clinical Trials",
+          "description": "Planning and design of multi-regional clinical trials.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/E17EWG_Step4_2017_1116.pdf",
+          "keywords": ["MRCT", "multi-regional", "global", "clinical trial", "consistency"]
+        },
+        {
+          "id": "E19",
+          "title": "Optimization of Safety Data Collection",
+          "description": "Selective approach to safety data collection in clinical trials.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/ICH_E19_Guideline_Step4_2022_0826_0.pdf",
+          "keywords": ["safety data", "adverse events", "collection", "optimization", "selective"]
+        },
+        {
+          "id": "E20",
+          "title": "Adaptive Clinical Trials",
+          "description": "Principles for design and analysis of adaptive clinical trials.",
+          "status": "step2",
+          "url": "https://database.ich.org/sites/default/files/ICH_E20_Step2_Presentation_7July2025.pdf",
+          "keywords": ["adaptive", "clinical trial", "design", "interim analysis", "flexibility"]
+        }
+      ],
+      "multidisciplinary": [
+        {
+          "id": "M1",
+          "title": "MedDRA Terminology",
+          "description": "Medical Dictionary for Regulatory Activities - standardized medical terminology.",
+          "status": "final",
+          "url": "https://www.meddra.org/",
+          "keywords": ["MedDRA", "terminology", "coding", "adverse events", "medical dictionary"]
+        },
+        {
+          "id": "M3(R2)",
+          "title": "Nonclinical Safety Studies for Pharmaceuticals in Clinical Trials",
+          "description": "Guidance on timing and conduct of nonclinical safety studies.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/M3_R2__Guideline.pdf",
+          "keywords": ["nonclinical", "safety", "clinical trials", "timing", "FIH"]
+        },
+        {
+          "id": "M4",
+          "title": "Common Technical Document (CTD)",
+          "description": "Organization of CTD for registration of pharmaceuticals.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/M4_R4__Guideline.pdf",
+          "keywords": ["CTD", "common technical document", "registration", "dossier", "modules"]
+        },
+        {
+          "id": "M4E(R2)",
+          "title": "CTD - Efficacy",
+          "description": "Common Technical Document Module 5 - Clinical (Efficacy).",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/M4E_R2__Guideline.pdf",
+          "keywords": ["CTD", "efficacy", "module 5", "clinical", "registration"]
+        },
+        {
+          "id": "M4Q(R1)",
+          "title": "CTD - Quality",
+          "description": "Common Technical Document Module 3 - Quality.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/M4Q_R1_Guideline.pdf",
+          "keywords": ["CTD", "quality", "module 3", "drug substance", "drug product"]
+        },
+        {
+          "id": "M4S(R2)",
+          "title": "CTD - Safety",
+          "description": "Common Technical Document Module 4 - Nonclinical (Safety).",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/M4S_R2_Guideline.pdf",
+          "keywords": ["CTD", "safety", "module 4", "nonclinical", "toxicology"]
+        },
+        {
+          "id": "M7(R2)",
+          "title": "Mutagenic Impurities",
+          "description": "Assessment and control of DNA reactive (mutagenic) impurities.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/ICH_M7(R2)_Guideline_Step4_2023_0216_0.pdf",
+          "keywords": ["mutagenic", "impurities", "DNA reactive", "genotoxic", "TTC"]
+        },
+        {
+          "id": "M9",
+          "title": "BCS-Based Biowaivers",
+          "description": "Biopharmaceutics Classification System-based biowaivers.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/M9_Guideline_Step4_2019_1116.pdf",
+          "keywords": ["BCS", "biowaiver", "biopharmaceutics", "dissolution", "bioequivalence"]
+        },
+        {
+          "id": "M10",
+          "title": "Bioanalytical Method Validation",
+          "description": "Validation and implementation of bioanalytical methods.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/M10_Guideline_Step4_2022_0524.pdf",
+          "keywords": ["bioanalytical", "validation", "chromatography", "ligand binding", "method"]
+        },
+        {
+          "id": "M11",
+          "title": "Clinical Electronic Structured Harmonised Protocol (CeSHarP)",
+          "description": "Electronic structured clinical study protocol template.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/ICH_Step4_M11_Final_Guideline_2025_1119.pdf",
+          "keywords": ["CeSHarP", "protocol", "electronic", "structured", "clinical trial"]
+        },
+        {
+          "id": "M12",
+          "title": "Drug Interaction Studies",
+          "description": "Guidance on drug-drug interaction studies.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/ICH_M12_Step4_Guideline_2024_0521_0.pdf",
+          "keywords": ["drug interaction", "DDI", "PBPK", "CYP", "transporter"]
+        },
+        {
+          "id": "M13A",
+          "title": "Bioequivalence for Immediate-Release Solid Oral Dosage Forms",
+          "description": "Guidance on bioequivalence studies for IR solid oral dosage forms.",
+          "status": "final",
+          "url": "https://database.ich.org/sites/default/files/ICH_M13A_Step4_Final_Guideline_2024_0723.pdf",
+          "keywords": ["bioequivalence", "BE", "immediate release", "generic", "oral"]
+        }
+      ]
+    },
+    "cioms": {
+      "pharmacovigilance": [
+        {
+          "id": "CIOMS-AI-PV",
+          "title": "Artificial Intelligence in Pharmacovigilance",
+          "year": 2025,
+          "description": "CIOMS Working Group report on AI applications in drug safety.",
+          "url": "https://cioms.ch/publications/product/artificial-intelligence-in-pharmacovigilance/",
+          "keywords": ["AI", "artificial intelligence", "machine learning", "pharmacovigilance", "automation"]
+        },
+        {
+          "id": "CIOMS-Glossary-2.3",
+          "title": "CIOMS Cumulative Glossary with Focus on Pharmacovigilance (Version 2.3)",
+          "year": 2025,
+          "description": "Terms and definitions from CIOMS Working Group reports.",
+          "url": "https://cioms.ch/publications/product/cioms-cumulative-glossary-with-a-focus-on-pharmacovigilance-version-2-3/",
+          "keywords": ["glossary", "definitions", "terminology", "pharmacovigilance"]
+        },
+        {
+          "id": "CIOMS-MLG",
+          "title": "Introduction to MedDRA Labeling Grouping (MLG)",
+          "year": 2024,
+          "description": "Guidance on using MedDRA for product labeling.",
+          "url": "https://cioms.ch/publications/product/introduction-to-meddra-labeling-grouping-mlg/",
+          "keywords": ["MedDRA", "labeling", "MLG", "grouping", "terminology"]
+        },
+        {
+          "id": "CIOMS-Benefit-Risk",
+          "title": "Benefit-Risk Balance for Medicinal Products",
+          "year": 2025,
+          "description": "Framework for assessing benefit-risk balance.",
+          "url": "https://cioms.ch/publications/product/benefit-risk-balance-for-medicinal-products/",
+          "keywords": ["benefit-risk", "assessment", "balance", "decision-making"]
+        },
+        {
+          "id": "CIOMS-SCAR",
+          "title": "Severe Cutaneous Adverse Reactions (SCAR)",
+          "year": 2025,
+          "description": "Guidance on management of severe cutaneous adverse reactions.",
+          "url": "https://cioms.ch/publications/product/severe-cutaneous-adverse-reactions-scar/",
+          "keywords": ["SCAR", "cutaneous", "skin", "Stevens-Johnson", "TEN", "DRESS"]
+        },
+        {
+          "id": "CIOMS-RWD",
+          "title": "Real-World Data and Real-World Evidence in Regulatory Decision Making",
+          "year": 2024,
+          "description": "Use of RWD/RWE in regulatory and safety decisions.",
+          "url": "https://cioms.ch/publications/product/real-world-data-in-regulatory-decision-making/",
+          "keywords": ["RWD", "RWE", "real-world", "evidence", "regulatory"]
+        },
+        {
+          "id": "CIOMS-VIII",
+          "title": "Practical Aspects of Signal Detection in Pharmacovigilance",
+          "year": 2010,
+          "description": "CIOMS Working Group VIII report on signal detection methods.",
+          "url": "https://cioms.ch/publications/product/practical-aspects-of-signal-detection-in-pharmacovigilance/",
+          "keywords": ["signal detection", "disproportionality", "PRR", "ROR", "data mining"]
+        },
+        {
+          "id": "CIOMS-VI",
+          "title": "Management of Safety Information from Clinical Trials",
+          "year": 2005,
+          "description": "CIOMS Working Group VI on clinical trial safety data.",
+          "url": "https://cioms.ch/publications/product/management-of-safety-information-from-clinical-trials/",
+          "keywords": ["clinical trials", "safety", "DSUR", "blinding", "unblinding"]
+        },
+        {
+          "id": "CIOMS-V",
+          "title": "Current Challenges in Pharmacovigilance",
+          "year": 2001,
+          "description": "CIOMS/WHO Working Group V on pharmacovigilance challenges.",
+          "url": "https://cioms.ch/publications/product/current-challenges-in-pharmacovigilance/",
+          "keywords": ["pharmacovigilance", "challenges", "systems", "WHO"]
+        },
+        {
+          "id": "CIOMS-IV",
+          "title": "Benefit-Risk Balance for Marketed Drugs",
+          "year": 1998,
+          "description": "CIOMS Working Group IV on evaluating benefit-risk.",
+          "url": "https://cioms.ch/publications/product/benefit-risk-balance-for-marketed-drugs/",
+          "keywords": ["benefit-risk", "marketed drugs", "evaluation", "decision-making"]
+        },
+        {
+          "id": "CIOMS-I-II",
+          "title": "International Reporting of Adverse Drug Reactions (CIOMS I Form)",
+          "year": 1990,
+          "description": "CIOMS form for international ADR reporting.",
+          "url": "https://cioms.ch/publications/product/international-reporting-of-adverse-drug-reactions/",
+          "keywords": ["CIOMS form", "ADR", "reporting", "international", "ICSR"]
+        }
+      ],
+      "ethics": [
+        {
+          "id": "CIOMS-Ethics-2016",
+          "title": "International Ethical Guidelines for Health-Related Research Involving Humans",
+          "year": 2016,
+          "description": "Ethical guidelines for health research involving human participants.",
+          "url": "https://cioms.ch/publications/product/international-ethical-guidelines-for-health-related-research-involving-humans/",
+          "keywords": ["ethics", "research", "human subjects", "informed consent", "IRB"]
+        },
+        {
+          "id": "CIOMS-Governance",
+          "title": "International Guidelines on Good Governance Practice for Research Institutions",
+          "year": 2023,
+          "description": "Governance practices for research institutions.",
+          "url": "https://cioms.ch/publications/product/international-guidelines-on-good-governance-practice-for-research-institutions/",
+          "keywords": ["governance", "research", "institutions", "integrity", "oversight"]
+        }
+      ]
+    },
+    "ema": {
+      "gvp_modules": [
+        {
+          "id": "GVP-I",
+          "title": "Pharmacovigilance Systems and Their Quality Systems",
+          "description": "EU requirements for pharmacovigilance systems, QPPV responsibilities, and quality management.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-module-i-pharmacovigilance-systems-and-their-quality-systems_en.pdf",
+          "keywords": ["QPPV", "quality system", "pharmacovigilance system", "EU", "MAH"]
+        },
+        {
+          "id": "GVP-II",
+          "title": "Pharmacovigilance System Master File (Rev. 2)",
+          "description": "Requirements for the PSMF including content, format, and maintenance.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-module-ii-pharmacovigilance-system-master-file-rev-2_en.pdf",
+          "keywords": ["PSMF", "master file", "documentation", "EU", "system description"]
+        },
+        {
+          "id": "GVP-III",
+          "title": "Pharmacovigilance Inspections",
+          "description": "Procedures for PV inspections by competent authorities in the EU.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-module-iii-pharmacovigilance-inspections_en.pdf",
+          "keywords": ["inspection", "compliance", "audit", "competent authority", "EU"]
+        },
+        {
+          "id": "GVP-IV",
+          "title": "Pharmacovigilance Audits (Rev. 1)",
+          "description": "Guidance on conducting and documenting pharmacovigilance audits.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-gvp-module-iv-pharmacovigilance-audits-rev-1_en.pdf",
+          "keywords": ["audit", "quality", "compliance", "internal audit", "EU"]
+        },
+        {
+          "id": "GVP-V",
+          "title": "Risk Management Systems (Rev. 2)",
+          "description": "EU requirements for risk management plans (RMPs) and risk minimization measures.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-module-v-risk-management-systems-rev-2_en.pdf",
+          "keywords": ["RMP", "risk management", "safety specification", "risk minimization", "EU"]
+        },
+        {
+          "id": "GVP-VI",
+          "title": "Collection, Management and Submission of Adverse Reaction Reports (Rev. 2)",
+          "description": "EU requirements for ICSR collection, processing, and submission to EudraVigilance.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/regulatory-procedural-guideline/guideline-good-pharmacovigilance-practices-gvp-module-vi-collection-management-submission-reports-suspected-adverse-reactions-medicinal-products-rev-2_en.pdf",
+          "keywords": ["ICSR", "adverse reaction", "EudraVigilance", "reporting", "E2B", "EU"]
+        },
+        {
+          "id": "GVP-VII",
+          "title": "Periodic Safety Update Report",
+          "description": "EU requirements for PSUR format, content, and submission procedures.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-gvp-module-vii-periodic-safety-update-report_en.pdf",
+          "keywords": ["PSUR", "PBRER", "periodic report", "benefit-risk", "EU"]
+        },
+        {
+          "id": "GVP-VIII",
+          "title": "Post-Authorisation Safety Studies (Rev. 3)",
+          "description": "EU requirements for PASS design, conduct, and reporting.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-gvp-module-viii-post-authorisation-safety-studies-rev-3_en.pdf",
+          "keywords": ["PASS", "safety study", "post-authorisation", "observational", "EU"]
+        },
+        {
+          "id": "GVP-IX",
+          "title": "Signal Management (Rev. 1)",
+          "description": "EU signal detection, validation, and assessment procedures.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-gvp-module-ix-signal-management-rev-1_en.pdf",
+          "keywords": ["signal", "detection", "validation", "assessment", "PRAC", "EU"]
+        },
+        {
+          "id": "GVP-X",
+          "title": "Additional Monitoring",
+          "description": "Black triangle scheme and additional monitoring requirements in the EU.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-module-x-additional-monitoring_en.pdf",
+          "keywords": ["black triangle", "additional monitoring", "new medicines", "EU"]
+        },
+        {
+          "id": "GVP-XV",
+          "title": "Safety Communication (Rev. 1)",
+          "description": "Requirements for DHPCs, safety announcements, and communication plans.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-module-xv-safety-communication-rev-1_en.pdf",
+          "keywords": ["DHPC", "safety communication", "Dear Healthcare Professional", "EU"]
+        },
+        {
+          "id": "GVP-XVI",
+          "title": "Risk Minimisation Measures (Rev. 3)",
+          "description": "Selection, implementation, and effectiveness evaluation of risk minimization measures.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/regulatory-procedural-guideline/guideline-good-pharmacovigilance-practices-gvp-module-xvi-risk-minimisation-measures-rev-3_en.pdf",
+          "keywords": ["risk minimization", "aRMM", "educational materials", "effectiveness", "EU"]
+        }
+      ],
+      "gvp_addenda": [
+        {
+          "id": "GVP-VI-Add-I",
+          "title": "Duplicate Management of Suspected Adverse Reaction Reports",
+          "description": "Guidance on identifying and managing duplicate ICSRs.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-gvp-module-vi-addendum-i-duplicate-management-suspected-adverse-reaction-reports_en.pdf",
+          "keywords": ["duplicate", "ICSR", "case management", "EU"]
+        },
+        {
+          "id": "GVP-VI-Add-II",
+          "title": "Masking of Personal Data in Individual Case Safety Reports",
+          "description": "Requirements for anonymization and data protection in ICSRs.",
+          "status": "final",
+          "year": 2025,
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-gvp-module-vi-addendum-ii-masking-personal-data-individual-case-safety-reports_en.pdf",
+          "keywords": ["masking", "anonymization", "GDPR", "personal data", "ICSR", "EU"]
+        },
+        {
+          "id": "GVP-VIII-Add-I",
+          "title": "Non-Interventional Post-Authorisation Safety Studies (Rev. 3)",
+          "description": "Detailed guidance on NI-PASS protocols, conduct, and reporting.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-gvp-module-viii-addendum-i-requirements-and-recommendations-submission-information-post-authorisation-safety-studies_en.pdf",
+          "keywords": ["NI-PASS", "non-interventional", "protocol", "EU PAS Register", "EU"]
+        },
+        {
+          "id": "GVP-IX-Add-I",
+          "title": "Signal Detection Methodological Aspects",
+          "description": "Statistical methods and data mining approaches for signal detection.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-gvp-module-ix-addendum-i-methodological-aspects-signal-detection-spontaneous-reports-adverse-reactions_en.pdf",
+          "keywords": ["signal detection", "disproportionality", "data mining", "statistics", "EU"]
+        },
+        {
+          "id": "GVP-XVI-Add-I",
+          "title": "Embryo-Fetal Risk Minimisation",
+          "description": "Specific guidance on pregnancy prevention programmes and teratogenic risk.",
+          "status": "final",
+          "year": 2025,
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-gvp-module-xvi-addendum-i-educational-materials_en.pdf",
+          "keywords": ["pregnancy prevention", "teratogenic", "embryo-fetal", "PPP", "EU"]
+        },
+        {
+          "id": "GVP-XVI-Add-II",
+          "title": "Evaluating Risk Minimisation Effectiveness",
+          "description": "Methods for measuring effectiveness of risk minimization measures.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-gvp-module-xvi-addendum-ii-methods-effectiveness-evaluation-risk-minimisation-measures_en.pdf",
+          "keywords": ["effectiveness", "evaluation", "metrics", "risk minimization", "EU"]
+        }
+      ],
+      "gvp_product_specific": [
+        {
+          "id": "GVP-P-I",
+          "title": "Vaccines for Prophylaxis Against Infectious Diseases",
+          "description": "PV considerations specific to prophylactic vaccines.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-gvp-product-or-population-specific-considerations-i-vaccines-prophylaxis-against-infectious-diseases_en.pdf",
+          "keywords": ["vaccines", "immunization", "AEFI", "batch", "EU"]
+        },
+        {
+          "id": "GVP-P-II",
+          "title": "Biological Medicinal Products",
+          "description": "PV considerations for biologics including traceability and immunogenicity.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-gvp-product-or-population-specific-considerations-ii-biological-medicinal-products_en.pdf",
+          "keywords": ["biologics", "biosimilars", "traceability", "immunogenicity", "EU"]
+        },
+        {
+          "id": "GVP-P-IV",
+          "title": "Paediatric Population",
+          "description": "PV considerations for medicines used in children.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-gvp-product-or-population-specific-considerations-iv-paediatric-population_en.pdf",
+          "keywords": ["paediatric", "children", "PIP", "off-label", "EU"]
+        }
+      ],
+      "gvp_annexes": [
+        {
+          "id": "GVP-Annex-I",
+          "title": "Definitions (Rev. 5)",
+          "description": "Standardized definitions used across all GVP modules.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-annex-i-definitions-rev-5_en.pdf",
+          "keywords": ["definitions", "glossary", "terminology", "EU"]
+        },
+        {
+          "id": "GVP-Annex-II",
+          "title": "Templates",
+          "description": "Standard templates for PSUR cover page, DHPC, and communication plans.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/template-form/guideline-good-pharmacovigilance-practices-gvp-annex-ii-templates_en.pdf",
+          "keywords": ["templates", "PSUR", "DHPC", "forms", "EU"]
+        },
+        {
+          "id": "GVP-Annex-V",
+          "title": "Abbreviations (Rev. 1)",
+          "description": "Standard abbreviations used in EU pharmacovigilance.",
+          "status": "final",
+          "url": "https://www.ema.europa.eu/en/documents/scientific-guideline/guideline-good-pharmacovigilance-practices-annex-v-abbreviations-rev-1_en.pdf",
+          "keywords": ["abbreviations", "acronyms", "EU"]
+        }
+      ]
+    }
+  }
+}

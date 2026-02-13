@@ -1,0 +1,14 @@
+[package]
+name = "primitive-innovation"
+version = "0.1.0"
+edition = "2024"
+description = "Innovation exploration for NexCore primitive ecosystem — new T2-C types, cross-domain bridges, and combination space fill"
+license = "Proprietary"
+authors = ["Matthew Campion, PharmD; NexVigilant"]
+
+[dependencies]
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"

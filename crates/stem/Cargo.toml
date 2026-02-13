@@ -1,0 +1,33 @@
+[workspace]
+
+[package]
+name = "stem"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "STEM: Science, Technology, Engineering, Mathematics as Rust traits"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nexvigilant/stem"
+keywords = ["stem", "science", "primitives", "cross-domain", "traits"]
+categories = ["science"]
+publish = true
+
+[dependencies]
+# Derive macros (must stay separate crate - proc-macro requirement)
+stem-derive = { version = "0.1.0", path = "../stem-derive", registry = "nexcore" }
+# Direct dependencies (formerly from sub-crates)
+nexcore-constants = { version = "1.0.0", path = "../nexcore-constants", registry = "nexcore" }
+nexcore-hormones = { version = "1.0.0", path = "../nexcore-hormones", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+thiserror = { version = "1.0.61" }
+serde = { version = "1.0.204", features = ["derive"] }
+tracing = { version = "0.1.40" }
+tokio = { version = "1.38.0", features = ["full", "macros", "rt-multi-thread"] }
+
+[dev-dependencies]
+serde_json = { version = "1.0.120" }
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "stem_benchmarks"
+harness = false

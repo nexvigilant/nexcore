@@ -1,0 +1,49 @@
+// pipeline.true — Ultra-compact functional pipelines
+//
+// Pipeline operator |> enables left-to-right data flow:
+//   a |> f |> g ≡ g(f(a))
+//
+// AI writes. Human verifies: 1=true, 0=false.
+
+// Define reusable transformations
+μ double(n: N) → N { n * 2 }
+μ inc(n: N) → N { n + 1 }
+μ square(n: N) → N { n * n }
+
+// Simple pipelines
+λ r1 = 5 |> double                    // 10
+λ r2 = 5 |> double |> inc             // 11
+λ r3 = 5 |> double |> inc |> square   // 121
+
+// Pipeline with inline lambda
+λ r4 = 10 |> |x| x * x + 1            // 101
+
+// Sequence processing pipeline
+λ data = σ[1, 2, 3, 4, 5]
+λ result = data
+    |> Φ(|x| x * 2)      // [2, 4, 6, 8, 10]
+    |> Ψ(|x| x κ> 4)     // [6, 8, 10]
+    |> Ω(0, |a, b| a + b) // 24
+
+// Ultra-compressed form (AI-optimal)
+λ sum_even = σ[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    |> Ψ(|x| x % 2 κ= 0)  // filter evens
+    |> Ω(0, |a, b| a + b) // sum: 30
+
+// Pipeline vs nested calls comparison:
+// Nested:  Ω(Ψ(Φ(σ[1,2,3], |x| x*2), |x| x κ> 3), 0, |a,b| a+b)
+// Pipeline: σ[1,2,3] |> Φ(|x| x*2) |> Ψ(|x| x κ> 3) |> Ω(0, |a,b| a+b)
+
+// Assertions
+‼(r1 κ= 10)
+‼(r2 κ= 11)
+‼(r3 κ= 121)
+‼(r4 κ= 101)
+‼(result κ= 24)
+‼(sum_even κ= 30)
+
+// Type inspection
+ω(τ(result))  // → "N"
+ω(T(result))  // → "T1" (single primitive)
+
+ω("∎ pipeline.true verified")

@@ -1,0 +1,32 @@
+[package]
+name = "nexcore-watch-app"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license = "LicenseRef-NexVigilant-Proprietary"
+description = "NexCore watch app — NativeActivity + Slint UI for Galaxy Watch7"
+
+[lib]
+name = "nexcore_watch_app"
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[features]
+default = []
+# Enable when building for Android device with: --features slint-ui
+slint-ui = ["dep:slint", "dep:android-activity", "dep:ndk", "dep:slint-build"]
+
+[dependencies]
+nexcore-watch-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Android + Slint — activated via `slint-ui` feature
+# On host, android_main is gated behind #[cfg(target_os = "android")]
+slint = { workspace = true, optional = true }
+android-activity = { workspace = true, optional = true }
+ndk = { workspace = true, optional = true }
+
+[build-dependencies]
+slint-build = { workspace = true, optional = true }

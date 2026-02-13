@@ -1,0 +1,4153 @@
+#![recursion_limit = "512"]
+//! # NexVigilant Core MCP Server
+//!
+//! MCP server exposing NexVigilant Core's high-performance Rust APIs to Claude Code.
+//!
+//! ## Features
+//!
+//! - **262 tools** across 11+ domains: Foundation, PV, Vigilance, HUD, Skills, Guidelines, FAERS, GCloud, Wolfram, Principles, Brain, Guardian, Chemistry, STEM, Regulatory, Hooks, Vigil
+//! - **Direct library integration** - no subprocess overhead
+//! - **Thread-safe state** - SkillRegistry with parking_lot RwLock
+//!
+//! ## Tool Categories
+//!
+//! | Category | Tools | Description |
+//! |----------|-------|-------------|
+//! | Foundation | 7 | Algorithms, crypto, YAML, graph, FSRS |
+//! | PV | 8 | Signal detection, causality assessment |
+//! | Vigilance | 4 | Safety margin, risk, ToV, harm types |
+//! | HUD | 24 | CAP-014/018/019/020/022/025/026/027/028/029/030/031/037 governance capabilities |
+//! | Skills | 8 | Registry, validation, taxonomy |
+//! | Guidelines | 9 | ICH, CIOMS, EMA GVP guideline search + ICH glossary (894+ terms) |
+//! | FAERS | 5 | FDA Adverse Event queries via OpenFDA |
+//! | GCloud | 19 | Google Cloud CLI operations |
+//! | Principles | 3 | Knowledge base search (Dalio, KISS, etc.) |
+
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
+// Style issues in newly migrated code - fix in dedicated cleanup pass
+#![allow(clippy::collapsible_if)]
+#![allow(clippy::redundant_closure)]
+#![allow(clippy::redundant_closure_for_method_calls)]
+
+pub mod browser;
+pub mod config;
+pub mod params;
+#[allow(missing_docs)]
+pub mod tooling;
+pub mod tools;
+/// Unified dispatcher for single-tool mode.
+pub mod unified;
+
+/// MCP call telemetry collection (optional feature).
+#[cfg(feature = "telemetry")]
+pub mod telemetry;
+
+#[cfg(test)]
+mod tests;
+
+use std::sync::Arc;
+
+use nexcore_vigilance::skills::{SkillKnowledgeIndex, SkillRegistry};
+use parking_lot::RwLock;
+use rmcp::handler::server::router::tool::ToolRouter;
+use rmcp::handler::server::tool::ToolCallContext;
+use rmcp::handler::server::wrapper::Parameters;
+use rmcp::model::{
+    CallToolRequestParams, CallToolResult, Implementation, ListToolsResult, PaginatedRequestParams,
+    ServerCapabilities, ServerInfo,
+};
+use rmcp::service::{RequestContext, RoleServer};
+use rmcp::{ErrorData as McpError, ServerHandler, tool, tool_router};
+
+/// NexCore MCP Server
+///
+/// Exposes NexCore APIs via Model Context Protocol for Claude Code integration.
+///
+/// Tier: T3 (Domain-specific MCP server)
+/// Grounds to T1 Concepts via Arc/RwLock/Option and tool router state
+/// Ord: N/A (stateful service)
+#[derive(Clone)]
+pub struct NexCoreMcpServer {
+    /// Skill registry (thread-safe)
+    pub registry: Arc<RwLock<SkillRegistry>>,
+    /// Skill knowledge index for intent-based search (thread-safe)
+    pub assist_index: Arc<RwLock<SkillKnowledgeIndex>>,
+    /// Loaded configuration (optional - may not exist)
+    pub config: Option<nexcore_config::ClaudeConfig>,
+    /// Tool router
+    tool_router: ToolRouter<Self>,
+}
+
+#[tool_router]
+impl NexCoreMcpServer {
+    /// Create a new NexCore MCP server
+    #[must_use]
+    pub fn new() -> Self {
+        // Load config with fallback (don't fail server if config missing)
+        let config = config::load_config().ok();
+
+        // Pre-populate skill knowledge index from ~/.claude/skills/
+        let assist_index = nexcore_vigilance::skills::default_skills_path()
+            .and_then(|p| SkillKnowledgeIndex::scan(&p).ok())
+            .unwrap_or_default();
+
+        Self {
+            registry: Arc::new(RwLock::new(SkillRegistry::new())),
+            assist_index: Arc::new(RwLock::new(assist_index)),
+            config,
+            tool_router: Self::tool_router(),
+        }
+    }
+
+    // ========================================================================
+    // Unified Dispatcher (1)
+    // ========================================================================
+
+    #[tool(
+        description = "Unified NexCore interface. 262 commands via {command, params}. Use command='help' for catalog."
+    )]
+    async fn nexcore(
+        &self,
+        Parameters(uparams): Parameters<params::UnifiedParams>,
+    ) -> Result<CallToolResult, McpError> {
+        if let Err(err) = crate::tooling::tool_gate().check(&uparams.command) {
+            return Ok(crate::tooling::gated_result(&uparams.command, err));
+        }
+        let result = crate::unified::dispatch(&uparams.command, uparams.params, self).await?;
+        Ok(crate::tooling::wrap_result(result))
+    }
+
+    // ========================================================================
+    // System Tools (4)
+    // ========================================================================
+
+    #[tool(
+        description = "Health check for NexCore MCP server. Returns version, tool count, and status."
+    )]
+    async fn nexcore_health(&self) -> Result<CallToolResult, McpError> {
+        let tool_count = self.tool_router.list_all().len();
+        let health = serde_json::json!({
+            "status": "healthy",
+            "server": "nexcore-mcp",
+            "version": env!("CARGO_PKG_VERSION"),
+            "tool_count": tool_count,
+            "domains": ["foundation", "pv", "vigilance", "skills", "guidelines", "faers", "gcloud", "wolfram", "principles", "hooks"]
+        });
+        Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+            serde_json::to_string_pretty(&health).unwrap_or_default(),
+        )]))
+    }
+
+    #[tool(
+        description = "Validate Claude Code configuration. Checks for security issues, path validity, and configuration errors. Returns validation status and any warnings."
+    )]
+    async fn config_validate(&self) -> Result<CallToolResult, McpError> {
+        use nexcore_config::Validate;
+
+        if let Some(cfg) = &self.config {
+            match cfg.validate() {
+                Ok(_) => Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+                    "✅ Configuration valid:\n\
+                     • No security issues detected\n\
+                     • All paths validated\n\
+                     • MCP servers properly configured"
+                        .to_string(),
+                )])),
+                Err(e) => Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+                    format!("⚠️  Configuration warnings:\n{}", e),
+                )])),
+            }
+        } else {
+            Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+                "ℹ️  No configuration loaded\n\
+                 Configuration file not found at:\n\
+                 • ~/nexcore/config.toml\n\
+                 • ~/.claude.json"
+                    .to_string(),
+            )]))
+        }
+    }
+
+    #[tool(
+        description = "List all configured MCP servers. Returns server names, commands, and arguments for both global and optionally project-specific servers."
+    )]
+    async fn mcp_servers_list(
+        &self,
+        Parameters(params): Parameters<params::McpServersListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        if let Some(cfg) = &self.config {
+            let mut servers: Vec<serde_json::Value> = cfg
+                .mcp_servers
+                .iter()
+                .map(|(name, config)| {
+                    let (command, args) = match config {
+                        nexcore_config::McpServerConfig::Stdio { command, args, .. } => {
+                            (command.clone(), args.clone())
+                        }
+                    };
+                    serde_json::json!({
+                        "name": name,
+                        "scope": "global",
+                        "command": command,
+                        "args": args
+                    })
+                })
+                .collect();
+
+            if params.include_projects {
+                for (path, project) in &cfg.projects {
+                    for (name, config) in &project.mcp_servers {
+                        let (command, args) = match config {
+                            nexcore_config::McpServerConfig::Stdio { command, args, .. } => {
+                                (command.clone(), args.clone())
+                            }
+                        };
+                        servers.push(serde_json::json!({
+                            "name": name,
+                            "scope": "project",
+                            "project": path.display().to_string(),
+                            "command": command,
+                            "args": args
+                        }));
+                    }
+                }
+            }
+
+            let result = serde_json::json!({
+                "total": servers.len(),
+                "servers": servers
+            });
+
+            Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+                serde_json::to_string_pretty(&result).unwrap_or_default(),
+            )]))
+        } else {
+            Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+                "ℹ️  No configuration loaded - cannot list MCP servers".to_string(),
+            )]))
+        }
+    }
+
+    #[tool(
+        description = "Get configuration details for a specific MCP server by name. Returns command, args, and environment variables."
+    )]
+    async fn mcp_server_get(
+        &self,
+        Parameters(params): Parameters<params::McpServerGetParams>,
+    ) -> Result<CallToolResult, McpError> {
+        if let Some(cfg) = &self.config {
+            if let Some(server) = cfg.mcp_servers.get(&params.name) {
+                let result = match server {
+                    nexcore_config::McpServerConfig::Stdio { command, args, env } => {
+                        serde_json::json!({
+                            "name": params.name,
+                            "type": "stdio",
+                            "command": command,
+                            "args": args,
+                            "env": env
+                        })
+                    }
+                };
+                Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+                    serde_json::to_string_pretty(&result).unwrap_or_default(),
+                )]))
+            } else {
+                Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+                    format!("❌ MCP server '{}' not found", params.name),
+                )]))
+            }
+        } else {
+            Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+                "ℹ️  No configuration loaded".to_string(),
+            )]))
+        }
+    }
+
+    // ========================================================================
+    // Foundation Tools (7)
+    // ========================================================================
+
+    #[tool(
+        description = "Calculate Levenshtein edit distance and similarity between two strings. Returns distance, similarity (0-1), and string lengths. 63x faster than Python."
+    )]
+    async fn foundation_levenshtein(
+        &self,
+        Parameters(params): Parameters<params::LevenshteinParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::foundation::calc_levenshtein(params)
+    }
+
+    #[tool(
+        description = "Calculate bounded Levenshtein distance with early termination. Returns distance if within max_distance, null if exceeded. Faster than unbounded for filtering large candidate sets."
+    )]
+    async fn foundation_levenshtein_bounded(
+        &self,
+        Parameters(params): Parameters<params::LevenshteinBoundedParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::foundation::calc_levenshtein_bounded(params)
+    }
+
+    #[tool(
+        description = "Batch fuzzy search: find best matches for a query against candidates. Returns matches sorted by similarity (descending)."
+    )]
+    async fn foundation_fuzzy_search(
+        &self,
+        Parameters(params): Parameters<params::FuzzySearchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::foundation::fuzzy_search(params)
+    }
+
+    #[tool(
+        description = "Calculate SHA-256 hash of input string. Returns hex-encoded hash. 20x faster than Python."
+    )]
+    async fn foundation_sha256(
+        &self,
+        Parameters(params): Parameters<params::Sha256Params>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::foundation::sha256(params)
+    }
+
+    #[tool(
+        description = "Parse YAML content to JSON. 7x faster than Python. Returns parsed JSON or error message."
+    )]
+    async fn foundation_yaml_parse(
+        &self,
+        Parameters(params): Parameters<params::YamlParseParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::foundation::yaml_parse(params)
+    }
+
+    #[tool(
+        description = "Topological sort of a directed acyclic graph (DAG). Returns nodes in dependency order. Detects cycles."
+    )]
+    async fn foundation_graph_topsort(
+        &self,
+        Parameters(params): Parameters<params::GraphTopsortParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::foundation::graph_topsort(params)
+    }
+
+    #[tool(
+        description = "Compute parallel execution levels for a DAG. Groups independent nodes that can run concurrently."
+    )]
+    async fn foundation_graph_levels(
+        &self,
+        Parameters(params): Parameters<params::GraphLevelsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::foundation::graph_levels(params)
+    }
+
+    #[tool(
+        description = "FSRS spaced repetition: calculate next review interval based on current state and rating."
+    )]
+    async fn foundation_fsrs_review(
+        &self,
+        Parameters(params): Parameters<params::FsrsReviewParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::foundation::fsrs_review(params)
+    }
+
+    #[tool(
+        description = "Expand a concept into all deterministic search variants: case forms (lower/UPPER/Title/camelCase/snake_case/kebab-case), singular/plural, abbreviation, truncated stems, and optional section markers. Returns patterns and combined regex. 100% deterministic, zero I/O."
+    )]
+    async fn foundation_concept_grep(
+        &self,
+        Parameters(params): Parameters<params::ConceptGrepParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::foundation::concept_grep(params)
+    }
+
+    // ========================================================================
+    // Formula-Derived Tools (5) — KU extraction pipeline → MCP tools
+    // ========================================================================
+
+    #[tool(
+        description = "Compute PV signal strength composite: S = Unexpectedness × Robustness × Therapeutic_importance. All inputs in [0,1]. Higher = stronger signal. Classifies as strong/moderate/weak/negligible."
+    )]
+    async fn pv_signal_strength(
+        &self,
+        Parameters(params): Parameters<params::SignalStrengthParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::formula::signal_strength(params)
+    }
+
+    #[tool(
+        description = "Compute domain distance via weighted primitive overlap. Distance in [0,1] where 0=identical, 1=maximally distant. Uses tier-weighted Jaccard: d = 1 - (w1×T1 + w2×T2 + w3×T3). Classifies domains as very_close to very_distant."
+    )]
+    async fn foundation_domain_distance(
+        &self,
+        Parameters(params): Parameters<params::DomainDistanceParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::formula::domain_distance(params)
+    }
+
+    #[tool(
+        description = "Compute flywheel velocity from paired failure/fix timestamps (ms since epoch). velocity = 1/avg(fix-failure). Target: < 24 hours. Classifies as exceptional/target/acceptable/slow."
+    )]
+    async fn foundation_flywheel_velocity(
+        &self,
+        Parameters(params): Parameters<params::FlywheelVelocityParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::formula::flywheel_velocity(params)
+    }
+
+    #[tool(
+        description = "Compute LLM token-to-operation ratio for code generation efficiency. ratio = tokens/operations. Target: ≤ 1.0. Lower = more efficient. Classifies as excellent/target/verbose/wasteful."
+    )]
+    async fn foundation_token_ratio(
+        &self,
+        Parameters(params): Parameters<params::TokenRatioParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::formula::token_ratio(params)
+    }
+
+    #[tool(
+        description = "Compute spectral overlap (cosine similarity) between two feature vectors. overlap = (a·b)/(‖a‖×‖b‖) in [-1,1]. For autocorrelation spectra, typically [0,1]. Classifies as highly_similar to anti_correlated."
+    )]
+    async fn foundation_spectral_overlap(
+        &self,
+        Parameters(params): Parameters<params::SpectralOverlapParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::formula::spectral_overlap(params)
+    }
+
+    // ========================================================================
+    // Lex Primitiva Tools (4) - T1 Symbolic Foundation
+    // ========================================================================
+
+    #[tool(
+        description = "List all 15 Lex Primitiva symbols (σ μ ς ρ ∅ ∂ ν ∃ π → κ N λ ∝ Σ). The irreducible T1 primitives that ground all higher-tier types."
+    )]
+    async fn lex_primitiva_list(
+        &self,
+        Parameters(params): Parameters<params::LexPrimitivaListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::lex_primitiva::list_primitives(params)
+    }
+
+    #[tool(
+        description = "Get details about a specific Lex Primitiva by name or symbol. Returns description, Rust manifestation, and tier."
+    )]
+    async fn lex_primitiva_get(
+        &self,
+        Parameters(params): Parameters<params::LexPrimitivaGetParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::lex_primitiva::get_primitive(params)
+    }
+
+    #[tool(
+        description = "Classify a type's grounding tier (T1-Universal, T2-Primitive, T2-Composite, T3-DomainSpecific) based on its primitive composition."
+    )]
+    async fn lex_primitiva_tier(
+        &self,
+        Parameters(params): Parameters<params::LexPrimitivaTierParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::lex_primitiva::classify_tier(params)
+    }
+
+    #[tool(
+        description = "Get the primitive composition for a grounded type. Shows which T1 primitives compose the type, the dominant primitive, and confidence score."
+    )]
+    async fn lex_primitiva_composition(
+        &self,
+        Parameters(params): Parameters<params::LexPrimitivaCompositionParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::lex_primitiva::get_composition(params)
+    }
+
+    #[tool(
+        description = "Reverse compose: given T1 primitives, synthesize upward through the tier DAG to discover patterns, interactions, dominant primitive, tier classification, and completion suggestions. Input primitive names like 'Boundary', 'Comparison'."
+    )]
+    async fn lex_primitiva_reverse_compose(
+        &self,
+        Parameters(params): Parameters<params::LexPrimitivaReverseComposeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::lex_primitiva::reverse_compose(params)
+    }
+
+    #[tool(
+        description = "Reverse lookup: find grounded types whose primitive composition matches a set of T1 primitives. Supports 'exact', 'superset' (default), and 'subset' match modes."
+    )]
+    async fn lex_primitiva_reverse_lookup(
+        &self,
+        Parameters(params): Parameters<params::LexPrimitivaReverseLookupParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::lex_primitiva::reverse_lookup(params)
+    }
+
+    #[tool(
+        description = "Compute the molecular weight of a word/concept from its T1 primitive decomposition (Algorithm A76). Provide primitive names and get Shannon information-theoretic weight in daltons, transfer class, and predicted cross-domain transfer confidence. MW anti-correlates with transferability: light words transfer easily, heavy words are domain-locked."
+    )]
+    async fn lex_primitiva_molecular_weight(
+        &self,
+        Parameters(params): Parameters<params::LexPrimitivaMolecularWeightParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::lex_primitiva::molecular_weight(params)
+    }
+
+    // ========================================================================
+    // PV Signal Detection Tools (8)
+    // ========================================================================
+
+    #[tool(
+        description = "Complete signal analysis using all 5 algorithms (PRR, ROR, IC, EBGM, Chi-square) on a 2x2 contingency table."
+    )]
+    async fn pv_signal_complete(
+        &self,
+        Parameters(params): Parameters<params::SignalCompleteParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pv::signal_complete(params)
+    }
+
+    #[tool(
+        description = "Calculate Proportional Reporting Ratio (PRR) for pharmacovigilance signal detection."
+    )]
+    async fn pv_signal_prr(
+        &self,
+        Parameters(params): Parameters<params::SignalAlgorithmParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pv::signal_prr(params)
+    }
+
+    #[tool(
+        description = "Calculate Reporting Odds Ratio (ROR) for pharmacovigilance signal detection."
+    )]
+    async fn pv_signal_ror(
+        &self,
+        Parameters(params): Parameters<params::SignalAlgorithmParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pv::signal_ror(params)
+    }
+
+    #[tool(
+        description = "Calculate Information Component (IC) using Bayesian shrinkage for pharmacovigilance signal detection."
+    )]
+    async fn pv_signal_ic(
+        &self,
+        Parameters(params): Parameters<params::SignalAlgorithmParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pv::signal_ic(params)
+    }
+
+    #[tool(
+        description = "Calculate Empirical Bayes Geometric Mean (EBGM) for pharmacovigilance signal detection."
+    )]
+    async fn pv_signal_ebgm(
+        &self,
+        Parameters(params): Parameters<params::SignalAlgorithmParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pv::signal_ebgm(params)
+    }
+
+    #[tool(description = "Calculate Chi-square statistic for a 2x2 contingency table.")]
+    async fn pv_chi_square(
+        &self,
+        Parameters(params): Parameters<params::SignalAlgorithmParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pv::chi_square(params)
+    }
+
+    #[tool(
+        description = "Naranjo causality assessment: quick 5-question assessment returning score (-4 to 13) and category (Definite/Probable/Possible/Doubtful)."
+    )]
+    async fn pv_naranjo_quick(
+        &self,
+        Parameters(params): Parameters<params::NaranjoParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pv::naranjo_quick(params)
+    }
+
+    #[tool(
+        description = "WHO-UMC causality assessment: returns category (Certain/Probable/Possible/Unlikely/Conditional/Unassessable) and description."
+    )]
+    async fn pv_who_umc_quick(
+        &self,
+        Parameters(params): Parameters<params::WhoUmcParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pv::who_umc_quick(params)
+    }
+
+    // ========================================================================
+    // Signal Pipeline Tools (3) - signal-stats / signal-core crates
+    // ========================================================================
+
+    #[tool(
+        description = "Detect signal for a drug-event pair using the signal-stats pipeline (PRR, ROR, IC, EBGM, Chi-square, SignalStrength). Returns all metrics with strength classification."
+    )]
+    async fn signal_detect(
+        &self,
+        Parameters(params): Parameters<params::SignalDetectParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::signal::signal_detect(params)
+    }
+
+    #[tool(
+        description = "Batch signal detection for multiple drug-event pairs. Returns results array with signals_found count."
+    )]
+    async fn signal_batch(
+        &self,
+        Parameters(params): Parameters<params::SignalBatchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::signal::signal_batch(params)
+    }
+
+    #[tool(
+        description = "Get signal detection threshold configurations: Evans (default), Strict (fewer false positives), Sensitive (fewer false negatives)."
+    )]
+    async fn signal_thresholds(&self) -> Result<CallToolResult, McpError> {
+        tools::signal::signal_thresholds()
+    }
+
+    // ========================================================================
+    // PVDSL Tools (4) - Pharmacovigilance Domain-Specific Language
+    // ========================================================================
+
+    #[tool(
+        description = "Compile PVDSL source code to bytecode. Validates syntax and returns compilation stats."
+    )]
+    async fn pvdsl_compile(
+        &self,
+        Parameters(params): Parameters<params::PvdslCompileParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pvdsl::pvdsl_compile(params)
+    }
+
+    #[tool(
+        description = "Execute PVDSL source code with optional variables. Supports signal detection (PRR, ROR, IC, EBGM, SPRT, MaxSPRT, CuSum, MGPS), causality (Naranjo, WHO-UMC), and math functions."
+    )]
+    async fn pvdsl_execute(
+        &self,
+        Parameters(params): Parameters<params::PvdslExecuteParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pvdsl::pvdsl_execute(params)
+    }
+
+    #[tool(
+        description = "Evaluate a single PVDSL expression. Example: signal::prr(10, 90, 100, 9800)"
+    )]
+    async fn pvdsl_eval(
+        &self,
+        Parameters(params): Parameters<params::PvdslEvalParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pvdsl::pvdsl_eval(params)
+    }
+
+    #[tool(
+        description = "List all available PVDSL functions organized by namespace (signal, causality, meddra, math, risk, date, classify)."
+    )]
+    async fn pvdsl_functions(&self) -> Result<CallToolResult, McpError> {
+        tools::pvdsl::pvdsl_functions()
+    }
+
+    // ========================================================================
+    // Vigilance Tools (4)
+    // ========================================================================
+
+    #[tool(
+        description = "Calculate safety margin d(s) - signed distance to harm boundary based on signal metrics. ToV axiom implementation."
+    )]
+    async fn vigilance_safety_margin(
+        &self,
+        Parameters(params): Parameters<params::SafetyMarginParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::vigilance::safety_margin(params)
+    }
+
+    #[tool(
+        description = "Guardian-AV risk scoring: calculate overall risk (0-100) with contributing factors."
+    )]
+    async fn vigilance_risk_score(
+        &self,
+        Parameters(params): Parameters<params::RiskScoreParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::vigilance::risk_score(params)
+    }
+
+    #[tool(
+        description = "List all 8 ToV harm types (A-H) with their conservation laws, letters, and affected hierarchy levels."
+    )]
+    async fn vigilance_harm_types(&self) -> Result<CallToolResult, McpError> {
+        tools::vigilance::harm_types()
+    }
+
+    #[tool(
+        description = "Map a SafetyLevel (1-8) to its ToV hierarchy level. Levels: Molecular(1-2), Physiological(3-5), Clinical(6), Population(7), Regulatory(8)."
+    )]
+    async fn vigilance_map_to_tov(
+        &self,
+        Parameters(params): Parameters<params::MapToTovParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::vigilance::map_to_tov(params)
+    }
+
+    // ========================================================================
+    // Compliance Tools (3) - SAM.gov, OSCAL, ICH Controls
+    // ========================================================================
+
+    #[tool(
+        description = "Check SAM.gov for federal entity exclusions (debarment, suspension). Query by UEI, CAGE code, or entity name. Requires SAM_GOV_API_KEY env var."
+    )]
+    async fn compliance_check_exclusion(
+        &self,
+        Parameters(params): Parameters<params::ComplianceCheckExclusionParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::compliance::check_exclusion(params).await
+    }
+
+    #[tool(
+        description = "Run compliance assessment on controls. Evaluates control status and findings to determine Compliant/NonCompliant/Inconclusive result."
+    )]
+    async fn compliance_assess(
+        &self,
+        Parameters(params): Parameters<params::ComplianceAssessParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::compliance::assess(params)
+    }
+
+    #[tool(
+        description = "Get pre-populated ICH control catalog (E2A-E2E guidelines). Optionally filter by guideline code. Returns 12 pharmacovigilance controls."
+    )]
+    async fn compliance_catalog_ich(
+        &self,
+        Parameters(params): Parameters<params::ComplianceCatalogParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::compliance::catalog_ich(params)
+    }
+
+    #[tool(
+        description = "Get SEC EDGAR filings for a company by CIK. Filter by form type (10-K, 10-Q, 8-K). No auth required."
+    )]
+    async fn compliance_sec_filings(
+        &self,
+        Parameters(params): Parameters<params::ComplianceSecFilingsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::compliance::sec_filings(params).await
+    }
+
+    #[tool(
+        description = "Get SEC 10-K filings for major pharma companies. Companies: pfizer, jnj, merck, abbvie, bms, lilly, amgen, gilead, regeneron, moderna."
+    )]
+    async fn compliance_sec_pharma(
+        &self,
+        Parameters(params): Parameters<params::ComplianceSecPharmaParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::compliance::sec_pharma(params).await
+    }
+
+    // ========================================================================
+    // Hormone Tools (4) - Endocrine System
+    // ========================================================================
+
+    #[tool(
+        description = "Get full endocrine state: all 6 hormone levels, mood score, risk tolerance, and behavioral modifiers."
+    )]
+    async fn hormone_status(&self) -> Result<CallToolResult, McpError> {
+        tools::hormones::status()
+    }
+
+    #[tool(
+        description = "Get a specific hormone level. Valid: cortisol, dopamine, serotonin, adrenaline, oxytocin, melatonin."
+    )]
+    async fn hormone_get(
+        &self,
+        Parameters(params): Parameters<params::HormoneGetParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hormones::get(params)
+    }
+
+    #[tool(
+        description = "Apply a stimulus to the endocrine system. Types: error, task_completed, positive_feedback, deadline, critical, partnership, etc."
+    )]
+    async fn hormone_stimulus(
+        &self,
+        Parameters(params): Parameters<params::HormoneStimulusParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hormones::stimulus(params)
+    }
+
+    #[tool(
+        description = "Get current behavioral modifiers derived from hormone state: risk tolerance, validation depth, exploration rate, and active modes."
+    )]
+    async fn hormone_modifiers(&self) -> Result<CallToolResult, McpError> {
+        tools::hormones::modifiers()
+    }
+
+    // ========================================================================
+    // Guardian Tools (4) - Homeostasis Control Loop
+    // ========================================================================
+
+    #[tool(
+        description = "Run one iteration of the Guardian homeostasis control loop. Collects signals from sensors, evaluates via decision engine, and executes responses through actuators."
+    )]
+    async fn guardian_homeostasis_tick(
+        &self,
+        Parameters(params): Parameters<params::GuardianTickParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::guardian::homeostasis_tick(params).await
+    }
+
+    #[tool(
+        description = "Evaluate PV risk context and get recommended responses. Takes signal metrics (PRR, ROR, IC, EBGM) and returns risk score with suggested actions."
+    )]
+    async fn guardian_evaluate_pv(
+        &self,
+        Parameters(params): Parameters<params::GuardianEvaluatePvParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::guardian::evaluate_pv(params)
+    }
+
+    #[tool(
+        description = "Get Guardian homeostasis loop status. Returns iteration count, registered sensors, and actuators."
+    )]
+    async fn guardian_status(
+        &self,
+        Parameters(params): Parameters<params::GuardianStatusParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::guardian::status(params).await
+    }
+
+    #[tool(
+        description = "Reset the Guardian homeostasis loop state. Clears iteration count and resets decision engine amplification."
+    )]
+    async fn guardian_reset(&self) -> Result<CallToolResult, McpError> {
+        tools::guardian::reset().await
+    }
+
+    #[tool(
+        description = "Inject a test signal into Guardian for simulation/testing. Creates synthetic PAMP/DAMP/PV signal processed on next tick."
+    )]
+    async fn guardian_inject_signal(
+        &self,
+        Parameters(params): Parameters<params::GuardianInjectSignalParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::guardian::inject_signal(params)
+    }
+
+    #[tool(
+        description = "List all registered Guardian sensors (PAMPs, DAMPs, PV) with their status and detector capabilities."
+    )]
+    async fn guardian_sensors_list(
+        &self,
+        Parameters(params): Parameters<params::GuardianSensorsListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::guardian::sensors_list(params).await
+    }
+
+    #[tool(
+        description = "List all registered Guardian actuators (Alert, AuditLog, Block, RateLimit, Escalation) with status and priority."
+    )]
+    async fn guardian_actuators_list(
+        &self,
+        Parameters(params): Parameters<params::GuardianActuatorsListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::guardian::actuators_list(params).await
+    }
+
+    #[tool(
+        description = "Get Guardian event history. Returns recent signals and actions for monitoring and debugging."
+    )]
+    async fn guardian_history(
+        &self,
+        Parameters(params): Parameters<params::GuardianHistoryParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::guardian::history(params)
+    }
+
+    #[tool(
+        description = "Classify an entity by {G,V,R} autonomy capabilities. G=Goal-selection, V=Value-evaluation, R=Refusal-capacity. Entities with ¬G∧¬V∧¬R have symmetric harm capability. Returns originator type, ceiling multiplier, and interpretation."
+    )]
+    async fn guardian_originator_classify(
+        &self,
+        Parameters(params): Parameters<params::GuardianOriginatorClassifyParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::guardian::originator_classify(params)
+    }
+
+    #[tool(
+        description = "Get autonomy-aware ceiling limits for an originator type. Higher autonomy → lower limits (entity can self-regulate). Types: tool (1.0x), agent_with_r (0.8x), agent_with_vr (0.5x), agent_with_gr (0.6x), agent_with_gvr (0.2x)."
+    )]
+    async fn guardian_ceiling_for_originator(
+        &self,
+        Parameters(params): Parameters<params::GuardianCeilingForOriginatorParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::guardian::ceiling_for_originator(params)
+    }
+
+    #[tool(
+        description = "Compute 3D safety space point for visualization. Maps PV metrics + ToV + GVR to: X=Severity (harm magnitude), Y=Likelihood (boundary crossing probability), Z=Detectability (early detection capability). Returns RPN=S×L×(1-D) and zone (Green/Yellow/Orange/Red)."
+    )]
+    async fn guardian_space3d_compute(
+        &self,
+        Parameters(params): Parameters<params::GuardianSpace3DComputeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::guardian::space3d_compute(params)
+    }
+
+    #[tool(
+        description = "Run one PV control loop iteration (Aerospace→PV domain translation). Executes SENSE→COMPARE→CONTROL→ACTUATE→FEEDBACK cycle. Returns safety state (PRR/ROR/IC/EBGM), signal strength, and recommended action (ContinueMonitoring→EmergencyWithdrawal). Transfer confidence: 0.92."
+    )]
+    async fn pv_control_loop_tick(
+        &self,
+        Parameters(params): Parameters<params::PvControlLoopTickParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::guardian::pv_control_loop_tick(params)
+    }
+
+    // ========================================================================
+    // FDA Data Bridge Tools (2)
+    // ========================================================================
+
+    #[tool(
+        description = "Evaluate drug-event pair through FDA Data Bridge. Connects FAERS contingency data (a,b,c,d) to PV Control Loop. Returns signal detection (PRR/ROR/IC/EBGM), severity (None→Critical), and recommended action (ContinueMonitoring→EmergencyWithdrawal)."
+    )]
+    async fn fda_bridge_evaluate(
+        &self,
+        Parameters(params): Parameters<params::FdaBridgeEvaluateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::guardian::fda_bridge_evaluate(params)
+    }
+
+    #[tool(
+        description = "Batch evaluate multiple drug-event pairs through FDA Data Bridge. Processes multiple contingency tables [[a,b,c,d],...] efficiently. Returns signals detected count, max priority action, and per-pair results."
+    )]
+    async fn fda_bridge_batch(
+        &self,
+        Parameters(params): Parameters<params::FdaBridgeBatchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::guardian::fda_bridge_batch(params)
+    }
+
+    // ========================================================================
+    // HUD Capability Tools (6) - CAP-025, CAP-026, CAP-027
+    // ========================================================================
+
+    #[tool(
+        description = "Allocate agent for task (CAP-025 Small Business Act). Analyzes task complexity, recommends model tier (Haiku/Sonnet/Opus), identifies matching skills, and allocates compute quota. Returns primary agent, alternatives, and confidence."
+    )]
+    async fn sba_allocate_agent(
+        &self,
+        Parameters(params): Parameters<params::SbaAllocateAgentParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::sba_allocate_agent(params)
+    }
+
+    #[tool(
+        description = "Get next step in agent chain (CAP-025). After completing a step, returns the next agent to trigger based on chain configuration (Always/WithErrors/Stable conditions)."
+    )]
+    async fn sba_chain_next(
+        &self,
+        Parameters(params): Parameters<params::SbaChainNextParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::sba_chain_next(params)
+    }
+
+    #[tool(
+        description = "Persist state with SHA-256 integrity (CAP-026 Social Security Act). Stores state with cryptographic hash for verification. Returns version number, hash, and persistence level (Session/Local/Distributed/Resolved)."
+    )]
+    async fn ssa_persist_state(
+        &self,
+        Parameters(params): Parameters<params::SsaPersistStateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::ssa_persist_state(params)
+    }
+
+    #[tool(
+        description = "Verify state integrity (CAP-026). Compares expected SHA-256 hash against computed hash to detect tampering or corruption. Returns match status and recommendation."
+    )]
+    async fn ssa_verify_integrity(
+        &self,
+        Parameters(params): Parameters<params::SsaVerifyIntegrityParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::ssa_verify_integrity(params)
+    }
+
+    #[tool(
+        description = "Get token budget report (CAP-027 Federal Reserve Act). Returns daily/session usage, remaining budget, stability level (Stable/Cautious/Restricted/Emergency), and estimated cost."
+    )]
+    async fn fed_budget_report(
+        &self,
+        Parameters(params): Parameters<params::FedBudgetReportParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::fed_budget_report(params)
+    }
+
+    #[tool(
+        description = "Recommend model tier (CAP-027). Based on task complexity, budget utilization, and accuracy requirements, recommends Economy/Standard/Premium tier with cost comparison."
+    )]
+    async fn fed_recommend_model(
+        &self,
+        Parameters(params): Parameters<params::FedRecommendModelParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::fed_recommend_model(params)
+    }
+
+    #[tool(
+        description = "Audit market compliance (CAP-028 Securities Act). Analyzes trade volume against liquidity thresholds, detects concentration risk, and returns compliance verdicts."
+    )]
+    async fn sec_audit_market(
+        &self,
+        Parameters(params): Parameters<params::SecAuditMarketParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::sec_audit_market(params)
+    }
+
+    #[tool(
+        description = "Recommend communication protocol (CAP-029 Communications Act). Selects optimal protocol based on delivery guarantee, latency, and broadcast requirements."
+    )]
+    async fn comm_recommend_protocol(
+        &self,
+        Parameters(params): Parameters<params::CommRecommendProtocolParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::comm_recommend_protocol(params)
+    }
+
+    #[tool(
+        description = "Route message (CAP-029). Dispatches message from source to destination with optional protocol selection, TTL, and routing confirmation."
+    )]
+    async fn comm_route_message(
+        &self,
+        Parameters(params): Parameters<params::CommRouteMessageParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::comm_route_message(params)
+    }
+
+    #[tool(
+        description = "Launch exploration mission (CAP-030 Exploration Act). Creates mission manifest with target, objective, scope (Wide/Focused/Deep), and discovery patterns."
+    )]
+    async fn explore_launch_mission(
+        &self,
+        Parameters(params): Parameters<params::ExploreLaunchMissionParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::explore_launch_mission(params)
+    }
+
+    #[tool(
+        description = "Record discovery (CAP-030). Logs finding with location and significance score, adds to discovery index."
+    )]
+    async fn explore_record_discovery(
+        &self,
+        Parameters(params): Parameters<params::ExploreRecordDiscoveryParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::explore_record_discovery(params)
+    }
+
+    #[tool(
+        description = "Get exploration frontier (CAP-030). Returns current frontier bounds (min/max explored), unexplored regions, and discovery count."
+    )]
+    async fn explore_get_frontier(
+        &self,
+        Parameters(params): Parameters<params::ExploreGetFrontierParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::explore_get_frontier(params)
+    }
+
+    #[tool(
+        description = "Validate signal efficacy (CAP-014 Public Health Act). FDA-style validation with accuracy, FPR, and community value."
+    )]
+    async fn health_validate_signal(
+        &self,
+        Parameters(params): Parameters<params::HealthValidateSignalParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::health_validate_signal(params)
+    }
+
+    #[tool(
+        description = "Measure public health impact (CAP-014). Returns efficacy score based on valid/total signals."
+    )]
+    async fn health_measure_impact(
+        &self,
+        Parameters(params): Parameters<params::HealthMeasureImpactParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::health_measure_impact(params)
+    }
+
+    #[tool(
+        description = "Convert signal asymmetry (CAP-018 Treasury Act). Converts informational edge to token rewards via arbitrage."
+    )]
+    async fn treasury_convert_asymmetry(
+        &self,
+        Parameters(params): Parameters<params::TreasuryConvertAsymmetryParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::treasury_convert_asymmetry(params)
+    }
+
+    #[tool(
+        description = "Audit treasury status (CAP-018). Checks compute/memory quotas for solvency."
+    )]
+    async fn treasury_audit(
+        &self,
+        Parameters(params): Parameters<params::TreasuryAuditParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::treasury_audit(params)
+    }
+
+    #[tool(
+        description = "Dispatch transit manifest (CAP-019 Transportation Act). Routes signal batch between domains with priority."
+    )]
+    async fn dot_dispatch_manifest(
+        &self,
+        Parameters(params): Parameters<params::DotDispatchManifestParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::dot_dispatch_manifest(params)
+    }
+
+    #[tool(description = "Verify highway safety (CAP-019). NHTSA-style route integrity check.")]
+    async fn dot_verify_highway(
+        &self,
+        Parameters(params): Parameters<params::DotVerifyHighwayParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::dot_verify_highway(params)
+    }
+
+    #[tool(
+        description = "Verify boundary entry (CAP-020 Homeland Security Act). CBP-style authenticity check for incoming data."
+    )]
+    async fn dhs_verify_boundary(
+        &self,
+        Parameters(params): Parameters<params::DhsVerifyBoundaryParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::dhs_verify_boundary(params)
+    }
+
+    #[tool(
+        description = "Train agent in curriculum (CAP-022 Education Act). Returns mastery level based on completion."
+    )]
+    async fn edu_train_agent(
+        &self,
+        Parameters(params): Parameters<params::EduTrainAgentParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::edu_train_agent(params)
+    }
+
+    #[tool(
+        description = "Evaluate comprehension (CAP-022). Returns average score and letter grade from score array."
+    )]
+    async fn edu_evaluate(
+        &self,
+        Parameters(params): Parameters<params::EduEvaluateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::edu_evaluate(params)
+    }
+
+    #[tool(
+        description = "Fund research project (CAP-031 Science Foundation Act). NSF-style grant for capability enhancement."
+    )]
+    async fn nsf_fund_research(
+        &self,
+        Parameters(params): Parameters<params::NsfFundResearchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::nsf_fund_research(params)
+    }
+
+    #[tool(
+        description = "Procure resource (CAP-037 General Services Act). GSA procurement with priority and fulfillment status."
+    )]
+    async fn gsa_procure(
+        &self,
+        Parameters(params): Parameters<params::GsaProcureParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::gsa_procure(params)
+    }
+
+    #[tool(
+        description = "Audit service value (CAP-037). Cost/benefit analysis with ROI and rating."
+    )]
+    async fn gsa_audit_value(
+        &self,
+        Parameters(params): Parameters<params::GsaAuditValueParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hud::gsa_audit_value(params)
+    }
+
+    // ========================================================================
+    // Documentation Generation Tools (1)
+    // ========================================================================
+
+    #[tool(
+        description = "Generate CLAUDE.md by mining codebase primitives. Extracts from Cargo.toml (manifest), src/lib.rs (modules), README.md. Returns generated markdown content with discovery metadata."
+    )]
+    async fn docs_generate_claude_md(
+        &self,
+        Parameters(params): Parameters<params::DocsGenerateClaudeMdParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::docs::docs_generate_claude_md(params)
+    }
+
+    // ========================================================================
+    // Vigil Orchestrator Tools (6)
+    // ========================================================================
+
+    #[tool(
+        description = "Get Vigil orchestrator status. Returns process status, components (EventBus, MemoryLayer, DecisionEngine), sources, and executors."
+    )]
+    async fn vigil_status(
+        &self,
+        Parameters(params): Parameters<params::VigilStatusParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::vigil::status(params)
+    }
+
+    #[tool(
+        description = "Vigil health check. Returns comprehensive status including Vigil process, Qdrant, Prometheus, and Grafana connectivity."
+    )]
+    async fn vigil_health(
+        &self,
+        Parameters(params): Parameters<params::VigilHealthParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::vigil::health(params).await
+    }
+
+    #[tool(
+        description = "Emit an event to Vigil's event bus. Events flow through the decision engine which determines the action (InvokeClaude, QuickResponse, SilentLog, AutonomousAct, Escalate)."
+    )]
+    async fn vigil_emit_event(
+        &self,
+        Parameters(params): Parameters<params::VigilEmitEventParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::vigil::emit_event(params).await
+    }
+
+    #[tool(
+        description = "Search Vigil's memory layer (Qdrant KSB vector store). Performs keyword filtering on indexed knowledge."
+    )]
+    async fn vigil_memory_search(
+        &self,
+        Parameters(params): Parameters<params::VigilMemorySearchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::vigil::memory_search(params).await
+    }
+
+    #[tool(
+        description = "Get Vigil memory layer statistics. Returns Qdrant collection info, point count, and vector configuration."
+    )]
+    async fn vigil_memory_stats(
+        &self,
+        Parameters(params): Parameters<params::VigilMemoryStatsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::vigil::memory_stats(params).await
+    }
+
+    #[tool(
+        description = "Get Vigil LLM usage statistics for the current session. Returns total calls, token counts (input/output breakdown), average tokens per call, timestamps, provider, and model info. Useful for monitoring Gemini API usage and costs."
+    )]
+    async fn vigil_llm_stats(
+        &self,
+        Parameters(params): Parameters<params::VigilLlmStatsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::vigil::llm_stats(params).await
+    }
+
+    #[tool(
+        description = "Control Vigil event sources (start/stop/status management). Manages lifecycle of filesystem, webhook, voice, and git_monitor sources."
+    )]
+    async fn vigil_source_control(
+        &self,
+        Parameters(params): Parameters<params::VigilSourceControlParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::vigil::source_control(params).await
+    }
+
+    #[tool(
+        description = "Control Vigil executor routing (LLM provider selection and complexity-based routing). Manages executor selection and model assignment (Claude/Gemini/Local)."
+    )]
+    async fn vigil_executor_control(
+        &self,
+        Parameters(params): Parameters<params::VigilExecutorControlParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::vigil::executor_control(params).await
+    }
+
+    #[tool(
+        description = "Configure Vigil authority rules (human_required, ai_allowed, thresholds). Manages decision engine configuration for approval workflows without restart."
+    )]
+    async fn vigil_authority_config(
+        &self,
+        Parameters(params): Parameters<params::VigilAuthorityConfigParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::vigil::authority_config(params).await
+    }
+
+    #[tool(
+        description = "Assemble inference context from project state and memory. Builds complete LLM prompt context including git state, recent files, memory summaries, available tools, and token budget."
+    )]
+    async fn vigil_context_assemble(
+        &self,
+        Parameters(params): Parameters<params::VigilContextAssembleParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::vigil::context_assemble(serde_json::to_value(&params).unwrap_or_default()).await
+    }
+
+    #[tool(
+        description = "Verify authority routing without executing. Dry-run decision engine to test authorization flow and preview recommended actions without side effects."
+    )]
+    async fn vigil_authority_verify(
+        &self,
+        Parameters(params): Parameters<params::VigilAuthorityVerifyParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::vigil::authority_verify(serde_json::to_value(&params).unwrap_or_default()).await
+    }
+
+    #[tool(
+        description = "Test webhook payload validation before deployment. Validates webhook payloads against expected schema (structure, types, size, security)."
+    )]
+    async fn vigil_webhook_test(
+        &self,
+        Parameters(params): Parameters<params::VigilWebhookTestParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::vigil::webhook_test(serde_json::to_value(&params).unwrap_or_default()).await
+    }
+
+    #[tool(
+        description = "Configure event source parameters (voice wake word, webhook auth, scheduler timezone, filesystem patterns). Granular configuration for all Vigil event sources."
+    )]
+    async fn vigil_source_config(
+        &self,
+        Parameters(params): Parameters<params::VigilSourceConfigParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::vigil::source_config(serde_json::to_value(&params).unwrap_or_default()).await
+    }
+
+    // ========================================================================
+    // End-to-End PV Pipeline (1)
+    // ========================================================================
+
+    #[tool(
+        description = "End-to-end pharmacovigilance pipeline: FAERS → Signal Detection → Guardian Risk. Queries live FDA data, runs all signal algorithms (PRR, ROR, IC, EBGM, χ²), and returns Guardian risk assessment with recommended actions. Validated capability with 19M+ FAERS reports."
+    )]
+    async fn pv_pipeline(
+        &self,
+        Parameters(params): Parameters<params::PvPipelineParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pv_pipeline::run_pipeline(params).await
+    }
+
+    // ========================================================================
+    // PV Axioms Database (5)
+    // ========================================================================
+
+    #[tool(
+        description = "Look up KSBs (Knowledge, Skill, Behavior, AI Integration items) from the PV axioms database. Filter by ksb_id, domain_id (D01-D15), ksb_type, or keyword search. Returns 1,462 KSBs across 15 PV domains with regulatory refs, EPA/CPA mappings, and Bloom levels."
+    )]
+    async fn pv_axioms_ksb_lookup(
+        &self,
+        Parameters(params): Parameters<params::PvAxiomsKsbLookupParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pv_axioms::ksb_lookup(params)
+    }
+
+    #[tool(
+        description = "Search 341 PV regulations (FDA, EMA, ICH, CIOMS) by text query, jurisdiction, or domain. Returns official identifiers, key requirements, compliance risk levels, and harmonization status."
+    )]
+    async fn pv_axioms_regulation_search(
+        &self,
+        Parameters(params): Parameters<params::PvAxiomsRegulationSearchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pv_axioms::regulation_search(params)
+    }
+
+    #[tool(
+        description = "Trace regulatory axioms through the full chain: axiom → parameter → pipeline stage → Rust implementation coverage. Filter by axiom_id, source_guideline (e.g. 'ICH E2A'), or primitive symbol."
+    )]
+    async fn pv_axioms_traceability_chain(
+        &self,
+        Parameters(params): Parameters<params::PvAxiomsTraceabilityParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pv_axioms::traceability_chain(params)
+    }
+
+    #[tool(
+        description = "Domain dashboard showing KSB counts by type, regulation counts, EPA mappings, and coverage metrics. Specify domain_id for one domain or omit for all 15."
+    )]
+    async fn pv_axioms_domain_dashboard(
+        &self,
+        Parameters(params): Parameters<params::PvAxiomsDomainDashboardParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pv_axioms::domain_dashboard(params)
+    }
+
+    #[tool(
+        description = "Raw SQL query against the PV axioms database (read-only, max 100 rows). Access 68 tables and 14 views including ksbs, regulations, axioms, domains, epas, primitives, and traceability views."
+    )]
+    async fn pv_axioms_query(
+        &self,
+        Parameters(params): Parameters<params::PvAxiomsQueryParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pv_axioms::query(params)
+    }
+
+    // ========================================================================
+    // Skills Tools (8)
+    // ========================================================================
+
+    #[tool(
+        description = "Scan a directory for skills and populate the registry. Returns count of skills found."
+    )]
+    async fn skill_scan(
+        &self,
+        Parameters(params): Parameters<params::SkillScanParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::skills::scan(&self.registry, params)
+    }
+
+    #[tool(
+        description = "List all registered skills with their names, intents, and compliance levels."
+    )]
+    async fn skill_list(&self) -> Result<CallToolResult, McpError> {
+        tools::skills::list(&self.registry)
+    }
+
+    #[tool(description = "Get detailed information about a specific skill by name.")]
+    async fn skill_get(
+        &self,
+        Parameters(params): Parameters<params::SkillGetParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::skills::get(&self.registry, params)
+    }
+
+    #[tool(
+        description = "Validate a skill for Diamond v2 compliance. Returns level, SMST score, issues, and suggestions."
+    )]
+    async fn skill_validate(
+        &self,
+        Parameters(params): Parameters<params::SkillValidateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::skills::validate(params)
+    }
+
+    #[tool(description = "Search skills by tag. Returns matching skills from the registry.")]
+    async fn skill_search_by_tag(
+        &self,
+        Parameters(params): Parameters<params::SkillSearchByTagParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::skills::search_by_tag(&self.registry, params)
+    }
+
+    #[tool(
+        description = "List nested sub-skills for a compound/parent skill. Discovers skills declared in the parent's nested-skills frontmatter."
+    )]
+    async fn skill_list_nested(
+        &self,
+        Parameters(params): Parameters<params::SkillListNestedParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::skills::list_nested(&self.registry, params)
+    }
+
+    #[tool(
+        description = "Query taxonomy by type and key. Types: compliance, smst, category, node."
+    )]
+    async fn skill_taxonomy_query(
+        &self,
+        Parameters(params): Parameters<params::TaxonomyQueryParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::skills::taxonomy_query(params)
+    }
+
+    #[tool(
+        description = "List all entries in a taxonomy. Types: compliance, smst, category, node."
+    )]
+    async fn skill_taxonomy_list(
+        &self,
+        Parameters(params): Parameters<params::TaxonomyListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::skills::taxonomy_list(params)
+    }
+
+    #[tool(
+        description = "Get skill categories that are compute-intensive (candidates for Rust/NexCore delegation)."
+    )]
+    async fn skill_categories_compute_intensive(&self) -> Result<CallToolResult, McpError> {
+        tools::skills::categories_compute_intensive()
+    }
+
+    #[tool(
+        description = "Search skill knowledge by intent. Returns ranked skills with guidance sections, MCP tools for chaining, and related skills. Pre-populated index of all SKILL.md files. Use instead of reading individual skill files."
+    )]
+    async fn nexcore_assist(
+        &self,
+        Parameters(params): Parameters<params::AssistParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::assist::search(&self.assist_index, params)
+    }
+
+    #[tool(
+        description = "Analyze skills for orchestration patterns. Detects orchestrators (skills that spawn/delegate work), extracts triggers, and recommends subagent types with rationale. Accepts a path or glob pattern (e.g., '~/.claude/skills/forge' or '~/.claude/skills/*')."
+    )]
+    async fn skill_orchestration_analyze(
+        &self,
+        Parameters(params): Parameters<params::SkillOrchestrationAnalyzeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::skills::orchestration_analyze(params)
+    }
+
+    #[tool(
+        description = "Execute a skill by name with parameters. Runs the skill's scripts/binaries via nexcore-skill-exec. Returns output, status, duration, exit code, and stdout/stderr."
+    )]
+    async fn skill_execute(
+        &self,
+        Parameters(params): Parameters<params::SkillExecuteParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::skills::execute(params)
+    }
+
+    #[tool(
+        description = "Get a skill's input/output schema and execution methods. Returns JSON Schema for inputs/outputs, whether the skill is executable, and available execution methods (shell, binary, library)."
+    )]
+    async fn skill_schema(
+        &self,
+        Parameters(params): Parameters<params::SkillSchemaParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::skills::schema(params)
+    }
+
+    // ========================================================================
+    // Skill Compiler Tools (2)
+    // ========================================================================
+
+    #[tool(
+        description = "Compile 2+ skills into a single compound skill binary. Generates a Rust crate with SKILL.md, optionally builds it. Params: skills (list), strategy (sequential/parallel/feedback_loop), name, build (bool)."
+    )]
+    async fn skill_compile(
+        &self,
+        Parameters(params): Parameters<params::SkillCompileParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::skills::compile(params)
+    }
+
+    #[tool(
+        description = "Check if skills can be compiled into a compound skill (dry run). Returns compatibility report with warnings and blockers."
+    )]
+    async fn skill_compile_check(
+        &self,
+        Parameters(params): Parameters<params::SkillCompileCheckParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::skills::compile_check(params)
+    }
+
+    #[tool(
+        description = "Analyze token usage in a skill directory. Returns per-file metrics (chars, tokens, lines, code blocks), total estimated tokens, and optimization recommendations. Useful for context window optimization."
+    )]
+    async fn skill_token_analyze(
+        &self,
+        Parameters(params): Parameters<params::SkillTokenAnalyzeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::skill_tokens::analyze(params)
+    }
+
+    // ========================================================================
+    // Vocabulary-Skill Mapping Tools (4)
+    // ========================================================================
+
+    #[tool(
+        description = "Look up skills associated with a vocabulary shorthand (e.g., 'build-doctrine', 'ctvp-validated')."
+    )]
+    async fn vocab_skill_lookup(
+        &self,
+        Parameters(params): Parameters<params::VocabSkillLookupParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::skills::vocab_skill_lookup(params)
+    }
+
+    #[tool(
+        description = "Look up skills associated with a T1/T2 primitive (e.g., 'sequence', 'mapping', 'state')."
+    )]
+    async fn primitive_skill_lookup(
+        &self,
+        Parameters(params): Parameters<params::PrimitiveSkillLookupParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::skills::primitive_skill_lookup(params)
+    }
+
+    #[tool(
+        description = "Look up skill chains by name or trigger phrase (e.g., 'forge-pipeline', 'START FORGE')."
+    )]
+    async fn skill_chain_lookup(
+        &self,
+        Parameters(params): Parameters<params::SkillChainLookupParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::skills::skill_chain_lookup(params)
+    }
+
+    #[tool(description = "List all vocabulary shorthands available for skill mapping.")]
+    async fn vocab_list(&self) -> Result<CallToolResult, McpError> {
+        tools::skills::vocab_list()
+    }
+
+    // ========================================================================
+    // Guidelines Tools (9)
+    // ========================================================================
+
+    #[tool(
+        description = "Search ICH/CIOMS/EMA guidelines with scoring. Returns matching guidelines sorted by relevance."
+    )]
+    async fn guidelines_search(
+        &self,
+        Parameters(params): Parameters<params::GuidelinesSearchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::guidelines::search(params)
+    }
+
+    #[tool(
+        description = "Get a specific guideline by ID (e.g., 'E2B', 'CIOMS-I', 'GVP-Module-VI')."
+    )]
+    async fn guidelines_get(
+        &self,
+        Parameters(params): Parameters<params::GuidelinesGetParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::guidelines::get(params)
+    }
+
+    #[tool(
+        description = "List all guideline categories with document counts for ICH, CIOMS, and EMA."
+    )]
+    async fn guidelines_categories(&self) -> Result<CallToolResult, McpError> {
+        tools::guidelines::categories()
+    }
+
+    #[tool(
+        description = "Get all pharmacovigilance-specific guidelines (ICH E2 series, CIOMS PV, EMA GVP)."
+    )]
+    async fn guidelines_pv_all(&self) -> Result<CallToolResult, McpError> {
+        tools::guidelines::pv_all()
+    }
+
+    #[tool(description = "Get the PDF URL for a guideline by ID.")]
+    async fn guidelines_url(
+        &self,
+        Parameters(params): Parameters<params::GuidelinesUrlParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::guidelines::url(params)
+    }
+
+    #[tool(
+        description = "Look up an ICH/CIOMS pharmacovigilance term by name. O(1) Perfect Hash Function lookup across 894+ regulatory terms with autocomplete suggestions."
+    )]
+    async fn ich_lookup(
+        &self,
+        Parameters(params): Parameters<params::IchLookupParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ich_glossary::ich_lookup(params)
+    }
+
+    #[tool(
+        description = "Search ICH/CIOMS glossary terms by keyword or phrase. Returns fuzzy-matched results with relevance scores, abbreviations, and definition snippets."
+    )]
+    async fn ich_search(
+        &self,
+        Parameters(params): Parameters<params::IchSearchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ich_glossary::ich_search(params)
+    }
+
+    #[tool(
+        description = "Get ICH guideline metadata by ID (e.g., 'E2A', 'Q9', 'M4'). Returns title, category, status, date, term count, description, and URL."
+    )]
+    async fn ich_guideline(
+        &self,
+        Parameters(params): Parameters<params::IchGuidelineParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ich_glossary::ich_guideline(params)
+    }
+
+    #[tool(
+        description = "Get ICH glossary statistics: total terms, guideline counts, terms by category (Q/S/E/M), performance metrics, and data provenance."
+    )]
+    async fn ich_stats(&self) -> Result<CallToolResult, McpError> {
+        tools::ich_glossary::ich_stats()
+    }
+
+    // ========================================================================
+    // MESH Tools (6) - NLM Medical Subject Headings
+    // ========================================================================
+
+    #[tool(
+        description = "Look up a MESH descriptor by UI (e.g., 'D001241') or name (e.g., 'Aspirin'). Returns descriptor details with tree classification and primitive tier."
+    )]
+    async fn mesh_lookup(
+        &self,
+        Parameters(params): Parameters<params::MeshLookupParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::mesh::lookup(params).await
+    }
+
+    #[tool(
+        description = "Search MESH descriptors by term. Returns matching descriptors with tree numbers, scope notes, and primitive tier classification."
+    )]
+    async fn mesh_search(
+        &self,
+        Parameters(params): Parameters<params::MeshSearchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::mesh::search(params).await
+    }
+
+    #[tool(
+        description = "Navigate MESH tree hierarchy. Get ancestors (parents), descendants (children), or siblings of a descriptor."
+    )]
+    async fn mesh_tree(
+        &self,
+        Parameters(params): Parameters<params::MeshTreeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::mesh::tree(params).await
+    }
+
+    #[tool(
+        description = "Cross-reference a term across MESH, MedDRA, SNOMED-CT, and ICH. Returns mappings with relationship types and confidence scores."
+    )]
+    async fn mesh_crossref(
+        &self,
+        Parameters(params): Parameters<params::MeshCrossrefParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::mesh::crossref(params).await
+    }
+
+    #[tool(
+        description = "Enrich a PubMed article with its MESH descriptors. Returns indexed terms for a given PMID."
+    )]
+    async fn mesh_enrich_pubmed(
+        &self,
+        Parameters(params): Parameters<params::MeshEnrichPubmedParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::mesh::enrich_pubmed(params).await
+    }
+
+    #[tool(
+        description = "Check consistency of terms across multiple terminology corpora (MESH, MedDRA, ICH, SNOMED). Detects definition conflicts, scope differences, and missing mappings."
+    )]
+    async fn mesh_consistency(
+        &self,
+        Parameters(params): Parameters<params::MeshConsistencyParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::mesh::consistency(params).await
+    }
+
+    // ========================================================================
+    // FAERS Tools (5)
+    // ========================================================================
+
+    #[tool(
+        description = "Search FDA Adverse Event Reporting System (FAERS) for adverse events by drug name and/or reaction."
+    )]
+    async fn faers_search(
+        &self,
+        Parameters(params): Parameters<params::FaersSearchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::faers::search(params).await
+    }
+
+    #[tool(description = "Get top adverse events reported for a specific drug from FAERS.")]
+    async fn faers_drug_events(
+        &self,
+        Parameters(params): Parameters<params::FaersDrugEventsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::faers::drug_events(params).await
+    }
+
+    #[tool(
+        description = "Quick signal detection check for a drug-event pair using Evans criteria (PRR≥2, χ²≥3.841, n≥3)."
+    )]
+    async fn faers_signal_check(
+        &self,
+        Parameters(params): Parameters<params::FaersSignalParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::faers::signal_check(params).await
+    }
+
+    #[tool(
+        description = "Full disproportionality analysis for a drug-event pair. Returns 2x2 table, PRR with CI, ROR with CI, chi-square."
+    )]
+    async fn faers_disproportionality(
+        &self,
+        Parameters(params): Parameters<params::FaersSignalParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::faers::disproportionality(params).await
+    }
+
+    #[tool(
+        description = "Compare adverse event profiles between two drugs. Shows common and unique events."
+    )]
+    async fn faers_compare_drugs(
+        &self,
+        Parameters(params): Parameters<params::FaersCompareDrugsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::faers::compare_drugs(params).await
+    }
+
+    // ========================================================================
+    // FAERS ETL Tools (4) — Local bulk data pipeline
+    // ========================================================================
+
+    #[tool(
+        description = "Run full FAERS ETL pipeline on local quarterly ASCII data (~7GB RSS). Returns top signals by PRR. Requires faers_dir path to quarterly ASCII directory."
+    )]
+    async fn faers_etl_run(
+        &self,
+        Parameters(params): Parameters<params::FaersEtlRunParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::faers_etl::run(params).await
+    }
+
+    #[tool(
+        description = "Search FAERS ETL signals by drug and/or event name from local bulk data. Runs full pipeline then filters results."
+    )]
+    async fn faers_etl_signals(
+        &self,
+        Parameters(params): Parameters<params::FaersEtlSignalsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::faers_etl::signals(params).await
+    }
+
+    #[tool(
+        description = "Validate known drug-event pairs against local FAERS data. Returns hit rate and per-pair signal metrics."
+    )]
+    async fn faers_etl_known_pairs(
+        &self,
+        Parameters(params): Parameters<params::FaersEtlKnownPairsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::faers_etl::known_pairs(params).await
+    }
+
+    #[tool(
+        description = "Check status of cached FAERS Parquet output files (sizes, modification times). Lightweight filesystem check only."
+    )]
+    fn faers_etl_status(
+        &self,
+        Parameters(params): Parameters<params::FaersEtlStatusParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::faers_etl::status(params)
+    }
+
+    // ========================================================================
+    // FAERS Analytics Tools (A77, A80, A82 — Novel Signal Detection)
+    // ========================================================================
+
+    #[tool(
+        description = "Algorithm A82: Outcome-Conditioned Signal Strength. Adjusts standard PRR by reaction outcome severity (Fatal=5x, Not Recovered=3x, Recovered=0x). Exploits previously unused FAERS reactionoutcome field. Provide cases with drug, event, and outcome_code (1-6). P0 patient safety: separates fatal signals from transient ADRs."
+    )]
+    fn faers_outcome_conditioned(
+        &self,
+        Parameters(params): Parameters<params::FaersOutcomeConditionedParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::faers_analytics::outcome_conditioned(params)
+    }
+
+    #[tool(
+        description = "Algorithm A77: Signal Velocity Detector. Detects EMERGING signals by measuring temporal acceleration in reporting frequency. Catches signals 6-18 months before they cross PRR thresholds. Provide cases with drug, event, and receipt_date (YYYYMMDD). Early warning system for pharmacovigilance."
+    )]
+    fn faers_signal_velocity(
+        &self,
+        Parameters(params): Parameters<params::FaersSignalVelocityParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::faers_analytics::signal_velocity(params)
+    }
+
+    #[tool(
+        description = "Algorithm A80: Seriousness Cascade Detector. Detects signals ESCALATING in severity using all 6 FAERS seriousness flags (death, hospitalization, disabling, congenital, life-threatening, other). P0 patient safety alarm: flags drug-event pairs where seriousness is trending upward even when case counts are stable. Requires immediate human review when death rate exceeds threshold."
+    )]
+    fn faers_seriousness_cascade(
+        &self,
+        Parameters(params): Parameters<params::FaersSeriousnessCascadeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::faers_analytics::seriousness_cascade(params)
+    }
+
+    #[tool(
+        description = "Algorithm A78: Polypharmacy Interaction Signal. Detects drug PAIRS with disproportionate co-occurrence signals for a given event. Computes pair PRR and compares to individual PRRs — positive interaction_signal indicates synergistic toxicity invisible to single-drug analysis. Input: cases with case_id, multiple drugs (with characterization codes), and event."
+    )]
+    fn faers_polypharmacy(
+        &self,
+        Parameters(params): Parameters<params::FaersPolypharmacyParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::faers_analytics::polypharmacy(params)
+    }
+
+    #[tool(
+        description = "Algorithm A79: Reporter-Weighted Disproportionality. Weights each case by reporter qualification (Physician=1.0, Pharmacist=0.9, OtherHP=0.8, Consumer=0.6, Lawyer=0.5). Computes Shannon entropy for reporter diversity — multi-source confirmed signals have higher confidence. Input: cases with drug, event, and qualification_code (1-5)."
+    )]
+    fn faers_reporter_weighted(
+        &self,
+        Parameters(params): Parameters<params::FaersReporterWeightedParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::faers_analytics::reporter_weighted(params)
+    }
+
+    #[tool(
+        description = "Algorithm A81: Geographic Signal Divergence. Detects drug-event pairs with significantly different reporting rates across countries. Computes per-country rates, divergence ratio (max/min), and chi-squared heterogeneity test. Divergent signals may indicate pharmacogenomic effects, regulatory gaps, or reporting biases. Input: cases with drug, event, and country (ISO 2-letter)."
+    )]
+    fn faers_geographic_divergence(
+        &self,
+        Parameters(params): Parameters<params::FaersGeographicDivergenceParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::faers_analytics::geographic_divergence(params)
+    }
+
+    // ========================================================================
+    // Laboratory Tools (4)
+    // ========================================================================
+
+    #[tool(
+        description = "Run a complete word/concept experiment. Decomposes to T1 primitives, computes Shannon molecular weight in daltons, classifies transfer tier, and produces spectral analysis of constituents."
+    )]
+    fn lab_experiment(
+        &self,
+        Parameters(params): Parameters<params::LabExperimentParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::laboratory::lab_experiment(params)
+    }
+
+    #[tool(
+        description = "Compare two concepts side-by-side. Returns both experiment results plus comparative metrics: weight delta, shared/unique primitives, Jaccard similarity, and transfer class alignment."
+    )]
+    fn lab_compare(
+        &self,
+        Parameters(params): Parameters<params::LabCompareParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::laboratory::lab_compare(params)
+    }
+
+    #[tool(
+        description = "React two concepts by combining their primitive compositions. Shared primitives are catalysts. Product is the union. Enthalpy (ΔH) measures weight efficiency — negative = exothermic (more compact than sum of parts)."
+    )]
+    fn lab_react(
+        &self,
+        Parameters(params): Parameters<params::LabReactParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::laboratory::lab_react(params)
+    }
+
+    #[tool(
+        description = "Run experiments on a batch of specimens with statistical summary. Returns individual results plus aggregate: lightest/heaviest, average weight, standard deviation, and transfer class distribution."
+    )]
+    fn lab_batch(
+        &self,
+        Parameters(params): Parameters<params::LabBatchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::laboratory::lab_batch(params)
+    }
+
+    // ========================================================================
+    // CEP Tools (6) — Cognitive Evolution Pipeline
+    // ========================================================================
+
+    #[tool(
+        description = "Execute a single CEP (Cognitive Evolution Pipeline) stage. Stages: SEE (1), SPEAK (2), DECOMPOSE (3), COMPOSE (4), TRANSLATE (5), VALIDATE (6), DEPLOY (7), IMPROVE (8). Stage 8 feeds back to Stage 1."
+    )]
+    fn cep_execute_stage(
+        &self,
+        Parameters(params): Parameters<params::CepExecuteStageParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cep::execute_stage(params)
+    }
+
+    #[tool(
+        description = "Get all 8 CEP pipeline stages with descriptions, ordering, and validation thresholds (coverage >= 0.95, minimality >= 0.90, independence >= 0.90)."
+    )]
+    fn cep_pipeline_stages(&self) -> Result<CallToolResult, McpError> {
+        tools::cep::pipeline_stages()
+    }
+
+    #[tool(
+        description = "Validate primitive extraction quality against CEP thresholds. Checks coverage (>= 0.95), minimality (>= 0.90), and independence (>= 0.90). Returns pass/fail per metric and weakest metric."
+    )]
+    fn cep_validate_extraction(
+        &self,
+        Parameters(params): Parameters<params::CepValidateExtractionParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cep::validate_extraction(params)
+    }
+
+    #[tool(
+        description = "Extract T1/T2/T3 primitives from a domain. Returns extraction steps and methodology. Use /primitive-extractor skill for full LLM-assisted extraction."
+    )]
+    fn cep_extract_primitives(
+        &self,
+        Parameters(params): Parameters<params::PrimitiveExtractParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cep::extract_primitives(params)
+    }
+
+    #[tool(
+        description = "Translate a concept between domains using T1/T2/T3 tier-based mapping rules. T1 = identity mapping (1.0 confidence), T2 = similarity matching (0.85-0.95), T3 = novel synthesis (0.70-0.85)."
+    )]
+    fn cep_domain_translate(
+        &self,
+        Parameters(params): Parameters<params::DomainTranslateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cep::domain_translate(params)
+    }
+
+    #[tool(
+        description = "Classify a primitive's tier based on domain count. T1-Universal (>= 10 domains), T2-CrossDomain (2-9), T3-DomainSpecific (1). Returns tier, confidence, and minimum coverage threshold."
+    )]
+    fn cep_classify_primitive(
+        &self,
+        Parameters(params): Parameters<params::PrimitiveTierClassifyParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cep::classify_primitive(params.domain_count)
+    }
+
+    #[tool(description = "Perform a real-time network scan for a behavioral pattern")]
+    async fn node_hunt_scan(
+        &self,
+        Parameters(params): Parameters<params::NodeHuntScanParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::node_hunter::scan(params)
+    }
+
+    #[tool(description = "Isolate a specific node from the network")]
+    async fn node_hunt_isolate(
+        &self,
+        Parameters(params): Parameters<params::NodeHuntIsolateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::node_hunter::isolate(params)
+    }
+
+    // ========================================================================
+    // GCloud Tools (19)
+    // ========================================================================
+
+    #[tool(description = "List authenticated gcloud accounts.")]
+    async fn gcloud_auth_list(&self) -> Result<CallToolResult, McpError> {
+        tools::gcloud::auth_list().await
+    }
+
+    #[tool(description = "List current gcloud configuration (project, account, region, zone).")]
+    async fn gcloud_config_list(&self) -> Result<CallToolResult, McpError> {
+        tools::gcloud::config_list().await
+    }
+
+    #[tool(description = "Get a specific gcloud configuration property.")]
+    async fn gcloud_config_get(
+        &self,
+        Parameters(params): Parameters<params::GcloudConfigGetParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gcloud::config_get(&params.property).await
+    }
+
+    #[tool(description = "Set a gcloud configuration property.")]
+    async fn gcloud_config_set(
+        &self,
+        Parameters(params): Parameters<params::GcloudConfigSetParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gcloud::config_set(&params.property, &params.value).await
+    }
+
+    #[tool(description = "List all accessible GCP projects.")]
+    async fn gcloud_projects_list(&self) -> Result<CallToolResult, McpError> {
+        tools::gcloud::projects_list().await
+    }
+
+    #[tool(description = "Get details about a specific GCP project.")]
+    async fn gcloud_projects_describe(
+        &self,
+        Parameters(params): Parameters<params::GcloudProjectParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gcloud::projects_describe(&params.project_id).await
+    }
+
+    #[tool(description = "Get IAM policy for a GCP project.")]
+    async fn gcloud_projects_get_iam_policy(
+        &self,
+        Parameters(params): Parameters<params::GcloudProjectParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gcloud::projects_get_iam_policy(&params.project_id).await
+    }
+
+    #[tool(description = "List secrets in Secret Manager.")]
+    async fn gcloud_secrets_list(
+        &self,
+        Parameters(params): Parameters<params::GcloudOptionalProjectParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gcloud::secrets_list(params.project.as_deref()).await
+    }
+
+    #[tool(description = "Access a secret version's value from Secret Manager.")]
+    async fn gcloud_secrets_versions_access(
+        &self,
+        Parameters(params): Parameters<params::GcloudSecretsAccessParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gcloud::secrets_versions_access(
+            &params.secret_name,
+            &params.version,
+            params.project.as_deref(),
+        )
+        .await
+    }
+
+    #[tool(description = "List Cloud Storage buckets.")]
+    async fn gcloud_storage_buckets_list(
+        &self,
+        Parameters(params): Parameters<params::GcloudOptionalProjectParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gcloud::storage_buckets_list(params.project.as_deref()).await
+    }
+
+    #[tool(description = "List objects in a Cloud Storage path.")]
+    async fn gcloud_storage_ls(
+        &self,
+        Parameters(params): Parameters<params::GcloudStoragePathParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gcloud::storage_ls(&params.path).await
+    }
+
+    #[tool(description = "Copy files to/from Cloud Storage.")]
+    async fn gcloud_storage_cp(
+        &self,
+        Parameters(params): Parameters<params::GcloudStorageCpParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gcloud::storage_cp(&params.source, &params.destination, params.recursive).await
+    }
+
+    #[tool(description = "List Compute Engine instances.")]
+    async fn gcloud_compute_instances_list(
+        &self,
+        Parameters(params): Parameters<params::GcloudComputeInstancesParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gcloud::compute_instances_list(params.project.as_deref(), params.zone.as_deref())
+            .await
+    }
+
+    #[tool(description = "List Cloud Run services.")]
+    async fn gcloud_run_services_list(
+        &self,
+        Parameters(params): Parameters<params::GcloudServiceListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gcloud::run_services_list(params.project.as_deref(), params.region.as_deref()).await
+    }
+
+    #[tool(description = "Get details about a Cloud Run service.")]
+    async fn gcloud_run_services_describe(
+        &self,
+        Parameters(params): Parameters<params::GcloudServiceDescribeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gcloud::run_services_describe(
+            &params.name,
+            &params.region,
+            params.project.as_deref(),
+        )
+        .await
+    }
+
+    #[tool(description = "List Cloud Functions.")]
+    async fn gcloud_functions_list(
+        &self,
+        Parameters(params): Parameters<params::GcloudServiceListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gcloud::functions_list(params.project.as_deref(), params.region.as_deref()).await
+    }
+
+    #[tool(description = "List service accounts.")]
+    async fn gcloud_iam_service_accounts_list(
+        &self,
+        Parameters(params): Parameters<params::GcloudOptionalProjectParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gcloud::iam_service_accounts_list(params.project.as_deref()).await
+    }
+
+    #[tool(description = "Read log entries from Cloud Logging.")]
+    async fn gcloud_logging_read(
+        &self,
+        Parameters(params): Parameters<params::GcloudLoggingReadParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gcloud::logging_read(&params.filter, params.limit, params.project.as_deref()).await
+    }
+
+    #[tool(
+        description = "Run an arbitrary gcloud command (with safety checks for destructive operations)."
+    )]
+    async fn gcloud_run_command(
+        &self,
+        Parameters(params): Parameters<params::GcloudRunCommandParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gcloud::run_command(&params.command, params.timeout).await
+    }
+
+    // ========================================================================
+    // Wolfram Alpha Tools (19)
+    // ========================================================================
+
+    #[tool(
+        description = "Query Wolfram Alpha's computational knowledge engine with full results. Returns comprehensive information organized in pods. Use for: math, science, geography, history, linguistics, music, astronomy, engineering, medicine, finance, sports, food/nutrition, and more. Examples: 'integrate x^2 from 0 to 1', 'distance Earth to Mars', 'GDP of France vs Germany', 'ISS location', 'weather in Tokyo'"
+    )]
+    async fn wolfram_query(
+        &self,
+        Parameters(params): Parameters<params::WolframQueryParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::query(params).await
+    }
+
+    #[tool(
+        description = "Get a concise, single-line answer from Wolfram Alpha. Best for quick facts, simple calculations, and direct questions. More efficient than full query when you just need the answer. Examples: 'population of Japan', 'boiling point of water', '100 miles in km', 'how many days until Christmas'"
+    )]
+    async fn wolfram_short_answer(
+        &self,
+        Parameters(params): Parameters<params::WolframShortParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::short_answer(params).await
+    }
+
+    #[tool(
+        description = "Get a natural language answer suitable for speaking aloud. Returns human-readable sentences rather than data tables. Ideal for voice interfaces, accessibility, or conversational responses. Examples: 'What is the speed of light?', 'How far is the moon?', 'What is the derivative of x cubed?'"
+    )]
+    async fn wolfram_spoken_answer(
+        &self,
+        Parameters(params): Parameters<params::WolframShortParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::spoken_answer(params).await
+    }
+
+    #[tool(
+        description = "Perform mathematical calculations with Wolfram Alpha. Supports arithmetic, algebra, calculus, linear algebra, statistics, number theory, discrete math, and more. Examples: 'solve x^2 + 2x - 3 = 0', 'integral of sin(x)cos(x)', 'determinant of {{1,2},{3,4}}', 'sum of 1/n^2 from n=1 to infinity', 'factor 123456789', 'derivative of e^(x^2)'"
+    )]
+    async fn wolfram_calculate(
+        &self,
+        Parameters(params): Parameters<params::WolframCalculateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::calculate(params).await
+    }
+
+    #[tool(
+        description = "Solve math problems with detailed step-by-step explanations. Shows the work and reasoning for educational purposes. Best for: solving equations, derivatives, integrals, limits, simplification, factoring, and algebraic manipulations. Examples: 'solve 2x + 5 = 13 step by step', 'integrate x*e^x step by step', 'factor x^2 - 5x + 6'"
+    )]
+    async fn wolfram_step_by_step(
+        &self,
+        Parameters(params): Parameters<params::WolframStepByStepParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::step_by_step(params).await
+    }
+
+    #[tool(
+        description = "Generate mathematical plots and graphs. Returns image URL for the visualization. Supports 2D plots, 3D surfaces, parametric curves, implicit plots, etc. Examples: 'plot sin(x) from -2pi to 2pi', '3D plot of x^2 + y^2', 'plot x^2, x^3, x^4 together', 'parametric plot (cos(t), sin(t)) for t from 0 to 2pi'"
+    )]
+    async fn wolfram_plot(
+        &self,
+        Parameters(params): Parameters<params::WolframPlotParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::plot(params).await
+    }
+
+    #[tool(
+        description = "Convert between units of measurement with high precision. Supports all physical units: length, mass, volume, temperature, speed, energy, pressure, area, time, data sizes, currency, and more. Examples: '100 mph to km/h', '72 fahrenheit to celsius', '1 lightyear to km', '500 MB to GB', '1 acre to square meters'"
+    )]
+    async fn wolfram_convert(
+        &self,
+        Parameters(params): Parameters<params::WolframConvertParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::convert(params).await
+    }
+
+    #[tool(
+        description = "Look up comprehensive chemical compound information. Returns molecular formula, structure, properties, safety data, thermodynamic data, and more. Accepts: compound names, molecular formulas, SMILES, CAS numbers. Examples: 'caffeine', 'H2SO4', 'aspirin properties', 'CAS 50-78-2', 'ethanol boiling point'"
+    )]
+    async fn wolfram_chemistry(
+        &self,
+        Parameters(params): Parameters<params::WolframChemistryParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::chemistry(params).await
+    }
+
+    #[tool(
+        description = "Query physics constants, formulas, and calculations. Includes mechanics, electromagnetism, thermodynamics, quantum physics, relativity, optics, and astrophysics. Examples: 'speed of light', 'gravitational constant', 'kinetic energy of 10 kg at 5 m/s', 'wavelength of red light', 'escape velocity of Earth', 'Schwarzschild radius of the Sun'"
+    )]
+    async fn wolfram_physics(
+        &self,
+        Parameters(params): Parameters<params::WolframPhysicsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::physics(params).await
+    }
+
+    #[tool(
+        description = "Query astronomical data: planets, stars, galaxies, satellites, events. Real-time positions, rise/set times, orbital data, and more. Examples: 'ISS location', 'Mars distance from Earth', 'next solar eclipse', 'Andromeda galaxy', 'sunrise tomorrow in London', 'Jupiter moons', 'Hubble Space Telescope orbit'"
+    )]
+    async fn wolfram_astronomy(
+        &self,
+        Parameters(params): Parameters<params::WolframAstronomyParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::astronomy(params).await
+    }
+
+    #[tool(
+        description = "Perform statistical calculations and analysis. Includes descriptive statistics, probability distributions, hypothesis testing, regression, and more. Examples: 'mean of {1, 2, 3, 4, 5}', 'standard deviation of {10, 12, 15, 18, 20}', 'normal distribution mean=100 sd=15', 'P(X > 2) for Poisson(3)', 'linear regression {{1,2},{2,4},{3,5},{4,4},{5,5}}'"
+    )]
+    async fn wolfram_statistics(
+        &self,
+        Parameters(params): Parameters<params::WolframStatisticsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::statistics(params).await
+    }
+
+    #[tool(
+        description = "Look up real-world data: demographics, economics, geography, etc. Includes countries, cities, companies, historical data, rankings. Examples: 'population of Tokyo', 'GDP of Germany', 'tallest buildings in the world', 'US unemployment rate', 'distance from New York to London', 'area of Texas'"
+    )]
+    async fn wolfram_data_lookup(
+        &self,
+        Parameters(params): Parameters<params::WolframDataLookupParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::data_lookup(params).await
+    }
+
+    #[tool(
+        description = "Query Wolfram Alpha with a specific interpretation for ambiguous terms. Use when a previous query returned multiple possible interpretations. Examples: query 'Mercury' with assumption for planet vs element, query 'pi' with assumption for mathematical constant vs movie"
+    )]
+    async fn wolfram_query_with_assumption(
+        &self,
+        Parameters(params): Parameters<params::WolframQueryWithAssumptionParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::query_with_assumption(params).await
+    }
+
+    #[tool(
+        description = "Query Wolfram Alpha with pod filtering to get specific result types. Reduces noise by including only relevant pods or excluding unwanted ones. Common pod IDs: Result, Input, Plot, Solution, Properties, Definition, BasicInformation, Timeline, Notable facts"
+    )]
+    async fn wolfram_query_filtered(
+        &self,
+        Parameters(params): Parameters<params::WolframQueryFilteredParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::query_filtered(params).await
+    }
+
+    #[tool(
+        description = "Get a visual/image result from Wolfram Alpha. Returns a URL to an image containing the full rendered result. Useful for complex visualizations, formulas, and graphical data. Examples: 'anatomy of the heart', 'world map with time zones', 'periodic table', 'human skeleton'"
+    )]
+    async fn wolfram_image_result(
+        &self,
+        Parameters(params): Parameters<params::WolframImageParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::image_result(params).await
+    }
+
+    #[tool(
+        description = "Calculate dates, times, durations, and time zones. Examples: 'days until December 25 2025', 'time in Tokyo', 'what day was July 4 1776', '90 days from today', 'duration from Jan 1 2020 to today', 'next full moon'"
+    )]
+    async fn wolfram_datetime(
+        &self,
+        Parameters(params): Parameters<params::WolframDatetimeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::datetime(params).await
+    }
+
+    #[tool(
+        description = "Look up nutritional information for foods. Returns calories, macros, vitamins, minerals, and more. Examples: 'nutrition facts for apple', '100g chicken breast calories', 'compare pizza vs salad nutrition', 'vitamin C in orange'"
+    )]
+    async fn wolfram_nutrition(
+        &self,
+        Parameters(params): Parameters<params::WolframNutritionParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::nutrition(params).await
+    }
+
+    #[tool(
+        description = "Financial calculations and market data. Includes currency conversion, loan calculations, investment growth, stock data, economic indicators. Examples: '500 USD to EUR', 'mortgage payment 300000 at 6% for 30 years', 'compound interest 10000 at 5% for 10 years', 'inflation adjusted 1000 from 1990 to today'"
+    )]
+    async fn wolfram_finance(
+        &self,
+        Parameters(params): Parameters<params::WolframFinanceParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::finance(params).await
+    }
+
+    #[tool(
+        description = "Language and word information: definitions, etymology, translations, word frequency, anagrams, rhymes, and more. Examples: 'define ubiquitous', 'etymology of algorithm', 'translate hello to Japanese', 'anagrams of listen', 'words that rhyme with time', 'Scrabble score for quizzify'"
+    )]
+    async fn wolfram_linguistics(
+        &self,
+        Parameters(params): Parameters<params::WolframLinguisticsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::wolfram::linguistics(params).await
+    }
+
+    // ========================================================================
+    // Perplexity AI Search Tools (4)
+    // ========================================================================
+
+    #[tool(
+        description = "Search the web using Perplexity AI's Sonar API. Returns search-grounded answers with citations. Supports model selection (sonar=fast, sonar-pro=deep, sonar-deep-research=multi-step), recency filtering (hour/day/week/month), and domain filtering. Set PERPLEXITY_API_KEY env var. Examples: 'latest FDA drug approvals 2026', 'Rust async runtime comparison'"
+    )]
+    async fn perplexity_search(
+        &self,
+        Parameters(params): Parameters<params::PerplexitySearchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::perplexity::search(params).await
+    }
+
+    #[tool(
+        description = "High-level research routing. Specify use_case: 'general' (open web research), 'competitive' (market/competitor intel with SonarPro), or 'regulatory' (FDA/EMA/ICH/WHO filtered). Each use case applies specialized system prompts and domain filters."
+    )]
+    async fn perplexity_research(
+        &self,
+        Parameters(params): Parameters<params::PerplexityResearchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::perplexity::research(params).await
+    }
+
+    #[tool(
+        description = "Competitive intelligence search filtered to specified competitor domains. Uses SonarPro model with month recency filter. Provide competitor domain names (e.g., ['competitor1.com', 'competitor2.io']). Focuses on market positioning, pricing, announcements, partnerships."
+    )]
+    async fn perplexity_competitive(
+        &self,
+        Parameters(params): Parameters<params::PerplexityCompetitiveParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::perplexity::competitive(params).await
+    }
+
+    #[tool(
+        description = "Regulatory intelligence search pre-filtered to pharmaceutical/healthcare regulatory domains: fda.gov, ema.europa.eu, ich.org, who.int, clinicaltrials.gov, drugs.com, drugbank.com, pmda.go.jp. Uses SonarPro with month recency. For FDA actions, EMA guidelines, ICH harmonization, WHO reports."
+    )]
+    async fn perplexity_regulatory(
+        &self,
+        Parameters(params): Parameters<params::PerplexityRegulatoryParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::perplexity::regulatory(params).await
+    }
+
+    // ========================================================================
+    // Principles Knowledge Base Tools (3)
+    // ========================================================================
+
+    #[tool(
+        description = "List all available principles in the knowledge base. Returns principle IDs, titles, and file paths. Includes Ray Dalio's Principles, KISS, First Principles, etc."
+    )]
+    async fn principles_list(
+        &self,
+        Parameters(params): Parameters<params::PrinciplesListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::principles::list_principles(params)
+    }
+
+    #[tool(
+        description = "Get a specific principle by name. Returns the full markdown content. Use 'dalio-principles' for Ray Dalio's decision-making framework, 'kiss' for Keep It Simple, 'first-principles' for foundational reasoning."
+    )]
+    async fn principles_get(
+        &self,
+        Parameters(params): Parameters<params::PrinciplesGetParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::principles::get_principle(params)
+    }
+
+    #[tool(
+        description = "Search principles by keyword. Returns matching sections with context. Use for finding relevant decision-making guidance. Examples: 'open-minded', 'meritocracy', 'believability', 'expected value'"
+    )]
+    async fn principles_search(
+        &self,
+        Parameters(params): Parameters<params::PrinciplesSearchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::principles::search_principles(params)
+    }
+
+    // ========================================================================
+    // Universal Validation Tools
+    // ========================================================================
+
+    #[tool(
+        description = "Run L1-L5 validation on a target. Validates coherence (L1), structure (L2), function (L3), operations (L4), and impact (L5). Auto-detects domain or specify explicitly. Returns detailed check results per level."
+    )]
+    async fn validation_run(
+        &self,
+        Parameters(params): Parameters<params::ValidationRunParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::validation::run(params)
+    }
+
+    #[tool(
+        description = "Quick L1-L2 validation check. Fast coherence and structural validation only. Use for rapid sanity checks before full validation."
+    )]
+    async fn validation_check(
+        &self,
+        Parameters(params): Parameters<params::ValidationCheckParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::validation::check(params)
+    }
+
+    #[tool(
+        description = "List available validation domains and L1-L5 level definitions. Shows detection patterns for each domain."
+    )]
+    async fn validation_domains(
+        &self,
+        Parameters(params): Parameters<params::ValidationDomainsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::validation::domains(params)
+    }
+
+    #[tool(
+        description = "Classify tests in Rust source into 5 categories: Positive (happy path), Negative (error handling), Edge (boundary conditions), Stress (performance), Adversarial (security). Returns distribution, coverage gaps, and recommendations."
+    )]
+    async fn validation_classify_tests(
+        &self,
+        Parameters(params): Parameters<params::ValidationClassifyTestsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::validation::classify_tests_tool(params)
+    }
+
+    // ========================================================================
+    // Brain Tools (12) - Antigravity-style working memory
+    // ========================================================================
+
+    #[tool(
+        description = "Create a new brain session for working memory. Returns session ID. Sessions store artifacts (task.md, plan.md) with versioning."
+    )]
+    async fn brain_session_create(
+        &self,
+        Parameters(params): Parameters<params::BrainSessionCreateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brain::session_create(params)
+    }
+
+    #[tool(
+        description = "Load an existing brain session by ID. Returns session details and artifact list."
+    )]
+    async fn brain_session_load(
+        &self,
+        Parameters(params): Parameters<params::BrainSessionLoadParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brain::session_load(params)
+    }
+
+    #[tool(
+        description = "List all brain sessions, most recent first. Returns session IDs, dates, and projects."
+    )]
+    async fn brain_sessions_list(
+        &self,
+        Parameters(params): Parameters<params::BrainSessionsListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brain::sessions_list(params)
+    }
+
+    #[tool(
+        description = "Save an artifact to a brain session. Artifact types: task, plan, walkthrough, review, research, decision, custom."
+    )]
+    async fn brain_artifact_save(
+        &self,
+        Parameters(params): Parameters<params::BrainArtifactSaveParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brain::artifact_save(params)
+    }
+
+    #[tool(
+        description = "Resolve an artifact, creating an immutable snapshot. Creates .resolved and .resolved.N files. Returns version number."
+    )]
+    async fn brain_artifact_resolve(
+        &self,
+        Parameters(params): Parameters<params::BrainArtifactResolveParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brain::artifact_resolve(params)
+    }
+
+    #[tool(
+        description = "Get an artifact's content. Specify version for a specific resolved snapshot, or omit for current mutable state."
+    )]
+    async fn brain_artifact_get(
+        &self,
+        Parameters(params): Parameters<params::BrainArtifactGetParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brain::artifact_get(params)
+    }
+
+    #[tool(
+        description = "Diff two resolved versions of an artifact. Returns line-based diff showing additions and removals."
+    )]
+    async fn brain_artifact_diff(
+        &self,
+        Parameters(params): Parameters<params::BrainArtifactDiffParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brain::artifact_diff(params)
+    }
+
+    #[tool(
+        description = "Track a file for content-addressable change detection. Stores SHA-256 hash and file copy."
+    )]
+    async fn code_tracker_track(
+        &self,
+        Parameters(params): Parameters<params::BrainCodeTrackerTrackParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brain::code_tracker_track(params)
+    }
+
+    #[tool(
+        description = "Check if a tracked file has changed since it was tracked. Returns changed: true/false."
+    )]
+    async fn code_tracker_changed(
+        &self,
+        Parameters(params): Parameters<params::BrainCodeTrackerChangedParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brain::code_tracker_changed(params)
+    }
+
+    #[tool(description = "Get the original content of a tracked file when it was first tracked.")]
+    async fn code_tracker_original(
+        &self,
+        Parameters(params): Parameters<params::BrainCodeTrackerOriginalParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brain::code_tracker_original(params)
+    }
+
+    #[tool(
+        description = "Get a learned preference from implicit knowledge. Returns value and confidence score."
+    )]
+    async fn implicit_get(
+        &self,
+        Parameters(params): Parameters<params::BrainImplicitGetParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brain::implicit_get(params)
+    }
+
+    #[tool(
+        description = "Set a learned preference in implicit knowledge. Value should be JSON. Preferences are reinforced with repeated use."
+    )]
+    async fn implicit_set(
+        &self,
+        Parameters(params): Parameters<params::BrainImplicitSetParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brain::implicit_set(params)
+    }
+
+    #[tool(
+        description = "Get implicit knowledge statistics including total patterns, corrections, preferences, decayed patterns (confidence < 0.5 after time-decay), and ungrounded patterns (no T1 primitive assigned)."
+    )]
+    async fn implicit_stats(&self) -> Result<CallToolResult, McpError> {
+        tools::brain::implicit_stats()
+    }
+
+    #[tool(
+        description = "Find corrections using fuzzy token matching (Jaccard similarity). Returns corrections above the similarity threshold. Default threshold: 0.3."
+    )]
+    async fn implicit_find_corrections(
+        &self,
+        Parameters(params): Parameters<params::BrainImplicitFindCorrectionsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brain::implicit_find_corrections(params)
+    }
+
+    #[tool(
+        description = "List patterns filtered by T1 primitive grounding (sequence, mapping, recursion, state, void). Returns patterns with their decay-adjusted effective confidence."
+    )]
+    async fn implicit_patterns_by_grounding(
+        &self,
+        Parameters(params): Parameters<params::BrainImplicitPatternsByGroundingParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brain::implicit_patterns_by_grounding(params)
+    }
+
+    #[tool(
+        description = "List all patterns sorted by decay-adjusted relevance (effective confidence descending). Shows which patterns are still strong vs fading."
+    )]
+    async fn implicit_patterns_by_relevance(&self) -> Result<CallToolResult, McpError> {
+        tools::brain::implicit_patterns_by_relevance()
+    }
+
+    #[tool(
+        description = "Check brain health status. Returns overall status (healthy/degraded), index health, and partial writes."
+    )]
+    async fn brain_recovery_check(&self) -> Result<CallToolResult, McpError> {
+        tools::brain::recovery_check()
+    }
+
+    #[tool(
+        description = "Repair partial writes by creating missing metadata for artifacts. Operates on specified session or latest."
+    )]
+    async fn brain_recovery_repair(
+        &self,
+        Parameters(params): Parameters<params::BrainRecoveryRepairParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brain::recovery_repair(params.session_id.as_deref())
+    }
+
+    #[tool(
+        description = "Rebuild session index from session directories. Use when index is corrupted or missing."
+    )]
+    async fn brain_recovery_rebuild_index(&self) -> Result<CallToolResult, McpError> {
+        tools::brain::recovery_rebuild_index()
+    }
+
+    #[tool(
+        description = "Attempt automatic brain recovery. Checks health and repairs if auto_recovery is enabled."
+    )]
+    async fn brain_recovery_auto(&self) -> Result<CallToolResult, McpError> {
+        tools::brain::recovery_auto()
+    }
+
+    // ========================================================================
+    // Brain Coordination Tools (ACS)
+    // ========================================================================
+
+    #[tool(
+        description = "Acquire a file lock for agent coordination. Prevents race conditions in multi-agent environments. Returns success status and lock info. Idempotent."
+    )]
+    async fn brain_coordination_acquire(
+        &self,
+        Parameters(params): Parameters<params::BrainCoordinationAcquireParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brain::coordination_acquire(params)
+    }
+
+    #[tool(
+        description = "Release a file lock held by an agent. Allows other agents to access the file. Returns success status."
+    )]
+    async fn brain_coordination_release(
+        &self,
+        Parameters(params): Parameters<params::BrainCoordinationReleaseParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brain::coordination_release(params)
+    }
+
+    #[tool(
+        description = "Check the lock status of a file. Returns Vacant or Occupied with agent info."
+    )]
+    async fn brain_coordination_status(
+        &self,
+        Parameters(params): Parameters<params::BrainCoordinationStatusParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brain::coordination_status(params)
+    }
+
+    // ========================================================================
+    // Hooks Tools (3) - Hook Registry API
+    // ========================================================================
+
+    #[tool(
+        description = "Get hook registry statistics. Returns total hooks, counts by tier (dev/review/deploy), and counts by event type. Provides structured overview of the hook system."
+    )]
+    async fn hooks_stats(&self) -> Result<CallToolResult, McpError> {
+        tools::hooks::stats()
+    }
+
+    #[tool(
+        description = "Get hooks for a specific event type. Returns list of hooks that trigger on the given event (e.g., 'SessionStart', 'PreToolUse:Edit|Write'). Each hook includes name, tiers, timeout, and description."
+    )]
+    async fn hooks_for_event(
+        &self,
+        Parameters(params): Parameters<params::HooksForEventParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hooks::for_event(params)
+    }
+
+    #[tool(
+        description = "Get hooks for a specific deployment tier. Returns hooks active in the given tier: 'dev' (11 fast hooks), 'review' (33 quality hooks), or 'deploy' (76 full validation hooks). Use this to understand which hooks run in different environments."
+    )]
+    async fn hooks_for_tier(
+        &self,
+        Parameters(params): Parameters<params::HooksForTierParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hooks::for_tier(params)
+    }
+
+    #[tool(
+        description = "List nested hooks for a compound hook (hook molecule). Returns molecular formula, nested hooks, bond strengths, and stability status. Use to inspect compound hook architecture."
+    )]
+    async fn hook_list_nested(
+        &self,
+        Parameters(params): Parameters<params::HookListNestedParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hooks::list_nested(params)
+    }
+
+    #[tool(
+        description = "Get aggregate hook execution metrics summary. Returns total executions, block/warn counts, per-hook timing (p50/p95/p99), event distribution, and slowest hooks. Use to monitor hook performance and block rates."
+    )]
+    async fn hooks_metrics_summary(
+        &self,
+        Parameters(params): Parameters<params::HookMetricsSummaryParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hooks::metrics_summary(params)
+    }
+
+    #[tool(
+        description = "Get hook execution metrics filtered by event type. Returns per-hook statistics only for the specified event (e.g., PreToolUse, SessionStart). Use to analyze hook behavior for specific lifecycle events."
+    )]
+    async fn hooks_metrics_by_event(
+        &self,
+        Parameters(params): Parameters<params::HookMetricsByEventParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hooks::metrics_by_event(params)
+    }
+
+    // ========================================================================
+    // Immunity Tools (6) - Antipattern Detection and Self-Regulation
+    // ========================================================================
+
+    #[tool(
+        description = "Scan code content for known antipatterns. Returns threats with antibody IDs, severity, confidence, and response actions. Use before writing code to detect PAMPs/DAMPs."
+    )]
+    async fn immunity_scan(
+        &self,
+        Parameters(params): Parameters<params::ImmunityScanParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::immunity::immunity_scan(params)
+    }
+
+    #[tool(
+        description = "Scan stderr output for known error patterns. Use after build/test failures to identify recurring antipatterns from compiler or tool output."
+    )]
+    async fn immunity_scan_errors(
+        &self,
+        Parameters(params): Parameters<params::ImmunityScanErrorsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::immunity::immunity_scan_errors(params)
+    }
+
+    #[tool(
+        description = "List all registered antibodies with optional filtering by threat type (PAMP/DAMP) and minimum severity (low/medium/high/critical)."
+    )]
+    async fn immunity_list(
+        &self,
+        Parameters(params): Parameters<params::ImmunityListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::immunity::immunity_list(params)
+    }
+
+    #[tool(
+        description = "Get detailed antibody by ID. Returns detection patterns, response strategy, Rust template, confidence, and learned_from context."
+    )]
+    async fn immunity_get(
+        &self,
+        Parameters(params): Parameters<params::ImmunityGetParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::immunity::immunity_get(params)
+    }
+
+    #[tool(
+        description = "Propose new antibody from observed error/fix pair. Creates proposal for review at ~/.claude/immunity/proposals.yaml. Use after fixing a recurring bug."
+    )]
+    async fn immunity_propose(
+        &self,
+        Parameters(params): Parameters<params::ImmunityProposeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::immunity::immunity_propose(params)
+    }
+
+    #[tool(
+        description = "Get immunity system status. Returns registry version, antibody counts by type/severity, and homeostasis loop status."
+    )]
+    async fn immunity_status(&self) -> Result<CallToolResult, McpError> {
+        tools::immunity::immunity_status()
+    }
+
+    // ========================================================================
+    // Regulatory Primitives Tools (3)
+    // ========================================================================
+
+    #[tool(
+        description = "Extract regulatory primitives from FDA/ICH/CIOMS sources. Classifies terms into T1 (Universal), T2-P (Cross-Domain Primitive), T2-C (Cross-Domain Composite), or T3 (Domain-Specific). Returns primitive inventory with dependency graphs and source citations."
+    )]
+    async fn regulatory_primitives_extract(
+        &self,
+        Parameters(params): Parameters<params::RegulatoryExtractParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::regulatory::extract(params)
+    }
+
+    #[tool(
+        description = "Audit FDA vs CIOMS/ICH term consistency. Computes structural match (word overlap), semantic match (concept alignment), identifies discrepancies, and returns verdict: Aligned, MinorDeviation, MajorDeviation, or NoCorrespondence."
+    )]
+    async fn regulatory_primitives_audit(
+        &self,
+        Parameters(params): Parameters<params::RegulatoryAuditParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::regulatory::audit(params)
+    }
+
+    #[tool(
+        description = "Cross-domain transfer analysis between regulatory domains. Maps primitives from one domain (PV, Cloud, AI Safety, Finance) to another, computing transfer confidence scores."
+    )]
+    async fn regulatory_primitives_compare(
+        &self,
+        Parameters(params): Parameters<params::RegulatoryCompareParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::regulatory::compare(params)
+    }
+
+    // ========================================================================
+    // Brand Semantics Tools (3) - Primitive Extraction for Brand Names
+    // ========================================================================
+
+    #[tool(
+        description = "Get the pre-computed NexVigilant brand decomposition. Returns etymology roots, tier-classified primitives (T1/T2-P/T2-C/T3), primitive tests, transfer mappings to aviation domain, and semantic synthesis."
+    )]
+    async fn brand_decomposition_nexvigilant(&self) -> Result<CallToolResult, McpError> {
+        tools::brand_semantics::brand_decomposition_nexvigilant()
+    }
+
+    #[tool(
+        description = "Get a brand decomposition by name. Currently supports 'nexvigilant'. Returns full primitive extraction with tier classification and cross-domain transfer mappings."
+    )]
+    async fn brand_decomposition_get(
+        &self,
+        Parameters(params): Parameters<params::BrandDecompositionGetParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brand_semantics::brand_decomposition_get(params)
+    }
+
+    #[tool(
+        description = "Test if a term is a primitive using the 3-part test: (1) No domain-internal dependencies, (2) Grounds to external concepts, (3) Not merely a synonym. Returns verdict (Primitive/Composite) and tier classification (T1/T2-P/T2-C/T3)."
+    )]
+    async fn brand_primitive_test(
+        &self,
+        Parameters(params): Parameters<params::BrandPrimitiveTestParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::brand_semantics::brand_primitive_test(params)
+    }
+
+    #[tool(
+        description = "List all semantic tiers (T1-Universal, T2-P-CrossDomainPrimitive, T2-C-CrossDomainComposite, T3-DomainSpecific) with definitions, examples, and transfer guidance."
+    )]
+    async fn brand_semantic_tiers(&self) -> Result<CallToolResult, McpError> {
+        tools::brand_semantics::brand_semantic_tiers()
+    }
+
+    // ========================================================================
+    // Primitive Validation Tools (4) - Corpus-Backed with Professional Citations
+    // ========================================================================
+
+    #[tool(
+        description = "Validate a primitive term against external corpus (ICH glossary, PubMed). Returns validation tier (1=Authoritative/2=Peer-Reviewed/3=Web/4=Expert), confidence score, definition, and professional citations in Vancouver format. Essential for regulatory compliance."
+    )]
+    async fn primitive_validate(
+        &self,
+        Parameters(params): Parameters<params::PrimitiveValidateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::primitive_validation::validate(params).await
+    }
+
+    #[tool(
+        description = "Generate a professional Vancouver-format citation for a PubMed ID (PMID) or DOI. Returns formatted citation with all metadata for regulatory documentation."
+    )]
+    async fn primitive_cite(
+        &self,
+        Parameters(params): Parameters<params::PrimitiveCiteParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::primitive_validation::cite(params).await
+    }
+
+    #[tool(
+        description = "Batch validate multiple primitive terms. Returns validation summary with tier distribution, confidence scores, and aggregate statistics."
+    )]
+    async fn primitive_validate_batch(
+        &self,
+        Parameters(params): Parameters<params::PrimitiveValidateBatchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::primitive_validation::validate_batch(params).await
+    }
+
+    #[tool(
+        description = "List validation tiers and their confidence levels. Shows Tier 1 (Authoritative: ICH/FDA/EMA), Tier 2 (Peer-Reviewed: PubMed), Tier 3 (Validated Web), and Tier 4 (Expert Generation). Includes regulatory compliance notes."
+    )]
+    async fn primitive_validation_tiers(&self) -> Result<CallToolResult, McpError> {
+        tools::primitive_validation::validation_tiers()
+    }
+
+    // ========================================================================
+    // Chemistry Primitives Tools (10) - Cross-Domain Transfer
+    // ========================================================================
+
+    #[tool(
+        description = "Calculate Arrhenius rate constant (threshold gating). Maps to signal_detection_threshold in PV. PV transfer confidence: 0.92. k = A × e^(-Ea/RT)"
+    )]
+    async fn chemistry_threshold_rate(
+        &self,
+        Parameters(params): Parameters<params::ChemistryThresholdRateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::chemistry::threshold_rate(params)
+    }
+
+    #[tool(
+        description = "Calculate remaining amount after decay (half-life kinetics). Maps to signal_persistence in PV. PV transfer confidence: 0.90. N(t) = N₀ × e^(-kt)"
+    )]
+    async fn chemistry_decay_remaining(
+        &self,
+        Parameters(params): Parameters<params::ChemistryDecayRemainingParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::chemistry::decay_remaining(params)
+    }
+
+    #[tool(
+        description = "Calculate Michaelis-Menten saturation rate. Maps to case_processing_capacity in PV. PV transfer confidence: 0.88. v = Vmax × [S] / (Km + [S])"
+    )]
+    async fn chemistry_saturation_rate(
+        &self,
+        Parameters(params): Parameters<params::ChemistrySaturationRateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::chemistry::saturation_rate(params)
+    }
+
+    #[tool(
+        description = "Calculate Gibbs free energy feasibility. Maps to causality_likelihood in PV. PV transfer confidence: 0.85. ΔG = ΔH - TΔS"
+    )]
+    async fn chemistry_feasibility(
+        &self,
+        Parameters(params): Parameters<params::ChemistryFeasibilityParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::chemistry::feasibility(params)
+    }
+
+    #[tool(
+        description = "Calculate rate law dependency. Maps to signal_dependency in PV. PV transfer confidence: 0.82. rate = k[A]^n[B]^m"
+    )]
+    async fn chemistry_dependency_rate(
+        &self,
+        Parameters(params): Parameters<params::ChemistryDependencyRateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::chemistry::dependency_rate(params)
+    }
+
+    #[tool(
+        description = "Calculate buffer capacity (Henderson-Hasselbalch). Maps to baseline_stability in PV. PV transfer confidence: 0.78. β = 2.303 × C × ratio / (1+ratio)²"
+    )]
+    async fn chemistry_buffer_capacity(
+        &self,
+        Parameters(params): Parameters<params::ChemistryBufferCapacityParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::chemistry::buffer_cap(params)
+    }
+
+    #[tool(
+        description = "Calculate Beer-Lambert absorbance. Maps to dose_response_linearity in PV. PV transfer confidence: 0.75. A = εlc"
+    )]
+    async fn chemistry_signal_absorbance(
+        &self,
+        Parameters(params): Parameters<params::ChemistrySignalAbsorbanceParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::chemistry::signal_absorbance(params)
+    }
+
+    #[tool(
+        description = "Calculate equilibrium steady-state fractions. Maps to reporting_baseline in PV. PV transfer confidence: 0.72. Returns product and substrate fractions at equilibrium."
+    )]
+    async fn chemistry_equilibrium(
+        &self,
+        Parameters(params): Parameters<params::ChemistryEquilibriumParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::chemistry::equilibrium(params)
+    }
+
+    #[tool(
+        description = "Get all chemistry → PV mappings. Returns 8 cross-domain transfer mappings with confidence scores (0.72-0.92) and rationale for each mapping."
+    )]
+    async fn chemistry_pv_mappings(
+        &self,
+        Parameters(params): Parameters<params::ChemistryPvMappingsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::chemistry::get_pv_mappings(params)
+    }
+
+    #[tool(
+        description = "Simple threshold exceeded check. Returns boolean: signal > threshold. Useful as a gate for signal detection workflows."
+    )]
+    async fn chemistry_threshold_exceeded(
+        &self,
+        Parameters(params): Parameters<params::ChemistryThresholdExceededParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::chemistry::check_threshold_exceeded(params)
+    }
+
+    #[tool(
+        description = "Calculate Hill equation response (cooperative binding). Maps to signal_cascade_amplification in PV. PV confidence: 0.85. Y = I^nH / (K₀.₅^nH + I^nH). nH>1 amplifies, nH<1 dampens."
+    )]
+    async fn chemistry_hill_response(
+        &self,
+        Parameters(params): Parameters<params::ChemistryHillResponseParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::chemistry::hill_cooperative(params)
+    }
+
+    #[tool(
+        description = "Calculate Nernst potential (dynamic threshold). Maps to dynamic_decision_threshold in PV. PV confidence: 0.80. E = E⁰ - (RT/nF)ln(Q). Threshold shifts with concentration."
+    )]
+    async fn chemistry_nernst_potential(
+        &self,
+        Parameters(params): Parameters<params::ChemistryNernstParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::chemistry::nernst_dynamic(params)
+    }
+
+    #[tool(
+        description = "Calculate competitive inhibition rate. Maps to signal_interference_factor in PV. PV confidence: 0.78. v = Vmax[S] / (Km(1+[I]/Ki) + [S]). Competing signals raise threshold."
+    )]
+    async fn chemistry_inhibition_rate(
+        &self,
+        Parameters(params): Parameters<params::ChemistryInhibitionParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::chemistry::inhibition_rate(params)
+    }
+
+    #[tool(
+        description = "Calculate Eyring rate (transition state theory). Maps to signal_escalation_rate in PV. PV confidence: 0.82. k = κ(kB*T/h)exp(-ΔG‡/RT). More accurate than Arrhenius."
+    )]
+    async fn chemistry_eyring_rate(
+        &self,
+        Parameters(params): Parameters<params::ChemistryEyringRateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::chemistry::eyring_transition(params)
+    }
+
+    #[tool(
+        description = "Calculate Langmuir coverage (resource binding). Maps to case_slot_occupancy in PV. PV confidence: 0.88. θ = K[A]/(1+K[A]). Finite slots, saturation behavior."
+    )]
+    async fn chemistry_langmuir_coverage(
+        &self,
+        Parameters(params): Parameters<params::ChemistryLangmuirParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::chemistry::langmuir_binding(params)
+    }
+
+    // ========================================================================
+    // Cytokine Signaling Tools (3) - Typed Event Bus (Immune System Patterns)
+    // ========================================================================
+
+    #[tool(
+        description = "Emit a cytokine signal to the global event bus. Families: il1 (alarm), il2 (growth), il6 (acute), il10 (suppress), tnf_alpha (terminate), ifn_gamma (activate), tgf_beta (regulate), csf (spawn). Severities: trace, low, medium, high, critical. Scopes: autocrine, paracrine, endocrine, systemic."
+    )]
+    async fn cytokine_emit(
+        &self,
+        Parameters(params): Parameters<params::CytokineEmitParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cytokine::emit(params)
+    }
+
+    #[tool(
+        description = "Get cytokine bus status: signals emitted/delivered/dropped, cascades triggered, counts by family and severity. Shows current event bus health."
+    )]
+    async fn cytokine_status(&self) -> Result<CallToolResult, McpError> {
+        tools::cytokine::status()
+    }
+
+    #[tool(
+        description = "List all cytokine families with descriptions. Each family maps to an immune function: IL-1 (alarm), IL-6 (acute response), TNF-alpha (destroy threats), etc. Optional filter by family name."
+    )]
+    async fn cytokine_families(
+        &self,
+        Parameters(params): Parameters<params::CytokineListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cytokine::families(params)
+    }
+
+    // ========================================================================
+    // Value Mining Tools (4) - Economic Signal Detection (PV Algorithms)
+    // ========================================================================
+
+    #[tool(
+        description = "List all value signal types with their PV algorithm analogs and T1 primitives. Types: Sentiment (PRR), Trend (IC), Engagement (ROR), Virality (EBGM), Controversy (Chi²). Each type maps to a pharmacovigilance algorithm for cross-domain transfer."
+    )]
+    async fn value_signal_types(
+        &self,
+        Parameters(params): Parameters<params::ValueSignalTypesParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::value_mining::list_signal_types(params)
+    }
+
+    #[tool(
+        description = "Detect a value signal from numeric observations. Applies PV algorithm analog (PRR, IC, ROR, EBGM, Chi²) based on signal type. Returns score, confidence, strength, and interpretation. Params: signal_type, observed, baseline, sample_size, entity, source."
+    )]
+    async fn value_signal_detect(
+        &self,
+        Parameters(params): Parameters<params::ValueSignalDetectParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::value_mining::detect_signal(params)
+    }
+
+    #[tool(
+        description = "Create a baseline for signal detection. Sets expected rates for sentiment, engagement, and posting frequency. Used as comparison point for detecting signals."
+    )]
+    async fn value_baseline_create(
+        &self,
+        Parameters(params): Parameters<params::ValueBaselineCreateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::value_mining::create_baseline(params)
+    }
+
+    #[tool(
+        description = "Get the PV ↔ Value Mining algorithm mapping. Shows how pharmacovigilance algorithms (PRR, ROR, IC, EBGM, Chi²) transfer to economic signal detection with confidence scores and T1 primitive groundings."
+    )]
+    async fn value_pv_mapping(
+        &self,
+        Parameters(params): Parameters<params::ValuePvMappingParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::value_mining::get_pv_mapping(params)
+    }
+
+    // ========================================================================
+    // Game Theory Tools (5) - 2x2 Nash + Forge N×M Pipeline
+    // ========================================================================
+
+    #[tool(description = "Analyze a 2x2 normal-form game and return pure/mixed Nash equilibria.")]
+    async fn game_theory_nash_2x2(
+        &self,
+        Parameters(params): Parameters<params::GameTheoryNash2x2Params>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::game_theory::nash_2x2(params)
+    }
+
+    #[tool(
+        description = "Build and analyze an N×M payoff matrix. Returns best responses, dominant strategies, minimax/maximin values, and expected payoffs per row."
+    )]
+    async fn forge_payoff_matrix(
+        &self,
+        Parameters(params): Parameters<params::ForgePayoffMatrixParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::game_theory::forge_payoff_matrix(params)
+    }
+
+    #[tool(
+        description = "Solve N×M mixed strategy Nash equilibrium via fictitious play. Returns mixed strategy weights, expected payoff, and convergence info."
+    )]
+    async fn forge_nash_solve(
+        &self,
+        Parameters(params): Parameters<params::ForgeNashSolveParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::game_theory::forge_nash_solve(params)
+    }
+
+    #[tool(
+        description = "Compute forge quality score Q = 0.40×prim + 0.25×combat + 0.20×turn + 0.15×survival. Returns total, component breakdown, letter grade, and code completeness."
+    )]
+    async fn forge_quality_score(
+        &self,
+        Parameters(params): Parameters<params::ForgeQualityScoreParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::game_theory::forge_quality_score(params)
+    }
+
+    #[tool(
+        description = "Generate Rust code from collected Lex Primitiva (0-15) and defeated safety enemies. Returns complete forge_output.rs with GroundsTo-annotated types."
+    )]
+    async fn forge_code_generate(
+        &self,
+        Parameters(params): Parameters<params::ForgeCodeGenerateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::game_theory::forge_code_generate(params)
+    }
+
+    // ========================================================================
+    // STEM Primitives Tools (11) - Cross-Domain T2-P Traits
+    // ========================================================================
+
+    #[tool(
+        description = "Get STEM system version, trait counts, domain summary, and T1 distribution. 32 traits across 4 domains (Science, Chemistry, Physics, Mathematics)."
+    )]
+    async fn stem_version(&self) -> Result<CallToolResult, McpError> {
+        tools::stem::version()
+    }
+
+    #[tool(
+        description = "Get the full 32-trait STEM taxonomy with T1 groundings. Shows every trait's domain, T1 primitive (SEQUENCE/MAPPING/RECURSION/STATE), and cross-domain transfer description."
+    )]
+    async fn stem_taxonomy(&self) -> Result<CallToolResult, McpError> {
+        tools::stem::taxonomy()
+    }
+
+    #[tool(
+        description = "Combine two confidence values via multiplicative composition. Confidence (T2-P) is the universal uncertainty quantifier shared across all STEM domains. Result clamped to [0.0, 1.0]."
+    )]
+    async fn stem_confidence_combine(
+        &self,
+        Parameters(params): Parameters<params::StemConfidenceCombineParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::confidence_combine(params)
+    }
+
+    #[tool(
+        description = "Get tier classification info and transfer multiplier. Tiers: T1 (1.0), T2-P (0.9), T2-C (0.7), T3 (0.4). Higher tier = more transferable across domains."
+    )]
+    async fn stem_tier_info(
+        &self,
+        Parameters(params): Parameters<params::StemTierInfoParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::tier_info(params)
+    }
+
+    #[tool(
+        description = "Calculate chemistry equilibrium balance from forward/reverse rates. Returns K (equilibrium constant), whether system is at equilibrium, and whether products are favored. Grounds to STATE (Harmonize trait)."
+    )]
+    async fn stem_chem_balance(
+        &self,
+        Parameters(params): Parameters<params::StemChemBalanceParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::chem_balance(params)
+    }
+
+    #[tool(
+        description = "Create a Fraction [0.0, 1.0] and check saturation status. Saturated when ≥ 0.99. Grounds to STATE (Saturate trait). Cross-domain: capacity utilization."
+    )]
+    async fn stem_chem_fraction(
+        &self,
+        Parameters(params): Parameters<params::StemChemFractionParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::chem_fraction(params)
+    }
+
+    #[tool(
+        description = "Calculate acceleration from force and mass (Newton's F=ma → a=F/m). Grounds to MAPPING (YieldForce trait). Cross-domain: dose-response relationship."
+    )]
+    async fn stem_phys_fma(
+        &self,
+        Parameters(params): Parameters<params::StemPhysFmaParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::phys_fma(params)
+    }
+
+    #[tool(
+        description = "Check quantity conservation (before vs after within tolerance). Grounds to STATE (Preserve trait). Cross-domain: case count conservation in reporting pipelines."
+    )]
+    async fn stem_phys_conservation(
+        &self,
+        Parameters(params): Parameters<params::StemPhysConservationParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::phys_conservation(params)
+    }
+
+    #[tool(
+        description = "Convert frequency to period (T = 1/f). Grounds to RECURSION (Harmonics trait). Cross-domain: seasonal reporting pattern cycle detection."
+    )]
+    async fn stem_phys_period(
+        &self,
+        Parameters(params): Parameters<params::StemPhysPeriodParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::phys_period(params)
+    }
+
+    #[tool(
+        description = "Check if a value is within optional lower/upper bounds and compute clamped value. Grounds to STATE (Bound trait). Cross-domain: confidence interval boundary checking."
+    )]
+    async fn stem_math_bounds_check(
+        &self,
+        Parameters(params): Parameters<params::StemMathBoundsCheckParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::math_bounds_check(params)
+    }
+
+    #[tool(
+        description = "Invert a mathematical relation (LessThan↔GreaterThan, Equal↔Equal, Incomparable↔Incomparable). Checks symmetry. Grounds to MAPPING (Symmetric trait)."
+    )]
+    async fn stem_math_relation_invert(
+        &self,
+        Parameters(params): Parameters<params::StemMathRelationInvertParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::math_relation_invert(params)
+    }
+
+    // ========================================================================
+    // Visualization Tools (6) - SVG diagrams for STEM concepts
+    // ========================================================================
+
+    #[tool(
+        description = "Generate STEM taxonomy sunburst SVG showing all 32 traits across 4 domains (Science, Chemistry, Physics, Mathematics), color-coded by T1 grounding (MAPPING, SEQUENCE, RECURSION, STATE, PERSISTENCE, BOUNDARY, SUM). Returns self-contained SVG."
+    )]
+    async fn viz_stem_taxonomy(
+        &self,
+        Parameters(params): Parameters<params::VizTaxonomyParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz::taxonomy(params)
+    }
+
+    #[tool(
+        description = "Generate type composition SVG showing how a type decomposes to T1 Lex Primitiva. Shows the type at center with T1 primitives radiating outward. Dominant primitive highlighted. Tier classification shown (T1/T2-P/T2-C/T3)."
+    )]
+    async fn viz_type_composition(
+        &self,
+        Parameters(params): Parameters<params::VizCompositionParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz::composition(params)
+    }
+
+    #[tool(
+        description = "Generate circular flow SVG for STEM method loops. Domain options: 'science' (8-step SCIENCE loop with Heisenberg/Shannon/Godel limits), 'chemistry' (9-step CHEMISTRY loop), 'math' (9-step MATHEMATICS loop)."
+    )]
+    async fn viz_method_loop(
+        &self,
+        Parameters(params): Parameters<params::VizLoopParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz::method_loop(params)
+    }
+
+    #[tool(
+        description = "Generate confidence propagation waterfall SVG. Shows how confidence flows through derivation chains. Rule: conf(child) <= min(conf(parents)). Claims as JSON array: [{\"text\":\"...\", \"confidence\":0.95, \"proof_type\":\"analytical\", \"parent\":null}]."
+    )]
+    async fn viz_confidence_chain(
+        &self,
+        Parameters(params): Parameters<params::VizConfidenceParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz::confidence(params)
+    }
+
+    #[tool(
+        description = "Generate bounds visualization SVG. Shows a value on a number line with optional lower/upper bounds, in-bounds/out-of-bounds status, and clamped position. Cross-domain: confidence intervals, price limits, range types."
+    )]
+    async fn viz_bounds(
+        &self,
+        Parameters(params): Parameters<params::VizBoundsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz::bounds(params)
+    }
+
+    #[tool(
+        description = "Generate DAG topology SVG with parallel execution levels. Edges as JSON array: [[\"from\",\"to\"], ...]. Nodes auto-discovered from edges. Shows topological ordering and which nodes can execute concurrently."
+    )]
+    async fn viz_dag(
+        &self,
+        Parameters(params): Parameters<params::VizDagParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz::dag(params)
+    }
+
+    // ========================================================================
+    // Watchtower Tools (5) - Session monitoring and primitive extraction
+    // ========================================================================
+
+    #[tool(
+        description = "List saved Watchtower sessions. Returns session files with metadata (size, modified time) from ~/.claude/logs/sessions/."
+    )]
+    async fn watchtower_sessions_list(
+        &self,
+        Parameters(_params): Parameters<params::WatchtowerSessionsListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let result = tools::watchtower::watchtower_sessions_list();
+        Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+            serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Get active Claude Code sessions from recent log entries. Returns session IDs and their working directories."
+    )]
+    async fn watchtower_active_sessions(
+        &self,
+        Parameters(_params): Parameters<params::WatchtowerActiveSessionsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let result = tools::watchtower::watchtower_active_sessions();
+        Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+            serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Analyze a session log and extract behavioral primitives. Returns statistics, T1/T2/T3 primitives, anti-patterns, and transfer confidence scores."
+    )]
+    async fn watchtower_analyze(
+        &self,
+        Parameters(params): Parameters<params::WatchtowerAnalyzeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let result = tools::watchtower::watchtower_analyze(params.session_path.as_deref());
+        Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+            serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Get hook telemetry statistics. Returns tool distribution, average hook timing, and session activity from hook_telemetry.jsonl."
+    )]
+    async fn watchtower_telemetry_stats(
+        &self,
+        Parameters(_params): Parameters<params::WatchtowerTelemetryStatsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let result = tools::watchtower::watchtower_telemetry_stats();
+        Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+            serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Get recent log entries from commands.log. Optionally filter by session ID and limit count."
+    )]
+    async fn watchtower_recent(
+        &self,
+        Parameters(params): Parameters<params::WatchtowerRecentParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let result =
+            tools::watchtower::watchtower_recent(params.count, params.session_filter.as_deref());
+        Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+            serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Audit symbols in files for potential collisions. Scans for single-letter and short symbols, groups by context (definition/equation/reference), and flags where same symbol may have different meanings."
+    )]
+    async fn watchtower_symbol_audit(
+        &self,
+        Parameters(params): Parameters<params::WatchtowerSymbolAuditParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let result = tools::watchtower::watchtower_symbol_audit(&params.path);
+        Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+            serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Get Gemini API call statistics. Returns total calls, token usage, latency, and breakdown by session/flow from gemini_telemetry.jsonl."
+    )]
+    async fn watchtower_gemini_stats(
+        &self,
+        Parameters(_params): Parameters<params::WatchtowerGeminiStatsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let result = tools::watchtower::watchtower_gemini_stats();
+        Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+            serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Get recent Gemini API calls. Returns the latest N entries with timestamps, models, tokens, and latency."
+    )]
+    async fn watchtower_gemini_recent(
+        &self,
+        Parameters(params): Parameters<params::WatchtowerGeminiRecentParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let result = tools::watchtower::watchtower_gemini_recent(params.count);
+        Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+            serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Get unified Claude + Gemini telemetry view. Combines hook telemetry and Gemini API stats into a single dashboard."
+    )]
+    async fn watchtower_unified(
+        &self,
+        Parameters(params): Parameters<params::WatchtowerUnifiedParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let result =
+            tools::watchtower::watchtower_unified(params.include_claude, params.include_gemini);
+        Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+            serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".to_string()),
+        )]))
+    }
+
+    // ========================================================================
+    // Telemetry Intelligence Tools (6) - External source monitoring
+    // ========================================================================
+
+    #[tool(
+        description = "List all discovered telemetry sources (sessions). Scans telemetry directories and returns session metadata including project hash, filename, and path."
+    )]
+    async fn telemetry_sources_list(
+        &self,
+        Parameters(params): Parameters<params::TelemetrySourcesListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::telemetry_intel::sources_list(params)
+    }
+
+    #[tool(
+        description = "Deep analysis of a specific telemetry source session. Returns operation counts, file access patterns, and token usage. Provide session_path or project_hash."
+    )]
+    async fn telemetry_source_analyze(
+        &self,
+        Parameters(params): Parameters<params::TelemetrySourceAnalyzeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::telemetry_intel::source_analyze(params)
+    }
+
+    #[tool(
+        description = "Cross-reference telemetry with governance module changes. Identifies file accesses to governance-related paths (primitives, governance, capabilities, constitutional) and tracks modifications."
+    )]
+    async fn telemetry_governance_crossref(
+        &self,
+        Parameters(params): Parameters<params::TelemetryGovernanceCrossrefParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::telemetry_intel::governance_crossref(params)
+    }
+
+    #[tool(
+        description = "Track snapshot/artifact version history. Discovers brain sessions and their artifacts, showing version evolution over time. Provide session_id for specific session or omit for overview."
+    )]
+    async fn telemetry_snapshot_evolution(
+        &self,
+        Parameters(params): Parameters<params::TelemetrySnapshotEvolutionParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::telemetry_intel::snapshot_evolution(params)
+    }
+
+    #[tool(
+        description = "Generate full intelligence report. Aggregates data from telemetry sources and brain snapshots to produce a comprehensive report with token usage, file patterns, and governance access."
+    )]
+    async fn telemetry_intel_report(
+        &self,
+        Parameters(params): Parameters<params::TelemetryIntelReportParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::telemetry_intel::intel_report(params)
+    }
+
+    #[tool(
+        description = "Real-time activity stream. Returns the most recent operations across all telemetry sources, sorted by timestamp descending."
+    )]
+    async fn telemetry_recent(
+        &self,
+        Parameters(params): Parameters<params::TelemetryRecentParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::telemetry_intel::recent_activity(params)
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PRIMITIVE SCANNER (2 tools) - Domain primitive extraction
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    #[tool(
+        description = "Scan sources for primitives in a domain. Returns T1/T2/T3 tier classification."
+    )]
+    async fn primitive_scan(
+        &self,
+        Parameters(params): Parameters<params::PrimitiveScanParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::primitive_scanner::primitive_scan(params)
+    }
+
+    #[tool(
+        description = "Batch test terms for primitiveness using 3-test protocol. Returns verdict and tier for each term."
+    )]
+    async fn primitive_batch_test(
+        &self,
+        Parameters(params): Parameters<params::PrimitiveBatchTestParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::primitive_scanner::primitive_batch_test(params)
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ALGOVIGILANCE (6 tools) - ICSR deduplication + signal triage
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    #[tool(
+        description = "Compare two ICSR narratives for similarity using Jaccard tokenization with medical stopword removal. Returns similarity score, threshold comparison, and duplicate verdict."
+    )]
+    async fn algovigil_dedup_pair(
+        &self,
+        Parameters(params): Parameters<params::AlgovigilDedupPairParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::algovigilance::dedup_pair(params)
+    }
+
+    #[tool(
+        description = "Configure batch ICSR deduplication for a drug. Sets up DedupFunction with threshold and limit. Use algovigil_dedup_pair for pairwise comparison."
+    )]
+    async fn algovigil_dedup_batch(
+        &self,
+        Parameters(params): Parameters<params::AlgovigilDedupBatchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::algovigilance::dedup_batch(params)
+    }
+
+    #[tool(
+        description = "Get signal with current decay-adjusted relevance. Looks up signal by drug+event in persisted queue, applies exponential decay (half-life configurable)."
+    )]
+    async fn algovigil_triage_decay(
+        &self,
+        Parameters(params): Parameters<params::AlgovigilTriageDecayParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::algovigilance::triage_decay(params)
+    }
+
+    #[tool(
+        description = "Reinforce a signal with new case evidence. Restores confidence toward original level proportional to new cases."
+    )]
+    async fn algovigil_triage_reinforce(
+        &self,
+        Parameters(params): Parameters<params::AlgovigilTriageReinforceParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::algovigilance::triage_reinforce(params)
+    }
+
+    #[tool(
+        description = "Get prioritized signal queue for a drug. Returns signals sorted by decay-adjusted relevance with configurable half-life and cutoff."
+    )]
+    async fn algovigil_triage_queue(
+        &self,
+        Parameters(params): Parameters<params::AlgovigilTriageQueueParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::algovigilance::triage_queue(params)
+    }
+
+    #[tool(
+        description = "Algovigilance system status. Returns store health, synonym count, queue count, and registered function metadata."
+    )]
+    async fn algovigil_status(&self) -> Result<CallToolResult, McpError> {
+        tools::algovigilance::status()
+    }
+
+    // ========================================================================
+    // Edit Distance Framework (4 tools)
+    // ========================================================================
+
+    #[tool(
+        description = "Compute edit distance between two strings. Supports algorithms: 'levenshtein' (default), 'damerau' (adds transposition), 'lcs' (indel-only). Returns distance, similarity, and string lengths."
+    )]
+    async fn edit_distance_compute(
+        &self,
+        Parameters(params): Parameters<params::EditDistanceParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::edit_distance::edit_distance_compute(params)
+    }
+
+    #[tool(
+        description = "Compute string similarity with threshold check. Returns similarity score (0-1), distance, and whether similarity meets threshold (default 0.8). Useful for PV drug name matching."
+    )]
+    async fn edit_distance_similarity(
+        &self,
+        Parameters(params): Parameters<params::EditDistanceSimilarityParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::edit_distance::edit_distance_similarity(params)
+    }
+
+    #[tool(
+        description = "Compute edit distance with full traceback: returns the sequence of insert/delete/substitute operations to transform source into target. Uses full-matrix DP solver."
+    )]
+    async fn edit_distance_traceback(
+        &self,
+        Parameters(params): Parameters<params::EditDistanceTracebackParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::edit_distance::edit_distance_traceback(params)
+    }
+
+    #[tool(
+        description = "Look up cross-domain transfer confidence for edit distance concepts. Pre-computed maps: text/unicode ↔ bioinformatics/dna, spell-checking, nlp/tokens, pharmacovigilance; bioinformatics/dna ↔ music/melody. Returns structural/functional/contextual scores and caveats."
+    )]
+    async fn edit_distance_transfer(
+        &self,
+        Parameters(params): Parameters<params::EditDistanceTransferParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::edit_distance::edit_distance_transfer(params)
+    }
+
+    #[tool(
+        description = "Batch edit distance: compare a query string against multiple candidates. Returns matches sorted by similarity (descending). Supports min_similarity filter, limit, and algorithm selection (levenshtein/damerau/lcs)."
+    )]
+    async fn edit_distance_batch(
+        &self,
+        Parameters(params): Parameters<params::EditDistanceBatchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::edit_distance::edit_distance_batch(params)
+    }
+
+    // ========================================================================
+    // Integrity Assessment (3 tools)
+    // ========================================================================
+
+    #[tool(
+        description = "Analyze text for AI-generation indicators using 5 statistical features (Zipf, entropy, burstiness, perplexity, TTR) aggregated via chemistry primitives (Beer-Lambert + Hill + Arrhenius). Optional Bloom taxonomy level (1-7) adapts threshold. Returns verdict (Human/Generated), probability, confidence, features."
+    )]
+    async fn integrity_analyze(
+        &self,
+        Parameters(params): Parameters<params::IntegrityAnalyzeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::integrity::integrity_analyze(params)
+    }
+
+    #[tool(
+        description = "Assess KSB response integrity. Convenience endpoint requiring Bloom level (1-7). Higher Bloom = stricter threshold: L1 Remember=0.70, L4 Analyze=0.50, L7 Create=0.30. Returns verdict, probability, hill_score."
+    )]
+    async fn integrity_assess_ksb(
+        &self,
+        Parameters(params): Parameters<params::IntegrityAssessKsbParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::integrity::integrity_assess_ksb(params)
+    }
+
+    #[tool(
+        description = "Get domain calibration profile with baseline feature expectations for PV domains (D02-D12). Returns domain baselines (zipf_alpha, entropy_std, burstiness, perplexity_var, ttr) and Bloom threshold presets."
+    )]
+    async fn integrity_calibration(
+        &self,
+        Parameters(params): Parameters<params::IntegrityCalibrationParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::integrity::integrity_calibration(params)
+    }
+
+    // ========================================================================
+    // Decision Tree Engine (6 tools)
+    // ========================================================================
+
+    #[tool(
+        description = "Train a CART decision tree on feature matrix and labels. Returns tree_id for subsequent predict/prune/export calls. Supports criteria: gini (default), entropy, gain_ratio, mse (regression). Configure max_depth, min_samples_split, min_samples_leaf for pre-pruning."
+    )]
+    async fn dtree_train(
+        &self,
+        Parameters(params): Parameters<params::DtreeTrainParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::dtree::dtree_train(params)
+    }
+
+    #[tool(
+        description = "Predict class label (or regression value) for a single sample using a trained tree. Returns prediction, confidence, class distribution, and the explainable rule path from root to leaf."
+    )]
+    async fn dtree_predict(
+        &self,
+        Parameters(params): Parameters<params::DtreePredictParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::dtree::dtree_predict(params)
+    }
+
+    #[tool(
+        description = "Get feature importance scores from a trained tree. Importance = sum of weighted impurity decreases across all splits using each feature. Normalized to sum to 1.0, sorted descending."
+    )]
+    async fn dtree_importance(
+        &self,
+        Parameters(params): Parameters<params::DtreeImportanceParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::dtree::dtree_importance(params)
+    }
+
+    #[tool(
+        description = "Prune a trained tree using cost-complexity pruning (CCP). Alpha controls aggressiveness: 0.0 = no pruning, higher = more aggressive. Returns before/after depth and leaf counts."
+    )]
+    async fn dtree_prune(
+        &self,
+        Parameters(params): Parameters<params::DtreePruneParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::dtree::dtree_prune(params)
+    }
+
+    #[tool(
+        description = "Export a trained tree in specified format. Formats: 'json' (serialized tree), 'rules' (human-readable if-then-else), 'summary' (statistics overview)."
+    )]
+    async fn dtree_export(
+        &self,
+        Parameters(params): Parameters<params::DtreeExportParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::dtree::dtree_export(params)
+    }
+
+    #[tool(
+        description = "Get metadata and statistics for a trained tree: depth, leaf count, split count, feature count, class count, sample count, criterion, and feature names."
+    )]
+    async fn dtree_info(
+        &self,
+        Parameters(params): Parameters<params::DtreeInfoParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::dtree::dtree_info(params)
+    }
+}
+
+// ============================================================================
+// Unified mode stateful helpers (outside #[tool_router] block)
+// ============================================================================
+impl NexCoreMcpServer {
+    /// Health check for unified dispatcher.
+    pub fn unified_health(&self) -> Result<CallToolResult, McpError> {
+        let tool_count = self.tool_router.list_all().len();
+        let health = serde_json::json!({
+            "status": "healthy",
+            "server": "nexcore-mcp",
+            "version": env!("CARGO_PKG_VERSION"),
+            "tool_count": tool_count,
+            "domains": ["foundation", "pv", "vigilance", "skills", "guidelines", "faers", "gcloud", "wolfram", "principles", "hooks"]
+        });
+        unified_text_result(&health)
+    }
+
+    /// Config validate for unified dispatcher.
+    pub fn unified_config_validate(&self) -> Result<CallToolResult, McpError> {
+        use nexcore_config::Validate;
+        let msg = match &self.config {
+            Some(cfg) => match cfg.validate() {
+                Ok(_) => "Configuration valid: no security issues, all paths validated, MCP servers configured".to_string(),
+                Err(e) => format!("Configuration warnings:\n{e}"),
+            },
+            None => "No configuration loaded".to_string(),
+        };
+        Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+            msg,
+        )]))
+    }
+
+    /// MCP servers list for unified dispatcher.
+    pub fn unified_mcp_servers_list(
+        &self,
+        p: params::McpServersListParams,
+    ) -> Result<CallToolResult, McpError> {
+        let servers = unified_collect_servers(&self.config, p.include_projects);
+        let result = serde_json::json!({"total": servers.len(), "servers": servers});
+        unified_text_result(&result)
+    }
+
+    /// MCP server get for unified dispatcher.
+    pub fn unified_mcp_server_get(
+        &self,
+        p: params::McpServerGetParams,
+    ) -> Result<CallToolResult, McpError> {
+        let msg = unified_get_server(&self.config, &p.name);
+        Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+            msg,
+        )]))
+    }
+}
+
+fn unified_text_result(v: &serde_json::Value) -> Result<CallToolResult, McpError> {
+    Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+        serde_json::to_string_pretty(v).unwrap_or_default(),
+    )]))
+}
+
+fn unified_collect_servers(
+    config: &Option<nexcore_config::ClaudeConfig>,
+    include_projects: bool,
+) -> Vec<serde_json::Value> {
+    let cfg = match config {
+        Some(c) => c,
+        None => return Vec::new(),
+    };
+    let mut servers: Vec<serde_json::Value> = cfg
+        .mcp_servers
+        .iter()
+        .map(|(name, sc)| unified_server_json(name, sc, "global", None))
+        .collect();
+    if include_projects {
+        for (path, project) in &cfg.projects {
+            for (name, sc) in &project.mcp_servers {
+                servers.push(unified_server_json(
+                    name,
+                    sc,
+                    "project",
+                    Some(&path.display().to_string()),
+                ));
+            }
+        }
+    }
+    servers
+}
+
+fn unified_server_json(
+    name: &str,
+    sc: &nexcore_config::McpServerConfig,
+    scope: &str,
+    project: Option<&str>,
+) -> serde_json::Value {
+    let (command, args) = match sc {
+        nexcore_config::McpServerConfig::Stdio { command, args, .. } => {
+            (command.clone(), args.clone())
+        }
+    };
+    let mut v = serde_json::json!({"name": name, "scope": scope, "command": command, "args": args});
+    if let Some(p) = project {
+        v["project"] = serde_json::Value::String(p.to_string());
+    }
+    v
+}
+
+fn unified_get_server(config: &Option<nexcore_config::ClaudeConfig>, name: &str) -> String {
+    let cfg = match config {
+        Some(c) => c,
+        None => return "No configuration loaded".to_string(),
+    };
+    match cfg.mcp_servers.get(name) {
+        Some(nexcore_config::McpServerConfig::Stdio { command, args, env }) => {
+            let result = serde_json::json!({"name": name, "type": "stdio", "command": command, "args": args, "env": env});
+            serde_json::to_string_pretty(&result).unwrap_or_default()
+        }
+        None => format!("MCP server '{name}' not found"),
+    }
+}
+
+impl Default for NexCoreMcpServer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl ServerHandler for NexCoreMcpServer {
+    fn get_info(&self) -> ServerInfo {
+        ServerInfo {
+            instructions: Some(
+                r#"NexCore MCP Server - High-performance Rust APIs for Claude Code.
+
+## Tool Categories (121 tools total)
+
+### Foundation (9 tools) - 10-63x faster than Python
+- foundation_levenshtein: Edit distance and similarity
+- foundation_levenshtein_bounded: Bounded edit distance with early termination
+- foundation_fuzzy_search: Batch fuzzy matching
+- foundation_sha256: SHA-256 hashing
+- foundation_yaml_parse: YAML to JSON
+- foundation_graph_topsort: Topological sort
+- foundation_graph_levels: Parallel execution levels
+- foundation_fsrs_review: Spaced repetition scheduling
+- foundation_concept_grep: Deterministic concept expansion for multi-variant search
+
+### PV Signal Detection (8 tools)
+- pv_signal_complete: All 5 algorithms at once
+- pv_signal_prr/ror/ic/ebgm: Individual algorithms
+- pv_chi_square: Chi-square statistic
+- pv_naranjo_quick: Naranjo causality (5 questions)
+- pv_who_umc_quick: WHO-UMC causality
+
+### Vigilance (4 tools) - Theory of Vigilance
+- vigilance_safety_margin: d(s) safety distance
+- vigilance_risk_score: Guardian-AV risk scoring
+- vigilance_harm_types: List 8 ToV harm types (A-H)
+- vigilance_map_to_tov: Map SafetyLevel to ToV
+
+### Guardian (10 tools) - Homeostasis Control Loop + GVR Framework
+- guardian_homeostasis_tick: Run one sensing→decision→response iteration
+- guardian_evaluate_pv: Evaluate PV risk with recommended actions
+- guardian_status: Get loop status (sensors, actuators, iteration count)
+- guardian_reset: Reset loop state and amplification
+- guardian_originator_classify: Classify entity by {G,V,R} autonomy capabilities
+- guardian_ceiling_for_originator: Get autonomy-aware ceiling limits
+
+### Vigil (6 tools) - AI Orchestrator
+- vigil_status: Get orchestrator status (components, sources, executors)
+- vigil_health: Health check (process, Qdrant, Prometheus, Grafana)
+- vigil_emit_event: Emit event to EventBus
+- vigil_memory_search: Search KSB vector store
+- vigil_memory_stats: Get Qdrant collection statistics
+- vigil_llm_stats: Get LLM token usage (Gemini calls, tokens, avg per call)
+
+### Skills (8 tools)
+- skill_scan: Scan directory for skills
+- skill_list: List registered skills
+- skill_get: Get skill by name
+- skill_validate: Diamond v2 compliance validation
+- skill_search_by_tag: Find skills by tag
+- skill_taxonomy_query/list: O(1) taxonomy lookups
+- skill_categories_compute_intensive: Get Rust-delegate categories
+
+### Validation (3 tools) - Universal L1-L5 Validation
+- validation_run: Full L1-L5 validation on any target
+- validation_check: Quick L1-L2 check (fast)
+- validation_domains: List domains and level definitions
+
+### Guidelines (5 tools)
+- guidelines_search: Search ICH/CIOMS/EMA guidelines
+- guidelines_get: Get guideline by ID
+- guidelines_categories: List all categories
+- guidelines_pv_all: Get all PV-specific guidelines
+- guidelines_url: Get PDF URL for guideline
+
+### FAERS (5 tools)
+- faers_search: Search FDA adverse events
+- faers_drug_events: Top events for a drug
+- faers_signal_check: Quick signal detection
+- faers_disproportionality: Full PRR/ROR analysis
+- faers_compare_drugs: Compare two drug profiles
+
+### GCloud (19 tools)
+- gcloud_auth_list: List authenticated accounts
+- gcloud_config_list/get/set: Configuration management
+- gcloud_projects_list/describe: Project operations
+- gcloud_secrets_list/versions_access: Secret Manager
+- gcloud_storage_*: Cloud Storage operations
+- gcloud_compute_instances_list: Compute Engine
+- gcloud_run_services_*: Cloud Run
+- gcloud_functions_list: Cloud Functions
+- gcloud_iam_service_accounts_list: IAM
+- gcloud_logging_read: Cloud Logging
+- gcloud_run_command: Generic command (with safety checks)
+
+### Principles Knowledge Base (3 tools)
+- principles_list: List all available principles
+- principles_get: Get principle by name (dalio-principles, kiss, first-principles)
+- principles_search: Search by keyword (open-minded, meritocracy, expected value)
+
+### Brain (12 tools) - Antigravity-style working memory
+- brain_session_create: Create new session
+- brain_session_load: Load session by ID
+- brain_sessions_list: List all sessions
+- brain_artifact_save: Save artifact (task, plan, walkthrough)
+- brain_artifact_resolve: Create immutable snapshot
+- brain_artifact_get: Get artifact content
+- brain_artifact_diff: Diff two versions
+- code_tracker_track: Track file for changes
+- code_tracker_changed: Check if file changed
+- code_tracker_original: Get original content
+- implicit_get: Get learned preference
+- implicit_set: Set learned preference
+
+### Hooks (4 tools) - Hook Registry API
+- hooks_stats: Get statistics by tier and event type
+- hooks_for_event: Query hooks by event (SessionStart, PreToolUse, etc.)
+- hooks_for_tier: Query hooks by tier (dev/review/deploy)
+- hook_list_nested: List nested hooks in compound hook molecules
+
+### Regulatory Primitives (3 tools) - FDA/ICH/CIOMS Analysis
+- regulatory_primitives_extract: Extract T1/T2/T3 primitives from regulatory sources
+- regulatory_primitives_audit: Audit FDA vs ICH/CIOMS consistency
+- regulatory_primitives_compare: Cross-domain transfer analysis
+
+### Primitive Validation (4 tools) - Corpus-Backed with Professional Citations
+- primitive_validate: Validate term against ICH glossary, BioOntology (MedDRA/SNOMED), PubMed
+- primitive_cite: Generate Vancouver-format citation from PMID or DOI
+- primitive_validate_batch: Batch validation with statistics
+- primitive_validation_tiers: List validation tiers and confidence levels
+
+### Chemistry Primitives (10 tools) - Cross-Domain Transfer
+- chemistry_threshold_rate: Arrhenius rate (signal detection threshold, 0.92 confidence)
+- chemistry_decay_remaining: Half-life decay (signal persistence, 0.90 confidence)
+- chemistry_saturation_rate: Michaelis-Menten (case processing capacity, 0.88 confidence)
+- chemistry_feasibility: Gibbs free energy (causality likelihood, 0.85 confidence)
+- chemistry_dependency_rate: Rate law (signal dependency, 0.82 confidence)
+- chemistry_buffer_capacity: Henderson-Hasselbalch (baseline stability, 0.78 confidence)
+- chemistry_signal_absorbance: Beer-Lambert (dose-response linearity, 0.75 confidence)
+- chemistry_equilibrium: Steady-state fractions (reporting baseline, 0.72 confidence)
+- chemistry_pv_mappings: All 13 chemistry → PV mappings
+- chemistry_threshold_exceeded: Simple signal gate
+- chemistry_hill_response: Hill cooperative binding (signal cascade, 0.85 confidence)
+- chemistry_nernst_potential: Nernst dynamic threshold (0.80 confidence)
+- chemistry_inhibition_rate: Competitive inhibition (signal interference, 0.78 confidence)
+- chemistry_eyring_rate: Eyring transition state (signal escalation, 0.82 confidence)
+- chemistry_langmuir_coverage: Langmuir adsorption (case slot occupancy, 0.88 confidence)
+
+### STEM Primitives (11 tools) - Cross-Domain T2-P Traits
+- stem_version: STEM system version, trait counts, domain summary
+- stem_taxonomy: Full 32-trait taxonomy with T1 groundings
+- stem_confidence_combine: Multiplicative confidence composition
+- stem_tier_info: Tier classification and transfer multiplier
+- stem_chem_balance: Chemistry equilibrium balance (K, products favored)
+- stem_chem_fraction: Fraction saturation check [0.0, 1.0]
+- stem_phys_fma: Force = mass × acceleration (Newton's 2nd)
+- stem_phys_conservation: Quantity conservation check
+- stem_phys_period: Frequency to period conversion
+- stem_math_bounds_check: Value within bounds + clamping
+- stem_math_relation_invert: Relation inversion with symmetry check
+
+### Algovigilance (6 tools) - ICSR Deduplication + Signal Triage
+- algovigil_dedup_pair: Compare two ICSR narratives (Jaccard similarity)
+- algovigil_dedup_batch: Configure batch deduplication for a drug
+- algovigil_triage_decay: Get signal with decay-adjusted relevance
+- algovigil_triage_reinforce: Reinforce signal with new case evidence
+- algovigil_triage_queue: Get prioritized signal queue for a drug
+- algovigil_status: Store health, synonym count, queue stats
+
+### Edit Distance Framework (4 tools) - Generic cross-domain edit distance
+- edit_distance_compute: Compute distance (levenshtein/damerau/lcs algorithms)
+- edit_distance_similarity: Similarity with threshold check (PV drug matching)
+- edit_distance_traceback: Full operation sequence (insert/delete/substitute/transpose)
+- edit_distance_transfer: Cross-domain transfer confidence lookup"#
+                    .into(),
+            ),
+            capabilities: ServerCapabilities::builder().enable_tools().build(),
+            server_info: Implementation {
+                name: "nexcore-mcp".into(),
+                version: env!("CARGO_PKG_VERSION").into(),
+                title: Some("NexCore MCP Server".into()),
+                icons: None,
+                website_url: None,
+            },
+            ..Default::default()
+        }
+    }
+
+    fn call_tool(
+        &self,
+        request: CallToolRequestParams,
+        context: RequestContext<RoleServer>,
+    ) -> impl std::future::Future<Output = Result<CallToolResult, McpError>> + Send + '_ {
+        async move {
+            let tool_name: String = request.name.to_string();
+            if let Err(err) = crate::tooling::tool_gate().check(&tool_name) {
+                return Ok(crate::tooling::gated_result(&tool_name, err));
+            }
+            let tcc = ToolCallContext::new(self, request, context);
+            let result = self.tool_router.call(tcc).await?;
+            Ok(crate::tooling::wrap_result(result))
+        }
+    }
+
+    fn list_tools(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _context: RequestContext<RoleServer>,
+    ) -> impl std::future::Future<Output = Result<ListToolsResult, McpError>> + Send + '_ {
+        std::future::ready(Ok(ListToolsResult {
+            tools: if crate::tooling::is_unified_mode() {
+                vec![crate::tooling::unified_tool_descriptor()]
+            } else {
+                self.tool_router.list_all()
+            },
+            meta: None,
+            next_cursor: None,
+        }))
+    }
+}

@@ -1,0 +1,122 @@
+{
+  "health": {
+    "crate_healths": [
+      {
+        "components": {
+          "cdi_norm": 0.1442429105218361,
+          "coupling_norm": 0.7261490370736908,
+          "entropy_norm": 0.0,
+          "freshness_norm": 1.0,
+          "test_density_norm": 0.04742587317756678
+        },
+        "crate_id": "wksp-api-client",
+        "rating": "Weak",
+        "score": 3.787227122874053
+      },
+      {
+        "components": {
+          "cdi_norm": 0.11522348081007305,
+          "coupling_norm": 0.019841094744370298,
+          "entropy_norm": 0.917618532676728,
+          "freshness_norm": 1.0,
+          "test_density_norm": 0.04742587317756678
+        },
+        "crate_id": "wksp-components",
+        "rating": "Adequate",
+        "score": 4.166319159001223
+      },
+      {
+        "components": {
+          "cdi_norm": 0.10918441483422224,
+          "coupling_norm": 0.4867522559599717,
+          "entropy_norm": 1.0,
+          "freshness_norm": 1.0,
+          "test_density_norm": 0.04742587317756678
+        },
+        "crate_id": "wksp-core",
+        "rating": "Adequate",
+        "score": 5.255845817115193
+      }
+    ],
+    "mean_rating": "Adequate",
+    "mean_score": 4.40313069966349,
+    "rating_distribution": {
+      "adequate": 2,
+      "critical": 0,
+      "excellent": 0,
+      "good": 0,
+      "weak": 1
+    },
+    "timestamp": 1770575793
+  },
+  "measurement": {
+    "crate_count": 3,
+    "crates": [
+      {
+        "cdi": 0.06097560975609756,
+        "coupling_ratio": 0.5,
+        "crate_id": "wksp-api-client",
+        "entropy": 0.0,
+        "fan_in": 1,
+        "fan_out": 1,
+        "loc": 365,
+        "module_count": 1,
+        "module_loc_distribution": [
+          365
+        ],
+        "redundancy": 1.0,
+        "test_count": 0,
+        "test_density": 0.0,
+        "timestamp": 1770575793
+      },
+      {
+        "cdi": 0.04807692307692308,
+        "coupling_ratio": 1.0,
+        "crate_id": "wksp-components",
+        "entropy": 2.6037107691106156,
+        "fan_in": 0,
+        "fan_out": 2,
+        "loc": 256,
+        "module_count": 7,
+        "module_loc_distribution": [
+          53,
+          63,
+          33,
+          48,
+          23,
+          30,
+          6
+        ],
+        "redundancy": 0.07253951089224264,
+        "test_count": 0,
+        "test_density": 0.0,
+        "timestamp": 1770575793
+      },
+      {
+        "cdi": 0.04504504504504504,
+        "coupling_ratio": 0.0,
+        "crate_id": "wksp-core",
+        "entropy": 1.40407541345106,
+        "fan_in": 2,
+        "fan_out": 0,
+        "loc": 31,
+        "module_count": 3,
+        "module_loc_distribution": [
+          11,
+          16,
+          4
+        ],
+        "redundancy": 0.11412704539558038,
+        "test_count": 0,
+        "test_density": 0.0,
+        "timestamp": 1770575793
+      }
+    ],
+    "graph_density": 0.5,
+    "max_depth": 3,
+    "scc_count": 0,
+    "timestamp": 1770575793,
+    "total_loc": 652,
+    "total_tests": 0
+  }
+}

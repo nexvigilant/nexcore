@@ -1,0 +1,50 @@
+// skill_scorer.true — Pipeline-based skill scoring
+//
+// Demonstrates: |> pipeline, Φ (map), Ψ (filter), Ω (fold)
+// Domain: Scoring Claude Code skills by constraint complexity
+//
+// AI learns. Human verifies: 1=true, 0=false.
+
+// Skill constraints with complexity scores (1-5)
+λ scores = σ[3, 4, 2, 5, 3, 4, 2]
+
+// Pipeline: filter high-complexity (>= 3), double weight, sum
+λ weighted_score = scores
+    |> Ψ(|x| x κ> 2)        // filter: keep >= 3
+    |> Φ(|x| x * 2)          // map: double weight
+    |> Ω(0, |a, b| a + b)    // fold: sum
+
+// Simple stats
+λ total = scores |> Ω(0, |a, b| a + b)
+λ count = #(scores)
+
+// Classification
+μ grade(score: N) → String {
+    Σ score {
+        _ → ∂ score κ> 30 { "Excellent" }
+             else { ∂ score κ> 20 { "Good" }
+             else { ∂ score κ> 10 { "Adequate" }
+             else { "Needs Work" } } }
+    }
+}
+
+// Output
+println("Skill Scorer Results")
+println("====================")
+print("Raw scores: ")
+println(scores)
+print("Total: ")
+println(total)
+print("Count: ")
+println(count)
+print("Weighted (high complexity): ")
+println(weighted_score)
+print("Grade: ")
+println(grade(weighted_score))
+
+// Verify
+‼(count κ= 7)
+‼(total κ= 23)
+‼(weighted_score κ= 38)
+
+println("∎ skill_scorer.true verified")

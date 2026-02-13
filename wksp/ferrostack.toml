@@ -1,0 +1,64 @@
+[workspace]
+name = "nexvigilant-app-store"
+description = "NexVigilant App Store"
+
+[[apps]]
+name = "ncos"
+path = "apps/ncos"
+description = "Mobile PWA for NexCore access"
+port = 3000
+tier = "production"
+
+[[apps]]
+name = "adventure-hud"
+path = "apps/adventure-hud"
+description = "Game HUD with metric tracking"
+port = 3001
+tier = "experimental"
+
+[[apps]]
+name = "borrow-miner"
+path = "apps/borrow-miner"
+description = "Ore mining game with FDA signal checks"
+port = 3002
+tier = "experimental"
+
+[[apps]]
+name = "education-machine"
+path = "apps/education-machine"
+description = "Educational content"
+port = 3003
+tier = "experimental"
+
+[[apps]]
+name = "ferro-clicker"
+path = "apps/ferro-clicker"
+description = "Clicker game"
+port = 3004
+tier = "experimental"
+
+[[apps]]
+name = "ferro-explore"
+path = "apps/ferro-explore"
+description = "Ferrostack exploration"
+port = 3005
+tier = "experimental"
+
+[[apps]]
+name = "nexcore-watch-app"
+path = "apps/nexcore-watch-app"
+description = "Galaxy Watch 7 Application"
+port = 3006
+tier = "experimental"
+
+[[tools]]
+name = "lessons-mcp"
+path = "tools/lessons-mcp"
+description = "MCP server for lessons learned"
+tier = "production"
+
+[[tools]]
+name = "nexcore-watch-core"
+path = "tools/nexcore-watch-core"
+description = "Core logic for watch app"
+tier = "production"

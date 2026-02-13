@@ -1,0 +1,54 @@
+[workspace]
+
+[package]
+name = "nexcore-build-gate"
+version = "1.0.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+description = "Cargo build coordination for multi-agent environments"
+keywords = ["cargo", "build", "coordination", "lock", "agent"]
+categories = ["development-tools"]
+
+[[bin]]
+name = "build-gate"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
+walkdir = { version = "2.5.0" }
+sha2 = { version = "0.10.8" }
+hex = { version = "0.4.3" }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = { version = "1.0.120" }
+chrono = { version = "0.4.38", features = ["serde"] }
+tracing = { version = "0.1.40" }
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+
+# File locking
+fs2 = "0.4"
+
+[lints.rust]
+async_fn_in_trait = "allow"
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+unused_mut = "allow"
+unused_assignments = "allow"
+unused_must_use = "allow"
+
+[lints.clippy]
+all = "allow"
+pedantic = "allow"
+nursery = "allow"
+cargo = "allow"
+map_unwrap_or = "allow"
+manual_map = "allow"
+option_map_or_none = "allow"
+derivable_impls = "allow"
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"
+todo = "allow"
+unimplemented = "allow"
+unreachable = "allow"

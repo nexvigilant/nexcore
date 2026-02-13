@@ -1,0 +1,47 @@
+# Generic NexCore Service Dockerfile
+ARG RUST_VERSION=1.88
+FROM rust:${RUST_VERSION}-bookworm AS builder
+
+ARG PACKAGE=nexcore-api
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y pkg-config libssl-dev libasound2-dev && rm -rf /var/lib/apt/lists/*
+
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
+COPY nexcore-cli ./nexcore-cli
+
+# Handle binary name vs package name (especially for nexcore-vigil -> friday)
+RUN cargo build --release -p ${PACKAGE}
+
+FROM debian:bookworm-slim
+ARG PACKAGE=nexcore-api
+# Mapping for cases where binary name != package name
+ARG BINARY_NAME=${PACKAGE}
+WORKDIR /app
+
+# Install runtime dependencies + GCloud SDK for tools that require it
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    libssl3 \
+    curl \
+    python3 \
+    gnupg \
+    && echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
+    && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - \
+    && apt-get update && apt-get install -y google-cloud-sdk \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -r -s /bin/false nexcore
+
+# Correctly copy the binary even if renamed (like nexcore-vigil -> friday)
+# If BINARY_NAME is provided, use it, else default to PACKAGE
+COPY --from=builder /app/target/release/${BINARY_NAME} /app/service
+
+RUN chown -R nexcore:nexcore /app
+USER nexcore
+
+ENV PORT=8080
+EXPOSE 8080
+
+CMD ["/app/service"]

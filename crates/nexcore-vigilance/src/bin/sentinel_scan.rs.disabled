@@ -1,0 +1,78 @@
+//! # Sentinel Scan: Automated Alpha Discovery
+//!
+//! Orchestrates the end-to-end intelligence pipeline:
+//! 1. Fetch live clinical leads from OpenFDA.
+//! 2. Ingest real-time market data from Polymarket.
+//! 3. Propagate belief through the BettingGrid.
+//! 4. Propose actionable market orders (Hidden Alpha).
+//!
+//! # Codex Compliance
+//! - **Tier**: T3 (System Orchestrator)
+//! - **Commandments**: IX (Measure), XI (Acknowledge)
+
+use nexcore_vigilance::betting::{
+    BettingGrid, BettingSentinel, MarketDataService, SignalConverter, SportType,
+};
+use nexcore_faers_etl::api::OpenFdaClient;
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use tracing::{info, warn};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Initialize tracing
+    tracing_subscriber::fmt::init();
+    info!("Starting Sentinel Scan (Guardian × Polymarket)");
+
+    // 1. Initialize Components
+    let client = OpenFdaClient::new()?;
+    let grid = BettingGrid::new();
+    let converter = SignalConverter::new();
+    
+    let sentinel = BettingSentinel::new(client, grid, converter);
+
+    // 2. Load Market Context
+    // In a real scenario, this would fetch from a database or config
+    let leads = vec![
+        ("OZEMPIC", "VISION LOSS", "POLYMARKET-OZEMPIC-RESTR-2026", SportType::Nfl),
+        ("METFORMIN", "LACTIC ACIDOSIS", "POLYMARKET-METFORMIN-LABEL-2026", SportType::Nba),
+    ];
+
+    // 3. Execute Scan
+    for (drug, event, market_id, sport) in leads {
+        info!("Scanning lead: {} | {}", drug, event);
+        
+        match sentinel.process_lead(drug, event, market_id, sport).await {
+            Ok(newly_flagged) => {
+                if !newly_flagged.is_empty() {
+                    info!("Propagation successful. Hidden Alpha flagged in: {:?}", newly_flagged);
+                }
+            }
+            Err(e) => {
+                warn!("Failed to process lead {}: {}", drug, e);
+            }
+        }
+    }
+
+    // 4. Extract Actionable Alpha
+    info!("Extracting actionable Alpha from grid...");
+    let base_quantity = 100;
+    let orders = sentinel.scan_for_alpha(base_quantity).await;
+
+    if orders.is_empty() {
+        info!("No actionable Alpha discovered in this cycle.");
+    } else {
+        info!("DISCOVERED {} ACTIONABLE ORDERS:", orders.len());
+        for order in orders {
+            info!("  - [Ω] ORDER: {} {} @ {} (Qty: {})", 
+                order.side, 
+                order.market_id.0, 
+                order.limit_price.0, 
+                order.quantity.0
+            );
+        }
+    }
+
+    info!("Sentinel Scan cycle complete.");
+    Ok(())
+}

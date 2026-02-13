@@ -1,0 +1,14 @@
+; hello.dna — output the values 72, 101, 108, 108, 111 (ASCII "Hello")
+.code
+    entry
+    lit 72
+    out
+    lit 101
+    out
+    lit 108
+    out
+    lit 108
+    out
+    lit 111
+    out
+    halt

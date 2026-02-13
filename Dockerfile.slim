@@ -1,0 +1,28 @@
+# Slim runtime image for nexcore-api
+# Uses pre-built binary for fast deployment
+
+FROM debian:bookworm-slim
+
+WORKDIR /app
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    libssl3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy pre-built binary
+COPY target/release/nexcore-api /usr/local/bin/
+
+# Default port
+EXPOSE 3030
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3030/health/ready || exit 1
+
+# Run as non-root
+RUN useradd -m -u 1000 appuser
+USER appuser
+
+CMD ["nexcore-api"]

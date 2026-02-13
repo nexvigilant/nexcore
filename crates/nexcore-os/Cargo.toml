@@ -1,0 +1,54 @@
+[workspace]
+
+[package]
+name = "nexcore-os"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "NexCore OS — Operating system core runtime with STOS-based boot sequence"
+authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
+license = "LicenseRef-NexVigilant-Proprietary"
+repository = "https://github.com/nexvigilant/nexcore"
+keywords = ["os", "runtime", "boot", "state-machine", "operating-system"]
+categories = ["os", "embedded"]
+
+[dependencies]
+nexcore-pal = { version = "0.1.0", path = "../nexcore-pal", registry = "nexcore" }
+nexcore-network = { version = "0.1.0", path = "../nexcore-network", registry = "nexcore" }
+nexcore-audio = { version = "0.1.0", path = "../nexcore-audio", registry = "nexcore" }
+nexcore-state-os = { version = "0.1.0", path = "../nexcore-state-os", registry = "nexcore" }
+nexcore-cytokine = { version = "1.0.0", path = "../nexcore-cytokine", registry = "nexcore" }
+nexcore-energy = { version = "0.1.0", path = "../nexcore-energy", registry = "nexcore" }
+nexcore-clearance = { version = "1.0.0", path = "../nexcore-clearance", registry = "nexcore" }
+nexcore-vault = { version = "1.0.0", path = "../nexcore-vault", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+sha2 = { version = "0.10.8" }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = { version = "1.0.120" }
+tracing = { version = "0.1.40" }
+thiserror = { version = "1.0.61" }
+chrono = { version = "0.4.38", features = ["serde"] }
+
+[dev-dependencies]
+nexcore-pal-linux = { version = "0.1.0", path = "../nexcore-pal-linux", registry = "nexcore" }
+tempfile = { version = "3.10.1" }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = "warn"
+pedantic = "warn"
+nursery = "warn"
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+must_use_candidate = "allow"
+module_name_repetitions = "allow"
+doc_markdown = "allow"
+missing_const_for_fn = "allow"
+cast_possible_truncation = "allow"
+option_if_let_else = "allow"
+significant_drop_tightening = "allow"

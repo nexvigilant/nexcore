@@ -1,0 +1,42 @@
+[workspace]
+
+[package]
+name = "nexcore-pal"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Platform Abstraction Layer — hardware-agnostic traits for NexCore OS"
+authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
+license = "LicenseRef-NexVigilant-Proprietary"
+repository = "https://github.com/nexvigilant/nexcore"
+keywords = ["platform", "hal", "abstraction", "no-std", "os"]
+categories = ["no-std", "hardware-support", "os"]
+
+[dependencies]
+# Zero external dependencies — no_std core traits only
+# Optional grounding support
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore", optional = true }
+serde = { version = "1.0.204", features = ["derive"], optional = true }
+
+[features]
+default = ["std"]
+std = []
+alloc = []
+grounding = ["dep:nexcore-lex-primitiva"]
+serde = ["dep:serde"]
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = "warn"
+pedantic = "warn"
+nursery = "warn"
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+must_use_candidate = "allow"
+module_name_repetitions = "allow"
+doc_markdown = "allow"

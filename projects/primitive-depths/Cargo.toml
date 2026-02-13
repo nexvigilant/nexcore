@@ -1,0 +1,11 @@
+[package]
+name = "primitive-depths"
+version = "0.1.0"
+edition = "2021"
+description = "Terminal roguelike: collect all 16 Lex Primitiva to master the depths"
+
+[workspace]
+
+[dependencies]
+crossterm = "0.28"
+rand = "0.8"

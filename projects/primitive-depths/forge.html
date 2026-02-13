@@ -1,0 +1,1978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Primitive Depths: Code Forge</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --panel: #12121a;
+    --border: #2a2a3a;
+    --text: #c0c0d0;
+    --dim: #555566;
+    --accent: #00ccff;
+    --green: #00cc66;
+    --red: #ff4444;
+    --yellow: #ffcc00;
+    --magenta: #cc66ff;
+    --code-bg: #0d0d18;
+    --locked: #333344;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 13px;
+    overflow: hidden;
+    height: 100vh;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr auto;
+    height: 100vh;
+    gap: 1px;
+    background: var(--border);
+  }
+  .header {
+    grid-column: 1 / -1;
+    background: var(--panel);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .header h1 {
+    font-size: 16px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .header .stats {
+    display: flex;
+    gap: 20px;
+    font-size: 12px;
+    color: var(--dim);
+  }
+  .header .stats span { color: var(--text); }
+
+  /* Left panel: game */
+  .game-panel {
+    background: var(--panel);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .game-canvas-wrap {
+    flex: 1;
+    padding: 4px;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+  #game-canvas {
+    font-size: 14px;
+    line-height: 1.25;
+    white-space: pre;
+    letter-spacing: 1px;
+  }
+  .game-info {
+    padding: 6px 12px;
+    border-top: 1px solid var(--border);
+    max-height: 180px;
+    overflow-y: auto;
+  }
+  .prim-bar {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .prim-slot {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: bold;
+    transition: all 0.3s;
+  }
+  .prim-slot.locked { background: var(--locked); color: #444; }
+  .prim-slot.collected { color: #000; animation: primPop 0.4s ease-out; }
+  @keyframes primPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.5); }
+    100% { transform: scale(1); }
+  }
+  .game-log {
+    font-size: 11px;
+    max-height: 80px;
+    overflow-y: auto;
+  }
+  .game-log div { padding: 1px 0; }
+  .controls {
+    padding: 8px 12px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--panel);
+  }
+  .controls button {
+    background: var(--border);
+    color: var(--text);
+    border: 1px solid #444;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    transition: all 0.15s;
+  }
+  .controls button:hover { background: #3a3a4a; }
+  .controls button.active { background: var(--accent); color: #000; border-color: var(--accent); }
+  .speed-btns { display: flex; gap: 4px; }
+  .speed-btns button { padding: 3px 8px; font-size: 11px; min-width: 32px; }
+
+  /* Right panel: code + metrics */
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    background: var(--panel);
+    overflow: hidden;
+  }
+  .tab-bar {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    padding: 6px 16px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--dim);
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-content { flex: 1; overflow-y: auto; display: none; }
+  .tab-content.active { display: block; }
+
+  /* Code panel */
+  .code-panel { padding: 0; }
+  .code-section {
+    border-bottom: 1px solid var(--border);
+    animation: fadeIn 0.5s ease-out;
+  }
+  @keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .code-section-header {
+    padding: 4px 12px;
+    background: rgba(0,204,255,0.05);
+    font-size: 11px;
+    color: var(--accent);
+    display: flex;
+    justify-content: space-between;
+  }
+  .code-section-header .prim-tag {
+    background: rgba(0,204,255,0.15);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  .code-section pre {
+    padding: 6px 12px;
+    font-size: 12px;
+    line-height: 1.4;
+    background: var(--code-bg);
+    overflow-x: auto;
+  }
+  .code-section.locked {
+    opacity: 0.4;
+  }
+  .code-section.locked pre {
+    color: var(--dim);
+    font-style: italic;
+  }
+
+  /* Syntax colors */
+  .kw { color: #ff79c6; }    /* keywords */
+  .ty { color: #8be9fd; }    /* types */
+  .fn-name { color: #50fa7b; }
+  .str { color: #f1fa8c; }
+  .num { color: #bd93f9; }
+  .cmt { color: #6272a4; }
+  .mac { color: #ffb86c; }
+  .lf { color: #ff5555; }
+
+  /* Metrics panel */
+  .metrics-panel { padding: 12px; }
+  .metric-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  .metric-card h3 {
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  .matrix-table th, .matrix-table td {
+    padding: 3px 6px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .matrix-table th { color: var(--dim); font-weight: normal; }
+  .payoff-pos { color: var(--green); }
+  .payoff-neg { color: var(--red); }
+  .payoff-zero { color: var(--dim); }
+
+  .nash-bar {
+    display: flex;
+    gap: 2px;
+    height: 20px;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+  .nash-bar div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: #000;
+    font-weight: bold;
+    transition: width 0.3s;
+  }
+  .quality-bar {
+    height: 12px;
+    background: #1a1a2a;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 4px 0;
+  }
+  .quality-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.3s, background 0.3s;
+  }
+  .sparkline-wrap {
+    height: 30px;
+    display: flex;
+    align-items: flex-end;
+    gap: 1px;
+    margin-top: 6px;
+  }
+  .sparkline-wrap div {
+    flex: 1;
+    background: var(--accent);
+    opacity: 0.6;
+    border-radius: 1px 1px 0 0;
+    min-width: 2px;
+    transition: height 0.2s;
+  }
+
+  .completeness-ring {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto;
+  }
+
+  /* Footer */
+  .footer {
+    grid-column: 1 / -1;
+    background: var(--panel);
+    padding: 4px 16px;
+    font-size: 11px;
+    color: var(--dim);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--panel); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div class="header">
+    <h1>PRIMITIVE DEPTHS: CODE FORGE</h1>
+    <div class="stats">
+      Floor <span id="hdr-floor">1/5</span> &nbsp;
+      Turn <span id="hdr-turn">0</span> &nbsp;
+      Lv.<span id="hdr-level">1</span> &nbsp;
+      HP <span id="hdr-hp">30/30</span> &nbsp;
+      ATK <span id="hdr-atk">5</span> &nbsp;
+      DEF <span id="hdr-def">2</span>
+    </div>
+  </div>
+
+  <!-- Left: Game -->
+  <div class="game-panel">
+    <div class="game-canvas-wrap">
+      <div id="game-canvas"></div>
+    </div>
+    <div class="game-info">
+      <div class="prim-bar" id="prim-bar"></div>
+      <div class="game-log" id="game-log"></div>
+    </div>
+    <div class="controls">
+      <button id="btn-autopilot" onclick="toggleAutopilot()">Autopilot &#9654;</button>
+      <div class="speed-btns">
+        <button onclick="setSpeed(500)" id="sp-1" class="active">1x</button>
+        <button onclick="setSpeed(250)" id="sp-2">2x</button>
+        <button onclick="setSpeed(100)" id="sp-5">5x</button>
+        <button onclick="setSpeed(50)" id="sp-10">10x</button>
+      </div>
+      <button onclick="resetGame()">Reset</button>
+      <button onclick="exportRust()" id="btn-export">Export .rs</button>
+    </div>
+  </div>
+
+  <!-- Right: Code + Metrics -->
+  <div class="right-panel">
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('code')">CODE FORGE</div>
+      <div class="tab" onclick="switchTab('metrics')">GAME THEORY</div>
+    </div>
+    <div class="tab-content active" id="tab-code">
+      <div class="code-panel" id="code-panel"></div>
+    </div>
+    <div class="tab-content" id="tab-metrics">
+      <div class="metrics-panel" id="metrics-panel"></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div id="footer-status">Ready — click Autopilot or use arrow keys</div>
+    <div>Code: <span id="footer-completeness">0/23</span> sections | Q: <span id="footer-quality">0.00</span></div>
+  </div>
+</div>
+
+<script>
+// =========================================================================
+// CONSTANTS
+// =========================================================================
+const MAP_W = 60, MAP_H = 18, MAX_ROOMS = 8;
+const MIN_ROOM_W = 5, MAX_ROOM_W = 11, MIN_ROOM_H = 3, MAX_ROOM_H = 6;
+const NUM_FLOORS = 5, PRIMS_PER_FLOOR = 4, VIEW_RADIUS = 8;
+
+const PRIMITIVES = [
+  { sym: 'σ', name: 'Sequence',        desc: '+2 ATK (ordered strikes)',     color: '#00ccff', idx: 0 },
+  { sym: 'μ', name: 'Mapping',         desc: '+2 DEF (transform damage)',    color: '#4488ff', idx: 1 },
+  { sym: 'ς', name: 'State',           desc: '+8 Max HP (mutable vitality)', color: '#00cc66', idx: 2 },
+  { sym: 'ρ', name: 'Recursion',       desc: 'Full heal! (self-reference)',  color: '#cc66ff', idx: 3 },
+  { sym: '∅', name: 'Void',            desc: 'Enemies -2 ATK (nullify)',     color: '#666666', idx: 4 },
+  { sym: '∂', name: 'Boundary',        desc: '+3 DEF (edge protection)',     color: '#ffcc00', idx: 5 },
+  { sym: 'ν', name: 'Frequency',       desc: '+1 ATK, +1 DEF (tempo)',       color: '#008888', idx: 6 },
+  { sym: '∃', name: 'Existence',       desc: 'Reveal floor (detection)',     color: '#ffffff', idx: 7 },
+  { sym: 'π', name: 'Persistence',     desc: '+12 Max HP (endurance)',       color: '#006633', idx: 8 },
+  { sym: '→', name: 'Causality',       desc: '+4 ATK (cause & effect)',      color: '#ff4444', idx: 9 },
+  { sym: 'κ', name: 'Comparison',      desc: '+2 ATK, +1 DEF (judgment)',    color: '#cc8800', idx: 10 },
+  { sym: 'N', name: 'Quantity',        desc: '+20 HP heal (abundance)',      color: '#00ccff', idx: 11 },
+  { sym: 'λ', name: 'Location',        desc: 'See enemies (awareness)',      color: '#8800cc', idx: 12 },
+  { sym: '∝', name: 'Irreversibility', desc: '+3 ATK (permanent force)',     color: '#880000', idx: 13 },
+  { sym: 'Σ', name: 'Sum',             desc: '+5 HP, +2 ATK (combine)',      color: '#00cc66', idx: 14 },
+  { sym: '×', name: 'Product',         desc: '+2 ATK, +2 DEF (multiply)',    color: '#ffcc00', idx: 15 },
+];
+
+const ENEMY_TEMPLATES = {
+  1: [
+    { glyph: 'g', name: 'Unwrap Goblin',   hp: 8,  atk: 3, def: 0, color: '#00cc66', xp: 10, safety: 'unwrap' },
+    { glyph: 'r', name: 'Raw Ptr Rat',      hp: 5,  atk: 4, def: 0, color: '#006633', xp: 8,  safety: null },
+  ],
+  2: [
+    { glyph: 'g', name: 'Unwrap Goblin',   hp: 10, atk: 4, def: 1, color: '#00cc66', xp: 12, safety: 'unwrap' },
+    { glyph: 'p', name: 'Panic Sprite',     hp: 7,  atk: 6, def: 0, color: '#ff4444', xp: 15, safety: 'panic' },
+    { glyph: 'r', name: 'Raw Ptr Rat',      hp: 6,  atk: 5, def: 0, color: '#006633', xp: 10, safety: null },
+  ],
+  3: [
+    { glyph: 'o', name: 'Unsafe Orc',       hp: 16, atk: 5, def: 2, color: '#ffcc00', xp: 20, safety: 'unsafe' },
+    { glyph: 'p', name: 'Panic Sprite',     hp: 9,  atk: 7, def: 0, color: '#ff4444', xp: 18, safety: 'panic' },
+    { glyph: 'w', name: 'Deadlock Wraith',  hp: 12, atk: 6, def: 1, color: '#008888', xp: 22, safety: 'deadlock' },
+  ],
+  4: [
+    { glyph: 'o', name: 'Unsafe Orc',       hp: 20, atk: 6, def: 3, color: '#ffcc00', xp: 25, safety: 'unsafe' },
+    { glyph: 'T', name: 'Clone Troll',      hp: 24, atk: 5, def: 4, color: '#cc66ff', xp: 30, safety: 'clone' },
+    { glyph: 'w', name: 'Deadlock Wraith',  hp: 15, atk: 7, def: 2, color: '#008888', xp: 28, safety: 'deadlock' },
+  ],
+  5: [
+    { glyph: 'D', name: 'Dragon Leak',      hp: 35, atk: 9, def: 5, color: '#880000', xp: 50, safety: 'leak' },
+    { glyph: 'T', name: 'Clone Troll',      hp: 28, atk: 7, def: 4, color: '#cc66ff', xp: 35, safety: 'clone' },
+    { glyph: 'w', name: 'Deadlock Wraith',  hp: 20, atk: 8, def: 3, color: '#008888', xp: 32, safety: 'deadlock' },
+  ],
+};
+
+// =========================================================================
+// RANDOM
+// =========================================================================
+function rng(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(arr) { return arr[rng(0, arr.length - 1)]; }
+
+// =========================================================================
+// GAME STATE
+// =========================================================================
+let game = null;
+let autopilotOn = false;
+let autopilotTimer = null;
+let speed = 500;
+let totalEnemiesSeen = 0;
+let totalEnemiesKilled = 0;
+
+function createGame() {
+  totalEnemiesSeen = 0;
+  totalEnemiesKilled = 0;
+  const g = {
+    map: [], player: null, enemies: [], prims: [],
+    log: [], floor: 1, turn: 0, gameOver: false, victory: false,
+    remaining: Array.from({length: 16}, (_, i) => i),
+  };
+  g.player = {
+    x: 0, y: 0, hp: 30, maxHp: 30, atk: 5, def: 2,
+    collected: [], xp: 0, level: 1,
+    seen: Array.from({length: MAP_H}, () => Array(MAP_W).fill(false)),
+    seeEnemies: false, revealed: false,
+  };
+  g.log.push({ text: 'Welcome to Primitive Depths: Code Forge!', color: '#00ccff' });
+  g.log.push({ text: 'Collect 16 Lex Primitiva. Each unlocks Rust code.', color: '#c0c0d0' });
+  generateFloor(g);
+  return g;
+}
+
+function generateFloor(g) {
+  g.map = Array.from({length: MAP_H}, () => Array(MAP_W).fill(0)); // 0=wall
+  g.enemies = [];
+  g.prims = [];
+  g.player.seen = Array.from({length: MAP_H}, () => Array(MAP_W).fill(false));
+  g.player.revealed = false;
+
+  // Generate rooms
+  let rooms = [];
+  for (let attempt = 0; attempt < 50 && rooms.length < MAX_ROOMS; attempt++) {
+    const w = rng(MIN_ROOM_W, MAX_ROOM_W);
+    const h = rng(MIN_ROOM_H, MAX_ROOM_H);
+    const x = rng(1, Math.max(1, MAP_W - w - 2));
+    const y = rng(1, Math.max(1, MAP_H - h - 2));
+    const room = { x, y, w, h };
+    if (rooms.every(r => !intersects(room, r))) rooms.push(room);
+  }
+  if (rooms.length < 3) {
+    rooms = [
+      { x: 2, y: 2, w: 8, h: 5 },
+      { x: 28, y: 2, w: 8, h: 5 },
+      { x: 14, y: 10, w: 10, h: 5 },
+    ];
+  }
+
+  // Carve rooms
+  for (const r of rooms) {
+    for (let dy = 0; dy < r.h; dy++)
+      for (let dx = 0; dx < r.w; dx++) {
+        const ry = r.y + dy, rx = r.x + dx;
+        if (ry < MAP_H && rx < MAP_W) g.map[ry][rx] = 1; // 1=floor
+      }
+  }
+
+  // Connect with corridors
+  for (let i = 1; i < rooms.length; i++) {
+    const [cx1, cy1] = center(rooms[i-1]);
+    const [cx2, cy2] = center(rooms[i]);
+    if (Math.random() < 0.5) { carveH(g, cx1, cx2, cy1); carveV(g, cy1, cy2, cx2); }
+    else { carveV(g, cy1, cy2, cx1); carveH(g, cx1, cx2, cy2); }
+  }
+
+  // Player in first room
+  const [px, py] = center(rooms[0]);
+  g.player.x = px; g.player.y = py;
+
+  // Stairs in last room
+  const [sx, sy] = center(rooms[rooms.length - 1]);
+  g.map[sy][sx] = 2; // 2=stairs
+
+  // Place primitives
+  const toPlace = Math.min(PRIMS_PER_FLOOR, g.remaining.length);
+  let placed = 0;
+  for (let att = 0; att < 200 && placed < toPlace; att++) {
+    const ri = rng(1, rooms.length - 1);
+    const r = rooms[ri];
+    const fx = r.x + rng(0, r.w - 1);
+    const fy = r.y + rng(0, r.h - 1);
+    if (fx < MAP_W && fy < MAP_H && g.map[fy][fx] === 1
+        && !(fx === px && fy === py) && !(fx === sx && fy === sy)
+        && !g.prims.some(p => p.x === fx && p.y === fy)) {
+      g.prims.push({ x: fx, y: fy, idx: g.remaining[placed] });
+      placed++;
+    }
+  }
+
+  // Spawn enemies
+  const numEnemies = g.floor + 2;
+  const templates = ENEMY_TEMPLATES[Math.min(g.floor, 5)];
+  let spawned = 0;
+  for (let att = 0; att < 300 && spawned < numEnemies; att++) {
+    if (rooms.length < 2) break;
+    const ri = rng(1, rooms.length - 1);
+    const r = rooms[ri];
+    const ex = r.x + rng(0, r.w - 1);
+    const ey = r.y + rng(0, r.h - 1);
+    if (ex < MAP_W && ey < MAP_H && g.map[ey][ex] === 1
+        && !(ex === px && ey === py)
+        && !g.enemies.some(e => e.x === ex && e.y === ey)) {
+      const t = pick(templates);
+      g.enemies.push({
+        x: ex, y: ey, glyph: t.glyph, name: t.name,
+        hp: t.hp, maxHp: t.hp, atk: t.atk, def: t.def,
+        color: t.color, xp: t.xp, safety: t.safety,
+      });
+      spawned++;
+      totalEnemiesSeen++;
+    }
+  }
+
+  addLog(g, `--- Floor ${g.floor}/${NUM_FLOORS} ---`, '#ffcc00');
+  updateFov(g);
+}
+
+function intersects(a, b) {
+  return a.x < b.x + b.w + 2 && a.x + a.w + 2 > b.x
+      && a.y < b.y + b.h + 2 && a.y + a.h + 2 > b.y;
+}
+function center(r) { return [r.x + Math.floor(r.w / 2), r.y + Math.floor(r.h / 2)]; }
+function carveH(g, x1, x2, y) {
+  const a = Math.min(x1, x2), b = Math.max(x1, x2);
+  for (let x = a; x <= b; x++) if (y < MAP_H && x < MAP_W) g.map[y][x] = g.map[y][x] || 1;
+}
+function carveV(g, y1, y2, x) {
+  const a = Math.min(y1, y2), b = Math.max(y1, y2);
+  for (let y = a; y <= b; y++) if (y < MAP_H && x < MAP_W) g.map[y][x] = g.map[y][x] || 1;
+}
+
+// =========================================================================
+// FOV
+// =========================================================================
+function updateFov(g) {
+  if (g.player.revealed) {
+    for (let y = 0; y < MAP_H; y++)
+      for (let x = 0; x < MAP_W; x++) g.player.seen[y][x] = true;
+    return;
+  }
+  const px = g.player.x, py = g.player.y;
+  for (let dy = -VIEW_RADIUS; dy <= VIEW_RADIUS; dy++)
+    for (let dx = -VIEW_RADIUS; dx <= VIEW_RADIUS; dx++) {
+      if (dx*dx + dy*dy > VIEW_RADIUS * VIEW_RADIUS) continue;
+      const tx = px + dx, ty = py + dy;
+      if (tx >= 0 && ty >= 0 && tx < MAP_W && ty < MAP_H) {
+        if (hasLos(g, px, py, tx, ty)) g.player.seen[ty][tx] = true;
+      }
+    }
+}
+
+function hasLos(g, x0, y0, x1, y1) {
+  let dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0);
+  const sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+  let err = dx + dy, cx = x0, cy = y0;
+  for (let i = 0; i < 200; i++) {
+    if (cx === x1 && cy === y1) return true;
+    if ((cx !== x0 || cy !== y0) && cx >= 0 && cy >= 0 && cx < MAP_W && cy < MAP_H && g.map[cy][cx] === 0) return false;
+    const e2 = 2 * err;
+    if (e2 >= dy) { err += dy; cx += sx; }
+    if (e2 <= dx) { err += dx; cy += sy; }
+  }
+  return false;
+}
+
+function inFov(g, x, y) {
+  const dx = x - g.player.x, dy = y - g.player.y;
+  return dx*dx + dy*dy <= VIEW_RADIUS * VIEW_RADIUS && hasLos(g, g.player.x, g.player.y, x, y);
+}
+
+// =========================================================================
+// ACTIONS
+// =========================================================================
+function addLog(g, text, color) { g.log.push({ text, color: color || '#c0c0d0' }); }
+
+function tryMove(g, dx, dy) {
+  if (g.gameOver) return;
+  const nx = g.player.x + dx, ny = g.player.y + dy;
+  if (nx < 0 || ny < 0 || nx >= MAP_W || ny >= MAP_H) return;
+  if (g.map[ny][nx] === 0) return;
+
+  // Bump attack
+  const ei = g.enemies.findIndex(e => e.x === nx && e.y === ny);
+  if (ei >= 0) {
+    attackEnemy(g, ei);
+    g.turn++;
+    onMoveExecuted(dx, dy);
+    enemyTurns(g);
+    updateFov(g);
+    return;
+  }
+
+  g.player.x = nx; g.player.y = ny;
+  g.turn++;
+  onMoveExecuted(dx, dy);
+  checkPickup(g);
+  if (g.map[ny][nx] === 2) descend(g);
+  enemyTurns(g);
+  updateFov(g);
+}
+
+function waitTurn(g) {
+  if (g.gameOver) return;
+  g.turn++;
+  if (g.player.hp < g.player.maxHp) g.player.hp++;
+  onMoveExecuted(0, 0);
+  enemyTurns(g);
+  updateFov(g);
+}
+
+function checkPickup(g) {
+  const pi = g.prims.findIndex(p => p.x === g.player.x && p.y === g.player.y);
+  if (pi < 0) return;
+  const prim = g.prims.splice(pi, 1)[0];
+  const def = PRIMITIVES[prim.idx];
+  g.player.collected.push(prim.idx);
+  g.remaining = g.remaining.filter(i => i !== prim.idx);
+
+  // Apply bonus
+  switch (prim.idx) {
+    case 0:  g.player.atk += 2; break; // Sequence
+    case 1:  g.player.def += 2; break; // Mapping
+    case 2:  g.player.maxHp += 8; g.player.hp += 8; break; // State
+    case 3:  g.player.hp = g.player.maxHp; break; // Recursion
+    case 4:  g.enemies.forEach(e => e.atk = Math.max(1, e.atk - 2)); break; // Void
+    case 5:  g.player.def += 3; break; // Boundary
+    case 6:  g.player.atk += 1; g.player.def += 1; break; // Frequency
+    case 7:  g.player.revealed = true;
+             for (let y = 0; y < MAP_H; y++)
+               for (let x = 0; x < MAP_W; x++) g.player.seen[y][x] = true;
+             break; // Existence
+    case 8:  g.player.maxHp += 12; g.player.hp += 12; break; // Persistence
+    case 9:  g.player.atk += 4; break; // Causality
+    case 10: g.player.atk += 2; g.player.def += 1; break; // Comparison
+    case 11: g.player.hp = Math.min(g.player.hp + 20, g.player.maxHp); break; // Quantity
+    case 12: g.player.seeEnemies = true; break; // Location
+    case 13: g.player.atk += 3; break; // Irreversibility
+    case 14: g.player.maxHp += 5; g.player.hp += 5; g.player.atk += 2; break; // Sum
+    case 15: g.player.atk += 2; g.player.def += 2; break; // Product
+  }
+
+  addLog(g, `${def.sym} ${def.name}: ${def.desc}`, def.color);
+  onPrimitiveCollected(prim.idx);
+
+  if (g.player.collected.length === 16) {
+    addLog(g, '*** ALL 16 LEX PRIMITIVA COLLECTED! ***', '#cc66ff');
+  }
+}
+
+function descend(g) {
+  if (g.floor >= NUM_FLOORS) {
+    if (g.player.collected.length === 16) {
+      g.victory = true; g.gameOver = true;
+      addLog(g, 'VICTORY! You\'ve mastered all Lex Primitiva!', '#00cc66');
+      onGameOver(true);
+    } else {
+      addLog(g, `Need all 16 to ascend! (${g.player.collected.length}/16)`, '#ffcc00');
+    }
+  } else {
+    g.floor++;
+    onFloorDescended(g.floor);
+    generateFloor(g);
+  }
+}
+
+function attackEnemy(g, idx) {
+  const damage = Math.max(1, g.player.atk - g.enemies[idx].def + rng(0, 2));
+  g.enemies[idx].hp -= damage;
+  const name = g.enemies[idx].name;
+  if (g.enemies[idx].hp <= 0) {
+    const xp = g.enemies[idx].xp;
+    const safety = g.enemies[idx].safety;
+    g.player.xp += xp;
+    addLog(g, `${name} slain! +${xp} XP (${damage} dmg)`, '#00cc66');
+    g.enemies.splice(idx, 1);
+    totalEnemiesKilled++;
+    if (safety) onEnemyDefeated(safety);
+    checkLevelUp(g);
+  } else {
+    addLog(g, `Hit ${name} for ${damage} (${g.enemies[idx].hp}/${g.enemies[idx].maxHp})`, '#c0c0d0');
+  }
+}
+
+function checkLevelUp(g) {
+  if (g.player.xp >= g.player.level * 40) {
+    g.player.level++;
+    g.player.maxHp += 5;
+    g.player.hp = g.player.maxHp;
+    g.player.atk++;
+    g.player.def++;
+    addLog(g, `** LEVEL UP -> Lv.${g.player.level} ** (Full heal, +1 ATK/DEF)`, '#cc66ff');
+  }
+}
+
+function enemyTurns(g) {
+  const px = g.player.x, py = g.player.y;
+  for (let i = 0; i < g.enemies.length; i++) {
+    const e = g.enemies[i];
+    const dist = Math.abs(px - e.x) + Math.abs(py - e.y);
+    if (dist <= 1) {
+      const dmg = Math.max(1, e.atk - g.player.def + rng(0, 1));
+      g.player.hp -= dmg;
+      addLog(g, `${e.name} hits you for ${dmg}!`, '#ff4444');
+      if (g.player.hp <= 0) {
+        g.gameOver = true;
+        addLog(g, 'You have been defeated...', '#880000');
+        onGameOver(false);
+        return;
+      }
+    } else if (dist < 10) {
+      const ddx = px > e.x ? 1 : px < e.x ? -1 : 0;
+      const ddy = py > e.y ? 1 : py < e.y ? -1 : 0;
+      const moves = Math.random() < 0.6 ? [[ddx,0],[0,ddy]] : [[0,ddy],[ddx,0]];
+      let moved = false;
+      for (const [mx, my] of moves) {
+        if (mx === 0 && my === 0) continue;
+        const nx = e.x + mx, ny = e.y + my;
+        if (nx >= 0 && ny >= 0 && nx < MAP_W && ny < MAP_H && g.map[ny][nx] !== 0
+            && !(nx === px && ny === py)
+            && !g.enemies.some((o, j) => j !== i && o.x === nx && o.y === ny)) {
+          e.x = nx; e.y = ny; moved = true; break;
+        }
+      }
+      if (!moved && Math.random() < 0.3) {
+        const dirs = [[0,1],[0,-1],[1,0],[-1,0]];
+        const [dx, dy] = pick(dirs);
+        const nx = e.x + dx, ny = e.y + dy;
+        if (nx >= 0 && ny >= 0 && nx < MAP_W && ny < MAP_H && g.map[ny][nx] === 1
+            && !(nx === px && ny === py)
+            && !g.enemies.some((o, j) => j !== i && o.x === nx && o.y === ny)) {
+          e.x = nx; e.y = ny;
+        }
+      }
+    }
+  }
+}
+
+// =========================================================================
+// EVENT HOOKS (game -> forge bridge)
+// =========================================================================
+function onPrimitiveCollected(idx) { codeForge.unlockPrimitive(idx); }
+function onEnemyDefeated(safetyKey) { codeForge.unlockSafety(safetyKey); }
+function onMoveExecuted(dx, dy) { gameTheory.updateMetrics(game); }
+function onFloorDescended(floor) { addLog(game, `Descending to floor ${floor}...`, '#ffcc00'); }
+function onGameOver(victory) {
+  stopAutopilot();
+  if (victory) addLog(game, 'Code Forge COMPLETE! Export your Rust module.', '#00cc66');
+}
+
+// =========================================================================
+// CODE FORGE
+// =========================================================================
+const codeForge = {
+  sections: new Map(),
+  unlockedPrims: new Set(),
+  unlockedSafety: new Set(),
+
+  init() {
+    this.sections.clear();
+    this.unlockedPrims.clear();
+    this.unlockedSafety.clear();
+    this.defineSections();
+    this.render();
+  },
+
+  defineSections() {
+    // Header (always unlocked)
+    this.sections.set('header', {
+      order: -1, unlocked: true, label: 'Module Header', primTag: null,
+      code:
+`//! forge_output.rs — Generated by Primitive Depths: Code Forge
+//! Game-theory types grounded in Lex Primitiva
+
+#![forbid(unsafe_code)]
+#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+
+use std::fmt;`
+    });
+
+    // Primitive-unlocked sections
+    this.sections.set('prim-11', { // N Quantity
+      order: 0, unlocked: false, primIdx: 11, label: 'Payoff (N Quantity)', primTag: 'N',
+      code:
+`/// A numeric payoff value. GroundsTo: N(Quantity) + κ(Comparison)
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Payoff(pub f64);
+
+impl Payoff {
+    pub fn new(v: f64) -> Self { Self(v) }
+    pub fn value(&self) -> f64 { self.0 }
+    pub fn is_positive(&self) -> bool { self.0 > 0.0 }
+}`
+    });
+
+    this.sections.set('prim-14', { // Σ Sum
+      order: 1, unlocked: false, primIdx: 14, label: 'Action Enum (Σ Sum)', primTag: 'Σ',
+      code:
+`/// Player actions in the forge. GroundsTo: Σ(Sum) + ∂(Boundary)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Action {
+    Explore,
+    Fight,
+    Collect,
+    Descend,
+    Wait,
+}
+
+impl Action {
+    pub const ALL: [Action; 5] = [
+        Action::Explore, Action::Fight, Action::Collect,
+        Action::Descend, Action::Wait,
+    ];
+
+    pub fn index(&self) -> usize {
+        match self {
+            Action::Explore => 0, Action::Fight => 1,
+            Action::Collect => 2, Action::Descend => 3,
+            Action::Wait => 4,
+        }
+    }
+}`
+    });
+
+    this.sections.set('prim-15', { // × Product
+      order: 2, unlocked: false, primIdx: 15, label: 'PlayerState (× Product)', primTag: '×',
+      code:
+`/// Composite player state. GroundsTo: ×(Product) + ς(State) + N(Quantity)
+#[derive(Debug, Clone)]
+pub struct PlayerState {
+    pub hp: i32,
+    pub max_hp: i32,
+    pub atk: i32,
+    pub def: i32,
+    pub primitives_collected: usize,
+    pub floor: usize,
+    pub turn: u32,
+}
+
+impl PlayerState {
+    pub fn hp_ratio(&self) -> f64 {
+        if self.max_hp == 0 { 0.0 }
+        else { self.hp as f64 / self.max_hp as f64 }
+    }
+}`
+    });
+
+    this.sections.set('prim-0', { // σ Sequence
+      order: 3, unlocked: false, primIdx: 0, label: 'ActionSequence (σ Sequence)', primTag: 'σ',
+      code:
+`/// Ordered sequence of actions. GroundsTo: σ(Sequence) + N(Quantity)
+#[derive(Debug, Clone)]
+pub struct ActionSequence(Vec<Action>);
+
+impl ActionSequence {
+    pub fn new() -> Self { Self(Vec::new()) }
+    pub fn push(&mut self, a: Action) { self.0.push(a); }
+    pub fn len(&self) -> usize { self.0.len() }
+    pub fn is_empty(&self) -> bool { self.0.is_empty() }
+    pub fn iter(&self) -> impl Iterator<Item = &Action> { self.0.iter() }
+}
+
+impl Default for ActionSequence {
+    fn default() -> Self { Self::new() }
+}
+
+impl IntoIterator for ActionSequence {
+    type Item = Action;
+    type IntoIter = std::vec::IntoIter<Action>;
+    fn into_iter(self) -> Self::IntoIter { self.0.into_iter() }
+}`
+    });
+
+    this.sections.set('prim-1', { // μ Mapping
+      order: 4, unlocked: false, primIdx: 1, label: 'PayoffMatrix (μ Mapping)', primTag: 'μ',
+      code:
+`/// 5×3 payoff matrix (actions × responses). GroundsTo: μ(Mapping) + N(Quantity)
+#[derive(Debug, Clone)]
+pub struct PayoffMatrix {
+    data: [[f64; 3]; 5],
+}
+
+impl PayoffMatrix {
+    pub fn new(data: [[f64; 3]; 5]) -> Self { Self { data } }
+    pub fn zeros() -> Self { Self { data: [[0.0; 3]; 5] } }
+    pub fn get(&self, row: usize, col: usize) -> Option<Payoff> {
+        self.data.get(row).and_then(|r| r.get(col)).map(|&v| Payoff(v))
+    }
+    pub fn set(&mut self, row: usize, col: usize, val: f64) {
+        if row < 5 && col < 3 { self.data[row][col] = val; }
+    }
+    pub fn rows(&self) -> usize { 5 }
+    pub fn cols(&self) -> usize { 3 }
+}
+
+pub fn map_payoff(matrix: &PayoffMatrix, f: impl Fn(f64) -> f64) -> PayoffMatrix {
+    let mut out = PayoffMatrix::zeros();
+    for r in 0..5 {
+        for c in 0..3 {
+            if let Some(p) = matrix.get(r, c) {
+                out.set(r, c, f(p.value()));
+            }
+        }
+    }
+    out
+}`
+    });
+
+    this.sections.set('prim-10', { // κ Comparison
+      order: 5, unlocked: false, primIdx: 10, label: 'Payoff Ord (κ Comparison)', primTag: 'κ',
+      code:
+`impl PartialOrd for Payoff {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Eq for Payoff {}
+
+impl Ord for Payoff {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.0.total_cmp(&other.0)
+    }
+}
+
+impl fmt::Display for Payoff {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:.2}", self.0)
+    }
+}`
+    });
+
+    this.sections.set('prim-2', { // ς State
+      order: 6, unlocked: false, primIdx: 2, label: 'ForgePhase FSM (ς State)', primTag: 'ς',
+      code:
+`/// Forge phase state machine. GroundsTo: ς(State) + ∂(Boundary) + σ(Sequence)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ForgePhase {
+    Explore,
+    Combat,
+    Collect,
+    Descend,
+}
+
+impl ForgePhase {
+    /// Valid transitions from this phase
+    pub fn valid_transitions(&self) -> &[ForgePhase] {
+        match self {
+            ForgePhase::Explore => &[ForgePhase::Combat, ForgePhase::Collect, ForgePhase::Descend],
+            ForgePhase::Combat => &[ForgePhase::Explore, ForgePhase::Collect],
+            ForgePhase::Collect => &[ForgePhase::Explore, ForgePhase::Descend],
+            ForgePhase::Descend => &[ForgePhase::Explore],
+        }
+    }
+
+    pub fn can_transition_to(&self, next: ForgePhase) -> bool {
+        self.valid_transitions().contains(&next)
+    }
+}`
+    });
+
+    this.sections.set('prim-9', { // → Causality
+      order: 7, unlocked: false, primIdx: 9, label: 'apply_action (→ Causality)', primTag: '→',
+      code:
+`/// Outcome of an action. GroundsTo: →(Causality) + ×(Product)
+#[derive(Debug, Clone)]
+pub struct Outcome {
+    pub payoff: Payoff,
+    pub new_phase: ForgePhase,
+    pub description: String,
+}
+
+pub fn apply_action(phase: &mut ForgePhase, action: Action) -> Outcome {
+    let (payoff, new_phase, desc) = match (phase.clone(), action) {
+        (ForgePhase::Explore, Action::Fight)   => (Payoff(3.0), ForgePhase::Combat,  "Engaged enemy"),
+        (ForgePhase::Explore, Action::Collect)  => (Payoff(5.0), ForgePhase::Collect, "Found primitive"),
+        (ForgePhase::Explore, Action::Descend)  => (Payoff(2.0), ForgePhase::Descend, "Reached stairs"),
+        (ForgePhase::Combat, Action::Fight)     => (Payoff(4.0), ForgePhase::Combat,  "Continued fight"),
+        (ForgePhase::Combat, Action::Explore)   => (Payoff(1.0), ForgePhase::Explore, "Retreated"),
+        (ForgePhase::Collect, Action::Explore)  => (Payoff(2.0), ForgePhase::Explore, "Moved on"),
+        (ForgePhase::Collect, Action::Descend)  => (Payoff(3.0), ForgePhase::Descend, "Descending"),
+        (_, Action::Wait)                       => (Payoff(0.5), *phase,              "Waiting"),
+        _                                       => (Payoff(0.0), *phase,              "Invalid transition"),
+    };
+    *phase = new_phase;
+    Outcome { payoff, new_phase, description: desc.to_string() }
+}`
+    });
+
+    this.sections.set('prim-5', { // ∂ Boundary
+      order: 8, unlocked: false, primIdx: 5, label: 'validate_payoff (∂ Boundary)', primTag: '∂',
+      code:
+`/// Forge error types. GroundsTo: ∂(Boundary) + ∅(Void)
+#[derive(Debug, Clone)]
+pub enum ForgeError {
+    PayoffOutOfRange(f64),
+    InvalidMatrixIndex { row: usize, col: usize },
+    EmptyMatrix,
+    StrategyNotNormalized(f64),
+    CycleDetected(Vec<usize>),
+}
+
+impl fmt::Display for ForgeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ForgeError::PayoffOutOfRange(v) => write!(f, "payoff {v} out of [-100, 100]"),
+            ForgeError::InvalidMatrixIndex { row, col } => write!(f, "index [{row}][{col}] out of bounds"),
+            ForgeError::EmptyMatrix => write!(f, "empty payoff matrix"),
+            ForgeError::StrategyNotNormalized(s) => write!(f, "weights sum to {s}, expected 1.0"),
+            ForgeError::CycleDetected(c) => write!(f, "strategy cycle: {c:?}"),
+        }
+    }
+}
+
+pub fn validate_payoff(v: f64) -> Result<Payoff, ForgeError> {
+    if v.is_nan() || v < -100.0 || v > 100.0 {
+        Err(ForgeError::PayoffOutOfRange(v))
+    } else {
+        Ok(Payoff(v))
+    }
+}`
+    });
+
+    this.sections.set('prim-3', { // ρ Recursion
+      order: 9, unlocked: false, primIdx: 3, label: 'minimax (ρ Recursion)', primTag: 'ρ',
+      code:
+`/// Minimax solver for payoff matrices. GroundsTo: ρ(Recursion) + κ(Comparison)
+pub fn minimax(matrix: &PayoffMatrix, depth: usize, maximizing: bool) -> Payoff {
+    if depth == 0 {
+        // Base case: evaluate current position as average payoff
+        let mut sum = 0.0;
+        let mut count = 0;
+        for r in 0..matrix.rows() {
+            for c in 0..matrix.cols() {
+                if let Some(p) = matrix.get(r, c) {
+                    sum += p.value();
+                    count += 1;
+                }
+            }
+        }
+        return if count > 0 { Payoff(sum / count as f64) } else { Payoff(0.0) };
+    }
+
+    if maximizing {
+        let mut best = Payoff(f64::NEG_INFINITY);
+        for r in 0..matrix.rows() {
+            let val = minimax(matrix, depth - 1, false);
+            if val > best { best = val; }
+        }
+        best
+    } else {
+        let mut best = Payoff(f64::INFINITY);
+        for c in 0..matrix.cols() {
+            let val = minimax(matrix, depth - 1, true);
+            if val < best { best = val; }
+        }
+        best
+    }
+}`
+    });
+
+    this.sections.set('prim-6', { // ν Frequency
+      order: 10, unlocked: false, primIdx: 6, label: 'MixedStrategy (ν Frequency)', primTag: 'ν',
+      code:
+`/// Mixed strategy: probability distribution over actions.
+/// GroundsTo: ν(Frequency) + Σ(Sum) + N(Quantity)
+#[derive(Debug, Clone)]
+pub struct MixedStrategy {
+    pub weights: Vec<(Action, f64)>,
+}
+
+impl MixedStrategy {
+    pub fn uniform() -> Self {
+        Self {
+            weights: Action::ALL.iter()
+                .map(|&a| (a, 1.0 / Action::ALL.len() as f64))
+                .collect(),
+        }
+    }
+
+    pub fn from_weights(weights: Vec<(Action, f64)>) -> Result<Self, ForgeError> {
+        let sum: f64 = weights.iter().map(|(_, w)| w).sum();
+        if (sum - 1.0).abs() > 0.01 {
+            return Err(ForgeError::StrategyNotNormalized(sum));
+        }
+        Ok(Self { weights })
+    }
+
+    pub fn best_action(&self) -> Action {
+        self.weights.iter()
+            .max_by(|a, b| a.1.total_cmp(&b.1))
+            .map(|(a, _)| *a)
+            .unwrap_or(Action::Wait)
+    }
+
+    pub fn weight_of(&self, action: Action) -> f64 {
+        self.weights.iter()
+            .find(|(a, _)| *a == action)
+            .map(|(_, w)| *w)
+            .unwrap_or(0.0)
+    }
+}`
+    });
+
+    this.sections.set('prim-7', { // ∃ Existence
+      order: 11, unlocked: false, primIdx: 7, label: 'has_dominant_strategy (∃ Existence)', primTag: '∃',
+      code:
+`/// Check if a dominant strategy exists. GroundsTo: ∃(Existence) + κ(Comparison)
+pub fn has_dominant_strategy(matrix: &PayoffMatrix) -> Option<usize> {
+    'outer: for r in 0..matrix.rows() {
+        for other in 0..matrix.rows() {
+            if r == other { continue; }
+            for c in 0..matrix.cols() {
+                let mine = matrix.get(r, c).map(|p| p.value()).unwrap_or(0.0);
+                let theirs = matrix.get(other, c).map(|p| p.value()).unwrap_or(0.0);
+                if mine <= theirs { continue 'outer; }
+            }
+        }
+        return Some(r);
+    }
+    None
+}`
+    });
+
+    this.sections.set('prim-4', { // ∅ Void
+      order: 12, unlocked: false, primIdx: 4, label: 'safe_payoff (∅ Void)', primTag: '∅',
+      code:
+`/// Safe matrix access returning Option. GroundsTo: ∅(Void) + ∂(Boundary)
+pub fn safe_payoff(m: &PayoffMatrix, r: usize, c: usize) -> Option<Payoff> {
+    if r < m.rows() && c < m.cols() { m.get(r, c) } else { None }
+}
+
+/// Safe row slice — returns empty slice if out of bounds
+pub fn safe_row(m: &PayoffMatrix, r: usize) -> Vec<Payoff> {
+    if r >= m.rows() { return Vec::new(); }
+    (0..m.cols()).filter_map(|c| m.get(r, c)).collect()
+}`
+    });
+
+    this.sections.set('prim-8', { // π Persistence
+      order: 13, unlocked: false, primIdx: 8, label: 'Serde derives (π Persistence)', primTag: 'π',
+      code:
+`// With π Persistence collected, all types gain serialization capability.
+// In a full build, add to Cargo.toml:
+//   serde = { version = "1", features = ["derive"] }
+//   serde_json = "1"
+//
+// Then add to each struct/enum:
+//   #[derive(serde::Serialize, serde::Deserialize)]
+//
+// Serializable types: Payoff, Action, PlayerState, PayoffMatrix,
+//                     ForgePhase, MixedStrategy, MatrixPos, ForgeError,
+//                     Outcome, QualityScore, GameSession
+
+/// Placeholder for serde support
+pub trait Persistable: Sized {
+    fn to_json(&self) -> String;
+    fn from_json(s: &str) -> Result<Self, ForgeError>;
+}`
+    });
+
+    this.sections.set('prim-12', { // λ Location
+      order: 14, unlocked: false, primIdx: 12, label: 'MatrixPos (λ Location)', primTag: 'λ',
+      code:
+`/// Position in a payoff matrix. GroundsTo: λ(Location) + N(Quantity) + ∂(Boundary)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct MatrixPos {
+    pub row: usize,
+    pub col: usize,
+}
+
+impl MatrixPos {
+    pub fn new(row: usize, col: usize) -> Result<Self, ForgeError> {
+        if row >= 5 || col >= 3 {
+            Err(ForgeError::InvalidMatrixIndex { row, col })
+        } else {
+            Ok(Self { row, col })
+        }
+    }
+
+    pub fn neighbors(&self) -> Vec<MatrixPos> {
+        let mut out = Vec::new();
+        if self.row > 0 { out.push(MatrixPos { row: self.row - 1, col: self.col }); }
+        if self.row < 4 { out.push(MatrixPos { row: self.row + 1, col: self.col }); }
+        if self.col > 0 { out.push(MatrixPos { row: self.row, col: self.col - 1 }); }
+        if self.col < 2 { out.push(MatrixPos { row: self.row, col: self.col + 1 }); }
+        out
+    }
+}`
+    });
+
+    this.sections.set('prim-13', { // ∝ Irreversibility
+      order: 15, unlocked: false, primIdx: 13, label: 'CommittedStrategy (∝ Irreversibility)', primTag: '∝',
+      code:
+`/// A strategy that cannot be changed once committed.
+/// GroundsTo: ∝(Irreversibility) + ν(Frequency)
+pub struct CommittedStrategy {
+    inner: MixedStrategy,
+}
+
+impl CommittedStrategy {
+    /// Commit a strategy — this is irreversible
+    pub fn commit(strategy: MixedStrategy) -> Result<Self, ForgeError> {
+        // Validate before sealing
+        let sum: f64 = strategy.weights.iter().map(|(_, w)| w).sum();
+        if (sum - 1.0).abs() > 0.01 {
+            return Err(ForgeError::StrategyNotNormalized(sum));
+        }
+        Ok(Self { inner: strategy })
+    }
+
+    pub fn best_action(&self) -> Action { self.inner.best_action() }
+    pub fn weights(&self) -> &[(Action, f64)] { &self.inner.weights }
+}
+
+impl fmt::Debug for CommittedStrategy {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "CommittedStrategy(sealed, {} weights)", self.inner.weights.len())
+    }
+}`
+    });
+
+    // Safety sections (enemy-triggered)
+    this.sections.set('safety-unwrap', {
+      order: 100, unlocked: false, safetyKey: 'unwrap', label: 'Unwrap Protection', primTag: 'Safety',
+      code:
+`// --- Safety: Unwrap Goblin defeated ---
+// All matrix access uses Option instead of unwrap
+
+/// Safe matrix lookup with default
+pub fn payoff_or_default(m: &PayoffMatrix, r: usize, c: usize, default: f64) -> Payoff {
+    safe_payoff(m, r, c).unwrap_or(Payoff(default))
+}`
+    });
+
+    this.sections.set('safety-panic', {
+      order: 101, unlocked: false, safetyKey: 'panic', label: 'Panic Prevention', primTag: 'Safety',
+      code:
+`// --- Safety: Panic Sprite defeated ---
+// All fallible operations return Result<T, ForgeError>
+
+pub fn checked_division(a: Payoff, b: Payoff) -> Result<Payoff, ForgeError> {
+    if b.value().abs() < f64::EPSILON {
+        Err(ForgeError::PayoffOutOfRange(f64::INFINITY))
+    } else {
+        Ok(Payoff(a.value() / b.value()))
+    }
+}`
+    });
+
+    this.sections.set('safety-unsafe', {
+      order: 102, unlocked: false, safetyKey: 'unsafe', label: 'Unsafe Forbidden', primTag: 'Safety',
+      code:
+`// --- Safety: Unsafe Orc defeated ---
+// Module header already declares: #![forbid(unsafe_code)]
+// All pointer operations are safe Rust. No raw pointers.
+// Array access through bounds-checked methods only.`
+    });
+
+    this.sections.set('safety-deadlock', {
+      order: 103, unlocked: false, safetyKey: 'deadlock', label: 'Cycle Detection', primTag: 'Safety',
+      code:
+`// --- Safety: Deadlock Wraith defeated ---
+
+/// Detect cycles in strategy sequences (best-response loops)
+pub fn detect_strategy_cycle(history: &[usize]) -> Result<(), ForgeError> {
+    let len = history.len();
+    if len < 4 { return Ok(()); }
+    // Floyd's cycle detection on the last 100 entries
+    let window = if len > 100 { &history[len-100..] } else { history };
+    for cycle_len in 2..=window.len()/2 {
+        let tail = &window[window.len()-cycle_len..];
+        let prev = &window[window.len()-2*cycle_len..window.len()-cycle_len];
+        if tail == prev {
+            return Err(ForgeError::CycleDetected(tail.to_vec()));
+        }
+    }
+    Ok(())
+}`
+    });
+
+    this.sections.set('safety-clone', {
+      order: 104, unlocked: false, safetyKey: 'clone', label: 'Zero-Copy Nash', primTag: 'Safety',
+      code:
+`// --- Safety: Clone Troll defeated ---
+
+/// Compute Nash equilibrium in-place (zero allocation for the hot path)
+pub fn compute_nash_in_place(matrix: &PayoffMatrix, strategy: &mut [f64; 5]) {
+    // Iterated best response (in-place mutation, no cloning)
+    for _ in 0..50 {
+        let mut best_row = 0;
+        let mut best_val = f64::NEG_INFINITY;
+        for r in 0..5 {
+            let expected: f64 = (0..3).map(|c| {
+                matrix.get(r, c).map(|p| p.value()).unwrap_or(0.0) / 3.0
+            }).sum();
+            if expected > best_val { best_val = expected; best_row = r; }
+        }
+        // Shift weight toward best response
+        for i in 0..5 { strategy[i] *= 0.9; }
+        strategy[best_row] += 0.1;
+        // Renormalize
+        let sum: f64 = strategy.iter().sum();
+        if sum > 0.0 { for s in strategy.iter_mut() { *s /= sum; } }
+    }
+}`
+    });
+
+    this.sections.set('safety-leak', {
+      order: 105, unlocked: false, safetyKey: 'leak', label: 'Drop Cleanup', primTag: 'Safety',
+      code:
+`// --- Safety: Dragon Leak defeated ---
+
+/// Game session with proper cleanup. GroundsTo: ς(State) + ∂(Boundary)
+pub struct GameSession {
+    pub player: PlayerState,
+    pub matrix: PayoffMatrix,
+    pub history: ActionSequence,
+    pub quality: f64,
+}
+
+impl Drop for GameSession {
+    fn drop(&mut self) {
+        // Ensure all resources are released
+        // In a real system: flush metrics, save state, close connections
+        let _ = self.quality; // acknowledged
+    }
+}`
+    });
+
+    // Quality score (unlocked when any 8 prims collected)
+    this.sections.set('quality-score', {
+      order: 200, unlocked: false, label: 'Quality Score', primTag: 'Q',
+      code:
+`/// Quality score for a forge session
+#[derive(Debug, Clone)]
+pub struct QualityScore {
+    pub primitive_coverage: f64,
+    pub combat_efficiency: f64,
+    pub turn_efficiency: f64,
+    pub survival: f64,
+}
+
+impl QualityScore {
+    pub fn compute(
+        prims: usize, enemies_killed: usize, enemies_seen: usize,
+        actual_turns: u32, ideal_turns: u32, hp: i32, max_hp: i32,
+    ) -> Self {
+        let primitive_coverage = prims as f64 / 16.0;
+        let combat_efficiency = if enemies_seen > 0 {
+            enemies_killed as f64 / enemies_seen as f64
+        } else { 0.0 };
+        let turn_efficiency = if actual_turns > 0 {
+            (ideal_turns as f64 / actual_turns as f64).min(1.0)
+        } else { 0.0 };
+        let survival = if max_hp > 0 { hp as f64 / max_hp as f64 } else { 0.0 };
+        Self { primitive_coverage, combat_efficiency, turn_efficiency, survival }
+    }
+
+    pub fn total(&self) -> f64 {
+        0.40 * self.primitive_coverage
+      + 0.25 * self.combat_efficiency
+      + 0.20 * self.turn_efficiency
+      + 0.15 * self.survival
+    }
+}`
+    });
+  },
+
+  unlockPrimitive(idx) {
+    if (this.unlockedPrims.has(idx)) return;
+    this.unlockedPrims.add(idx);
+    const key = `prim-${idx}`;
+    if (this.sections.has(key)) {
+      this.sections.get(key).unlocked = true;
+    }
+    // Unlock quality score when 8+ prims
+    if (this.unlockedPrims.size >= 8) {
+      this.sections.get('quality-score').unlocked = true;
+    }
+    this.render();
+  },
+
+  unlockSafety(key) {
+    if (this.unlockedSafety.has(key)) return;
+    this.unlockedSafety.add(key);
+    const sKey = `safety-${key}`;
+    if (this.sections.has(sKey)) {
+      this.sections.get(sKey).unlocked = true;
+    }
+    this.render();
+  },
+
+  getUnlockedCount() {
+    let n = 0;
+    for (const [, s] of this.sections) if (s.unlocked) n++;
+    return n;
+  },
+
+  getTotalCount() { return this.sections.size; },
+
+  render() {
+    const panel = document.getElementById('code-panel');
+    const sorted = [...this.sections.entries()].sort((a, b) => a[1].order - b[1].order);
+    let html = '';
+    for (const [key, sec] of sorted) {
+      const locked = !sec.unlocked;
+      const primName = sec.primIdx !== undefined ? PRIMITIVES[sec.primIdx].name : '';
+      html += `<div class="code-section ${locked ? 'locked' : ''}">`;
+      html += `<div class="code-section-header">`;
+      html += `<span>${sec.label}</span>`;
+      if (sec.primTag) html += `<span class="prim-tag">${sec.primTag}</span>`;
+      html += `</div>`;
+      if (locked) {
+        const lockMsg = sec.primIdx !== undefined
+          ? `// [LOCKED] Collect ${PRIMITIVES[sec.primIdx].sym} ${PRIMITIVES[sec.primIdx].name} to unlock`
+          : sec.safetyKey
+          ? `// [LOCKED] Defeat ${sec.safetyKey} enemy to unlock`
+          : `// [LOCKED] Collect 8+ primitives to unlock`;
+        html += `<pre>${lockMsg}</pre>`;
+      } else {
+        html += `<pre>${highlightRust(sec.code)}</pre>`;
+      }
+      html += `</div>`;
+    }
+    panel.innerHTML = html;
+    updateCompleteness();
+  },
+
+  exportCode() {
+    const sorted = [...this.sections.entries()]
+      .filter(([, s]) => s.unlocked)
+      .sort((a, b) => a[1].order - b[1].order);
+    return sorted.map(([, s]) => s.code).join('\n\n');
+  }
+};
+
+// =========================================================================
+// SYNTAX HIGHLIGHTING (regex-based)
+// =========================================================================
+function highlightRust(code) {
+  // Escape HTML first
+  let s = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // Comments
+  s = s.replace(/(\/\/.*?)$/gm, '<span class="cmt">$1</span>');
+  // Strings
+  s = s.replace(/("(?:[^"\\]|\\.)*")/g, '<span class="str">$1</span>');
+  // Macros
+  s = s.replace(/\b(write|format|vec|todo|println|eprintln|assert|cfg|derive|serde|allow|forbid|deny)!/g, '<span class="mac">$1!</span>');
+  // Keywords
+  s = s.replace(/\b(pub|fn|let|mut|const|struct|enum|impl|for|in|if|else|match|return|use|mod|self|Self|where|type|trait|loop|while|break|continue|as|ref|move|async|await|dyn|static|crate|super|extern|unsafe)\b/g, '<span class="kw">$1</span>');
+  // Types
+  s = s.replace(/\b(u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize|f32|f64|bool|char|str|String|Vec|Option|Result|Some|None|Ok|Err|Box|Rc|Arc|HashMap|BTreeMap|HashSet|Iterator|Display|Debug|Clone|Copy|Default|PartialEq|Eq|PartialOrd|Ord|Hash|Sized|Send|Sync|Drop|Fn|FnMut|FnOnce|IntoIterator)\b/g, '<span class="ty">$1</span>');
+  // Lifetime + attribute
+  s = s.replace(/(#\[.*?\])/g, '<span class="mac">$1</span>');
+  // Numbers
+  s = s.replace(/\b(\d+\.?\d*(?:_\d+)*(?:f64|f32|u32|usize|i32|i64)?)\b/g, '<span class="num">$1</span>');
+  return s;
+}
+
+// =========================================================================
+// GAME THEORY ENGINE
+// =========================================================================
+const gameTheory = {
+  matrix: Array.from({length: 5}, () => [0, 0, 0]),
+  nashStrategy: [0.2, 0.2, 0.2, 0.2, 0.2],
+  qualityScore: 0,
+  sparkline: [],
+
+  updateMetrics(g) {
+    if (!g) return;
+    const p = g.player;
+
+    // Compute payoff matrix based on current game state
+    // Rows: Explore, Fight, Collect, Descend, Wait
+    // Cols: Passive, Pursue, Ambush
+    const hpRatio = p.maxHp > 0 ? p.hp / p.maxHp : 0;
+    const nearestEnemy = this.nearestEnemy(g);
+    const nearestPrim = this.nearestPrim(g);
+    const hasAllPrims = g.prims.length === 0;
+
+    // Explore payoffs
+    this.matrix[0][0] = 2.0 + (1 - hpRatio) * -1;  // passive: decent
+    this.matrix[0][1] = 0.5;                          // pursue: risky
+    this.matrix[0][2] = -1.0;                         // ambush: bad
+
+    // Fight payoffs
+    const fightVal = nearestEnemy < 3 ? 4.0 : 1.0;
+    this.matrix[1][0] = fightVal;
+    this.matrix[1][1] = fightVal - 1.0;
+    this.matrix[1][2] = fightVal - 2.0;
+
+    // Collect payoffs
+    const collectVal = nearestPrim < 5 ? 5.0 : 0.5;
+    this.matrix[2][0] = collectVal;
+    this.matrix[2][1] = collectVal - 1.5;
+    this.matrix[2][2] = collectVal - 2.5;
+
+    // Descend payoffs
+    const descendVal = hasAllPrims ? 6.0 : -1.0;
+    this.matrix[3][0] = descendVal;
+    this.matrix[3][1] = descendVal - 1.0;
+    this.matrix[3][2] = descendVal - 3.0;
+
+    // Wait payoffs
+    const waitVal = hpRatio < 0.4 ? 3.0 : 0.5;
+    this.matrix[4][0] = waitVal;
+    this.matrix[4][1] = waitVal - 0.5;
+    this.matrix[4][2] = waitVal - 1.0;
+
+    // Solve Nash (iterated best response)
+    this.solveNash();
+
+    // Quality score
+    const primCoverage = p.collected.length / 16;
+    const combatEff = totalEnemiesSeen > 0 ? totalEnemiesKilled / totalEnemiesSeen : 0;
+    const idealTurns = g.floor * 40;
+    const turnEff = g.turn > 0 ? Math.min(1.0, idealTurns / g.turn) : 1;
+    const survival = hpRatio;
+    this.qualityScore = 0.40 * primCoverage + 0.25 * combatEff + 0.20 * turnEff + 0.15 * survival;
+
+    // Sparkline
+    this.sparkline.push(this.qualityScore);
+    if (this.sparkline.length > 60) this.sparkline.shift();
+
+    this.renderMetrics(g);
+  },
+
+  nearestEnemy(g) {
+    let min = 999;
+    for (const e of g.enemies) {
+      const d = Math.abs(e.x - g.player.x) + Math.abs(e.y - g.player.y);
+      if (d < min) min = d;
+    }
+    return min;
+  },
+
+  nearestPrim(g) {
+    let min = 999;
+    for (const p of g.prims) {
+      const d = Math.abs(p.x - g.player.x) + Math.abs(p.y - g.player.y);
+      if (d < min) min = d;
+    }
+    return min;
+  },
+
+  solveNash() {
+    // Iterated best response (50 iterations)
+    const s = [...this.nashStrategy];
+    for (let iter = 0; iter < 50; iter++) {
+      let bestRow = 0, bestVal = -Infinity;
+      for (let r = 0; r < 5; r++) {
+        let expected = 0;
+        for (let c = 0; c < 3; c++) expected += this.matrix[r][c] / 3;
+        if (expected > bestVal) { bestVal = expected; bestRow = r; }
+      }
+      for (let i = 0; i < 5; i++) s[i] *= 0.9;
+      s[bestRow] += 0.1;
+      const sum = s.reduce((a, b) => a + b, 0);
+      if (sum > 0) for (let i = 0; i < 5; i++) s[i] /= sum;
+    }
+    for (let i = 0; i < 5; i++) this.nashStrategy[i] = s[i];
+  },
+
+  renderMetrics(g) {
+    const panel = document.getElementById('metrics-panel');
+    const actions = ['Explore', 'Fight', 'Collect', 'Descend', 'Wait'];
+    const responses = ['Passive', 'Pursue', 'Ambush'];
+    const nashColors = ['#00ccff', '#ff4444', '#00cc66', '#ffcc00', '#cc66ff'];
+
+    let html = '';
+
+    // Payoff Matrix
+    html += '<div class="metric-card"><h3>Payoff Matrix (5x3)</h3>';
+    html += '<table class="matrix-table"><tr><th></th>';
+    for (const r of responses) html += `<th>${r}</th>`;
+    html += '</tr>';
+    for (let r = 0; r < 5; r++) {
+      html += `<tr><th>${actions[r]}</th>`;
+      for (let c = 0; c < 3; c++) {
+        const v = this.matrix[r][c];
+        const cls = v > 0 ? 'payoff-pos' : v < 0 ? 'payoff-neg' : 'payoff-zero';
+        html += `<td class="${cls}">${v.toFixed(1)}</td>`;
+      }
+      html += '</tr>';
+    }
+    html += '</table></div>';
+
+    // Nash Equilibrium
+    html += '<div class="metric-card"><h3>Nash Equilibrium (Mixed Strategy)</h3>';
+    html += '<div class="nash-bar">';
+    for (let i = 0; i < 5; i++) {
+      const pct = (this.nashStrategy[i] * 100).toFixed(0);
+      if (this.nashStrategy[i] > 0.02) {
+        html += `<div style="width:${pct}%;background:${nashColors[i]}" title="${actions[i]}: ${pct}%">${pct > 8 ? actions[i].slice(0,3) : ''}</div>`;
+      }
+    }
+    html += '</div>';
+    html += '<div style="font-size:11px;color:var(--dim);margin-top:4px">';
+    for (let i = 0; i < 5; i++) {
+      html += `<span style="color:${nashColors[i]}">${actions[i]}: ${(this.nashStrategy[i]*100).toFixed(1)}%</span>  `;
+    }
+    html += '</div></div>';
+
+    // Quality Score
+    const qPct = (this.qualityScore * 100).toFixed(1);
+    const qColor = this.qualityScore > 0.7 ? 'var(--green)' : this.qualityScore > 0.4 ? 'var(--yellow)' : 'var(--red)';
+    html += `<div class="metric-card"><h3>Quality Score</h3>`;
+    html += `<div style="font-size:24px;font-weight:bold;color:${qColor}">${qPct}%</div>`;
+    html += `<div class="quality-bar"><div class="quality-fill" style="width:${qPct}%;background:${qColor}"></div></div>`;
+    html += `<div style="font-size:10px;color:var(--dim)">`;
+    if (g) {
+      html += `Prims: ${g.player.collected.length}/16 (40%) | `;
+      html += `Combat: ${totalEnemiesKilled}/${totalEnemiesSeen} (25%) | `;
+      html += `Turns: ${g.turn} (20%) | `;
+      html += `HP: ${Math.max(0,g.player.hp)}/${g.player.maxHp} (15%)`;
+    }
+    html += `</div></div>`;
+
+    // Code Completeness
+    const unlocked = codeForge.getUnlockedCount();
+    const total = codeForge.getTotalCount();
+    const compPct = (unlocked / total * 100).toFixed(0);
+    html += `<div class="metric-card"><h3>Code Completeness</h3>`;
+    html += `<div style="display:flex;align-items:center;gap:12px">`;
+    html += `<svg class="completeness-ring" viewBox="0 0 36 36">`;
+    html += `<path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--border)" stroke-width="3"/>`;
+    html += `<path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="${compPct}, 100" stroke-linecap="round"/>`;
+    html += `<text x="18" y="20.35" fill="var(--text)" font-size="8" text-anchor="middle">${unlocked}/${total}</text>`;
+    html += `</svg>`;
+    html += `<div style="font-size:11px;color:var(--dim)">${compPct}% generated<br>${total - unlocked} sections locked</div>`;
+    html += `</div></div>`;
+
+    // Sparkline
+    html += `<div class="metric-card"><h3>Quality Over Time</h3>`;
+    html += `<div class="sparkline-wrap">`;
+    const maxQ = Math.max(0.01, ...this.sparkline);
+    for (const v of this.sparkline) {
+      const h = Math.max(2, (v / maxQ) * 28);
+      html += `<div style="height:${h}px"></div>`;
+    }
+    html += `</div></div>`;
+
+    panel.innerHTML = html;
+  },
+
+  reset() {
+    this.matrix = Array.from({length: 5}, () => [0, 0, 0]);
+    this.nashStrategy = [0.2, 0.2, 0.2, 0.2, 0.2];
+    this.qualityScore = 0;
+    this.sparkline = [];
+  }
+};
+
+// =========================================================================
+// AI AUTOPILOT
+// =========================================================================
+function computeOptimalMove(g) {
+  const p = g.player;
+  const candidates = [];
+
+  // 8 directions + wait
+  const dirs = [
+    [0,-1], [0,1], [-1,0], [1,0],
+    [-1,-1], [1,-1], [-1,1], [1,1],
+    [0,0] // wait
+  ];
+
+  for (const [dx, dy] of dirs) {
+    const nx = p.x + dx, ny = p.y + dy;
+    if (dx === 0 && dy === 0) {
+      // Wait
+      let val = 0.5;
+      if (p.hp < p.maxHp * 0.4) val = 3.0;
+      else if (p.hp < p.maxHp * 0.7) val = 1.5;
+      candidates.push({ dx, dy, val, type: 'wait' });
+      continue;
+    }
+
+    if (nx < 0 || ny < 0 || nx >= MAP_W || ny >= MAP_H) continue;
+    if (g.map[ny][nx] === 0) continue;
+
+    let val = 0;
+    let type = 'explore';
+
+    // Adjacent enemy? Fight payoff
+    const enemy = g.enemies.find(e => e.x === nx && e.y === ny);
+    if (enemy) {
+      const expectedDamage = Math.max(1, enemy.atk - p.def);
+      val = enemy.xp / Math.max(1, expectedDamage);
+      // Avoid fighting if low HP unless cornered
+      if (p.hp < p.maxHp * 0.25 && g.enemies.length > 1) val *= 0.3;
+      type = 'fight';
+    } else {
+      // Primitive nearby? Collect payoff
+      const nearPrim = g.prims.find(pr => pr.x === nx && pr.y === ny);
+      if (nearPrim) {
+        val = 12;
+        type = 'collect';
+      } else {
+        // Move toward nearest primitive
+        let bestPrimDist = 999;
+        for (const pr of g.prims) {
+          const d = Math.abs(pr.x - nx) + Math.abs(pr.y - ny);
+          if (d < bestPrimDist) bestPrimDist = d;
+        }
+        if (bestPrimDist < 999 && g.prims.length > 0) {
+          val = 10 / Math.max(1, bestPrimDist);
+          type = 'collect-approach';
+        }
+
+        // All prims on floor collected? Head to stairs
+        if (g.prims.length === 0) {
+          // Find stairs
+          for (let sy = 0; sy < MAP_H; sy++)
+            for (let sx = 0; sx < MAP_W; sx++) {
+              if (g.map[sy][sx] === 2) {
+                const stairDist = Math.abs(sx - nx) + Math.abs(sy - ny);
+                const descendVal = 15 / Math.max(1, stairDist);
+                if (descendVal > val) { val = descendVal; type = 'descend'; }
+              }
+            }
+        }
+
+        // Exploration bonus for unseen tiles
+        if (!g.player.seen[ny][nx]) val += 1.5;
+
+        // Avoid enemies if low HP
+        for (const e of g.enemies) {
+          const eDist = Math.abs(e.x - nx) + Math.abs(e.y - ny);
+          if (eDist <= 2 && p.hp < p.maxHp * 0.3) val -= 3;
+        }
+      }
+    }
+
+    candidates.push({ dx, dy, val, type });
+  }
+
+  if (candidates.length === 0) return { dx: 0, dy: 0 };
+
+  // Sort by value descending
+  candidates.sort((a, b) => b.val - a.val);
+
+  // Nash mixing: 70% best, 20% second best, 10% random
+  const r = Math.random();
+  if (r < 0.7 || candidates.length === 1) return candidates[0];
+  if (r < 0.9 && candidates.length > 1) return candidates[1];
+  return candidates[rng(0, Math.min(candidates.length - 1, 3))];
+}
+
+function autopilotStep() {
+  if (!game || game.gameOver) { stopAutopilot(); return; }
+  const move = computeOptimalMove(game);
+  if (move.dx === 0 && move.dy === 0) waitTurn(game);
+  else tryMove(game, move.dx, move.dy);
+  renderGame();
+}
+
+// =========================================================================
+// RENDERING
+// =========================================================================
+function renderGame() {
+  if (!game) return;
+  const g = game;
+  const p = g.player;
+  let html = '';
+
+  for (let y = 0; y < MAP_H; y++) {
+    for (let x = 0; x < MAP_W; x++) {
+      const visible = p.seen[y][x];
+      const fov = inFov(g, x, y);
+
+      if (x === p.x && y === p.y) {
+        html += `<span style="color:#fff;background:#224">@</span>`;
+      } else {
+        const enemy = g.enemies.find(e => e.x === x && e.y === y);
+        const prim = g.prims.find(pr => pr.x === x && pr.y === y);
+
+        if (enemy && (fov || p.seeEnemies)) {
+          html += `<span style="color:${enemy.color}">${enemy.glyph}</span>`;
+        } else if (prim && (fov || p.revealed)) {
+          const def = PRIMITIVES[prim.idx];
+          html += `<span style="color:#000;background:${def.color}">${def.sym}</span>`;
+        } else if (fov) {
+          if (g.map[y][x] === 0) html += `<span style="color:#555">#</span>`;
+          else if (g.map[y][x] === 2) html += `<span style="color:#ffcc00;background:#333">&gt;</span>`;
+          else html += `<span style="color:#333">.</span>`;
+        } else if (visible) {
+          if (g.map[y][x] === 0) html += `<span style="color:#222">#</span>`;
+          else html += `<span style="color:#222">.</span>`;
+        } else {
+          html += ' ';
+        }
+      }
+    }
+    html += '\n';
+  }
+  document.getElementById('game-canvas').innerHTML = html;
+
+  // Prim bar
+  let primHtml = '';
+  for (let i = 0; i < 16; i++) {
+    const def = PRIMITIVES[i];
+    if (p.collected.includes(i)) {
+      primHtml += `<div class="prim-slot collected" style="background:${def.color}" title="${def.name}">${def.sym}</div>`;
+    } else {
+      primHtml += `<div class="prim-slot locked" title="${def.name} (locked)">?</div>`;
+    }
+  }
+  document.getElementById('prim-bar').innerHTML = primHtml;
+
+  // Log
+  const logEl = document.getElementById('game-log');
+  const start = Math.max(0, g.log.length - 6);
+  let logHtml = '';
+  for (let i = start; i < g.log.length; i++) {
+    logHtml += `<div style="color:${g.log[i].color}">${g.log[i].text}</div>`;
+  }
+  logEl.innerHTML = logHtml;
+  logEl.scrollTop = logEl.scrollHeight;
+
+  // Header
+  document.getElementById('hdr-floor').textContent = `${g.floor}/${NUM_FLOORS}`;
+  document.getElementById('hdr-turn').textContent = g.turn;
+  document.getElementById('hdr-level').textContent = p.level;
+  document.getElementById('hdr-hp').textContent = `${Math.max(0, p.hp)}/${p.maxHp}`;
+  document.getElementById('hdr-atk').textContent = p.atk;
+  document.getElementById('hdr-def').textContent = p.def;
+
+  updateCompleteness();
+}
+
+function updateCompleteness() {
+  const unlocked = codeForge.getUnlockedCount();
+  const total = codeForge.getTotalCount();
+  document.getElementById('footer-completeness').textContent = `${unlocked}/${total}`;
+  document.getElementById('footer-quality').textContent = gameTheory.qualityScore.toFixed(2);
+
+  if (game && game.gameOver) {
+    document.getElementById('footer-status').textContent = game.victory
+      ? 'VICTORY — Code Forge complete!'
+      : `DEFEATED — Floor ${game.floor}, ${game.player.collected.length}/16 primitives`;
+  } else if (autopilotOn) {
+    document.getElementById('footer-status').textContent = `Autopilot running (${speed}ms/turn)`;
+  }
+}
+
+// =========================================================================
+// CONTROLS
+// =========================================================================
+function toggleAutopilot() {
+  if (autopilotOn) stopAutopilot();
+  else startAutopilot();
+}
+
+function startAutopilot() {
+  if (!game || game.gameOver) return;
+  autopilotOn = true;
+  document.getElementById('btn-autopilot').classList.add('active');
+  document.getElementById('btn-autopilot').innerHTML = 'Autopilot &#9632;';
+  autopilotTimer = setInterval(autopilotStep, speed);
+}
+
+function stopAutopilot() {
+  autopilotOn = false;
+  document.getElementById('btn-autopilot').classList.remove('active');
+  document.getElementById('btn-autopilot').innerHTML = 'Autopilot &#9654;';
+  if (autopilotTimer) { clearInterval(autopilotTimer); autopilotTimer = null; }
+}
+
+function setSpeed(ms) {
+  speed = ms;
+  document.querySelectorAll('.speed-btns button').forEach(b => b.classList.remove('active'));
+  document.getElementById(`sp-${ms === 500 ? '1' : ms === 250 ? '2' : ms === 100 ? '5' : '10'}`).classList.add('active');
+  if (autopilotOn) {
+    clearInterval(autopilotTimer);
+    autopilotTimer = setInterval(autopilotStep, speed);
+  }
+}
+
+function resetGame() {
+  stopAutopilot();
+  game = createGame();
+  codeForge.init();
+  gameTheory.reset();
+  gameTheory.updateMetrics(game);
+  renderGame();
+  document.getElementById('footer-status').textContent = 'Reset — click Autopilot or use arrow keys';
+}
+
+function exportRust() {
+  const code = codeForge.exportCode();
+  const blob = new Blob([code], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'forge_output.rs';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  addLog(game, `Exported forge_output.rs (${code.split('\n').length} lines)`, '#00ccff');
+  renderGame();
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  if (tab === 'code') {
+    document.querySelector('.tab:first-child').classList.add('active');
+    document.getElementById('tab-code').classList.add('active');
+  } else {
+    document.querySelector('.tab:last-child').classList.add('active');
+    document.getElementById('tab-metrics').classList.add('active');
+  }
+}
+
+// Keyboard controls
+document.addEventListener('keydown', (e) => {
+  if (!game || game.gameOver || autopilotOn) return;
+  switch (e.key) {
+    case 'ArrowUp': case 'w': case 'k': tryMove(game, 0, -1); break;
+    case 'ArrowDown': case 's': case 'j': tryMove(game, 0, 1); break;
+    case 'ArrowLeft': case 'a': case 'h': tryMove(game, -1, 0); break;
+    case 'ArrowRight': case 'd': case 'l': tryMove(game, 1, 0); break;
+    case 'y': tryMove(game, -1, -1); break;
+    case 'u': tryMove(game, 1, -1); break;
+    case 'b': tryMove(game, -1, 1); break;
+    case 'n': tryMove(game, 1, 1); break;
+    case '.': case '5': waitTurn(game); break;
+    default: return;
+  }
+  e.preventDefault();
+  renderGame();
+});
+
+// =========================================================================
+// INIT
+// =========================================================================
+game = createGame();
+codeForge.init();
+gameTheory.updateMetrics(game);
+renderGame();
+</script>
+</body>
+</html>

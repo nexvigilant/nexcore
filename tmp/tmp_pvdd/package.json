@@ -1,0 +1,28 @@
+{
+  "name": "pv-dd-toolkit-tests",
+  "version": "1.0.0",
+  "description": "Cypress test suite for PV DD Toolkit",
+  "scripts": {
+    "test": "cypress run --headless --browser chrome",
+    "test:headed": "cypress run --browser chrome",
+    "test:open": "cypress open",
+    "test:home": "cypress run --spec 'cypress/e2e/01-home.cy.js'",
+    "test:getting-started": "cypress run --spec 'cypress/e2e/02-getting-started.cy.js'",
+    "test:modules": "cypress run --spec 'cypress/e2e/03-core-modules.cy.js'",
+    "test:tools": "cypress run --spec 'cypress/e2e/04-decision-tools.cy.js'",
+    "test:reference": "cypress run --spec 'cypress/e2e/05-reference.cy.js'",
+    "test:about": "cypress run --spec 'cypress/e2e/06-about.cy.js'",
+    "test:accessibility": "cypress run --spec 'cypress/e2e/07-accessibility-performance.cy.js'",
+    "test:report": "cypress run --reporter mochawesome --reporter-options reportDir=cypress/reports,overwrite=false,html=true,json=true",
+    "serve": "cd . && source .venv/bin/activate && mkdocs serve --dev-addr 127.0.0.1:8766"
+  },
+  "dependencies": {
+    "playwright": "^1.57.0"
+  },
+  "devDependencies": {
+    "cypress": "^15.8.1",
+    "mochawesome": "^7.1.3",
+    "mochawesome-merge": "^4.3.0",
+    "mochawesome-report-generator": "^6.2.0"
+  }
+}

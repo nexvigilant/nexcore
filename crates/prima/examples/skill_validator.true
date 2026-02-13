@@ -1,0 +1,69 @@
+// skill_validator.true — PRIMA Learner's First Prima Program
+//
+// Domain: Claude Code Skills
+// Grounding: Skills are σ[constraint] with tier scoring
+//
+// AI learns. Human verifies: 1=true, 0=false.
+
+// λ binds locations (variables)
+λ skill_name = "prima-learner"
+λ constraints = σ["decompose", "confidence", "analogies"]
+
+// Tier classification based on primitive count
+// Uses κ (comparison) on N (quantity)
+μ classify_tier(n: N) → N {
+    ∂ n κ= 1 { 1 }
+    else { ∂ n κ< 4 { 2 }
+    else { ∂ n κ< 6 { 3 }
+    else { 4 } } }
+}
+
+// Tier to name via Σ (sum/match)
+μ tier_name(t: N) → String {
+    Σ t {
+        1 → "T1-Universal",
+        2 → "T2-Primitive",
+        3 → "T2-Composite",
+        _ → "T3-Domain"
+    }
+}
+
+// Transfer confidence based on tier code
+μ transfer_confidence(t: N) → N {
+    Σ t {
+        1 → 100,
+        2 → 90,
+        3 → 70,
+        _ → 40
+    }
+}
+
+// Main validation
+λ prim_count = #(constraints)
+λ tier_code = classify_tier(prim_count)
+λ tier = tier_name(tier_code)
+λ confidence = transfer_confidence(tier_code)
+
+// Output
+println("Skill Validator Results")
+println("=======================")
+print("Skill: ")
+println(skill_name)
+print("Constraints: ")
+println(prim_count)
+print("Tier: ")
+println(tier)
+print("Transfer Confidence: ")
+print(confidence)
+println("%")
+
+// Assertions — verify truth
+‼(prim_count κ= 3)
+‼(tier_code κ= 2)
+‼(confidence κ= 90)
+
+// Grounding check
+print("Tier of result: ")
+println(T(confidence))
+
+println("∎ skill_validator.true verified")

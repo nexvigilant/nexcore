@@ -1,0 +1,199 @@
+//! STEM Visualization MCP tools
+//!
+//! Produces self-contained SVG diagrams for:
+//! - STEM taxonomy sunburst (32 traits, 4 domains, 7 T1 groundings)
+//! - Type composition (how any type decomposes to T1 primitives)
+//! - Science/Chemistry/Math method loops
+//! - Confidence propagation waterfall charts
+//! - Bounded value number lines
+//! - DAG topology with parallel execution levels
+
+use rmcp::ErrorData as McpError;
+use rmcp::model::CallToolResult;
+
+use crate::params::{
+    VizBoundsParams, VizCompositionParams, VizConfidenceParams, VizDagParams, VizLoopParams,
+    VizTaxonomyParams,
+};
+
+/// Generate STEM taxonomy sunburst SVG.
+pub fn taxonomy(params: VizTaxonomyParams) -> Result<CallToolResult, McpError> {
+    let title = params
+        .title
+        .unwrap_or_else(|| "STEM Taxonomy — 32 Traits".to_string());
+    let entries = nexcore_viz::taxonomy::standard_taxonomy();
+    let svg = nexcore_viz::render_taxonomy(&entries, &title);
+
+    Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+        svg,
+    )]))
+}
+
+/// Generate type composition diagram SVG.
+pub fn composition(params: VizCompositionParams) -> Result<CallToolResult, McpError> {
+    let primitives: Vec<nexcore_viz::PrimitiveNode> = params
+        .primitives
+        .split(',')
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .map(|name| nexcore_viz::PrimitiveNode {
+            name: name.to_string(),
+            symbol: primitive_symbol(name).to_string(),
+            role: String::new(),
+        })
+        .collect();
+
+    let comp = nexcore_viz::TypeComposition {
+        type_name: params.type_name,
+        tier: params.tier,
+        primitives,
+        dominant: params.dominant,
+        confidence: params.confidence.unwrap_or(0.80),
+    };
+
+    let svg = nexcore_viz::render_composition(&comp);
+    Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+        svg,
+    )]))
+}
+
+/// Generate science/chemistry/math loop SVG.
+pub fn method_loop(params: VizLoopParams) -> Result<CallToolResult, McpError> {
+    let (steps, name) = match params.domain.to_lowercase().as_str() {
+        "science" => (
+            nexcore_viz::science_loop::science_loop(),
+            "SCIENCE",
+        ),
+        "chemistry" | "chem" => (
+            nexcore_viz::science_loop::chemistry_loop(),
+            "CHEMISTRY",
+        ),
+        "math" | "mathematics" => (
+            nexcore_viz::science_loop::math_loop(),
+            "MATHEMATICS",
+        ),
+        other => {
+            return Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+                format!("Unknown domain: {other}. Use: science, chemistry, or math"),
+            )]));
+        }
+    };
+
+    let svg = nexcore_viz::render_science_loop(&steps, name);
+    Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+        svg,
+    )]))
+}
+
+/// Generate confidence propagation waterfall SVG.
+pub fn confidence(params: VizConfidenceParams) -> Result<CallToolResult, McpError> {
+    let title = params
+        .title
+        .unwrap_or_else(|| "Confidence Propagation".to_string());
+
+    // Parse claims JSON
+    let raw: Vec<serde_json::Value> = serde_json::from_str(&params.claims).map_err(|e| {
+        McpError::invalid_params(
+            format!("Invalid claims JSON: {e}"),
+            None,
+        )
+    })?;
+
+    let claims: Vec<nexcore_viz::Claim> = raw
+        .iter()
+        .map(|v| nexcore_viz::Claim {
+            text: v["text"].as_str().unwrap_or("claim").to_string(),
+            confidence: v["confidence"].as_f64().unwrap_or(0.5),
+            proof_type: v["proof_type"].as_str().unwrap_or("derived").to_string(),
+            parent: v["parent"].as_u64().map(|p| p as usize),
+        })
+        .collect();
+
+    let svg = nexcore_viz::render_confidence_chain(&claims, &title);
+    Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+        svg,
+    )]))
+}
+
+/// Generate bounds visualization SVG.
+pub fn bounds(params: VizBoundsParams) -> Result<CallToolResult, McpError> {
+    let bounded = nexcore_viz::BoundedValue {
+        value: params.value,
+        lower: params.lower,
+        upper: params.upper,
+        label: params.label.unwrap_or_else(|| "value".to_string()),
+    };
+
+    let svg = nexcore_viz::render_bounds(&bounded);
+    Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+        svg,
+    )]))
+}
+
+/// Generate DAG topology visualization SVG.
+pub fn dag(params: VizDagParams) -> Result<CallToolResult, McpError> {
+    let title = params
+        .title
+        .unwrap_or_else(|| "DAG Topology".to_string());
+
+    // Parse edges JSON
+    let raw_edges: Vec<Vec<String>> =
+        serde_json::from_str(&params.edges).map_err(|e| {
+            McpError::invalid_params(
+                format!("Invalid edges JSON: {e}"),
+                None,
+            )
+        })?;
+
+    // Collect unique node IDs
+    let mut node_ids = std::collections::HashSet::new();
+    let mut edges = Vec::new();
+
+    for edge in &raw_edges {
+        if edge.len() >= 2 {
+            node_ids.insert(edge[0].clone());
+            node_ids.insert(edge[1].clone());
+            edges.push(nexcore_viz::DagEdge {
+                from: edge[0].clone(),
+                to: edge[1].clone(),
+            });
+        }
+    }
+
+    let nodes: Vec<nexcore_viz::DagNode> = node_ids
+        .into_iter()
+        .map(|id| nexcore_viz::DagNode {
+            label: id.clone(),
+            id,
+            color: None,
+        })
+        .collect();
+
+    let svg = nexcore_viz::render_dag(&nodes, &edges, &title);
+    Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+        svg,
+    )]))
+}
+
+/// Map primitive name to unicode symbol.
+fn primitive_symbol(name: &str) -> &'static str {
+    match name.to_lowercase().as_str() {
+        "mapping" => "\u{03bc}",
+        "sequence" => "\u{03c3}",
+        "recursion" => "\u{03c1}",
+        "state" => "\u{03c2}",
+        "persistence" => "\u{03c0}",
+        "boundary" => "\u{2202}",
+        "sum" => "\u{03a3}",
+        "void" => "\u{2205}",
+        "frequency" => "\u{03bd}",
+        "existence" => "\u{2203}",
+        "causality" => "\u{2192}",
+        "comparison" => "\u{03ba}",
+        "quantity" => "N",
+        "location" => "\u{03bb}",
+        "irreversibility" => "\u{221d}",
+        "product" => "\u{00d7}",
+        _ => "?",
+    }
+}

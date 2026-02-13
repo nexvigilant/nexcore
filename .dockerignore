@@ -1,0 +1,38 @@
+# Build artifacts
+target/
+**/target/
+
+# Git
+.git/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Large/unnecessary crates
+crates/nexcore-hooks/
+crates/nexcore-vigil/
+crates/nexcore-control-center/
+crates/nexcore-tov-proofs/
+crates/nexcore-skill-verify/
+
+# Claude state
+.claude/
+
+# Data files
+*.db
+*.sqlite
+*.parquet
+*.profraw
+*.profdata
+
+# Archive
+archive/
+archived/
+
+# Secrets
+.env
+.env.local
+*.pem
+*.key

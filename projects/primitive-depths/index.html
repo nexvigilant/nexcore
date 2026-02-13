@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Primitive Depths — Lex Primitiva Roguelike</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0a0a0f;
+  color: #c0c0c0;
+  font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+#header {
+  padding: 10px 0 4px;
+  font-size: 18px;
+  color: #00cccc;
+  letter-spacing: 2px;
+}
+#header span { color: #666; font-size: 14px; }
+canvas {
+  border: 1px solid #222;
+  image-rendering: pixelated;
+}
+#hud {
+  display: flex;
+  gap: 24px;
+  padding: 6px 0;
+  font-size: 14px;
+}
+.hud-item { color: #888; }
+.hud-val { color: #fff; font-weight: bold; }
+.hud-hp { color: #4f4; }
+.hud-atk { color: #f88; }
+.hud-def { color: #88f; }
+.hud-xp { color: #cc0; }
+#prims-bar {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0;
+  align-items: center;
+}
+.prim-slot {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid #333;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.3s;
+}
+.prim-slot.collected {
+  border-color: #fff;
+  animation: pulse 0.5s;
+}
+.prim-slot.empty { color: #333; background: #111; }
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+#log {
+  width: 700px;
+  height: 80px;
+  overflow: hidden;
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #999;
+}
+.log-line { white-space: nowrap; }
+#controls {
+  color: #444;
+  font-size: 11px;
+  padding: 4px;
+}
+#overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+#overlay.hidden { display: none; }
+#overlay h1 { font-size: 36px; margin-bottom: 12px; }
+#overlay p { font-size: 16px; color: #aaa; margin: 4px; }
+#overlay .btn {
+  margin-top: 20px;
+  padding: 10px 30px;
+  background: #00cccc;
+  color: #000;
+  border: none;
+  font-family: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+#overlay .btn:hover { background: #00ffff; }
+</style>
+</head>
+<body>
+
+<div id="header">PRIMITIVE DEPTHS <span>— collect all 16 Lex Primitiva</span></div>
+<div id="hud">
+  <div class="hud-item">Floor <span class="hud-val" id="hFloor">1/5</span></div>
+  <div class="hud-item">HP <span class="hud-val hud-hp" id="hHp">30/30</span></div>
+  <div class="hud-item">ATK <span class="hud-val hud-atk" id="hAtk">5</span></div>
+  <div class="hud-item">DEF <span class="hud-val hud-def" id="hDef">2</span></div>
+  <div class="hud-item">Lv <span class="hud-val hud-xp" id="hLvl">1</span></div>
+  <div class="hud-item">XP <span class="hud-val hud-xp" id="hXp">0</span></div>
+  <div class="hud-item">Turn <span class="hud-val" id="hTurn">0</span></div>
+</div>
+<canvas id="game" width="840" height="400"></canvas>
+<div id="prims-bar"></div>
+<div id="log"></div>
+<div id="controls">[Arrow/WASD/HJKL] move &nbsp; [YUBN] diagonal &nbsp; [.] wait &nbsp; [R] restart</div>
+
+<div id="overlay">
+  <h1 id="ovTitle" style="color:#00cccc">Primitive Depths</h1>
+  <p>Descend 5 floors. Collect all 16 Lex Primitiva.</p>
+  <p>Defeat Rust antipattern enemies. Each primitive grants power.</p>
+  <p style="color:#666; font-size:13px; margin-top:12px">@ = you &nbsp; # = wall &nbsp; > = stairs &nbsp; colored letters = primitives</p>
+  <button class="btn" id="ovBtn" onclick="startGame()">Begin Descent</button>
+</div>
+
+<script>
+// ===========================================================================
+// Primitive Depths — Browser Edition
+// ===========================================================================
+
+const TILE_W = 12, TILE_H = 20;
+const MAP_W = 70, MAP_H = 20;
+const MAX_ROOMS = 9, NUM_FLOORS = 5, PRIMS_PER_FLOOR = 4;
+const VIEW_R = 8;
+
+const PRIMS = [
+  { sym:'σ', name:'Sequence',       desc:'+2 ATK (ordered strikes)',     col:'#00cccc' },
+  { sym:'μ', name:'Mapping',        desc:'+2 DEF (transform damage)',    col:'#4488ff' },
+  { sym:'ς', name:'State',          desc:'+8 Max HP (mutable vitality)', col:'#44cc44' },
+  { sym:'ρ', name:'Recursion',      desc:'Full heal! (self-reference)',  col:'#cc44cc' },
+  { sym:'∅', name:'Void',           desc:'Enemies -2 ATK (nullify)',     col:'#666666' },
+  { sym:'∂', name:'Boundary',       desc:'+3 DEF (edge protection)',     col:'#cccc00' },
+  { sym:'ν', name:'Frequency',      desc:'+1 ATK, +1 DEF (tempo)',       col:'#008888' },
+  { sym:'∃', name:'Existence',      desc:'Reveal floor (detection)',     col:'#ffffff' },
+  { sym:'π', name:'Persistence',    desc:'+12 Max HP (endurance)',       col:'#228822' },
+  { sym:'→', name:'Causality',      desc:'+4 ATK (cause & effect)',      col:'#ff4444' },
+  { sym:'κ', name:'Comparison',     desc:'+2 ATK, +1 DEF (judgment)',    col:'#aa8800' },
+  { sym:'N', name:'Quantity',       desc:'+20 HP heal (abundance)',      col:'#00cccc' },
+  { sym:'λ', name:'Location',       desc:'See enemies always',           col:'#884488' },
+  { sym:'∝', name:'Irreversibility',desc:'+3 ATK (permanent force)',     col:'#aa2222' },
+  { sym:'Σ', name:'Sum',            desc:'+5 HP, +2 ATK (combine)',      col:'#44cc44' },
+  { sym:'×', name:'Product',        desc:'+2 ATK, +2 DEF (multiply)',    col:'#cccc00' },
+];
+
+const ENEMY_DEFS = {
+  1: [
+    { g:'g', name:'Unwrap Goblin', hp:8,  atk:3, def:0, col:'#44aa44', xp:10 },
+    { g:'r', name:'Raw Ptr Rat',   hp:5,  atk:4, def:0, col:'#228822', xp:8  },
+  ],
+  2: [
+    { g:'g', name:'Unwrap Goblin', hp:10, atk:4, def:1, col:'#44aa44', xp:12 },
+    { g:'p', name:'Panic Sprite',  hp:7,  atk:6, def:0, col:'#ff4444', xp:15 },
+    { g:'r', name:'Raw Ptr Rat',   hp:6,  atk:5, def:0, col:'#228822', xp:10 },
+  ],
+  3: [
+    { g:'o', name:'Unsafe Orc',      hp:16, atk:5, def:2, col:'#cccc00', xp:20 },
+    { g:'p', name:'Panic Sprite',    hp:9,  atk:7, def:0, col:'#ff4444', xp:18 },
+    { g:'w', name:'Deadlock Wraith', hp:12, atk:6, def:1, col:'#008888', xp:22 },
+  ],
+  4: [
+    { g:'o', name:'Unsafe Orc',      hp:20, atk:6, def:3, col:'#cccc00', xp:25 },
+    { g:'T', name:'Clone Troll',     hp:24, atk:5, def:4, col:'#cc44cc', xp:30 },
+    { g:'w', name:'Deadlock Wraith', hp:15, atk:7, def:2, col:'#008888', xp:28 },
+  ],
+  5: [
+    { g:'D', name:'Dragon Leak',     hp:35, atk:9, def:5, col:'#aa2222', xp:50 },
+    { g:'T', name:'Clone Troll',     hp:28, atk:7, def:4, col:'#cc44cc', xp:35 },
+    { g:'w', name:'Deadlock Wraith', hp:20, atk:8, def:3, col:'#008888', xp:32 },
+  ],
+};
+
+const WALL=0, FLOOR=1, STAIRS=2;
+
+let ctx, game;
+
+// ---------------------------------------------------------------------------
+// RNG (xorshift128+)
+// ---------------------------------------------------------------------------
+let rngState = [Date.now() ^ 0xDEADBEEF, Date.now() ^ 0xCAFEBABE];
+function rng01() {
+  let s1 = rngState[0], s0 = rngState[1];
+  rngState[0] = s0;
+  s1 ^= s1 << 23;
+  rngState[1] = s1 ^ s0 ^ (s1 >>> 17) ^ (s0 >>> 26);
+  return ((rngState[1] + s0) >>> 0) / 4294967296;
+}
+function rngInt(lo, hi) { return lo + Math.floor(rng01() * (hi - lo + 1)); }
+
+// ---------------------------------------------------------------------------
+// Game state
+// ---------------------------------------------------------------------------
+function newGame() {
+  return {
+    map: [], player: null, enemies: [], prims: [],
+    log: [], floor: 1, turn: 0, over: false, victory: false,
+    remaining: Array.from({length:16}, (_,i) => i),
+    seen: [],
+  };
+}
+
+function initPlayer() {
+  return {
+    x:0, y:0, hp:30, maxHp:30, atk:5, def:2,
+    collected:[], xp:0, level:1,
+    seeEnemies:false, revealed:false,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Dungeon generation
+// ---------------------------------------------------------------------------
+function generateFloor(g) {
+  g.map = Array.from({length:MAP_H}, () => new Uint8Array(MAP_W)); // all WALL=0
+  g.enemies = [];
+  g.prims = [];
+  g.seen = Array.from({length:MAP_H}, () => new Uint8Array(MAP_W));
+  g.player.revealed = false;
+
+  let rooms = [];
+  for (let i = 0; i < 60 && rooms.length < MAX_ROOMS; i++) {
+    let w = rngInt(5,12), h = rngInt(3,7);
+    let x = rngInt(1, Math.max(1, MAP_W-w-2)), y = rngInt(1, Math.max(1, MAP_H-h-2));
+    let room = {x,y,w,h};
+    if (rooms.every(r => !intersects(r, room))) rooms.push(room);
+  }
+  if (rooms.length < 3) {
+    rooms = [{x:2,y:2,w:8,h:5},{x:30,y:2,w:8,h:5},{x:15,y:12,w:10,h:5}];
+  }
+
+  // Carve
+  for (let room of rooms)
+    for (let dy=0; dy<room.h; dy++)
+      for (let dx=0; dx<room.w; dx++) {
+        let ry=room.y+dy, rx=room.x+dx;
+        if (ry<MAP_H && rx<MAP_W) g.map[ry][rx] = FLOOR;
+      }
+
+  // Corridors
+  for (let i=1; i<rooms.length; i++) {
+    let [cx1,cy1] = center(rooms[i-1]), [cx2,cy2] = center(rooms[i]);
+    if (rng01() < 0.5) { carveH(g,cx1,cx2,cy1); carveV(g,cy1,cy2,cx2); }
+    else { carveV(g,cy1,cy2,cx1); carveH(g,cx1,cx2,cy2); }
+  }
+
+  // Player
+  let [px,py] = center(rooms[0]);
+  g.player.x = px; g.player.y = py;
+
+  // Stairs
+  let [sx,sy] = center(rooms[rooms.length-1]);
+  g.map[sy][sx] = STAIRS;
+
+  // Primitives
+  let toPlace = Math.min(PRIMS_PER_FLOOR, g.remaining.length);
+  let placed = 0;
+  for (let att=0; att<200 && placed<toPlace; att++) {
+    let ri = rngInt(1, rooms.length-1), room = rooms[ri];
+    let fx = room.x+rngInt(0,room.w-1), fy = room.y+rngInt(0,room.h-1);
+    if (fx<MAP_W && fy<MAP_H && g.map[fy][fx]===FLOOR
+        && !(fx===px&&fy===py) && !(fx===sx&&fy===sy)
+        && !g.prims.some(p=>p.x===fx&&p.y===fy)) {
+      g.prims.push({x:fx, y:fy, idx:g.remaining[placed]});
+      placed++;
+    }
+  }
+
+  // Enemies
+  let numE = g.floor + 2;
+  let templates = ENEMY_DEFS[Math.min(g.floor,5)];
+  let eSpawned = 0;
+  for (let att=0; att<300 && eSpawned<numE; att++) {
+    if (rooms.length < 2) break;
+    let ri = rngInt(1, rooms.length-1), room = rooms[ri];
+    let ex = room.x+rngInt(0,room.w-1), ey = room.y+rngInt(0,room.h-1);
+    if (ex<MAP_W && ey<MAP_H && g.map[ey][ex]===FLOOR
+        && !(ex===px&&ey===py)
+        && !g.enemies.some(e=>e.x===ex&&e.y===ey)) {
+      let t = templates[rngInt(0, templates.length-1)];
+      g.enemies.push({x:ex,y:ey,glyph:t.g,name:t.name,hp:t.hp,maxHp:t.hp,atk:t.atk,def:t.def,col:t.col,xp:t.xp});
+      eSpawned++;
+    }
+  }
+
+  addLog(g, `--- Floor ${g.floor}/${NUM_FLOORS} ---`, '#cccc00');
+  updateFov(g);
+}
+
+function intersects(a,b) {
+  return a.x < b.x+b.w+2 && a.x+a.w+2 > b.x && a.y < b.y+b.h+2 && a.y+a.h+2 > b.y;
+}
+function center(r) { return [r.x+Math.floor(r.w/2), r.y+Math.floor(r.h/2)]; }
+function carveH(g,x1,x2,y) {
+  let a=Math.min(x1,x2), b=Math.max(x1,x2);
+  for (let x=a;x<=b;x++) if(y<MAP_H&&x<MAP_W) g.map[y][x]=FLOOR;
+}
+function carveV(g,y1,y2,x) {
+  let a=Math.min(y1,y2), b=Math.max(y1,y2);
+  for (let y=a;y<=b;y++) if(y<MAP_H&&x<MAP_W) g.map[y][x]=FLOOR;
+}
+
+// ---------------------------------------------------------------------------
+// FOV
+// ---------------------------------------------------------------------------
+function updateFov(g) {
+  if (g.player.revealed) {
+    for (let y=0;y<MAP_H;y++) for (let x=0;x<MAP_W;x++) g.seen[y][x]=1;
+    return;
+  }
+  let px=g.player.x, py=g.player.y;
+  for (let dy=-VIEW_R;dy<=VIEW_R;dy++)
+    for (let dx=-VIEW_R;dx<=VIEW_R;dx++) {
+      if (dx*dx+dy*dy > VIEW_R*VIEW_R) continue;
+      let tx=px+dx, ty=py+dy;
+      if (tx>=0&&ty>=0&&tx<MAP_W&&ty<MAP_H && hasLos(g,px,py,tx,ty))
+        g.seen[ty][tx] = 1;
+    }
+}
+
+function hasLos(g,x0,y0,x1,y1) {
+  let dx=Math.abs(x1-x0), dy=-Math.abs(y1-y0);
+  let sx=x0<x1?1:-1, sy=y0<y1?1:-1, err=dx+dy;
+  let cx=x0, cy=y0;
+  while(true) {
+    if(cx===x1&&cy===y1) return true;
+    if((cx!==x0||cy!==y0) && cx>=0&&cy>=0&&cx<MAP_W&&cy<MAP_H && g.map[cy][cx]===WALL) return false;
+    let e2=2*err;
+    if(e2>=dy){err+=dy;cx+=sx;}
+    if(e2<=dx){err+=dx;cy+=sy;}
+  }
+}
+
+function inFov(g,x,y) {
+  let dx=x-g.player.x, dy=y-g.player.y;
+  return dx*dx+dy*dy <= VIEW_R*VIEW_R && hasLos(g,g.player.x,g.player.y,x,y);
+}
+
+// ---------------------------------------------------------------------------
+// Actions
+// ---------------------------------------------------------------------------
+function tryMove(g, dx, dy) {
+  if (g.over) return;
+  let nx=g.player.x+dx, ny=g.player.y+dy;
+  if (nx<0||ny<0||nx>=MAP_W||ny>=MAP_H) return;
+  if (g.map[ny][nx]===WALL) return;
+
+  let eIdx = g.enemies.findIndex(e=>e.x===nx&&e.y===ny);
+  if (eIdx>=0) { attackEnemy(g,eIdx); g.turn++; enemyTurns(g); updateFov(g); render(g); return; }
+
+  g.player.x=nx; g.player.y=ny; g.turn++;
+  checkPickup(g);
+  if (g.map[ny][nx]===STAIRS) descend(g);
+  if (!g.over) { enemyTurns(g); updateFov(g); }
+  render(g);
+}
+
+function waitTurn(g) {
+  if (g.over) return;
+  g.turn++;
+  if (g.player.hp < g.player.maxHp) g.player.hp++;
+  enemyTurns(g); updateFov(g); render(g);
+}
+
+function checkPickup(g) {
+  let pi = g.prims.findIndex(p=>p.x===g.player.x&&p.y===g.player.y);
+  if (pi<0) return;
+  let prim = g.prims.splice(pi,1)[0];
+  let def = PRIMS[prim.idx];
+  g.player.collected.push(prim.idx);
+  g.remaining = g.remaining.filter(i=>i!==prim.idx);
+
+  switch(prim.idx) {
+    case 0: g.player.atk+=2; break;
+    case 1: g.player.def+=2; break;
+    case 2: g.player.maxHp+=8; g.player.hp+=8; break;
+    case 3: g.player.hp=g.player.maxHp; break;
+    case 4: g.enemies.forEach(e=>{e.atk=Math.max(1,e.atk-2);}); break;
+    case 5: g.player.def+=3; break;
+    case 6: g.player.atk+=1; g.player.def+=1; break;
+    case 7:
+      g.player.revealed=true;
+      for(let y=0;y<MAP_H;y++) for(let x=0;x<MAP_W;x++) g.seen[y][x]=1;
+      break;
+    case 8: g.player.maxHp+=12; g.player.hp+=12; break;
+    case 9: g.player.atk+=4; break;
+    case 10: g.player.atk+=2; g.player.def+=1; break;
+    case 11: g.player.hp=Math.min(g.player.hp+20, g.player.maxHp); break;
+    case 12: g.player.seeEnemies=true; break;
+    case 13: g.player.atk+=3; break;
+    case 14: g.player.maxHp+=5; g.player.hp+=5; g.player.atk+=2; break;
+    case 15: g.player.atk+=2; g.player.def+=2; break;
+  }
+  addLog(g, `${def.sym} ${def.name}: ${def.desc}`, def.col);
+  if (g.player.collected.length===16) addLog(g, '*** ALL 16 LEX PRIMITIVA COLLECTED! ***', '#ff44ff');
+}
+
+function descend(g) {
+  if (g.floor >= NUM_FLOORS) {
+    if (g.player.collected.length===16) {
+      g.victory=true; g.over=true;
+      addLog(g, 'VICTORY! All Lex Primitiva mastered!', '#44ff44');
+      showOverlay(g);
+    } else {
+      addLog(g, `Need all 16 to ascend! (${g.player.collected.length}/16)`, '#cccc00');
+    }
+  } else {
+    g.floor++;
+    generateFloor(g);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Combat
+// ---------------------------------------------------------------------------
+function attackEnemy(g, idx) {
+  let e = g.enemies[idx];
+  let dmg = Math.max(1, g.player.atk - e.def + rngInt(0,2));
+  e.hp -= dmg;
+  if (e.hp <= 0) {
+    g.player.xp += e.xp;
+    addLog(g, `${e.name} slain! +${e.xp} XP (${dmg} dmg)`, '#44ff44');
+    g.enemies.splice(idx, 1);
+    checkLevelUp(g);
+  } else {
+    addLog(g, `Hit ${e.name} for ${dmg} (${e.hp}/${e.maxHp})`, '#cccccc');
+  }
+}
+
+function checkLevelUp(g) {
+  let threshold = g.player.level * 40;
+  if (g.player.xp >= threshold) {
+    g.player.level++;
+    g.player.maxHp+=5; g.player.hp=g.player.maxHp;
+    g.player.atk+=1; g.player.def+=1;
+    addLog(g, `** LEVEL UP → Lv.${g.player.level} ** (Full heal!)`, '#ff44ff');
+  }
+}
+
+function enemyTurns(g) {
+  let px=g.player.x, py=g.player.y;
+  for (let i=0; i<g.enemies.length; i++) {
+    let e=g.enemies[i];
+    let dist=Math.abs(px-e.x)+Math.abs(py-e.y);
+    if (dist<=1) {
+      let dmg=Math.max(1, e.atk - g.player.def + rngInt(0,1));
+      g.player.hp -= dmg;
+      addLog(g, `${e.name} hits you for ${dmg}!`, '#ff4444');
+      if (g.player.hp<=0) {
+        g.over=true;
+        addLog(g, 'You have been defeated...', '#aa2222');
+        showOverlay(g);
+        return;
+      }
+    } else if (dist<10) {
+      let ddx=px>e.x?1:px<e.x?-1:0, ddy=py>e.y?1:py<e.y?-1:0;
+      let moves = rng01()<0.6 ? [[ddx,0],[0,ddy]] : [[0,ddy],[ddx,0]];
+      let moved=false;
+      for (let [mx,my] of moves) {
+        if(mx===0&&my===0) continue;
+        let nx=e.x+mx, ny=e.y+my;
+        if(nx>=0&&ny>=0&&nx<MAP_W&&ny<MAP_H && g.map[ny][nx]!==WALL
+          && !(nx===px&&ny===py) && !g.enemies.some((o,j)=>j!==i&&o.x===nx&&o.y===ny)) {
+          e.x=nx; e.y=ny; moved=true; break;
+        }
+      }
+      if(!moved && rng01()<0.3) {
+        let dirs=[[0,1],[0,-1],[1,0],[-1,0]];
+        let [rdx,rdy]=dirs[rngInt(0,3)];
+        let nx=e.x+rdx, ny=e.y+rdy;
+        if(nx>=0&&ny>=0&&nx<MAP_W&&ny<MAP_H && g.map[ny][nx]===FLOOR
+          && !(nx===px&&ny===py) && !g.enemies.some((o,j)=>j!==i&&o.x===nx&&o.y===ny)) {
+          e.x=nx; e.y=ny;
+        }
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Log
+// ---------------------------------------------------------------------------
+function addLog(g, text, color) {
+  g.log.push({text, color: color||'#888'});
+  if (g.log.length > 50) g.log.shift();
+}
+
+// ---------------------------------------------------------------------------
+// Rendering
+// ---------------------------------------------------------------------------
+function render(g) {
+  if (!ctx) return;
+  ctx.fillStyle = '#0a0a0f';
+  ctx.fillRect(0, 0, MAP_W*TILE_W, MAP_H*TILE_H);
+
+  ctx.font = `${TILE_H-2}px monospace`;
+  ctx.textBaseline = 'top';
+
+  for (let y=0; y<MAP_H; y++) {
+    for (let x=0; x<MAP_W; x++) {
+      let px=x*TILE_W, py=y*TILE_H;
+      let vis = g.seen[y][x];
+      let fov = inFov(g,x,y);
+
+      // Player
+      if (x===g.player.x && y===g.player.y) {
+        ctx.fillStyle = '#1a1a44';
+        ctx.fillRect(px, py, TILE_W, TILE_H);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('@', px+1, py+1);
+        continue;
+      }
+
+      // Enemy
+      let enemy = g.enemies.find(e=>e.x===x&&e.y===y);
+      if (enemy && (fov || g.player.seeEnemies)) {
+        ctx.fillStyle = '#1a0a0a';
+        ctx.fillRect(px, py, TILE_W, TILE_H);
+        ctx.fillStyle = enemy.col;
+        ctx.fillText(enemy.glyph, px+1, py+1);
+        // HP bar under enemy
+        let hpFrac = enemy.hp / enemy.maxHp;
+        ctx.fillStyle = '#440000';
+        ctx.fillRect(px, py+TILE_H-3, TILE_W, 2);
+        ctx.fillStyle = hpFrac>0.5?'#44aa44':hpFrac>0.25?'#cccc00':'#ff4444';
+        ctx.fillRect(px, py+TILE_H-3, Math.max(1, TILE_W*hpFrac), 2);
+        continue;
+      }
+
+      // Primitive
+      let prim = g.prims.find(p=>p.x===x&&p.y===y);
+      if (prim && (fov || g.player.revealed)) {
+        let def = PRIMS[prim.idx];
+        ctx.fillStyle = def.col + '33';
+        ctx.fillRect(px, py, TILE_W, TILE_H);
+        ctx.fillStyle = def.col;
+        ctx.font = `bold ${TILE_H-2}px monospace`;
+        ctx.fillText(def.sym, px+1, py+1);
+        ctx.font = `${TILE_H-2}px monospace`;
+        continue;
+      }
+
+      // Terrain
+      if (fov) {
+        let tile = g.map[y][x];
+        if (tile===WALL) {
+          ctx.fillStyle = '#222233';
+          ctx.fillRect(px, py, TILE_W, TILE_H);
+          ctx.fillStyle = '#556';
+          ctx.fillText('#', px+1, py+1);
+        } else if (tile===FLOOR) {
+          ctx.fillStyle = '#444';
+          ctx.fillText('·', px+3, py+1);
+        } else if (tile===STAIRS) {
+          ctx.fillStyle = '#1a1a00';
+          ctx.fillRect(px, py, TILE_W, TILE_H);
+          ctx.fillStyle = '#cccc00';
+          ctx.font = `bold ${TILE_H-2}px monospace`;
+          ctx.fillText('>', px+1, py+1);
+          ctx.font = `${TILE_H-2}px monospace`;
+        }
+      } else if (vis) {
+        let tile = g.map[y][x];
+        if (tile===WALL) {
+          ctx.fillStyle = '#181820';
+          ctx.fillRect(px, py, TILE_W, TILE_H);
+          ctx.fillStyle = '#333';
+          ctx.fillText('#', px+1, py+1);
+        } else {
+          ctx.fillStyle = '#222';
+          ctx.fillText('·', px+3, py+1);
+        }
+      }
+    }
+  }
+
+  // HUD
+  let p = g.player;
+  document.getElementById('hFloor').textContent = `${g.floor}/${NUM_FLOORS}`;
+  document.getElementById('hHp').textContent = `${Math.max(0,p.hp)}/${p.maxHp}`;
+  document.getElementById('hHp').style.color = p.hp>p.maxHp*0.6?'#4f4':p.hp>p.maxHp*0.3?'#cc0':'#f44';
+  document.getElementById('hAtk').textContent = p.atk;
+  document.getElementById('hDef').textContent = p.def;
+  document.getElementById('hLvl').textContent = p.level;
+  document.getElementById('hXp').textContent = p.xp;
+  document.getElementById('hTurn').textContent = g.turn;
+
+  // Primitives bar
+  let bar = document.getElementById('prims-bar');
+  bar.innerHTML = '';
+  for (let i=0; i<16; i++) {
+    let slot = document.createElement('div');
+    slot.className = 'prim-slot';
+    if (p.collected.includes(i)) {
+      slot.classList.add('collected');
+      slot.style.background = PRIMS[i].col + '33';
+      slot.style.color = PRIMS[i].col;
+      slot.style.borderColor = PRIMS[i].col;
+      slot.textContent = PRIMS[i].sym;
+      slot.title = `${PRIMS[i].name}: ${PRIMS[i].desc}`;
+    } else {
+      slot.classList.add('empty');
+      slot.textContent = '·';
+      slot.title = PRIMS[i].name;
+    }
+    bar.appendChild(slot);
+  }
+  let countSpan = document.createElement('span');
+  countSpan.style.color = '#888';
+  countSpan.style.marginLeft = '8px';
+  countSpan.textContent = `${p.collected.length}/16`;
+  bar.appendChild(countSpan);
+
+  // Log
+  let logDiv = document.getElementById('log');
+  let start = Math.max(0, g.log.length - 4);
+  logDiv.innerHTML = g.log.slice(start).map(l =>
+    `<div class="log-line" style="color:${l.color}">${escHtml(l.text)}</div>`
+  ).join('');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ---------------------------------------------------------------------------
+// Overlay
+// ---------------------------------------------------------------------------
+function showOverlay(g) {
+  let ov = document.getElementById('overlay');
+  ov.classList.remove('hidden');
+  let title = document.getElementById('ovTitle');
+  let btn = document.getElementById('ovBtn');
+
+  if (g.victory) {
+    title.textContent = 'VICTORY!';
+    title.style.color = '#44ff44';
+    ov.querySelector('p').textContent = 'All 16 Lex Primitiva mastered. You achieved T3 Domain Mastery.';
+    ov.querySelectorAll('p')[1].textContent = `Floor ${g.floor} · Turn ${g.turn} · Level ${g.player.level}`;
+  } else if (g.over) {
+    title.textContent = 'GAME OVER';
+    title.style.color = '#ff4444';
+    ov.querySelector('p').textContent = 'The antipatterns consumed you...';
+    ov.querySelectorAll('p')[1].textContent = `${g.player.collected.length}/16 primitives · Floor ${g.floor} · Turn ${g.turn}`;
+  }
+  btn.textContent = 'Play Again';
+  btn.onclick = startGame;
+}
+
+// ---------------------------------------------------------------------------
+// Input
+// ---------------------------------------------------------------------------
+document.addEventListener('keydown', (e) => {
+  if (!game || game.over) {
+    if (e.key === 'r' || e.key === 'R') startGame();
+    return;
+  }
+  switch(e.key) {
+    case 'ArrowUp': case 'w': case 'k': e.preventDefault(); tryMove(game,0,-1); break;
+    case 'ArrowDown': case 's': case 'j': e.preventDefault(); tryMove(game,0,1); break;
+    case 'ArrowLeft': case 'a': case 'h': e.preventDefault(); tryMove(game,-1,0); break;
+    case 'ArrowRight': case 'd': case 'l': e.preventDefault(); tryMove(game,1,0); break;
+    case 'y': tryMove(game,-1,-1); break;
+    case 'u': tryMove(game,1,-1); break;
+    case 'b': tryMove(game,-1,1); break;
+    case 'n': tryMove(game,1,1); break;
+    case '.': case '5': waitTurn(game); break;
+    case 'r': case 'R': startGame(); break;
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Init
+// ---------------------------------------------------------------------------
+function startGame() {
+  document.getElementById('overlay').classList.add('hidden');
+  rngState = [Date.now() ^ 0xDEADBEEF, (Date.now() * 7) ^ 0xCAFEBABE];
+  game = newGame();
+  game.player = initPlayer();
+  generateFloor(game);
+  addLog(game, 'Welcome to Primitive Depths!', '#00cccc');
+  addLog(game, 'Collect all 16 Lex Primitiva. Descend the stairs.', '#888');
+  render(game);
+}
+
+window.onload = () => {
+  let canvas = document.getElementById('game');
+  ctx = canvas.getContext('2d');
+};
+</script>
+</body>
+</html>

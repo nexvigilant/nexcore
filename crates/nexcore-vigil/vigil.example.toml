@@ -1,0 +1,89 @@
+# Vigil Configuration — pi(d*nu)|prop
+#
+# nexcore vigil run --config vigil.example.toml
+#
+# 4-Layer Architecture:
+#   nu (Watch Sources) -> d (Boundary Gate) -> prop (Consequence Pipeline)
+#              |                  |                        |
+#              +--------+---------+                        |
+#                       v                                  v
+#               pi (Vigilance Ledger) <--------------------+
+
+# --- Global Settings ---
+
+# Write-ahead log for the hash-chained ledger
+wal_path = "/tmp/vigil-ledger.wal"
+
+# Main loop poll interval (ms)
+poll_interval_ms = 1000
+
+# Max events buffered before backpressure
+max_event_buffer = 10000
+
+# Flush WAL on every ledger append (true = durable, false = batched)
+sync_wal = true
+
+# --- nu Layer: Watch Sources ---
+
+[[sources]]
+type = "timer"
+name = "heartbeat"
+interval_ms = 60000          # 1-minute heartbeat
+
+[[sources]]
+type = "timer"
+name = "fast-poll"
+interval_ms = 5000           # 5-second fast poll
+
+[[sources]]
+type = "filesystem"
+name = "config-watcher"
+paths = ["/etc/nexcore", "/tmp/vigil-alerts"]
+
+# --- d Layer: Boundary Specifications ---
+
+[[boundaries]]
+name = "high-severity-gate"
+cooldown_ms = 5000
+
+[boundaries.threshold]
+type = "severity_at_least"
+level = "high"
+
+[[boundaries]]
+name = "burst-detector"
+source_filter = "fast-poll"
+cooldown_ms = 10000
+
+[boundaries.threshold]
+type = "count_exceeds"
+count = 10
+window_ms = 60000            # 10 events in 60s = burst
+
+[[boundaries]]
+name = "catch-all"
+cooldown_ms = 0
+
+[boundaries.threshold]
+type = "always"
+
+# --- prop Layer: Consequence Pipeline ---
+# Consequences execute in order (escalation chain).
+
+[[consequences]]
+type = "log"
+level = "observe"            # observe | warn | alert | act | audit
+
+[[consequences]]
+type = "notify"
+dir = "/tmp/vigil-notifications"
+
+[[consequences]]
+type = "shell"
+command = "echo 'VIGIL ALERT' >> /tmp/vigil-shell.log"
+timeout_ms = 5000
+
+# [[consequences]]
+# type = "webhook"
+# url = "https://hooks.example.com/vigil"
+# timeout_ms = 10000

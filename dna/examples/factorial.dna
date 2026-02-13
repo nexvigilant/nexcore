@@ -1,0 +1,34 @@
+; factorial.dna — compute 5! = 120
+; Strategy: push 5, use accumulator for running product
+.code
+    entry
+
+    ; Initialize accumulator = 1
+    push1
+    storeacc
+
+    ; Start counter at 5
+    lit 5
+
+loop:
+    ; acc = acc * counter
+    dup             ; copy counter for later
+    pushacc         ; push current acc
+    mul             ; acc * counter
+    storeacc        ; store back to acc
+
+    ; counter = counter - 1
+    dec
+
+    ; if counter > 0, loop
+    dup
+    push0
+    gt
+    lit @loop
+    jmpif
+
+    ; Output result
+    pop             ; remove counter (0)
+    pushacc         ; push final result
+    out             ; output 120
+    halt

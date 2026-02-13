@@ -1,0 +1,18 @@
+[package]
+name = "nexcore-dna"
+version = "0.2.0"
+edition = "2024"
+rust-version = "1.85"
+description = "DNA-based computation: nucleotide types, data storage, biological operations, a 64-instruction Codon VM, assembler, and disassembler. Zero external dependencies."
+
+# Zero dependencies. Built from bedrock.
+[dependencies]
+
+[[bin]]
+name = "dna"
+path = "src/bin/dna.rs"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"

@@ -1,0 +1,60 @@
+# NexCore cargo-nextest configuration
+# Docs: https://nexte.st/docs/configuration/
+
+[store]
+# Directory for nextest artifacts
+dir = "target/nextest"
+
+[profile.default]
+# Retry flaky tests once
+retries = 1
+# Show slow tests after 30s
+slow-timeout = { period = "30s", terminate-after = 2 }
+# Status output level
+status-level = "pass"
+# Final output level
+final-status-level = "flaky"
+# Fail fast on first failure? No — run all tests
+fail-fast = false
+# Test threads: use all available cores
+test-threads = "num-cpus"
+
+[profile.default.junit]
+path = "target/nextest/junit.xml"
+report-name = "nexcore-tests"
+
+[profile.ci]
+# CI: stricter settings
+retries = 0
+fail-fast = true
+slow-timeout = { period = "60s", terminate-after = 3 }
+status-level = "skip"
+final-status-level = "fail"
+
+[profile.ci.junit]
+path = "target/nextest/junit.xml"
+report-name = "nexcore-ci-tests"
+
+# ── Test Groups ──────────────────────────────────────────────────
+
+# Group: flaky tests that need isolation
+[[profile.default.overrides]]
+filter = "test(test_pause_resume_loop)"
+retries = 2
+slow-timeout = { period = "10s", terminate-after = 3 }
+threads-required = 1
+
+# Group: renderer tests (may need GPU context)
+[[profile.default.overrides]]
+filter = "package(nexcore-renderer)"
+slow-timeout = { period = "45s", terminate-after = 2 }
+
+# Group: nexcloud — SHELVED (excluded from workspace)
+# [[profile.default.overrides]]
+# filter = "package(nexcloud)"
+# slow-timeout = { period = "20s", terminate-after = 2 }
+
+# Group: Prima language tests
+[[profile.default.overrides]]
+filter = "package(prima) | package(prima-*)"
+slow-timeout = { period = "15s", terminate-after = 2 }

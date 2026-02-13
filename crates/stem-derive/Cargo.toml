@@ -1,0 +1,48 @@
+[workspace]
+
+[package]
+name = "stem-derive"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+description = "Derive macros for STEM crate T2-P newtypes"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nexvigilant/stem"
+keywords = ["stem", "derive", "macros", "primitives"]
+categories = ["science"]
+publish = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2.0.71", features = ["full"] }
+quote = "1.0.36"
+proc-macro2 = "1.0.86"
+stem-derive-core = { version = "1.0.0", path = "../stem-derive-core", registry = "nexcore" }
+
+[lints.rust]
+async_fn_in_trait = "allow"
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+unused_mut = "allow"
+unused_assignments = "allow"
+unused_must_use = "allow"
+
+[lints.clippy]
+all = "allow"
+pedantic = "allow"
+nursery = "allow"
+cargo = "allow"
+map_unwrap_or = "allow"
+manual_map = "allow"
+option_map_or_none = "allow"
+derivable_impls = "allow"
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"
+todo = "allow"
+unimplemented = "allow"
+unreachable = "allow"

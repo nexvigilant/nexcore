@@ -1,0 +1,48 @@
+# Dockerfile.api — Cloud Run deployment for nexcore-api
+# Handles workspace isolation (excludes crates with local-only path deps)
+
+# Stage 1: Cargo Chef Preparation
+FROM lukemathwalker/cargo-chef:latest-rust-1.85-bookworm AS chef
+WORKDIR /app
+
+# Stage 2: Recipe Planner
+FROM chef AS planner
+COPY . .
+# Exclude crates with absolute path deps (prima) that don't exist in cloud
+RUN sed -i '/^exclude = \[/,/^\]/ s/^\]/    "crates\/nexcore-mcp",\n    "crates\/nexcore-renderer",\n]/' Cargo.toml
+RUN cargo chef prepare --recipe-path recipe.json
+
+# Stage 3: Dependency Cacher
+FROM chef AS cacher
+COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
+
+# Stage 4: Builder
+FROM chef AS builder
+COPY . .
+COPY --from=cacher /app/target target
+COPY --from=cacher /usr/local/cargo /usr/local/cargo
+# Exclude nexcore-mcp + nexcore-renderer (have prima path deps not available in cloud)
+RUN sed -i '/^exclude = \[/,/^\]/ s/^\]/    "crates\/nexcore-mcp",\n    "crates\/nexcore-renderer",\n]/' Cargo.toml
+RUN cargo build --release --bin nexcore-api
+
+# Stage 5: Runtime (minimal)
+FROM debian:bookworm-slim AS runtime
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    libssl3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Non-root user
+RUN useradd -m -u 1000 appuser
+
+COPY --from=builder /app/target/release/nexcore-api /usr/local/bin/
+
+# Cloud Run injects PORT env var
+ENV PORT=3030
+EXPOSE 3030
+
+USER appuser
+CMD ["nexcore-api"]

@@ -1,0 +1,57 @@
+services:
+  # The SENSE Layer (Ingress)
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.template
+      args:
+        PACKAGE: nexcore-mcp
+    ports:
+      - "8081:8080"
+    environment:
+      - RUST_LOG=debug
+      - MESSAGE_BUS_URL=http://vigil:8080
+    depends_on:
+      - vigil
+
+  # The COMPARE/ACT Layer (Orchestrator + Bus)
+  vigil:
+    build:
+      context: .
+      dockerfile: Dockerfile.template
+      args:
+        PACKAGE: nexcore-vigil
+        BINARY_NAME: friday
+    ports:
+      - "8080:8080"
+    environment:
+      - RUST_LOG=info
+      - QDRANT_URL=http://qdrant:6333
+    depends_on:
+      - qdrant
+
+  # The Specialized Effectors (ACT)
+  epa1:
+    build:
+      context: .
+      dockerfile: Dockerfile.template
+      args:
+        PACKAGE: guardian-epa1
+    ports:
+      - "3020:8080"
+    environment:
+      - RUST_LOG=debug
+    depends_on:
+      - vigil
+
+  # Infrastructure
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+volumes:
+  qdrant_data:

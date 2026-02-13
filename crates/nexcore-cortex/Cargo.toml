@@ -1,0 +1,52 @@
+[workspace]
+
+[package]
+name = "nexcore-cortex"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Local LLM inference engine using HuggingFace Candle with NexCloud fine-tuning"
+license = "MIT"
+repository = "https://github.com/nexvigilant/nexcore"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+candle-core = { version = "0.9" }
+candle-nn = { version = "0.9" }
+candle-transformers = { version = "0.9" }
+hf-hub = { version = "0.4", default-features = false, features = ["ureq"] }
+tokenizers = { version = "0.22" }
+nexcore-cloud = { version = "0.1.0", path = "../nexcore-cloud", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = { version = "1.0.120" }
+thiserror = { version = "1.0.61" }
+tracing = { version = "0.1.40" }
+dirs = { version = "5.0.1" }
+
+[lints.rust]
+async_fn_in_trait = "allow"
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+unused_mut = "allow"
+unused_assignments = "allow"
+unused_must_use = "allow"
+
+[lints.clippy]
+all = "allow"
+pedantic = "allow"
+nursery = "allow"
+cargo = "allow"
+map_unwrap_or = "allow"
+manual_map = "allow"
+option_map_or_none = "allow"
+derivable_impls = "allow"
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"
+todo = "allow"
+unimplemented = "allow"
+unreachable = "allow"

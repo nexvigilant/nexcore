@@ -1,0 +1,16 @@
+[package]
+name = "wksp-components"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+leptos = { workspace = true }
+leptos_router = { workspace = true }
+leptos_meta = { workspace = true }
+serde = { workspace = true }
+wksp-core = { path = "../wksp-core" }
+wksp-api-client = { workspace = true }
+
+[features]
+ssr = ["leptos/ssr", "leptos_router/ssr", "leptos_meta/ssr", "wksp-api-client/ssr"]
+hydrate = ["leptos/hydrate", "wksp-api-client/hydrate"]

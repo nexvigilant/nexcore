@@ -1,0 +1,11 @@
+; Factorial: compute 5! = 120
+fn factorial(n) do
+  let result = 1
+  let i = n
+  while i > 0 do
+    result = result * i
+    i = i - 1
+  end
+  return result
+end
+factorial(5)

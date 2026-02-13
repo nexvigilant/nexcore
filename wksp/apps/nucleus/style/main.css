@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* NexVigilant Design System Overrides */
+
+@layer components {
+    /* Glassmorphism primitives */
+    .glass-panel {
+        @apply bg-slate-950/50 backdrop-blur-md border border-slate-800 shadow-xl;
+    }
+    
+    .glass-card {
+        @apply bg-glass-gradient backdrop-blur-sm border border-white/5 rounded-2xl;
+    }
+
+    /* High-tech glows */
+    .glow-border-cyan {
+        @apply border-cyan-500/30 shadow-glow-cyan;
+    }
+
+    .glow-border-amber {
+        @apply border-amber-500/30 shadow-glow-amber;
+    }
+    
+    .font-mono-tech {
+        @apply font-mono tracking-wider uppercase text-[11px] font-bold;
+    }
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    @apply bg-slate-950;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-slate-800 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-700;
+}
+
+/* Base transitions */
+* {
+    @apply transition-colors duration-200;
+}

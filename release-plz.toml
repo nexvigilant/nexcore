@@ -1,0 +1,20 @@
+# release-plz configuration for nexcore crates
+# All crates publish to the Kellnr private registry "nexcore"
+#
+# Usage:
+#   release-plz release --registry nexcore --manifest-path crates/<name>/Cargo.toml
+#   OR use tools/release.sh for DAG-ordered bulk release
+
+[workspace]
+# Publish to the nexcore Kellnr registry
+publish = true
+# Enable git tags for tracking releases
+git_tag_enable = true
+# Tag format: <crate-name>/v<version>
+git_tag_name = "{{ package }}/v{{ version }}"
+# Generate changelogs from conventional commits
+changelog_update = true
+# Skip semver compatibility checks (private ecosystem)
+semver_check = false
+# Don't create GitHub releases (local Kellnr, no GitHub integration)
+git_release_enable = false

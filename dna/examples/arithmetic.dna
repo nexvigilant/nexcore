@@ -1,0 +1,29 @@
+; arithmetic.dna — demonstrate basic operations
+.code
+    entry
+
+    ; 2 + 3 = 5
+    lit 2
+    lit 3
+    add
+    out             ; → 5
+
+    ; 10 - 4 = 6
+    lit 10
+    lit 4
+    sub
+    out             ; → 6
+
+    ; 7 * 8 = 56
+    lit 7
+    lit 8
+    mul
+    out             ; → 56
+
+    ; 100 / 3 = 33
+    lit 100
+    lit 3
+    div
+    out             ; → 33
+
+    halt

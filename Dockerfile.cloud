@@ -1,0 +1,18 @@
+# Minimal Cloud Run deployment
+# Pre-build locally, deploy binary only
+
+FROM debian:bookworm-slim
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    libssl3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy pre-built binary
+COPY target/release/nexcore-api /usr/local/bin/
+
+EXPOSE 3030
+ENV PORT=3030
+
+CMD ["nexcore-api"]

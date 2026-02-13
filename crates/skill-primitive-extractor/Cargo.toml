@@ -1,0 +1,18 @@
+[workspace]
+
+[package]
+name = "skill-primitive-extractor"
+version = "0.1.0"
+edition = "2024"
+description = "Primitive extraction skill as a Rust crate"
+license = "MIT"
+
+[dependencies]
+skill-core = { version = "0.1.0", path = "../skill-core", registry = "nexcore"}
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+async-trait = "0.1"
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore"}
+
+[dev-dependencies]
+tokio = { version = "1.0", features = ["rt-multi-thread", "macros"] }

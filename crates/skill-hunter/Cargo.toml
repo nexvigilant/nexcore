@@ -1,0 +1,23 @@
+[workspace]
+
+[package]
+name = "skill-hunter"
+version = "0.1.0"
+edition = "2021"
+description = "Gamified skill validator - hunt down issues in your skill ecosystem"
+license = "MIT"
+
+[[bin]]
+name = "skill-hunter"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+walkdir = "2.5"
+console = "0.15"
+indicatif = "0.17"
+rand = "0.8"
+dirs = "5.0"
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }

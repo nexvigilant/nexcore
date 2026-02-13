@@ -1,0 +1,115 @@
+#!/bin/bash
+# Gemini Forge Harness - Connects Gemini to MCP for primitive-first technology forging
+#
+# Usage: gemini-forge "Build a rate limiter with sliding window"
+#
+# Requires: GOOGLE_API_KEY or GOOGLE_APPLICATION_CREDENTIALS
+
+set -e
+
+NEXCORE_DIR="${HOME}/.nexcore"
+MCP_CLIENT="${NEXCORE_DIR}/target/release/mcp-stdio-client"
+MCP_SERVER="${NEXCORE_DIR}/target/release/nexcore-mcp"
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# Check dependencies
+if [[ ! -x "$MCP_CLIENT" ]] || [[ ! -x "$MCP_SERVER" ]]; then
+    echo "Building MCP tools..."
+    cd "$NEXCORE_DIR" && cargo build --release -p mcp-stdio-client -p nexcore-mcp
+fi
+
+# Check for API key
+if [[ -z "$GOOGLE_API_KEY" ]] && [[ -z "$GOOGLE_APPLICATION_CREDENTIALS" ]]; then
+    echo "Error: Set GOOGLE_API_KEY or GOOGLE_APPLICATION_CREDENTIALS"
+    exit 1
+fi
+
+# Helper: Call MCP tool
+mcp_call() {
+    local cmd="$1"
+    local params="$2"
+    timeout 30 "$MCP_CLIENT" \
+        --command "$MCP_SERVER" \
+        --call nexcore \
+        --args-json "{\"command\":\"$cmd\",\"params\":$params}" \
+        --timeout-ms 20000 2>/dev/null | tail -1 | jq -r '.[0].text' 2>/dev/null
+}
+
+# Task from argument or prompt
+TASK="${1:-}"
+if [[ -z "$TASK" ]]; then
+    echo -e "${CYAN}═══ GEMINI FORGE HARNESS ═══${NC}"
+    echo "Enter task to forge:"
+    read -r TASK
+fi
+
+echo -e "${CYAN}═══ FORGING: ${TASK} ═══${NC}"
+
+# 1. Initialize forge session
+echo -e "${YELLOW}[1/4] Initializing forge session...${NC}"
+INIT_RESULT=$(mcp_call "forge_init" "{}")
+SESSION_ID=$(echo "$INIT_RESULT" | jq -r '.session_id')
+echo "  Session: $SESSION_ID"
+
+# 2. Get system prompt for Gemini
+echo -e "${YELLOW}[2/4] Loading forge system prompt...${NC}"
+SYSTEM_PROMPT=$(mcp_call "forge_system_prompt" "{}" | jq -r '.system_prompt')
+
+# 3. Get forge prompt for this task
+echo -e "${YELLOW}[3/4] Generating task prompt...${NC}"
+TASK_PROMPT=$(mcp_call "forge_prompt" "{\"name\":\"$TASK\",\"description\":\"$TASK\",\"domain\":\"systems\"}" | jq -r '.prompt')
+
+# 4. Call Gemini
+echo -e "${YELLOW}[4/4] Invoking Gemini...${NC}"
+
+# Build the request
+REQUEST=$(jq -n \
+    --arg system "$SYSTEM_PROMPT" \
+    --arg task "$TASK_PROMPT" \
+    '{
+        "contents": [
+            {"role": "user", "parts": [{"text": $task}]}
+        ],
+        "system_instruction": {"parts": [{"text": $system}]},
+        "generationConfig": {
+            "temperature": 0.7,
+            "maxOutputTokens": 8192
+        }
+    }')
+
+# Determine API endpoint
+if [[ -n "$GOOGLE_API_KEY" ]]; then
+    # Google AI Studio
+    MODEL="${GEMINI_MODEL:-gemini-2.0-flash}"
+    URL="https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${GOOGLE_API_KEY}"
+    AUTH_HEADER=""
+else
+    # Vertex AI
+    TOKEN=$(gcloud auth application-default print-access-token)
+    PROJECT=$(gcloud config get-value project)
+    MODEL="${GEMINI_MODEL:-gemini-2.0-flash}"
+    URL="https://aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/us-central1/publishers/google/models/${MODEL}:generateContent"
+    AUTH_HEADER="Authorization: Bearer $TOKEN"
+fi
+
+# Make the API call
+echo -e "${GREEN}═══ GEMINI FORGE OUTPUT ═══${NC}"
+RESPONSE=$(curl -s -X POST "$URL" \
+    -H "Content-Type: application/json" \
+    ${AUTH_HEADER:+-H "$AUTH_HEADER"} \
+    -d "$REQUEST")
+
+# Extract and display the response
+echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text // .error.message // "No response"'
+
+# 5. Show session summary
+echo ""
+echo -e "${CYAN}═══ SESSION SUMMARY ═══${NC}"
+mcp_call "forge_summary" "{}" | jq '.'
+
+echo -e "${GREEN}═══ FORGE COMPLETE ═══${NC}"

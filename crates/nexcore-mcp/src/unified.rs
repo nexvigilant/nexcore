@@ -730,6 +730,7 @@ async fn dispatch_inner(
         "forge_mine" => typed(params, tools::forge::forge_mine),
         "forge_prompt" => typed(params, tools::forge::forge_prompt),
         "forge_summary" => typed(params, tools::forge::forge_summary),
+        "forge_suggest" => typed(params, tools::forge::forge_suggest),
         "forge_system_prompt" => tools::forge::forge_system_prompt(),
         "forge_tier" => typed(params, |p: params::ForgeTierParams| {
             tools::forge::forge_tier_classify(p.count)
@@ -1574,7 +1575,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
         "categories": {
             "system": ["nexcore_health", "config_validate", "mcp_servers_list", "mcp_server_get"],
             "bonding": ["bonding_analyze", "bonding_evolve"],
-            "forge": ["forge_init", "forge_reference", "forge_mine", "forge_prompt", "forge_summary", "forge_system_prompt", "forge_tier"],
+            "forge": ["forge_init", "forge_reference", "forge_mine", "forge_prompt", "forge_suggest", "forge_summary", "forge_system_prompt", "forge_tier"],
             "foundation": ["foundation_levenshtein", "foundation_levenshtein_bounded", "foundation_fuzzy_search", "foundation_sha256", "foundation_yaml_parse", "foundation_graph_topsort", "foundation_graph_levels", "foundation_fsrs_review", "foundation_concept_grep", "foundation_domain_distance", "foundation_flywheel_velocity", "foundation_token_ratio", "foundation_spectral_overlap"],
             "pv": ["pv_signal_complete", "pv_signal_prr", "pv_signal_ror", "pv_signal_ic", "pv_signal_ebgm", "pv_chi_square", "pv_naranjo_quick", "pv_who_umc_quick", "pv_signal_strength"],
             "benefit_risk": ["pv_qbri_compute", "pv_qbri_derive", "pv_qbri_equation"],

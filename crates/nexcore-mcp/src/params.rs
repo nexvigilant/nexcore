@@ -6778,6 +6778,25 @@ pub struct ForgePromptParams {
 #[serde(crate = "rmcp::serde")]
 pub struct ForgeSummaryParams {}
 
+/// Suggest the next forge action based on evolved strategy.
+/// Tier: T2-P (→ Causality + κ Comparison + ς State)
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct ForgeSuggestParams {
+    /// Number of blocking compiler errors (default: 0)
+    #[serde(default)]
+    pub blocker_count: Option<u32>,
+    /// Number of clippy warnings in scope (default: 0)
+    #[serde(default)]
+    pub warning_count: Option<u32>,
+    /// Number of unmined primitives available (default: 0)
+    #[serde(default)]
+    pub primitives_available: Option<u32>,
+    /// Overall generation confidence 0.0-1.0 (default: 0.9)
+    #[serde(default)]
+    pub confidence: Option<f64>,
+}
+
 /// Classify tier from primitive count.
 /// Tier: T1 (κ — Comparison)
 #[derive(Debug, Deserialize, JsonSchema)]

@@ -16,6 +16,7 @@ path = "src/main.rs"
 # NexCore unified crate (all modules consolidated)
 nexcore-vigilance = { version = "1.0.0", path = "../nexcore-vigilance", registry = "nexcore" }
 nexcore-vigil = { version = "0.1.0", path = "../nexcore-vigil", registry = "nexcore" }
+nexcore-forge-strategy = { version = "0.1.0", path = "../nexcore-forge-strategy", registry = "nexcore" }
 nexcore-brain = { version = "1.0.0", path = "../nexcore-brain", registry = "nexcore" }
 nexcore-db = { version = "1.0.0", path = "../nexcore-db", registry = "nexcore" }
 nexcore-synapse = { version = "1.0.0", path = "../nexcore-synapse", registry = "nexcore" }

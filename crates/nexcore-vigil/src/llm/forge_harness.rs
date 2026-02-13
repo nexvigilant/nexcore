@@ -23,10 +23,11 @@
 //!   └────────────────────────────────────────┘
 //! ```
 
+use nexcore_forge_strategy::{ForgeDecision, ForgeState, ForgeStrategy};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// The 15 Lex Primitiva symbols
+/// The 16 Lex Primitiva symbols
 pub const LEX_PRIMITIVA: &[(&str, &str, &str)] = &[
     ("σ", "Sequence", "Ordered collection"),
     ("μ", "Mapping", "Key→Value association"),
@@ -43,6 +44,7 @@ pub const LEX_PRIMITIVA: &[(&str, &str, &str)] = &[
     ("λ", "Location", "Position/address"),
     ("∝", "Irreversibility", "One-way/entropy"),
     ("Σ", "Sum", "Aggregation"),
+    ("×", "Product", "Conjunctive combination"),
 ];
 
 /// Tier classification based on primitive count
@@ -124,11 +126,18 @@ pub enum ValidationStatus {
 }
 
 /// The Forge Harness API
+///
+/// Now includes an evolved `ForgeStrategy` that advises what action to take
+/// next based on parameters discovered through evolutionary training.
 #[derive(Debug)]
 pub struct ForgeHarness {
     pub session_id: String,
     pub mined_primitives: Vec<PrimitiveExtraction>,
     pub generated_code: HashMap<String, String>,
+    /// Evolved strategy parameters for decision-making.
+    pub strategy: ForgeStrategy,
+    /// Current validation status of the generated code.
+    pub validation: ValidationStatus,
 }
 
 impl ForgeHarness {
@@ -137,13 +146,63 @@ impl ForgeHarness {
             session_id: session_id.into(),
             mined_primitives: Vec::new(),
             generated_code: HashMap::new(),
+            strategy: ForgeStrategy::default(),
+            validation: ValidationStatus::Pending,
+        }
+    }
+
+    /// Create a forge harness with a custom strategy.
+    pub fn with_strategy(session_id: impl Into<String>, strategy: ForgeStrategy) -> Self {
+        Self {
+            strategy,
+            ..Self::new(session_id)
+        }
+    }
+
+    /// Suggest the next forge action based on evolved strategy parameters.
+    ///
+    /// Maps the current harness state into a `ForgeState` and delegates to
+    /// the strategy's `decide()` method. The decision reflects parameters
+    /// evolved through 12,000 simulated games.
+    pub fn suggest_action(
+        &self,
+        blocker_count: u32,
+        warning_count: u32,
+        primitives_available: u32,
+        confidence: f64,
+    ) -> ForgeDecision {
+        let quality_ratio = self.estimate_quality();
+        let tier_complete = primitives_available == 0 && !self.mined_primitives.is_empty();
+
+        let state = ForgeState {
+            quality_ratio,
+            blocker_count,
+            nearest_blocker_dist: if blocker_count > 0 { 1 } else { u32::MAX },
+            warning_count,
+            primitives_available,
+            tier_complete,
+            confidence,
+        };
+
+        self.strategy.decide(&state)
+    }
+
+    /// Estimate current code quality from validation status.
+    fn estimate_quality(&self) -> f64 {
+        match &self.validation {
+            ValidationStatus::Production => 1.0,
+            ValidationStatus::ClippyClean => 0.9,
+            ValidationStatus::TestsPass => 0.7,
+            ValidationStatus::Compiles => 0.5,
+            ValidationStatus::Pending => 0.3,
+            ValidationStatus::Failed(_) => 0.1,
         }
     }
 
     /// Get the primitive reference card (for Gemini context)
     pub fn primitive_reference() -> String {
         let mut output = String::new();
-        output.push_str("# The 15 Lex Primitiva\n\n");
+        output.push_str("# The 16 Lex Primitiva\n\n");
         output.push_str("| Symbol | Name | Description |\n");
         output.push_str("|--------|------|-------------|\n");
         for (symbol, name, desc) in LEX_PRIMITIVA {
@@ -157,8 +216,20 @@ impl ForgeHarness {
         output
     }
 
-    /// Generate the forge prompt for Gemini
-    pub fn forge_prompt(task: &ForgeTask) -> String {
+    /// Generate the forge prompt for Gemini, informed by evolved strategy.
+    pub fn forge_prompt(&self, task: &ForgeTask) -> String {
+        let s = &self.strategy;
+        let lint_approach = if s.lint_strictness > 0.5 {
+            "Fix ALL clippy warnings before proceeding"
+        } else {
+            "Fix clippy warnings only in code you're actively touching"
+        };
+        let explore_note = if s.speculative_generation {
+            "When stuck, try alternative decompositions before giving up"
+        } else {
+            "Stay focused on the primary decomposition path"
+        };
+
         format!(
             r#"# FORGE TASK: {}
 
@@ -174,13 +245,15 @@ You are the FORGE - an autonomous technology constructor.
 
 ### Phase 1: MINE
 Extract the irreducible T1/T2 primitives from the task requirements.
-Use only the 15 Lex Primitiva symbols: σ μ ς ρ ∅ ∂ ν ∃ π → κ N λ ∝ Σ
+Use only the 16 Lex Primitiva symbols: σ μ ς ρ ∅ ∂ ν ∃ π → κ N λ ∝ Σ ×
+Search depth: up to {} levels of decomposition.
 
 ### Phase 2: DECOMPOSE
 For each concept in the task, identify:
 - Which primitives compose it
 - The tier (T1/T2-P/T2-C/T3)
 - The Rust type that manifests this composition
+Promote eagerly to next tier once current level is mined (eagerness: {:.0}%).
 
 ### Phase 3: GENERATE
 Write idiomatic Rust code that:
@@ -188,15 +261,19 @@ Write idiomatic Rust code that:
 - Uses newtypes for domain values (no raw u32 for IDs)
 - Forbids unsafe, unwrap, expect, panic in production paths
 - Follows Edition 2024 patterns
+- {}
 
 ### Phase 4: VALIDATE
 The code must:
 - `cargo check` - compiles
-- `cargo clippy -- -D warnings` - no warnings
+- `cargo clippy -- -D warnings` - {}
 - `cargo test` - all tests pass
+Quality floor: {:.0}%. When refactoring, reach {:.0}% before resuming.
 
 ### Phase 5: REFINE
-If validation fails, analyze the error and fix.
+If validation fails, fix the easiest errors first: {}.
+Almost never abandon — persistence threshold: {:.1}%.
+{}
 Loop back to GENERATE until VALIDATE passes.
 
 ## Output Format
@@ -213,7 +290,19 @@ Loop back to GENERATE until VALIDATE passes.
 
 Task: {}
 "#,
-            task.name, task.description, task.domain, task.name
+            task.name,
+            task.description,
+            task.domain,
+            s.decomposition_depth,
+            s.tier_promotion_eagerness * 100.0,
+            explore_note,
+            lint_approach,
+            s.quality_floor * 100.0,
+            s.refactor_completeness * 100.0,
+            s.fix_easiest_first,
+            s.abandon_threshold * 100.0,
+            explore_note,
+            task.name,
         )
     }
 
@@ -246,6 +335,8 @@ Task: {}
     /// Get session summary
     pub fn summary(&self) -> String {
         let mut output = format!("# Forge Session: {}\n\n", self.session_id);
+
+        output.push_str(&format!("## Strategy: {}\n\n", self.strategy));
 
         output.push_str("## Primitives Mined\n\n");
         for ext in &self.mined_primitives {
@@ -313,10 +404,12 @@ cargo check
 
 ## Remember
 
-- Every type grounds to {{0, 1}} through the 15 primitives
+- Every type grounds to {{0, 1}} through the 16 Lex Primitiva
 - No unsafe, unwrap, expect, panic in production paths
 - Prefer T2-P (high transfer) over T3 (domain-locked)
 - The compiler is your verification oracle
+- Fix easiest errors first, promote tiers eagerly, almost never abandon
+- Be careful at module boundaries (caution: 72%)
 "#,
         ForgeHarness::primitive_reference()
     )
@@ -358,5 +451,87 @@ mod tests {
         assert!(ref_card.contains("σ"));
         assert!(ref_card.contains("Sequence"));
         assert!(ref_card.contains("T2-P"));
+    }
+
+    #[test]
+    fn test_harness_has_default_strategy() {
+        let harness = ForgeHarness::new("test");
+        assert!((harness.strategy.quality_floor - 0.313).abs() < 0.001);
+        assert!(harness.strategy.fix_easiest_first);
+    }
+
+    #[test]
+    fn test_with_custom_strategy() {
+        let custom = ForgeStrategy {
+            lint_strictness: 0.9,
+            ..ForgeStrategy::default()
+        };
+        let harness = ForgeHarness::with_strategy("test", custom);
+        assert!((harness.strategy.lint_strictness - 0.9).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_suggest_action_fix_blocker() {
+        let harness = ForgeHarness::new("test");
+        let decision = harness.suggest_action(3, 0, 5, 0.8);
+        assert_eq!(decision, ForgeDecision::FixBlocker);
+    }
+
+    #[test]
+    fn test_suggest_action_decompose() {
+        let mut harness = ForgeHarness::new("test");
+        harness.validation = ValidationStatus::Compiles; // quality=0.5, above floor
+        let decision = harness.suggest_action(0, 0, 4, 0.9);
+        assert_eq!(decision, ForgeDecision::Decompose);
+    }
+
+    #[test]
+    fn test_suggest_action_explore_fallback() {
+        let mut harness = ForgeHarness::new("test");
+        harness.validation = ValidationStatus::Compiles; // quality=0.5, above floor
+        let decision = harness.suggest_action(0, 0, 0, 0.9);
+        // No blockers, no warnings, no prims → Explore (speculative_generation=true)
+        assert_eq!(decision, ForgeDecision::Explore);
+    }
+
+    #[test]
+    fn test_suggest_action_refactor_when_pending() {
+        let harness = ForgeHarness::new("test");
+        // Pending validation → quality=0.3 < quality_floor=0.313 → Refactor
+        let decision = harness.suggest_action(0, 0, 4, 0.9);
+        assert_eq!(decision, ForgeDecision::Refactor);
+    }
+
+    #[test]
+    fn test_estimate_quality() {
+        let mut harness = ForgeHarness::new("test");
+        assert!((harness.estimate_quality() - 0.3).abs() < f64::EPSILON); // Pending
+        harness.validation = ValidationStatus::Compiles;
+        assert!((harness.estimate_quality() - 0.5).abs() < f64::EPSILON);
+        harness.validation = ValidationStatus::ClippyClean;
+        assert!((harness.estimate_quality() - 0.9).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_summary_includes_strategy() {
+        let harness = ForgeHarness::new("test");
+        let summary = harness.summary();
+        assert!(summary.contains("ForgeStrategy"));
+        assert!(summary.contains("pragmatic"));
+    }
+
+    #[test]
+    fn test_forge_prompt_includes_strategy_params() {
+        let harness = ForgeHarness::new("test");
+        let task = ForgeTask {
+            name: "TestTask".to_string(),
+            description: "A test".to_string(),
+            domain: "testing".to_string(),
+            target_tier: None,
+        };
+        let prompt = harness.forge_prompt(&task);
+        assert!(prompt.contains("13")); // decomposition_depth
+        assert!(prompt.contains("89")); // tier_promotion_eagerness
+        assert!(prompt.contains("alternative decompositions")); // speculative
     }
 }

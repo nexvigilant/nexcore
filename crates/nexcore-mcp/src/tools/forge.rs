@@ -14,8 +14,10 @@
 //! | Technology Output | Sum | Σ |
 
 use crate::params::{
-    ForgeInitParams, ForgeMineParams, ForgePromptParams, ForgeReferenceParams, ForgeSummaryParams,
+    ForgeInitParams, ForgeMineParams, ForgePromptParams, ForgeReferenceParams, ForgeSuggestParams,
+    ForgeSummaryParams,
 };
+use nexcore_forge_strategy::ForgeDecision;
 use nexcore_vigil::llm::forge_harness::{ForgeHarness, ForgeTask, LEX_PRIMITIVA, Tier};
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
@@ -46,7 +48,7 @@ pub fn forge_init(params: ForgeInitParams) -> Result<CallToolResult, McpError> {
         json!({
             "status": "initialized",
             "session_id": session_id,
-            "primitives_available": 15,
+            "primitives_available": 16,
             "tier_system": {
                 "T1": { "primitives": 1, "transfer": 1.0 },
                 "T2-P": { "primitives": "2-3", "transfer": 0.9 },
@@ -74,7 +76,7 @@ pub fn forge_reference(_params: ForgeReferenceParams) -> Result<CallToolResult, 
 
     Ok(CallToolResult::success(vec![Content::text(
         json!({
-            "count": 15,
+            "count": 16,
             "primitives": primitives,
             "formatted": reference
         })
@@ -111,7 +113,7 @@ pub fn forge_mine(params: ForgeMineParams) -> Result<CallToolResult, McpError> {
     )]))
 }
 
-/// Generate forge prompt for a task
+/// Generate forge prompt for a task (now strategy-aware via session harness)
 pub fn forge_prompt(params: ForgePromptParams) -> Result<CallToolResult, McpError> {
     let task = ForgeTask {
         name: params.name.clone(),
@@ -126,7 +128,21 @@ pub fn forge_prompt(params: ForgePromptParams) -> Result<CallToolResult, McpErro
         }),
     };
 
-    let prompt = ForgeHarness::forge_prompt(&task);
+    // Use the session harness if available (includes evolved strategy params);
+    // otherwise create a temporary one with default evolved strategy.
+    let guard = FORGE_SESSION.lock().map_err(|e| {
+        McpError::internal_error(format!("Failed to acquire forge lock: {}", e), None)
+    })?;
+    let temp_harness;
+    let harness = match guard.as_ref() {
+        Some(h) => h,
+        None => {
+            temp_harness = ForgeHarness::new("forge-temp");
+            &temp_harness
+        }
+    };
+
+    let prompt = harness.forge_prompt(&task);
 
     Ok(CallToolResult::success(vec![Content::text(
         json!({
@@ -136,7 +152,8 @@ pub fn forge_prompt(params: ForgePromptParams) -> Result<CallToolResult, McpErro
                 "domain": task.domain,
                 "target_tier": task.target_tier.map(|t| t.code())
             },
-            "prompt": prompt
+            "prompt": prompt,
+            "strategy": format!("{}", harness.strategy)
         })
         .to_string(),
     )]))
@@ -194,6 +211,56 @@ pub fn forge_system_prompt() -> Result<CallToolResult, McpError> {
                 "generate": "[ACTION: forge_generate]{...}[/ACTION]",
                 "validate": "[ACTION: forge_validate]{...}[/ACTION]",
                 "shell": "[ACTION: shell]cargo check[/ACTION]"
+            }
+        })
+        .to_string(),
+    )]))
+}
+
+/// Suggest the next forge action based on evolved strategy parameters.
+///
+/// Maps current forge state to a decision using parameters evolved through
+/// 12,000 simulated games in the Primitive Depths genetic algorithm.
+pub fn forge_suggest(params: ForgeSuggestParams) -> Result<CallToolResult, McpError> {
+    let guard = FORGE_SESSION.lock().map_err(|e| {
+        McpError::internal_error(format!("Failed to acquire forge lock: {}", e), None)
+    })?;
+
+    let harness = guard.as_ref().ok_or_else(|| {
+        McpError::invalid_request(
+            "No forge session active. Call forge_init first.".to_string(),
+            None,
+        )
+    })?;
+
+    let decision = harness.suggest_action(
+        params.blocker_count.unwrap_or(0),
+        params.warning_count.unwrap_or(0),
+        params.primitives_available.unwrap_or(0),
+        params.confidence.unwrap_or(0.9),
+    );
+
+    let guidance = match decision {
+        ForgeDecision::Abandon => "Confidence too low — abandon this generation and restart",
+        ForgeDecision::FixBlocker => "Fix blocking compiler errors immediately (easiest first)",
+        ForgeDecision::Refactor => "Quality below floor — refactor to 84% before resuming",
+        ForgeDecision::LintFix => "Fix clippy warnings in adjacent code",
+        ForgeDecision::Decompose => "Mine and decompose available primitives",
+        ForgeDecision::Promote => "Current tier complete — promote to next tier",
+        ForgeDecision::Explore => "Try alternative decompositions or approaches",
+        ForgeDecision::Stuck => "No progress possible — needs external intervention",
+    };
+
+    Ok(CallToolResult::success(vec![Content::text(
+        json!({
+            "decision": format!("{decision}"),
+            "guidance": guidance,
+            "strategy": format!("{}", harness.strategy),
+            "state": {
+                "blockers": params.blocker_count.unwrap_or(0),
+                "warnings": params.warning_count.unwrap_or(0),
+                "primitives_available": params.primitives_available.unwrap_or(0),
+                "confidence": params.confidence.unwrap_or(0.9)
             }
         })
         .to_string(),

@@ -42,6 +42,7 @@ regex = "1.12.2"
 config = "0.15.19"
 parking_lot = "0.12"
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore"}
+nexcore-forge-strategy = { version = "0.1.0", path = "../nexcore-forge-strategy", registry = "nexcore"}
 nexcore-vigilance = { version = "1.0.0", path = "../nexcore-vigilance", registry = "nexcore"}
 nexcore-skill-exec = { version = "1.0.0", path = "../nexcore-skill-exec", registry = "nexcore"}
 nexcore-browser = { version = "0.1.0", path = "../nexcore-browser", registry = "nexcore"}

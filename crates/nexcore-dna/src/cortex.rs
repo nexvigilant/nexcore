@@ -209,14 +209,19 @@ pub struct EvolutionConfig {
 }
 
 impl Default for EvolutionConfig {
+    /// Defaults refined by evolutionary training (primitive-forge, 12k games).
+    ///
+    /// Key findings: higher mutation (0.2 vs 0.1) prevents premature convergence;
+    /// larger elite (4 vs 2) preserves solution diversity while maintaining
+    /// monotonic fitness improvement.
     fn default() -> Self {
         Self {
             population_size: 50,
             generations: 100,
-            mutation_rate: 0.1,
+            mutation_rate: 0.2,
             crossover_rate: 0.7,
             tournament_size: 3,
-            elitism: 2,
+            elitism: 4,
         }
     }
 }
@@ -1671,9 +1676,9 @@ mod tests {
         let cfg = EvolutionConfig::default();
         assert_eq!(cfg.population_size, 50);
         assert_eq!(cfg.generations, 100);
-        assert!((cfg.mutation_rate - 0.1).abs() < f64::EPSILON);
+        assert!((cfg.mutation_rate - 0.2).abs() < f64::EPSILON);
         assert!((cfg.crossover_rate - 0.7).abs() < f64::EPSILON);
         assert_eq!(cfg.tournament_size, 3);
-        assert_eq!(cfg.elitism, 2);
+        assert_eq!(cfg.elitism, 4);
     }
 }

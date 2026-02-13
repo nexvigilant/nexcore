@@ -4591,6 +4591,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexcore-forge-strategy"
+version = "0.1.0"
+dependencies = [
+ "nexcore-lex-primitiva",
+]
+
+[[package]]
 name = "nexcore-guardian-engine"
 version = "1.0.0"
 dependencies = [
@@ -4800,6 +4807,7 @@ dependencies = [
  "nexcore-education-machine",
  "nexcore-energy",
  "nexcore-faers-etl",
+ "nexcore-forge-strategy",
  "nexcore-guardian-engine",
  "nexcore-hooks",
  "nexcore-hormones",
@@ -5398,6 +5406,7 @@ dependencies = [
  "nexcore-cortex",
  "nexcore-cytokine",
  "nexcore-energy",
+ "nexcore-forge-strategy",
  "nexcore-hormones",
  "nexcore-id",
  "nexcore-immunity",

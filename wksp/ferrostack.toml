@@ -3,9 +3,9 @@ name = "nexvigilant-app-store"
 description = "NexVigilant App Store"
 
 [[apps]]
-name = "ncos"
-path = "apps/ncos"
-description = "Mobile PWA for NexCore access"
+name = "nucleus"
+path = "apps/nucleus"
+description = "Unified NexVigilant portal"
 port = 3000
 tier = "production"
 

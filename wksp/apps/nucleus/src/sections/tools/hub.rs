@@ -80,6 +80,13 @@ pub fn HubPage() -> impl IntoView {
                     href="/tools/registry"
                     color="text-slate-400"
                 />
+                <ToolCard
+                    title="App Store"
+                    icon="π"
+                    desc="Transferred from NCOS. Browse ecosystem apps directly in Nucleus."
+                    href="/tools/store"
+                    color="text-cyan-300"
+                />
             </div>
 
             <section class="mt-14">

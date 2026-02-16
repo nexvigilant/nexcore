@@ -14,8 +14,8 @@ cargo check --workspace
 cargo clippy --workspace -- -D warnings
 cargo test --workspace   # All 18 wksp-owned members (nexcore path deps excluded)
 
-# Run a specific app (e.g., NCOS)
-cd apps/ncos && cargo leptos watch
+# Run a specific app (e.g., NUCLEUS)
+cd apps/nucleus && cargo leptos watch
 ```
 
 ### 2. Run Applications
@@ -24,7 +24,7 @@ Each app is assigned a dedicated port to allow simultaneous development.
 
 | App | Port | Description | Tier |
 |-----|------|-------------|------|
-| **ncos** | 3000 | Mobile PWA (Production) | Production |
+| **nucleus** | 3000 | Mobile PWA (Production) | Production |
 | **adventure-hud** | 3001 | Game HUD | Experimental |
 | **borrow-miner** | 3002 | Ore mining game | Experimental |
 | **education-machine** | 3003 | Educational content | Experimental |
@@ -39,12 +39,12 @@ Each app is assigned a dedicated port to allow simultaneous development.
 ```mermaid
 graph TD
     User((User)) -->|Browser| LB[Load Balancer / Ingress]
-    LB --> NCOS[NCOS :3000]
+    LB --> NUCLEUS[NUCLEUS :3000]
     LB --> AH[Adventure HUD :3001]
     
     subgraph "Ferrostack Workspace (~/wksp)"
-        NCOS --> Shared[wksp-components]
-        NCOS --> Client[wksp-api-client]
+        NUCLEUS --> Shared[wksp-components]
+        NUCLEUS --> Client[wksp-api-client]
         AH --> Shared
         AH --> Client
         
@@ -85,7 +85,7 @@ Use the `lessons-mcp` tool for workspace insights:
 Each app in `apps/` can be built as a Docker container.
 
 ```bash
-docker build -t ncos -f apps/ncos/Dockerfile .
+docker build -t nucleus -f apps/nucleus/Dockerfile .
 ```
 
 (Ensure Dockerfile context is set to workspace root if using workspace deps).

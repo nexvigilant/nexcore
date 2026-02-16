@@ -64,6 +64,7 @@ pub fn App() -> impl IntoView {
                     <Route path=StaticSegment("doctrine") view=sections::public::DoctrinePage/>
                     <Route path=StaticSegment("guardian") view=sections::public::GuardianPublicPage/>
                     <Route path=StaticSegment("verify") view=sections::public::VerifyPage/>
+                    <Route path=StaticSegment("enterprise-readiness") view=sections::public::EnterpriseReadinessPage/>
                 </ParentRoute>
 
                 /* === Auth (standalone pages, no shell) === */
@@ -272,6 +273,9 @@ pub fn App() -> impl IntoView {
                     <Route path=StaticSegment("guidelines") view=sections::regulatory::GuidelinesPage/>
                     <Route path=StaticSegment("live") view=sections::regulatory::LiveFeedPage/>
                     <Route path=StaticSegment("dashboard") view=sections::regulatory::DashboardPage/>
+                    <Route path=StaticSegment("directory") view=sections::regulatory::DirectoryPage/>
+                    <Route path=StaticSegment("timelines") view=sections::regulatory::TimelinesPage/>
+                    <Route path=StaticSegment("glossary") view=sections::regulatory::GlossaryPage/>
                 </ParentRoute>
                 <ParentRoute path=StaticSegment("solutions") view=ProtectedShell>
                     <Route path=StaticSegment("") view=sections::solutions::HubPage/>

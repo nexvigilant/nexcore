@@ -4,6 +4,63 @@ use leptos::prelude::*;
 
 #[component]
 pub fn ServicesPage() -> impl IntoView {
+    let blocker_checks = RwSignal::new(vec![false; 10]);
+    let checked_count =
+        Signal::derive(move || blocker_checks.with(|items| items.iter().filter(|v| **v).count()));
+
+    let blockers = [
+        (
+            "GxP/CSV VALIDATION BURDEN",
+            "Pharma teams reject tools that cannot survive validation and SOP review.",
+            "We ship a validation package: URS, risk matrix, IQ/OQ/PQ protocol templates, and traceability mapping.",
+        ),
+        (
+            "SECURITY + PRIVACY RISK",
+            "No adoption if data handling is unclear for PV case data and user access.",
+            "We provide tenant isolation posture, encryption model, role-based access controls, and boundary documentation.",
+        ),
+        (
+            "INTEGRATION FRICTION",
+            "If it does not connect to existing safety systems, it becomes shelfware.",
+            "We implement staged integration with API mapping, data contracts, and migration runbooks.",
+        ),
+        (
+            "WEAK AUDIT TRAIL",
+            "Regulated teams need deterministic evidence for who changed what and when.",
+            "Nucleus surfaces review-ready auditability expectations and workflow artifacts tied to reporting.",
+        ),
+        (
+            "AI BLACK-BOX FEAR",
+            "Signal or triage recommendations without rationale are blocked by governance.",
+            "We expose method provenance, threshold logic, and human override checkpoints.",
+        ),
+        (
+            "NO REGULATORY FIT",
+            "Teams abandon tools that do not map to ICH/GVP workflows.",
+            "We align features to PV operations and provide guidance paths in regulatory and vigilance modules.",
+        ),
+        (
+            "CHANGE-MANAGEMENT FAILURE",
+            "Adoption dies when users are not trained and workflows are not embedded.",
+            "We provide role-based onboarding, admin workflow pages, and operating playbooks.",
+        ),
+        (
+            "UNCLEAR BUSINESS CASE",
+            "Without quantified benefit, procurement will not approve expansion.",
+            "We define baseline metrics (cycle time, case throughput, signal latency) and track deltas.",
+        ),
+        (
+            "GLOBAL OP MODEL GAPS",
+            "Global pharma needs consistent governance across local affiliates.",
+            "We support centralized controls with configurable section-level processes and oversight hubs.",
+        ),
+        (
+            "VENDOR RISK / LOCK-IN",
+            "Procurement blocks vendors with poor portability or unclear continuity.",
+            "We provide architecture transparency, export pathways, and transition documentation.",
+        ),
+    ];
+
     view! {
         <div class="min-h-screen bg-slate-950 selection:bg-cyan-500/30">
             // Hero
@@ -70,6 +127,88 @@ pub fn ServicesPage() -> impl IntoView {
                         ]
                     />
                 </div>
+
+                // Enterprise adoption blockers and mitigations
+                <section class="mt-20 rounded-2xl border border-slate-800 bg-slate-900/40 p-8 md:p-10">
+                    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                        <div>
+                            <h3 class="text-xs font-mono font-bold text-cyan-500 uppercase tracking-[0.3em] mb-3">
+                                "// ADOPTION RISK MAP"
+                            </h3>
+                            <h2 class="text-2xl md:text-3xl font-black font-mono text-white uppercase tracking-tight">
+                                "10 REASONS PHARMA WON'T ADOPT — AND HOW WE FIX THEM"
+                            </h2>
+                        </div>
+                        <div class="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3">
+                            <p class="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-cyan-300">
+                                "Readiness Score"
+                            </p>
+                            <p class="text-2xl font-black font-mono text-white">
+                                {move || format!("{}/10", checked_count.get())}
+                            </p>
+                        </div>
+                    </div>
+
+                    <p class="mt-4 text-sm text-slate-400 font-mono max-w-4xl">
+                        "Use this checklist in discovery calls. Every item should be closed before full deployment."
+                    </p>
+
+                    <div class="mt-8 grid gap-4">
+                        {blockers.into_iter().enumerate().map(|(idx, (title, risk, fix))| {
+                            let is_checked = Signal::derive(move || {
+                                blocker_checks.with(|items| items.get(idx).copied().unwrap_or(false))
+                            });
+                            view! {
+                                <div class="rounded-xl border border-slate-800 bg-slate-950/60 p-5">
+                                    <div class="flex items-start gap-3">
+                                        <button
+                                            class=move || {
+                                                if is_checked.get() {
+                                                    "mt-0.5 h-5 w-5 rounded border border-emerald-400 bg-emerald-500/20 text-emerald-300 text-xs font-bold"
+                                                } else {
+                                                    "mt-0.5 h-5 w-5 rounded border border-slate-600 bg-slate-900 text-slate-500 text-xs font-bold"
+                                                }
+                                            }
+                                            on:click=move |_| {
+                                                blocker_checks.update(|items| {
+                                                    if let Some(slot) = items.get_mut(idx) {
+                                                        *slot = !*slot;
+                                                    }
+                                                });
+                                            }
+                                            title="Mark as mitigated"
+                                        >
+                                            {move || if is_checked.get() { "✓" } else { "" }}
+                                        </button>
+                                        <div class="flex-1">
+                                            <h4 class="text-sm font-mono font-black text-white uppercase tracking-wide">{title}</h4>
+                                            <p class="mt-2 text-sm text-rose-300/90 font-mono">
+                                                <span class="text-rose-400 font-bold">"Why adoption fails: "</span>
+                                                {risk}
+                                            </p>
+                                            <p class="mt-2 text-sm text-emerald-300/90 font-mono">
+                                                <span class="text-emerald-400 font-bold">"Fix: "</span>
+                                                {fix}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }).collect_view()}
+                    </div>
+
+                    <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+                        <a href="/enterprise-readiness" class="px-8 py-3 bg-white/5 border border-white/20 text-white font-mono font-black text-xs uppercase tracking-widest rounded hover:bg-white/10 transition-colors">
+                            "OPEN ENTERPRISE READINESS CENTER"
+                        </a>
+                        <a href="/verify" class="px-8 py-3 bg-cyan-600 text-white font-mono font-black text-xs uppercase tracking-widest rounded hover:bg-cyan-500 transition-colors">
+                            "OPEN TRUST + VALIDATION CENTER"
+                        </a>
+                        <a href="/contact" class="px-8 py-3 border border-slate-700 text-slate-300 font-mono font-black text-xs uppercase tracking-widest rounded hover:bg-slate-900 transition-colors">
+                            "BOOK ADOPTION READINESS WORKSHOP"
+                        </a>
+                    </div>
+                </section>
 
                 // CTA
                 <div class="mt-16 text-center">

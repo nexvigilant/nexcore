@@ -1,7 +1,7 @@
 //! App shell layout — header, sidebar, main content area
 
-use leptos::prelude::*;
 use crate::auth::use_auth;
+use leptos::prelude::*;
 
 /// App shell wrapping authenticated pages
 #[component]
@@ -14,7 +14,7 @@ pub fn AppShell(children: Children) -> impl IntoView {
                 <main class="flex-1 overflow-y-auto relative custom-scrollbar">
                     // Scanline overlay for that tech feel
                     <div class="fixed inset-0 pointer-events-none opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%] z-50"></div>
-                    
+
                     <div class="relative z-10">
                         {children()}
                     </div>
@@ -54,12 +54,13 @@ fn Header() -> impl IntoView {
                         </div>
                         <span class="text-xl font-black text-white font-mono tracking-tighter uppercase group-hover:text-cyan-400 transition-colors">"NUCLEUS"</span>
                     </a>
-                    
+
                     <nav class="hidden gap-6 lg:flex">
                         <TopNavLink href="/academy" label="ACADEMY"/>
                         <TopNavLink href="/community" label="COMMUNITY"/>
                         <TopNavLink href="/careers" label="CAREERS"/>
                         <TopNavLink href="/vigilance" label="VIGILANCE"/>
+                        <TopNavLink href="/tools" label="TOOLS"/>
                     </nav>
                 </div>
 
@@ -141,8 +142,15 @@ fn DesktopSidebar() -> impl IntoView {
                     ("/admin/users", "IDENTITY MGT"),
                     ("/admin/settings", "PROTOCOLS"),
                 ] />
+
+                <SidebarSection title="ENGINEERING" items=vec![
+                    ("/tools", "STUDIO"),
+                    ("/tools/codegen", "CODE STUDIO"),
+                    ("/tools/api-explorer", "API EXPLORER"),
+                    ("/tools/registry", "REGISTRY HUD"),
+                ] />
             </nav>
-            
+
             <div class="mt-12 pt-8 border-t border-slate-800/50">
                 <div class="flex items-center gap-3 text-slate-600">
                     <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>

@@ -1,8 +1,12 @@
 target/
+bin/
 *.log
 .DS_Store
 output/
 *.parquet
+*.bak
+*.workspace-backup
+.gitmodules
 crates/nexcore-control-center/node_modules/
 crates/nexcore-control-center/target/
 

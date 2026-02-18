@@ -83,6 +83,39 @@ validate-seq: fmt-check clippy test anatomy-check
 # Sequential quick validation (fallback, no orchestrator)
 validate-quick-seq: check clippy test-core anatomy-check
 
+# ── Brain Milestones (Crate Workflow Gate) ──────────────────────
+
+# Capture crate task milestone (save + resolve)
+brain-crate-task crate *content:
+    ./scripts/brain-crate-milestone {{crate}} task "{{content}}"
+
+# Capture crate plan milestone (save + resolve)
+brain-crate-plan crate *content:
+    ./scripts/brain-crate-milestone {{crate}} plan "{{content}}"
+
+# Capture crate handoff milestone (save + resolve)
+brain-crate-handoff crate *content:
+    ./scripts/brain-crate-milestone {{crate}} handoff "{{content}}"
+
+# Gate crate workflow before finish/release
+brain-crate-gate crate:
+    ./scripts/brain-crate-gate {{crate}} --strict-markers
+
+# Audit recent sessions for missing required resolved milestones
+brain-crate-audit limit="20":
+    ./scripts/brain-crate-audit {{limit}}
+
+# Strict audit (non-zero when any milestone gaps are found)
+brain-crate-audit-strict limit="20":
+    ./scripts/brain-crate-audit {{limit}} --strict
+
+# Crate completion gate: brain gate + compile + lint + tests
+brain-crate-ready crate:
+    ./scripts/brain-crate-gate {{crate}} --strict-markers
+    cargo check -p {{crate}}
+    cargo clippy -p {{crate}} -- -D warnings
+    cargo test -p {{crate}}
+
 # ── MCP & Services ───────────────────────────────────────────────
 
 # Build and install MCP server
@@ -430,7 +463,7 @@ kellnr-down:
 
 # Show Kellnr status
 kellnr-status:
-    @curl -s http://localhost:8000/api/v1/crates 2>/dev/null | python3 -m json.tool 2>/dev/null || echo "Kellnr not running"
+    @curl -s http://localhost:8000/api/v1/crates 2>/dev/null | jq . 2>/dev/null || echo "Kellnr not running"
 
 # ── Workspace Migration ──────────────────────────────────────
 

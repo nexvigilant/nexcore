@@ -1,0 +1,52 @@
+
+[package]
+name = "nexcore-browser-shell"
+version = "1.0.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+repository = "https://github.com/nexvigilant/nexcore"
+description = "NexVigilant Browser - Rust-native browser shell with Tauri + Leptos"
+
+[lib]
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "nexcore-browser-shell"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# NexCore crates
+nexcore-browser = { version = "0.1.0", path = "../nexcore-browser", registry = "nexcore" }
+nexcore-lex-primitiva = { workspace = true }
+
+# Tauri
+tauri = { version = "2", features = ["devtools"] }
+tauri-plugin-shell = "2"
+
+# Leptos (SSR disabled for Tauri)
+leptos = { version = "0.7", features = ["csr"] }
+
+# Serialization
+serde = { workspace = true, features = ["derive"] }
+
+# Error handling
+thiserror = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[lints]
+workspace = true

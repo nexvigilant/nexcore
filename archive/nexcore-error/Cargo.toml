@@ -1,0 +1,22 @@
+
+[package]
+name = "nexcore-error"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Zero-dependency error handling for NexVigilant Core ecosystem"
+license = "MIT"
+repository = "https://github.com/nexvigilant/nexcore"
+keywords = ["error", "result", "no-std"]
+categories = ["no-std", "rust-patterns"]
+
+[dependencies]
+# Zero external dependencies - supply chain sovereignty
+# Replaces: thiserror, anyhow
+
+[features]
+default = ["std"]
+std = []
+
+[lints]
+workspace = true

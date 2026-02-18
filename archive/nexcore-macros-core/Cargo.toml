@@ -1,0 +1,13 @@
+
+[package]
+name = "nexcore-macros-core"
+version = "1.0.0"
+edition = "2024"
+description = "Shared macro utilities for NexVigilant Core primitive grounding and tier classification derives"
+
+[dependencies]
+quote = { workspace = true }
+proc-macro2 = { workspace = true }
+
+[lints]
+workspace = true

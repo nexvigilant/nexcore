@@ -6,6 +6,7 @@
 //! Search and retrieval for 2,794+ FDA guidance documents.
 //! Data embedded at compile time from FDA's static JSON endpoint.
 
+pub mod refresh;
 pub mod types;
 
 pub use types::{FdaGuidanceDoc, FdaGuidanceError};

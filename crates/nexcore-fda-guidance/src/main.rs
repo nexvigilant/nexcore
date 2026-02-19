@@ -130,9 +130,89 @@ async fn main() -> anyhow::Result<()> {
 
             Ok(())
         }
-        _ => {
-            // Remaining subcommands will be implemented after index.rs and format.rs
-            eprintln!("This subcommand requires the embedded index (build Tasks 4-5 first).");
+        Commands::Search {
+            query,
+            center,
+            product,
+            status,
+            limit,
+        } => {
+            let results = nexcore_fda_guidance::index::search(
+                &query,
+                center.as_deref(),
+                product.as_deref(),
+                status.as_deref(),
+                limit,
+            )?;
+            print!(
+                "{}",
+                nexcore_fda_guidance::format::format_search_results(&results, &query)
+            );
+            Ok(())
+        }
+        Commands::Get { id } => {
+            match nexcore_fda_guidance::index::get(&id)? {
+                Some(doc) => print!("{}", nexcore_fda_guidance::format::format_detail(&doc)),
+                None => eprintln!("Not found: {id}"),
+            }
+            Ok(())
+        }
+        Commands::Categories => {
+            let docs = nexcore_fda_guidance::index::load_all()?;
+            let by_center = nexcore_fda_guidance::index::categories_by_center(&docs);
+            let by_product = nexcore_fda_guidance::index::categories_by_product(&docs);
+            let by_topic = nexcore_fda_guidance::index::categories_by_topic(&docs);
+            print!(
+                "{}",
+                nexcore_fda_guidance::format::format_categories(
+                    &by_center,
+                    &by_product,
+                    &by_topic,
+                    docs.len()
+                )
+            );
+            Ok(())
+        }
+        Commands::Url { id } => {
+            match nexcore_fda_guidance::index::get(&id)? {
+                Some(doc) => match doc.pdf_url {
+                    Some(ref pdf) => println!("{pdf}"),
+                    None => println!("No PDF. View at: {}", doc.url),
+                },
+                None => eprintln!("Not found: {id}"),
+            }
+            Ok(())
+        }
+        Commands::Status {
+            status,
+            open_for_comment,
+        } => {
+            let docs = nexcore_fda_guidance::index::by_status(&status, open_for_comment)?;
+            print!(
+                "{}",
+                nexcore_fda_guidance::format::format_status_list(&docs, &status, open_for_comment)
+            );
+            Ok(())
+        }
+        Commands::Stats => {
+            let docs = nexcore_fda_guidance::index::load_all()?;
+            let total = docs.len();
+            let drafts = docs.iter().filter(|d| d.status == "Draft").count();
+            let finals = docs.iter().filter(|d| d.status == "Final").count();
+            let with_pdf = docs.iter().filter(|d| d.pdf_url.is_some()).count();
+            let open = docs.iter().filter(|d| d.open_for_comment).count();
+            let centers = nexcore_fda_guidance::index::categories_by_center(&docs);
+
+            println!("FDA Guidance Document Statistics:");
+            println!("  Total:            {total}");
+            println!("  Final:            {finals}");
+            println!("  Draft:            {drafts}");
+            println!("  With PDF:         {with_pdf}");
+            println!("  Open for comment: {open}");
+            println!("\nBy Center:");
+            for (name, count) in &centers {
+                println!("  {name}: {count}");
+            }
             Ok(())
         }
     }

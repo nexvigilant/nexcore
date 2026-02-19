@@ -374,7 +374,6 @@ pub mod digestive;
 pub mod integumentary;
 pub mod lymphatic;
 pub mod muscular;
-pub mod ncbi;
 pub mod nervous;
 pub mod phenotype;
 pub mod respiratory;

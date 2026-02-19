@@ -2102,66 +2102,8 @@ impl NexCoreMcpServer {
     }
 
     // ========================================================================
-    // NCBI Entrez Tools (6)
+    // NCBI Entrez Tools — disabled (ncbi module needs feature gate in nexcore-dna)
     // ========================================================================
-
-    #[tool(
-        description = "Search NCBI databases for UIDs matching a query. Supports date-range filtering (datetype, mindate, maxdate). Returns matching IDs, count, and query translation."
-    )]
-    async fn ncbi_esearch(
-        &self,
-        Parameters(params): Parameters<params::ncbi::NcbiSearchParams>,
-    ) -> Result<CallToolResult, McpError> {
-        tools::ncbi::esearch(params).await
-    }
-
-    #[tool(description = "Retrieve summaries for a list of NCBI UIDs from a specific database.")]
-    async fn ncbi_esummary(
-        &self,
-        Parameters(params): Parameters<params::ncbi::NcbiSummaryParams>,
-    ) -> Result<CallToolResult, McpError> {
-        tools::ncbi::esummary(params).await
-    }
-
-    #[tool(
-        description = "Retrieve full records for a list of NCBI UIDs in various formats (e.g., FASTA, GenBank)."
-    )]
-    async fn ncbi_efetch(
-        &self,
-        Parameters(params): Parameters<params::ncbi::NcbiFetchParams>,
-    ) -> Result<CallToolResult, McpError> {
-        tools::ncbi::efetch(params).await
-    }
-
-    #[tool(
-        description = "Find linked records across NCBI databases (cross-database traversal). E.g., find all nucleotide sequences linked to a gene ID, or PubMed articles linked to a protein."
-    )]
-    async fn ncbi_elink(
-        &self,
-        Parameters(params): Parameters<params::ncbi::NcbiLinkParams>,
-    ) -> Result<CallToolResult, McpError> {
-        tools::ncbi::elink(params).await
-    }
-
-    #[tool(
-        description = "Search an NCBI database then fetch FASTA records in one call. Returns parsed sequence data with ID, description, length, GC content, and first 60 bases."
-    )]
-    async fn ncbi_search_and_fetch(
-        &self,
-        Parameters(params): Parameters<params::ncbi::NcbiSearchFetchParams>,
-    ) -> Result<CallToolResult, McpError> {
-        tools::ncbi::search_and_fetch(params).await
-    }
-
-    #[tool(
-        description = "Search an NCBI database then retrieve document summaries in one call. Faster than full fetch — returns metadata (titles, organisms, etc.) without downloading full sequences. Supports date-range filtering for PubMed."
-    )]
-    async fn ncbi_search_and_summarize(
-        &self,
-        Parameters(params): Parameters<params::ncbi::NcbiSearchSummarizeParams>,
-    ) -> Result<CallToolResult, McpError> {
-        tools::ncbi::search_and_summarize(params).await
-    }
 
     // ========================================================================
     // Laboratory Tools (4)

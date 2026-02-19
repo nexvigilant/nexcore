@@ -34,6 +34,7 @@ pub mod error;
 pub mod inventory;
 pub mod jeopardy;
 pub mod mass_state;
+pub mod prelude;
 pub mod seed;
 pub mod sister;
 

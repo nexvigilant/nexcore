@@ -445,9 +445,7 @@ async fn dispatch_inner(
         // ====================================================================
         // NCBI Entrez Tools (3)
         // ====================================================================
-        "ncbi_esearch" => typed_async(params, tools::ncbi::esearch).await,
-        "ncbi_esummary" => typed_async(params, tools::ncbi::esummary).await,
-        "ncbi_efetch" => typed_async(params, tools::ncbi::efetch).await,
+        // ncbi tools disabled — ncbi module needs feature gate in nexcore-dna
 
         // ====================================================================
         // Lex Primitiva Tools (7) — T1 Symbolic Foundation
@@ -2337,7 +2335,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "fda_guidance": ["fda_guidance_search", "fda_guidance_get", "fda_guidance_categories", "fda_guidance_url", "fda_guidance_status"],
             "mesh": ["mesh_lookup", "mesh_search", "mesh_tree", "mesh_crossref", "mesh_enrich_pubmed", "mesh_consistency"],
             "faers": ["faers_search", "faers_drug_events", "faers_signal_check", "faers_disproportionality", "faers_compare_drugs"],
-            "ncbi": ["ncbi_esearch", "ncbi_esummary", "ncbi_efetch"],
+            // "ncbi": disabled — needs feature gate in nexcore-dna
             "faers_etl": ["faers_etl_run", "faers_etl_signals", "faers_etl_known_pairs", "faers_etl_status"],
             "pharos": ["pharos_run", "pharos_status", "pharos_report"],
             "faers_analytics": ["faers_outcome_conditioned", "faers_signal_velocity", "faers_seriousness_cascade", "faers_polypharmacy", "faers_reporter_weighted", "faers_geographic_divergence"],

@@ -1,4 +1,3 @@
-[workspace]
 
 [package]
 name = "nexcore-api"
@@ -16,71 +15,54 @@ path = "src/main.rs"
 
 [dependencies]
 # Internal crates
-nexcore-vigilance = { version = "1.0.0", path = "../nexcore-vigilance", registry = "nexcore" }
-nexcore-vigil = { version = "0.1.0", path = "../nexcore-vigil", registry = "nexcore" }
-nexcore-pv-core = { version = "1.0.0", path = "../nexcore-pv-core", registry = "nexcore" }
-nexcore-primitives = { version = "1.0.0", path = "../nexcore-primitives", registry = "nexcore" }
-nexcore-core = { version = "1.0.0", path = "../nexcore-core", registry = "nexcore" }
-nexcore-skill-exec = { version = "1.0.0", path = "../nexcore-skill-exec", registry = "nexcore" }
-nexcore-state-os = { version = "0.1.0", path = "../nexcore-state-os", registry = "nexcore" }
-nexcore-mesh = { version = "1.0.0", path = "../nexcore-mesh", registry = "nexcore" }
-signal = { version = "1.0.0", path = "../signal", registry = "nexcore" }
+nexcore-vigilance = { workspace = true }
+nexcore-vigil = { workspace = true }
+nexcore-pv-core = { workspace = true }
+nexcore-primitives = { workspace = true }
+nexcore-skill-exec = { workspace = true }
+nexcore-state-os = { workspace = true }
+nexcore-mesh = { workspace = true }
+signal = { workspace = true }
+vr-tenant = { workspace = true }
+vr-core = { workspace = true }
+base64 = { workspace = true }
 
 # HTTP server
-axum = { version = "0.8.8", features = ["ws"] }
-tower-http = { version = "0.5.2", features = ["cors", "trace", "compression-full"] }
-tokio = { version = "1.38.0", features = ["full", "sync"] }
+axum = { workspace = true }
+tower-http = { workspace = true }
+tokio = { workspace = true }
 
 # Serialization
-serde = { version = "1.0.204", features = ["derive"] }
-serde_json = { version = "1.0.120" }
+serde = { workspace = true }
+serde_json = { workspace = true }
 
 # Error handling
-anyhow = { version = "1.0.86" }
+anyhow = { workspace = true }
 
 # Logging
-tracing = { version = "0.1.40" }
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 
 # OpenAPI
-utoipa = { version = "5.3", features = ["axum_extras"] }
+utoipa = { workspace = true }
 utoipa-scalar = { version = "0.3", features = ["axum"] }
 
 # HTTP client (for FRIDAY/Qdrant health checks)
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { workspace = true }
+
+# Async
+futures = { workspace = true }
 
 # Utilities
-chrono = { version = "0.4.38", features = ["serde"] }
-dirs = { version = "5.0.1" }
-nexcore-id = { version = "0.1.0", path = "../nexcore-id", registry = "nexcore", features = ["serde"] }
+chrono = { workspace = true }
+dirs = { workspace = true }
+nexcore-id = { workspace = true }
 shellexpand = "3.1"
-uuid = { version = "1.10.0", features = ["v4", "serde"] }
+uuid = { workspace = true }
 
 [dev-dependencies]
-tempfile = { version = "3.10.1" }
-tower = { version = "0.4.13", features = ["full", "util"] }
+tempfile = { workspace = true }
+tower = { workspace = true }
 
-[lints.rust]
-async_fn_in_trait = "allow"
-dead_code = "allow"
-unused_imports = "allow"
-unused_variables = "allow"
-unused_mut = "allow"
-unused_assignments = "allow"
-unused_must_use = "allow"
-
-[lints.clippy]
-all = "allow"
-pedantic = "allow"
-nursery = "allow"
-cargo = "allow"
-map_unwrap_or = "allow"
-manual_map = "allow"
-option_map_or_none = "allow"
-derivable_impls = "allow"
-unwrap_used = "allow"
-expect_used = "allow"
-panic = "allow"
-todo = "allow"
-unimplemented = "allow"
-unreachable = "allow"
+[lints]
+workspace = true

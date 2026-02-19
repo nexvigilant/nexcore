@@ -25,9 +25,17 @@
 //! | Mass conservation | `BalanceProof` (primitive counts match) |
 //! | Isomers | Sister concepts (same primitives, different arrangement) |
 
+pub mod balance;
+pub mod codec;
+pub mod decomposer;
+pub mod dictionary;
 pub mod equation;
 pub mod error;
 pub mod inventory;
+pub mod jeopardy;
+pub mod mass_state;
+pub mod seed;
+pub mod sister;
 
 // Re-export foundation types for single-import convenience
 pub use nexcore_lex_primitiva::molecular_weight::{AtomicMass, MolecularFormula, MolecularWeight};

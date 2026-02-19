@@ -1,5 +1,7 @@
 //! CONSORT-style clinical study report generator per ICH E3.
 //!
+//! Tier: T2-P (π+ν+∝ — Report Generation)
+//!
 //! Generates a Markdown report covering:
 //! - Protocol summary
 //! - CONSORT flow (enrolled → randomized → analyzed)

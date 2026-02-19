@@ -1,5 +1,7 @@
 //! Sample size and power analysis per ICH E9(R1) §3.5
 //!
+//! Tier: T2-P (N+→+∃ — Power Analysis)
+//!
 //! Uses the Abramowitz & Stegun (1964) normal quantile approximation.
 //! No external statistics crate required.
 

@@ -1,5 +1,7 @@
 //! Interim analysis and group sequential methods per ICH E20 (Adaptive Designs)
 //!
+//! Tier: T2-P (ν+κ+∂ — Interim Analysis)
+//!
 //! Implements:
 //! - O'Brien-Fleming boundary (Wang-Tsiatis power family, ρ=0)
 //! - Lan-DeMets alpha spending function (OBF-type and Pocock-type)

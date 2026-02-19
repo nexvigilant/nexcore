@@ -1,5 +1,7 @@
 //! Protocol registration per ICH E9(R1) §2.
 //!
+//! Tier: T2-P (→+∃+N+σ+∂ — Protocol Design)
+//!
 //! A protocol is registered once and treated as immutable.
 //! Validates: primary endpoint exists, >= 2 arms, power >= 0.80, alpha in (0, 1).
 

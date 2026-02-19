@@ -1,5 +1,7 @@
 //! Randomization schemes per ICH E9(R1) §2.3
 //!
+//! Tier: T2-P (σ+∂+μ — Randomization)
+//!
 //! Three schemes: simple (coin flip), block (permuted blocks), stratified (block within strata).
 //! Optional deterministic seed for reproducibility and audit trail.
 

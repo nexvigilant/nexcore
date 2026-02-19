@@ -1,5 +1,7 @@
 //! Blinding integrity verification per ICH E9(R1) §2.4
 //!
+//! Tier: T2-P (∂+κ+N — Blinding Verification)
+//!
 //! Checks that subject-facing assignment data does not leak treatment group identity.
 
 use crate::error::TrialError;

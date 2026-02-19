@@ -9,6 +9,7 @@ pub mod adaptation;
 pub mod blinding;
 pub mod endpoint;
 pub mod error;
+pub mod grounding;
 pub mod interim;
 pub mod multiplicity;
 pub mod power;
@@ -35,3 +36,8 @@ pub use randomize::{block_randomize, randomization_hash, simple_randomize, strat
 pub use report::{determine_verdict, generate_report};
 pub use safety::{check_safety_boundary, safety_event_rate};
 pub use types::*;
+
+// Lex Primitiva grounding
+pub use nexcore_lex_primitiva::primitiva::{LexPrimitiva, PrimitiveComposition};
+pub use nexcore_lex_primitiva::tier::Tier;
+pub use nexcore_primitives::{Confidence, Measured};

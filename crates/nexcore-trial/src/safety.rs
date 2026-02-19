@@ -1,5 +1,7 @@
 //! Safety monitoring per ICH E2A/E2C and E20 §3.
 //!
+//! Tier: T2-P (∂+N — Safety Monitoring)
+//!
 //! Checks observed safety metrics against pre-specified stopping boundaries.
 
 use crate::types::{SafetyCheckResult, SafetyRule};

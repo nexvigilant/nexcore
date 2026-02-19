@@ -1,5 +1,7 @@
 //! Adaptive design engine per ICH E20 §4.
 //!
+//! Tier: T2-P (ς+→+∂ — Adaptation Engine)
+//!
 //! Validates that any mid-trial modification was pre-specified in the protocol.
 //! Unauthorized adaptations violate regulatory requirements and are rejected.
 

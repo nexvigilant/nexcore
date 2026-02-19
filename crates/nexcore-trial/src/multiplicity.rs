@@ -1,5 +1,7 @@
 //! Multiplicity adjustment procedures per ICH E9(R1) §2.2.5.
 //!
+//! Tier: T2-P (κ+N+∂ — Multiplicity Correction)
+//!
 //! Implements: Bonferroni, Holm (step-down), Hochberg (step-up), Benjamini-Hochberg (FDR).
 
 use crate::types::AdjustedResult;

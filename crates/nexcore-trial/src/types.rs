@@ -1,6 +1,6 @@
 //! Core domain types for TRIAL framework
 //!
-//! Tier: T2 (Domain compound types)
+//! Tier: T2-P (Cross-domain protocol types grounded to Lex Primitiva)
 //!
 //! - `Protocol` — the immutable experiment definition (mirrors IND filing)
 //! - `Arm` — a treatment or control group

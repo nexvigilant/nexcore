@@ -1,5 +1,7 @@
 //! Endpoint evaluation per ICH E9(R1) §5 Estimands framework.
 //!
+//! Tier: T2-P (N+κ+→ — Endpoint Evaluation)
+//!
 //! Implements Z-test for two proportions, t-test for two means, and NNT computation.
 
 use crate::error::TrialError;

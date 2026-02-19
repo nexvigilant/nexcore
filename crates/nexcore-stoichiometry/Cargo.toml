@@ -1,0 +1,20 @@
+[package]
+name = "nexcore-stoichiometry"
+version = "1.0.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+repository = "https://github.com/nexvigilant/nexcore"
+rust-version = "1.85"
+description = "Stoichiometric engine for balanced primitive equations — the cargo container for the 15 Lex Primitiva"
+
+[dependencies]
+nexcore-lex-primitiva = { workspace = true }
+nexcore-primitives = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+[lints]
+workspace = true

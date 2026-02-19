@@ -24,18 +24,23 @@
 //! | Principles | 3 | Knowledge base search (Dalio, KISS, etc.) |
 
 #![forbid(unsafe_code)]
-#![warn(missing_docs)]
+#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![allow(missing_docs)]
 // Style issues in newly migrated code - fix in dedicated cleanup pass
 #![allow(clippy::collapsible_if)]
 #![allow(clippy::redundant_closure)]
 #![allow(clippy::redundant_closure_for_method_calls)]
 
 pub mod browser;
+pub mod composites;
 pub mod config;
+pub mod grounding;
 pub mod params;
+pub mod prelude;
 #[allow(missing_docs)]
 pub mod tooling;
 pub mod tools;
+pub mod transfer;
 /// Unified dispatcher for single-tool mode.
 pub mod unified;
 
@@ -76,7 +81,7 @@ pub struct NexCoreMcpServer {
     /// Loaded configuration (optional - may not exist)
     pub config: Option<nexcore_config::ClaudeConfig>,
     /// Tool router
-    tool_router: ToolRouter<Self>,
+    pub tool_router: ToolRouter<Self>,
 }
 
 #[tool_router]
@@ -105,11 +110,11 @@ impl NexCoreMcpServer {
     // ========================================================================
 
     #[tool(
-        description = "Unified NexCore interface. 262 commands via {command, params}. Use command='help' for catalog."
+        description = "nexcore unified interface. 380+ commands via {command, params}. help=catalog, toolbox=search."
     )]
     async fn nexcore(
         &self,
-        Parameters(uparams): Parameters<params::UnifiedParams>,
+        Parameters(uparams): Parameters<params::system::UnifiedParams>,
     ) -> Result<CallToolResult, McpError> {
         if let Err(err) = crate::tooling::tool_gate().check(&uparams.command) {
             return Ok(crate::tooling::gated_result(&uparams.command, err));
@@ -122,17 +127,42 @@ impl NexCoreMcpServer {
     // System Tools (4)
     // ========================================================================
 
+    /*
     #[tool(
         description = "Health check for NexCore MCP server. Returns version, tool count, and status."
     )]
     async fn nexcore_health(&self) -> Result<CallToolResult, McpError> {
+        let tool_count = self.tool_router.list_all().len();
+        let health =
+            serde_json::json!({
+            "status": "healthy",
+            "server": "nexcore-mcp",
+            "version": env!("CARGO_PKG_VERSION"),
+            "tool_count": tool_count,
+            "domains": ["foundation", "pv", "vigilance", "skills", "guidelines", "faers", "gcloud", "wolfram", "principles", "hooks"]
+        });
+        Ok(
+            CallToolResult::success(
+                vec![
+                    rmcp::model::Content::text(
+                        serde_json::to_string_pretty(&health).unwrap_or_default()
+                    )
+                ]
+            )
+        )
+    }
+    */
+    #[tool(
+        description = "Health check for NexCore MCP server (Probe). Returns version, tool count, and status."
+    )]
+    pub async fn nexcore_health_probe(&self) -> Result<CallToolResult, McpError> {
         let tool_count = self.tool_router.list_all().len();
         let health = serde_json::json!({
             "status": "healthy",
             "server": "nexcore-mcp",
             "version": env!("CARGO_PKG_VERSION"),
             "tool_count": tool_count,
-            "domains": ["foundation", "pv", "vigilance", "skills", "guidelines", "faers", "gcloud", "wolfram", "principles", "hooks"]
+            "probe": true
         });
         Ok(CallToolResult::success(vec![rmcp::model::Content::text(
             serde_json::to_string_pretty(&health).unwrap_or_default(),
@@ -174,7 +204,7 @@ impl NexCoreMcpServer {
     )]
     async fn mcp_servers_list(
         &self,
-        Parameters(params): Parameters<params::McpServersListParams>,
+        Parameters(params): Parameters<params::system::McpServersListParams>,
     ) -> Result<CallToolResult, McpError> {
         if let Some(cfg) = &self.config {
             let mut servers: Vec<serde_json::Value> = cfg
@@ -234,7 +264,7 @@ impl NexCoreMcpServer {
     )]
     async fn mcp_server_get(
         &self,
-        Parameters(params): Parameters<params::McpServerGetParams>,
+        Parameters(params): Parameters<params::system::McpServerGetParams>,
     ) -> Result<CallToolResult, McpError> {
         if let Some(cfg) = &self.config {
             if let Some(server) = cfg.mcp_servers.get(&params.name) {
@@ -273,7 +303,7 @@ impl NexCoreMcpServer {
     )]
     async fn foundation_levenshtein(
         &self,
-        Parameters(params): Parameters<params::LevenshteinParams>,
+        Parameters(params): Parameters<params::foundation::LevenshteinParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::foundation::calc_levenshtein(params)
     }
@@ -283,7 +313,7 @@ impl NexCoreMcpServer {
     )]
     async fn foundation_levenshtein_bounded(
         &self,
-        Parameters(params): Parameters<params::LevenshteinBoundedParams>,
+        Parameters(params): Parameters<params::foundation::LevenshteinBoundedParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::foundation::calc_levenshtein_bounded(params)
     }
@@ -293,7 +323,7 @@ impl NexCoreMcpServer {
     )]
     async fn foundation_fuzzy_search(
         &self,
-        Parameters(params): Parameters<params::FuzzySearchParams>,
+        Parameters(params): Parameters<params::foundation::FuzzySearchParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::foundation::fuzzy_search(params)
     }
@@ -303,7 +333,7 @@ impl NexCoreMcpServer {
     )]
     async fn foundation_sha256(
         &self,
-        Parameters(params): Parameters<params::Sha256Params>,
+        Parameters(params): Parameters<params::foundation::Sha256Params>,
     ) -> Result<CallToolResult, McpError> {
         tools::foundation::sha256(params)
     }
@@ -313,7 +343,7 @@ impl NexCoreMcpServer {
     )]
     async fn foundation_yaml_parse(
         &self,
-        Parameters(params): Parameters<params::YamlParseParams>,
+        Parameters(params): Parameters<params::foundation::YamlParseParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::foundation::yaml_parse(params)
     }
@@ -323,7 +353,7 @@ impl NexCoreMcpServer {
     )]
     async fn foundation_graph_topsort(
         &self,
-        Parameters(params): Parameters<params::GraphTopsortParams>,
+        Parameters(params): Parameters<params::foundation::GraphTopsortParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::foundation::graph_topsort(params)
     }
@@ -333,7 +363,7 @@ impl NexCoreMcpServer {
     )]
     async fn foundation_graph_levels(
         &self,
-        Parameters(params): Parameters<params::GraphLevelsParams>,
+        Parameters(params): Parameters<params::foundation::GraphLevelsParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::foundation::graph_levels(params)
     }
@@ -343,7 +373,7 @@ impl NexCoreMcpServer {
     )]
     async fn foundation_fsrs_review(
         &self,
-        Parameters(params): Parameters<params::FsrsReviewParams>,
+        Parameters(params): Parameters<params::foundation::FsrsReviewParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::foundation::fsrs_review(params)
     }
@@ -353,7 +383,7 @@ impl NexCoreMcpServer {
     )]
     async fn foundation_concept_grep(
         &self,
-        Parameters(params): Parameters<params::ConceptGrepParams>,
+        Parameters(params): Parameters<params::foundation::ConceptGrepParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::foundation::concept_grep(params)
     }
@@ -367,7 +397,7 @@ impl NexCoreMcpServer {
     )]
     async fn pv_signal_strength(
         &self,
-        Parameters(params): Parameters<params::SignalStrengthParams>,
+        Parameters(params): Parameters<params::formula::SignalStrengthParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::formula::signal_strength(params)
     }
@@ -377,7 +407,7 @@ impl NexCoreMcpServer {
     )]
     async fn foundation_domain_distance(
         &self,
-        Parameters(params): Parameters<params::DomainDistanceParams>,
+        Parameters(params): Parameters<params::formula::DomainDistanceParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::formula::domain_distance(params)
     }
@@ -387,7 +417,7 @@ impl NexCoreMcpServer {
     )]
     async fn foundation_flywheel_velocity(
         &self,
-        Parameters(params): Parameters<params::FlywheelVelocityParams>,
+        Parameters(params): Parameters<params::formula::FlywheelVelocityParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::formula::flywheel_velocity(params)
     }
@@ -397,7 +427,7 @@ impl NexCoreMcpServer {
     )]
     async fn foundation_token_ratio(
         &self,
-        Parameters(params): Parameters<params::TokenRatioParams>,
+        Parameters(params): Parameters<params::formula::TokenRatioParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::formula::token_ratio(params)
     }
@@ -407,7 +437,7 @@ impl NexCoreMcpServer {
     )]
     async fn foundation_spectral_overlap(
         &self,
-        Parameters(params): Parameters<params::SpectralOverlapParams>,
+        Parameters(params): Parameters<params::formula::SpectralOverlapParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::formula::spectral_overlap(params)
     }
@@ -421,7 +451,7 @@ impl NexCoreMcpServer {
     )]
     async fn lex_primitiva_list(
         &self,
-        Parameters(params): Parameters<params::LexPrimitivaListParams>,
+        Parameters(params): Parameters<params::lex_primitiva::LexPrimitivaListParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::lex_primitiva::list_primitives(params)
     }
@@ -431,7 +461,7 @@ impl NexCoreMcpServer {
     )]
     async fn lex_primitiva_get(
         &self,
-        Parameters(params): Parameters<params::LexPrimitivaGetParams>,
+        Parameters(params): Parameters<params::lex_primitiva::LexPrimitivaGetParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::lex_primitiva::get_primitive(params)
     }
@@ -441,7 +471,7 @@ impl NexCoreMcpServer {
     )]
     async fn lex_primitiva_tier(
         &self,
-        Parameters(params): Parameters<params::LexPrimitivaTierParams>,
+        Parameters(params): Parameters<params::lex_primitiva::LexPrimitivaTierParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::lex_primitiva::classify_tier(params)
     }
@@ -451,7 +481,7 @@ impl NexCoreMcpServer {
     )]
     async fn lex_primitiva_composition(
         &self,
-        Parameters(params): Parameters<params::LexPrimitivaCompositionParams>,
+        Parameters(params): Parameters<params::lex_primitiva::LexPrimitivaCompositionParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::lex_primitiva::get_composition(params)
     }
@@ -461,7 +491,7 @@ impl NexCoreMcpServer {
     )]
     async fn lex_primitiva_reverse_compose(
         &self,
-        Parameters(params): Parameters<params::LexPrimitivaReverseComposeParams>,
+        Parameters(params): Parameters<params::lex_primitiva::LexPrimitivaReverseComposeParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::lex_primitiva::reverse_compose(params)
     }
@@ -471,7 +501,7 @@ impl NexCoreMcpServer {
     )]
     async fn lex_primitiva_reverse_lookup(
         &self,
-        Parameters(params): Parameters<params::LexPrimitivaReverseLookupParams>,
+        Parameters(params): Parameters<params::lex_primitiva::LexPrimitivaReverseLookupParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::lex_primitiva::reverse_lookup(params)
     }
@@ -481,9 +511,19 @@ impl NexCoreMcpServer {
     )]
     async fn lex_primitiva_molecular_weight(
         &self,
-        Parameters(params): Parameters<params::LexPrimitivaMolecularWeightParams>,
+        Parameters(params): Parameters<params::lex_primitiva::LexPrimitivaMolecularWeightParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::lex_primitiva::molecular_weight(params)
+    }
+
+    #[tool(
+        description = "Dominant shift (phase transition) analysis: detect whether adding a new T1 primitive to a base composition changes the dominant primitive. Returns old/new dominant, tier transition, coherence delta, and a shifted flag. A 'shifted = true' result signals a phase transition — the structural character of the composition has reorganized. Example: adding 'Boundary' to ['Comparison'] triggers the Gatekeeper pattern, shifting dominance from Comparison to Boundary."
+    )]
+    async fn lex_primitiva_dominant_shift(
+        &self,
+        Parameters(params): Parameters<params::lex_primitiva::LexPrimitivaDominantShiftParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::lex_primitiva::dominant_shift(params)
     }
 
     // ========================================================================
@@ -495,7 +535,7 @@ impl NexCoreMcpServer {
     )]
     async fn pv_signal_complete(
         &self,
-        Parameters(params): Parameters<params::SignalCompleteParams>,
+        Parameters(params): Parameters<params::pv::SignalCompleteParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::pv::signal_complete(params)
     }
@@ -505,7 +545,7 @@ impl NexCoreMcpServer {
     )]
     async fn pv_signal_prr(
         &self,
-        Parameters(params): Parameters<params::SignalAlgorithmParams>,
+        Parameters(params): Parameters<params::pv::SignalAlgorithmParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::pv::signal_prr(params)
     }
@@ -515,7 +555,7 @@ impl NexCoreMcpServer {
     )]
     async fn pv_signal_ror(
         &self,
-        Parameters(params): Parameters<params::SignalAlgorithmParams>,
+        Parameters(params): Parameters<params::pv::SignalAlgorithmParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::pv::signal_ror(params)
     }
@@ -525,7 +565,7 @@ impl NexCoreMcpServer {
     )]
     async fn pv_signal_ic(
         &self,
-        Parameters(params): Parameters<params::SignalAlgorithmParams>,
+        Parameters(params): Parameters<params::pv::SignalAlgorithmParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::pv::signal_ic(params)
     }
@@ -535,7 +575,7 @@ impl NexCoreMcpServer {
     )]
     async fn pv_signal_ebgm(
         &self,
-        Parameters(params): Parameters<params::SignalAlgorithmParams>,
+        Parameters(params): Parameters<params::pv::SignalAlgorithmParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::pv::signal_ebgm(params)
     }
@@ -543,7 +583,7 @@ impl NexCoreMcpServer {
     #[tool(description = "Calculate Chi-square statistic for a 2x2 contingency table.")]
     async fn pv_chi_square(
         &self,
-        Parameters(params): Parameters<params::SignalAlgorithmParams>,
+        Parameters(params): Parameters<params::pv::SignalAlgorithmParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::pv::chi_square(params)
     }
@@ -553,7 +593,7 @@ impl NexCoreMcpServer {
     )]
     async fn pv_naranjo_quick(
         &self,
-        Parameters(params): Parameters<params::NaranjoParams>,
+        Parameters(params): Parameters<params::pv::NaranjoParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::pv::naranjo_quick(params)
     }
@@ -563,7 +603,7 @@ impl NexCoreMcpServer {
     )]
     async fn pv_who_umc_quick(
         &self,
-        Parameters(params): Parameters<params::WhoUmcParams>,
+        Parameters(params): Parameters<params::pv::WhoUmcParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::pv::who_umc_quick(params)
     }
@@ -577,7 +617,7 @@ impl NexCoreMcpServer {
     )]
     async fn signal_detect(
         &self,
-        Parameters(params): Parameters<params::SignalDetectParams>,
+        Parameters(params): Parameters<params::pv::SignalDetectParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::signal::signal_detect(params)
     }
@@ -587,7 +627,7 @@ impl NexCoreMcpServer {
     )]
     async fn signal_batch(
         &self,
-        Parameters(params): Parameters<params::SignalBatchParams>,
+        Parameters(params): Parameters<params::pv::SignalBatchParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::signal::signal_batch(params)
     }
@@ -608,7 +648,7 @@ impl NexCoreMcpServer {
     )]
     async fn pvdsl_compile(
         &self,
-        Parameters(params): Parameters<params::PvdslCompileParams>,
+        Parameters(params): Parameters<params::pvdsl::PvdslCompileParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::pvdsl::pvdsl_compile(params)
     }
@@ -618,7 +658,7 @@ impl NexCoreMcpServer {
     )]
     async fn pvdsl_execute(
         &self,
-        Parameters(params): Parameters<params::PvdslExecuteParams>,
+        Parameters(params): Parameters<params::pvdsl::PvdslExecuteParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::pvdsl::pvdsl_execute(params)
     }
@@ -628,7 +668,7 @@ impl NexCoreMcpServer {
     )]
     async fn pvdsl_eval(
         &self,
-        Parameters(params): Parameters<params::PvdslEvalParams>,
+        Parameters(params): Parameters<params::pvdsl::PvdslEvalParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::pvdsl::pvdsl_eval(params)
     }
@@ -649,7 +689,7 @@ impl NexCoreMcpServer {
     )]
     async fn vigilance_safety_margin(
         &self,
-        Parameters(params): Parameters<params::SafetyMarginParams>,
+        Parameters(params): Parameters<params::vigilance::SafetyMarginParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::vigilance::safety_margin(params)
     }
@@ -659,7 +699,7 @@ impl NexCoreMcpServer {
     )]
     async fn vigilance_risk_score(
         &self,
-        Parameters(params): Parameters<params::RiskScoreParams>,
+        Parameters(params): Parameters<params::vigilance::RiskScoreParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::vigilance::risk_score(params)
     }
@@ -676,7 +716,7 @@ impl NexCoreMcpServer {
     )]
     async fn vigilance_map_to_tov(
         &self,
-        Parameters(params): Parameters<params::MapToTovParams>,
+        Parameters(params): Parameters<params::vigilance::MapToTovParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::vigilance::map_to_tov(params)
     }
@@ -690,7 +730,7 @@ impl NexCoreMcpServer {
     )]
     async fn compliance_check_exclusion(
         &self,
-        Parameters(params): Parameters<params::ComplianceCheckExclusionParams>,
+        Parameters(params): Parameters<params::compliance::ComplianceCheckExclusionParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::compliance::check_exclusion(params).await
     }
@@ -700,7 +740,7 @@ impl NexCoreMcpServer {
     )]
     async fn compliance_assess(
         &self,
-        Parameters(params): Parameters<params::ComplianceAssessParams>,
+        Parameters(params): Parameters<params::compliance::ComplianceAssessParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::compliance::assess(params)
     }
@@ -710,7 +750,7 @@ impl NexCoreMcpServer {
     )]
     async fn compliance_catalog_ich(
         &self,
-        Parameters(params): Parameters<params::ComplianceCatalogParams>,
+        Parameters(params): Parameters<params::compliance::ComplianceCatalogParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::compliance::catalog_ich(params)
     }
@@ -720,7 +760,7 @@ impl NexCoreMcpServer {
     )]
     async fn compliance_sec_filings(
         &self,
-        Parameters(params): Parameters<params::ComplianceSecFilingsParams>,
+        Parameters(params): Parameters<params::compliance::ComplianceSecFilingsParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::compliance::sec_filings(params).await
     }
@@ -730,7 +770,7 @@ impl NexCoreMcpServer {
     )]
     async fn compliance_sec_pharma(
         &self,
-        Parameters(params): Parameters<params::ComplianceSecPharmaParams>,
+        Parameters(params): Parameters<params::compliance::ComplianceSecPharmaParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::compliance::sec_pharma(params).await
     }
@@ -751,7 +791,7 @@ impl NexCoreMcpServer {
     )]
     async fn hormone_get(
         &self,
-        Parameters(params): Parameters<params::HormoneGetParams>,
+        Parameters(params): Parameters<params::biology::HormoneGetParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hormones::get(params)
     }
@@ -761,7 +801,7 @@ impl NexCoreMcpServer {
     )]
     async fn hormone_stimulus(
         &self,
-        Parameters(params): Parameters<params::HormoneStimulusParams>,
+        Parameters(params): Parameters<params::biology::HormoneStimulusParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hormones::stimulus(params)
     }
@@ -782,7 +822,7 @@ impl NexCoreMcpServer {
     )]
     async fn guardian_homeostasis_tick(
         &self,
-        Parameters(params): Parameters<params::GuardianTickParams>,
+        Parameters(params): Parameters<params::guardian::GuardianTickParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::guardian::homeostasis_tick(params).await
     }
@@ -792,7 +832,7 @@ impl NexCoreMcpServer {
     )]
     async fn guardian_evaluate_pv(
         &self,
-        Parameters(params): Parameters<params::GuardianEvaluatePvParams>,
+        Parameters(params): Parameters<params::guardian::GuardianEvaluatePvParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::guardian::evaluate_pv(params)
     }
@@ -802,7 +842,7 @@ impl NexCoreMcpServer {
     )]
     async fn guardian_status(
         &self,
-        Parameters(params): Parameters<params::GuardianStatusParams>,
+        Parameters(params): Parameters<params::guardian::GuardianStatusParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::guardian::status(params).await
     }
@@ -819,9 +859,9 @@ impl NexCoreMcpServer {
     )]
     async fn guardian_inject_signal(
         &self,
-        Parameters(params): Parameters<params::GuardianInjectSignalParams>,
+        Parameters(params): Parameters<params::guardian::GuardianInjectSignalParams>,
     ) -> Result<CallToolResult, McpError> {
-        tools::guardian::inject_signal(params)
+        tools::guardian::inject_signal(params).await
     }
 
     #[tool(
@@ -829,7 +869,7 @@ impl NexCoreMcpServer {
     )]
     async fn guardian_sensors_list(
         &self,
-        Parameters(params): Parameters<params::GuardianSensorsListParams>,
+        Parameters(params): Parameters<params::guardian::GuardianSensorsListParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::guardian::sensors_list(params).await
     }
@@ -839,7 +879,7 @@ impl NexCoreMcpServer {
     )]
     async fn guardian_actuators_list(
         &self,
-        Parameters(params): Parameters<params::GuardianActuatorsListParams>,
+        Parameters(params): Parameters<params::guardian::GuardianActuatorsListParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::guardian::actuators_list(params).await
     }
@@ -849,7 +889,7 @@ impl NexCoreMcpServer {
     )]
     async fn guardian_history(
         &self,
-        Parameters(params): Parameters<params::GuardianHistoryParams>,
+        Parameters(params): Parameters<params::guardian::GuardianHistoryParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::guardian::history(params)
     }
@@ -859,7 +899,7 @@ impl NexCoreMcpServer {
     )]
     async fn guardian_originator_classify(
         &self,
-        Parameters(params): Parameters<params::GuardianOriginatorClassifyParams>,
+        Parameters(params): Parameters<params::guardian::GuardianOriginatorClassifyParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::guardian::originator_classify(params)
     }
@@ -869,7 +909,7 @@ impl NexCoreMcpServer {
     )]
     async fn guardian_ceiling_for_originator(
         &self,
-        Parameters(params): Parameters<params::GuardianCeilingForOriginatorParams>,
+        Parameters(params): Parameters<params::guardian::GuardianCeilingForOriginatorParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::guardian::ceiling_for_originator(params)
     }
@@ -879,7 +919,7 @@ impl NexCoreMcpServer {
     )]
     async fn guardian_space3d_compute(
         &self,
-        Parameters(params): Parameters<params::GuardianSpace3DComputeParams>,
+        Parameters(params): Parameters<params::guardian::GuardianSpace3DComputeParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::guardian::space3d_compute(params)
     }
@@ -889,9 +929,51 @@ impl NexCoreMcpServer {
     )]
     async fn pv_control_loop_tick(
         &self,
-        Parameters(params): Parameters<params::PvControlLoopTickParams>,
+        Parameters(params): Parameters<params::guardian::PvControlLoopTickParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::guardian::pv_control_loop_tick(params)
+    }
+
+    // ========================================================================
+    // Relay Fidelity Tools (4) — →+∂+π
+    // ========================================================================
+
+    #[tool(
+        description = "Build a relay chain from hops and verify A1-A5 axioms. Each hop has a stage name, fidelity (0.0-1.0), and optional threshold. Returns total fidelity, signal loss %, axiom pass/fail, and weakest hop. Use to measure information preservation across any multi-stage pipeline."
+    )]
+    async fn relay_chain_verify(
+        &self,
+        Parameters(params): Parameters<params::relay::RelayChainComputeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::relay::relay_chain_verify(params)
+    }
+
+    #[tool(
+        description = "Get the pre-configured 7-stage PV signal pipeline relay chain with verification. Shows fidelity at each stage: ingest → normalize → detect → threshold → store → alert → report. Returns total F, signal loss, and whether it meets safety-critical threshold (F_min=0.80)."
+    )]
+    async fn relay_pv_pipeline(
+        &self,
+    ) -> Result<CallToolResult, McpError> {
+        tools::relay::relay_pv_pipeline()
+    }
+
+    #[tool(
+        description = "Get the core 4-stage detection relay chain: ingest → detect → threshold → alert. This is the minimal safe pipeline that passes safety-critical fidelity (F>0.80). Compare with relay_pv_pipeline to see the effect of additional hops."
+    )]
+    async fn relay_core_detection(
+        &self,
+    ) -> Result<CallToolResult, McpError> {
+        tools::relay::relay_core_detection()
+    }
+
+    #[tool(
+        description = "Compose fidelity values multiplicatively. Given [0.95, 0.93, 0.97], returns composed fidelity = 0.95 × 0.93 × 0.97 = 0.857. Demonstrates the Relay Degradation Law: F_total = ∏ F_i. Each hop can only reduce total fidelity, never increase it."
+    )]
+    async fn relay_fidelity_compose(
+        &self,
+        Parameters(params): Parameters<params::relay::RelayFidelityComposeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::relay::relay_fidelity_compose(params)
     }
 
     // ========================================================================
@@ -903,7 +985,7 @@ impl NexCoreMcpServer {
     )]
     async fn fda_bridge_evaluate(
         &self,
-        Parameters(params): Parameters<params::FdaBridgeEvaluateParams>,
+        Parameters(params): Parameters<params::guardian::FdaBridgeEvaluateParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::guardian::fda_bridge_evaluate(params)
     }
@@ -913,7 +995,7 @@ impl NexCoreMcpServer {
     )]
     async fn fda_bridge_batch(
         &self,
-        Parameters(params): Parameters<params::FdaBridgeBatchParams>,
+        Parameters(params): Parameters<params::guardian::FdaBridgeBatchParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::guardian::fda_bridge_batch(params)
     }
@@ -927,7 +1009,7 @@ impl NexCoreMcpServer {
     )]
     async fn sba_allocate_agent(
         &self,
-        Parameters(params): Parameters<params::SbaAllocateAgentParams>,
+        Parameters(params): Parameters<params::hud::SbaAllocateAgentParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::sba_allocate_agent(params)
     }
@@ -937,7 +1019,7 @@ impl NexCoreMcpServer {
     )]
     async fn sba_chain_next(
         &self,
-        Parameters(params): Parameters<params::SbaChainNextParams>,
+        Parameters(params): Parameters<params::hud::SbaChainNextParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::sba_chain_next(params)
     }
@@ -947,7 +1029,7 @@ impl NexCoreMcpServer {
     )]
     async fn ssa_persist_state(
         &self,
-        Parameters(params): Parameters<params::SsaPersistStateParams>,
+        Parameters(params): Parameters<params::hud::SsaPersistStateParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::ssa_persist_state(params)
     }
@@ -957,7 +1039,7 @@ impl NexCoreMcpServer {
     )]
     async fn ssa_verify_integrity(
         &self,
-        Parameters(params): Parameters<params::SsaVerifyIntegrityParams>,
+        Parameters(params): Parameters<params::hud::SsaVerifyIntegrityParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::ssa_verify_integrity(params)
     }
@@ -967,7 +1049,7 @@ impl NexCoreMcpServer {
     )]
     async fn fed_budget_report(
         &self,
-        Parameters(params): Parameters<params::FedBudgetReportParams>,
+        Parameters(params): Parameters<params::hud::FedBudgetReportParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::fed_budget_report(params)
     }
@@ -977,7 +1059,7 @@ impl NexCoreMcpServer {
     )]
     async fn fed_recommend_model(
         &self,
-        Parameters(params): Parameters<params::FedRecommendModelParams>,
+        Parameters(params): Parameters<params::hud::FedRecommendModelParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::fed_recommend_model(params)
     }
@@ -987,7 +1069,7 @@ impl NexCoreMcpServer {
     )]
     async fn sec_audit_market(
         &self,
-        Parameters(params): Parameters<params::SecAuditMarketParams>,
+        Parameters(params): Parameters<params::hud::SecAuditMarketParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::sec_audit_market(params)
     }
@@ -997,7 +1079,7 @@ impl NexCoreMcpServer {
     )]
     async fn comm_recommend_protocol(
         &self,
-        Parameters(params): Parameters<params::CommRecommendProtocolParams>,
+        Parameters(params): Parameters<params::hud::CommRecommendProtocolParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::comm_recommend_protocol(params)
     }
@@ -1007,7 +1089,7 @@ impl NexCoreMcpServer {
     )]
     async fn comm_route_message(
         &self,
-        Parameters(params): Parameters<params::CommRouteMessageParams>,
+        Parameters(params): Parameters<params::hud::CommRouteMessageParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::comm_route_message(params)
     }
@@ -1017,7 +1099,7 @@ impl NexCoreMcpServer {
     )]
     async fn explore_launch_mission(
         &self,
-        Parameters(params): Parameters<params::ExploreLaunchMissionParams>,
+        Parameters(params): Parameters<params::hud::ExploreLaunchMissionParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::explore_launch_mission(params)
     }
@@ -1027,7 +1109,7 @@ impl NexCoreMcpServer {
     )]
     async fn explore_record_discovery(
         &self,
-        Parameters(params): Parameters<params::ExploreRecordDiscoveryParams>,
+        Parameters(params): Parameters<params::hud::ExploreRecordDiscoveryParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::explore_record_discovery(params)
     }
@@ -1037,7 +1119,7 @@ impl NexCoreMcpServer {
     )]
     async fn explore_get_frontier(
         &self,
-        Parameters(params): Parameters<params::ExploreGetFrontierParams>,
+        Parameters(params): Parameters<params::hud::ExploreGetFrontierParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::explore_get_frontier(params)
     }
@@ -1047,7 +1129,7 @@ impl NexCoreMcpServer {
     )]
     async fn health_validate_signal(
         &self,
-        Parameters(params): Parameters<params::HealthValidateSignalParams>,
+        Parameters(params): Parameters<params::hud::HealthValidateSignalParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::health_validate_signal(params)
     }
@@ -1057,7 +1139,7 @@ impl NexCoreMcpServer {
     )]
     async fn health_measure_impact(
         &self,
-        Parameters(params): Parameters<params::HealthMeasureImpactParams>,
+        Parameters(params): Parameters<params::hud::HealthMeasureImpactParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::health_measure_impact(params)
     }
@@ -1067,7 +1149,7 @@ impl NexCoreMcpServer {
     )]
     async fn treasury_convert_asymmetry(
         &self,
-        Parameters(params): Parameters<params::TreasuryConvertAsymmetryParams>,
+        Parameters(params): Parameters<params::hud::TreasuryConvertAsymmetryParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::treasury_convert_asymmetry(params)
     }
@@ -1077,7 +1159,7 @@ impl NexCoreMcpServer {
     )]
     async fn treasury_audit(
         &self,
-        Parameters(params): Parameters<params::TreasuryAuditParams>,
+        Parameters(params): Parameters<params::hud::TreasuryAuditParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::treasury_audit(params)
     }
@@ -1087,7 +1169,7 @@ impl NexCoreMcpServer {
     )]
     async fn dot_dispatch_manifest(
         &self,
-        Parameters(params): Parameters<params::DotDispatchManifestParams>,
+        Parameters(params): Parameters<params::hud::DotDispatchManifestParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::dot_dispatch_manifest(params)
     }
@@ -1095,7 +1177,7 @@ impl NexCoreMcpServer {
     #[tool(description = "Verify highway safety (CAP-019). NHTSA-style route integrity check.")]
     async fn dot_verify_highway(
         &self,
-        Parameters(params): Parameters<params::DotVerifyHighwayParams>,
+        Parameters(params): Parameters<params::hud::DotVerifyHighwayParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::dot_verify_highway(params)
     }
@@ -1105,7 +1187,7 @@ impl NexCoreMcpServer {
     )]
     async fn dhs_verify_boundary(
         &self,
-        Parameters(params): Parameters<params::DhsVerifyBoundaryParams>,
+        Parameters(params): Parameters<params::hud::DhsVerifyBoundaryParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::dhs_verify_boundary(params)
     }
@@ -1115,7 +1197,7 @@ impl NexCoreMcpServer {
     )]
     async fn edu_train_agent(
         &self,
-        Parameters(params): Parameters<params::EduTrainAgentParams>,
+        Parameters(params): Parameters<params::hud::EduTrainAgentParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::edu_train_agent(params)
     }
@@ -1125,7 +1207,7 @@ impl NexCoreMcpServer {
     )]
     async fn edu_evaluate(
         &self,
-        Parameters(params): Parameters<params::EduEvaluateParams>,
+        Parameters(params): Parameters<params::hud::EduEvaluateParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::edu_evaluate(params)
     }
@@ -1135,7 +1217,7 @@ impl NexCoreMcpServer {
     )]
     async fn nsf_fund_research(
         &self,
-        Parameters(params): Parameters<params::NsfFundResearchParams>,
+        Parameters(params): Parameters<params::hud::NsfFundResearchParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::nsf_fund_research(params)
     }
@@ -1145,7 +1227,7 @@ impl NexCoreMcpServer {
     )]
     async fn gsa_procure(
         &self,
-        Parameters(params): Parameters<params::GsaProcureParams>,
+        Parameters(params): Parameters<params::hud::GsaProcureParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::gsa_procure(params)
     }
@@ -1155,7 +1237,7 @@ impl NexCoreMcpServer {
     )]
     async fn gsa_audit_value(
         &self,
-        Parameters(params): Parameters<params::GsaAuditValueParams>,
+        Parameters(params): Parameters<params::hud::GsaAuditValueParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hud::gsa_audit_value(params)
     }
@@ -1169,9 +1251,67 @@ impl NexCoreMcpServer {
     )]
     async fn docs_generate_claude_md(
         &self,
-        Parameters(params): Parameters<params::DocsGenerateClaudeMdParams>,
+        Parameters(params): Parameters<params::docs::DocsGenerateClaudeMdParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::docs::docs_generate_claude_md(params)
+    }
+
+    // ========================================================================
+    // Crate X-Ray (3)
+    // ========================================================================
+
+    #[tool(
+        description = "Deep X-ray inspection of a nexcore crate. Returns structure (types, modules), grounding coverage, transfer mappings, safety denials, dependency graph, reverse deps, adoption status, and overall health grade (GOLD/SILVER/BRONZE/UNRATED). Like an MRI for crates."
+    )]
+    async fn crate_xray(
+        &self,
+        Parameters(params): Parameters<params::CrateXrayParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::crate_xray::xray(params)
+    }
+
+    #[tool(
+        description = "Run CTVP validation trials on a crate. Phase 0=Preclinical (structure), Phase 1=Safety (denials, no panics), Phase 2=Efficacy (grounding, transfers, serde), Phase 3=Confirmation (tests exist, categories covered), Phase 4=Surveillance (adoption, blast radius). Omit phase to run all."
+    )]
+    async fn crate_xray_trial(
+        &self,
+        Parameters(params): Parameters<params::CrateXrayTrialParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::crate_xray::trial(params)
+    }
+
+    #[tool(
+        description = "Generate prioritized development goals for a crate based on X-ray gap analysis. Returns P0-P3 goals mapped to CTVP phases with effort estimates. Shows overall progress percentage and what to work on next."
+    )]
+    async fn crate_xray_goals(
+        &self,
+        Parameters(params): Parameters<params::CrateXrayGoalsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::crate_xray::goals(params)
+    }
+
+    // ========================================================================
+    // Crate Development Framework (2)
+    // ========================================================================
+
+    #[tool(
+        description = "Scaffold a new nexcore crate following the gold standard pattern (nexcore-cloud). Creates Cargo.toml, lib.rs, primitives.rs, composites.rs, grounding.rs, transfer.rs, and prelude.rs with templates. Returns file list and next steps."
+    )]
+    async fn crate_dev_scaffold(
+        &self,
+        Parameters(params): Parameters<params::CrateDevScaffoldParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::crate_dev::scaffold_crate(params)
+    }
+
+    #[tool(
+        description = "Audit a nexcore crate against gold standard quality checks. Scores: safety denials, module structure, GroundsTo coverage, transfer mappings, dependency minimality, serde derives. Returns grade (GOLD/SILVER/BRONZE/UNRATED) and detailed check results."
+    )]
+    async fn crate_dev_audit(
+        &self,
+        Parameters(params): Parameters<params::CrateDevAuditParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::crate_dev::audit_crate(params)
     }
 
     // ========================================================================
@@ -1183,7 +1323,7 @@ impl NexCoreMcpServer {
     )]
     async fn vigil_status(
         &self,
-        Parameters(params): Parameters<params::VigilStatusParams>,
+        Parameters(params): Parameters<params::vigil::VigilStatusParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::vigil::status(params)
     }
@@ -1193,7 +1333,7 @@ impl NexCoreMcpServer {
     )]
     async fn vigil_health(
         &self,
-        Parameters(params): Parameters<params::VigilHealthParams>,
+        Parameters(params): Parameters<params::vigil::VigilHealthParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::vigil::health(params).await
     }
@@ -1203,7 +1343,7 @@ impl NexCoreMcpServer {
     )]
     async fn vigil_emit_event(
         &self,
-        Parameters(params): Parameters<params::VigilEmitEventParams>,
+        Parameters(params): Parameters<params::vigil::VigilEmitEventParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::vigil::emit_event(params).await
     }
@@ -1213,7 +1353,7 @@ impl NexCoreMcpServer {
     )]
     async fn vigil_memory_search(
         &self,
-        Parameters(params): Parameters<params::VigilMemorySearchParams>,
+        Parameters(params): Parameters<params::vigil::VigilMemorySearchParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::vigil::memory_search(params).await
     }
@@ -1223,7 +1363,7 @@ impl NexCoreMcpServer {
     )]
     async fn vigil_memory_stats(
         &self,
-        Parameters(params): Parameters<params::VigilMemoryStatsParams>,
+        Parameters(params): Parameters<params::vigil::VigilMemoryStatsParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::vigil::memory_stats(params).await
     }
@@ -1233,7 +1373,7 @@ impl NexCoreMcpServer {
     )]
     async fn vigil_llm_stats(
         &self,
-        Parameters(params): Parameters<params::VigilLlmStatsParams>,
+        Parameters(params): Parameters<params::vigil::VigilLlmStatsParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::vigil::llm_stats(params).await
     }
@@ -1243,7 +1383,7 @@ impl NexCoreMcpServer {
     )]
     async fn vigil_source_control(
         &self,
-        Parameters(params): Parameters<params::VigilSourceControlParams>,
+        Parameters(params): Parameters<params::vigil::VigilSourceControlParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::vigil::source_control(params).await
     }
@@ -1253,7 +1393,7 @@ impl NexCoreMcpServer {
     )]
     async fn vigil_executor_control(
         &self,
-        Parameters(params): Parameters<params::VigilExecutorControlParams>,
+        Parameters(params): Parameters<params::vigil::VigilExecutorControlParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::vigil::executor_control(params).await
     }
@@ -1263,7 +1403,7 @@ impl NexCoreMcpServer {
     )]
     async fn vigil_authority_config(
         &self,
-        Parameters(params): Parameters<params::VigilAuthorityConfigParams>,
+        Parameters(params): Parameters<params::vigil::VigilAuthorityConfigParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::vigil::authority_config(params).await
     }
@@ -1273,7 +1413,7 @@ impl NexCoreMcpServer {
     )]
     async fn vigil_context_assemble(
         &self,
-        Parameters(params): Parameters<params::VigilContextAssembleParams>,
+        Parameters(params): Parameters<params::vigil::VigilContextAssembleParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::vigil::context_assemble(serde_json::to_value(&params).unwrap_or_default()).await
     }
@@ -1283,7 +1423,7 @@ impl NexCoreMcpServer {
     )]
     async fn vigil_authority_verify(
         &self,
-        Parameters(params): Parameters<params::VigilAuthorityVerifyParams>,
+        Parameters(params): Parameters<params::vigil::VigilAuthorityVerifyParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::vigil::authority_verify(serde_json::to_value(&params).unwrap_or_default()).await
     }
@@ -1293,7 +1433,7 @@ impl NexCoreMcpServer {
     )]
     async fn vigil_webhook_test(
         &self,
-        Parameters(params): Parameters<params::VigilWebhookTestParams>,
+        Parameters(params): Parameters<params::vigil::VigilWebhookTestParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::vigil::webhook_test(serde_json::to_value(&params).unwrap_or_default()).await
     }
@@ -1303,7 +1443,7 @@ impl NexCoreMcpServer {
     )]
     async fn vigil_source_config(
         &self,
-        Parameters(params): Parameters<params::VigilSourceConfigParams>,
+        Parameters(params): Parameters<params::vigil::VigilSourceConfigParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::vigil::source_config(serde_json::to_value(&params).unwrap_or_default()).await
     }
@@ -1317,7 +1457,7 @@ impl NexCoreMcpServer {
     )]
     async fn pv_pipeline(
         &self,
-        Parameters(params): Parameters<params::PvPipelineParams>,
+        Parameters(params): Parameters<params::pv::PvPipelineParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::pv_pipeline::run_pipeline(params).await
     }
@@ -1331,7 +1471,7 @@ impl NexCoreMcpServer {
     )]
     async fn pv_axioms_ksb_lookup(
         &self,
-        Parameters(params): Parameters<params::PvAxiomsKsbLookupParams>,
+        Parameters(params): Parameters<params::axioms::PvAxiomsKsbLookupParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::pv_axioms::ksb_lookup(params)
     }
@@ -1341,7 +1481,7 @@ impl NexCoreMcpServer {
     )]
     async fn pv_axioms_regulation_search(
         &self,
-        Parameters(params): Parameters<params::PvAxiomsRegulationSearchParams>,
+        Parameters(params): Parameters<params::axioms::PvAxiomsRegulationSearchParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::pv_axioms::regulation_search(params)
     }
@@ -1351,7 +1491,7 @@ impl NexCoreMcpServer {
     )]
     async fn pv_axioms_traceability_chain(
         &self,
-        Parameters(params): Parameters<params::PvAxiomsTraceabilityParams>,
+        Parameters(params): Parameters<params::axioms::PvAxiomsTraceabilityParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::pv_axioms::traceability_chain(params)
     }
@@ -1361,7 +1501,7 @@ impl NexCoreMcpServer {
     )]
     async fn pv_axioms_domain_dashboard(
         &self,
-        Parameters(params): Parameters<params::PvAxiomsDomainDashboardParams>,
+        Parameters(params): Parameters<params::axioms::PvAxiomsDomainDashboardParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::pv_axioms::domain_dashboard(params)
     }
@@ -1371,7 +1511,7 @@ impl NexCoreMcpServer {
     )]
     async fn pv_axioms_query(
         &self,
-        Parameters(params): Parameters<params::PvAxiomsQueryParams>,
+        Parameters(params): Parameters<params::axioms::PvAxiomsQueryParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::pv_axioms::query(params)
     }
@@ -1385,7 +1525,7 @@ impl NexCoreMcpServer {
     )]
     async fn skill_scan(
         &self,
-        Parameters(params): Parameters<params::SkillScanParams>,
+        Parameters(params): Parameters<params::skills::SkillScanParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::skills::scan(&self.registry, params)
     }
@@ -1400,7 +1540,7 @@ impl NexCoreMcpServer {
     #[tool(description = "Get detailed information about a specific skill by name.")]
     async fn skill_get(
         &self,
-        Parameters(params): Parameters<params::SkillGetParams>,
+        Parameters(params): Parameters<params::skills::SkillGetParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::skills::get(&self.registry, params)
     }
@@ -1410,7 +1550,7 @@ impl NexCoreMcpServer {
     )]
     async fn skill_validate(
         &self,
-        Parameters(params): Parameters<params::SkillValidateParams>,
+        Parameters(params): Parameters<params::skills::SkillValidateParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::skills::validate(params)
     }
@@ -1418,7 +1558,7 @@ impl NexCoreMcpServer {
     #[tool(description = "Search skills by tag. Returns matching skills from the registry.")]
     async fn skill_search_by_tag(
         &self,
-        Parameters(params): Parameters<params::SkillSearchByTagParams>,
+        Parameters(params): Parameters<params::skills::SkillSearchByTagParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::skills::search_by_tag(&self.registry, params)
     }
@@ -1428,7 +1568,7 @@ impl NexCoreMcpServer {
     )]
     async fn skill_list_nested(
         &self,
-        Parameters(params): Parameters<params::SkillListNestedParams>,
+        Parameters(params): Parameters<params::skills::SkillListNestedParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::skills::list_nested(&self.registry, params)
     }
@@ -1438,7 +1578,7 @@ impl NexCoreMcpServer {
     )]
     async fn skill_taxonomy_query(
         &self,
-        Parameters(params): Parameters<params::TaxonomyQueryParams>,
+        Parameters(params): Parameters<params::skills::TaxonomyQueryParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::skills::taxonomy_query(params)
     }
@@ -1448,7 +1588,7 @@ impl NexCoreMcpServer {
     )]
     async fn skill_taxonomy_list(
         &self,
-        Parameters(params): Parameters<params::TaxonomyListParams>,
+        Parameters(params): Parameters<params::skills::TaxonomyListParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::skills::taxonomy_list(params)
     }
@@ -1465,7 +1605,7 @@ impl NexCoreMcpServer {
     )]
     async fn nexcore_assist(
         &self,
-        Parameters(params): Parameters<params::AssistParams>,
+        Parameters(params): Parameters<params::skills::AssistParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::assist::search(&self.assist_index, params)
     }
@@ -1475,7 +1615,7 @@ impl NexCoreMcpServer {
     )]
     async fn skill_orchestration_analyze(
         &self,
-        Parameters(params): Parameters<params::SkillOrchestrationAnalyzeParams>,
+        Parameters(params): Parameters<params::skills::SkillOrchestrationAnalyzeParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::skills::orchestration_analyze(params)
     }
@@ -1485,7 +1625,7 @@ impl NexCoreMcpServer {
     )]
     async fn skill_execute(
         &self,
-        Parameters(params): Parameters<params::SkillExecuteParams>,
+        Parameters(params): Parameters<params::skills::SkillExecuteParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::skills::execute(params)
     }
@@ -1495,7 +1635,7 @@ impl NexCoreMcpServer {
     )]
     async fn skill_schema(
         &self,
-        Parameters(params): Parameters<params::SkillSchemaParams>,
+        Parameters(params): Parameters<params::skills::SkillSchemaParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::skills::schema(params)
     }
@@ -1509,7 +1649,7 @@ impl NexCoreMcpServer {
     )]
     async fn skill_compile(
         &self,
-        Parameters(params): Parameters<params::SkillCompileParams>,
+        Parameters(params): Parameters<params::skills::SkillCompileParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::skills::compile(params)
     }
@@ -1519,7 +1659,7 @@ impl NexCoreMcpServer {
     )]
     async fn skill_compile_check(
         &self,
-        Parameters(params): Parameters<params::SkillCompileCheckParams>,
+        Parameters(params): Parameters<params::skills::SkillCompileCheckParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::skills::compile_check(params)
     }
@@ -1529,7 +1669,7 @@ impl NexCoreMcpServer {
     )]
     async fn skill_token_analyze(
         &self,
-        Parameters(params): Parameters<params::SkillTokenAnalyzeParams>,
+        Parameters(params): Parameters<params::skills::SkillTokenAnalyzeParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::skill_tokens::analyze(params)
     }
@@ -1543,7 +1683,7 @@ impl NexCoreMcpServer {
     )]
     async fn vocab_skill_lookup(
         &self,
-        Parameters(params): Parameters<params::VocabSkillLookupParams>,
+        Parameters(params): Parameters<params::skills::VocabSkillLookupParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::skills::vocab_skill_lookup(params)
     }
@@ -1553,7 +1693,7 @@ impl NexCoreMcpServer {
     )]
     async fn primitive_skill_lookup(
         &self,
-        Parameters(params): Parameters<params::PrimitiveSkillLookupParams>,
+        Parameters(params): Parameters<params::skills::PrimitiveSkillLookupParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::skills::primitive_skill_lookup(params)
     }
@@ -1563,7 +1703,7 @@ impl NexCoreMcpServer {
     )]
     async fn skill_chain_lookup(
         &self,
-        Parameters(params): Parameters<params::SkillChainLookupParams>,
+        Parameters(params): Parameters<params::skills::SkillChainLookupParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::skills::skill_chain_lookup(params)
     }
@@ -1582,7 +1722,7 @@ impl NexCoreMcpServer {
     )]
     async fn guidelines_search(
         &self,
-        Parameters(params): Parameters<params::GuidelinesSearchParams>,
+        Parameters(params): Parameters<params::knowledge::GuidelinesSearchParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::guidelines::search(params)
     }
@@ -1592,7 +1732,7 @@ impl NexCoreMcpServer {
     )]
     async fn guidelines_get(
         &self,
-        Parameters(params): Parameters<params::GuidelinesGetParams>,
+        Parameters(params): Parameters<params::knowledge::GuidelinesGetParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::guidelines::get(params)
     }
@@ -1614,9 +1754,56 @@ impl NexCoreMcpServer {
     #[tool(description = "Get the PDF URL for a guideline by ID.")]
     async fn guidelines_url(
         &self,
-        Parameters(params): Parameters<params::GuidelinesUrlParams>,
+        Parameters(params): Parameters<params::knowledge::GuidelinesUrlParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::guidelines::url(params)
+    }
+
+    #[tool(
+        description = "Search 2,794+ FDA guidance documents by keyword. Filter by center (CDER/CBER/CDRH/CFSAN/CVM/CTP/ORA), product area, or status (Draft/Final). Returns scored results with title, status, date, centers, PDF URL."
+    )]
+    async fn fda_guidance_search(
+        &self,
+        Parameters(params): Parameters<params::knowledge::FdaGuidanceSearchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::fda_guidance::search(params)
+    }
+
+    #[tool(
+        description = "Get a specific FDA guidance document by slug or partial title. Returns full details including PDF URL, centers, topics, products, docket number, and comment status."
+    )]
+    async fn fda_guidance_get(
+        &self,
+        Parameters(params): Parameters<params::knowledge::FdaGuidanceGetParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::fda_guidance::get(params)
+    }
+
+    #[tool(
+        description = "List FDA guidance document categories with counts. Shows breakdown by FDA center, product area, and topic."
+    )]
+    async fn fda_guidance_categories(&self) -> Result<CallToolResult, McpError> {
+        tools::fda_guidance::categories()
+    }
+
+    #[tool(
+        description = "Get the PDF download URL for an FDA guidance document by slug."
+    )]
+    async fn fda_guidance_url(
+        &self,
+        Parameters(params): Parameters<params::knowledge::FdaGuidanceUrlParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::fda_guidance::url(params)
+    }
+
+    #[tool(
+        description = "List FDA guidance documents filtered by status (Draft/Final). Optionally filter to only documents currently open for public comment."
+    )]
+    async fn fda_guidance_status(
+        &self,
+        Parameters(params): Parameters<params::knowledge::FdaGuidanceStatusParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::fda_guidance::status(params)
     }
 
     #[tool(
@@ -1624,7 +1811,7 @@ impl NexCoreMcpServer {
     )]
     async fn ich_lookup(
         &self,
-        Parameters(params): Parameters<params::IchLookupParams>,
+        Parameters(params): Parameters<params::knowledge::IchLookupParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::ich_glossary::ich_lookup(params)
     }
@@ -1634,7 +1821,7 @@ impl NexCoreMcpServer {
     )]
     async fn ich_search(
         &self,
-        Parameters(params): Parameters<params::IchSearchParams>,
+        Parameters(params): Parameters<params::knowledge::IchSearchParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::ich_glossary::ich_search(params)
     }
@@ -1644,7 +1831,7 @@ impl NexCoreMcpServer {
     )]
     async fn ich_guideline(
         &self,
-        Parameters(params): Parameters<params::IchGuidelineParams>,
+        Parameters(params): Parameters<params::knowledge::IchGuidelineParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::ich_glossary::ich_guideline(params)
     }
@@ -1665,7 +1852,7 @@ impl NexCoreMcpServer {
     )]
     async fn mesh_lookup(
         &self,
-        Parameters(params): Parameters<params::MeshLookupParams>,
+        Parameters(params): Parameters<params::mesh::MeshLookupParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::mesh::lookup(params).await
     }
@@ -1675,7 +1862,7 @@ impl NexCoreMcpServer {
     )]
     async fn mesh_search(
         &self,
-        Parameters(params): Parameters<params::MeshSearchParams>,
+        Parameters(params): Parameters<params::mesh::MeshSearchParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::mesh::search(params).await
     }
@@ -1685,7 +1872,7 @@ impl NexCoreMcpServer {
     )]
     async fn mesh_tree(
         &self,
-        Parameters(params): Parameters<params::MeshTreeParams>,
+        Parameters(params): Parameters<params::mesh::MeshTreeParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::mesh::tree(params).await
     }
@@ -1695,7 +1882,7 @@ impl NexCoreMcpServer {
     )]
     async fn mesh_crossref(
         &self,
-        Parameters(params): Parameters<params::MeshCrossrefParams>,
+        Parameters(params): Parameters<params::mesh::MeshCrossrefParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::mesh::crossref(params).await
     }
@@ -1705,7 +1892,7 @@ impl NexCoreMcpServer {
     )]
     async fn mesh_enrich_pubmed(
         &self,
-        Parameters(params): Parameters<params::MeshEnrichPubmedParams>,
+        Parameters(params): Parameters<params::mesh::MeshEnrichPubmedParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::mesh::enrich_pubmed(params).await
     }
@@ -1715,7 +1902,7 @@ impl NexCoreMcpServer {
     )]
     async fn mesh_consistency(
         &self,
-        Parameters(params): Parameters<params::MeshConsistencyParams>,
+        Parameters(params): Parameters<params::mesh::MeshConsistencyParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::mesh::consistency(params).await
     }
@@ -1729,7 +1916,7 @@ impl NexCoreMcpServer {
     )]
     async fn faers_search(
         &self,
-        Parameters(params): Parameters<params::FaersSearchParams>,
+        Parameters(params): Parameters<params::faers::FaersSearchParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::faers::search(params).await
     }
@@ -1737,7 +1924,7 @@ impl NexCoreMcpServer {
     #[tool(description = "Get top adverse events reported for a specific drug from FAERS.")]
     async fn faers_drug_events(
         &self,
-        Parameters(params): Parameters<params::FaersDrugEventsParams>,
+        Parameters(params): Parameters<params::faers::FaersDrugEventsParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::faers::drug_events(params).await
     }
@@ -1747,7 +1934,7 @@ impl NexCoreMcpServer {
     )]
     async fn faers_signal_check(
         &self,
-        Parameters(params): Parameters<params::FaersSignalParams>,
+        Parameters(params): Parameters<params::faers::FaersSignalParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::faers::signal_check(params).await
     }
@@ -1757,7 +1944,7 @@ impl NexCoreMcpServer {
     )]
     async fn faers_disproportionality(
         &self,
-        Parameters(params): Parameters<params::FaersSignalParams>,
+        Parameters(params): Parameters<params::faers::FaersSignalParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::faers::disproportionality(params).await
     }
@@ -1767,7 +1954,7 @@ impl NexCoreMcpServer {
     )]
     async fn faers_compare_drugs(
         &self,
-        Parameters(params): Parameters<params::FaersCompareDrugsParams>,
+        Parameters(params): Parameters<params::faers::FaersCompareDrugsParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::faers::compare_drugs(params).await
     }
@@ -1781,7 +1968,7 @@ impl NexCoreMcpServer {
     )]
     async fn faers_etl_run(
         &self,
-        Parameters(params): Parameters<params::FaersEtlRunParams>,
+        Parameters(params): Parameters<params::faers::FaersEtlRunParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::faers_etl::run(params).await
     }
@@ -1791,7 +1978,7 @@ impl NexCoreMcpServer {
     )]
     async fn faers_etl_signals(
         &self,
-        Parameters(params): Parameters<params::FaersEtlSignalsParams>,
+        Parameters(params): Parameters<params::faers::FaersEtlSignalsParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::faers_etl::signals(params).await
     }
@@ -1801,7 +1988,7 @@ impl NexCoreMcpServer {
     )]
     async fn faers_etl_known_pairs(
         &self,
-        Parameters(params): Parameters<params::FaersEtlKnownPairsParams>,
+        Parameters(params): Parameters<params::faers::FaersEtlKnownPairsParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::faers_etl::known_pairs(params).await
     }
@@ -1811,9 +1998,43 @@ impl NexCoreMcpServer {
     )]
     fn faers_etl_status(
         &self,
-        Parameters(params): Parameters<params::FaersEtlStatusParams>,
+        Parameters(params): Parameters<params::faers::FaersEtlStatusParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::faers_etl::status(params)
+    }
+
+    // ========================================================================
+    // PHAROS Tools (Autonomous Signal Surveillance)
+    // ========================================================================
+
+    #[tool(
+        description = "Run the full PHAROS surveillance pipeline: FAERS ETL → signal detection (PRR/ROR/IC/EBGM) → threshold filtering → report. Returns actionable signals with threat levels. Heavy operation (~30-60s)."
+    )]
+    async fn pharos_run(
+        &self,
+        Parameters(params): Parameters<params::PharosRunParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pharos::run(params).await
+    }
+
+    #[tool(
+        description = "Check PHAROS status: existing surveillance reports, Parquet output, and timer state."
+    )]
+    fn pharos_status(
+        &self,
+        Parameters(params): Parameters<params::PharosStatusParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pharos::status(params)
+    }
+
+    #[tool(
+        description = "Retrieve a specific or latest PHAROS surveillance report by run_id. Returns full JSON report with top signals, metrics, and threat levels."
+    )]
+    fn pharos_report(
+        &self,
+        Parameters(params): Parameters<params::PharosReportParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::pharos::report(params)
     }
 
     // ========================================================================
@@ -1825,7 +2046,7 @@ impl NexCoreMcpServer {
     )]
     fn faers_outcome_conditioned(
         &self,
-        Parameters(params): Parameters<params::FaersOutcomeConditionedParams>,
+        Parameters(params): Parameters<params::faers::FaersOutcomeConditionedParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::faers_analytics::outcome_conditioned(params)
     }
@@ -1835,7 +2056,7 @@ impl NexCoreMcpServer {
     )]
     fn faers_signal_velocity(
         &self,
-        Parameters(params): Parameters<params::FaersSignalVelocityParams>,
+        Parameters(params): Parameters<params::faers::FaersSignalVelocityParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::faers_analytics::signal_velocity(params)
     }
@@ -1845,7 +2066,7 @@ impl NexCoreMcpServer {
     )]
     fn faers_seriousness_cascade(
         &self,
-        Parameters(params): Parameters<params::FaersSeriousnessCascadeParams>,
+        Parameters(params): Parameters<params::faers::FaersSeriousnessCascadeParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::faers_analytics::seriousness_cascade(params)
     }
@@ -1855,7 +2076,7 @@ impl NexCoreMcpServer {
     )]
     fn faers_polypharmacy(
         &self,
-        Parameters(params): Parameters<params::FaersPolypharmacyParams>,
+        Parameters(params): Parameters<params::faers::FaersPolypharmacyParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::faers_analytics::polypharmacy(params)
     }
@@ -1865,7 +2086,7 @@ impl NexCoreMcpServer {
     )]
     fn faers_reporter_weighted(
         &self,
-        Parameters(params): Parameters<params::FaersReporterWeightedParams>,
+        Parameters(params): Parameters<params::faers::FaersReporterWeightedParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::faers_analytics::reporter_weighted(params)
     }
@@ -1875,9 +2096,71 @@ impl NexCoreMcpServer {
     )]
     fn faers_geographic_divergence(
         &self,
-        Parameters(params): Parameters<params::FaersGeographicDivergenceParams>,
+        Parameters(params): Parameters<params::faers::FaersGeographicDivergenceParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::faers_analytics::geographic_divergence(params)
+    }
+
+    // ========================================================================
+    // NCBI Entrez Tools (6)
+    // ========================================================================
+
+    #[tool(
+        description = "Search NCBI databases for UIDs matching a query. Supports date-range filtering (datetype, mindate, maxdate). Returns matching IDs, count, and query translation."
+    )]
+    async fn ncbi_esearch(
+        &self,
+        Parameters(params): Parameters<params::ncbi::NcbiSearchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ncbi::esearch(params).await
+    }
+
+    #[tool(description = "Retrieve summaries for a list of NCBI UIDs from a specific database.")]
+    async fn ncbi_esummary(
+        &self,
+        Parameters(params): Parameters<params::ncbi::NcbiSummaryParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ncbi::esummary(params).await
+    }
+
+    #[tool(
+        description = "Retrieve full records for a list of NCBI UIDs in various formats (e.g., FASTA, GenBank)."
+    )]
+    async fn ncbi_efetch(
+        &self,
+        Parameters(params): Parameters<params::ncbi::NcbiFetchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ncbi::efetch(params).await
+    }
+
+    #[tool(
+        description = "Find linked records across NCBI databases (cross-database traversal). E.g., find all nucleotide sequences linked to a gene ID, or PubMed articles linked to a protein."
+    )]
+    async fn ncbi_elink(
+        &self,
+        Parameters(params): Parameters<params::ncbi::NcbiLinkParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ncbi::elink(params).await
+    }
+
+    #[tool(
+        description = "Search an NCBI database then fetch FASTA records in one call. Returns parsed sequence data with ID, description, length, GC content, and first 60 bases."
+    )]
+    async fn ncbi_search_and_fetch(
+        &self,
+        Parameters(params): Parameters<params::ncbi::NcbiSearchFetchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ncbi::search_and_fetch(params).await
+    }
+
+    #[tool(
+        description = "Search an NCBI database then retrieve document summaries in one call. Faster than full fetch — returns metadata (titles, organisms, etc.) without downloading full sequences. Supports date-range filtering for PubMed."
+    )]
+    async fn ncbi_search_and_summarize(
+        &self,
+        Parameters(params): Parameters<params::ncbi::NcbiSearchSummarizeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ncbi::search_and_summarize(params).await
     }
 
     // ========================================================================
@@ -1889,7 +2172,7 @@ impl NexCoreMcpServer {
     )]
     fn lab_experiment(
         &self,
-        Parameters(params): Parameters<params::LabExperimentParams>,
+        Parameters(params): Parameters<params::lab::LabExperimentParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::laboratory::lab_experiment(params)
     }
@@ -1899,7 +2182,7 @@ impl NexCoreMcpServer {
     )]
     fn lab_compare(
         &self,
-        Parameters(params): Parameters<params::LabCompareParams>,
+        Parameters(params): Parameters<params::lab::LabCompareParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::laboratory::lab_compare(params)
     }
@@ -1909,7 +2192,7 @@ impl NexCoreMcpServer {
     )]
     fn lab_react(
         &self,
-        Parameters(params): Parameters<params::LabReactParams>,
+        Parameters(params): Parameters<params::lab::LabReactParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::laboratory::lab_react(params)
     }
@@ -1919,7 +2202,7 @@ impl NexCoreMcpServer {
     )]
     fn lab_batch(
         &self,
-        Parameters(params): Parameters<params::LabBatchParams>,
+        Parameters(params): Parameters<params::lab::LabBatchParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::laboratory::lab_batch(params)
     }
@@ -1933,7 +2216,7 @@ impl NexCoreMcpServer {
     )]
     fn cep_execute_stage(
         &self,
-        Parameters(params): Parameters<params::CepExecuteStageParams>,
+        Parameters(params): Parameters<params::cep::CepExecuteStageParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::cep::execute_stage(params)
     }
@@ -1950,7 +2233,7 @@ impl NexCoreMcpServer {
     )]
     fn cep_validate_extraction(
         &self,
-        Parameters(params): Parameters<params::CepValidateExtractionParams>,
+        Parameters(params): Parameters<params::cep::CepValidateExtractionParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::cep::validate_extraction(params)
     }
@@ -1960,7 +2243,7 @@ impl NexCoreMcpServer {
     )]
     fn cep_extract_primitives(
         &self,
-        Parameters(params): Parameters<params::PrimitiveExtractParams>,
+        Parameters(params): Parameters<params::cep::PrimitiveExtractParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::cep::extract_primitives(params)
     }
@@ -1970,7 +2253,7 @@ impl NexCoreMcpServer {
     )]
     fn cep_domain_translate(
         &self,
-        Parameters(params): Parameters<params::DomainTranslateParams>,
+        Parameters(params): Parameters<params::cep::DomainTranslateParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::cep::domain_translate(params)
     }
@@ -1980,7 +2263,7 @@ impl NexCoreMcpServer {
     )]
     fn cep_classify_primitive(
         &self,
-        Parameters(params): Parameters<params::PrimitiveTierClassifyParams>,
+        Parameters(params): Parameters<params::cep::PrimitiveTierClassifyParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::cep::classify_primitive(params.domain_count)
     }
@@ -1988,7 +2271,7 @@ impl NexCoreMcpServer {
     #[tool(description = "Perform a real-time network scan for a behavioral pattern")]
     async fn node_hunt_scan(
         &self,
-        Parameters(params): Parameters<params::NodeHuntScanParams>,
+        Parameters(params): Parameters<params::network::NodeHuntScanParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::node_hunter::scan(params)
     }
@@ -1996,7 +2279,7 @@ impl NexCoreMcpServer {
     #[tool(description = "Isolate a specific node from the network")]
     async fn node_hunt_isolate(
         &self,
-        Parameters(params): Parameters<params::NodeHuntIsolateParams>,
+        Parameters(params): Parameters<params::network::NodeHuntIsolateParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::node_hunter::isolate(params)
     }
@@ -2018,7 +2301,7 @@ impl NexCoreMcpServer {
     #[tool(description = "Get a specific gcloud configuration property.")]
     async fn gcloud_config_get(
         &self,
-        Parameters(params): Parameters<params::GcloudConfigGetParams>,
+        Parameters(params): Parameters<params::gcloud::GcloudConfigGetParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::gcloud::config_get(&params.property).await
     }
@@ -2026,7 +2309,7 @@ impl NexCoreMcpServer {
     #[tool(description = "Set a gcloud configuration property.")]
     async fn gcloud_config_set(
         &self,
-        Parameters(params): Parameters<params::GcloudConfigSetParams>,
+        Parameters(params): Parameters<params::gcloud::GcloudConfigSetParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::gcloud::config_set(&params.property, &params.value).await
     }
@@ -2039,7 +2322,7 @@ impl NexCoreMcpServer {
     #[tool(description = "Get details about a specific GCP project.")]
     async fn gcloud_projects_describe(
         &self,
-        Parameters(params): Parameters<params::GcloudProjectParams>,
+        Parameters(params): Parameters<params::gcloud::GcloudProjectParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::gcloud::projects_describe(&params.project_id).await
     }
@@ -2047,7 +2330,7 @@ impl NexCoreMcpServer {
     #[tool(description = "Get IAM policy for a GCP project.")]
     async fn gcloud_projects_get_iam_policy(
         &self,
-        Parameters(params): Parameters<params::GcloudProjectParams>,
+        Parameters(params): Parameters<params::gcloud::GcloudProjectParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::gcloud::projects_get_iam_policy(&params.project_id).await
     }
@@ -2055,7 +2338,7 @@ impl NexCoreMcpServer {
     #[tool(description = "List secrets in Secret Manager.")]
     async fn gcloud_secrets_list(
         &self,
-        Parameters(params): Parameters<params::GcloudOptionalProjectParams>,
+        Parameters(params): Parameters<params::gcloud::GcloudOptionalProjectParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::gcloud::secrets_list(params.project.as_deref()).await
     }
@@ -2063,7 +2346,7 @@ impl NexCoreMcpServer {
     #[tool(description = "Access a secret version's value from Secret Manager.")]
     async fn gcloud_secrets_versions_access(
         &self,
-        Parameters(params): Parameters<params::GcloudSecretsAccessParams>,
+        Parameters(params): Parameters<params::gcloud::GcloudSecretsAccessParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::gcloud::secrets_versions_access(
             &params.secret_name,
@@ -2076,7 +2359,7 @@ impl NexCoreMcpServer {
     #[tool(description = "List Cloud Storage buckets.")]
     async fn gcloud_storage_buckets_list(
         &self,
-        Parameters(params): Parameters<params::GcloudOptionalProjectParams>,
+        Parameters(params): Parameters<params::gcloud::GcloudOptionalProjectParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::gcloud::storage_buckets_list(params.project.as_deref()).await
     }
@@ -2084,7 +2367,7 @@ impl NexCoreMcpServer {
     #[tool(description = "List objects in a Cloud Storage path.")]
     async fn gcloud_storage_ls(
         &self,
-        Parameters(params): Parameters<params::GcloudStoragePathParams>,
+        Parameters(params): Parameters<params::gcloud::GcloudStoragePathParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::gcloud::storage_ls(&params.path).await
     }
@@ -2092,7 +2375,7 @@ impl NexCoreMcpServer {
     #[tool(description = "Copy files to/from Cloud Storage.")]
     async fn gcloud_storage_cp(
         &self,
-        Parameters(params): Parameters<params::GcloudStorageCpParams>,
+        Parameters(params): Parameters<params::gcloud::GcloudStorageCpParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::gcloud::storage_cp(&params.source, &params.destination, params.recursive).await
     }
@@ -2100,7 +2383,7 @@ impl NexCoreMcpServer {
     #[tool(description = "List Compute Engine instances.")]
     async fn gcloud_compute_instances_list(
         &self,
-        Parameters(params): Parameters<params::GcloudComputeInstancesParams>,
+        Parameters(params): Parameters<params::gcloud::GcloudComputeInstancesParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::gcloud::compute_instances_list(params.project.as_deref(), params.zone.as_deref())
             .await
@@ -2109,7 +2392,7 @@ impl NexCoreMcpServer {
     #[tool(description = "List Cloud Run services.")]
     async fn gcloud_run_services_list(
         &self,
-        Parameters(params): Parameters<params::GcloudServiceListParams>,
+        Parameters(params): Parameters<params::gcloud::GcloudServiceListParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::gcloud::run_services_list(params.project.as_deref(), params.region.as_deref()).await
     }
@@ -2117,7 +2400,7 @@ impl NexCoreMcpServer {
     #[tool(description = "Get details about a Cloud Run service.")]
     async fn gcloud_run_services_describe(
         &self,
-        Parameters(params): Parameters<params::GcloudServiceDescribeParams>,
+        Parameters(params): Parameters<params::gcloud::GcloudServiceDescribeParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::gcloud::run_services_describe(
             &params.name,
@@ -2130,7 +2413,7 @@ impl NexCoreMcpServer {
     #[tool(description = "List Cloud Functions.")]
     async fn gcloud_functions_list(
         &self,
-        Parameters(params): Parameters<params::GcloudServiceListParams>,
+        Parameters(params): Parameters<params::gcloud::GcloudServiceListParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::gcloud::functions_list(params.project.as_deref(), params.region.as_deref()).await
     }
@@ -2138,7 +2421,7 @@ impl NexCoreMcpServer {
     #[tool(description = "List service accounts.")]
     async fn gcloud_iam_service_accounts_list(
         &self,
-        Parameters(params): Parameters<params::GcloudOptionalProjectParams>,
+        Parameters(params): Parameters<params::gcloud::GcloudOptionalProjectParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::gcloud::iam_service_accounts_list(params.project.as_deref()).await
     }
@@ -2146,7 +2429,7 @@ impl NexCoreMcpServer {
     #[tool(description = "Read log entries from Cloud Logging.")]
     async fn gcloud_logging_read(
         &self,
-        Parameters(params): Parameters<params::GcloudLoggingReadParams>,
+        Parameters(params): Parameters<params::gcloud::GcloudLoggingReadParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::gcloud::logging_read(&params.filter, params.limit, params.project.as_deref()).await
     }
@@ -2156,7 +2439,7 @@ impl NexCoreMcpServer {
     )]
     async fn gcloud_run_command(
         &self,
-        Parameters(params): Parameters<params::GcloudRunCommandParams>,
+        Parameters(params): Parameters<params::gcloud::GcloudRunCommandParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::gcloud::run_command(&params.command, params.timeout).await
     }
@@ -2170,7 +2453,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_query(
         &self,
-        Parameters(params): Parameters<params::WolframQueryParams>,
+        Parameters(params): Parameters<params::wolfram::WolframQueryParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::query(params).await
     }
@@ -2180,7 +2463,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_short_answer(
         &self,
-        Parameters(params): Parameters<params::WolframShortParams>,
+        Parameters(params): Parameters<params::wolfram::WolframShortParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::short_answer(params).await
     }
@@ -2190,7 +2473,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_spoken_answer(
         &self,
-        Parameters(params): Parameters<params::WolframShortParams>,
+        Parameters(params): Parameters<params::wolfram::WolframShortParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::spoken_answer(params).await
     }
@@ -2200,7 +2483,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_calculate(
         &self,
-        Parameters(params): Parameters<params::WolframCalculateParams>,
+        Parameters(params): Parameters<params::wolfram::WolframCalculateParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::calculate(params).await
     }
@@ -2210,7 +2493,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_step_by_step(
         &self,
-        Parameters(params): Parameters<params::WolframStepByStepParams>,
+        Parameters(params): Parameters<params::wolfram::WolframStepByStepParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::step_by_step(params).await
     }
@@ -2220,7 +2503,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_plot(
         &self,
-        Parameters(params): Parameters<params::WolframPlotParams>,
+        Parameters(params): Parameters<params::wolfram::WolframPlotParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::plot(params).await
     }
@@ -2230,7 +2513,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_convert(
         &self,
-        Parameters(params): Parameters<params::WolframConvertParams>,
+        Parameters(params): Parameters<params::wolfram::WolframConvertParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::convert(params).await
     }
@@ -2240,7 +2523,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_chemistry(
         &self,
-        Parameters(params): Parameters<params::WolframChemistryParams>,
+        Parameters(params): Parameters<params::wolfram::WolframChemistryParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::chemistry(params).await
     }
@@ -2250,7 +2533,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_physics(
         &self,
-        Parameters(params): Parameters<params::WolframPhysicsParams>,
+        Parameters(params): Parameters<params::wolfram::WolframPhysicsParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::physics(params).await
     }
@@ -2260,7 +2543,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_astronomy(
         &self,
-        Parameters(params): Parameters<params::WolframAstronomyParams>,
+        Parameters(params): Parameters<params::wolfram::WolframAstronomyParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::astronomy(params).await
     }
@@ -2270,7 +2553,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_statistics(
         &self,
-        Parameters(params): Parameters<params::WolframStatisticsParams>,
+        Parameters(params): Parameters<params::wolfram::WolframStatisticsParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::statistics(params).await
     }
@@ -2280,7 +2563,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_data_lookup(
         &self,
-        Parameters(params): Parameters<params::WolframDataLookupParams>,
+        Parameters(params): Parameters<params::wolfram::WolframDataLookupParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::data_lookup(params).await
     }
@@ -2290,7 +2573,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_query_with_assumption(
         &self,
-        Parameters(params): Parameters<params::WolframQueryWithAssumptionParams>,
+        Parameters(params): Parameters<params::wolfram::WolframQueryWithAssumptionParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::query_with_assumption(params).await
     }
@@ -2300,7 +2583,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_query_filtered(
         &self,
-        Parameters(params): Parameters<params::WolframQueryFilteredParams>,
+        Parameters(params): Parameters<params::wolfram::WolframQueryFilteredParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::query_filtered(params).await
     }
@@ -2310,7 +2593,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_image_result(
         &self,
-        Parameters(params): Parameters<params::WolframImageParams>,
+        Parameters(params): Parameters<params::wolfram::WolframImageParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::image_result(params).await
     }
@@ -2320,7 +2603,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_datetime(
         &self,
-        Parameters(params): Parameters<params::WolframDatetimeParams>,
+        Parameters(params): Parameters<params::wolfram::WolframDatetimeParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::datetime(params).await
     }
@@ -2330,7 +2613,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_nutrition(
         &self,
-        Parameters(params): Parameters<params::WolframNutritionParams>,
+        Parameters(params): Parameters<params::wolfram::WolframNutritionParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::nutrition(params).await
     }
@@ -2340,7 +2623,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_finance(
         &self,
-        Parameters(params): Parameters<params::WolframFinanceParams>,
+        Parameters(params): Parameters<params::wolfram::WolframFinanceParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::finance(params).await
     }
@@ -2350,7 +2633,7 @@ impl NexCoreMcpServer {
     )]
     async fn wolfram_linguistics(
         &self,
-        Parameters(params): Parameters<params::WolframLinguisticsParams>,
+        Parameters(params): Parameters<params::wolfram::WolframLinguisticsParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::wolfram::linguistics(params).await
     }
@@ -2364,7 +2647,7 @@ impl NexCoreMcpServer {
     )]
     async fn perplexity_search(
         &self,
-        Parameters(params): Parameters<params::PerplexitySearchParams>,
+        Parameters(params): Parameters<params::perplexity::PerplexitySearchParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::perplexity::search(params).await
     }
@@ -2374,7 +2657,7 @@ impl NexCoreMcpServer {
     )]
     async fn perplexity_research(
         &self,
-        Parameters(params): Parameters<params::PerplexityResearchParams>,
+        Parameters(params): Parameters<params::perplexity::PerplexityResearchParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::perplexity::research(params).await
     }
@@ -2384,7 +2667,7 @@ impl NexCoreMcpServer {
     )]
     async fn perplexity_competitive(
         &self,
-        Parameters(params): Parameters<params::PerplexityCompetitiveParams>,
+        Parameters(params): Parameters<params::perplexity::PerplexityCompetitiveParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::perplexity::competitive(params).await
     }
@@ -2394,7 +2677,7 @@ impl NexCoreMcpServer {
     )]
     async fn perplexity_regulatory(
         &self,
-        Parameters(params): Parameters<params::PerplexityRegulatoryParams>,
+        Parameters(params): Parameters<params::perplexity::PerplexityRegulatoryParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::perplexity::regulatory(params).await
     }
@@ -2408,7 +2691,7 @@ impl NexCoreMcpServer {
     )]
     async fn principles_list(
         &self,
-        Parameters(params): Parameters<params::PrinciplesListParams>,
+        Parameters(params): Parameters<params::principles::PrinciplesListParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::principles::list_principles(params)
     }
@@ -2418,7 +2701,7 @@ impl NexCoreMcpServer {
     )]
     async fn principles_get(
         &self,
-        Parameters(params): Parameters<params::PrinciplesGetParams>,
+        Parameters(params): Parameters<params::principles::PrinciplesGetParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::principles::get_principle(params)
     }
@@ -2428,7 +2711,7 @@ impl NexCoreMcpServer {
     )]
     async fn principles_search(
         &self,
-        Parameters(params): Parameters<params::PrinciplesSearchParams>,
+        Parameters(params): Parameters<params::principles::PrinciplesSearchParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::principles::search_principles(params)
     }
@@ -2442,7 +2725,7 @@ impl NexCoreMcpServer {
     )]
     async fn validation_run(
         &self,
-        Parameters(params): Parameters<params::ValidationRunParams>,
+        Parameters(params): Parameters<params::validation::ValidationRunParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::validation::run(params)
     }
@@ -2452,7 +2735,7 @@ impl NexCoreMcpServer {
     )]
     async fn validation_check(
         &self,
-        Parameters(params): Parameters<params::ValidationCheckParams>,
+        Parameters(params): Parameters<params::validation::ValidationCheckParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::validation::check(params)
     }
@@ -2462,7 +2745,7 @@ impl NexCoreMcpServer {
     )]
     async fn validation_domains(
         &self,
-        Parameters(params): Parameters<params::ValidationDomainsParams>,
+        Parameters(params): Parameters<params::validation::ValidationDomainsParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::validation::domains(params)
     }
@@ -2472,7 +2755,7 @@ impl NexCoreMcpServer {
     )]
     async fn validation_classify_tests(
         &self,
-        Parameters(params): Parameters<params::ValidationClassifyTestsParams>,
+        Parameters(params): Parameters<params::validation::ValidationClassifyTestsParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::validation::classify_tests_tool(params)
     }
@@ -2486,7 +2769,7 @@ impl NexCoreMcpServer {
     )]
     async fn brain_session_create(
         &self,
-        Parameters(params): Parameters<params::BrainSessionCreateParams>,
+        Parameters(params): Parameters<params::brain::BrainSessionCreateParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::brain::session_create(params)
     }
@@ -2496,7 +2779,7 @@ impl NexCoreMcpServer {
     )]
     async fn brain_session_load(
         &self,
-        Parameters(params): Parameters<params::BrainSessionLoadParams>,
+        Parameters(params): Parameters<params::brain::BrainSessionLoadParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::brain::session_load(params)
     }
@@ -2506,7 +2789,7 @@ impl NexCoreMcpServer {
     )]
     async fn brain_sessions_list(
         &self,
-        Parameters(params): Parameters<params::BrainSessionsListParams>,
+        Parameters(params): Parameters<params::brain::BrainSessionsListParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::brain::sessions_list(params)
     }
@@ -2516,7 +2799,7 @@ impl NexCoreMcpServer {
     )]
     async fn brain_artifact_save(
         &self,
-        Parameters(params): Parameters<params::BrainArtifactSaveParams>,
+        Parameters(params): Parameters<params::brain::BrainArtifactSaveParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::brain::artifact_save(params)
     }
@@ -2526,7 +2809,7 @@ impl NexCoreMcpServer {
     )]
     async fn brain_artifact_resolve(
         &self,
-        Parameters(params): Parameters<params::BrainArtifactResolveParams>,
+        Parameters(params): Parameters<params::brain::BrainArtifactResolveParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::brain::artifact_resolve(params)
     }
@@ -2536,7 +2819,7 @@ impl NexCoreMcpServer {
     )]
     async fn brain_artifact_get(
         &self,
-        Parameters(params): Parameters<params::BrainArtifactGetParams>,
+        Parameters(params): Parameters<params::brain::BrainArtifactGetParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::brain::artifact_get(params)
     }
@@ -2546,7 +2829,7 @@ impl NexCoreMcpServer {
     )]
     async fn brain_artifact_diff(
         &self,
-        Parameters(params): Parameters<params::BrainArtifactDiffParams>,
+        Parameters(params): Parameters<params::brain::BrainArtifactDiffParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::brain::artifact_diff(params)
     }
@@ -2556,7 +2839,7 @@ impl NexCoreMcpServer {
     )]
     async fn code_tracker_track(
         &self,
-        Parameters(params): Parameters<params::BrainCodeTrackerTrackParams>,
+        Parameters(params): Parameters<params::brain::BrainCodeTrackerTrackParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::brain::code_tracker_track(params)
     }
@@ -2566,7 +2849,7 @@ impl NexCoreMcpServer {
     )]
     async fn code_tracker_changed(
         &self,
-        Parameters(params): Parameters<params::BrainCodeTrackerChangedParams>,
+        Parameters(params): Parameters<params::brain::BrainCodeTrackerChangedParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::brain::code_tracker_changed(params)
     }
@@ -2574,7 +2857,7 @@ impl NexCoreMcpServer {
     #[tool(description = "Get the original content of a tracked file when it was first tracked.")]
     async fn code_tracker_original(
         &self,
-        Parameters(params): Parameters<params::BrainCodeTrackerOriginalParams>,
+        Parameters(params): Parameters<params::brain::BrainCodeTrackerOriginalParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::brain::code_tracker_original(params)
     }
@@ -2584,7 +2867,7 @@ impl NexCoreMcpServer {
     )]
     async fn implicit_get(
         &self,
-        Parameters(params): Parameters<params::BrainImplicitGetParams>,
+        Parameters(params): Parameters<params::brain::BrainImplicitGetParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::brain::implicit_get(params)
     }
@@ -2594,7 +2877,7 @@ impl NexCoreMcpServer {
     )]
     async fn implicit_set(
         &self,
-        Parameters(params): Parameters<params::BrainImplicitSetParams>,
+        Parameters(params): Parameters<params::brain::BrainImplicitSetParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::brain::implicit_set(params)
     }
@@ -2611,7 +2894,7 @@ impl NexCoreMcpServer {
     )]
     async fn implicit_find_corrections(
         &self,
-        Parameters(params): Parameters<params::BrainImplicitFindCorrectionsParams>,
+        Parameters(params): Parameters<params::brain::BrainImplicitFindCorrectionsParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::brain::implicit_find_corrections(params)
     }
@@ -2621,7 +2904,7 @@ impl NexCoreMcpServer {
     )]
     async fn implicit_patterns_by_grounding(
         &self,
-        Parameters(params): Parameters<params::BrainImplicitPatternsByGroundingParams>,
+        Parameters(params): Parameters<params::brain::BrainImplicitPatternsByGroundingParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::brain::implicit_patterns_by_grounding(params)
     }
@@ -2645,7 +2928,7 @@ impl NexCoreMcpServer {
     )]
     async fn brain_recovery_repair(
         &self,
-        Parameters(params): Parameters<params::BrainRecoveryRepairParams>,
+        Parameters(params): Parameters<params::brain::BrainRecoveryRepairParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::brain::recovery_repair(params.session_id.as_deref())
     }
@@ -2673,7 +2956,7 @@ impl NexCoreMcpServer {
     )]
     async fn brain_coordination_acquire(
         &self,
-        Parameters(params): Parameters<params::BrainCoordinationAcquireParams>,
+        Parameters(params): Parameters<params::brain::BrainCoordinationAcquireParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::brain::coordination_acquire(params)
     }
@@ -2683,7 +2966,7 @@ impl NexCoreMcpServer {
     )]
     async fn brain_coordination_release(
         &self,
-        Parameters(params): Parameters<params::BrainCoordinationReleaseParams>,
+        Parameters(params): Parameters<params::brain::BrainCoordinationReleaseParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::brain::coordination_release(params)
     }
@@ -2693,7 +2976,7 @@ impl NexCoreMcpServer {
     )]
     async fn brain_coordination_status(
         &self,
-        Parameters(params): Parameters<params::BrainCoordinationStatusParams>,
+        Parameters(params): Parameters<params::brain::BrainCoordinationStatusParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::brain::coordination_status(params)
     }
@@ -2714,7 +2997,7 @@ impl NexCoreMcpServer {
     )]
     async fn hooks_for_event(
         &self,
-        Parameters(params): Parameters<params::HooksForEventParams>,
+        Parameters(params): Parameters<params::hooks::HooksForEventParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hooks::for_event(params)
     }
@@ -2724,7 +3007,7 @@ impl NexCoreMcpServer {
     )]
     async fn hooks_for_tier(
         &self,
-        Parameters(params): Parameters<params::HooksForTierParams>,
+        Parameters(params): Parameters<params::hooks::HooksForTierParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hooks::for_tier(params)
     }
@@ -2734,7 +3017,7 @@ impl NexCoreMcpServer {
     )]
     async fn hook_list_nested(
         &self,
-        Parameters(params): Parameters<params::HookListNestedParams>,
+        Parameters(params): Parameters<params::hooks::HookListNestedParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hooks::list_nested(params)
     }
@@ -2744,7 +3027,7 @@ impl NexCoreMcpServer {
     )]
     async fn hooks_metrics_summary(
         &self,
-        Parameters(params): Parameters<params::HookMetricsSummaryParams>,
+        Parameters(params): Parameters<params::hooks::HookMetricsSummaryParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hooks::metrics_summary(params)
     }
@@ -2754,7 +3037,7 @@ impl NexCoreMcpServer {
     )]
     async fn hooks_metrics_by_event(
         &self,
-        Parameters(params): Parameters<params::HookMetricsByEventParams>,
+        Parameters(params): Parameters<params::hooks::HookMetricsByEventParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hooks::metrics_by_event(params)
     }
@@ -2768,7 +3051,7 @@ impl NexCoreMcpServer {
     )]
     async fn immunity_scan(
         &self,
-        Parameters(params): Parameters<params::ImmunityScanParams>,
+        Parameters(params): Parameters<params::immunity::ImmunityScanParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::immunity::immunity_scan(params)
     }
@@ -2778,7 +3061,7 @@ impl NexCoreMcpServer {
     )]
     async fn immunity_scan_errors(
         &self,
-        Parameters(params): Parameters<params::ImmunityScanErrorsParams>,
+        Parameters(params): Parameters<params::immunity::ImmunityScanErrorsParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::immunity::immunity_scan_errors(params)
     }
@@ -2788,7 +3071,7 @@ impl NexCoreMcpServer {
     )]
     async fn immunity_list(
         &self,
-        Parameters(params): Parameters<params::ImmunityListParams>,
+        Parameters(params): Parameters<params::immunity::ImmunityListParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::immunity::immunity_list(params)
     }
@@ -2798,7 +3081,7 @@ impl NexCoreMcpServer {
     )]
     async fn immunity_get(
         &self,
-        Parameters(params): Parameters<params::ImmunityGetParams>,
+        Parameters(params): Parameters<params::immunity::ImmunityGetParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::immunity::immunity_get(params)
     }
@@ -2808,7 +3091,7 @@ impl NexCoreMcpServer {
     )]
     async fn immunity_propose(
         &self,
-        Parameters(params): Parameters<params::ImmunityProposeParams>,
+        Parameters(params): Parameters<params::immunity::ImmunityProposeParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::immunity::immunity_propose(params)
     }
@@ -2829,7 +3112,7 @@ impl NexCoreMcpServer {
     )]
     async fn regulatory_primitives_extract(
         &self,
-        Parameters(params): Parameters<params::RegulatoryExtractParams>,
+        Parameters(params): Parameters<params::regulatory::RegulatoryExtractParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::regulatory::extract(params)
     }
@@ -2839,7 +3122,7 @@ impl NexCoreMcpServer {
     )]
     async fn regulatory_primitives_audit(
         &self,
-        Parameters(params): Parameters<params::RegulatoryAuditParams>,
+        Parameters(params): Parameters<params::regulatory::RegulatoryAuditParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::regulatory::audit(params)
     }
@@ -2849,7 +3132,7 @@ impl NexCoreMcpServer {
     )]
     async fn regulatory_primitives_compare(
         &self,
-        Parameters(params): Parameters<params::RegulatoryCompareParams>,
+        Parameters(params): Parameters<params::regulatory::RegulatoryCompareParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::regulatory::compare(params)
     }
@@ -3087,6 +3370,26 @@ impl NexCoreMcpServer {
         tools::chemistry::langmuir_binding(params)
     }
 
+    #[tool(
+        description = "Calculate First Law closed system energy balance. Maps to case_backlog_change in PV. PV confidence: 0.85. ΔU = Q - W. Backlog change = cases received - cases resolved."
+    )]
+    async fn chemistry_first_law_closed(
+        &self,
+        Parameters(params): Parameters<params::ChemistryFirstLawClosedParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::chemistry::first_law_closed(params)
+    }
+
+    #[tool(
+        description = "Calculate First Law open system energy balance. Maps to throughput_energy_balance in PV. PV confidence: 0.85. dE/dt = Q̇ - Ẇ + Σṁh_in - Σṁh_out. Models case inflow/outflow with enthalpy (complexity)."
+    )]
+    async fn chemistry_first_law_open(
+        &self,
+        Parameters(params): Parameters<params::ChemistryFirstLawOpenParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::chemistry::first_law_open(params)
+    }
+
     // ========================================================================
     // Cytokine Signaling Tools (3) - Typed Event Bus (Immune System Patterns)
     // ========================================================================
@@ -3163,13 +3466,64 @@ impl NexCoreMcpServer {
     }
 
     // ========================================================================
+    // Academy Forge Tools (3) - Extract IR + Validate Academy Content
+    // ========================================================================
+
+    #[tool(
+        description = "Extract structured knowledge from a NexCore Rust crate into an Intermediate Representation (IR). Returns module tree, public types, enums, constants, traits, dependency graph. With domain='vigilance': extracts 5 axioms, 8 harm types, 11 conservation laws, 3 theorems, axiom DAG, signal thresholds."
+    )]
+    async fn forge_extract(
+        &self,
+        Parameters(params): Parameters<params::ForgeExtractParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::academy_forge::forge_extract(params)
+    }
+
+    #[tool(
+        description = "Validate academy content JSON against 27 rules: R1-R8 (schema), R9-R14 (accuracy vs IR), R15-R19 (conventions), R20-R23 (progression), R24-R27 (experiential learning). Returns pass/fail with findings by severity (Error/Warning/Advisory)."
+    )]
+    async fn forge_validate(
+        &self,
+        Parameters(params): Parameters<params::ForgeValidateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::academy_forge::forge_validate(params)
+    }
+
+    #[tool(
+        description = "Generate a pathway authoring template from domain IR. Extracts domain analysis, then produces a complete StaticPathway JSON with axiom stages, harm type stages, quiz skeletons, Bloom progression, and TODO markers. Output passes R1-R8 (schema) and R20-R23 (progression) rules out of the box."
+    )]
+    async fn forge_scaffold(
+        &self,
+        Parameters(params): Parameters<params::ForgeScaffoldParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::academy_forge::forge_scaffold(params)
+    }
+
+    #[tool(
+        description = "Return the StaticPathway JSON Schema describing the expected structure of academy pathway content. Use this schema when generating academy content to ensure it passes forge_validate."
+    )]
+    async fn forge_schema(&self) -> Result<CallToolResult, McpError> {
+        tools::academy_forge::forge_schema()
+    }
+
+    #[tool(
+        description = "Compile pathway JSON into Studio-compatible TypeScript stage files. Takes a forge-generated pathway JSON (tov-01.json) and produces TypeScript source files matching CapabilityStage from @/types/academy. Generates one NN-slug.ts per stage, config.ts, and index.ts."
+    )]
+    async fn forge_compile(
+        &self,
+        Parameters(params): Parameters<params::ForgeCompileParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::academy_forge::forge_compile(params)
+    }
+
+    // ========================================================================
     // Game Theory Tools (5) - 2x2 Nash + Forge N×M Pipeline
     // ========================================================================
 
     #[tool(description = "Analyze a 2x2 normal-form game and return pure/mixed Nash equilibria.")]
     async fn game_theory_nash_2x2(
         &self,
-        Parameters(params): Parameters<params::GameTheoryNash2x2Params>,
+        Parameters(params): Parameters<params::game_theory::GameTheoryNash2x2Params>,
     ) -> Result<CallToolResult, McpError> {
         tools::game_theory::nash_2x2(params)
     }
@@ -3179,7 +3533,7 @@ impl NexCoreMcpServer {
     )]
     async fn forge_payoff_matrix(
         &self,
-        Parameters(params): Parameters<params::ForgePayoffMatrixParams>,
+        Parameters(params): Parameters<params::forge::ForgePayoffMatrixParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::game_theory::forge_payoff_matrix(params)
     }
@@ -3189,7 +3543,7 @@ impl NexCoreMcpServer {
     )]
     async fn forge_nash_solve(
         &self,
-        Parameters(params): Parameters<params::ForgeNashSolveParams>,
+        Parameters(params): Parameters<params::forge::ForgeNashSolveParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::game_theory::forge_nash_solve(params)
     }
@@ -3199,7 +3553,7 @@ impl NexCoreMcpServer {
     )]
     async fn forge_quality_score(
         &self,
-        Parameters(params): Parameters<params::ForgeQualityScoreParams>,
+        Parameters(params): Parameters<params::forge::ForgeQualityScoreParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::game_theory::forge_quality_score(params)
     }
@@ -3209,7 +3563,7 @@ impl NexCoreMcpServer {
     )]
     async fn forge_code_generate(
         &self,
-        Parameters(params): Parameters<params::ForgeCodeGenerateParams>,
+        Parameters(params): Parameters<params::forge::ForgeCodeGenerateParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::game_theory::forge_code_generate(params)
     }
@@ -3237,7 +3591,7 @@ impl NexCoreMcpServer {
     )]
     async fn stem_confidence_combine(
         &self,
-        Parameters(params): Parameters<params::StemConfidenceCombineParams>,
+        Parameters(params): Parameters<params::stem::StemConfidenceCombineParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::stem::confidence_combine(params)
     }
@@ -3247,7 +3601,7 @@ impl NexCoreMcpServer {
     )]
     async fn stem_tier_info(
         &self,
-        Parameters(params): Parameters<params::StemTierInfoParams>,
+        Parameters(params): Parameters<params::stem::StemTierInfoParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::stem::tier_info(params)
     }
@@ -3257,7 +3611,7 @@ impl NexCoreMcpServer {
     )]
     async fn stem_chem_balance(
         &self,
-        Parameters(params): Parameters<params::StemChemBalanceParams>,
+        Parameters(params): Parameters<params::stem::StemChemBalanceParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::stem::chem_balance(params)
     }
@@ -3267,7 +3621,7 @@ impl NexCoreMcpServer {
     )]
     async fn stem_chem_fraction(
         &self,
-        Parameters(params): Parameters<params::StemChemFractionParams>,
+        Parameters(params): Parameters<params::stem::StemChemFractionParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::stem::chem_fraction(params)
     }
@@ -3277,7 +3631,7 @@ impl NexCoreMcpServer {
     )]
     async fn stem_phys_fma(
         &self,
-        Parameters(params): Parameters<params::StemPhysFmaParams>,
+        Parameters(params): Parameters<params::stem::StemPhysFmaParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::stem::phys_fma(params)
     }
@@ -3287,7 +3641,7 @@ impl NexCoreMcpServer {
     )]
     async fn stem_phys_conservation(
         &self,
-        Parameters(params): Parameters<params::StemPhysConservationParams>,
+        Parameters(params): Parameters<params::stem::StemPhysConservationParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::stem::phys_conservation(params)
     }
@@ -3297,7 +3651,7 @@ impl NexCoreMcpServer {
     )]
     async fn stem_phys_period(
         &self,
-        Parameters(params): Parameters<params::StemPhysPeriodParams>,
+        Parameters(params): Parameters<params::stem::StemPhysPeriodParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::stem::phys_period(params)
     }
@@ -3307,7 +3661,7 @@ impl NexCoreMcpServer {
     )]
     async fn stem_math_bounds_check(
         &self,
-        Parameters(params): Parameters<params::StemMathBoundsCheckParams>,
+        Parameters(params): Parameters<params::stem::StemMathBoundsCheckParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::stem::math_bounds_check(params)
     }
@@ -3317,9 +3671,139 @@ impl NexCoreMcpServer {
     )]
     async fn stem_math_relation_invert(
         &self,
-        Parameters(params): Parameters<params::StemMathRelationInvertParams>,
+        Parameters(params): Parameters<params::stem::StemMathRelationInvertParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::stem::math_relation_invert(params)
+    }
+
+    #[tool(
+        description = "Create a concentration ratio value and optionally compare two ratios (fold change). Grounds to MAPPING+QUANTITY (Concentrate trait). Cross-domain: substance concentration, dose-per-volume."
+    )]
+    async fn stem_chem_ratio(
+        &self,
+        Parameters(params): Parameters<params::stem::StemChemRatioParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::chem_ratio(params)
+    }
+
+    #[tool(
+        description = "Create a rate-of-change value and optionally compare two rates. Grounds to MAPPING+QUANTITY (Energize trait). Cross-domain: reaction rate, reporting frequency, signal velocity."
+    )]
+    async fn stem_chem_rate(
+        &self,
+        Parameters(params): Parameters<params::stem::StemChemRateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::chem_rate(params)
+    }
+
+    #[tool(
+        description = "Create a binding affinity value [0.0-1.0] and classify as weak/moderate/strong. Grounds to MAPPING (Interact trait). Cross-domain: drug-target binding, signal-receptor affinity."
+    )]
+    async fn stem_chem_affinity(
+        &self,
+        Parameters(params): Parameters<params::stem::StemChemAffinityParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::chem_affinity(params)
+    }
+
+    #[tool(
+        description = "Create an amplitude value and optionally superpose (add) with another. Grounds to QUANTITY (Harmonics trait). Cross-domain: signal strength, effect magnitude."
+    )]
+    async fn stem_phys_amplitude(
+        &self,
+        Parameters(params): Parameters<params::stem::StemPhysAmplitudeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::phys_amplitude(params)
+    }
+
+    #[tool(
+        description = "Apply a scale factor to a value (output = factor × input). Grounds to MAPPING (Scale trait). Cross-domain: dose scaling, proportional adjustment."
+    )]
+    async fn stem_phys_scale(
+        &self,
+        Parameters(params): Parameters<params::stem::StemPhysScaleParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::phys_scale(params)
+    }
+
+    #[tool(
+        description = "Calculate resistance force from inertial mass and proposed change magnitude. Grounds to PERSISTENCE (Inertia trait). Cross-domain: organizational resistance, system momentum."
+    )]
+    async fn stem_phys_inertia(
+        &self,
+        Parameters(params): Parameters<params::stem::StemPhysInertiaParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::phys_inertia(params)
+    }
+
+    #[tool(
+        description = "Construct a logical proof from premises and conclusion, marking it valid or invalid. Grounds to SEQUENCE+EXISTENCE (Prove trait). Cross-domain: causality assessment, regulatory justification."
+    )]
+    async fn stem_math_proof(
+        &self,
+        Parameters(params): Parameters<params::stem::StemMathProofParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::math_proof(params)
+    }
+
+    #[tool(
+        description = "Check if a value is the identity element for addition (0) or multiplication (1). Grounds to STATE (Identify trait). Cross-domain: neutral element, baseline, no-op."
+    )]
+    async fn stem_math_identity(
+        &self,
+        Parameters(params): Parameters<params::stem::StemMathIdentityParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::math_identity(params)
+    }
+
+    #[tool(
+        description = "Create a distance value and optionally compare two distances for approximate equality. Grounds to QUANTITY+MAPPING (metric space). Cross-domain: edit distance, concept similarity."
+    )]
+    async fn stem_spatial_distance(
+        &self,
+        Parameters(params): Parameters<params::stem::StemSpatialDistanceParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::spatial_distance(params)
+    }
+
+    #[tool(
+        description = "Check the triangle inequality: d(a,c) ≤ d(a,b) + d(b,c). Validates metric consistency. Grounds to BOUNDARY+COMPARISON."
+    )]
+    async fn stem_spatial_triangle(
+        &self,
+        Parameters(params): Parameters<params::stem::StemSpatialTriangleParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::spatial_triangle(params)
+    }
+
+    #[tool(
+        description = "Check if a point is within a neighborhood of given radius (open or closed boundary). Grounds to BOUNDARY+LOCATION. Cross-domain: threshold neighborhoods, fuzzy match radius."
+    )]
+    async fn stem_spatial_neighborhood(
+        &self,
+        Parameters(params): Parameters<params::stem::StemSpatialNeighborhoodParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::spatial_neighborhood(params)
+    }
+
+    #[tool(
+        description = "Dimension rank and subspace checking. Returns codimension when comparing. Grounds to QUANTITY. Cross-domain: feature dimensionality, parameter space."
+    )]
+    async fn stem_spatial_dimension(
+        &self,
+        Parameters(params): Parameters<params::stem::StemSpatialDimensionParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::spatial_dimension(params)
+    }
+
+    #[tool(
+        description = "Orientation composition (positive × negative = negative, etc.). Grounds to MAPPING+STATE. Cross-domain: signal direction, trend polarity."
+    )]
+    async fn stem_spatial_orientation(
+        &self,
+        Parameters(params): Parameters<params::stem::StemSpatialOrientationParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::spatial_orientation(params)
     }
 
     // ========================================================================
@@ -3331,7 +3815,7 @@ impl NexCoreMcpServer {
     )]
     async fn viz_stem_taxonomy(
         &self,
-        Parameters(params): Parameters<params::VizTaxonomyParams>,
+        Parameters(params): Parameters<params::viz::VizTaxonomyParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::viz::taxonomy(params)
     }
@@ -3341,7 +3825,7 @@ impl NexCoreMcpServer {
     )]
     async fn viz_type_composition(
         &self,
-        Parameters(params): Parameters<params::VizCompositionParams>,
+        Parameters(params): Parameters<params::viz::VizCompositionParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::viz::composition(params)
     }
@@ -3351,7 +3835,7 @@ impl NexCoreMcpServer {
     )]
     async fn viz_method_loop(
         &self,
-        Parameters(params): Parameters<params::VizLoopParams>,
+        Parameters(params): Parameters<params::viz::VizLoopParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::viz::method_loop(params)
     }
@@ -3361,7 +3845,7 @@ impl NexCoreMcpServer {
     )]
     async fn viz_confidence_chain(
         &self,
-        Parameters(params): Parameters<params::VizConfidenceParams>,
+        Parameters(params): Parameters<params::viz::VizConfidenceParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::viz::confidence(params)
     }
@@ -3371,7 +3855,7 @@ impl NexCoreMcpServer {
     )]
     async fn viz_bounds(
         &self,
-        Parameters(params): Parameters<params::VizBoundsParams>,
+        Parameters(params): Parameters<params::viz::VizBoundsParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::viz::bounds(params)
     }
@@ -3381,7 +3865,7 @@ impl NexCoreMcpServer {
     )]
     async fn viz_dag(
         &self,
-        Parameters(params): Parameters<params::VizDagParams>,
+        Parameters(params): Parameters<params::viz::VizDagParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::viz::dag(params)
     }
@@ -3395,7 +3879,7 @@ impl NexCoreMcpServer {
     )]
     async fn watchtower_sessions_list(
         &self,
-        Parameters(_params): Parameters<params::WatchtowerSessionsListParams>,
+        Parameters(_params): Parameters<params::watchtower::WatchtowerSessionsListParams>,
     ) -> Result<CallToolResult, McpError> {
         let result = tools::watchtower::watchtower_sessions_list();
         Ok(CallToolResult::success(vec![rmcp::model::Content::text(
@@ -3408,7 +3892,7 @@ impl NexCoreMcpServer {
     )]
     async fn watchtower_active_sessions(
         &self,
-        Parameters(_params): Parameters<params::WatchtowerActiveSessionsParams>,
+        Parameters(_params): Parameters<params::watchtower::WatchtowerActiveSessionsParams>,
     ) -> Result<CallToolResult, McpError> {
         let result = tools::watchtower::watchtower_active_sessions();
         Ok(CallToolResult::success(vec![rmcp::model::Content::text(
@@ -3421,7 +3905,7 @@ impl NexCoreMcpServer {
     )]
     async fn watchtower_analyze(
         &self,
-        Parameters(params): Parameters<params::WatchtowerAnalyzeParams>,
+        Parameters(params): Parameters<params::watchtower::WatchtowerAnalyzeParams>,
     ) -> Result<CallToolResult, McpError> {
         let result = tools::watchtower::watchtower_analyze(params.session_path.as_deref());
         Ok(CallToolResult::success(vec![rmcp::model::Content::text(
@@ -3434,7 +3918,7 @@ impl NexCoreMcpServer {
     )]
     async fn watchtower_telemetry_stats(
         &self,
-        Parameters(_params): Parameters<params::WatchtowerTelemetryStatsParams>,
+        Parameters(_params): Parameters<params::watchtower::WatchtowerTelemetryStatsParams>,
     ) -> Result<CallToolResult, McpError> {
         let result = tools::watchtower::watchtower_telemetry_stats();
         Ok(CallToolResult::success(vec![rmcp::model::Content::text(
@@ -3447,7 +3931,7 @@ impl NexCoreMcpServer {
     )]
     async fn watchtower_recent(
         &self,
-        Parameters(params): Parameters<params::WatchtowerRecentParams>,
+        Parameters(params): Parameters<params::watchtower::WatchtowerRecentParams>,
     ) -> Result<CallToolResult, McpError> {
         let result =
             tools::watchtower::watchtower_recent(params.count, params.session_filter.as_deref());
@@ -3461,7 +3945,7 @@ impl NexCoreMcpServer {
     )]
     async fn watchtower_symbol_audit(
         &self,
-        Parameters(params): Parameters<params::WatchtowerSymbolAuditParams>,
+        Parameters(params): Parameters<params::watchtower::WatchtowerSymbolAuditParams>,
     ) -> Result<CallToolResult, McpError> {
         let result = tools::watchtower::watchtower_symbol_audit(&params.path);
         Ok(CallToolResult::success(vec![rmcp::model::Content::text(
@@ -3474,7 +3958,7 @@ impl NexCoreMcpServer {
     )]
     async fn watchtower_gemini_stats(
         &self,
-        Parameters(_params): Parameters<params::WatchtowerGeminiStatsParams>,
+        Parameters(_params): Parameters<params::watchtower::WatchtowerGeminiStatsParams>,
     ) -> Result<CallToolResult, McpError> {
         let result = tools::watchtower::watchtower_gemini_stats();
         Ok(CallToolResult::success(vec![rmcp::model::Content::text(
@@ -3487,7 +3971,7 @@ impl NexCoreMcpServer {
     )]
     async fn watchtower_gemini_recent(
         &self,
-        Parameters(params): Parameters<params::WatchtowerGeminiRecentParams>,
+        Parameters(params): Parameters<params::watchtower::WatchtowerGeminiRecentParams>,
     ) -> Result<CallToolResult, McpError> {
         let result = tools::watchtower::watchtower_gemini_recent(params.count);
         Ok(CallToolResult::success(vec![rmcp::model::Content::text(
@@ -3500,7 +3984,7 @@ impl NexCoreMcpServer {
     )]
     async fn watchtower_unified(
         &self,
-        Parameters(params): Parameters<params::WatchtowerUnifiedParams>,
+        Parameters(params): Parameters<params::watchtower::WatchtowerUnifiedParams>,
     ) -> Result<CallToolResult, McpError> {
         let result =
             tools::watchtower::watchtower_unified(params.include_claude, params.include_gemini);
@@ -3518,7 +4002,7 @@ impl NexCoreMcpServer {
     )]
     async fn telemetry_sources_list(
         &self,
-        Parameters(params): Parameters<params::TelemetrySourcesListParams>,
+        Parameters(params): Parameters<params::telemetry::TelemetrySourcesListParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::telemetry_intel::sources_list(params)
     }
@@ -3528,7 +4012,7 @@ impl NexCoreMcpServer {
     )]
     async fn telemetry_source_analyze(
         &self,
-        Parameters(params): Parameters<params::TelemetrySourceAnalyzeParams>,
+        Parameters(params): Parameters<params::telemetry::TelemetrySourceAnalyzeParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::telemetry_intel::source_analyze(params)
     }
@@ -3538,7 +4022,7 @@ impl NexCoreMcpServer {
     )]
     async fn telemetry_governance_crossref(
         &self,
-        Parameters(params): Parameters<params::TelemetryGovernanceCrossrefParams>,
+        Parameters(params): Parameters<params::telemetry::TelemetryGovernanceCrossrefParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::telemetry_intel::governance_crossref(params)
     }
@@ -3548,7 +4032,7 @@ impl NexCoreMcpServer {
     )]
     async fn telemetry_snapshot_evolution(
         &self,
-        Parameters(params): Parameters<params::TelemetrySnapshotEvolutionParams>,
+        Parameters(params): Parameters<params::telemetry::TelemetrySnapshotEvolutionParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::telemetry_intel::snapshot_evolution(params)
     }
@@ -3558,7 +4042,7 @@ impl NexCoreMcpServer {
     )]
     async fn telemetry_intel_report(
         &self,
-        Parameters(params): Parameters<params::TelemetryIntelReportParams>,
+        Parameters(params): Parameters<params::telemetry::TelemetryIntelReportParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::telemetry_intel::intel_report(params)
     }
@@ -3568,7 +4052,7 @@ impl NexCoreMcpServer {
     )]
     async fn telemetry_recent(
         &self,
-        Parameters(params): Parameters<params::TelemetryRecentParams>,
+        Parameters(params): Parameters<params::telemetry::TelemetryRecentParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::telemetry_intel::recent_activity(params)
     }
@@ -3582,7 +4066,7 @@ impl NexCoreMcpServer {
     )]
     async fn primitive_scan(
         &self,
-        Parameters(params): Parameters<params::PrimitiveScanParams>,
+        Parameters(params): Parameters<params::primitive_scanner::PrimitiveScanParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::primitive_scanner::primitive_scan(params)
     }
@@ -3592,7 +4076,7 @@ impl NexCoreMcpServer {
     )]
     async fn primitive_batch_test(
         &self,
-        Parameters(params): Parameters<params::PrimitiveBatchTestParams>,
+        Parameters(params): Parameters<params::primitive_scanner::PrimitiveBatchTestParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::primitive_scanner::primitive_batch_test(params)
     }
@@ -3606,7 +4090,7 @@ impl NexCoreMcpServer {
     )]
     async fn algovigil_dedup_pair(
         &self,
-        Parameters(params): Parameters<params::AlgovigilDedupPairParams>,
+        Parameters(params): Parameters<params::algovigilance::AlgovigilDedupPairParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::algovigilance::dedup_pair(params)
     }
@@ -3616,7 +4100,7 @@ impl NexCoreMcpServer {
     )]
     async fn algovigil_dedup_batch(
         &self,
-        Parameters(params): Parameters<params::AlgovigilDedupBatchParams>,
+        Parameters(params): Parameters<params::algovigilance::AlgovigilDedupBatchParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::algovigilance::dedup_batch(params)
     }
@@ -3626,7 +4110,7 @@ impl NexCoreMcpServer {
     )]
     async fn algovigil_triage_decay(
         &self,
-        Parameters(params): Parameters<params::AlgovigilTriageDecayParams>,
+        Parameters(params): Parameters<params::algovigilance::AlgovigilTriageDecayParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::algovigilance::triage_decay(params)
     }
@@ -3636,7 +4120,7 @@ impl NexCoreMcpServer {
     )]
     async fn algovigil_triage_reinforce(
         &self,
-        Parameters(params): Parameters<params::AlgovigilTriageReinforceParams>,
+        Parameters(params): Parameters<params::algovigilance::AlgovigilTriageReinforceParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::algovigilance::triage_reinforce(params)
     }
@@ -3646,7 +4130,7 @@ impl NexCoreMcpServer {
     )]
     async fn algovigil_triage_queue(
         &self,
-        Parameters(params): Parameters<params::AlgovigilTriageQueueParams>,
+        Parameters(params): Parameters<params::algovigilance::AlgovigilTriageQueueParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::algovigilance::triage_queue(params)
     }
@@ -3667,7 +4151,7 @@ impl NexCoreMcpServer {
     )]
     async fn edit_distance_compute(
         &self,
-        Parameters(params): Parameters<params::EditDistanceParams>,
+        Parameters(params): Parameters<params::edit_distance::EditDistanceParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::edit_distance::edit_distance_compute(params)
     }
@@ -3677,7 +4161,7 @@ impl NexCoreMcpServer {
     )]
     async fn edit_distance_similarity(
         &self,
-        Parameters(params): Parameters<params::EditDistanceSimilarityParams>,
+        Parameters(params): Parameters<params::edit_distance::EditDistanceSimilarityParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::edit_distance::edit_distance_similarity(params)
     }
@@ -3687,7 +4171,7 @@ impl NexCoreMcpServer {
     )]
     async fn edit_distance_traceback(
         &self,
-        Parameters(params): Parameters<params::EditDistanceTracebackParams>,
+        Parameters(params): Parameters<params::edit_distance::EditDistanceTracebackParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::edit_distance::edit_distance_traceback(params)
     }
@@ -3697,7 +4181,7 @@ impl NexCoreMcpServer {
     )]
     async fn edit_distance_transfer(
         &self,
-        Parameters(params): Parameters<params::EditDistanceTransferParams>,
+        Parameters(params): Parameters<params::edit_distance::EditDistanceTransferParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::edit_distance::edit_distance_transfer(params)
     }
@@ -3707,7 +4191,7 @@ impl NexCoreMcpServer {
     )]
     async fn edit_distance_batch(
         &self,
-        Parameters(params): Parameters<params::EditDistanceBatchParams>,
+        Parameters(params): Parameters<params::edit_distance::EditDistanceBatchParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::edit_distance::edit_distance_batch(params)
     }
@@ -3721,7 +4205,7 @@ impl NexCoreMcpServer {
     )]
     async fn integrity_analyze(
         &self,
-        Parameters(params): Parameters<params::IntegrityAnalyzeParams>,
+        Parameters(params): Parameters<params::integrity::IntegrityAnalyzeParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::integrity::integrity_analyze(params)
     }
@@ -3731,7 +4215,7 @@ impl NexCoreMcpServer {
     )]
     async fn integrity_assess_ksb(
         &self,
-        Parameters(params): Parameters<params::IntegrityAssessKsbParams>,
+        Parameters(params): Parameters<params::integrity::IntegrityAssessKsbParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::integrity::integrity_assess_ksb(params)
     }
@@ -3741,7 +4225,7 @@ impl NexCoreMcpServer {
     )]
     async fn integrity_calibration(
         &self,
-        Parameters(params): Parameters<params::IntegrityCalibrationParams>,
+        Parameters(params): Parameters<params::integrity::IntegrityCalibrationParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::integrity::integrity_calibration(params)
     }
@@ -3755,7 +4239,7 @@ impl NexCoreMcpServer {
     )]
     async fn dtree_train(
         &self,
-        Parameters(params): Parameters<params::DtreeTrainParams>,
+        Parameters(params): Parameters<params::dtree::DtreeTrainParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::dtree::dtree_train(params)
     }
@@ -3765,7 +4249,7 @@ impl NexCoreMcpServer {
     )]
     async fn dtree_predict(
         &self,
-        Parameters(params): Parameters<params::DtreePredictParams>,
+        Parameters(params): Parameters<params::dtree::DtreePredictParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::dtree::dtree_predict(params)
     }
@@ -3775,7 +4259,7 @@ impl NexCoreMcpServer {
     )]
     async fn dtree_importance(
         &self,
-        Parameters(params): Parameters<params::DtreeImportanceParams>,
+        Parameters(params): Parameters<params::dtree::DtreeImportanceParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::dtree::dtree_importance(params)
     }
@@ -3785,7 +4269,7 @@ impl NexCoreMcpServer {
     )]
     async fn dtree_prune(
         &self,
-        Parameters(params): Parameters<params::DtreePruneParams>,
+        Parameters(params): Parameters<params::dtree::DtreePruneParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::dtree::dtree_prune(params)
     }
@@ -3795,7 +4279,7 @@ impl NexCoreMcpServer {
     )]
     async fn dtree_export(
         &self,
-        Parameters(params): Parameters<params::DtreeExportParams>,
+        Parameters(params): Parameters<params::dtree::DtreeExportParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::dtree::dtree_export(params)
     }
@@ -3805,9 +4289,651 @@ impl NexCoreMcpServer {
     )]
     async fn dtree_info(
         &self,
-        Parameters(params): Parameters<params::DtreeInfoParams>,
+        Parameters(params): Parameters<params::dtree::DtreeInfoParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::dtree::dtree_info(params)
+    }
+
+    // ========================================================================
+    // Cargo Toolchain Tools (6) — Structured build/check/test/clippy/fmt/tree
+    // ========================================================================
+
+    #[tool(
+        description = "Run cargo check and return structured diagnostics (errors, warnings with file/line/column locations and error codes). Uses --message-format=json for parsed output."
+    )]
+    async fn cargo_check(
+        &self,
+        Parameters(params): Parameters<params::cargo::CargoCheckParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cargo::cargo_check(params)
+    }
+
+    #[tool(
+        description = "Run cargo build and return structured diagnostics. Uses --message-format=json. Set release=true for optimized builds."
+    )]
+    async fn cargo_build(
+        &self,
+        Parameters(params): Parameters<params::cargo::CargoBuildParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cargo::cargo_build(params)
+    }
+
+    #[tool(
+        description = "Run cargo test and return structured results: pass/fail/ignore counts per test, plus any compile diagnostics. Supports test_filter and skip parameters."
+    )]
+    async fn cargo_test(
+        &self,
+        Parameters(params): Parameters<params::cargo::CargoTestParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cargo::cargo_test(params)
+    }
+
+    #[tool(
+        description = "Run cargo clippy and return structured lint diagnostics. deny_warnings defaults to true (-- -D warnings). Uses --message-format=json for parsed output."
+    )]
+    async fn cargo_clippy(
+        &self,
+        Parameters(params): Parameters<params::cargo::CargoClippyParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cargo::cargo_clippy(params)
+    }
+
+    #[tool(
+        description = "Run cargo fmt. Set check_only=true to verify formatting without modifying files. Returns list of unformatted files in check mode."
+    )]
+    async fn cargo_fmt(
+        &self,
+        Parameters(params): Parameters<params::cargo::CargoFmtParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cargo::cargo_fmt(params)
+    }
+
+    #[tool(
+        description = "Run cargo tree and return the dependency tree. Supports package filter, depth limit, invert (reverse deps), and duplicates-only mode."
+    )]
+    async fn cargo_tree(
+        &self,
+        Parameters(params): Parameters<params::cargo::CargoTreeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cargo::cargo_tree(params)
+    }
+
+    // ========================================================================
+    // Git Tools (8) — Structured git CLI wrappers
+    // ========================================================================
+
+    #[tool(
+        description = "Run git status and return structured output: branch name, staged/modified/untracked file counts, and per-file status."
+    )]
+    async fn git_status(
+        &self,
+        Parameters(params): Parameters<params::git::GitStatusParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::git::git_status(params)
+    }
+
+    #[tool(
+        description = "Run git diff and return both stat summary and full diff text. Set staged=true for --staged. Supports file filter and ref_spec for comparing against branches/commits."
+    )]
+    async fn git_diff(
+        &self,
+        Parameters(params): Parameters<params::git::GitDiffParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::git::git_diff(params)
+    }
+
+    #[tool(
+        description = "Run git log and return structured commit history: hash, author, email, date, subject. Set oneline=true for compact output. Default: 10 commits."
+    )]
+    async fn git_log(
+        &self,
+        Parameters(params): Parameters<params::git::GitLogParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::git::git_log(params)
+    }
+
+    #[tool(
+        description = "Stage files and create a git commit. Safety: refuses to commit files matching sensitive patterns (.env, credentials, .key, .pem). If files is empty, commits currently staged changes."
+    )]
+    async fn git_commit(
+        &self,
+        Parameters(params): Parameters<params::git::GitCommitParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::git::git_commit(params)
+    }
+
+    #[tool(
+        description = "List, create, or delete git branches. Default: lists local branches. Set list=true for all (local + remote). Use create/delete for branch management."
+    )]
+    async fn git_branch(
+        &self,
+        Parameters(params): Parameters<params::git::GitBranchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::git::git_branch(params)
+    }
+
+    #[tool(
+        description = "Checkout a git branch, tag, or commit. Set create=true to create a new branch (-b flag)."
+    )]
+    async fn git_checkout(
+        &self,
+        Parameters(params): Parameters<params::git::GitCheckoutParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::git::git_checkout(params)
+    }
+
+    #[tool(
+        description = "Push commits to remote. Safety: blocks force push and direct push to main/master. Set set_upstream=true for -u flag."
+    )]
+    async fn git_push(
+        &self,
+        Parameters(params): Parameters<params::git::GitPushParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::git::git_push(params)
+    }
+
+    #[tool(
+        description = "Git stash operations: push (save changes), pop (apply+remove), list (show stashes), drop (remove top stash). Optional message for push."
+    )]
+    async fn git_stash(
+        &self,
+        Parameters(params): Parameters<params::git::GitStashParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::git::git_stash(params)
+    }
+
+    // ========================================================================
+    // GitHub CLI Tools (5) — PR and issue management via gh
+    // ========================================================================
+
+    #[tool(
+        description = "Create a GitHub pull request. Returns the PR URL. Set draft=true for draft PRs. Optional base branch."
+    )]
+    async fn gh_pr_create(
+        &self,
+        Parameters(params): Parameters<params::gh::GhPrCreateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gh::gh_pr_create(params).await
+    }
+
+    #[tool(
+        description = "View a GitHub pull request. Returns PR details (title, state, body, author, additions/deletions). If number not specified, views PR for current branch."
+    )]
+    async fn gh_pr_view(
+        &self,
+        Parameters(params): Parameters<params::gh::GhPrViewParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gh::gh_pr_view(params).await
+    }
+
+    #[tool(
+        description = "List GitHub pull requests. Filter by state (open/closed/merged/all). Returns number, title, state, author, branch, date, URL."
+    )]
+    async fn gh_pr_list(
+        &self,
+        Parameters(params): Parameters<params::gh::GhPrListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gh::gh_pr_list(params).await
+    }
+
+    #[tool(
+        description = "View a GitHub issue by number. Returns title, state, body, author, labels, assignees."
+    )]
+    async fn gh_issue_view(
+        &self,
+        Parameters(params): Parameters<params::gh::GhIssueViewParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gh::gh_issue_view(params).await
+    }
+
+    #[tool(
+        description = "Call the GitHub REST API directly. Safety: blocks DELETE method by default (set allow_delete=true to proceed). Supports GET, POST, PUT, PATCH."
+    )]
+    async fn gh_api(
+        &self,
+        Parameters(params): Parameters<params::gh::GhApiParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::gh::gh_api(params).await
+    }
+
+    // ========================================================================
+    // Systemctl Tools (4) — Service management (user scope by default)
+    // ========================================================================
+
+    #[tool(
+        description = "Get systemctl status for a unit. Returns active state, sub-state, PID, and full status output. Defaults to --user scope."
+    )]
+    async fn systemctl_status(
+        &self,
+        Parameters(params): Parameters<params::service::SystemctlStatusParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::service::systemctl_status(params)
+    }
+
+    #[tool(
+        description = "Restart a systemd unit. Safety: only allows --user scope. System-wide restart is blocked."
+    )]
+    async fn systemctl_restart(
+        &self,
+        Parameters(params): Parameters<params::service::SystemctlRestartParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::service::systemctl_restart(params)
+    }
+
+    #[tool(
+        description = "Start a systemd unit. Safety: only allows --user scope. System-wide start is blocked."
+    )]
+    async fn systemctl_start(
+        &self,
+        Parameters(params): Parameters<params::service::SystemctlStartParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::service::systemctl_start(params)
+    }
+
+    #[tool(
+        description = "List systemd units. Defaults to --user scope. Optional state filter (running, failed, active)."
+    )]
+    async fn systemctl_list(
+        &self,
+        Parameters(params): Parameters<params::service::SystemctlListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::service::systemctl_list(params)
+    }
+
+    // ========================================================================
+    // NPM Tools (4) — Node.js package management
+    // ========================================================================
+
+    #[tool(
+        description = "Run an npm script from package.json. Returns stdout/stderr with 120s timeout. Output truncated at 50KB."
+    )]
+    async fn npm_run(
+        &self,
+        Parameters(params): Parameters<params::npm::NpmRunParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::npm::npm_run(params).await
+    }
+
+    #[tool(
+        description = "Install npm packages. If packages list is empty, runs npm install from package.json. Set dev=true for --save-dev."
+    )]
+    async fn npm_install(
+        &self,
+        Parameters(params): Parameters<params::npm::NpmInstallParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::npm::npm_install(params).await
+    }
+
+    #[tool(description = "List installed npm packages as JSON. depth=0 for top-level only.")]
+    async fn npm_list(
+        &self,
+        Parameters(params): Parameters<params::npm::NpmListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::npm::npm_list(params).await
+    }
+
+    #[tool(
+        description = "Check for outdated npm packages. Returns JSON with current, wanted, and latest versions per package."
+    )]
+    async fn npm_outdated(
+        &self,
+        Parameters(params): Parameters<params::npm::NpmOutdatedParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::npm::npm_outdated(params).await
+    }
+
+    // ========================================================================
+    // Filesystem Tools (4) — mkdir, copy, move, chmod
+    // ========================================================================
+
+    #[tool(
+        description = "Create a directory. Set parents=true for recursive creation (-p). Uses Rust std::fs for speed."
+    )]
+    async fn fs_mkdir(
+        &self,
+        Parameters(params): Parameters<params::fs::FsMkdirParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::fs::fs_mkdir(params)
+    }
+
+    #[tool(
+        description = "Copy a file or directory. Set recursive=true for directories (uses cp -a to preserve attributes)."
+    )]
+    async fn fs_copy(
+        &self,
+        Parameters(params): Parameters<params::fs::FsCopyParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::fs::fs_copy(params)
+    }
+
+    #[tool(
+        description = "Move a file or directory. Directories use safe move pattern (cp -a + verify + rm) to prevent data loss."
+    )]
+    async fn fs_move(
+        &self,
+        Parameters(params): Parameters<params::fs::FsMoveParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::fs::fs_move(params)
+    }
+
+    #[tool(
+        description = "Change file permissions. Safety: blocks mode 777 (world-writable). Set recursive=true for -R flag."
+    )]
+    async fn fs_chmod(
+        &self,
+        Parameters(params): Parameters<params::fs::FsChmodParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::fs::fs_chmod(params)
+    }
+
+    // ========================================================================
+    // Frontend & Accessibility Tools (6) — WCAG, touch targets, type/spacing scale
+    // ========================================================================
+
+    #[tool(
+        description = "Compute WCAG 2.1 contrast ratio between foreground and background colors. Returns ratio, AA/AAA verdicts, and recommendations. Supports RGBA foreground (alpha-blended onto background). Provide colors as [r,g,b] or [r,g,b,a] (0-255 for RGB, 0.0-1.0 for alpha)."
+    )]
+    async fn frontend_wcag_contrast(
+        &self,
+        Parameters(params): Parameters<params::frontend::WcagContrastParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::frontend::wcag_contrast(params)
+    }
+
+    #[tool(
+        description = "Blend an RGBA foreground color onto an opaque RGB background. Returns the effective RGB color after alpha compositing. Useful for computing actual rendered colors from CSS rgba() values."
+    )]
+    async fn frontend_color_blend(
+        &self,
+        Parameters(params): Parameters<params::frontend::ColorBlendParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::frontend::color_blend(params)
+    }
+
+    #[tool(
+        description = "Check interactive element dimensions against WCAG 2.5.5 (AA: 44x44px) or 2.5.8 (AAA: 48x48px) touch target requirements. Returns pass/fail verdict and deficit in pixels."
+    )]
+    async fn frontend_touch_target(
+        &self,
+        Parameters(params): Parameters<params::frontend::TouchTargetParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::frontend::touch_target(params)
+    }
+
+    #[tool(
+        description = "Audit a set of font sizes for modular scale compliance. Detects gaps (missing intermediate sizes), clusters (nearly identical sizes), and ratio deviations. Default target: golden ratio (1.618). Returns per-step analysis and compliance score."
+    )]
+    async fn frontend_type_scale_audit(
+        &self,
+        Parameters(params): Parameters<params::frontend::TypeScaleAuditParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::frontend::type_scale_audit(params)
+    }
+
+    #[tool(
+        description = "Audit spacing values against a modular scale (base * ratio^n). Reports which values are on-scale, off-scale, and the nearest scale step. Default: 8px base with golden ratio."
+    )]
+    async fn frontend_spacing_audit(
+        &self,
+        Parameters(params): Parameters<params::frontend::SpacingAuditParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::frontend::spacing_audit(params)
+    }
+
+    #[tool(
+        description = "Combined accessibility audit in one call. Checks multiple contrast pairs (WCAG AA/AAA), touch target sizes (44px minimum), and heading hierarchy (no skips, single h1). Returns per-check results and weighted composite score (A/B/C/F grade)."
+    )]
+    async fn frontend_a11y_summary(
+        &self,
+        Parameters(params): Parameters<params::frontend::A11yAuditParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::frontend::a11y_summary(params)
+    }
+
+    // ========================================================================
+    // Epidemiology Tools (11) — Domain 7, Cross-Domain Transfer to PV
+    // ========================================================================
+
+    #[tool(
+        description = "Calculate Relative Risk (Risk Ratio). RR = [a/(a+b)] / [c/(c+d)]. Maps to PRR in PV. Transfer confidence: 0.95. Returns RR with 95% CI and interpretation."
+    )]
+    async fn epi_relative_risk(
+        &self,
+        Parameters(params): Parameters<params::EpiRelativeRiskParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::epidemiology::relative_risk(params)
+    }
+
+    #[tool(
+        description = "Calculate Odds Ratio. OR = (a×d)/(b×c). Identical to ROR in PV. Transfer confidence: 0.98. Returns OR with 95% CI (Woolf method) and interpretation."
+    )]
+    async fn epi_odds_ratio(
+        &self,
+        Parameters(params): Parameters<params::EpiOddsRatioParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::epidemiology::odds_ratio(params)
+    }
+
+    #[tool(
+        description = "Calculate Attributable Risk (Risk Difference). AR = Ie - Io = a/(a+b) - c/(c+d). Maps to excess signal rate in PV. Transfer confidence: 0.90."
+    )]
+    async fn epi_attributable_risk(
+        &self,
+        Parameters(params): Parameters<params::EpiAttributableRiskParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::epidemiology::attributable_risk(params)
+    }
+
+    #[tool(
+        description = "Calculate NNT (Number Needed to Treat) or NNH (Number Needed to Harm). NNT = 1/ARR when protective, NNH = 1/ARI when harmful. Maps to benefit-risk ratio in PV. Transfer confidence: 0.85."
+    )]
+    async fn epi_nnt_nnh(
+        &self,
+        Parameters(params): Parameters<params::EpiNntNnhParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::epidemiology::nnt_nnh(params)
+    }
+
+    #[tool(
+        description = "Calculate Attributable Fraction among exposed. AF = (RR-1)/RR. Maps to signal contribution fraction in PV. Transfer confidence: 0.88."
+    )]
+    async fn epi_attributable_fraction(
+        &self,
+        Parameters(params): Parameters<params::EpiAttributableFractionParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::epidemiology::attributable_fraction(params)
+    }
+
+    #[tool(
+        description = "Calculate Population Attributable Fraction. PAF = Pe(RR-1)/[1+Pe(RR-1)]. Maps to population signal burden in PV. Transfer confidence: 0.85. Quantifies population-level impact."
+    )]
+    async fn epi_population_af(
+        &self,
+        Parameters(params): Parameters<params::EpiPopulationAFParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::epidemiology::population_attributable_fraction(params)
+    }
+
+    #[tool(
+        description = "Calculate Incidence Rate. IR = events/person-time × multiplier. Maps to reporting rate in PV. Transfer confidence: 0.92. Includes Poisson CI."
+    )]
+    async fn epi_incidence_rate(
+        &self,
+        Parameters(params): Parameters<params::EpiIncidenceRateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::epidemiology::incidence_rate(params)
+    }
+
+    #[tool(
+        description = "Calculate Point Prevalence. P = cases/population × multiplier. Maps to background rate in PV. Transfer confidence: 0.90. Includes Wilson score CI."
+    )]
+    async fn epi_prevalence(
+        &self,
+        Parameters(params): Parameters<params::EpiPrevalenceParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::epidemiology::prevalence(params)
+    }
+
+    #[tool(
+        description = "Kaplan-Meier product-limit survival estimator. S(t) = Π[1-d_i/n_i]. Maps to time-to-onset survival (Weibull TTO) in PV. Transfer confidence: 0.82. Handles censoring, computes median survival, Greenwood SE."
+    )]
+    async fn epi_kaplan_meier(
+        &self,
+        Parameters(params): Parameters<params::EpiKaplanMeierParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::epidemiology::kaplan_meier(params)
+    }
+
+    #[tool(
+        description = "Calculate Standardized Mortality/Morbidity Ratio. SMR = observed/expected. Maps to O/E ratio (EBGM) in PV. Transfer confidence: 0.93. Includes Byar CI."
+    )]
+    async fn epi_smr(
+        &self,
+        Parameters(params): Parameters<params::EpiSmrParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::epidemiology::smr(params)
+    }
+
+    #[tool(
+        description = "Get all epidemiology → PV transfer mappings. Shows 10 epidemiology measures mapped to their PV equivalents with transfer confidence scores. Overall transfer confidence: 0.95."
+    )]
+    async fn epi_pv_mappings(
+        &self,
+        Parameters(params): Parameters<params::EpiPvMappingsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::epidemiology::epi_pv_mappings(params)
+    }
+
+    #[tool(
+        description = "Make an HTTP request to any URL (curl replacement). Supports GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS. Works with localhost. Returns status, headers, and body as JSON. Use body_only=true for raw response body."
+    )]
+    async fn http_request(
+        &self,
+        Parameters(params): Parameters<params::http::HttpRequestParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::http::http_request(params).await
+    }
+
+    // ========================================================================
+    // Observatory Phase 9 (3 tools) — Career, Learning DAG, Graph Layout
+    // ========================================================================
+
+    #[tool(
+        description = "Compute career transition graph from KSB corpus. Uses cosine similarity over 1,286 KSB component vectors to determine transition probability between PV career roles. Returns nodes (roles with salary data) and edges (transitions with probability/difficulty). Set include_salary=true for value-mining salary signals."
+    )]
+    async fn career_transitions(
+        &self,
+        Parameters(params): Parameters<params::career::CareerTransitionsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::career::transitions(params)
+    }
+
+    #[tool(
+        description = "Resolve a learning progression DAG with completion state. Builds DAG from pathway structure, runs topological sort for levels, propagates completion state (completed/unlocked/locked), and computes height values for terrain mesh rendering. Pass user_id for personalized view."
+    )]
+    async fn learning_dag_resolve(
+        &self,
+        Parameters(params): Parameters<params::learning_dag::LearningDagResolveParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::learning_dag::resolve(params)
+    }
+
+    #[tool(
+        description = "Pre-compute converged force-directed graph layout positions. Fruchterman-Reingold algorithm in 2D or 3D. Returns positioned nodes normalized to [-1,1]. Supports configurable iterations and convergence detection. Performance: <50ms for 100 nodes, <500ms for 1000 nodes."
+    )]
+    async fn graph_layout_converge(
+        &self,
+        Parameters(params): Parameters<params::graph_layout::GraphLayoutConvergeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::graph_layout::converge(params)
+    }
+
+    // ========================================================================
+    // Observatory Personalization (4 tools) — detect, get, set, validate
+    // ========================================================================
+
+    #[tool(
+        description = "Auto-detect optimal Observatory rendering settings from device capabilities: GPU renderer, memory, CPU cores, and accessibility media queries (prefers-reduced-motion, prefers-contrast). Returns recommended quality, theme, post-processing, and worker layout settings."
+    )]
+    async fn observatory_personalize_detect(
+        &self,
+        Parameters(params): Parameters<params::observatory::PersonalizeDetectParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::observatory::personalize_detect(params)
+    }
+
+    #[tool(
+        description = "Get default Observatory personalization preferences for a named user profile. Profiles: 'default' (balanced), 'power-user' (cinematic quality, all effects), 'accessibility' (high-contrast, CVD-safe, reduced motion), 'mobile' (low quality, no effects)."
+    )]
+    async fn observatory_personalize_get(
+        &self,
+        Parameters(params): Parameters<params::observatory::PersonalizeGetParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::observatory::personalize_get(params)
+    }
+
+    #[tool(
+        description = "Validate and normalize an Observatory preferences object. Checks quality (low/medium/high/cinematic), theme (default/warm/clinical/high-contrast), CVD mode (normal/deuteranopia/protanopia/tritanopia), explorer, layout, and post-processing effects. Returns normalized values or validation errors."
+    )]
+    async fn observatory_personalize_set(
+        &self,
+        Parameters(params): Parameters<params::observatory::PersonalizeSetParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::observatory::personalize_set(params)
+    }
+
+    #[tool(
+        description = "Cross-validate an Observatory configuration against explorer capability constraints. Detects incompatibilities (e.g. CVD mode unsupported in 'state' explorer, layout ignored in 'math' explorer) and suggests improvements (e.g. bloom with cinematic quality). Returns errors, warnings, and suggestions."
+    )]
+    async fn observatory_personalize_validate(
+        &self,
+        Parameters(params): Parameters<params::observatory::PersonalizeValidateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::observatory::personalize_validate(params)
+    }
+
+    // ========================================================================
+    // SOP-Anatomy-Code Tools (4) — Triple mapping, reactor, transfer protocol
+    // ========================================================================
+
+    #[tool(
+        description = "Look up the SOP-Anatomy-Code triple mapping. Maps 18 SOP governance sections through biological anatomy to software code structures. Provide a section number (1-18) or omit for all 18."
+    )]
+    async fn sop_anatomy_map(
+        &self,
+        Parameters(params): Parameters<params::sop_anatomy::SopAnatomyMapParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::sop_anatomy::sop_anatomy_map(params)
+    }
+
+    #[tool(
+        description = "Cross-domain transfer using the Capability Transfer Protocol (FISSION->CHIRALITY->FUSION->TITRATION). Translates a concept from one domain (sop/anatomy/code) to another with confidence scoring and chirality warnings."
+    )]
+    async fn sop_anatomy_bridge(
+        &self,
+        Parameters(params): Parameters<params::sop_anatomy::SopAnatomyBridgeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::sop_anatomy::sop_anatomy_bridge(params)
+    }
+
+    #[tool(
+        description = "Audit a crate or project directory against all 18 SOP governance sections. Detects structural code patterns (file presence, directory existence) and scores with critical-section 2x weighting (max 25)."
+    )]
+    async fn sop_anatomy_audit(
+        &self,
+        Parameters(params): Parameters<params::sop_anatomy::SopAnatomyAuditParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::sop_anatomy::sop_anatomy_audit(params)
+    }
+
+    #[tool(
+        description = "Full 18-section SOP-Anatomy-Code coverage report. Shows all sections with priority tier, weight, and bio-crate wiring status (which nexcore bio-crates implement each governance function)."
+    )]
+    async fn sop_anatomy_coverage(
+        &self,
+        Parameters(params): Parameters<params::sop_anatomy::SopAnatomyCoverageParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::sop_anatomy::sop_anatomy_coverage(params)
     }
 }
 
@@ -3832,10 +4958,12 @@ impl NexCoreMcpServer {
     pub fn unified_config_validate(&self) -> Result<CallToolResult, McpError> {
         use nexcore_config::Validate;
         let msg = match &self.config {
-            Some(cfg) => match cfg.validate() {
-                Ok(_) => "Configuration valid: no security issues, all paths validated, MCP servers configured".to_string(),
-                Err(e) => format!("Configuration warnings:\n{e}"),
-            },
+            Some(cfg) =>
+                match cfg.validate() {
+                    Ok(_) =>
+                        "Configuration valid: no security issues, all paths validated, MCP servers configured".to_string(),
+                    Err(e) => format!("Configuration warnings:\n{e}"),
+                }
             None => "No configuration loaded".to_string(),
         };
         Ok(CallToolResult::success(vec![rmcp::model::Content::text(
@@ -3846,7 +4974,7 @@ impl NexCoreMcpServer {
     /// MCP servers list for unified dispatcher.
     pub fn unified_mcp_servers_list(
         &self,
-        p: params::McpServersListParams,
+        p: params::system::McpServersListParams,
     ) -> Result<CallToolResult, McpError> {
         let servers = unified_collect_servers(&self.config, p.include_projects);
         let result = serde_json::json!({"total": servers.len(), "servers": servers});
@@ -3856,7 +4984,7 @@ impl NexCoreMcpServer {
     /// MCP server get for unified dispatcher.
     pub fn unified_mcp_server_get(
         &self,
-        p: params::McpServerGetParams,
+        p: params::system::McpServerGetParams,
     ) -> Result<CallToolResult, McpError> {
         let msg = unified_get_server(&self.config, &p.name);
         Ok(CallToolResult::success(vec![rmcp::model::Content::text(
@@ -3877,7 +5005,9 @@ fn unified_collect_servers(
 ) -> Vec<serde_json::Value> {
     let cfg = match config {
         Some(c) => c,
-        None => return Vec::new(),
+        None => {
+            return Vec::new();
+        }
     };
     let mut servers: Vec<serde_json::Value> = cfg
         .mcp_servers
@@ -3920,7 +5050,9 @@ fn unified_server_json(
 fn unified_get_server(config: &Option<nexcore_config::ClaudeConfig>, name: &str) -> String {
     let cfg = match config {
         Some(c) => c,
-        None => return "No configuration loaded".to_string(),
+        None => {
+            return "No configuration loaded".to_string();
+        }
     };
     match cfg.mcp_servers.get(name) {
         Some(nexcore_config::McpServerConfig::Stdio { command, args, env }) => {
@@ -3941,170 +5073,13 @@ impl ServerHandler for NexCoreMcpServer {
     fn get_info(&self) -> ServerInfo {
         ServerInfo {
             instructions: Some(
-                r#"NexCore MCP Server - High-performance Rust APIs for Claude Code.
+                r#"nexcore MCP Server — 380+ Rust-powered tools via unified dispatcher.
 
-## Tool Categories (121 tools total)
+USAGE: nexcore(command="CMD", params={...})
+DISCOVER: nexcore(command="help") for full categorized catalog
+SEARCH: nexcore(command="toolbox", params={query: "keyword"}) for tool lookup with parameter schemas
 
-### Foundation (9 tools) - 10-63x faster than Python
-- foundation_levenshtein: Edit distance and similarity
-- foundation_levenshtein_bounded: Bounded edit distance with early termination
-- foundation_fuzzy_search: Batch fuzzy matching
-- foundation_sha256: SHA-256 hashing
-- foundation_yaml_parse: YAML to JSON
-- foundation_graph_topsort: Topological sort
-- foundation_graph_levels: Parallel execution levels
-- foundation_fsrs_review: Spaced repetition scheduling
-- foundation_concept_grep: Deterministic concept expansion for multi-variant search
-
-### PV Signal Detection (8 tools)
-- pv_signal_complete: All 5 algorithms at once
-- pv_signal_prr/ror/ic/ebgm: Individual algorithms
-- pv_chi_square: Chi-square statistic
-- pv_naranjo_quick: Naranjo causality (5 questions)
-- pv_who_umc_quick: WHO-UMC causality
-
-### Vigilance (4 tools) - Theory of Vigilance
-- vigilance_safety_margin: d(s) safety distance
-- vigilance_risk_score: Guardian-AV risk scoring
-- vigilance_harm_types: List 8 ToV harm types (A-H)
-- vigilance_map_to_tov: Map SafetyLevel to ToV
-
-### Guardian (10 tools) - Homeostasis Control Loop + GVR Framework
-- guardian_homeostasis_tick: Run one sensing→decision→response iteration
-- guardian_evaluate_pv: Evaluate PV risk with recommended actions
-- guardian_status: Get loop status (sensors, actuators, iteration count)
-- guardian_reset: Reset loop state and amplification
-- guardian_originator_classify: Classify entity by {G,V,R} autonomy capabilities
-- guardian_ceiling_for_originator: Get autonomy-aware ceiling limits
-
-### Vigil (6 tools) - AI Orchestrator
-- vigil_status: Get orchestrator status (components, sources, executors)
-- vigil_health: Health check (process, Qdrant, Prometheus, Grafana)
-- vigil_emit_event: Emit event to EventBus
-- vigil_memory_search: Search KSB vector store
-- vigil_memory_stats: Get Qdrant collection statistics
-- vigil_llm_stats: Get LLM token usage (Gemini calls, tokens, avg per call)
-
-### Skills (8 tools)
-- skill_scan: Scan directory for skills
-- skill_list: List registered skills
-- skill_get: Get skill by name
-- skill_validate: Diamond v2 compliance validation
-- skill_search_by_tag: Find skills by tag
-- skill_taxonomy_query/list: O(1) taxonomy lookups
-- skill_categories_compute_intensive: Get Rust-delegate categories
-
-### Validation (3 tools) - Universal L1-L5 Validation
-- validation_run: Full L1-L5 validation on any target
-- validation_check: Quick L1-L2 check (fast)
-- validation_domains: List domains and level definitions
-
-### Guidelines (5 tools)
-- guidelines_search: Search ICH/CIOMS/EMA guidelines
-- guidelines_get: Get guideline by ID
-- guidelines_categories: List all categories
-- guidelines_pv_all: Get all PV-specific guidelines
-- guidelines_url: Get PDF URL for guideline
-
-### FAERS (5 tools)
-- faers_search: Search FDA adverse events
-- faers_drug_events: Top events for a drug
-- faers_signal_check: Quick signal detection
-- faers_disproportionality: Full PRR/ROR analysis
-- faers_compare_drugs: Compare two drug profiles
-
-### GCloud (19 tools)
-- gcloud_auth_list: List authenticated accounts
-- gcloud_config_list/get/set: Configuration management
-- gcloud_projects_list/describe: Project operations
-- gcloud_secrets_list/versions_access: Secret Manager
-- gcloud_storage_*: Cloud Storage operations
-- gcloud_compute_instances_list: Compute Engine
-- gcloud_run_services_*: Cloud Run
-- gcloud_functions_list: Cloud Functions
-- gcloud_iam_service_accounts_list: IAM
-- gcloud_logging_read: Cloud Logging
-- gcloud_run_command: Generic command (with safety checks)
-
-### Principles Knowledge Base (3 tools)
-- principles_list: List all available principles
-- principles_get: Get principle by name (dalio-principles, kiss, first-principles)
-- principles_search: Search by keyword (open-minded, meritocracy, expected value)
-
-### Brain (12 tools) - Antigravity-style working memory
-- brain_session_create: Create new session
-- brain_session_load: Load session by ID
-- brain_sessions_list: List all sessions
-- brain_artifact_save: Save artifact (task, plan, walkthrough)
-- brain_artifact_resolve: Create immutable snapshot
-- brain_artifact_get: Get artifact content
-- brain_artifact_diff: Diff two versions
-- code_tracker_track: Track file for changes
-- code_tracker_changed: Check if file changed
-- code_tracker_original: Get original content
-- implicit_get: Get learned preference
-- implicit_set: Set learned preference
-
-### Hooks (4 tools) - Hook Registry API
-- hooks_stats: Get statistics by tier and event type
-- hooks_for_event: Query hooks by event (SessionStart, PreToolUse, etc.)
-- hooks_for_tier: Query hooks by tier (dev/review/deploy)
-- hook_list_nested: List nested hooks in compound hook molecules
-
-### Regulatory Primitives (3 tools) - FDA/ICH/CIOMS Analysis
-- regulatory_primitives_extract: Extract T1/T2/T3 primitives from regulatory sources
-- regulatory_primitives_audit: Audit FDA vs ICH/CIOMS consistency
-- regulatory_primitives_compare: Cross-domain transfer analysis
-
-### Primitive Validation (4 tools) - Corpus-Backed with Professional Citations
-- primitive_validate: Validate term against ICH glossary, BioOntology (MedDRA/SNOMED), PubMed
-- primitive_cite: Generate Vancouver-format citation from PMID or DOI
-- primitive_validate_batch: Batch validation with statistics
-- primitive_validation_tiers: List validation tiers and confidence levels
-
-### Chemistry Primitives (10 tools) - Cross-Domain Transfer
-- chemistry_threshold_rate: Arrhenius rate (signal detection threshold, 0.92 confidence)
-- chemistry_decay_remaining: Half-life decay (signal persistence, 0.90 confidence)
-- chemistry_saturation_rate: Michaelis-Menten (case processing capacity, 0.88 confidence)
-- chemistry_feasibility: Gibbs free energy (causality likelihood, 0.85 confidence)
-- chemistry_dependency_rate: Rate law (signal dependency, 0.82 confidence)
-- chemistry_buffer_capacity: Henderson-Hasselbalch (baseline stability, 0.78 confidence)
-- chemistry_signal_absorbance: Beer-Lambert (dose-response linearity, 0.75 confidence)
-- chemistry_equilibrium: Steady-state fractions (reporting baseline, 0.72 confidence)
-- chemistry_pv_mappings: All 13 chemistry → PV mappings
-- chemistry_threshold_exceeded: Simple signal gate
-- chemistry_hill_response: Hill cooperative binding (signal cascade, 0.85 confidence)
-- chemistry_nernst_potential: Nernst dynamic threshold (0.80 confidence)
-- chemistry_inhibition_rate: Competitive inhibition (signal interference, 0.78 confidence)
-- chemistry_eyring_rate: Eyring transition state (signal escalation, 0.82 confidence)
-- chemistry_langmuir_coverage: Langmuir adsorption (case slot occupancy, 0.88 confidence)
-
-### STEM Primitives (11 tools) - Cross-Domain T2-P Traits
-- stem_version: STEM system version, trait counts, domain summary
-- stem_taxonomy: Full 32-trait taxonomy with T1 groundings
-- stem_confidence_combine: Multiplicative confidence composition
-- stem_tier_info: Tier classification and transfer multiplier
-- stem_chem_balance: Chemistry equilibrium balance (K, products favored)
-- stem_chem_fraction: Fraction saturation check [0.0, 1.0]
-- stem_phys_fma: Force = mass × acceleration (Newton's 2nd)
-- stem_phys_conservation: Quantity conservation check
-- stem_phys_period: Frequency to period conversion
-- stem_math_bounds_check: Value within bounds + clamping
-- stem_math_relation_invert: Relation inversion with symmetry check
-
-### Algovigilance (6 tools) - ICSR Deduplication + Signal Triage
-- algovigil_dedup_pair: Compare two ICSR narratives (Jaccard similarity)
-- algovigil_dedup_batch: Configure batch deduplication for a drug
-- algovigil_triage_decay: Get signal with decay-adjusted relevance
-- algovigil_triage_reinforce: Reinforce signal with new case evidence
-- algovigil_triage_queue: Get prioritized signal queue for a drug
-- algovigil_status: Store health, synonym count, queue stats
-
-### Edit Distance Framework (4 tools) - Generic cross-domain edit distance
-- edit_distance_compute: Compute distance (levenshtein/damerau/lcs algorithms)
-- edit_distance_similarity: Similarity with threshold check (PV drug matching)
-- edit_distance_traceback: Full operation sequence (insert/delete/substitute/transpose)
-- edit_distance_transfer: Cross-domain transfer confidence lookup"#
+Domains: Foundation, PV Signal Detection, Vigilance, Guardian, Vigil, Skills, Validation, Guidelines, FAERS, GCloud, Wolfram, Principles, Brain, Hooks, Regulatory, Chemistry, STEM, Algovigilance, EditDistance, Cargo, Epidemiology, Compliance, HUD, Immunity, Watchtower, Telemetry"#
                     .into(),
             ),
             capabilities: ServerCapabilities::builder().enable_tools().build(),
@@ -4140,11 +5115,31 @@ impl ServerHandler for NexCoreMcpServer {
         _request: Option<PaginatedRequestParams>,
         _context: RequestContext<RoleServer>,
     ) -> impl std::future::Future<Output = Result<ListToolsResult, McpError>> + Send + '_ {
+        // Toolbox architecture: expose only the unified dispatcher + meta-tools.
+        // All 380+ commands remain accessible via nexcore(command="CMD", params={...}).
+        // Use nexcore(command="toolbox", params={query:"keyword"}) for discovery.
+        // Use nexcore(command="help") for full catalog.
+        //
+        // To restore individual tool listing, set NEXCORE_MCP_ALL_TOOLS=true.
+        let expose_all = std::env::var("NEXCORE_MCP_ALL_TOOLS")
+            .map(|v| v == "true" || v == "1")
+            .unwrap_or(false);
+
         std::future::ready(Ok(ListToolsResult {
-            tools: if crate::tooling::is_unified_mode() {
-                vec![crate::tooling::unified_tool_descriptor()]
-            } else {
+            tools: if expose_all {
                 self.tool_router.list_all()
+            } else {
+                // Toolbox mode (default): only meta-tools
+                self.tool_router
+                    .list_all()
+                    .into_iter()
+                    .filter(|t| {
+                        matches!(
+                            t.name.as_ref(),
+                            "nexcore" | "nexcore_health_probe" | "nexcore_assist"
+                        )
+                    })
+                    .collect()
             },
             meta: None,
             next_cursor: None,

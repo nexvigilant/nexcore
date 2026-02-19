@@ -1,4 +1,3 @@
-[workspace]
 
 [package]
 name = "nexcore-mcp"
@@ -13,216 +12,261 @@ name = "nexcore-mcp"
 path = "src/main.rs"
 
 [dependencies]
+# Academy Forge (structured knowledge extraction + validation)
+academy-forge = { workspace = true }
+
 # NexCore unified crate (all modules consolidated)
-nexcore-vigilance = { version = "1.0.0", path = "../nexcore-vigilance", registry = "nexcore" }
-nexcore-vigil = { version = "0.1.0", path = "../nexcore-vigil", registry = "nexcore" }
-nexcore-forge-strategy = { version = "0.1.0", path = "../nexcore-forge-strategy", registry = "nexcore" }
-nexcore-brain = { version = "1.0.0", path = "../nexcore-brain", registry = "nexcore" }
-nexcore-db = { version = "1.0.0", path = "../nexcore-db", registry = "nexcore" }
-nexcore-synapse = { version = "1.0.0", path = "../nexcore-synapse", registry = "nexcore" }
-nexcore-hooks = { version = "0.1.0", path = "../nexcore-hooks", registry = "nexcore" }
-nexcore-config = { version = "0.1.0", path = "../nexcore-config", registry = "nexcore" }
-nexcore-skill-exec = { version = "1.0.0", path = "../nexcore-skill-exec", registry = "nexcore" }
-nexcore-skill-compiler = { version = "1.0.0", path = "../nexcore-skill-compiler", registry = "nexcore" }
-nexcore-telemetry-core = { version = "1.0.0", path = "../nexcore-telemetry-core", registry = "nexcore" }
-nexcore-compliance = { version = "1.0.0", path = "../nexcore-compliance", registry = "nexcore" }
-nexcore-algovigilance = { version = "1.0.0", path = "../nexcore-algovigilance", registry = "nexcore" }
-nexcore-dna = { version = "1.0.0", path = "../nexcore-dna", registry = "nexcore" }
-nexcore-dtree = { version = "1.0.0", path = "../nexcore-dtree", registry = "nexcore" }
-nexcore-sentinel = { version = "1.0.0", path = "../nexcore-sentinel", registry = "nexcore" }
-nexcore-measure = { version = "1.0.0", path = "../nexcore-measure", registry = "nexcore" }
-nexcore-anatomy = { version = "1.0.0", path = "../nexcore-anatomy", registry = "nexcore" }
-nexcore-faers-etl = { version = "1.0.0", path = "../nexcore-faers-etl", registry = "nexcore" }
-nexcore-edit-distance = { version = "1.0.0", path = "../nexcore-edit-distance", registry = "nexcore" }
-nexcore-integrity = { version = "1.0.0", path = "../nexcore-integrity", registry = "nexcore" }
-signal = { version = "1.0.0", path = "../signal", registry = "nexcore" }
-nexcore-hormones = { version = "1.0.0", path = "../nexcore-hormones", registry = "nexcore" }
-nexcore-immunity = { version = "0.1.0", path = "../nexcore-immunity", registry = "nexcore" }
-nexcore-insight = { version = "0.1.0", path = "../nexcore-insight", registry = "nexcore" }
-stem = { version = "0.1.0", path = "../stem", registry = "nexcore" }
-nexcore-viz = { version = "1.0.0", path = "../nexcore-viz", registry = "nexcore" }
-nexcore-synth = { version = "0.1.0", path = "../nexcore-synth", registry = "nexcore" }
-nexcore-trust = { version = "0.1.0", path = "../nexcore-trust", registry = "nexcore" }
-nexcore-guardian-engine = { version = "1.0.0", path = "../nexcore-guardian-engine", registry = "nexcore" }
-counter-awareness = { version = "1.0.0", path = "../counter-awareness", registry = "nexcore" }
-nexcore-signal-fence = { version = "0.1.0", path = "../nexcore-signal-fence", registry = "nexcore" }
-nexcore-caesura = { version = "1.0.0", path = "../nexcore-caesura", registry = "nexcore" }
-nexcore-declension = { version = "1.0.0", path = "../nexcore-declension", registry = "nexcore" }
+nexcore-vigilance = { workspace = true }
+nexcore-vigil = { workspace = true }
+nexcore-forge-strategy = { workspace = true }
+nexcore-brain = { workspace = true }
+nexcore-oracle = { workspace = true }
+nexcore-db = { workspace = true }
+nexcore-synapse = { workspace = true }
+nexcore-hooks = { workspace = true }
+nexcore-config = { workspace = true }
+nexcore-skill-exec = { workspace = true }
+nexcore-skill-compiler = { workspace = true }
+nexcore-telemetry-core = { workspace = true }
+nexcore-compliance = { workspace = true }
+nexcore-algovigilance = { workspace = true }
+nexcore-dna = { workspace = true, features = ["ncbi"] }
+nexcore-dtree = { workspace = true }
+nexcore-organize = { workspace = true }
+nexcore-sentinel = { workspace = true }
+nexcore-measure = { workspace = true }
+nexcore-anatomy = { workspace = true }
+nexcore-faers-etl = { workspace = true }
+nexcore-fda-guidance = { path = "../nexcore-fda-guidance" }
+nexcore-pharos = { workspace = true }
+nexcore-edit-distance = { workspace = true }
+nexcore-integrity = { workspace = true }
+signal = { workspace = true }
+nexcore-hormones = { workspace = true }
+nexcore-immunity = { workspace = true }
+nexcore-insight = { workspace = true }
+stem = { workspace = true }
+nexcore-viz = { workspace = true }
+nexcore-synth = { workspace = true }
+nexcore-trust = { workspace = true }
+nexcore-guardian-engine = { workspace = true }
+counter-awareness = { workspace = true }
+nexcore-signal-fence = { workspace = true }
+nexcore-caesura = { workspace = true }
+nexcore-declension = { workspace = true }
 # Biological system crates (Claude Code anatomy)
-nexcore-integumentary = { version = "1.0.0", path = "../nexcore-integumentary", registry = "nexcore" }
-nexcore-respiratory = { version = "1.0.0", path = "../nexcore-respiratory", registry = "nexcore" }
-nexcore-digestive = { version = "1.0.0", path = "../nexcore-digestive", registry = "nexcore" }
-nexcore-circulatory = { version = "1.0.0", path = "../nexcore-circulatory", registry = "nexcore" }
-nexcore-skeletal = { version = "1.0.0", path = "../nexcore-skeletal", registry = "nexcore" }
-nexcore-muscular = { version = "1.0.0", path = "../nexcore-muscular", registry = "nexcore" }
-nexcore-lymphatic = { version = "1.0.0", path = "../nexcore-lymphatic", registry = "nexcore" }
-nexcore-nervous = { version = "1.0.0", path = "../nexcore-nervous", registry = "nexcore" }
-nexcore-urinary = { version = "1.0.0", path = "../nexcore-urinary", registry = "nexcore" }
-nexcore-reproductive = { version = "1.0.0", path = "../nexcore-reproductive", registry = "nexcore" }
-# Legacy deps removed - now use nexcore-vigilance::{foundation, pv, skills}
+nexcore-integumentary = { workspace = true }
+nexcore-respiratory = { workspace = true }
+nexcore-digestive = { workspace = true }
+nexcore-circulatory = { workspace = true }
+nexcore-skeletal = { workspace = true }
+nexcore-muscular = { workspace = true }
+nexcore-lymphatic = { workspace = true }
+nexcore-nervous = { workspace = true }
+nexcore-urinary = { workspace = true }
+nexcore-reproductive = { workspace = true }
+# Knowledge Engine (compression, compilation, query)
+nexcore-knowledge-engine = { workspace = true }
+# Knowledge (KSB article index — 628 PV articles across 15 domains)
+nexcore-knowledge = { workspace = true }
+# Cardiovascular system (heart, vessels, blood, pressure, pathology)
+nexcore-cardiovascular = { workspace = true }
+# Disney Loop (forward-only compound discovery pipeline)
+disney-loop = { workspace = true }
+# Theory of Vigilance (ToV grounded types, proof logic)
+nexcore-tov = { workspace = true }
+nexcore-tov-grounded = { workspace = true }
+nexcore-tov-proofs = { workspace = true }
+# PV Core (signal algorithms, causality, medical coding, pharmacokinetics)
+nexcore-pv-core = { workspace = true }
+nexcore-pharmacovigilance = { workspace = true }
+nexcore-preemptive-pv = { workspace = true }
+nexcore-harm-taxonomy = { workspace = true }
+pvos-primitive-expansion = { workspace = true }
+# Platform/orchestration/security domain crates
+nexcore-orchestration = { workspace = true }
+nexcore-vault = { workspace = true }
+nexcore-statemind = { workspace = true }
+nexcore-model-checker = { workspace = true }
+nexcore-combinatorics = { workspace = true }
+nexcore-cloud = { workspace = true }
+nexcloud = { workspace = true }
+# Remaining domain wiring wave (excluding blocked nexcore-api)
+core-true = { workspace = true }
+nexcore-antibodies = { workspace = true }
+nexcore-audio = { workspace = true }
+nexcore-compilation-space = { workspace = true }
+nexcore-compositor = { workspace = true }
+nexcore-downloads-scanner = { workspace = true }
+nexcore-engram = { workspace = true }
+nexcore-ghost = { workspace = true }
+nexcore-jeopardy = { workspace = true }
+nexcore-mcp-hot = { workspace = true }
+nexcore-pharma-rd = { workspace = true }
+nexcore-softrender = { workspace = true }
+nexcore-state-theory = { workspace = true }
+# Clinical Trial Validation Paradigm (software validation methodology)
+nexcore-ctvp = { workspace = true }
+# Pharmacovigilance DSL extracted from vigilance megacrate
+nexcore-pvdsl = { workspace = true }
+# Pharmacovigilance Operating System substrate
+nexcore-pvos = { workspace = true }
+# Skill Ecosystem Registry (compliance, ToV monitoring, promotion)
+nexcore-registry = { workspace = true }
 
 # MCP server framework
 rmcp = { version = "0.14", features = ["server", "transport-io"] }
 
 # Async runtime
-tokio = { version = "1.38.0", features = ["full"] }
+tokio = { workspace = true }
 
 # Serialization
-serde = { version = "1.0.204", features = ["derive"] }
-serde_json = "1.0.120"
-serde_yaml = "0.9.34"
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
 
 # Error handling
-anyhow = "1.0.86"
+anyhow = { workspace = true }
 
 # Logging
-tracing = "0.1.40"
+tracing = { workspace = true }
 
 # Thread-safe state
 parking_lot = "0.12"
-once_cell = "1.20"
+once_cell = { workspace = true }
 
 # HTTP client (FAERS, Wolfram)
-reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+reqwest = { workspace = true }
 
 # URL encoding
-urlencoding = "2.1"
+urlencoding = { workspace = true }
 
 # Date/time handling
-chrono = { version = "0.4", features = ["serde"] }
+chrono = { workspace = true }
 
 # Home directory detection
-dirs = "5.0"
+dirs = { workspace = true }
 
 # Symbol audit dependencies
-regex = "1.10.5"
-walkdir = "2.5.0"
+regex = { workspace = true }
+walkdir = { workspace = true }
 
 # Consolidated MCP server deps (claude-fs, compendious, docs, gsheets, reddit)
-flate2 = "1.0.30"
-tar = "0.4.41"
-jsonwebtoken = "9"
-base64 = "0.22.1"
+flate2 = { workspace = true }
+tar = { workspace = true }
+jsonwebtoken = { workspace = true }
+base64 = { workspace = true }
 moka = { version = "0.12", features = ["future"] }
-nexcore-social = { version = "1.0.0", path = "../nexcore-social", registry = "nexcore" }
-nexcore-perplexity = { version = "1.0.0", path = "../nexcore-perplexity", registry = "nexcore" }
-thiserror = "1.0.61"
+nexcore-social = { workspace = true }
+nexcore-sop-anatomy = { workspace = true }
+nexcore-perplexity = { workspace = true }
+thiserror = { workspace = true }
 
 # XML parsing (Wolfram Full Results API)
 quick-xml = "0.37"
 
 # Chrome DevTools Protocol (browser automation)
 # Re-export from nexcore-browser for shared state with Vigil/Guardian
-nexcore-browser = { version = "0.1.0", path = "../nexcore-browser", registry = "nexcore" }
+nexcore-browser = { workspace = true }
 
 # Visual primitives (shape/color pattern matching)
-nexcore-renderer = { version = "1.0.0", path = "../nexcore-renderer", registry = "nexcore" }
+nexcore-renderer = { workspace = true }
 
 # Cytokine signaling (typed event bus)
-nexcore-cytokine = { version = "1.0.0", path = "../nexcore-cytokine", registry = "nexcore" }
+nexcore-cytokine = { workspace = true }
 
 # Value mining (economic signal detection)
-nexcore-value-mining = { version = "1.0.0", path = "../nexcore-value-mining", registry = "nexcore" }
+nexcore-value-mining = { workspace = true }
 
 # Prima language (primitive-first programming)
-prima = { version = "0.1.0", path = "../prima", registry = "nexcore" }
-prima-codegen = { version = "0.1.0", path = "../prima-codegen", registry = "nexcore" }
+prima = { workspace = true }
+prima-codegen = { workspace = true }
+nexcore-prima = { workspace = true }
+prima-chem = { workspace = true }
+prima-pipeline = { workspace = true }
+prima-academy = { workspace = true }
+prima-mcp-server = { workspace = true }
+nexcore-word = { workspace = true }
+nexcore-grammar-lab = { workspace = true }
+primitive-innovation = { workspace = true }
+nexcore-primitive-scanner = { workspace = true }
 
 # Cortex (local LLM inference engine)
-nexcore-cortex = { version = "0.1.0", path = "../nexcore-cortex", registry = "nexcore" }
+nexcore-cortex = { workspace = true }
 
 # Lex Primitiva (primitive basis, compound growth)
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
-nexcore-primitives = { version = "1.0.0", path = "../nexcore-primitives", registry = "nexcore" }
+nexcore-lex-primitiva = { workspace = true }
+nexcore-primitives = { workspace = true }
 
 # Proof of Meaning (chemistry-inspired semantic equivalence engine)
-nexcore-proof-of-meaning = { version = "1.0.0", path = "../nexcore-proof-of-meaning", registry = "nexcore" }
+nexcore-proof-of-meaning = { workspace = true }
+
+# GROUNDED (epistemological substrate — uncertainty, evidence, confidence)
+grounded = { workspace = true }
 
 # Aggregate (T1 fold/recursive/ranked combinators)
-nexcore-aggregate = { version = "1.0.0", path = "../nexcore-aggregate", registry = "nexcore" }
+nexcore-aggregate = { workspace = true }
 
 # Claude Care Process (PK engine for AI support interventions)
-nexcore-ccp = { version = "1.0.0", path = "../nexcore-ccp", registry = "nexcore" }
+nexcore-ccp = { workspace = true }
 
 # Education Machine (Bayesian mastery, 5-phase FSM, spaced repetition)
-nexcore-education-machine = { version = "0.1.0", path = "../nexcore-education-machine", registry = "nexcore" }
+nexcore-education-machine = { workspace = true }
 
 # AI text detection (5-feature statistical fingerprints)
-antitransformer = { version = "1.0.0", path = "../antitransformer", registry = "nexcore" }
+antitransformer = { workspace = true }
 
 # Token-as-Energy (ATP/ADP biochemistry for token budget management)
-nexcore-energy = { version = "0.1.0", path = "../nexcore-energy", registry = "nexcore" }
+nexcore-energy = { workspace = true }
 
 # Reverse Transcriptase (schema inference + data generation)
-nexcore-transcriptase = { version = "1.0.0", path = "../nexcore-transcriptase", registry = "nexcore" }
+nexcore-transcriptase = { workspace = true }
 
 # Ribosome (schema contract registry + drift detection)
-nexcore-ribosome = { version = "1.0.0", path = "../nexcore-ribosome", registry = "nexcore" }
+nexcore-ribosome = { workspace = true }
 
 # Phenotype (adversarial mutation testing)
-nexcore-phenotype = { version = "1.0.0", path = "../nexcore-phenotype", registry = "nexcore" }
+nexcore-phenotype = { workspace = true }
 
 # Domain Primitives (tier taxonomy + transfer confidence)
-nexcore-domain-primitives = { version = "0.1.0", path = "../nexcore-domain-primitives", registry = "nexcore" }
+nexcore-domain-primitives = { workspace = true }
 
 # Text Transformation (cross-domain rewriting engine)
-nexcore-transform = { version = "1.0.0", path = "../nexcore-transform", registry = "nexcore" }
-nexcore-labs = { version = "1.0.0", path = "../nexcore-labs", registry = "nexcore" }
+nexcore-transform = { workspace = true }
+nexcore-labs = { workspace = true }
 
 # Laboratory (word/concept experiment engine)
-nexcore-laboratory = { version = "1.0.0", path = "../nexcore-laboratory", registry = "nexcore" }
-nexcore-signal-types = { version = "1.0.0", path = "../nexcore-signal-types", registry = "nexcore" }
+nexcore-laboratory = { workspace = true }
+nexcore-signal-types = { workspace = true }
 
 # Signal Theory (Universal Theory of Signals — axioms, theorems, detection, SDT)
-nexcore-signal-theory = { version = "0.1.0", path = "../nexcore-signal-theory", registry = "nexcore" }
+nexcore-signal-theory = { workspace = true }
 
 # State Operating System (15-layer state machine runtime)
-nexcore-state-os = { version = "0.1.0", path = "../nexcore-state-os", registry = "nexcore" }
+nexcore-state-os = { workspace = true }
 
 # Security Classification (5-level clearance system)
-nexcore-clearance = { version = "1.0.0", path = "../nexcore-clearance", registry = "nexcore" }
+nexcore-clearance = { workspace = true }
 
 # OS Core Runtime (boot, services, vault, secure boot)
-nexcore-os = { version = "0.1.0", path = "../nexcore-os", registry = "nexcore" }
+nexcore-os = { workspace = true }
 
 # Mesh Networking (runtime mesh with discovery, gossip, resilience)
-nexcore-mesh = { version = "1.0.0", path = "../nexcore-mesh", registry = "nexcore" }
+nexcore-mesh = { workspace = true }
 
 # Skill crate (unified - formerly skill-core + primitive-extractor + transfer-confidence)
-skills = { version = "0.1.0", path = "../skills", registry = "nexcore" }
+skills = { workspace = true }
 
 # SQLite (PV axioms read-only database)
-rusqlite = { version = "0.32", features = ["bundled", "serde_json"] }
+rusqlite = { workspace = true }
 
 [dev-dependencies]
-tempfile = "3.10.1"
+tempfile = { workspace = true }
 
 [features]
 default = []
 # Enable MCP call telemetry collection (async write to ~/.claude/brain/telemetry/)
 telemetry = []
 
-[lints.rust]
-async_fn_in_trait = "allow"
-dead_code = "allow"
-unused_imports = "allow"
-unused_variables = "allow"
-unused_mut = "allow"
-unused_assignments = "allow"
-unused_must_use = "allow"
-
-[lints.clippy]
-all = "allow"
-pedantic = "allow"
-nursery = "allow"
-cargo = "allow"
-map_unwrap_or = "allow"
-manual_map = "allow"
-option_map_or_none = "allow"
-derivable_impls = "allow"
-unwrap_used = "allow"
-expect_used = "allow"
-panic = "allow"
-todo = "allow"
-unimplemented = "allow"
-unreachable = "allow"
+[lints]
+workspace = true

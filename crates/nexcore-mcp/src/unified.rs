@@ -134,6 +134,7 @@ async fn dispatch_inner(
 ) -> Result<CallToolResult, McpError> {
     match command {
         "help" => help_catalog(),
+        "toolbox" => typed(params, toolbox_search),
 
         // ====================================================================
         // System Tools (4)
@@ -239,7 +240,7 @@ async fn dispatch_inner(
         "guardian_evaluate_pv" => typed(params, tools::guardian::evaluate_pv),
         "guardian_status" => typed_async(params, tools::guardian::status).await,
         "guardian_reset" => tools::guardian::reset().await,
-        "guardian_inject_signal" => typed(params, tools::guardian::inject_signal),
+        "guardian_inject_signal" => typed_async(params, tools::guardian::inject_signal).await,
         "guardian_sensors_list" => typed_async(params, tools::guardian::sensors_list).await,
         "guardian_actuators_list" => typed_async(params, tools::guardian::actuators_list).await,
         "guardian_history" => typed(params, tools::guardian::history),
@@ -249,6 +250,9 @@ async fn dispatch_inner(
         "guardian_space3d_compute" => typed(params, tools::guardian::space3d_compute),
         "guardian_adversarial_input" => {
             typed_async(params, tools::adversarial::guardian_adversarial_input).await
+        }
+        "adversarial_decision_probe" => {
+            typed(params, tools::adversarial::adversarial_decision_probe)
         }
         "pv_control_loop_tick" => typed(params, tools::guardian::pv_control_loop_tick),
         "fda_bridge_evaluate" => typed(params, tools::guardian::fda_bridge_evaluate),
@@ -359,6 +363,18 @@ async fn dispatch_inner(
         "nexcore_assist" => typed(params, |p| tools::assist::search(&server.assist_index, p)),
 
         // ====================================================================
+        // Registry Tools (8) — Compliance assessment, promotion, ToV monitoring
+        // ====================================================================
+        "registry_assess_skill" => typed(params, tools::registry::assess_skill),
+        "registry_assess_all" => typed(params, tools::registry::assess_all),
+        "registry_gap_report" => typed(params, tools::registry::gap_report),
+        "registry_promotable" => typed(params, tools::registry::promotable),
+        "registry_promotion_plan" => typed(params, tools::registry::promotion_plan),
+        "registry_tov_safety" => typed(params, tools::registry::tov_safety),
+        "registry_tov_harm" => typed(params, tools::registry::tov_harm),
+        "registry_tov_is_safe" => typed(params, tools::registry::tov_is_safe),
+
+        // ====================================================================
         // Guidelines Tools (9)
         // ====================================================================
         "guidelines_search" => typed(params, tools::guidelines::search),
@@ -366,6 +382,15 @@ async fn dispatch_inner(
         "guidelines_categories" => tools::guidelines::categories(),
         "guidelines_pv_all" => tools::guidelines::pv_all(),
         "guidelines_url" => typed(params, tools::guidelines::url),
+
+        // FDA Guidance Tools (5)
+        // ====================================================================
+        "fda_guidance_search" => typed(params, tools::fda_guidance::search),
+        "fda_guidance_get" => typed(params, tools::fda_guidance::get),
+        "fda_guidance_categories" => tools::fda_guidance::categories(),
+        "fda_guidance_url" => typed(params, tools::fda_guidance::url),
+        "fda_guidance_status" => typed(params, tools::fda_guidance::status),
+
         "ich_lookup" => typed(params, tools::ich_glossary::ich_lookup),
         "ich_search" => typed(params, tools::ich_glossary::ich_search),
         "ich_guideline" => typed(params, tools::ich_glossary::ich_guideline),
@@ -399,6 +424,13 @@ async fn dispatch_inner(
         "faers_etl_status" => typed(params, tools::faers_etl::status),
 
         // ====================================================================
+        // PHAROS Tools (3) — Autonomous Signal Surveillance
+        // ====================================================================
+        "pharos_run" => typed_async(params, tools::pharos::run).await,
+        "pharos_status" => typed(params, tools::pharos::status),
+        "pharos_report" => typed(params, tools::pharos::report),
+
+        // ====================================================================
         // FAERS Analytics Tools (6) — P0 Patient Safety Algorithms
         // ====================================================================
         "faers_outcome_conditioned" => typed(params, tools::faers_analytics::outcome_conditioned),
@@ -411,6 +443,13 @@ async fn dispatch_inner(
         }
 
         // ====================================================================
+        // NCBI Entrez Tools (3)
+        // ====================================================================
+        "ncbi_esearch" => typed_async(params, tools::ncbi::esearch).await,
+        "ncbi_esummary" => typed_async(params, tools::ncbi::esummary).await,
+        "ncbi_efetch" => typed_async(params, tools::ncbi::efetch).await,
+
+        // ====================================================================
         // Lex Primitiva Tools (7) — T1 Symbolic Foundation
         // ====================================================================
         "lex_primitiva_list" => typed(params, tools::lex_primitiva::list_primitives),
@@ -420,6 +459,7 @@ async fn dispatch_inner(
         "lex_primitiva_reverse_compose" => typed(params, tools::lex_primitiva::reverse_compose),
         "lex_primitiva_reverse_lookup" => typed(params, tools::lex_primitiva::reverse_lookup),
         "lex_primitiva_molecular_weight" => typed(params, tools::lex_primitiva::molecular_weight),
+        "lex_primitiva_dominant_shift" => typed(params, tools::lex_primitiva::dominant_shift),
         "lex_primitiva_synth" => typed(params, tools::synth::lex_primitiva_synth),
         "lex_primitiva_state_mode" => typed(params, tools::lex_primitiva::get_state_mode),
         "lex_primitiva_audit" => return tools::lex_primitiva::audit(),
@@ -667,6 +707,42 @@ async fn dispatch_inner(
         "brain_db_tasks" => tools::brain_db::tasks(),
         "brain_db_efficiency" => tools::brain_db::efficiency(),
         "brain_db_sync" => tools::brain_db::sync(),
+        "brain_db_query" => typed(params, tools::brain_db::query),
+
+        // ====================================================================
+        // Anatomy DB Tools (12) - Persistent Organ State
+        // ====================================================================
+        "anatomy_query" => typed(params, tools::anatomy_db::anatomy_query),
+        "anatomy_status" => {
+            tools::anatomy_db::anatomy_status(crate::params::anatomy_db::AnatomyStatusParams {})
+        }
+        "anatomy_record_cytokine" => typed(params, tools::anatomy_db::record_cytokine),
+        "anatomy_record_hormones" => typed(params, tools::anatomy_db::record_hormones),
+        "anatomy_record_guardian_tick" => typed(params, tools::anatomy_db::record_guardian_tick),
+        "anatomy_record_immunity_event" => typed(params, tools::anatomy_db::record_immunity_event),
+        "anatomy_record_synapse" => typed(params, tools::anatomy_db::record_synapse),
+        "anatomy_record_energy" => typed(params, tools::anatomy_db::record_energy),
+        "anatomy_record_transcriptase" => typed(params, tools::anatomy_db::record_transcriptase),
+        "anatomy_record_ribosome" => typed(params, tools::anatomy_db::record_ribosome),
+        "anatomy_record_phenotype" => typed(params, tools::anatomy_db::record_phenotype),
+        "anatomy_record_organ_signal" => typed(params, tools::anatomy_db::record_organ_signal),
+
+        // ====================================================================
+        // Learning Daemon Tools (5) - Compounding Infrastructure
+        // ====================================================================
+        "learning_daemon_status" => tools::learning::status(),
+        "learning_daemon_trends" => tools::learning::trends(),
+        "learning_daemon_beliefs" => tools::learning::beliefs(),
+        "learning_daemon_corrections" => tools::learning::corrections(),
+        "learning_daemon_velocity" => tools::learning::velocity(),
+
+        // LEARN Vocabulary Program (6) - Feedback Loop Pipeline
+        "learn_landscape" => tools::learning::learn_landscape(),
+        "learn_extract" => tools::learning::learn_extract(),
+        "learn_assimilate" => tools::learning::learn_assimilate(),
+        "learn_recall" => tools::learning::learn_recall(),
+        "learn_normalize" => tools::learning::learn_normalize(),
+        "learn_pipeline" => tools::learning::learn_pipeline(),
 
         // ====================================================================
         // Synapse Tools (6) - Amplitude Growth Learning
@@ -677,6 +753,17 @@ async fn dispatch_inner(
         "synapse_list" => typed(params, tools::synapse::synapse_list),
         "synapse_stats" => tools::synapse::synapse_stats(),
         "synapse_prune" => tools::synapse::synapse_prune(),
+
+        // ====================================================================
+        // Oracle Tools (7) — Bayesian Event Prediction
+        // ====================================================================
+        "oracle_ingest" => typed(params, tools::oracle::oracle_ingest),
+        "oracle_predict" => typed(params, tools::oracle::oracle_predict),
+        "oracle_observe" => typed(params, tools::oracle::oracle_observe),
+        "oracle_report" => typed(params, tools::oracle::oracle_report),
+        "oracle_status" => typed(params, tools::oracle::oracle_status),
+        "oracle_reset" => typed(params, tools::oracle::oracle_reset),
+        "oracle_top_predictions" => typed(params, tools::oracle::oracle_top_predictions),
 
         // ====================================================================
         // Hooks Tools (6)
@@ -735,6 +822,15 @@ async fn dispatch_inner(
         "forge_tier" => typed(params, |p: params::ForgeTierParams| {
             tools::forge::forge_tier_classify(p.count)
         }),
+
+        // ====================================================================
+        // Academy Forge Tools (5)
+        // ====================================================================
+        "forge_extract" => typed(params, tools::academy_forge::forge_extract),
+        "forge_validate" => typed(params, tools::academy_forge::forge_validate),
+        "forge_scaffold" => typed(params, tools::academy_forge::forge_scaffold),
+        "forge_schema" => tools::academy_forge::forge_schema(),
+        "forge_compile" => typed(params, tools::academy_forge::forge_compile),
 
         // ====================================================================
         // Primitive Validation Tools (4)
@@ -815,6 +911,9 @@ async fn dispatch_inner(
         "signal_theory_conservation_check" => {
             typed(params, tools::signal_theory::conservation_check)
         }
+        "signal_theory_pipeline" => typed(params, tools::signal_theory::pipeline),
+        "signal_theory_cascade" => typed(params, tools::signal_theory::cascade),
+        "signal_theory_parallel" => typed(params, tools::signal_theory::parallel),
 
         // ====================================================================
         // Signal Fence Tools (3) — Process-Level Network Signal Container
@@ -1078,6 +1177,65 @@ async fn dispatch_inner(
         "stem_phys_period" => typed(params, tools::stem::phys_period),
         "stem_math_bounds_check" => typed(params, tools::stem::math_bounds_check),
         "stem_math_relation_invert" => typed(params, tools::stem::math_relation_invert),
+        "stem_chem_ratio" => typed(params, tools::stem::chem_ratio),
+        "stem_chem_rate" => typed(params, tools::stem::chem_rate),
+        "stem_chem_affinity" => typed(params, tools::stem::chem_affinity),
+        "stem_phys_amplitude" => typed(params, tools::stem::phys_amplitude),
+        "stem_phys_scale" => typed(params, tools::stem::phys_scale),
+        "stem_phys_inertia" => typed(params, tools::stem::phys_inertia),
+        "stem_math_proof" => typed(params, tools::stem::math_proof),
+        "stem_math_identity" => typed(params, tools::stem::math_identity),
+        "stem_spatial_distance" => typed(params, tools::stem::spatial_distance),
+        "stem_spatial_triangle" => typed(params, tools::stem::spatial_triangle),
+        "stem_spatial_neighborhood" => typed(params, tools::stem::spatial_neighborhood),
+        "stem_spatial_dimension" => typed(params, tools::stem::spatial_dimension),
+        "stem_spatial_orientation" => typed(params, tools::stem::spatial_orientation),
+        // Core tools
+        "stem_transfer_confidence" => typed(params, tools::stem::transfer_confidence),
+        "stem_integrity_check" => typed(params, tools::stem::integrity_check),
+        "stem_retry_budget" => typed(params, tools::stem::retry_budget),
+        "stem_determinism_score" => typed(params, tools::stem::determinism_score),
+        // Bio tools
+        "stem_bio_behavior_profile" => typed(params, tools::stem::bio_behavior_profile),
+        "stem_bio_tone_profile" => typed(params, tools::stem::bio_tone_profile),
+        // Finance tools
+        "stem_finance_discount" => typed(params, tools::stem::finance_discount),
+        "stem_finance_compound" => typed(params, tools::stem::finance_compound),
+        "stem_finance_spread" => typed(params, tools::stem::finance_spread),
+        "stem_finance_maturity" => typed(params, tools::stem::finance_maturity),
+        "stem_finance_exposure" => typed(params, tools::stem::finance_exposure),
+        "stem_finance_arbitrage" => typed(params, tools::stem::finance_arbitrage),
+        "stem_finance_diversify" => typed(params, tools::stem::finance_diversify),
+        "stem_finance_return" => typed(params, tools::stem::finance_return),
+
+        // ====================================================================
+        // Disney Loop Tools (4) — forward-only compound discovery
+        // ====================================================================
+        "disney_loop_run" => typed(params, tools::disney_loop::run),
+        "disney_loop_anti_regression" => typed(params, tools::disney_loop::anti_regression),
+        "disney_loop_curiosity_search" => typed(params, tools::disney_loop::curiosity_search),
+        "disney_loop_state_assess" => typed(params, tools::disney_loop::state_assess),
+
+        // ====================================================================
+        // KSB Knowledge Tools (3) — 628 PV articles across 15 domains
+        // ====================================================================
+        "ksb_get" => typed(params, tools::knowledge::get),
+        "ksb_search" => typed(params, tools::knowledge::search),
+        "ksb_stats" => typed(params, tools::knowledge::stats),
+
+        // ====================================================================
+        // ToV Direct Tools (3) — signal strength, stability shells, epistemic trust
+        // ====================================================================
+        "tov_signal_strength" => typed(params, tools::tov::signal_strength),
+        "tov_stability_shell" => typed(params, tools::tov::stability_shell),
+        "tov_epistemic_trust" => typed(params, tools::tov::epistemic_trust),
+
+        // ====================================================================
+        // PV Core Tools (3) — IVF axioms, severity classification
+        // ====================================================================
+        "pv_core_ivf_assess" => typed(params, tools::pv_core::ivf_assess),
+        "pv_core_ivf_axioms" => typed(params, tools::pv_core::ivf_axioms),
+        "pv_core_severity_assess" => typed(params, tools::pv_core::severity_assess),
 
         // ====================================================================
         // Visualization Tools (6)
@@ -1212,6 +1370,16 @@ async fn dispatch_inner(
         "sentinel_config_defaults" => typed(params, tools::sentinel::sentinel_config_defaults),
 
         // ====================================================================
+        // Organize — 8-step file organization pipeline (6)
+        // ====================================================================
+        "organize_analyze" => typed(params, tools::organize::organize_analyze),
+        "organize_config_default" => typed(params, tools::organize::organize_config_default),
+        "organize_report_markdown" => typed(params, tools::organize::organize_report_markdown),
+        "organize_report_json" => typed(params, tools::organize::organize_report_json),
+        "organize_observe" => typed(params, tools::organize::organize_observe),
+        "organize_rank" => typed(params, tools::organize::organize_rank),
+
+        // ====================================================================
         // Measure — Workspace quality measurement (7)
         // ====================================================================
         "measure_crate" => typed(params, tools::measure::measure_crate_tool),
@@ -1261,12 +1429,13 @@ async fn dispatch_inner(
         "cortex_fine_tune_status" => typed(params, tools::cortex::cortex_fine_tune_status),
 
         // ====================================================================
-        // Monitoring Tools (4) — Development system health
+        // Monitoring Tools (5) — Development system health + Phase 4 surveillance
         // ====================================================================
         "monitoring_health_check" => tools::monitoring::health_check(),
         "monitoring_alerts" => typed(params, tools::monitoring::alerts),
         "monitoring_hook_health" => typed(params, tools::monitoring::hook_health),
         "monitoring_signal_digest" => typed(params, tools::monitoring::signal_digest),
+        "phase4_surveillance_tick" => typed(params, tools::monitoring::phase4_surveillance_tick),
 
         // ====================================================================
         // Security Classification Tools (5) — 5-Level Clearance System
@@ -1507,6 +1676,39 @@ async fn dispatch_inner(
         "reproductive_start_mitosis" => typed(params, tools::reproductive::start_mitosis),
 
         // ====================================================================
+        // Crew-Mode Orchestration Tools (3) — Multi-Agent Task Decomposition
+        // T1 Grounding: σ (sequence) + μ (mapping) + Σ (sum) + × (product)
+        // ====================================================================
+        "crew_assign" => typed(params, tools::crew::crew_assign),
+        "crew_task_status" => typed(params, tools::crew::crew_task_status),
+        "crew_fuse_decisions" => typed(params, tools::crew::crew_fuse_decisions),
+
+        // ====================================================================
+        // Persistent Retrieval Pipeline Tools (3) — Unified Multi-Source Search
+        // T1 Grounding: μ (mapping) + σ (sequence) + κ (comparison) + π (persistence) + ν (frequency)
+        // ====================================================================
+        "retrieval_query" => typed(params, tools::retrieval::retrieval_query),
+        "retrieval_ingest" => typed(params, tools::retrieval::retrieval_ingest),
+        "retrieval_stats" => typed(params, tools::retrieval::retrieval_stats),
+
+        // ====================================================================
+        // Human-in-the-Loop Pipeline Tools (4) — Decision Approval Queue
+        // T1 Grounding: ∂ (boundary) + κ (comparison) + ς (state) + π (persistence) + → (causality)
+        // ====================================================================
+        "hitl_submit" => typed(params, tools::hitl::hitl_submit),
+        "hitl_queue" => typed(params, tools::hitl::hitl_queue),
+        "hitl_review" => typed(params, tools::hitl::hitl_review),
+        "hitl_stats" => typed(params, tools::hitl::hitl_stats),
+
+        // ====================================================================
+        // PV Domain Embeddings Tools (3) — TF-IDF + Graph Similarity
+        // T1 Grounding: μ (mapping) + κ (comparison) + N (quantity) + σ (sequence)
+        // ====================================================================
+        "pv_embedding_similarity" => typed(params, tools::pv_embeddings::pv_embedding_similarity),
+        "pv_embedding_get" => typed(params, tools::pv_embeddings::pv_embedding_get),
+        "pv_embedding_stats" => typed(params, tools::pv_embeddings::pv_embedding_stats),
+
+        // ====================================================================
         // Proof of Meaning Tools (5)
         // ====================================================================
         "pom_distill" => typed(params, tools::proof_of_meaning::pom_distill),
@@ -1514,6 +1716,351 @@ async fn dispatch_inner(
         "pom_titrate" => typed(params, tools::proof_of_meaning::pom_titrate),
         "pom_prove_equivalence" => typed(params, tools::proof_of_meaning::pom_prove_equivalence),
         "pom_registry_stats" => typed(params, tools::proof_of_meaning::pom_registry_stats),
+
+        // ====================================================================
+        // Statistical Drift Detection Tools (4) — KS, PSI, JSD, Composite
+        // T1 Grounding: ν (frequency) + κ (comparison) + ∂ (boundary) + N (quantity)
+        // Source: AI Engineering Bible Section 32 (Model Monitoring & Drift Detection)
+        // ====================================================================
+        "drift_ks_test" => typed(params, tools::drift_detection::drift_ks_test),
+        "drift_psi" => typed(params, tools::drift_detection::drift_psi),
+        "drift_jsd" => typed(params, tools::drift_detection::drift_jsd),
+        "drift_detect" => typed(params, tools::drift_detection::drift_detect),
+
+        // ====================================================================
+        // Rate Limiter Tools (3) — Token Bucket, Sliding Window, Status
+        // T1 Grounding: ν (frequency) + ∂ (boundary) + ς (state) + N (quantity)
+        // Source: AI Engineering Bible Section 14 (API Development & Integration)
+        // ====================================================================
+        "rate_limit_token_bucket" => typed(params, tools::rate_limiter::rate_limit_token_bucket),
+        "rate_limit_sliding_window" => {
+            typed(params, tools::rate_limiter::rate_limit_sliding_window)
+        }
+        "rate_limit_status" => typed(params, tools::rate_limiter::rate_limit_status),
+
+        // ====================================================================
+        // Rank Fusion Tools (3) — RRF, Hybrid Interpolation, Borda Count
+        // T1 Grounding: σ (sequence) + μ (mapping) + κ (comparison) + N (quantity)
+        // Source: AI Engineering Bible Section 31 (Context & Retrieval Refinements)
+        // ====================================================================
+        "rank_fusion_rrf" => typed(params, tools::rank_fusion::rank_fusion_rrf),
+        "rank_fusion_hybrid" => typed(params, tools::rank_fusion::rank_fusion_hybrid),
+        "rank_fusion_borda" => typed(params, tools::rank_fusion::rank_fusion_borda),
+
+        // Security Posture Assessment Tools (3)
+        "security_posture_assess" => {
+            typed(params, tools::security_posture::security_posture_assess)
+        }
+        "security_threat_readiness" => {
+            typed(params, tools::security_posture::security_threat_readiness)
+        }
+        "security_compliance_gap" => {
+            typed(params, tools::security_posture::security_compliance_gap)
+        }
+
+        // AI Observability Metrics Tools (3)
+        "observability_record_latency" => {
+            typed(params, tools::observability::observability_record_latency)
+        }
+        "observability_query" => typed(params, tools::observability::observability_query),
+        "observability_freshness" => typed(params, tools::observability::observability_freshness),
+
+        // ====================================================================
+        // GROUNDED Tools (7) — Epistemological substrate
+        // T1 Grounding: ×(Product) + N(Quantity) + ∂(Boundary) + σ(Sequence) + →(Causality)
+        // Uncertainty tracking, evidence chains, confidence gating
+        // ====================================================================
+        "grounded_uncertain" => typed(params, tools::grounded::grounded_uncertain),
+        "grounded_require" => typed(params, tools::grounded::grounded_require),
+        "grounded_compose" => typed(params, tools::grounded::grounded_compose),
+        "grounded_evidence_new" => typed(params, tools::grounded::grounded_evidence_new),
+        "grounded_evidence_step" => typed(params, tools::grounded::grounded_evidence_step),
+        "grounded_evidence_get" => typed(params, tools::grounded::grounded_evidence_get),
+        "grounded_skill_assess" => typed(params, tools::grounded::grounded_skill_assess),
+
+        // ====================================================================
+        // Digital Highway Tools (8) — Infrastructure acceleration (Chatburn 1923)
+        // T1 Grounding: κ(Comparison) + ∂(Boundary) + N(Quantity) + ν(Frequency) + Σ(Sum)
+        // Classification, quality scoring, stress analysis, field doctrine,
+        // traffic census, parallel planning, interchange merging, grade separation
+        // ====================================================================
+        "highway_classify" => typed(params, tools::highway::highway_classify),
+        "highway_quality" => typed(params, tools::highway::highway_quality),
+        "highway_destructive" => typed(params, tools::highway::highway_destructive),
+        "highway_legitimate_field" => typed(params, tools::highway::highway_legitimate_field),
+        "highway_traffic_census" => typed(params, tools::highway::highway_traffic_census),
+        "highway_parallel_plan" => typed(params, tools::highway::highway_parallel_plan),
+        "highway_interchange" => typed(params, tools::highway::highway_interchange),
+        "highway_grade_separate" => typed(params, tools::highway::highway_grade_separate),
+
+        // ====================================================================
+        // Tool Routing (deterministic dispatch + DAG execution planning)
+        // ====================================================================
+        "tool_route" => typed(params, tools::routing::tool_route),
+        "tool_dag" => typed(params, tools::routing::tool_dag),
+        "tool_deps" => typed(params, tools::routing::tool_deps),
+        "tool_chain" => typed(params, tools::routing::tool_chain),
+
+        // ====================================================================
+        // Validify Tools (3) — 8-gate crate validation (V-A-L-I-D-I-F-Y)
+        // ====================================================================
+        "validify_run" => typed(params, tools::validify::run),
+        "validify_gate" => typed(params, tools::validify::gate),
+        "validify_gates_list" => typed(params, tools::validify::gates_list),
+
+        // ====================================================================
+        // CTVP Tools (3) — Clinical Trial Validation Paradigm
+        // ====================================================================
+        "ctvp_score" => typed(params, tools::ctvp::score),
+        "ctvp_five_problems" => typed(params, tools::ctvp::five_problems),
+        "ctvp_phases_list" => typed(params, tools::ctvp::phases_list),
+
+        // ====================================================================
+        // Code Inspection Tools (3) — FDA-inspired audit
+        // ====================================================================
+        "code_inspect_audit" => typed(params, tools::code_inspect::audit),
+        "code_inspect_score" => typed(params, tools::code_inspect::score),
+        "code_inspect_criteria" => typed(params, tools::code_inspect::criteria),
+
+        // ====================================================================
+        // Primitive Coverage Tools (2) — T1 Lex Primitiva coverage
+        // ====================================================================
+        "primitive_coverage_check" => typed(params, tools::primitive_coverage::check),
+        "primitive_coverage_rules" => typed(params, tools::primitive_coverage::rules),
+
+        // ====================================================================
+        // Model Delegation Tools (3) — task→model routing
+        // ====================================================================
+        "model_route" => typed(params, tools::model_delegation::route),
+        "model_compare" => typed(params, tools::model_delegation::compare),
+        "model_list" => typed(params, tools::model_delegation::list),
+
+        // ====================================================================
+        // Prompt Kinetics Tools (3) — ADME PK model for prompts
+        // ====================================================================
+        "prompt_kinetics_analyze" => typed(params, tools::prompt_kinetics::analyze),
+        "prompt_bioavailability" => typed(params, tools::prompt_kinetics::bioavailability),
+        "prompt_kinetics_model" => typed(params, tools::prompt_kinetics::model),
+
+        // ====================================================================
+        // Compounding Engine Tools (3) — learning velocity metrics
+        // ====================================================================
+        "compounding_velocity" => typed(params, tools::compounding_engine::velocity),
+        "compounding_loop_health" => typed(params, tools::compounding_engine::loop_health),
+        "compounding_metrics" => typed(params, tools::compounding_engine::metrics),
+
+        // ====================================================================
+        // Polymer Tools (3) — hook pipeline composition
+        // ====================================================================
+        "polymer_compose" => typed(params, tools::polymer::compose),
+        "polymer_validate" => typed(params, tools::polymer::validate),
+        "polymer_analyze" => typed(params, tools::polymer::analyze),
+
+        // ====================================================================
+        // BAS Nervous System (4) — signal routing, reflex arcs, myelination
+        // ====================================================================
+        "nervous_reflex" => typed(params, tools::nervous::reflex),
+        "nervous_latency" => typed(params, tools::nervous::latency),
+        "nervous_myelination" => typed(params, tools::nervous::myelination),
+        "nervous_health" => typed(params, tools::nervous::health),
+
+        // ====================================================================
+        // BAS Cardiovascular System (4) — data transport, pressure, flow
+        // ====================================================================
+        "cardio_blood_pressure" => typed(params, tools::cardiovascular::blood_pressure),
+        "cardio_blood_health" => typed(params, tools::cardiovascular::blood_health),
+        "cardio_diagnose" => typed(params, tools::cardiovascular::diagnose),
+        "cardio_vitals" => typed(params, tools::cardiovascular::vitals),
+
+        // ====================================================================
+        // BAS Lymphatic System (4) — overflow, quality, inspection
+        // ====================================================================
+        "lymphatic_drainage" => typed(params, tools::lymphatic::drainage),
+        "lymphatic_thymic" => typed(params, tools::lymphatic::thymic_selection),
+        "lymphatic_inspect" => typed(params, tools::lymphatic::inspect),
+        "lymphatic_health" => typed(params, tools::lymphatic::health),
+
+        // ====================================================================
+        // BAS Respiratory System (4) — context window, gas exchange
+        // ====================================================================
+        "respiratory_exchange" => typed(params, tools::respiratory::exchange),
+        "respiratory_dead_space" => typed(params, tools::respiratory::dead_space),
+        "respiratory_tidal" => typed(params, tools::respiratory::tidal_volume),
+        "respiratory_health" => typed(params, tools::respiratory::health),
+
+        // ====================================================================
+        // BAS Urinary System (4) — waste management, pruning, retention
+        // ====================================================================
+        "urinary_pruning" => typed(params, tools::urinary::pruning),
+        "urinary_expiry" => typed(params, tools::urinary::expiry),
+        "urinary_retention" => typed(params, tools::urinary::retention),
+        "urinary_health" => typed(params, tools::urinary::health),
+
+        // ====================================================================
+        // BAS Integumentary System (5) — boundary, permissions, scarring
+        // ====================================================================
+        "integumentary_permission" => typed(params, tools::integumentary::permission),
+        "integumentary_settings" => typed(params, tools::integumentary::settings),
+        "integumentary_sandbox" => typed(params, tools::integumentary::sandbox),
+        "integumentary_scarring" => typed(params, tools::integumentary::scarring),
+        "integumentary_health" => typed(params, tools::integumentary::health),
+
+        // ====================================================================
+        // BAS Digestive System (3) — data pipeline processing
+        // ====================================================================
+        "digestive_process" => typed(params, tools::digestive::process),
+        "digestive_taste" => typed(params, tools::digestive::taste),
+        "digestive_health" => typed(params, tools::digestive::health),
+
+        // ====================================================================
+        // BAS Circulatory System (3) — data transport and routing
+        // ====================================================================
+        "circulatory_pump" => typed(params, tools::circulatory::pump),
+        "circulatory_pressure" => typed(params, tools::circulatory::pressure),
+        "circulatory_health" => typed(params, tools::circulatory::health),
+
+        // ====================================================================
+        // BAS Skeletal System (3) — structural knowledge framework
+        // ====================================================================
+        "skeletal_health" => typed(params, tools::skeletal::health),
+        "skeletal_wolffs_law" => typed(params, tools::skeletal::wolffs_law),
+        "skeletal_structure" => typed(params, tools::skeletal::structure),
+
+        // ====================================================================
+        // BAS Muscular System (3) — tool execution patterns
+        // ====================================================================
+        "muscular_classify" => typed(params, tools::muscular::classify),
+        "muscular_fatigue" => typed(params, tools::muscular::fatigue),
+        "muscular_health" => typed(params, tools::muscular::health),
+
+        // ====================================================================
+        // BAS Phenotype (2) — adversarial test generation
+        // ====================================================================
+        "phenotype_mutate" => typed(params, tools::phenotype::phenotype_mutate),
+        "phenotype_verify" => typed(params, tools::phenotype::phenotype_verify),
+
+        // ====================================================================
+        // Kellnr PK (6 — pharmacokinetics)
+        // ====================================================================
+        "kellnr_compute_pk_auc" => typed(params, tools::kellnr_pk::compute_pk_auc),
+        "kellnr_compute_pk_steady_state" => {
+            typed(params, tools::kellnr_pk::compute_pk_steady_state)
+        }
+        "kellnr_compute_pk_ionization" => typed(params, tools::kellnr_pk::compute_pk_ionization),
+        "kellnr_compute_pk_clearance" => typed(params, tools::kellnr_pk::compute_pk_clearance),
+        "kellnr_compute_pk_volume_distribution" => {
+            typed(params, tools::kellnr_pk::compute_pk_volume_distribution)
+        }
+        "kellnr_compute_pk_michaelis_menten" => {
+            typed(params, tools::kellnr_pk::compute_pk_michaelis_menten)
+        }
+
+        // ====================================================================
+        // Kellnr Thermo (4 — thermodynamics)
+        // ====================================================================
+        "kellnr_compute_thermo_gibbs" => typed(params, tools::kellnr_thermo::compute_thermo_gibbs),
+        "kellnr_compute_thermo_kd" => typed(params, tools::kellnr_thermo::compute_thermo_kd),
+        "kellnr_compute_thermo_binding_affinity" => typed(
+            params,
+            tools::kellnr_thermo::compute_thermo_binding_affinity,
+        ),
+        "kellnr_compute_thermo_arrhenius" => {
+            typed(params, tools::kellnr_thermo::compute_thermo_arrhenius)
+        }
+
+        // ====================================================================
+        // Kellnr Stats (5 — advanced statistics)
+        // ====================================================================
+        "kellnr_compute_stats_welch_ttest" => {
+            typed(params, tools::kellnr_stats::compute_stats_welch_ttest)
+        }
+        "kellnr_compute_stats_ols_regression" => {
+            typed(params, tools::kellnr_stats::compute_stats_ols_regression)
+        }
+        "kellnr_compute_stats_poisson_ci" => {
+            typed(params, tools::kellnr_stats::compute_stats_poisson_ci)
+        }
+        "kellnr_compute_stats_bayesian_posterior" => typed(
+            params,
+            tools::kellnr_stats::compute_stats_bayesian_posterior,
+        ),
+        "kellnr_compute_stats_entropy" => typed(params, tools::kellnr_stats::compute_stats_entropy),
+
+        // ====================================================================
+        // Kellnr Graph (4 — graph theory)
+        // ====================================================================
+        "kellnr_compute_graph_betweenness" => {
+            typed(params, tools::kellnr_graph::compute_graph_betweenness)
+        }
+        "kellnr_compute_graph_mutual_info" => {
+            typed(params, tools::kellnr_graph::compute_graph_mutual_info)
+        }
+        "kellnr_compute_graph_tarjan_scc" => {
+            typed(params, tools::kellnr_graph::compute_graph_tarjan_scc)
+        }
+        "kellnr_compute_graph_topsort" => typed(params, tools::kellnr_graph::compute_graph_topsort),
+
+        // ====================================================================
+        // Kellnr Decision Trees (3)
+        // ====================================================================
+        "kellnr_compute_dtree_feature_importance" => typed(
+            params,
+            tools::kellnr_dtree::compute_dtree_feature_importance,
+        ),
+        "kellnr_compute_dtree_prune" => typed(params, tools::kellnr_dtree::compute_dtree_prune),
+        "kellnr_compute_dtree_to_rules" => {
+            typed(params, tools::kellnr_dtree::compute_dtree_to_rules)
+        }
+
+        // ====================================================================
+        // Kellnr Surveillance (3 — sequential signal detection)
+        // ====================================================================
+        "kellnr_compute_signal_sprt" => typed(params, tools::kellnr_signal::compute_signal_sprt),
+        "kellnr_compute_signal_cusum" => typed(params, tools::kellnr_signal::compute_signal_cusum),
+        "kellnr_compute_signal_weibull_tto" => {
+            typed(params, tools::kellnr_signal::compute_signal_weibull_tto)
+        }
+
+        // ====================================================================
+        // Kellnr Registry (15 — async HTTP)
+        // ====================================================================
+        "kellnr_search_crates" => typed_async(params, tools::kellnr_registry::search_crates).await,
+        "kellnr_get_crate_metadata" => {
+            typed_async(params, tools::kellnr_registry::get_crate_metadata).await
+        }
+        "kellnr_list_crate_versions" => {
+            typed_async(params, tools::kellnr_registry::list_crate_versions).await
+        }
+        "kellnr_get_version_details" => {
+            typed_async(params, tools::kellnr_registry::get_version_details).await
+        }
+        "kellnr_list_owners" => typed_async(params, tools::kellnr_registry::list_owners).await,
+        "kellnr_add_owner" => typed_async(params, tools::kellnr_registry::add_owner).await,
+        "kellnr_remove_owner" => typed_async(params, tools::kellnr_registry::remove_owner).await,
+        "kellnr_yank_version" => typed_async(params, tools::kellnr_registry::yank_version).await,
+        "kellnr_unyank_version" => {
+            typed_async(params, tools::kellnr_registry::unyank_version).await
+        }
+        "kellnr_list_all_crates" => {
+            typed_async(params, tools::kellnr_registry::list_all_crates).await
+        }
+        "kellnr_get_dependencies" => {
+            typed_async(params, tools::kellnr_registry::get_dependencies).await
+        }
+        "kellnr_get_dependents" => {
+            typed_async(params, tools::kellnr_registry::get_dependents).await
+        }
+        "kellnr_health_check" => {
+            // No params — just call directly
+            tools::kellnr_registry::health_check().await
+        }
+        "kellnr_download_crate" => {
+            typed_async(params, tools::kellnr_registry::download_crate).await
+        }
+        "kellnr_registry_stats" => {
+            // No params — just call directly
+            tools::kellnr_registry::registry_stats().await
+        }
 
         // ====================================================================
         // Unknown command
@@ -1568,14 +2115,184 @@ fn watchtower_wrap(result: serde_json::Value) -> Result<CallToolResult, McpError
 // ============================================================================
 
 /// Return JSON catalog of all commands grouped by category.
+/// Toolbox: keyword search across the tool catalog.
+///
+/// Returns matching categories and their tools for discovery.
+fn toolbox_search(params: params::system::ToolboxParams) -> Result<CallToolResult, McpError> {
+    // Static catalog: category -> tool names
+    let catalog = toolbox_catalog();
+
+    let mut matches: Vec<serde_json::Value> = Vec::new();
+
+    if let Some(ref cat) = params.category {
+        // Direct category lookup
+        let key = cat.to_lowercase();
+        for (category, tools) in &catalog {
+            if category.to_lowercase() == key {
+                matches.push(serde_json::json!({
+                    "category": category,
+                    "tools": tools,
+                    "count": tools.len()
+                }));
+            }
+        }
+    } else if let Some(ref query) = params.query {
+        let q = query.to_lowercase();
+        let terms: Vec<&str> = q.split_whitespace().collect();
+
+        for (category, tools) in &catalog {
+            let cat_lower = category.to_lowercase();
+            let cat_matches = terms.iter().all(|t| cat_lower.contains(t));
+
+            if cat_matches {
+                // Whole category matches
+                matches.push(serde_json::json!({
+                    "category": category,
+                    "tools": tools,
+                    "count": tools.len()
+                }));
+            } else {
+                // Check individual tool names
+                let tool_hits: Vec<&str> = tools
+                    .iter()
+                    .filter(|t| {
+                        let tl = t.to_lowercase();
+                        terms.iter().any(|term| tl.contains(term))
+                    })
+                    .map(|t| t.as_str())
+                    .collect();
+
+                if !tool_hits.is_empty() {
+                    matches.push(serde_json::json!({
+                        "category": category,
+                        "tools": tool_hits,
+                        "count": tool_hits.len()
+                    }));
+                }
+            }
+        }
+    } else {
+        // No query — list all categories with counts
+        let summary: Vec<serde_json::Value> = catalog
+            .iter()
+            .map(|(cat, tools)| {
+                serde_json::json!({
+                    "category": cat,
+                    "count": tools.len()
+                })
+            })
+            .collect();
+
+        let result = serde_json::json!({
+            "total_categories": summary.len(),
+            "categories": summary,
+            "hint": "Use query or category param to search"
+        });
+
+        return Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".to_string()),
+        )]));
+    }
+
+    let total_tools: usize = matches
+        .iter()
+        .map(|m| m.get("count").and_then(|c| c.as_u64()).unwrap_or(0) as usize)
+        .sum();
+
+    let result = serde_json::json!({
+        "query": params.query,
+        "category": params.category,
+        "total_tools": total_tools,
+        "matches": matches
+    });
+
+    Ok(CallToolResult::success(vec![Content::text(
+        serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".to_string()),
+    )]))
+}
+
+/// Static tool catalog for toolbox search.
+fn toolbox_catalog() -> Vec<(&'static str, Vec<String>)> {
+    // Reuse the same data as help_catalog but structured for search
+    let catalog_json = help_catalog_json();
+    let categories = catalog_json
+        .get("categories")
+        .and_then(|c| c.as_object())
+        .cloned()
+        .unwrap_or_default();
+
+    categories
+        .into_iter()
+        .map(|(cat, tools)| {
+            let tool_names: Vec<String> = tools
+                .as_array()
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|v| v.as_str().map(String::from))
+                        .collect()
+                })
+                .unwrap_or_default();
+            (Box::leak(cat.into_boxed_str()) as &'static str, tool_names)
+        })
+        .collect()
+}
+
+/// Shared catalog data as JSON Value.
+fn help_catalog_json() -> serde_json::Value {
+    serde_json::json!({
+        "categories": {
+            "system": ["nexcore_health", "config_validate", "mcp_servers_list", "mcp_server_get"],
+            "foundation": ["foundation_levenshtein", "foundation_levenshtein_bounded", "foundation_fuzzy_search", "foundation_sha256", "foundation_yaml_parse", "foundation_graph_topsort", "foundation_graph_levels", "foundation_fsrs_review", "foundation_concept_grep", "foundation_domain_distance", "foundation_flywheel_velocity", "foundation_token_ratio", "foundation_spectral_overlap"],
+            "pv": ["pv_signal_complete", "pv_signal_prr", "pv_signal_ror", "pv_signal_ic", "pv_signal_ebgm", "pv_chi_square", "pv_naranjo_quick", "pv_who_umc_quick", "pv_signal_strength"],
+            "benefit_risk": ["pv_qbri_compute", "pv_qbri_derive", "pv_qbri_equation"],
+            "signal": ["signal_detect", "signal_batch", "signal_thresholds"],
+            "vigilance": ["vigilance_safety_margin", "vigilance_risk_score", "vigilance_harm_types", "vigilance_map_to_tov"],
+            "guardian": ["guardian_homeostasis_tick", "guardian_evaluate_pv", "guardian_status", "guardian_reset", "guardian_inject_signal", "guardian_sensors_list", "guardian_actuators_list", "guardian_history", "guardian_originator_classify", "guardian_ceiling_for_originator", "guardian_space3d_compute"],
+            "vigil": ["vigil_status", "vigil_health", "vigil_emit_event", "vigil_memory_search", "vigil_memory_stats", "vigil_llm_stats", "vigil_source_control", "vigil_executor_control", "vigil_authority_config", "vigil_context_assemble", "vigil_authority_verify", "vigil_webhook_test", "vigil_source_config"],
+            "skills": ["skill_scan", "skill_list", "skill_get", "skill_validate", "skill_search_by_tag", "skill_list_nested", "skill_taxonomy_query", "skill_taxonomy_list", "skill_categories_compute_intensive", "skill_orchestration_analyze", "skill_execute", "skill_schema", "skill_compile", "skill_compile_check", "vocab_skill_lookup", "primitive_skill_lookup", "skill_chain_lookup", "vocab_list", "nexcore_assist"],
+            "guidelines": ["guidelines_search", "guidelines_get", "guidelines_categories", "guidelines_pv_all", "guidelines_url", "ich_lookup", "ich_search", "ich_guideline", "ich_stats"],
+            "fda_guidance": ["fda_guidance_search", "fda_guidance_get", "fda_guidance_categories", "fda_guidance_url", "fda_guidance_status"],
+            "faers": ["faers_search", "faers_drug_events", "faers_signal_check", "faers_disproportionality", "faers_compare_drugs"],
+            "faers_analytics": ["faers_outcome_conditioned", "faers_signal_velocity", "faers_seriousness_cascade", "faers_polypharmacy", "faers_reporter_weighted", "faers_geographic_divergence"],
+            "faers_etl": ["faers_etl_run", "faers_etl_signals", "faers_etl_known_pairs", "faers_etl_status"],
+            "gcloud": ["gcloud_auth_list", "gcloud_config_list", "gcloud_config_get", "gcloud_config_set", "gcloud_projects_list", "gcloud_projects_describe", "gcloud_projects_get_iam_policy", "gcloud_secrets_list", "gcloud_secrets_versions_access", "gcloud_storage_buckets_list", "gcloud_storage_ls", "gcloud_storage_cp", "gcloud_compute_instances_list", "gcloud_run_services_list", "gcloud_run_services_describe", "gcloud_functions_list", "gcloud_iam_service_accounts_list", "gcloud_logging_read", "gcloud_run_command"],
+            "wolfram": ["wolfram_query", "wolfram_short_answer", "wolfram_spoken_answer", "wolfram_calculate", "wolfram_step_by_step", "wolfram_plot", "wolfram_convert", "wolfram_chemistry", "wolfram_physics", "wolfram_astronomy", "wolfram_statistics", "wolfram_data_lookup", "wolfram_datetime", "wolfram_nutrition", "wolfram_finance", "wolfram_linguistics"],
+            "principles": ["principles_list", "principles_get", "principles_search"],
+            "brain": ["brain_session_create", "brain_session_load", "brain_sessions_list", "brain_artifact_save", "brain_artifact_resolve", "brain_artifact_get", "brain_artifact_diff", "code_tracker_track", "code_tracker_changed", "code_tracker_original", "implicit_get", "implicit_set", "implicit_stats", "implicit_find_corrections", "implicit_patterns_by_grounding", "implicit_patterns_by_relevance", "brain_recovery_check", "brain_recovery_repair", "brain_recovery_rebuild_index", "brain_recovery_auto", "brain_coordination_acquire", "brain_coordination_release", "brain_coordination_status"],
+            "hooks": ["hooks_stats", "hooks_for_event", "hooks_for_tier", "hook_list_nested"],
+            "regulatory": ["regulatory_primitives_extract", "regulatory_primitives_audit", "regulatory_primitives_compare"],
+            "chemistry": ["chemistry_threshold_rate", "chemistry_decay_remaining", "chemistry_saturation_rate", "chemistry_feasibility", "chemistry_dependency_rate", "chemistry_buffer_capacity", "chemistry_signal_absorbance", "chemistry_equilibrium", "chemistry_pv_mappings", "chemistry_threshold_exceeded", "chemistry_hill_response", "chemistry_nernst_potential", "chemistry_inhibition_rate", "chemistry_eyring_rate", "chemistry_langmuir_coverage"],
+            "stem": ["stem_version", "stem_taxonomy", "stem_confidence_combine", "stem_tier_info", "stem_chem_balance", "stem_chem_fraction", "stem_chem_ratio", "stem_chem_rate", "stem_chem_affinity", "stem_phys_fma", "stem_phys_conservation", "stem_phys_period", "stem_phys_amplitude", "stem_phys_scale", "stem_phys_inertia", "stem_math_bounds_check", "stem_math_relation_invert", "stem_math_proof", "stem_math_identity", "stem_spatial_distance", "stem_spatial_triangle", "stem_spatial_neighborhood", "stem_spatial_dimension", "stem_spatial_orientation"],
+            "algovigilance": ["algovigil_dedup_pair", "algovigil_dedup_batch", "algovigil_triage_decay", "algovigil_triage_reinforce", "algovigil_triage_queue", "algovigil_status"],
+            "edit_distance": ["edit_distance_compute", "edit_distance_similarity", "edit_distance_traceback", "edit_distance_transfer", "edit_distance_batch"],
+            "cargo": ["cargo_check", "cargo_build", "cargo_test", "cargo_clippy", "cargo_fmt", "cargo_tree"],
+            "validation": ["validation_run", "validation_check", "validation_domains", "validation_classify_tests"],
+            "compliance": ["compliance_check_exclusion", "compliance_assess", "compliance_catalog_ich", "compliance_sec_filings", "compliance_sec_pharma"],
+            "watchtower": ["watchtower_sessions_list", "watchtower_active_sessions", "watchtower_analyze", "watchtower_telemetry_stats", "watchtower_recent", "watchtower_symbol_audit", "watchtower_gemini_stats", "watchtower_gemini_recent", "watchtower_unified"],
+            "telemetry": ["telemetry_sources_list", "telemetry_source_analyze", "telemetry_governance_crossref", "telemetry_snapshot_evolution", "telemetry_intel_report", "telemetry_recent"],
+            "immunity": ["immunity_scan", "immunity_scan_errors", "immunity_list", "immunity_get", "immunity_propose", "immunity_status"],
+            "hud": ["sba_allocate_agent", "sba_chain_next", "ssa_persist_state", "ssa_verify_integrity", "fed_budget_report", "fed_recommend_model", "sec_audit_market", "comm_recommend_protocol", "comm_route_message", "explore_launch_mission", "explore_record_discovery", "explore_get_frontier", "health_validate_signal", "health_measure_impact", "treasury_convert_asymmetry", "treasury_audit", "dot_dispatch_manifest", "dot_verify_highway", "dhs_verify_boundary", "edu_train_agent", "edu_evaluate", "nsf_fund_research", "gsa_procure", "gsa_audit_value"],
+            "primitive_validation": ["primitive_validate", "primitive_cite", "primitive_validate_batch", "primitive_validation_tiers"],
+            "brand_semantics": ["brand_decomposition_nexvigilant", "brand_decomposition_get", "brand_primitive_test", "brand_semantic_tiers"],
+            "mesh": ["mesh_lookup", "mesh_search", "mesh_tree", "mesh_crossref", "mesh_enrich_pubmed", "mesh_consistency"],
+            "hormone": ["hormone_status", "hormone_get", "hormone_stimulus", "hormone_modifiers"],
+            "pvdsl": ["pvdsl_compile", "pvdsl_execute", "pvdsl_eval", "pvdsl_functions"],
+            "dtree": ["dtree_train", "dtree_predict", "dtree_importance", "dtree_prune", "dtree_export", "dtree_info"],
+            "game_theory": ["game_theory_nash_2x2", "forge_payoff_matrix", "forge_nash_solve", "forge_quality_score", "forge_code_generate"],
+            "epi": ["epi_relative_risk", "epi_odds_ratio", "epi_attributable_risk", "epi_nnt_nnh", "epi_attributable_fraction", "epi_population_af", "epi_incidence_rate", "epi_prevalence", "epi_kaplan_meier", "epi_smr", "epi_pv_mappings"]
+        }
+    })
+}
+
 fn help_catalog() -> Result<CallToolResult, McpError> {
     let catalog = serde_json::json!({
-        "total": 393,
+        "total": 458,
         "usage": "nexcore(command=\"CMD\", params={...})",
         "categories": {
             "system": ["nexcore_health", "config_validate", "mcp_servers_list", "mcp_server_get"],
             "bonding": ["bonding_analyze", "bonding_evolve"],
             "forge": ["forge_init", "forge_reference", "forge_mine", "forge_prompt", "forge_suggest", "forge_summary", "forge_system_prompt", "forge_tier"],
+            "academy_forge": ["forge_extract", "forge_validate", "forge_scaffold", "forge_schema", "forge_compile"],
             "foundation": ["foundation_levenshtein", "foundation_levenshtein_bounded", "foundation_fuzzy_search", "foundation_sha256", "foundation_yaml_parse", "foundation_graph_topsort", "foundation_graph_levels", "foundation_fsrs_review", "foundation_concept_grep", "foundation_domain_distance", "foundation_flywheel_velocity", "foundation_token_ratio", "foundation_spectral_overlap"],
             "pv": ["pv_signal_complete", "pv_signal_prr", "pv_signal_ror", "pv_signal_ic", "pv_signal_ebgm", "pv_chi_square", "pv_naranjo_quick", "pv_who_umc_quick", "pv_signal_strength"],
             "benefit_risk": ["pv_qbri_compute", "pv_qbri_derive", "pv_qbri_equation"],
@@ -1585,7 +2302,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "vigilance": ["vigilance_safety_margin", "vigilance_risk_score", "vigilance_harm_types", "vigilance_map_to_tov"],
             "compliance": ["compliance_check_exclusion", "compliance_assess", "compliance_catalog_ich", "compliance_sec_filings", "compliance_sec_pharma"],
             "hormone": ["hormone_status", "hormone_get", "hormone_stimulus", "hormone_modifiers"],
-            "guardian": ["guardian_homeostasis_tick", "guardian_evaluate_pv", "guardian_status", "guardian_reset", "guardian_inject_signal", "guardian_sensors_list", "guardian_actuators_list", "guardian_history", "guardian_subscribe", "guardian_originator_classify", "guardian_ceiling_for_originator", "guardian_space3d_compute", "guardian_adversarial_input", "pv_control_loop_tick", "fda_bridge_evaluate", "fda_bridge_batch"],
+            "guardian": ["guardian_homeostasis_tick", "guardian_evaluate_pv", "guardian_status", "guardian_reset", "guardian_inject_signal", "guardian_sensors_list", "guardian_actuators_list", "guardian_history", "guardian_subscribe", "guardian_originator_classify", "guardian_ceiling_for_originator", "guardian_space3d_compute", "guardian_adversarial_input", "adversarial_decision_probe", "pv_control_loop_tick", "fda_bridge_evaluate", "fda_bridge_batch"],
             "hud": ["sba_allocate_agent", "sba_chain_next", "ssa_persist_state", "ssa_verify_integrity", "fed_budget_report", "fed_recommend_model", "sec_audit_market", "comm_recommend_protocol", "comm_route_message", "explore_launch_mission", "explore_record_discovery", "explore_get_frontier", "health_validate_signal", "health_measure_impact", "treasury_convert_asymmetry", "treasury_audit", "dot_dispatch_manifest", "dot_verify_highway", "dhs_verify_boundary", "edu_train_agent", "edu_evaluate", "nsf_fund_research", "gsa_procure", "gsa_audit_value"],
             "commandments": ["commandment_verify", "commandment_info", "commandment_list", "commandment_audit"],
             "docs": ["docs_generate_claude_md"],
@@ -1594,11 +2311,14 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "pv_axioms": ["pv_axioms_ksb_lookup", "pv_axioms_regulation_search", "pv_axioms_traceability_chain", "pv_axioms_domain_dashboard", "pv_axioms_query"],
             "skills": ["skill_scan", "skill_list", "skill_get", "skill_validate", "skill_search_by_tag", "skill_list_nested", "skill_taxonomy_query", "skill_taxonomy_list", "skill_categories_compute_intensive", "skill_orchestration_analyze", "skill_execute", "skill_schema", "skill_compile", "skill_compile_check", "vocab_skill_lookup", "primitive_skill_lookup", "skill_chain_lookup", "vocab_list", "nexcore_assist"],
             "guidelines": ["guidelines_search", "guidelines_get", "guidelines_categories", "guidelines_pv_all", "guidelines_url", "ich_lookup", "ich_search", "ich_guideline", "ich_stats"],
+            "fda_guidance": ["fda_guidance_search", "fda_guidance_get", "fda_guidance_categories", "fda_guidance_url", "fda_guidance_status"],
             "mesh": ["mesh_lookup", "mesh_search", "mesh_tree", "mesh_crossref", "mesh_enrich_pubmed", "mesh_consistency"],
             "faers": ["faers_search", "faers_drug_events", "faers_signal_check", "faers_disproportionality", "faers_compare_drugs"],
+            "ncbi": ["ncbi_esearch", "ncbi_esummary", "ncbi_efetch"],
             "faers_etl": ["faers_etl_run", "faers_etl_signals", "faers_etl_known_pairs", "faers_etl_status"],
+            "pharos": ["pharos_run", "pharos_status", "pharos_report"],
             "faers_analytics": ["faers_outcome_conditioned", "faers_signal_velocity", "faers_seriousness_cascade", "faers_polypharmacy", "faers_reporter_weighted", "faers_geographic_divergence"],
-            "lex_primitiva": ["lex_primitiva_list", "lex_primitiva_get", "lex_primitiva_tier", "lex_primitiva_composition", "lex_primitiva_reverse_compose", "lex_primitiva_reverse_lookup", "lex_primitiva_molecular_weight", "lex_primitiva_state_mode", "lex_primitiva_audit", "lex_primitiva_synth"],
+            "lex_primitiva": ["lex_primitiva_list", "lex_primitiva_get", "lex_primitiva_tier", "lex_primitiva_composition", "lex_primitiva_reverse_compose", "lex_primitiva_reverse_lookup", "lex_primitiva_molecular_weight", "lex_primitiva_dominant_shift", "lex_primitiva_state_mode", "lex_primitiva_audit", "lex_primitiva_synth"],
             "laboratory": ["lab_experiment", "lab_compare", "lab_react", "lab_batch"],
             "skill_tokens": ["skill_token_analyze"],
             "cep": ["cep_execute_stage", "cep_pipeline_stages", "cep_validate_extraction", "cep_extract_primitives", "cep_domain_translate", "cep_classify_primitive"],
@@ -1608,7 +2328,10 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "principles": ["principles_list", "principles_get", "principles_search"],
             "validation": ["validation_run", "validation_check", "validation_domains", "validation_classify_tests"],
             "brain": ["brain_session_create", "brain_session_load", "brain_sessions_list", "brain_artifact_save", "brain_artifact_resolve", "brain_artifact_get", "brain_artifact_diff", "code_tracker_track", "code_tracker_changed", "code_tracker_original", "implicit_get", "implicit_set", "implicit_stats", "implicit_find_corrections", "implicit_patterns_by_grounding", "implicit_patterns_by_relevance", "brain_recovery_check", "brain_recovery_repair", "brain_recovery_rebuild_index", "brain_recovery_auto", "brain_coordination_acquire", "brain_coordination_release", "brain_coordination_status", "brain_verify_engrams"],
-            "brain_db": ["brain_db_summary", "brain_db_decisions_stats", "brain_db_tool_stats", "brain_db_antibodies", "brain_db_handoffs", "brain_db_tasks", "brain_db_efficiency", "brain_db_sync"],
+            "brain_db": ["brain_db_summary", "brain_db_decisions_stats", "brain_db_tool_stats", "brain_db_antibodies", "brain_db_handoffs", "brain_db_tasks", "brain_db_efficiency", "brain_db_sync", "brain_db_query"],
+            "anatomy_db": ["anatomy_query", "anatomy_status", "anatomy_record_cytokine", "anatomy_record_hormones", "anatomy_record_guardian_tick", "anatomy_record_immunity_event", "anatomy_record_synapse", "anatomy_record_energy", "anatomy_record_transcriptase", "anatomy_record_ribosome", "anatomy_record_phenotype", "anatomy_record_organ_signal"],
+            "learning": ["learning_daemon_status", "learning_daemon_trends", "learning_daemon_beliefs", "learning_daemon_corrections", "learning_daemon_velocity", "learn_landscape", "learn_extract", "learn_assimilate", "learn_recall", "learn_normalize", "learn_pipeline"],
+            "oracle": ["oracle_ingest", "oracle_predict", "oracle_observe", "oracle_report", "oracle_status", "oracle_reset", "oracle_top_predictions"],
             "synapse": ["synapse_get_or_create", "synapse_get", "synapse_observe", "synapse_list", "synapse_stats", "synapse_prune"],
             "hooks": ["hooks_stats", "hooks_for_event", "hooks_for_tier", "hook_list_nested"],
             "immunity": ["immunity_scan", "immunity_scan_errors", "immunity_list", "immunity_get", "immunity_propose", "immunity_status"],
@@ -1620,7 +2343,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "visual": ["visual_shape_classify", "visual_color_analyze", "visual_shape_list"],
             "cytokine": ["cytokine_emit", "cytokine_status", "cytokine_families", "cytokine_recent", "chemotaxis_gradient", "endocytosis_internalize"],
             "value_mining": ["value_signal_types", "value_signal_detect", "value_baseline_create", "value_pv_mapping"],
-            "signal_theory": ["signal_theory_axioms", "signal_theory_theorems", "signal_theory_detect", "signal_theory_decision_matrix", "signal_theory_conservation_check"],
+            "signal_theory": ["signal_theory_axioms", "signal_theory_theorems", "signal_theory_detect", "signal_theory_decision_matrix", "signal_theory_conservation_check", "signal_theory_pipeline", "signal_theory_cascade", "signal_theory_parallel"],
             "signal_fence": ["fence_status", "fence_scan", "fence_evaluate"],
             "game_theory": ["game_theory_nash_2x2", "forge_payoff_matrix", "forge_nash_solve", "forge_quality_score", "forge_code_generate"],
             "mesh_network": ["mesh_network_simulate", "mesh_network_route_quality", "mesh_network_grounding", "mesh_network_node_info"],
@@ -1635,7 +2358,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "ribosome": ["ribosome_store", "ribosome_list", "ribosome_validate", "ribosome_generate", "ribosome_drift"],
             "domain_primitives": ["domain_primitives_list", "domain_primitives_transfer", "domain_primitives_decompose", "domain_primitives_bottlenecks", "domain_primitives_compare", "domain_primitives_topo_sort", "domain_primitives_critical_paths", "domain_primitives_registry", "domain_primitives_save", "domain_primitives_load", "domain_primitives_transfer_matrix"],
             "fda_credibility": ["fda_define_cou", "fda_assess_risk", "fda_create_plan", "fda_validate_evidence", "fda_decide_adequacy", "fda_calculate_score", "fda_metrics_summary", "fda_evidence_distribution", "fda_risk_distribution", "fda_drift_trend", "fda_rating_thresholds"],
-            "stem": ["stem_version", "stem_taxonomy", "stem_confidence_combine", "stem_tier_info", "stem_chem_balance", "stem_chem_fraction", "stem_phys_fma", "stem_phys_conservation", "stem_phys_period", "stem_math_bounds_check", "stem_math_relation_invert"],
+            "stem": ["stem_version", "stem_taxonomy", "stem_confidence_combine", "stem_tier_info", "stem_chem_balance", "stem_chem_fraction", "stem_chem_ratio", "stem_chem_rate", "stem_chem_affinity", "stem_phys_fma", "stem_phys_conservation", "stem_phys_period", "stem_phys_amplitude", "stem_phys_scale", "stem_phys_inertia", "stem_math_bounds_check", "stem_math_relation_invert", "stem_math_proof", "stem_math_identity", "stem_spatial_distance", "stem_spatial_triangle", "stem_spatial_neighborhood", "stem_spatial_dimension", "stem_spatial_orientation"],
             "viz": ["viz_stem_taxonomy", "viz_type_composition", "viz_method_loop", "viz_confidence_chain", "viz_bounds", "viz_dag"],
             "watchtower": ["watchtower_sessions_list", "watchtower_active_sessions", "watchtower_analyze", "watchtower_telemetry_stats", "watchtower_recent", "watchtower_symbol_audit", "watchtower_gemini_stats", "watchtower_gemini_recent", "watchtower_unified"],
             "node_hunter": ["node_hunt_scan", "node_hunt_isolate"],
@@ -1645,6 +2368,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "dtree": ["dtree_train", "dtree_predict", "dtree_importance", "dtree_prune", "dtree_export", "dtree_info"],
             "edit_distance": ["edit_distance_compute", "edit_distance_similarity", "edit_distance_traceback", "edit_distance_transfer", "edit_distance_batch"],
             "integrity": ["integrity_analyze", "integrity_assess_ksb", "integrity_calibration"],
+            "organize": ["organize_analyze", "organize_config_default", "organize_report_markdown", "organize_report_json", "organize_observe", "organize_rank"],
             "sentinel": ["sentinel_status", "sentinel_check_ip", "sentinel_parse_line", "sentinel_config_defaults"],
             "measure": ["measure_crate", "measure_workspace", "measure_entropy", "measure_graph", "measure_drift", "measure_compare", "measure_stats"],
             "anatomy": ["anatomy_health", "anatomy_blast_radius", "anatomy_chomsky", "anatomy_violations"],
@@ -1652,7 +2376,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "sos": ["sos_create", "sos_transition", "sos_state", "sos_history", "sos_validate", "sos_list", "sos_cycles", "sos_audit", "sos_schedule", "sos_route"],
             "cortex": ["cortex_download_model", "cortex_list_models", "cortex_model_info", "cortex_generate", "cortex_embed", "cortex_fine_tune_status"],
             "mcp_telemetry": ["telemetry_summary", "telemetry_by_tool", "telemetry_slow_calls", "audit_trail"],
-            "monitoring": ["monitoring_health_check", "monitoring_alerts", "monitoring_hook_health", "monitoring_signal_digest"],
+            "monitoring": ["monitoring_health_check", "monitoring_alerts", "monitoring_hook_health", "monitoring_signal_digest", "phase4_surveillance_tick"],
             "clearance": ["clearance_evaluate", "clearance_policy_for", "clearance_validate_change", "clearance_level_info", "clearance_config"],
             "secure_boot": ["secure_boot_status", "secure_boot_verify", "secure_boot_quote"],
             "user": ["user_create", "user_login", "user_logout", "user_list", "user_lock", "user_unlock", "user_status", "user_change_password"],
@@ -1677,6 +2401,35 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "borrow_miner": ["mine", "drop_ore", "get_state", "signal_check"],
             "reproductive": ["reproductive_guard_mutation", "reproductive_specialize_agent", "reproductive_start_mitosis"],
             "proof_of_meaning": ["pom_distill", "pom_chromatograph", "pom_titrate", "pom_prove_equivalence", "pom_registry_stats"],
+            "crew": ["crew_assign", "crew_task_status", "crew_fuse_decisions"],
+            "retrieval": ["retrieval_query", "retrieval_ingest", "retrieval_stats"],
+            "hitl": ["hitl_submit", "hitl_queue", "hitl_review", "hitl_stats"],
+            "pv_embeddings": ["pv_embedding_similarity", "pv_embedding_get", "pv_embedding_stats"],
+            "grounded": ["grounded_uncertain", "grounded_require", "grounded_compose", "grounded_evidence_new", "grounded_evidence_step", "grounded_evidence_get", "grounded_skill_assess"],
+            "highway": ["highway_classify", "highway_quality", "highway_destructive", "highway_legitimate_field", "highway_traffic_census", "highway_parallel_plan", "highway_interchange", "highway_grade_separate"],
+            "routing": ["tool_route", "tool_dag", "tool_deps", "tool_chain"],
+            "validify": ["validify_run", "validify_gate", "validify_gates_list"],
+            "ctvp": ["ctvp_score", "ctvp_five_problems", "ctvp_phases_list"],
+            "code_inspect": ["code_inspect_audit", "code_inspect_score", "code_inspect_criteria"],
+            "primitive_coverage": ["primitive_coverage_check", "primitive_coverage_rules"],
+            "model_delegation": ["model_route", "model_compare", "model_list"],
+            "prompt_kinetics": ["prompt_kinetics_analyze", "prompt_bioavailability", "prompt_kinetics_model"],
+            "compounding": ["compounding_velocity", "compounding_loop_health", "compounding_metrics"],
+            "polymer": ["polymer_compose", "polymer_validate", "polymer_analyze"],
+            "nervous": ["nervous_reflex", "nervous_latency", "nervous_myelination", "nervous_health"],
+            "cardiovascular": ["cardio_blood_pressure", "cardio_blood_health", "cardio_diagnose", "cardio_vitals"],
+            "lymphatic": ["lymphatic_drainage", "lymphatic_thymic", "lymphatic_inspect", "lymphatic_health"],
+            "respiratory": ["respiratory_exchange", "respiratory_dead_space", "respiratory_tidal", "respiratory_health"],
+            "urinary": ["urinary_pruning", "urinary_expiry", "urinary_retention", "urinary_health"],
+            "integumentary": ["integumentary_permission", "integumentary_settings", "integumentary_sandbox", "integumentary_scarring", "integumentary_health"],
+            "kellnr_pk": ["kellnr_compute_pk_auc", "kellnr_compute_pk_steady_state", "kellnr_compute_pk_ionization", "kellnr_compute_pk_clearance", "kellnr_compute_pk_volume_distribution", "kellnr_compute_pk_michaelis_menten"],
+            "kellnr_thermo": ["kellnr_compute_thermo_gibbs", "kellnr_compute_thermo_kd", "kellnr_compute_thermo_binding_affinity", "kellnr_compute_thermo_arrhenius"],
+            "kellnr_stats": ["kellnr_compute_stats_welch_ttest", "kellnr_compute_stats_ols_regression", "kellnr_compute_stats_poisson_ci", "kellnr_compute_stats_bayesian_posterior", "kellnr_compute_stats_entropy"],
+            "kellnr_graph": ["kellnr_compute_graph_betweenness", "kellnr_compute_graph_mutual_info", "kellnr_compute_graph_tarjan_scc", "kellnr_compute_graph_topsort"],
+            "kellnr_dtree": ["kellnr_compute_dtree_feature_importance", "kellnr_compute_dtree_prune", "kellnr_compute_dtree_to_rules"],
+            "kellnr_signal": ["kellnr_compute_signal_sprt", "kellnr_compute_signal_cusum", "kellnr_compute_signal_weibull_tto"],
+            "kellnr_registry": ["kellnr_search_crates", "kellnr_get_crate_metadata", "kellnr_list_crate_versions", "kellnr_get_version_details", "kellnr_list_owners", "kellnr_add_owner", "kellnr_remove_owner", "kellnr_yank_version", "kellnr_unyank_version", "kellnr_list_all_crates", "kellnr_get_dependencies", "kellnr_get_dependents", "kellnr_health_check", "kellnr_download_crate", "kellnr_registry_stats"],
+            "registry": ["registry_assess_skill", "registry_assess_all", "registry_gap_report", "registry_promotable", "registry_promotion_plan", "registry_tov_safety", "registry_tov_harm", "registry_tov_is_safe"],
         }
     });
 

@@ -16,24 +16,50 @@
 //! - brain: Antigravity-style working memory (sessions, artifacts, code tracking)
 //! - primitive_validation: Corpus-backed validation with professional citations
 
+// Academy Forge (structured knowledge extraction + academy validation)
+pub mod academy_forge;
+
 pub mod benefit_risk;
 pub mod bonding;
 pub mod brain;
+
+// CLI wrapper tools (git, gh, systemctl, npm, filesystem)
+pub mod fs;
+pub mod gh;
+pub mod git;
+pub mod npm;
+pub mod service;
+
+// Cargo Toolchain (structured build/check/test/clippy/fmt/tree)
 pub mod brain_db;
 pub mod brain_verify;
 pub mod brand_semantics;
+pub mod cargo;
 pub mod chemistry;
 pub mod commandments;
 pub mod compliance;
 pub mod cortex;
+pub mod learning;
+
+// Crate Development Framework (scaffold + audit)
+pub mod crate_dev;
+
+// Crate X-Ray (deep inspection, CTVP trials, dev goals)
+pub mod crate_xray;
+pub mod crew;
 pub mod docs;
 pub mod faers;
 pub mod forge;
 pub mod foundation;
+
+// Frontend & Accessibility (WCAG contrast, touch targets, type scale, spacing, a11y audit)
+pub mod frontend;
 pub mod gcloud;
 pub mod grammar;
 pub mod guardian;
+pub mod fda_guidance;
 pub mod guidelines;
+pub mod hitl;
 pub mod hooks;
 pub mod hud;
 pub mod ich_glossary;
@@ -42,12 +68,18 @@ pub mod primitive_validation;
 pub mod principles;
 pub mod pv;
 pub mod pv_axioms;
+pub mod pv_embeddings;
 pub mod pv_pipeline;
 pub mod pvdsl;
+pub mod registry;
 pub mod regulatory;
 pub mod reproductive;
+pub mod retrieval;
 pub mod signal;
 pub mod skills;
+
+// SOP-Anatomy-Code triple mapping, reactor, transfer protocol
+pub mod sop_anatomy;
 pub mod synapse;
 pub mod synth;
 pub mod validation;
@@ -102,9 +134,13 @@ pub mod measure;
 
 // Anatomy (workspace structural analysis — dependency graph, layers, blast radius, Chomsky)
 pub mod anatomy;
+pub mod anatomy_db;
 
 // FAERS ETL (local bulk data pipeline — ingest, signal detection, known-pair validation)
 pub mod faers_etl;
+
+// PHAROS — Pharmacovigilance Autonomous Reconnaissance and Observation System
+pub mod pharos;
 
 // FAERS Analytics (novel signal detection — A77 velocity, A80 cascade, A82 outcome)
 pub mod faers_analytics;
@@ -169,6 +205,9 @@ pub mod adversarial;
 
 // AI text detection (5-feature statistical fingerprints)
 pub mod antitransformer;
+
+// Epidemiology (Domain 7 — measures of association, impact, survival)
+pub mod epidemiology;
 
 // Token-as-Energy (ATP/ADP biochemistry for token budget management)
 pub mod energy;
@@ -244,6 +283,18 @@ pub mod declension;
 // Vigil System (π(∂·ν)|∝ — Vigilance engine: ledger, boundary gate, consequence pipeline)
 pub mod vigil_system;
 
+// Theory of Vigilance (ToV direct — signal strength, stability, epistemic trust)
+pub mod tov;
+
+// PV Core (IVF axioms, severity classification)
+pub mod pv_core;
+
+// Knowledge (KSB article index — 628 PV articles across 15 domains)
+pub mod knowledge;
+
+// Knowledge Engine (π+μ+σ+N+∝ — knowledge compression, compilation, and query)
+pub mod knowledge_engine;
+
 // Lessons Learned (π+μ+σ+∃ — persistent lesson storage with primitive extraction)
 pub mod lessons;
 
@@ -259,6 +310,100 @@ pub mod borrow_miner;
 // Proof of Meaning (σ+κ+∂+→+N — chemistry-inspired semantic equivalence engine)
 pub mod proof_of_meaning;
 
+// Statistical Drift Detection (KS test, PSI, Jensen-Shannon divergence)
+pub mod drift_detection;
+
+// Rate Limiting (token bucket, sliding window)
+pub mod rate_limiter;
+
+// Rank Fusion (RRF, hybrid interpolation, Borda count)
+pub mod rank_fusion;
+
+// Relay Fidelity (chain construction, verification, pipeline tracking — →+∂+π)
+pub mod relay;
+
+// Security Posture Assessment (compliance scorecards, threat readiness, gap analysis)
+pub mod security_posture;
+
+// AI Observability Metrics (inference latency, data freshness, throughput)
+pub mod observability;
+
+// ORGANIZE (8-step file organization pipeline — ∃ κ μ → ∂ Σ ∅ ς)
+pub mod organize;
+
+// GROUNDED (epistemological substrate — uncertainty, evidence chains, confidence gating)
+pub mod grounded;
+
+// Digital Highways (infrastructure acceleration — Chatburn 1923 transfer)
+pub mod highway;
+
+// Disney Loop (forward-only compound discovery — ρ(t) → ∂(¬σ⁻¹) → ∃(ν) → ρ(t+1))
+pub mod disney_loop;
+
+// Tool Routing (deterministic dispatch + DAG execution planning — σ+→+μ+∂)
+pub mod routing;
+
+// Validify (8-gate crate validation — V-A-L-I-D-I-F-Y)
+pub mod validify;
+
+// CTVP (Clinical Trial Validation Paradigm — 5-phase software validation)
+pub mod ctvp;
+
+// Code Inspection (FDA-inspired audit — safety/efficacy/purity)
+pub mod code_inspect;
+
+// Primitive Coverage (T1 Lex Primitiva coverage analysis)
+pub mod primitive_coverage;
+
+// Model Delegation (task→model routing with scoring)
+pub mod model_delegation;
+
+// Prompt Kinetics (ADME pharmacokinetic model for prompts)
+pub mod prompt_kinetics;
+
+// Compounding Engine (learning pipeline velocity metrics)
+pub mod compounding_engine;
+
+// Polymer (hook pipeline composition with stoichiometry)
+pub mod polymer;
+
+// BAS Organ Systems (Biological Analogy System — 11 organ crate wrappers)
+pub mod cardiovascular;
+pub mod circulatory;
+pub mod digestive;
+pub mod integumentary;
+pub mod lymphatic;
+pub mod muscular;
+pub mod ncbi;
+pub mod nervous;
+pub mod phenotype;
+pub mod respiratory;
+pub mod skeletal;
+pub mod urinary;
+
+// HTTP Request (MCP-native curl replacement — →+λ+μ+∂)
+pub mod http;
+
+// Oracle (Bayesian event prediction — σ+→+ν+κ+N+π)
+pub mod oracle;
+
 // MCP Call Telemetry (self-reporting metrics)
 #[cfg(feature = "telemetry")]
 pub mod telemetry;
+
+// Kellnr computation & registry (consolidated from kellnr-mcp)
+pub mod kellnr_dtree;
+pub mod kellnr_graph;
+pub mod kellnr_pk;
+pub mod kellnr_registry;
+pub mod kellnr_signal;
+pub mod kellnr_stats;
+pub mod kellnr_thermo;
+
+// Observatory Phase 9 — Career transitions, learning DAG, graph layout
+pub mod career;
+pub mod graph_layout;
+pub mod learning_dag;
+
+// Observatory Personalization (detect, get, set, validate)
+pub mod observatory;

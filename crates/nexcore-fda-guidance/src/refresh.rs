@@ -83,7 +83,7 @@ pub fn parse_us_date(date_str: &str) -> Option<String> {
     let day = parts[1].parse::<u32>().ok()?;
     let year = parts[2].parse::<u32>().ok()?;
     // Filter placeholders like 01/01/1900
-    if year < 1901 || month < 1 || month > 12 || day < 1 || day > 31 {
+    if year < 1901 || !(1..=12).contains(&month) || !(1..=31).contains(&day) {
         return None;
     }
     Some(format!("{year:04}-{month:02}-{day:02}"))
@@ -174,7 +174,7 @@ pub fn clean_record(raw: &RawFdaRecord) -> Result<FdaGuidanceDoc, FdaGuidanceErr
     let centers: Vec<String> = raw
         .issuing_office
         .split("<br><br>")
-        .map(|s| abbreviate_center(s))
+        .map(abbreviate_center)
         .filter(|s| !s.is_empty())
         .collect();
 

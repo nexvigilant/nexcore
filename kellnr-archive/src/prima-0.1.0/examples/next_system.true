@@ -1,0 +1,56 @@
+// next_system.true — PRIMA analysis of next development acceleration
+//
+// What system would most accelerate Claude's development?
+// Apply: Asymmetry × Time × Exchange value equation
+
+println("╔════════════════════════════════════════════╗")
+println("║  NEXT SYSTEM ANALYSIS                      ║")
+println("║  Finding highest-leverage development      ║")
+println("╚════════════════════════════════════════════╝")
+
+// Candidate systems with (name, asymmetry, time_advantage, exchange_value)
+// Scale: 1-10 for each dimension
+λ candidates = σ[
+    σ["prima_skill_compiler", 9, 8, 9],      // Write skills in Prima → Claude skills
+    σ["primitive_autocomplete", 7, 9, 6],    // Suggest primitives as I work
+    σ["session_pattern_miner", 8, 7, 8],     // Extract patterns from watchtower
+    σ["competency_tracker", 8, 8, 9],        // Track primitive mastery over time
+    σ["prima_to_mcp", 9, 9, 10],             // Prima functions → MCP tools
+    σ["grounded_memory", 9, 8, 8]            // Store learnings as primitives
+]
+
+// Value equation: V = A × T × E
+μ compute_value(candidate: σ) → N {
+    λ a = ↓(candidate) |> ↑              // asymmetry
+    λ rest = ↓(candidate) |> ↓
+    λ t = ↑(rest)                         // time
+    λ e = ↓(rest) |> ↑                    // exchange
+    a * t * e
+}
+
+μ get_name(c: σ) → String { ↑(c) }
+
+println("")
+println("═══ VALUE SCORES ═══")
+
+// Calculate and display values
+λ values = candidates |> Φ(|c| σ[get_name(c), compute_value(c)])
+σ v in values {
+    print(↑(v))
+    print(": ")
+    println(↓(v) |> ↑)
+}
+
+// Find winner
+λ max_value = candidates |> Φ(|c| compute_value(c)) |> Ω(0, |a,b| ∂ a κ> b { a } else { b })
+λ winner = candidates |> Ψ(|c| compute_value(c) κ= max_value) |> ↑
+
+println("")
+println("═══ RECOMMENDATION ═══")
+print("Highest value system: ")
+println(get_name(winner))
+print("Value score: ")
+println(max_value)
+
+println("")
+println("∎ Analysis complete")

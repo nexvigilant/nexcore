@@ -1,0 +1,24 @@
+[workspace]
+
+[package]
+name = "stem-core"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "STEM primitives: Science, Technology, Engineering, Mathematics as Rust traits"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nexvigilant/stem"
+keywords = ["primitives", "science", "cross-domain", "traits"]
+categories = ["science", "development-tools"]
+publish = true
+
+[dependencies]
+nexcore-constants = { version = "1.0.0", path = "../nexcore-constants", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+thiserror = { version = "1.0.61" }
+serde = { version = "1.0.204", features = ["derive"] }
+tracing = { version = "0.1.40" }
+
+[dev-dependencies]
+tokio = { version = "1.38.0", features = ["full", "macros", "rt-multi-thread"] }
+serde_json = { version = "1.0.120" }

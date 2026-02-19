@@ -1,0 +1,23 @@
+
+[package]
+name = "nexcore-oracle"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Bayesian event prediction engine — learns transition probabilities from event sequences, predicts next events, and self-tracks accuracy"
+authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+keywords = ["prediction", "markov", "bayesian", "sequence", "learning"]
+categories = ["algorithms", "data-structures"]
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+chrono = { workspace = true, features = ["serde"] }
+nexcore-lex-primitiva = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints]
+workspace = true

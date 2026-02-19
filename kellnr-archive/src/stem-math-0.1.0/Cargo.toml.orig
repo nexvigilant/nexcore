@@ -1,0 +1,21 @@
+[workspace]
+
+[package]
+name = "stem-math"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Mathematics primitives: sets, relations, proofs, bounds"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nexvigilant/stem"
+keywords = ["mathematics", "sets", "relations", "primitives"]
+categories = ["science"]
+publish = true
+
+[dependencies]
+stem-core = { version = "0.1.0", path = "../stem-core", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+thiserror = { version = "1.0.61" }
+serde = { version = "1.0.204", features = ["derive"] }
+
+[dev-dependencies]

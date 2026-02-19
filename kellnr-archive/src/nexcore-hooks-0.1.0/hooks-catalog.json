@@ -1,0 +1,134 @@
+{
+  "meta": {
+    "version": "1.0",
+    "description": "NexCore Hooks Catalog - All 95 available hooks with tier assignments",
+    "tiers": {
+      "dev": "Fast daily development - minimal blocking",
+      "review": "Code review - quality checks with warnings",
+      "deploy": "Pre-deploy - full validation, strict blocking"
+    }
+  },
+  "hooks": {
+    "SessionStart": {
+      "sessionstart_orphan_killer": { "tier": ["dev", "review", "deploy"], "timeout": 5, "desc": "Kills orphaned Claude processes" },
+      "session_continuity_prompt": { "tier": ["dev", "review", "deploy"], "timeout": 5, "desc": "Prompts about previous session handoffs" },
+      "session_context": { "tier": ["dev", "review", "deploy"], "timeout": 5, "desc": "Injects session info, git status, project type" },
+      "git_context": { "tier": ["review", "deploy"], "timeout": 5, "desc": "Injects git branch and last commit" },
+      "sessionstart_skill_loader": { "tier": ["deploy"], "timeout": 5, "desc": "Loads skill definitions" },
+      "session_handoff_loader": { "tier": ["deploy"], "timeout": 5, "desc": "Loads previous session handoff" },
+      "plan_loader": { "tier": ["deploy"], "timeout": 5, "desc": "Loads existing plans" }
+    },
+    "SessionEnd": {
+      "sessionend_cleanup": { "tier": ["review", "deploy"], "timeout": 5, "desc": "Cleans up temporary files" },
+      "hook_metrics_reporter": { "tier": ["review", "deploy"], "timeout": 5, "desc": "Reports hook metrics summary" },
+      "session_handoff_generator": { "tier": ["deploy"], "timeout": 10, "desc": "Generates handoff document" },
+      "mcp_efficacy_reporter": { "tier": ["deploy"], "timeout": 5, "desc": "Reports MCP efficacy metrics" }
+    },
+    "UserPromptSubmit": {
+      "prompt_memory_alert": { "tier": ["dev", "review", "deploy"], "timeout": 3, "desc": "Alerts on low memory" },
+      "prompt_skill_invoker": { "tier": ["review", "deploy"], "timeout": 3, "desc": "Auto-invokes relevant skills" },
+      "prompt_context_injector": { "tier": ["deploy"], "timeout": 3, "desc": "Injects relevant context" },
+      "prompt_requirements_gate": { "tier": ["deploy"], "timeout": 3, "desc": "Enforces requirement crystallization" },
+      "prompt_mcp_suggester": { "tier": ["deploy"], "timeout": 3, "desc": "Suggests MCP tools" },
+      "prompt_handoff_reviewer": { "tier": ["deploy"], "timeout": 3, "desc": "Reviews handoffs" },
+      "prompt_task_validator": { "tier": ["deploy"], "timeout": 3, "desc": "Validates task structure" },
+      "prompt_agent_detector": { "tier": ["deploy"], "timeout": 3, "desc": "Detects agent spawning needs" }
+    },
+    "PreToolUse:Bash": {
+      "bash_validator": { "tier": ["dev", "review", "deploy"], "timeout": 3, "desc": "Blocks dangerous commands" },
+      "pretool_bash_interceptor": { "tier": ["deploy"], "timeout": 3, "desc": "Intercepts shell commands" }
+    },
+    "PreToolUse:Edit|Write": {
+      "pretool_python_blocker": { "tier": ["dev", "review", "deploy"], "timeout": 3, "desc": "Blocks Python files (100% Rust)" },
+      "pretool_secret_scanner": { "tier": ["dev", "review", "deploy"], "timeout": 3, "desc": "Scans for hardcoded secrets" },
+      "file_protector": { "tier": ["dev", "review", "deploy"], "timeout": 3, "desc": "Protects .env, locks, keys" },
+      "context_builder": { "tier": ["review", "deploy"], "timeout": 3, "desc": "Builds shared FileContext" },
+      "pretool_unsafe_gatekeeper": { "tier": ["review", "deploy"], "timeout": 3, "desc": "Requires SAFETY comments" },
+      "pretool_error_validator": { "tier": ["review", "deploy"], "timeout": 3, "desc": "Validates error handling" },
+      "pretool_thread_enforcer": { "tier": ["review", "deploy"], "timeout": 3, "desc": "Enforces thread safety" },
+      "pretool_complexity_verifier": { "tier": ["review", "deploy"], "timeout": 3, "desc": "Checks complexity limits" },
+      "pretool_cargo_auditor": { "tier": ["review", "deploy"], "timeout": 3, "desc": "Audits Cargo.toml" },
+      "pretool_crate_validator": { "tier": ["review", "deploy"], "timeout": 3, "desc": "Validates crate selection" },
+      "pretool_panic_enforcer": { "tier": ["deploy"], "timeout": 3, "desc": "Blocks unwrap/expect/panic" },
+      "pretool_axiom_guard": { "tier": ["deploy"], "timeout": 3, "desc": "Validates ToV axioms" },
+      "pretool_pv_validator": { "tier": ["deploy"], "timeout": 3, "desc": "PV safety validation" },
+      "pretool_uaca_enforcer": { "tier": ["deploy"], "timeout": 3, "desc": "UACA architecture purity" },
+      "pretool_antipattern_blocker": { "tier": ["deploy"], "timeout": 3, "desc": "Blocks anti-patterns" },
+      "pretool_clone_detector": { "tier": ["deploy"], "timeout": 3, "desc": "Flags excessive .clone()" },
+      "pretool_allocation_gate": { "tier": ["deploy"], "timeout": 3, "desc": "Audits heap allocations" },
+      "pretool_lock_detector": { "tier": ["deploy"], "timeout": 3, "desc": "Checks mutex/lock patterns" },
+      "pretool_memory_detector": { "tier": ["deploy"], "timeout": 3, "desc": "Detects memory issues" },
+      "pretool_errorpath_verifier": { "tier": ["deploy"], "timeout": 3, "desc": "Verifies error paths" },
+      "pretool_errortype_validator": { "tier": ["deploy"], "timeout": 3, "desc": "Validates error types" },
+      "pretool_api_enforcer": { "tier": ["deploy"], "timeout": 3, "desc": "Enforces API design" },
+      "pretool_doc_validator": { "tier": ["deploy"], "timeout": 3, "desc": "Validates documentation" },
+      "pretool_test_enforcer": { "tier": ["deploy"], "timeout": 3, "desc": "Enforces TDD" },
+      "pretool_rationale_gate": { "tier": ["deploy"], "timeout": 3, "desc": "Requires rationale comments" },
+      "pretool_problem_gate": { "tier": ["deploy"], "timeout": 3, "desc": "Requires problem statement" },
+      "property_test_requirement": { "tier": ["deploy"], "timeout": 3, "desc": "Requires property tests" },
+      "pretool_config_detector": { "tier": ["review", "deploy"], "timeout": 3, "desc": "Detects config patterns" },
+      "pretool_health_validator": { "tier": ["review", "deploy"], "timeout": 3, "desc": "Validates health checks" },
+      "pretool_resilience_validator": { "tier": ["deploy"], "timeout": 3, "desc": "Validates resilience" },
+      "pretool_budget_enforcer": { "tier": ["review", "deploy"], "timeout": 3, "desc": "Enforces budgets" },
+      "pretool_techdebt_blocker": { "tier": ["review", "deploy"], "timeout": 3, "desc": "Blocks tech debt" },
+      "pretool_wheel_detector": { "tier": ["review", "deploy"], "timeout": 3, "desc": "Warns about reinventing" },
+      "pretool_assumption_audit": { "tier": ["review", "deploy"], "timeout": 3, "desc": "Audits assumptions" },
+      "context_integrity": { "tier": ["review", "deploy"], "timeout": 3, "desc": "Validates context integrity" },
+      "pretool_asr_integration_advisor": { "tier": ["review", "deploy"], "timeout": 3, "desc": "Suggests ASR T2 composite patterns for skill-related code" },
+      "pretool_deterministic_first": { "tier": ["review", "deploy"], "timeout": 3, "desc": "Encourages deterministic patterns over LLM-dependent ones" }
+    },
+    "PreToolUse:Task": {
+      "pretool_knowledge_verifier": { "tier": ["deploy"], "timeout": 3, "desc": "Verifies knowledge before agents" },
+      "pretool_plan_validator": { "tier": ["deploy"], "timeout": 3, "desc": "Validates plans" },
+      "plan_existence_enforcer": { "tier": ["deploy"], "timeout": 3, "desc": "Requires plan before action" }
+    },
+    "PostToolUse": {
+      "posttool_clippy_enforcer": { "tier": ["dev", "review", "deploy"], "timeout": 10, "matcher": "Edit|Write", "desc": "Runs clippy" },
+      "posttool_compile_verifier": { "tier": ["dev", "review", "deploy"], "timeout": 5, "matcher": "Edit|Write", "desc": "Verifies compilation" },
+      "posttool_incremental_verifier": { "tier": ["review", "deploy"], "timeout": 5, "desc": "Incremental build check" },
+      "posttool_handoff_updater": { "tier": ["review", "deploy"], "timeout": 5, "desc": "Updates handoffs" },
+      "posttool_test_analyzer": { "tier": ["review", "deploy"], "timeout": 5, "desc": "Analyzes test quality" },
+      "posttool_async_analyzer": { "tier": ["review", "deploy"], "timeout": 5, "desc": "Analyzes async patterns" },
+      "posttool_error_detector": { "tier": ["review", "deploy"], "timeout": 5, "desc": "Detects error issues" },
+      "posttool_test_spec": { "tier": ["deploy"], "timeout": 5, "desc": "Test specification check" },
+      "posttool_iterator_analyzer": { "tier": ["deploy"], "timeout": 5, "desc": "Iterator optimizations" },
+      "posttool_simd_detector": { "tier": ["deploy"], "timeout": 5, "desc": "SIMD opportunities" },
+      "posttool_string_optimizer": { "tier": ["deploy"], "timeout": 5, "desc": "String optimizations" },
+      "posttool_coverage_tracker": { "tier": ["review", "deploy"], "timeout": 5, "matcher": "Edit|Write", "desc": "Tracks deterministic coverage after skill changes" },
+      "posttool_flywheel_logger": { "tier": ["review", "deploy"], "timeout": 5, "matcher": "Edit|Write", "desc": "Logs LLM fallback patterns for flywheel analysis" },
+      "posttool_observability_checker": { "tier": ["deploy"], "timeout": 5, "desc": "Logging/tracing" },
+      "posttool_agent_detector": { "tier": ["deploy"], "timeout": 5, "desc": "Agent patterns" },
+      "posttool_agent_chainer": { "tier": ["deploy"], "timeout": 5, "desc": "Agent chaining" },
+      "posttool_task_tracker": { "tier": ["deploy"], "timeout": 5, "desc": "Task tracking" },
+      "mcp_usage_tracker": { "tier": ["deploy"], "timeout": 5, "desc": "MCP usage tracking" },
+      "metrics_collector": { "tier": ["deploy"], "timeout": 5, "desc": "General metrics" },
+      "decision_aggregator": { "tier": ["deploy"], "timeout": 5, "desc": "Aggregates decisions" },
+      "mcp_efficacy_monitor": { "tier": ["deploy"], "timeout": 5, "desc": "MCP efficacy monitoring" },
+      "deliverable_audit": { "tier": ["deploy"], "timeout": 5, "desc": "Audits deliverables" },
+      "task_completion_auditor": { "tier": ["deploy"], "timeout": 5, "desc": "Audits task completion" },
+      "security_audit_trigger": { "tier": ["deploy"], "timeout": 5, "desc": "Triggers security audits" },
+      "production_readiness_checklist": { "tier": ["deploy"], "timeout": 10, "desc": "Production readiness" },
+      "test_runner": { "tier": ["deploy"], "timeout": 30, "desc": "Runs tests" }
+    },
+    "SubagentStart": {
+      "subagent_validator": { "tier": ["deploy"], "timeout": 5, "desc": "Validates subagent config" }
+    },
+    "PreCompact": {
+      "precompact_state_saver": { "tier": ["review", "deploy"], "timeout": 5, "desc": "Saves state before compaction" }
+    },
+    "PermissionRequest": {
+      "permission_auto_approver": { "tier": ["deploy"], "timeout": 5, "desc": "Auto-approves safe requests" }
+    },
+    "PostToolUseFailure": {
+      "toolfail_responder": { "tier": ["deploy"], "timeout": 5, "desc": "Handles tool failures" }
+    },
+    "Stop": {
+      "stop_completion_checker": { "tier": ["dev", "review", "deploy"], "timeout": 10, "desc": "Verifies task completion" },
+      "stop_checker": { "tier": ["review", "deploy"], "timeout": 10, "desc": "Checks tests passed" }
+    },
+    "Setup": {
+      "setup_toolchain_validator": { "tier": ["deploy"], "timeout": 10, "desc": "Validates Rust toolchain" },
+      "toolchain_validator": { "tier": ["deploy"], "timeout": 10, "desc": "Toolchain validation" }
+    }
+  }
+}

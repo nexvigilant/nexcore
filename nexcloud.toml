@@ -1,0 +1,45 @@
+# NexCloud Platform Manifest — Local Development
+#
+# Run: cargo run -p nexcloud --release -- --manifest nexcloud.toml start
+# Validate: cargo run -p nexcloud --release -- --manifest nexcloud.toml validate
+
+[platform]
+name = "nexvigilant-local"
+log_dir = "/tmp/nexcloud/logs"
+
+[proxy]
+http_port = 9080
+
+# ── Services ──────────────────────────────────────────────────────────
+
+[[service]]
+name = "echo-a"
+binary = "/home/matthew/nexcore/target/release/nexcloud-echo"
+port = 7001
+health = "/health"
+restart = "on-failure"
+max_restarts = 3
+backoff_ms = 1000
+env = { PORT = "7001" }
+
+[[service]]
+name = "echo-b"
+binary = "/home/matthew/nexcore/target/release/nexcloud-echo"
+port = 7002
+health = "/health"
+restart = "on-failure"
+max_restarts = 3
+backoff_ms = 1000
+env = { PORT = "7002" }
+depends_on = ["echo-a"]
+
+# ── Routes ────────────────────────────────────────────────────────────
+
+[[route]]
+match_prefix = "/api"
+backend = "echo-a"
+strip_prefix = true
+
+[[route]]
+match_prefix = "/"
+backend = "echo-b"

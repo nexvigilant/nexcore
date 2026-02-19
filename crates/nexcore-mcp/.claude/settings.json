@@ -1,0 +1,6 @@
+{
+  "env": {
+    "NEXCORE_MCP_CRATE": "true",
+    "RUST_BACKTRACE": "1"
+  }
+}

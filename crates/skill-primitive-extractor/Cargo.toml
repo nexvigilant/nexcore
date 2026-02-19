@@ -1,4 +1,3 @@
-[workspace]
 
 [package]
 name = "skill-primitive-extractor"

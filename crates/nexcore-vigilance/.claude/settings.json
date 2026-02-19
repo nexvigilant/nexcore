@@ -1,0 +1,6 @@
+{
+  "env": {
+    "NEXCORE_VIGILANCE_CRATE": "true",
+    "RUST_BACKTRACE": "1"
+  }
+}

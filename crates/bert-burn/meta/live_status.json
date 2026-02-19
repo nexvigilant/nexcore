@@ -1,0 +1,10 @@
+{
+  "run_id": "run-1771459079",
+  "phase": "completed",
+  "epoch": 10,
+  "batch": 6,
+  "global_step": 60,
+  "loss": 1.4958568,
+  "accuracy": 0.3323126,
+  "elapsed_secs": 19.701628
+}

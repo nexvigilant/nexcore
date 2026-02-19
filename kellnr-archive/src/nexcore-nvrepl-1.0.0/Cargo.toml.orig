@@ -1,0 +1,54 @@
+[workspace]
+
+[package]
+name = "nexcore-nvrepl"
+version = "1.0.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+description = "NexVigilant REPL — deterministic terminal interface for PV signal detection, patient safety, and system monitoring"
+
+[[bin]]
+name = "nvrepl"
+path = "src/main.rs"
+
+[dependencies]
+nexcore-vigilance = { version = "1.0.0", path = "../nexcore-vigilance", registry = "nexcore" }
+nexcore-guardian-engine = { version = "1.0.0", path = "../nexcore-guardian-engine", registry = "nexcore" }
+nexcore-pv-core = { version = "1.0.0", path = "../nexcore-pv-core", registry = "nexcore" }
+nexcore-energy = { version = "0.1.0", path = "../nexcore-energy", registry = "nexcore" }
+rustyline = "15.0"
+chrono = { version = "0.4.38", features = ["serde"] }
+colored = { version = "3.0.0" }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = { version = "1.0.120" }
+tokio = { version = "1.38.0", features = ["full", "rt-multi-thread", "macros"] }
+tracing = { version = "0.1.40" }
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+anyhow = { version = "1.0.86" }
+
+[lints.rust]
+async_fn_in_trait = "allow"
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+unused_mut = "allow"
+unused_assignments = "allow"
+unused_must_use = "allow"
+
+[lints.clippy]
+all = "allow"
+pedantic = "allow"
+nursery = "allow"
+cargo = "allow"
+map_unwrap_or = "allow"
+manual_map = "allow"
+option_map_or_none = "allow"
+derivable_impls = "allow"
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"
+todo = "allow"
+unimplemented = "allow"
+unreachable = "allow"

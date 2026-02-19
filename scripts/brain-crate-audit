@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# brain-crate-audit: wrapper for brain session milestone audit
+# Usage: brain-crate-audit [limit] [--strict]
+set -euo pipefail
+
+LIMIT="20"
+STRICT=0
+BASE_SCRIPT="${HOME}/.nexcore/skills/brain-dev/scripts/brain-audit-sessions"
+
+if [[ $# -ge 1 ]]; then
+  LIMIT="$1"
+fi
+if [[ "${2:-}" == "--strict" || "${1:-}" == "--strict" ]]; then
+  STRICT=1
+fi
+
+if [[ ! -x "$BASE_SCRIPT" ]]; then
+  echo "Missing executable: $BASE_SCRIPT" >&2
+  exit 127
+fi
+
+if (( STRICT == 1 )); then
+  "$BASE_SCRIPT" --limit "$LIMIT"
+else
+  "$BASE_SCRIPT" --limit "$LIMIT" || true
+fi

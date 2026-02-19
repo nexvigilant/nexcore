@@ -1,0 +1,591 @@
+{
+  "$schema": "./pathway.schema.json",
+  "id": "pv-ed-04",
+  "title": "PV Learning Pathway Architecture: Career-Stage Progression",
+  "description": "Navigate the complete pharmacovigilance career trajectory from APPE rotation through executive leadership. Each stage maps learning modalities (Experiential, Didactic, Mentorship, Self-Directed, AI-Enhanced) to competency milestones, EPA entrustment levels, and Critical Professional Activities across eight career phases.",
+  "domain": "pharmacovigilance",
+  "componentCount": 30,
+  "estimatedDuration": "16 hours",
+  "stages": [
+    {
+      "id": "pv-ed-04-01",
+      "title": "APPE Rotation: Foundation Building",
+      "description": "Six-week Advanced Pharmacy Practice Experience rotation establishing baseline PV competency. Introduces all 8 Critical Professional Activities at Level 1-2 (Direct Supervision to Indirect Supervision). Primary modalities: Experiential learning through direct observation and structured didactic instruction.",
+      "bloomLevel": "Remember",
+      "passingScore": 70,
+      "estimatedDuration": "50 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-04-01-a01",
+          "title": "APPE PV Rotation Structure and Learning Objectives",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-04-01-a02",
+          "title": "Mapping ACPE Standards to PV Competencies",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-04-01-a03",
+          "title": "APPE Foundation Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-04-01-q01",
+                "type": "multiple-choice",
+                "question": "In EPA-based assessment, Level 1 entrustment means the learner performs an activity under which condition?",
+                "options": [
+                  "Direct active supervision — the supervisor is physically present and actively guides the learner",
+                  "Indirect supervision — the supervisor is available but not directly observing",
+                  "Reactive supervision — the supervisor is contacted only when the learner encounters a problem",
+                  "Full autonomy — the learner performs independently and supervises others"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "EPA entrustment Level 1 is 'Observe only' or direct active supervision where the supervisor is present and actively guiding. Level 2 is direct supervision with the learner performing, Level 3 is indirect supervision, Level 4 is distant supervision (practice-ready), and Level 5 is aspired autonomy."
+              },
+              {
+                "id": "pv-ed-04-01-q02",
+                "type": "multiple-choice",
+                "question": "Which learning modality is MOST emphasized during an APPE PV rotation for developing initial case processing skills?",
+                "options": [
+                  "Experiential learning through observed practice and structured preceptor feedback",
+                  "Self-directed online module completion without preceptor interaction",
+                  "Independent research projects submitted at rotation end",
+                  "AI-enhanced simulation without human oversight"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "APPE rotations are grounded in experiential learning per ACPE Standards 2025. Students develop initial competency through direct observation, hands-on practice under supervision, and structured feedback from experienced preceptors."
+              },
+              {
+                "id": "pv-ed-04-01-q03",
+                "type": "true-false",
+                "question": "During a 6-week APPE PV rotation, a student is expected to achieve Level 1-2 entrustment across all 8 Critical Professional Activities.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "The APPE rotation provides foundational exposure to all 8 CPAs at introductory entrustment levels (L1-L2). This establishes baseline awareness and initial supervised practice before deeper competency development in fellowship or employment."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-04-02",
+      "title": "Fellowship Months 1-6: Foundation Building",
+      "description": "First six months of PV fellowship focused on structured foundation building. All five learning modalities active: intensive didactic instruction, experiential case work under direct supervision, assigned mentorship relationships, guided self-directed learning plans, and introduction to AI-enhanced tools. Target: Level 2 across core CPAs.",
+      "bloomLevel": "Understand",
+      "passingScore": 70,
+      "estimatedDuration": "60 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-04-02-a01",
+          "title": "Fellowship Curriculum Design: Months 1-6",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-04-02-a02",
+          "title": "Learning Modality Integration Planner",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-04-02-a03",
+          "title": "Case Processing Under Supervision Simulation",
+          "type": "case-study",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-04-02-a04",
+          "title": "Fellowship Foundation Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-04-02-q01",
+                "type": "multiple-choice",
+                "question": "During the foundation phase of a PV fellowship (months 1-6), which milestone best indicates readiness to progress to core competency building?",
+                "options": [
+                  "Ability to independently triage incoming ICSRs for seriousness and expectedness with >90% accuracy under indirect supervision",
+                  "Completion of all assigned reading materials and online modules",
+                  "Memorization of the complete MedDRA System Organ Class hierarchy",
+                  "Ability to independently write a complete PBRER without review"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "The transition from foundation to core competency requires demonstrated ability (not just knowledge) in fundamental PV tasks. Case triage is a core CPA-1 skill; performing it accurately under indirect supervision indicates Level 2-3 entrustment readiness."
+              },
+              {
+                "id": "pv-ed-04-02-q02",
+                "type": "multiple-choice",
+                "question": "The mentorship modality in a PV fellowship ideally includes which structured component?",
+                "options": [
+                  "Regular one-on-one sessions with an experienced PV professional covering career development, complex case review, and professional identity formation",
+                  "Annual performance reviews conducted by the fellowship program director only",
+                  "Unstructured social interactions at professional conferences",
+                  "Peer-to-peer study groups without senior professional involvement"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Effective PV mentorship follows best practices in health professions education: regular structured sessions, longitudinal relationship with a senior professional, and explicit coverage of both technical competency and professional identity development."
+              },
+              {
+                "id": "pv-ed-04-02-q03",
+                "type": "true-false",
+                "question": "Self-directed learning in the fellowship foundation phase should follow a structured Individual Development Plan (IDP) with specific competency targets rather than unguided exploration.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "An IDP with competency targets provides scaffolding for self-directed learning. In the foundation phase, fellows need structure to identify knowledge gaps and track progress. The IDP evolves to become more self-generated as the fellow matures."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-04-03",
+      "title": "Fellowship Months 7-12: Core Competency",
+      "description": "Core competency development phase. Fellows transition from supervised to increasingly independent practice in Case Management and Signal Management (CPAs 1-2). Experiential learning shifts to indirect supervision. Didactic content deepens into regulatory science and epidemiological methods. Target: Level 3 in CPAs 1-2, Level 2 in CPAs 3-5.",
+      "bloomLevel": "Understand",
+      "passingScore": 75,
+      "estimatedDuration": "55 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-04-03-a01",
+          "title": "Core Competency Phase Curriculum and Milestones",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-04-03-a02",
+          "title": "Competency Milestone Tracker: Self-Assessment Tool",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-04-03-a03",
+          "title": "Core Competency Phase Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-04-03-q01",
+                "type": "multiple-choice",
+                "question": "A PV fellow at month 10 can independently assess causality for routine ICSRs but requires guidance for complex cases involving drug interactions. This performance corresponds to which entrustment level?",
+                "options": [
+                  "Level 3 — indirect supervision with the supervisor available but not directly overseeing routine work",
+                  "Level 1 — direct active supervision required for all cases",
+                  "Level 4 — distant/oversight supervision only; practice-ready",
+                  "Level 5 — can supervise others performing this activity"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Level 3 entrustment is characterized by independence on routine tasks with supervisor availability for complex situations. The fellow handles standard cases independently but appropriately seeks guidance for complex drug interaction cases."
+              },
+              {
+                "id": "pv-ed-04-03-q02",
+                "type": "multiple-choice",
+                "question": "Which assessment method is MOST appropriate for evaluating a fellow's progression from Level 2 to Level 3 in case processing?",
+                "options": [
+                  "Workplace-Based Assessment (WPBA) using direct observation with structured rating scales and narrative feedback over multiple cases",
+                  "A single high-stakes written examination at the end of month 12",
+                  "Self-reported confidence surveys completed monthly",
+                  "Peer comparison rankings within the fellowship cohort"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "EPA entrustment decisions require multiple observations over time using workplace-based assessments. Single exams test knowledge but not entrustable performance. WPBAs with structured tools (like the Ottawa scale) capture both competency and professional behavior."
+              },
+              {
+                "id": "pv-ed-04-03-q03",
+                "type": "true-false",
+                "question": "During the core competency phase, AI-enhanced learning tools should supplement but not replace the experiential and mentorship modalities.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "AI tools enhance efficiency and pattern recognition but cannot develop the clinical judgment, professional relationships, and tacit knowledge that experiential and mentorship modalities provide. All five modalities work synergistically."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-04-04",
+      "title": "Fellowship Months 13-18: Advanced Application",
+      "description": "Advanced application phase. Fellows take increasing ownership of Risk Management and Quality/Compliance (CPAs 3-4). Experiential learning emphasizes project leadership. Didactic content shifts to benefit-risk evaluation frameworks and regulatory strategy. Self-directed learning becomes research-oriented. Target: Level 3 in CPAs 3-5, Level 4 emerging in CPAs 1-2.",
+      "bloomLevel": "Apply",
+      "passingScore": 75,
+      "estimatedDuration": "65 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-04-04-a01",
+          "title": "Advanced Application Phase: Project Leadership",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-04-04-a02",
+          "title": "Risk Management Plan Component Builder",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-04-04-a03",
+          "title": "Benefit-Risk Framework Application: Drug Safety Committee Simulation",
+          "type": "case-study",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-04-04-a04",
+          "title": "Advanced Application Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-04-04-q01",
+                "type": "multiple-choice",
+                "question": "A fellow designing their first Risk Management Plan section should ensure it contains which essential components per GVP Module V?",
+                "options": [
+                  "Safety specification (important identified risks, important potential risks, missing information), pharmacovigilance plan, and risk minimization measures",
+                  "Marketing projections, competitive landscape analysis, and pricing strategy",
+                  "Clinical trial protocols, bioequivalence data, and manufacturing specifications",
+                  "Intellectual property assessment, patent landscape, and freedom-to-operate opinion"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Per GVP Module V, the RMP safety specification must characterize important identified risks, important potential risks, and missing information. The pharmacovigilance plan addresses further characterization. Risk minimization measures describe routine and additional measures."
+              },
+              {
+                "id": "pv-ed-04-04-q02",
+                "type": "multiple-choice",
+                "question": "When transitioning from indirect supervision (Level 3) to distant supervision (Level 4), which indicator is most reliable for an entrustment decision?",
+                "options": [
+                  "Consistent pattern of sound independent judgment across diverse case types, verified by retrospective chart review and multi-source feedback",
+                  "The fellow's self-assessment report indicating they feel ready for independence",
+                  "Completion of a minimum number of cases regardless of quality",
+                  "Passing a single standardized examination above the cut score"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Level 4 entrustment (practice-ready) requires evidence of consistent sound judgment across diverse situations. This requires triangulated data from retrospective review, direct observation over time, and multi-source feedback — not single assessments."
+              },
+              {
+                "id": "pv-ed-04-04-q03",
+                "type": "true-false",
+                "question": "During the advanced application phase, fellows should begin contributing to aggregate safety reports such as DSUR or PBRER sections under mentored supervision.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Aggregate report authorship is a key CPA-6 competency. Months 13-18 provide the appropriate developmental stage to begin contributing sections of DSURs or PBRERs with mentor review, building toward independent authorship in months 19-24."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-04-05",
+      "title": "Fellowship Months 19-24: Integration Mastery",
+      "description": "Integration mastery phase. Fellows achieve practice-readiness through capstone projects integrating all CPAs. Communication/Stakeholder (CPA-6) and Research/Development (CPA-7) move to foreground. Self-directed and AI-enhanced modalities become primary. Fellows prepare for independent professional practice. Target: Level 4 in CPAs 1-5, Level 3-4 in CPAs 6-8.",
+      "bloomLevel": "Apply",
+      "passingScore": 80,
+      "estimatedDuration": "70 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-04-05-a01",
+          "title": "Capstone Project Design and Integration Requirements",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-04-05-a02",
+          "title": "Portfolio-Based Assessment: Compiling Evidence of Competence",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-04-05-a03",
+          "title": "Capstone Scenario: Full Signal-to-Action Lifecycle",
+          "type": "case-study",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-04-05-a04",
+          "title": "Integration Mastery Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-04-05-q01",
+                "type": "multiple-choice",
+                "question": "A capstone project demonstrating integration mastery should ideally span which scope?",
+                "options": [
+                  "Multiple CPAs integrated end-to-end: from signal detection through risk assessment, regulatory communication, and outcome evaluation",
+                  "A single CPA performed repeatedly to demonstrate volume-based proficiency",
+                  "A literature review submitted as a written document without operational application",
+                  "A didactic presentation on PV theory without practical demonstration"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Integration mastery requires demonstrating the ability to connect multiple CPAs in a coherent workflow. A capstone spanning signal detection → assessment → communication → evaluation mirrors real PV practice and demonstrates practice-readiness."
+              },
+              {
+                "id": "pv-ed-04-05-q02",
+                "type": "multiple-choice",
+                "question": "Which portfolio component provides the STRONGEST evidence for a Level 4 entrustment decision in Case Management (CPA-1)?",
+                "options": [
+                  "A curated collection of independently processed cases with quality metrics, audit results, and reflective annotations showing progressive complexity",
+                  "A certificate of completion from an online case processing course",
+                  "A letter of recommendation from the fellowship preceptor",
+                  "A count of total cases processed during the fellowship"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Level 4 entrustment requires evidence of consistent quality in independent practice. A curated portfolio with quality metrics and reflective practice demonstrates both competence and self-assessment capability — key attributes of practice-ready professionals."
+              },
+              {
+                "id": "pv-ed-04-05-q03",
+                "type": "true-false",
+                "question": "By the end of the integration mastery phase (month 24), a fellow should be able to independently manage a drug safety committee meeting including preparation of safety summaries and facilitation of benefit-risk discussion.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Managing a drug safety committee meeting requires integration of multiple CPAs: case management knowledge (CPA-1), signal assessment (CPA-2), risk evaluation (CPA-3), and communication skills (CPA-6). This is an appropriate Level 4 milestone for month 24."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-04-06",
+      "title": "Professional Development Years 1-2: Level 4 Consolidation",
+      "description": "Early career professional development consolidating Level 4 independence across all CPAs. Learning modalities shift to predominantly self-directed and experiential with periodic mentorship. Professionals build specialized expertise in 2-3 CPAs while maintaining competence across all. AI-enhanced tools become part of daily workflow. Target: Solid Level 4 across all CPAs, Level 5 emerging in area of specialization.",
+      "bloomLevel": "Analyze",
+      "passingScore": 80,
+      "estimatedDuration": "65 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-04-06-a01",
+          "title": "Professional Development Planning: Years 1-2",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-04-06-a02",
+          "title": "Specialization Pathway Selector and IDP Builder",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-04-06-a03",
+          "title": "Cross-Functional Collaboration Scenario",
+          "type": "case-study",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-04-06-a04",
+          "title": "Professional Development Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-04-06-q01",
+                "type": "multiple-choice",
+                "question": "A PV professional in year 2 is asked to lead a signal evaluation for a newly identified hepatotoxicity risk. Which combination of skills demonstrates Level 4 competence?",
+                "options": [
+                  "Independently queries the safety database, performs disproportionality analysis, evaluates clinical relevance using WHO-UMC causality criteria, and presents findings with recommended actions to the safety committee",
+                  "Refers the signal to a senior colleague and awaits instructions",
+                  "Performs database queries but requests a statistician to interpret all results",
+                  "Compiles a literature review but defers the signal evaluation to the medical director"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Level 4 (distant supervision) means the professional performs the complete activity independently with supervision available for unusual situations. The correct answer demonstrates end-to-end signal management capability across database query, statistical analysis, clinical interpretation, and communication."
+              },
+              {
+                "id": "pv-ed-04-06-q02",
+                "type": "multiple-choice",
+                "question": "Which WHO-UMC causality category requires ALL of the following: plausible time relationship, unlikely to be attributed to disease or other drugs, clinically plausible response on withdrawal, AND a rechallenge event that is definitive?",
+                "options": [
+                  "Certain",
+                  "Probable/Likely",
+                  "Possible",
+                  "Unlikely"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "The WHO-UMC 'Certain' category requires a plausible temporal relationship, cannot be explained by disease or other drugs, plausible pharmacological response on dechallenge, AND definitive rechallenge confirmation. 'Probable/Likely' does not require rechallenge."
+              },
+              {
+                "id": "pv-ed-04-06-q03",
+                "type": "true-false",
+                "question": "Continuing professional development (CPD) in pharmacovigilance should include regular self-assessment against current competency frameworks rather than relying solely on time-based experience accrual.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Competency-based professional development requires periodic self-assessment against defined standards. Time in role does not guarantee competency maintenance or growth. Self-assessment drives targeted learning and identifies emerging gaps."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-04-07",
+      "title": "Professional Development Years 3-5: Level 5 Emergence",
+      "description": "Mid-career development where professionals achieve Level 5 (aspirational/supervisory) competence in their specialization. Learning modalities emphasize mentorship (now as mentor), self-directed research, and teaching. Professionals begin supervising others, contributing to organizational PV strategy, and shaping departmental processes. Target: Level 5 in 2-3 CPAs, solid Level 4 maintained across remainder.",
+      "bloomLevel": "Evaluate",
+      "passingScore": 85,
+      "estimatedDuration": "70 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-04-07-a01",
+          "title": "Level 5 Competence: Teaching, Supervising, and Leading",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-04-07-a02",
+          "title": "Entrustment Decision-Making: Becoming a Supervisor",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-04-07-a03",
+          "title": "Process Improvement Case: Redesigning Signal Triage Workflow",
+          "type": "case-study",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-04-07-a04",
+          "title": "Level 5 Emergence Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-04-07-q01",
+                "type": "multiple-choice",
+                "question": "Level 5 entrustment is characterized by which defining capability?",
+                "options": [
+                  "The ability to supervise and teach others performing the activity, contributing to the development of less experienced professionals",
+                  "The ability to perform the activity faster than any other team member",
+                  "The ability to work without any organizational oversight or quality checks",
+                  "The ability to delegate all operational work to subordinates while focusing on strategy"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Level 5 represents aspirational entrustment where the professional can not only perform the activity independently but can also supervise, teach, and provide entrustment decisions for others. It is about developing the profession, not just performing within it."
+              },
+              {
+                "id": "pv-ed-04-07-q02",
+                "type": "multiple-choice",
+                "question": "When a Level 5 professional is making an entrustment decision about a junior colleague's readiness for Level 3 in signal management, which approach is MOST appropriate?",
+                "options": [
+                  "Triangulating evidence from multiple workplace-based assessments, case review audits, and multi-source feedback collected over several months",
+                  "Administering a single pass/fail practical examination",
+                  "Relying primarily on the junior colleague's self-reported confidence level",
+                  "Comparing the number of signals the junior has reviewed to a minimum threshold"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Entrustment decisions are high-stakes. Best practice requires triangulated evidence across multiple data sources, assessment methods, and time points. Single assessments, self-report, or volume counts alone are insufficient for a valid entrustment decision."
+              },
+              {
+                "id": "pv-ed-04-07-q03",
+                "type": "true-false",
+                "question": "A PV professional at Level 5 should actively contribute to updating the organizational competency framework and assessment tools based on evolving regulatory requirements and best practices.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Level 5 professionals are stewards of the profession within their organization. Contributing to competency framework development ensures that assessment standards remain current with regulatory evolution (such as GVP updates or new ICH guidelines)."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-04-08",
+      "title": "Executive Pathway: Strategic PV Leadership",
+      "description": "Executive development pathway for PV Managers (L4-L5), Directors (L5), and Executives (L5+). Covers strategic leadership: PV system design, global regulatory strategy, organizational capability building, AI governance, and cross-functional executive collaboration. Learning modalities: executive mentorship, strategic self-directed development, and leadership-focused experiential assignments. Target: L5+ strategic leadership competence.",
+      "bloomLevel": "Create",
+      "passingScore": 85,
+      "estimatedDuration": "75 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-04-08-a01",
+          "title": "Executive PV Leadership: System Design and Global Strategy",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-04-08-a02",
+          "title": "Organizational Capability Assessment and Gap Analysis",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-04-08-a03",
+          "title": "Executive Decision Scenario: Post-Marketing Safety Crisis Management",
+          "type": "case-study",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-04-08-a04",
+          "title": "Executive Pathway Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-04-08-q01",
+                "type": "multiple-choice",
+                "question": "An executive-level PV leader designing a global PV system for a newly marketed product must ensure which structural requirement?",
+                "options": [
+                  "A single global pharmacovigilance system with a designated EU QPPV, US safety officer, and local qualified persons in each market, supported by a comprehensive PSMF",
+                  "Separate independent PV systems for each geographic market with no central coordination",
+                  "Outsourcing all PV activities to a single CRO with no internal oversight capability",
+                  "A PV system focused exclusively on the largest market by revenue"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Global PV requires an integrated system meeting requirements across jurisdictions: EU QPPV (Directive 2001/83/EC), US safety officer (21 CFR 314.80), and local QPPVs/safety contacts as required by national regulations, unified through a global PSMF and consistent SOPs."
+              },
+              {
+                "id": "pv-ed-04-08-q02",
+                "type": "multiple-choice",
+                "question": "When implementing AI/ML tools in a global PV organization, which governance principle should an executive prioritize FIRST?",
+                "options": [
+                  "Establishing a validation framework that ensures AI outputs meet regulatory accuracy requirements with documented human oversight protocols",
+                  "Deploying the most advanced available AI model as quickly as possible to reduce headcount",
+                  "Allowing each regional team to independently select and deploy their preferred AI tools",
+                  "Replacing the quality management system with AI-driven automated compliance"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "AI governance in PV must prioritize validation and human oversight. The EU AI Act, EMA, and FDA all require that AI tools used in safety contexts be validated for accuracy and maintain human oversight. Governance frameworks must be established before deployment."
+              },
+              {
+                "id": "pv-ed-04-08-q03",
+                "type": "true-false",
+                "question": "Executive PV leaders should ensure their organization maintains a succession plan that includes competency-mapped development pathways for all critical PV roles, not just the QPPV position.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Organizational resilience requires succession planning across all critical PV functions, not just the regulatory-mandated QPPV role. Competency-mapped pathways ensure continuity of expertise in signal management, risk evaluation, and all other CPAs."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

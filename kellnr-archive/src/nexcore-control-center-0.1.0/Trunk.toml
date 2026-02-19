@@ -1,0 +1,13 @@
+# Trunk configuration for nexcore-control-center
+
+[build]
+target = "index.html"
+dist = "target/site"
+
+[watch]
+watch = ["src", "input.css", "tailwind.config.js"]
+
+[[hooks]]
+stage = "build"
+command = "sh"
+command_arguments = ["-c", "./node_modules/.bin/tailwindcss -i input.css -o style/output.css --minify"]

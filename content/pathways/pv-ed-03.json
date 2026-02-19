@@ -1,0 +1,585 @@
+{
+  "$schema": "./pathway.schema.json",
+  "id": "pv-ed-03",
+  "title": "Critical Professional Activities in Pharmacovigilance",
+  "description": "Master the eight Critical Professional Activities (CPAs) that define PV practice: Case Management, Signal Management, Risk Management, Quality/Compliance, Data/Technology, Communication/Stakeholder Engagement, Research/Development, and AI-Enhanced PV. Each CPA maps to specific competencies and Entrustable Professional Activities.",
+  "domain": "pharmacovigilance",
+  "componentCount": 29,
+  "estimatedDuration": "14 hours",
+  "stages": [
+    {
+      "id": "pv-ed-03-01",
+      "title": "Case Management",
+      "description": "CPA-1 — Individual Case Safety Report (ICSR) lifecycle from intake through submission. Covers Competencies 2 (Regulatory Knowledge), 3 (Case Processing), 4 (Medical Assessment), and 14 (Documentation) mapped to EPAs 1, 2, and 3.",
+      "bloomLevel": "Remember",
+      "passingScore": 70,
+      "estimatedDuration": "45 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-03-01-a01",
+          "title": "ICSR Lifecycle and Regulatory Timelines",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-03-01-a02",
+          "title": "Case Intake and Data Entry Simulation",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-03-01-a03",
+          "title": "Case Management Fundamentals Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-03-01-q01",
+                "type": "multiple-choice",
+                "question": "Under ICH E2B(R3) guidelines, what are the four minimum criteria for a valid Individual Case Safety Report (ICSR)?",
+                "options": [
+                  "An identifiable reporter, an identifiable patient, a suspect product, and an adverse event/reaction",
+                  "Patient demographics, drug dose, onset date, and outcome",
+                  "Reporter credentials, patient diagnosis, suspect drug class, and MedDRA coding",
+                  "Case narrative, laboratory results, concomitant medications, and medical history"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "ICH E2B(R3) defines four minimum criteria for ICSR validity: an identifiable reporter, an identifiable patient, at least one suspect medicinal product, and at least one suspected adverse event or reaction."
+              },
+              {
+                "id": "pv-ed-03-01-q02",
+                "type": "multiple-choice",
+                "question": "What is the regulatory reporting timeline for serious, unexpected adverse drug reactions from post-marketing sources to competent authorities in most jurisdictions?",
+                "options": [
+                  "15 calendar days from the date the MAH first becomes aware",
+                  "30 calendar days from the date of the event",
+                  "7 calendar days from receipt of the report",
+                  "90 calendar days from marketing authorization"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Per ICH E2D and most regulatory frameworks, serious unexpected ADRs from spontaneous sources must be reported as expedited reports within 15 calendar days. Fatal or life-threatening cases require initial reporting within 7 days with a follow-up by 15 days."
+              },
+              {
+                "id": "pv-ed-03-01-q03",
+                "type": "true-false",
+                "question": "According to GVP Module VI, follow-up information for an ICSR should be sought when the initial report is incomplete but medically relevant details may be obtainable from the reporter.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "GVP Module VI requires Marketing Authorization Holders to make reasonable attempts to obtain follow-up information for ICSRs, particularly when the initial report lacks important medical or regulatory details."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-03-02",
+      "title": "Signal Management",
+      "description": "CPA-2 — Signal detection, validation, prioritization, and assessment. Covers Competencies 8 (Signal Detection), 9 (Epidemiological Methods), 10 (Benefit-Risk Assessment), and 15 (Continuous Learning) mapped to EPAs 5 and 6.",
+      "bloomLevel": "Understand",
+      "passingScore": 70,
+      "estimatedDuration": "60 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-03-02-a01",
+          "title": "Signal Detection Methods and Data Sources",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-03-02-a02",
+          "title": "Disproportionality Analysis Workshop",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-03-02-a03",
+          "title": "Signal Validation Case Study: Fluoroquinolone Aortic Dissection",
+          "type": "case-study",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-03-02-a04",
+          "title": "Signal Management Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-03-02-q01",
+                "type": "multiple-choice",
+                "question": "In disproportionality analysis, the Proportional Reporting Ratio (PRR) is calculated as which of the following?",
+                "options": [
+                  "(a / (a+b)) / (c / (c+d)), where a = drug-event pair, b = drug-other events, c = non-drug-event, d = non-drug-other events",
+                  "(a × d) / (b × c) in a standard 2×2 contingency table",
+                  "The observed-to-expected ratio using Bayesian shrinkage",
+                  "The chi-square statistic divided by degrees of freedom"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "PRR compares the proportion of a specific event among reports for a drug of interest versus the proportion of that event among all other drugs. PRR = (a/(a+b)) / (c/(c+d)). The ROR uses the cross-product ratio (ad/bc) instead."
+              },
+              {
+                "id": "pv-ed-03-02-q02",
+                "type": "multiple-choice",
+                "question": "According to GVP Module IX, what is the correct sequence in the signal management process?",
+                "options": [
+                  "Signal detection → Signal validation → Signal prioritization → Signal assessment → Recommendation for action",
+                  "Signal validation → Signal detection → Signal assessment → Signal prioritization → Recommendation for action",
+                  "Signal assessment → Signal detection → Signal validation → Recommendation for action → Signal prioritization",
+                  "Signal detection → Signal assessment → Signal prioritization → Signal validation → Recommendation for action"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "GVP Module IX defines the signal management process as: detection (identifying potential signals from data), validation (confirming the signal warrants further analysis), prioritization (ranking by public health impact), assessment (detailed evaluation), and recommendation for action."
+              },
+              {
+                "id": "pv-ed-03-02-q03",
+                "type": "true-false",
+                "question": "The Empirical Bayesian Geometric Mean (EBGM) uses a gamma-Poisson shrinkage model to reduce false positives from disproportionality analysis in large spontaneous reporting databases.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "EBGM employs a gamma-Poisson shrinkage (GPS) model that shrinks extreme values toward the overall mean, reducing false positive signals that arise from sparse data. The EB05 (lower 5th percentile) threshold of >= 2.0 is commonly used for signal detection."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-03-03",
+      "title": "Risk Management",
+      "description": "CPA-3 — Risk Evaluation and Mitigation Strategies (REMS), Risk Management Plans (RMPs), and benefit-risk frameworks. Covers Competencies 10 (Benefit-Risk), 11 (Risk Minimization), 12 (Regulatory Compliance), and 13 (Communication) mapped to EPAs 7 and 8.",
+      "bloomLevel": "Understand",
+      "passingScore": 75,
+      "estimatedDuration": "65 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-03-03-a01",
+          "title": "Risk Management Plans and REMS Frameworks",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-03-03-a02",
+          "title": "Benefit-Risk Assessment Framework Builder",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-03-03-a03",
+          "title": "REMS Case Study: Isotretinoin iPLEDGE Program",
+          "type": "case-study",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-03-03-a04",
+          "title": "Risk Management Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-03-03-q01",
+                "type": "multiple-choice",
+                "question": "Under EU GVP Module V, which component is NOT part of a Risk Management Plan (RMP)?",
+                "options": [
+                  "Marketing budget allocation for the product lifecycle",
+                  "Safety specification summarizing the safety profile",
+                  "Pharmacovigilance plan for further characterizing risks",
+                  "Risk minimization measures including routine and additional measures"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "An EU RMP per GVP Module V consists of a safety specification (Part II), a pharmacovigilance plan (Part III), and risk minimization measures (Part V). Marketing budget is a commercial function and has no place in an RMP."
+              },
+              {
+                "id": "pv-ed-03-03-q02",
+                "type": "multiple-choice",
+                "question": "The FDA REMS program may include which of the following elements to ensure safe use of a medication?",
+                "options": [
+                  "All of the following: Medication Guide, Communication Plan, Elements to Assure Safe Use (ETASU), and an Implementation System",
+                  "Only a Medication Guide and a Dear Healthcare Provider letter",
+                  "Only patient registries and restricted distribution programs",
+                  "Only a black box warning on the product labeling"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Under 21 USC 355-1, a REMS may require one or more of: a Medication Guide, a Communication Plan, Elements to Assure Safe Use (ETASU such as prescriber certification, patient registries, restricted distribution), and an Implementation System to monitor ETASU compliance."
+              },
+              {
+                "id": "pv-ed-03-03-q03",
+                "type": "true-false",
+                "question": "The EMA's benefit-risk methodology uses a structured framework called PrOACT-URL (Problem, Objectives, Alternatives, Consequences, Trade-offs — Uncertainty, Risk tolerance, Linked decisions).",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "The EMA adopted the PrOACT-URL framework as part of its Benefit-Risk Methodology Project to bring structure and transparency to benefit-risk evaluation in regulatory decision-making."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-03-04",
+      "title": "Quality and Compliance",
+      "description": "CPA-4 — Quality Management Systems (QMS) for PV, audit readiness, regulatory inspections, and SOPs. Covers Competencies 1 (Ethics), 12 (Regulatory Compliance), 7 (Data Management), and 4 (Medical Assessment) mapped to EPAs 9 and 10.",
+      "bloomLevel": "Apply",
+      "passingScore": 75,
+      "estimatedDuration": "55 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-03-04-a01",
+          "title": "PV Quality Management Systems and GVP Module I",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-03-04-a02",
+          "title": "Audit Finding Classification Exercise",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-03-04-a03",
+          "title": "Quality and Compliance Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-03-04-q01",
+                "type": "multiple-choice",
+                "question": "In a regulatory PV inspection, findings are typically classified into which categories?",
+                "options": [
+                  "Critical, Major, and Minor — where critical findings indicate potential serious risk to public health",
+                  "High, Medium, and Low — based on probability of recurrence",
+                  "Class I, II, and III — mirroring device risk classification",
+                  "Red, Amber, and Green — using traffic light severity"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "EMA and most competent authorities classify PV inspection findings as Critical (conditions/practices that adversely affect public health), Major (significant deviation from EU regulatory requirements), or Minor (not likely to adversely affect public health)."
+              },
+              {
+                "id": "pv-ed-03-04-q02",
+                "type": "multiple-choice",
+                "question": "According to GVP Module I, the Qualified Person Responsible for Pharmacovigilance (QPPV) must fulfill which key requirement?",
+                "options": [
+                  "Reside and operate in the EU/EEA, with continuous and permanent access to the pharmacovigilance system master file",
+                  "Hold an active medical license in at least two EU member states",
+                  "Maintain exclusive employment with no more than one Marketing Authorization Holder",
+                  "Complete annual certification through the EMA pharmacovigilance training academy"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Per GVP Module I and Directive 2001/83/EC Article 104, the QPPV must reside and operate in the EU/EEA and have continuous access to the PSMF. They must be sufficiently qualified and have oversight of the PV system."
+              },
+              {
+                "id": "pv-ed-03-04-q03",
+                "type": "true-false",
+                "question": "The Pharmacovigilance System Master File (PSMF) must be maintained at the site specified in the marketing authorization and be available for inspection at all times.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Per GVP Module II, the PSMF is a detailed description of the PV system used by the MAH. It must be located at the QPPV's site (or specified location) and be permanently available for inspection by competent authorities."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-03-05",
+      "title": "Data and Technology",
+      "description": "CPA-5 — Safety database management, data standards (E2B, MedDRA, WHODrug), and technology platforms for PV operations. Covers Competencies 7 (Data Management), 15 (Continuous Learning), and AI literacy mapped to EPAs 4 and 10.",
+      "bloomLevel": "Apply",
+      "passingScore": 80,
+      "estimatedDuration": "55 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-03-05-a01",
+          "title": "PV Data Standards: E2B(R3), MedDRA, and WHODrug",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-03-05-a02",
+          "title": "MedDRA Coding Hierarchy Navigation",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-03-05-a03",
+          "title": "Data and Technology Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-03-05-q01",
+                "type": "multiple-choice",
+                "question": "MedDRA (Medical Dictionary for Regulatory Activities) is organized into how many hierarchical levels?",
+                "options": [
+                  "Five: SOC, HLGT, HLT, PT, LLT",
+                  "Three: SOC, PT, LLT",
+                  "Four: SOC, HLT, PT, LLT",
+                  "Six: SOC, HLGT, HLT, PT, LLT, Verbatim"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "MedDRA has five hierarchical levels: System Organ Class (SOC) at the top, High Level Group Term (HLGT), High Level Term (HLT), Preferred Term (PT), and Lowest Level Term (LLT) for coding verbatim terms."
+              },
+              {
+                "id": "pv-ed-03-05-q02",
+                "type": "multiple-choice",
+                "question": "ICH E2B(R3) uses which data format for electronic transmission of ICSRs?",
+                "options": [
+                  "XML based on the ICH ICSR specification with HL7 Individual Case Safety Report schema",
+                  "CSV flat files with fixed column headers",
+                  "JSON-LD with FHIR resource mapping",
+                  "PDF/A with embedded structured data"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "E2B(R3) defines an XML-based format using the HL7 ICSR standard for structured electronic transmission of ICSRs between regulatory authorities, MAHs, and WHO."
+              },
+              {
+                "id": "pv-ed-03-05-q03",
+                "type": "true-false",
+                "question": "WHODrug Global is the international reference for identifying medicinal products in PV and uses the Anatomical Therapeutic Chemical (ATC) classification system.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "WHODrug Global, maintained by the Uppsala Monitoring Centre (UMC), is the reference drug dictionary for pharmacovigilance. It uses the WHO ATC classification to categorize medicinal substances by therapeutic/pharmacological/chemical properties."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-03-06",
+      "title": "Communication and Stakeholder Engagement",
+      "description": "CPA-6 — Regulatory submissions (PSURs/PBRERs), healthcare professional communication, patient engagement, and cross-functional collaboration. Covers Competencies 13 (Communication), 14 (Documentation), 15 (Continuous Learning), and 10 (Benefit-Risk) mapped to EPAs 3, 6, and 8.",
+      "bloomLevel": "Analyze",
+      "passingScore": 80,
+      "estimatedDuration": "65 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-03-06-a01",
+          "title": "PSUR/PBRER Structure and Regulatory Requirements",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-03-06-a02",
+          "title": "PBRER Section Analysis Workshop",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-03-06-a03",
+          "title": "Dear Healthcare Provider Letter Drafting Exercise",
+          "type": "case-study",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-03-06-a04",
+          "title": "Communication and Stakeholder Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-03-06-q01",
+                "type": "multiple-choice",
+                "question": "The Periodic Benefit-Risk Evaluation Report (PBRER), as defined in ICH E2C(R2), replaced which previous periodic reporting format?",
+                "options": [
+                  "The Periodic Safety Update Report (PSUR) as defined in ICH E2C(R1)",
+                  "The Development Safety Update Report (DSUR) as defined in ICH E2F",
+                  "The Annual Safety Report defined in FDA 21 CFR 312.32",
+                  "The Risk Management Plan Summary Report per GVP Module V"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "ICH E2C(R2) superseded E2C(R1) by introducing the PBRER format, which added a formal benefit-risk evaluation to the periodic safety update, replacing the purely safety-focused PSUR framework."
+              },
+              {
+                "id": "pv-ed-03-06-q02",
+                "type": "multiple-choice",
+                "question": "Which of the following is a mandatory section of the PBRER per ICH E2C(R2)?",
+                "options": [
+                  "Integrated Benefit-Risk Analysis for Approved Indications",
+                  "Marketing performance metrics and sales volume data",
+                  "Competitor safety profile comparison tables",
+                  "Patient-reported outcome questionnaire results"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "The Integrated Benefit-Risk Analysis for Approved Indications is a core required section of the PBRER. It synthesizes the benefit and risk evidence to support an updated benefit-risk evaluation at each reporting interval."
+              },
+              {
+                "id": "pv-ed-03-06-q03",
+                "type": "true-false",
+                "question": "Direct Healthcare Professional Communications (DHPCs) require prior approval or notification to the relevant competent authority before distribution in the EU.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Per GVP Module XV, DHPCs in the EU must be agreed upon with the relevant competent authority (national or EMA via PRAC) before dissemination. The content, target audience, and timing must be approved to ensure consistent, accurate safety communication."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-03-07",
+      "title": "Research and Development",
+      "description": "CPA-7 — Post-authorization safety studies (PASS), epidemiological study design, literature monitoring, and contribution to the evidence base. Covers Competencies 5 (Literature Monitoring), 9 (Epidemiological Methods), 8 (Signal Detection), and 15 (Continuous Learning) mapped to EPAs 4 and 5.",
+      "bloomLevel": "Evaluate",
+      "passingScore": 85,
+      "estimatedDuration": "70 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-03-07-a01",
+          "title": "PASS Design and GVP Module VIII Requirements",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-03-07-a02",
+          "title": "Epidemiological Study Design Selector",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-03-07-a03",
+          "title": "PASS Protocol Critique: Evaluating a Published Study",
+          "type": "case-study",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-03-07-a04",
+          "title": "Research and Development Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-03-07-q01",
+                "type": "multiple-choice",
+                "question": "Under GVP Module VIII, a Post-Authorization Safety Study (PASS) initiated voluntarily by an MAH must meet which requirement?",
+                "options": [
+                  "The study protocol must be submitted to the PRAC before study initiation, and the final study report must be submitted within 12 months of data collection end",
+                  "Only the final report needs to be submitted to the competent authority upon study completion",
+                  "No regulatory submission is required for voluntary studies not imposed as a condition of the marketing authorization",
+                  "The study must be registered in ClinicalTrials.gov and published in a peer-reviewed journal"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Per GVP Module VIII, even voluntarily-initiated non-interventional PASS must have protocols submitted to PRAC, and final study reports submitted within 12 months of data collection end. This ensures regulatory oversight of all post-authorization safety research."
+              },
+              {
+                "id": "pv-ed-03-07-q02",
+                "type": "multiple-choice",
+                "question": "Which epidemiological study design is most appropriate for detecting rare adverse events that require long observation periods?",
+                "options": [
+                  "Case-control study — efficiently studies rare outcomes by comparing cases to matched controls",
+                  "Randomized controlled trial — provides the strongest level of evidence",
+                  "Cross-sectional survey — captures prevalence at a single time point",
+                  "Ecological study — uses aggregate population-level data"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Case-control studies are optimal for rare outcomes because they start with identified cases and work backward, making them far more efficient than cohort studies or RCTs for rare events. Cohort studies are better for common outcomes with known exposures."
+              },
+              {
+                "id": "pv-ed-03-07-q03",
+                "type": "true-false",
+                "question": "GVP Module VI requires MAHs to monitor worldwide medical literature for ICSRs, including monitoring a minimum list of reference databases specified by the EMA.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "GVP Module VI mandates literature monitoring using a specified minimum list of databases (including at minimum widely used reference databases like Embase/MEDLINE). ICSRs identified in literature must be processed according to the same timelines as spontaneous reports."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-03-08",
+      "title": "AI-Enhanced Pharmacovigilance",
+      "description": "CPA-8 — Artificial intelligence and machine learning applications in PV: automated case processing, NLP-driven signal detection, predictive safety analytics, and governance of AI/ML tools. Integrates all competencies with AI literacy mapped to EPAs 10, 11, and 12.",
+      "bloomLevel": "Create",
+      "passingScore": 85,
+      "estimatedDuration": "75 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-03-08-a01",
+          "title": "AI/ML Applications Across the PV Lifecycle",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-03-08-a02",
+          "title": "NLP Pipeline Design for ICSR Processing",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-03-08-a03",
+          "title": "AI Governance Framework Design for PV Operations",
+          "type": "case-study",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-03-08-a04",
+          "title": "AI-Enhanced PV Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-03-08-q01",
+                "type": "multiple-choice",
+                "question": "When implementing NLP for automated ICSR processing, which step is MOST critical to ensure regulatory compliance?",
+                "options": [
+                  "Human-in-the-loop validation where a qualified safety professional reviews and confirms AI-extracted data before regulatory submission",
+                  "Using the largest available language model to maximize extraction accuracy",
+                  "Processing all reports through the AI system without exception to ensure consistency",
+                  "Training the model exclusively on the company's internal case database"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Regulatory agencies (EMA, FDA) require that MAHs maintain responsibility for the quality and completeness of safety data. AI/ML tools can assist but human oversight by qualified personnel is mandatory, especially for serious/unexpected cases requiring expedited reporting."
+              },
+              {
+                "id": "pv-ed-03-08-q02",
+                "type": "multiple-choice",
+                "question": "Which of the following represents a valid application of predictive analytics in pharmacovigilance?",
+                "options": [
+                  "Using time-series models on spontaneous reporting data to forecast emerging safety signals before they cross statistical thresholds",
+                  "Replacing causality assessment with automated probability scores to eliminate human bias",
+                  "Using AI to override regulatory reporting decisions when the model disagrees with the safety physician",
+                  "Eliminating follow-up activities for cases that the AI model classifies as non-serious"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Predictive analytics can legitimately augment signal detection by identifying reporting trends and emerging patterns before they reach traditional statistical thresholds. However, AI cannot replace regulatory obligations, causality assessment by qualified professionals, or mandated follow-up procedures."
+              },
+              {
+                "id": "pv-ed-03-08-q03",
+                "type": "true-false",
+                "question": "The EU AI Act classifies AI systems used in pharmacovigilance safety decision-making as high-risk, requiring conformity assessment, transparency obligations, and human oversight provisions.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Under the EU AI Act (Regulation 2024/1689), AI systems used in healthcare safety contexts — including pharmacovigilance decision support — are classified as high-risk under Annex III. This mandates risk management systems, data governance, human oversight, and conformity assessment before deployment."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

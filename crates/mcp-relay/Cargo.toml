@@ -1,0 +1,15 @@
+[package]
+name = "mcp-relay"
+version = "0.1.0"
+edition = "2024"
+description = "Stdio-to-Unix-socket relay for MCP hot-reload. Bridges Claude Code (stdio) to nexcore-mcp daemon (socket)."
+
+[[bin]]
+name = "mcp-relay"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { workspace = true, features = ["full"] }
+
+[lints]
+workspace = true

@@ -1,0 +1,8 @@
+{
+  "epoch": 6,
+  "batch": 0,
+  "global_step": 36,
+  "loss": 1.634076,
+  "accuracy": 0.2620552,
+  "learning_rate": 0.0001
+}

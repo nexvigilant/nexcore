@@ -1,0 +1,755 @@
+{
+  "$schema": "./pathway.schema.json",
+  "id": "pv-ed-01",
+  "title": "PV Competency Assessment & Development",
+  "description": "Comprehensive competency assessment across all 15 PV domains with developmental progression from L1 (Novice) through L5++ (Transformational). Covers foundational knowledge, process methodology, assessment strategy, and integration/communication competencies aligned to the NexVigilant Competency Framework.",
+  "domain": "pharmacovigilance",
+  "componentCount": 41,
+  "estimatedDuration": "12 hours",
+  "stages": [
+    {
+      "id": "pv-ed-01-01",
+      "title": "Foundational Domains: PV Foundations, Clinical ADR Analysis & ADR Recognition",
+      "description": "Assess and develop competency in Domains 1-3: understanding PV principles in the AI era, clinical analysis of adverse drug reactions, and systematic ADR recognition including AI-augmented approaches.",
+      "bloomLevel": "Remember",
+      "passingScore": 70,
+      "estimatedDuration": "90 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-01-01-a01",
+          "title": "PV Foundations Self-Assessment",
+          "type": "reading",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-01-01-a02",
+          "title": "ADR Classification Interactive Exercise",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-01-01-a03",
+          "title": "Foundational Domains Knowledge Check",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-01-01-q01",
+                "type": "multiple-choice",
+                "question": "According to ICH E2A, which of the following best defines an adverse drug reaction (ADR) in the pre-approval clinical experience context?",
+                "options": [
+                  "A response to a drug which is noxious and unintended and which occurs at doses normally used in man",
+                  "Any unfavorable medical occurrence in a patient administered a pharmaceutical product",
+                  "All noxious and unintended responses to a medicinal product related to any dose",
+                  "A harmful and unintended response that requires dose modification or discontinuation"
+                ],
+                "correctAnswer": 2,
+                "points": 2,
+                "explanation": "ICH E2A defines an ADR in the pre-approval context as 'all noxious and unintended responses to a medicinal product related to any dose,' which differs from the WHO definition used post-approval. This broader definition captures reactions at all dose levels including overdose."
+              },
+              {
+                "id": "pv-ed-01-01-q02",
+                "type": "true-false",
+                "question": "In pharmacovigilance, the terms 'adverse event' and 'adverse drug reaction' are interchangeable because both describe drug-related harm.",
+                "correctAnswer": false,
+                "points": 1,
+                "explanation": "An adverse event (AE) is any untoward medical occurrence associated with drug use but without necessarily having a causal relationship. An ADR implies at least a reasonable possibility of a causal relationship. All ADRs are AEs, but not all AEs are ADRs."
+              },
+              {
+                "id": "pv-ed-01-01-q03",
+                "type": "multiple-choice",
+                "question": "Which Rawlins-Thompson classification type describes dose-dependent, pharmacologically predictable adverse reactions?",
+                "options": [
+                  "Type A (Augmented)",
+                  "Type B (Bizarre)",
+                  "Type C (Chronic)",
+                  "Type D (Delayed)"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Type A reactions are augmented pharmacological effects that are dose-dependent and predictable from the drug's mechanism of action. They account for approximately 80% of all ADRs and are generally manageable with dose adjustment."
+              },
+              {
+                "id": "pv-ed-01-01-q04",
+                "type": "multiple-choice",
+                "question": "What is the primary role of AI/NLP tools in ADR recognition within the current PV landscape?",
+                "options": [
+                  "Replacing human medical review of individual case safety reports",
+                  "Automating MedDRA coding and narrative extraction from unstructured text",
+                  "Eliminating the need for pharmacovigilance professionals in signal detection",
+                  "Generating regulatory submissions without human oversight"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "AI/NLP tools currently augment PV processes by automating extraction and coding tasks from unstructured text sources. They do not replace human medical review, which remains essential for clinical judgment, causality assessment, and regulatory decision-making."
+              }
+            ]
+          }
+        },
+        {
+          "id": "pv-ed-01-01-a04",
+          "title": "Competency Gap Mapping: Domains 1-3",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-01-01-a05",
+          "title": "Development Level Self-Placement (L1-L5++)",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-01-02",
+      "title": "Process Domains I: ICSR Processing & Clinical Trial Safety",
+      "description": "Assess competency in Domains 4-5: ICSR lifecycle management from intake through submission, and clinical trial safety processes including SUSAR reporting and DSUR preparation.",
+      "bloomLevel": "Understand",
+      "passingScore": 72,
+      "estimatedDuration": "90 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-01-02-a01",
+          "title": "ICSR Processing Workflow Deep Dive",
+          "type": "reading",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-01-02-a02",
+          "title": "Clinical Trial Safety Case Simulation",
+          "type": "interactive",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-01-02-a03",
+          "title": "ICSR & Clinical Trial Safety Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-01-02-q01",
+                "type": "multiple-choice",
+                "question": "Under ICH E2B(R3), what are the four minimum criteria required for a valid Individual Case Safety Report (ICSR)?",
+                "options": [
+                  "Patient, reporter, suspect drug, adverse event/reaction",
+                  "Patient demographics, reporter credentials, drug batch number, MedDRA code",
+                  "Patient name, physician reporter, marketed drug, serious adverse event",
+                  "Patient age, healthcare professional reporter, approved drug, hospitalization"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "The four minimum criteria for a valid ICSR are: an identifiable patient, an identifiable reporter, a suspect medicinal product, and an adverse event or reaction. These are internationally harmonized requirements under ICH E2B(R3) and apply regardless of seriousness or expectedness."
+              },
+              {
+                "id": "pv-ed-01-02-q02",
+                "type": "true-false",
+                "question": "A Suspected Unexpected Serious Adverse Reaction (SUSAR) must be reported to regulatory authorities within 15 calendar days if fatal or life-threatening, and within 7 calendar days for all other serious cases.",
+                "correctAnswer": false,
+                "points": 1,
+                "explanation": "The timeline is reversed: fatal or life-threatening SUSARs require initial reporting within 7 calendar days (with follow-up within 8 additional days), while all other serious SUSARs must be reported within 15 calendar days. These expedited timelines are defined in ICH E2A and regional regulations."
+              },
+              {
+                "id": "pv-ed-01-02-q03",
+                "type": "multiple-choice",
+                "question": "Which document provides a periodic comprehensive safety analysis of a drug's clinical trial data and is submitted annually to regulatory authorities?",
+                "options": [
+                  "Periodic Benefit-Risk Evaluation Report (PBRER)",
+                  "Development Safety Update Report (DSUR)",
+                  "Risk Management Plan (RMP)",
+                  "Investigator's Brochure (IB)"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "The DSUR (ICH E2F) is an annual report that provides a comprehensive safety evaluation of a drug under clinical investigation. The PBRER is the post-marketing equivalent. The RMP describes risk minimization strategies, and the IB compiles clinical/non-clinical data for investigators."
+              },
+              {
+                "id": "pv-ed-01-02-q04",
+                "type": "multiple-choice",
+                "question": "When processing an ICSR, at what stage is MedDRA coding typically applied?",
+                "options": [
+                  "During initial triage before data entry",
+                  "After data entry during medical review and assessment",
+                  "Only at the time of regulatory submission",
+                  "During follow-up when additional information is received"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "MedDRA coding of adverse events is performed after initial data entry, during the medical review and assessment phase. This ensures the verbatim terms from reporters are accurately mapped to standardized terminology at the appropriate level (PT, LLT) for consistent analysis and regulatory reporting."
+              }
+            ]
+          }
+        },
+        {
+          "id": "pv-ed-01-02-a04",
+          "title": "ICSR Data Quality Audit Exercise",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-01-02-a05",
+          "title": "Behavioral Anchors: Process Compliance at Each Level",
+          "type": "reading",
+          "estimatedDuration": "10 minutes"
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-01-03",
+      "title": "Process Domains II: Medication Errors, Reporting Systems & Signal Detection",
+      "description": "Assess competency in Domains 6-8: medication error frameworks, global spontaneous reporting systems, and statistical/qualitative signal detection methodologies.",
+      "bloomLevel": "Apply",
+      "passingScore": 74,
+      "estimatedDuration": "90 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-01-03-a01",
+          "title": "Medication Error Taxonomy & Reporting Frameworks",
+          "type": "reading",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-01-03-a02",
+          "title": "Signal Detection Method Comparison Lab",
+          "type": "interactive",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-01-03-a03",
+          "title": "Process Domains II Knowledge Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-01-03-q01",
+                "type": "multiple-choice",
+                "question": "In the context of pharmacovigilance, which disproportionality measure uses a Bayesian approach with a prior distribution based on all drug-event combinations in the database?",
+                "options": [
+                  "Proportional Reporting Ratio (PRR)",
+                  "Reporting Odds Ratio (ROR)",
+                  "Empirical Bayes Geometric Mean (EBGM)",
+                  "Chi-squared statistic"
+                ],
+                "correctAnswer": 2,
+                "points": 2,
+                "explanation": "EBGM (Multi-item Gamma Poisson Shrinker) is a Bayesian method that uses prior information from all drug-event combinations to shrink estimates toward the overall background rate. This makes it more robust than frequentist measures (PRR, ROR) for rare events or sparse data, as used by FDA in FAERS analysis."
+              },
+              {
+                "id": "pv-ed-01-03-q02",
+                "type": "true-false",
+                "question": "The WHO Programme for International Drug Monitoring (VigiBase) uses the Information Component (IC) as its primary disproportionality measure for signal detection.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "VigiBase, maintained by the Uppsala Monitoring Centre (UMC), uses the Bayesian Confidence Propagation Neural Network (BCPNN) which calculates the Information Component (IC). The IC025 (lower 95% credibility interval) > 0 is the standard threshold for a signal of disproportionate reporting."
+              },
+              {
+                "id": "pv-ed-01-03-q03",
+                "type": "multiple-choice",
+                "question": "Under the NCC MERP taxonomy, which category describes a medication error that reached the patient and required intervention to preclude harm?",
+                "options": [
+                  "Category C — error reached patient, no harm",
+                  "Category D — error reached patient, required monitoring",
+                  "Category E — error contributed to temporary harm requiring intervention",
+                  "Category F — error contributed to temporary harm requiring hospitalization"
+                ],
+                "correctAnswer": 2,
+                "points": 2,
+                "explanation": "NCC MERP Category E describes errors that reached the patient and contributed to or resulted in temporary harm requiring intervention. Categories A-D involve no harm (from potential error to monitoring), while F-I escalate from hospitalization to death."
+              },
+              {
+                "id": "pv-ed-01-03-q04",
+                "type": "multiple-choice",
+                "question": "Which global spontaneous reporting system is operated by the FDA and contains over 20 million adverse event reports?",
+                "options": [
+                  "EudraVigilance (EMA)",
+                  "FAERS (FDA Adverse Event Reporting System)",
+                  "VigiBase (WHO/UMC)",
+                  "Yellow Card Scheme (MHRA)"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "FAERS is the FDA's post-marketing safety surveillance database containing reports from healthcare professionals, consumers, and manufacturers. It is publicly accessible via openFDA and is one of the largest AE databases globally, critical for US signal detection activities."
+              }
+            ]
+          }
+        },
+        {
+          "id": "pv-ed-01-03-a04",
+          "title": "Reporting System Navigation Exercise",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-01-03-a05",
+          "title": "Signal Detection Threshold Application",
+          "type": "interactive",
+          "estimatedDuration": "10 minutes"
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-01-04",
+      "title": "Process Domain III: Post-Authorization Safety Studies",
+      "description": "Assess competency in Domain 9: design, conduct, and evaluation of post-authorization safety studies (PASS) including both imposed and voluntary studies under regulatory frameworks.",
+      "bloomLevel": "Apply",
+      "passingScore": 76,
+      "estimatedDuration": "80 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-01-04-a01",
+          "title": "PASS Design & Regulatory Requirements",
+          "type": "reading",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-01-04-a02",
+          "title": "PASS Protocol Development Workshop",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-01-04-a03",
+          "title": "Post-Authorization Study Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-01-04-q01",
+                "type": "multiple-choice",
+                "question": "Under EU legislation, which committee is responsible for evaluating PASS protocols and results for studies imposed as a condition of marketing authorization?",
+                "options": [
+                  "Committee for Medicinal Products for Human Use (CHMP)",
+                  "Pharmacovigilance Risk Assessment Committee (PRAC)",
+                  "Committee for Advanced Therapies (CAT)",
+                  "Coordination Group for Mutual Recognition (CMDh)"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "PRAC is the EMA committee responsible for assessing all aspects of risk management of medicines, including evaluation of PASS protocols and study results. For imposed PASS, the protocol must be submitted to PRAC within 12 months of MA approval."
+              },
+              {
+                "id": "pv-ed-01-04-q02",
+                "type": "true-false",
+                "question": "A post-authorization efficacy study (PAES) and a post-authorization safety study (PASS) serve the same regulatory purpose and are governed by identical guidelines.",
+                "correctAnswer": false,
+                "points": 1,
+                "explanation": "PASS and PAES serve different purposes. PASS focuses on identifying, characterizing, or quantifying safety risks and evaluating risk minimization measures. PAES addresses residual uncertainty about efficacy. While both may be imposed as conditions of authorization, they have distinct protocols, endpoints, and evaluation criteria."
+              },
+              {
+                "id": "pv-ed-01-04-q03",
+                "type": "multiple-choice",
+                "question": "Which study design is most appropriate for a PASS aimed at estimating the incidence rate of a rare adverse reaction in a real-world population?",
+                "options": [
+                  "Randomized controlled trial",
+                  "Case-control study nested within a cohort",
+                  "Prospective cohort study using electronic health records",
+                  "Cross-sectional survey of healthcare professionals"
+                ],
+                "correctAnswer": 2,
+                "points": 2,
+                "explanation": "A prospective cohort study using real-world data (e.g., electronic health records, registries) is ideal for estimating incidence rates of adverse reactions in routine clinical practice. It captures the natural history of drug exposure and outcomes without the selection bias of clinical trials."
+              }
+            ]
+          }
+        },
+        {
+          "id": "pv-ed-01-04-a04",
+          "title": "PASS vs PAES Decision Framework",
+          "type": "interactive",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "pv-ed-01-04-a05",
+          "title": "Study Design Selection Tool",
+          "type": "interactive",
+          "estimatedDuration": "10 minutes"
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-01-05",
+      "title": "Assessment & Strategy: Benefit-Risk & Risk Management",
+      "description": "Assess competency in Domains 10-11: structured benefit-risk assessment frameworks and risk management planning including RMP development and REMS programs.",
+      "bloomLevel": "Analyze",
+      "passingScore": 78,
+      "estimatedDuration": "90 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-01-05-a01",
+          "title": "Benefit-Risk Assessment Frameworks: PrOACT-URL & Effects Table",
+          "type": "reading",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-01-05-a02",
+          "title": "Risk Management Plan Construction Lab",
+          "type": "interactive",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-01-05-a03",
+          "title": "Benefit-Risk & Risk Management Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-01-05-q01",
+                "type": "multiple-choice",
+                "question": "The EMA's benefit-risk assessment framework is based on which structured decision-making approach?",
+                "options": [
+                  "PrOACT-URL (Problem, Objectives, Alternatives, Consequences, Trade-offs, Uncertainty, Risk tolerance, Linked decisions)",
+                  "BRAT (Benefit-Risk Action Team) framework",
+                  "MCDA (Multi-Criteria Decision Analysis)",
+                  "GRADE (Grading of Recommendations, Assessment, Development and Evaluation)"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "The EMA adopted the PrOACT-URL framework for structured benefit-risk assessment. It provides a systematic approach to define the problem, set objectives, identify alternatives, evaluate consequences, make trade-offs, assess uncertainty, consider risk tolerance, and link decisions."
+              },
+              {
+                "id": "pv-ed-01-05-q02",
+                "type": "multiple-choice",
+                "question": "In an EU Risk Management Plan (RMP), which module contains the summary of the safety specification including important identified risks, potential risks, and missing information?",
+                "options": [
+                  "Module SI — Epidemiology of the indication",
+                  "Module SVIII — Summary of the safety concerns",
+                  "Module SII — Non-clinical part of the safety specification",
+                  "Module SIII — Clinical trial exposure"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "Module SVIII of the Safety Specification in the EU-RMP (GVP Module V) summarizes the safety concerns categorized as important identified risks, important potential risks, and missing information. This summary drives the pharmacovigilance plan and risk minimization activities."
+              },
+              {
+                "id": "pv-ed-01-05-q03",
+                "type": "true-false",
+                "question": "A Risk Evaluation and Mitigation Strategy (REMS) is an EU regulatory requirement equivalent to the European Risk Management Plan.",
+                "correctAnswer": false,
+                "points": 1,
+                "explanation": "REMS is a US FDA regulatory requirement (21 CFR 314.520), not an EU requirement. While both REMS and EU-RMP aim to manage drug risks, they differ in structure, legal basis, and scope. REMS may include medication guides, communication plans, and Elements to Assure Safe Use (ETASU), while EU-RMPs follow GVP Module V structure."
+              },
+              {
+                "id": "pv-ed-01-05-q04",
+                "type": "multiple-choice",
+                "question": "Which of the following is NOT a standard component of the effects table used in structured benefit-risk assessment?",
+                "options": [
+                  "Favorable and unfavorable effects with their frequencies",
+                  "Quality of evidence assessment for each effect",
+                  "Cost-effectiveness ratios for each treatment alternative",
+                  "Importance ranking or weight for each effect"
+                ],
+                "correctAnswer": 2,
+                "points": 2,
+                "explanation": "The effects table in benefit-risk assessment includes favorable/unfavorable effects, their frequencies, quality of evidence, and importance rankings. Cost-effectiveness analysis is a separate health economic evaluation and is not part of the standard regulatory benefit-risk effects table."
+              }
+            ]
+          }
+        },
+        {
+          "id": "pv-ed-01-05-a04",
+          "title": "Effects Table Construction Exercise",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-01-05-a05",
+          "title": "RMP vs REMS Comparative Analysis",
+          "type": "reading",
+          "estimatedDuration": "10 minutes"
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-01-06",
+      "title": "Assessment & Strategy: Regulatory Compliance",
+      "description": "Assess competency in Domain 12: global regulatory compliance frameworks, GVP guidelines, CFR requirements, and evolving regulatory expectations for AI-enabled PV systems.",
+      "bloomLevel": "Analyze",
+      "passingScore": 80,
+      "estimatedDuration": "80 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-01-06-a01",
+          "title": "Global Regulatory Landscape: GVP, CFR & ICH Guidelines",
+          "type": "reading",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-01-06-a02",
+          "title": "Regulatory Gap Analysis Simulation",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-01-06-a03",
+          "title": "Regulatory Compliance Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-01-06-q01",
+                "type": "multiple-choice",
+                "question": "Which GVP module specifically addresses signal management including detection, validation, confirmation, analysis, prioritization, and assessment?",
+                "options": [
+                  "GVP Module V — Risk Management Systems",
+                  "GVP Module VII — Periodic Safety Update Report",
+                  "GVP Module IX — Signal Management",
+                  "GVP Module XVI — Risk Minimisation Measures"
+                ],
+                "correctAnswer": 2,
+                "points": 2,
+                "explanation": "GVP Module IX covers the complete signal management process from detection through assessment and recommendation for action. It defines a signal as 'information that arises from one or multiple sources which suggests a new potentially causal association, or a new aspect of a known association.'"
+              },
+              {
+                "id": "pv-ed-01-06-q02",
+                "type": "multiple-choice",
+                "question": "Under 21 CFR 314.80, what is the expedited reporting timeline for serious and unexpected adverse drug experiences from post-marketing sources?",
+                "options": [
+                  "7 calendar days",
+                  "15 calendar days",
+                  "30 calendar days",
+                  "90 calendar days"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "21 CFR 314.80(c)(1) requires manufacturers to report serious, unexpected adverse drug experiences as 15-day Alert Reports. If the event is fatal or life-threatening, an additional field alert is recommended. Periodic reports (non-serious/expected) follow quarterly/annual schedules."
+              },
+              {
+                "id": "pv-ed-01-06-q03",
+                "type": "true-false",
+                "question": "ICH E2C(R2) harmonizes the format and content of the Periodic Benefit-Risk Evaluation Report (PBRER), which replaced the Periodic Safety Update Report (PSUR) in the EU.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "ICH E2C(R2) established the PBRER as the harmonized format for periodic safety reporting. In the EU, the PBRER replaced the PSUR for centrally authorized products, providing a more comprehensive benefit-risk evaluation rather than just safety data compilation."
+              }
+            ]
+          }
+        },
+        {
+          "id": "pv-ed-01-06-a04",
+          "title": "GVP Module Navigation Exercise",
+          "type": "interactive",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "pv-ed-01-06-a05",
+          "title": "AI Regulatory Readiness Self-Assessment",
+          "type": "interactive",
+          "estimatedDuration": "10 minutes"
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-01-07",
+      "title": "Integration: Global PV, Public Health & Communication Excellence",
+      "description": "Assess competency in Domains 13-14: integrating PV into global public health initiatives and mastering stakeholder communication across regulatory, clinical, and patient audiences.",
+      "bloomLevel": "Evaluate",
+      "passingScore": 82,
+      "estimatedDuration": "90 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-01-07-a01",
+          "title": "Global PV & Public Health Integration Landscape",
+          "type": "reading",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-01-07-a02",
+          "title": "Stakeholder Communication Scenario Lab",
+          "type": "interactive",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-01-07-a03",
+          "title": "Integration & Communication Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-01-07-q01",
+                "type": "multiple-choice",
+                "question": "Which organization coordinates the WHO Programme for International Drug Monitoring and maintains VigiBase, the global ICSR database?",
+                "options": [
+                  "World Health Organization (WHO) headquarters in Geneva",
+                  "Uppsala Monitoring Centre (UMC) in Sweden",
+                  "European Medicines Agency (EMA) in Amsterdam",
+                  "Council for International Organizations of Medical Sciences (CIOMS)"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "The Uppsala Monitoring Centre (UMC) is the WHO Collaborating Centre that manages VigiBase and coordinates the WHO Programme for International Drug Monitoring. Over 170 countries participate, contributing ICSRs to VigiBase which contains over 30 million reports."
+              },
+              {
+                "id": "pv-ed-01-07-q02",
+                "type": "multiple-choice",
+                "question": "When communicating a newly identified safety signal to healthcare professionals via a Direct Healthcare Professional Communication (DHPC), which element is MOST critical?",
+                "options": [
+                  "Detailed statistical analysis of the disproportionality scores",
+                  "Clear actionable recommendations for clinical practice changes",
+                  "Complete regulatory history of the product",
+                  "Comprehensive literature review of similar drug class effects"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "DHPCs must prioritize clear, actionable recommendations that healthcare professionals can implement immediately. While scientific evidence supports the communication, the primary goal is enabling clinicians to take appropriate action to protect patients."
+              },
+              {
+                "id": "pv-ed-01-07-q03",
+                "type": "true-false",
+                "question": "The CIOMS Working Groups have produced harmonized guidance on topics including pharmacogenomics and drug safety, management of safety information from clinical trials, and vaccine pharmacovigilance.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "CIOMS has produced numerous working group reports addressing key PV topics. Notable outputs include CIOMS I (international reporting), CIOMS V (consumer reporting), CIOMS VIII (signal detection), and reports on pharmacogenomics, clinical trial safety management, and vaccine pharmacovigilance."
+              },
+              {
+                "id": "pv-ed-01-07-q04",
+                "type": "multiple-choice",
+                "question": "In the context of risk communication, which framework is recommended for structuring patient-facing safety communications to ensure comprehension?",
+                "options": [
+                  "Use raw frequencies (e.g., 3 in 1,000) rather than percentages alone",
+                  "Emphasize relative risk reductions to convey benefit clearly",
+                  "Use technical MedDRA Preferred Terms for precision",
+                  "Present only the most serious risks to avoid information overload"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Health literacy research consistently shows that natural frequencies (e.g., 3 in 1,000 patients) are better understood by patients than percentages or relative measures. This approach, recommended by Gigerenzer and others, reduces denominator neglect and supports informed decision-making."
+              }
+            ]
+          }
+        },
+        {
+          "id": "pv-ed-01-07-a04",
+          "title": "DHPC Drafting Workshop",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-01-07-a05",
+          "title": "Cross-Cultural Communication Considerations",
+          "type": "reading",
+          "estimatedDuration": "10 minutes"
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-01-08",
+      "title": "Capstone: Information Sources, AI Integration & Individual Development Planning",
+      "description": "Assess competency in Domain 15 (Information Sources) and synthesize all 15 domains into an individualized development plan. Integrate AI-augmented competency enhancement strategies and create an actionable L1-to-L5++ progression roadmap.",
+      "bloomLevel": "Create",
+      "passingScore": 85,
+      "estimatedDuration": "100 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-01-08-a01",
+          "title": "PV Information Sources & Literature Evaluation",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-01-08-a02",
+          "title": "AI-Augmented Competency Enhancement Strategies",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-01-08-a03",
+          "title": "Capstone Comprehensive Assessment",
+          "type": "quiz",
+          "estimatedDuration": "25 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-01-08-q01",
+                "type": "multiple-choice",
+                "question": "Which database provides structured product labeling information including prescribing information, medication guides, and REMS documents for drugs approved in the United States?",
+                "options": [
+                  "PubMed/MEDLINE",
+                  "DailyMed (National Library of Medicine)",
+                  "Drugs@FDA",
+                  "ClinicalTrials.gov"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "DailyMed, maintained by the NLM, provides up-to-date labeling information submitted to the FDA by manufacturers. It includes SPL (Structured Product Labeling) data, medication guides, patient package inserts, and REMS documents, making it the primary source for current US drug labeling."
+              },
+              {
+                "id": "pv-ed-01-08-q02",
+                "type": "multiple-choice",
+                "question": "At the L5++ (Transformational) competency level, a PV professional is expected to demonstrate which distinguishing capability?",
+                "options": [
+                  "Independently perform signal detection using standard disproportionality methods",
+                  "Supervise junior staff in ICSR processing and quality review",
+                  "Drive paradigm shifts in the discipline through novel frameworks, methodologies, or policy influence",
+                  "Manage a regional pharmacovigilance team and ensure compliance with local regulations"
+                ],
+                "correctAnswer": 2,
+                "points": 2,
+                "explanation": "L5++ (Transformational) transcends expert-level practice. It requires driving paradigm shifts through innovation — creating new methodologies, influencing global policy, integrating novel technologies (like AI), and transforming how the discipline operates. This goes beyond managing or executing to fundamentally advancing the field."
+              },
+              {
+                "id": "pv-ed-01-08-q03",
+                "type": "true-false",
+                "question": "The Dreyfus model of skill acquisition, which underpins the L1-L5 competency framework, posits that expertise develops through qualitative shifts in perception and decision-making, not merely through accumulation of factual knowledge.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "The Dreyfus brothers (Stuart and Hubert) described expertise development as qualitative shifts: from rule-following (novice) through pattern recognition (competent) to intuitive holistic grasp (expert). Each level represents a fundamentally different way of perceiving and responding to situations, not just more knowledge."
+              },
+              {
+                "id": "pv-ed-01-08-q04",
+                "type": "multiple-choice",
+                "question": "When developing an individual competency development plan, which approach best ensures measurable progression across the L1-L5++ framework?",
+                "options": [
+                  "Assign the same learning activities to all professionals regardless of current level",
+                  "Define behavioral anchors for each level within each domain and assess against them periodically",
+                  "Focus exclusively on knowledge-based assessments through written examinations",
+                  "Rely solely on supervisor observation without structured rubrics"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "Behavioral anchors — specific, observable behaviors that characterize each competency level within each domain — provide the most reliable and valid basis for competency assessment. They enable consistent evaluation, identify specific gaps, and create targeted development pathways."
+              },
+              {
+                "id": "pv-ed-01-08-q05",
+                "type": "multiple-choice",
+                "question": "Which combination of assessment methods provides the most comprehensive evaluation of PV competency across cognitive, behavioral, and attitudinal dimensions?",
+                "options": [
+                  "Written exam + portfolio review + workplace-based assessment + 360-degree feedback",
+                  "Written exam + oral exam + case study",
+                  "Online quiz + supervisor rating",
+                  "Self-assessment + peer review"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "A multi-method approach combining knowledge testing (written exam), evidence of practice (portfolio), direct observation in context (workplace-based assessment), and multi-perspective feedback (360-degree) covers Miller's pyramid from 'knows' through 'does' and provides the most comprehensive competency picture."
+              }
+            ]
+          }
+        },
+        {
+          "id": "pv-ed-01-08-a04",
+          "title": "Individual Development Plan Builder",
+          "type": "interactive",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-01-08-a05",
+          "title": "Competency Dashboard & Progress Tracker Setup",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-01-08-a06",
+          "title": "AI Integration Readiness Assessment",
+          "type": "interactive",
+          "estimatedDuration": "10 minutes"
+        }
+      ]
+    }
+  ]
+}

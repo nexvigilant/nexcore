@@ -1,0 +1,10 @@
+// Hello World in Prima
+// File: hello.σ
+//
+// This program demonstrates basic Prima syntax.
+// All values ground to the root constants {0, 1}.
+
+println("Hello, Prima!")
+
+// The string "Hello, Prima!" has composition: σ + N
+// Tier: T2-P (2 primitives)

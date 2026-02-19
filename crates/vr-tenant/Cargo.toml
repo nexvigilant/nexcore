@@ -1,0 +1,23 @@
+
+[package]
+name = "vr-tenant"
+description = "PRPaaS tenant lifecycle — provisioning, tiers, teams, feature gating"
+version = "1.0.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+rust-version = "1.85"
+
+[dependencies]
+vr-core = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+uuid = { workspace = true, features = ["v4", "serde"] }
+chrono = { workspace = true, features = ["serde"] }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+
+[lints]
+workspace = true

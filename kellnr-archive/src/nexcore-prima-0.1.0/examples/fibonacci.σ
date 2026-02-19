@@ -1,0 +1,21 @@
+// Fibonacci in Prima
+// File: fibonacci.σ
+//
+// Demonstrates recursion (ρ) grounded to primitives.
+
+fn fib(n: N) → N {
+    if n κ< 2 {
+        n
+    } else {
+        fib(n - 1) + fib(n - 2)
+    }
+}
+
+let result = fib(10)
+println("fib(10) =", result)
+println("Tier:", result.tier())
+println("Composition:", result.composition())
+
+// fib(10) = 55
+// Tier: T1 (single primitive: N)
+// Composition: [N]

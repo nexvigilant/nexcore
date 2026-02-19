@@ -1,0 +1,23 @@
+
+[package]
+name = "stem-bio"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Biological system primitives: endocrine, immune, neural"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nexvigilant/stem"
+keywords = ["biology", "endocrine", "immune", "primitives"]
+categories = ["science"]
+publish = true
+
+[dependencies]
+stem-core = { workspace = true }
+nexcore-hormones = { workspace = true }
+nexcore-lex-primitiva = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+
+[dev-dependencies]
+
+[lints]
+workspace = true

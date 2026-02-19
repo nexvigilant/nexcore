@@ -1,0 +1,54 @@
+[workspace]
+
+[package]
+name = "nexcore-primitives"
+version = "1.0.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+repository = "https://github.com/nexvigilant/nexcore"
+rust-version = "1.85"
+description = "Universal computational primitives (Chemistry, Physics, Math) for the NexVigilant Core ecosystem"
+
+[dependencies]
+nexcore-constants = { version = "1.0.0", path = "../nexcore-constants", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+stem-math = { version = "0.1.0", path = "../stem-math", registry = "nexcore" }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = { version = "1.0.120" }
+thiserror = { version = "1.0.61" }
+chrono = { version = "0.4.38", features = ["serde"] }
+parking_lot = "0.12"
+anyhow = { version = "1.0.86" }
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "quantum_bench"
+harness = false
+
+[lints.rust]
+async_fn_in_trait = "allow"
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+unused_mut = "allow"
+unused_assignments = "allow"
+unused_must_use = "allow"
+
+[lints.clippy]
+all = "allow"
+pedantic = "allow"
+nursery = "allow"
+cargo = "allow"
+map_unwrap_or = "allow"
+manual_map = "allow"
+option_map_or_none = "allow"
+derivable_impls = "allow"
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"
+todo = "allow"
+unimplemented = "allow"
+unreachable = "allow"

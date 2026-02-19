@@ -1,0 +1,21 @@
+[package]
+name = "vr-compliance"
+description = "PRPaaS compliance engine — GDPR, SOC 2, export controls, and audit trails"
+version = "1.0.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+rust-version = "1.85"
+
+[dependencies]
+vr-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+thiserror = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
+
+[lints]
+workspace = true

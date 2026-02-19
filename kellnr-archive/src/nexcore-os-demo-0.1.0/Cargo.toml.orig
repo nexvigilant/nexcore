@@ -1,0 +1,44 @@
+[workspace]
+
+[package]
+name = "nexcore-os-demo"
+version = "0.1.0"
+edition = "2024"
+description = "NexCore OS init process — boots as PID 1 on bare Linux"
+license = "Proprietary"
+
+[[bin]]
+name = "nexcore-init"
+path = "src/main.rs"
+
+[dependencies]
+nexcore-os = { version = "0.1.0", path = "../nexcore-os", registry = "nexcore" }
+nexcore-pal = { version = "0.1.0", path = "../nexcore-pal", registry = "nexcore" }
+nexcore-pal-linux = { version = "0.1.0", path = "../nexcore-pal-linux", registry = "nexcore" }
+nix = { version = "0.29", features = ["signal", "process", "fs", "mount", "reboot", "hostname"] }
+chrono = { version = "0.4.38", features = ["serde"] }
+
+[lints.rust]
+async_fn_in_trait = "allow"
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+unused_mut = "allow"
+unused_assignments = "allow"
+unused_must_use = "allow"
+
+[lints.clippy]
+all = "allow"
+pedantic = "allow"
+nursery = "allow"
+cargo = "allow"
+map_unwrap_or = "allow"
+manual_map = "allow"
+option_map_or_none = "allow"
+derivable_impls = "allow"
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"
+todo = "allow"
+unimplemented = "allow"
+unreachable = "allow"

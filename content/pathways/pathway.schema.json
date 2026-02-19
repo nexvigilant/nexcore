@@ -1,0 +1,145 @@
+{
+  "id": "schema-00",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StaticPathway",
+  "description": "Academy learning pathway content structure. Validated by forge_validate (27 rules: R1-R8 schema, R9-R14 accuracy, R15-R19 conventions, R20-R23 progression, R24-R27 experiential).",
+  "type": "object",
+  "required": ["id", "title", "description", "stages"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z]+-\\d{2}(-\\d{2})?(-[a-z-]+)?$",
+      "description": "Pathway identifier (e.g., 'tov-01', 'pv-03-signal-detection')"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable pathway title"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Pathway description (50-500 characters recommended)"
+    },
+    "domain": {
+      "type": "string",
+      "description": "Domain identifier for domain-specific validation (e.g., 'vigilance')"
+    },
+    "componentCount": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Total number of activities across all stages. Must match actual count."
+    },
+    "estimatedDuration": {
+      "type": "string",
+      "description": "Total estimated duration (e.g., '12 hours', '45 minutes')"
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "description"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stage identifier (e.g., 'tov-01-01')"
+          },
+          "title": {
+            "type": "string",
+            "description": "Stage title"
+          },
+          "description": {
+            "type": "string",
+            "description": "Stage description including axiom/concept references"
+          },
+          "bloomLevel": {
+            "type": "string",
+            "enum": ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"],
+            "description": "Bloom's taxonomy level. Must be non-decreasing across stages (R20)."
+          },
+          "passingScore": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Minimum passing percentage. Must be non-decreasing across stages (R21)."
+          },
+          "estimatedDuration": {
+            "type": "string",
+            "description": "Stage duration (e.g., '45 minutes'). Must be non-decreasing across stages (R23)."
+          },
+          "activities": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "title", "type"],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Activity identifier (e.g., 'tov-01-01-01')"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Activity title"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Activity type (reading, interactive, quiz, case-study)"
+                },
+                "estimatedDuration": {
+                  "type": "string",
+                  "description": "Activity duration"
+                },
+                "quiz": {
+                  "type": "object",
+                  "properties": {
+                    "questions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["id", "type", "question", "correctAnswer"],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Question identifier"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": ["multiple-choice", "true-false", "multiple-select"],
+                            "description": "Question type"
+                          },
+                          "question": {
+                            "type": "string",
+                            "description": "Question text"
+                          },
+                          "options": {
+                            "type": "array",
+                            "items": { "type": "string" },
+                            "description": "Answer options (required for multiple-choice and multiple-select)"
+                          },
+                          "correctAnswer": {
+                            "type": ["integer", "boolean", "array"],
+                            "description": "Correct answer: index for multiple-choice, boolean for true-false, array of indices for multiple-select"
+                          },
+                          "points": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "Point value for this question"
+                          },
+                          "explanation": {
+                            "type": "string",
+                            "description": "Explanation of the correct answer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

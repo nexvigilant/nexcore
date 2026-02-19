@@ -1,0 +1,20 @@
+[package]
+name = "wksp-api-client"
+version = "0.1.0"
+edition = "2024"
+description = "Ferrostack API client — typed reqwest/gloo client for nexcore-api (SSR + Hydrate)"
+publish = ["nexcore"]
+
+[dependencies]
+wksp-core = { workspace = true }
+leptos = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+reqwest = { workspace = true, optional = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true, features = ["serde"] }
+
+[features]
+ssr = ["leptos/ssr", "dep:reqwest"]
+hydrate = ["leptos/hydrate"]

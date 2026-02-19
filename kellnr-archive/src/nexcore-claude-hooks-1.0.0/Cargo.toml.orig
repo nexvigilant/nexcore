@@ -1,0 +1,183 @@
+[workspace]
+
+[package]
+name = "nexcore-claude-hooks"
+version = "1.0.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+description = "Claude Code hooks - Pre/Post tool use interceptors merged from .claude/hooks/"
+
+[dependencies]
+nexcore-hook-lib = { version = "1.0.0", path = "../nexcore-hook-lib", registry = "nexcore", features = ["cytokine"] }
+nexcore-hook-metrics = { version = "1.0.0", path = "../nexcore-hook-metrics", registry = "nexcore" }
+nexcore-brain = { version = "1.0.0", path = "../nexcore-brain", registry = "nexcore" }
+nexcore-transcriptase = { version = "1.0.0", path = "../nexcore-transcriptase", registry = "nexcore" }
+nexcore-ribosome = { version = "1.0.0", path = "../nexcore-ribosome", registry = "nexcore" }
+nexcore-cytokine = { version = "1.0.0", path = "../nexcore-cytokine", registry = "nexcore" }
+nexcore-immunity = { version = "0.1.0", path = "../nexcore-immunity", registry = "nexcore" }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = { version = "1.0.120" }
+chrono = { version = "0.4.38", features = ["serde"] }
+regex = { version = "1.10.5" }
+
+[lints.rust]
+async_fn_in_trait = "allow"
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+unused_mut = "allow"
+unused_assignments = "allow"
+unused_must_use = "allow"
+
+[lints.clippy]
+all = "allow"
+pedantic = "allow"
+nursery = "allow"
+cargo = "allow"
+map_unwrap_or = "allow"
+manual_map = "allow"
+option_map_or_none = "allow"
+derivable_impls = "allow"
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"
+todo = "allow"
+unimplemented = "allow"
+unreachable = "allow"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Binary entries - each corresponds to a hook from .claude/hooks/
+# ─────────────────────────────────────────────────────────────────────────────
+
+[[bin]]
+name = "atomic-agent-enforcer"
+path = "bin/atomic-agent-enforcer.rs"
+
+[[bin]]
+name = "clippy-enforcer"
+path = "bin/clippy-enforcer.rs"
+
+[[bin]]
+name = "command-injection-detector"
+path = "bin/command-injection-detector.rs"
+
+[[bin]]
+name = "compile-verifier"
+path = "bin/compile-verifier.rs"
+
+[[bin]]
+name = "compound-growth-miner"
+path = "bin/compound-growth-miner.rs"
+
+[[bin]]
+name = "ignored-result-detector"
+path = "bin/ignored-result-detector.rs"
+
+[[bin]]
+name = "immunity-learner"
+path = "bin/immunity-learner.rs"
+
+[[bin]]
+name = "lesson-recall"
+path = "bin/lesson-recall.rs"
+
+[[bin]]
+name = "numeric-premise-validator"
+path = "bin/numeric-premise-validator.rs"
+
+[[bin]]
+name = "panic-detector"
+path = "bin/panic-detector.rs"
+
+[[bin]]
+name = "pretool-dispatcher"
+path = "bin/pretool-dispatcher.rs"
+
+[[bin]]
+name = "product-bias-detector"
+path = "bin/product-bias-detector.rs"
+
+[[bin]]
+name = "python-creation-blocker"
+path = "bin/python-creation-blocker.rs"
+
+[[bin]]
+name = "ref-integrity-checker"
+path = "bin/ref-integrity-checker.rs"
+
+[[bin]]
+name = "schema-gate"
+path = "bin/schema-gate.rs"
+
+[[bin]]
+name = "secret-scanner"
+path = "bin/secret-scanner.rs"
+
+[[bin]]
+name = "session-restore"
+path = "bin/session-restore.rs"
+
+[[bin]]
+name = "session-save"
+path = "bin/session-save.rs"
+
+[[bin]]
+name = "signal-receiver"
+path = "bin/signal-receiver.rs"
+
+[[bin]]
+name = "skill-injector"
+path = "bin/skill-injector.rs"
+
+[[bin]]
+name = "skill-max-turns-prompt"
+path = "bin/skill-max-turns-prompt.rs"
+
+[[bin]]
+name = "skill-primitive-grounding-enforcer"
+path = "bin/skill-primitive-grounding-enforcer.rs"
+
+[[bin]]
+name = "skill-subagent-sync"
+path = "bin/skill-subagent-sync.rs"
+
+[[bin]]
+name = "skill-telemetry-collector"
+path = "bin/skill-telemetry-collector.rs"
+
+[[bin]]
+name = "skill-telemetry-query"
+path = "bin/skill-telemetry-query.rs"
+
+[[bin]]
+name = "sql-injection-detector"
+path = "bin/sql-injection-detector.rs"
+
+[[bin]]
+name = "static-mut-blocker"
+path = "bin/static-mut-blocker.rs"
+
+[[bin]]
+name = "string-error-blocker"
+path = "bin/string-error-blocker.rs"
+
+[[bin]]
+name = "timeout-enforcer"
+path = "bin/timeout-enforcer.rs"
+
+[[bin]]
+name = "transmute-blocker"
+path = "bin/transmute-blocker.rs"
+
+[[bin]]
+name = "unsafe-documenter"
+path = "bin/unsafe-documenter.rs"
+
+[[bin]]
+name = "unwrap-guardian"
+path = "bin/unwrap-guardian.rs"
+
+[[bin]]
+name = "vocabulary-counter"
+path = "bin/vocabulary-counter.rs"

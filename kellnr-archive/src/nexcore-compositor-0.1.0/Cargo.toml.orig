@@ -1,0 +1,44 @@
+[workspace]
+
+[package]
+name = "nexcore-compositor"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "NexCore Compositor — display server for watch, phone, and desktop"
+authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
+license = "LicenseRef-NexVigilant-Proprietary"
+repository = "https://github.com/nexvigilant/nexcore"
+keywords = ["compositor", "display-server", "window-manager", "rendering"]
+categories = ["rendering", "gui"]
+
+[dependencies]
+nexcore-pal = { version = "0.1.0", path = "../nexcore-pal", registry = "nexcore" }
+nexcore-os = { version = "0.1.0", path = "../nexcore-os", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = { version = "1.0.120" }
+tracing = { version = "0.1.40" }
+
+[dev-dependencies]
+nexcore-pal-linux = { version = "0.1.0", path = "../nexcore-pal-linux", registry = "nexcore" }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = "warn"
+pedantic = "warn"
+nursery = "warn"
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+must_use_candidate = "allow"
+module_name_repetitions = "allow"
+doc_markdown = "allow"
+missing_const_for_fn = "allow"
+cast_possible_truncation = "allow"
+option_if_let_else = "allow"
+significant_drop_tightening = "allow"

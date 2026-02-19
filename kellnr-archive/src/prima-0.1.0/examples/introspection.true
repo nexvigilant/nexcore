@@ -1,0 +1,64 @@
+// introspection.true — Prima that analyzes itself
+//
+// Uses grounding functions: T (tier), C (composition), X (transfer)
+// Demonstrates self-describing computation
+//
+// AI learns. Human verifies: 1=true, 0=false.
+
+// Data with known tiers
+λ t1_value = 42                           // N → T1
+λ t2p_value = σ[1, 2, 3]                  // σ[N] → T2-P
+λ t2c_value = σ[σ[1], σ[2]]              // σ[σ[N]] → T2-C
+
+// Analyze tiers
+println("=== Tier Analysis ===")
+print("42 tier: ")
+println(T(t1_value))
+print("σ[1,2,3] tier: ")
+println(T(t2p_value))
+print("σ[σ[1],σ[2]] tier: ")
+println(T(t2c_value))
+
+// Analyze composition
+println("")
+println("=== Composition Analysis ===")
+print("42 composition: ")
+println(C(t1_value))
+print("σ[1,2,3] composition: ")
+println(C(t2p_value))
+
+// Transfer confidence
+println("")
+println("=== Transfer Confidence ===")
+print("T1 confidence: ")
+println(X(t1_value))
+print("T2-P confidence: ")
+println(X(t2p_value))
+print("T2-C confidence: ")
+println(X(t2c_value))
+
+// Self-describing pipeline
+println("")
+println("=== Self-Describing Pipeline ===")
+λ data = σ[1, 2, 3, 4, 5]
+λ result = data |> Ψ(|x| x κ> 2) |> Φ(|x| x * 10) |> Ω(0, |a,b| a+b)
+
+print("Input tier: ")
+println(T(data))
+print("Output tier: ")
+println(T(result))
+print("Output value: ")
+println(result)
+
+// Verify transfer confidence drops with complexity
+println("")
+println("=== Complexity Verification ===")
+λ simple = 1
+λ complex = σ[σ[σ[1]]]
+print("Simple (1) confidence: ")
+println(X(simple))
+print("Complex (σ[σ[σ[1]]]) confidence: ")
+println(X(complex))
+
+println("")
+println("∎ introspection.true verified")

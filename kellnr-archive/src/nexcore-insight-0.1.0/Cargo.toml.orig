@@ -1,0 +1,51 @@
+[workspace]
+
+[package]
+name = "nexcore-insight"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Insight engine: pattern detection, novelty recognition, connection mapping, and observation compression grounded in Lex Primitiva T1 primitives"
+license = "MIT"
+repository = "https://github.com/nexvigilant/nexcore"
+keywords = ["insight", "pattern-detection", "novelty", "primitives"]
+categories = ["data-structures", "algorithms"]
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = { version = "1.0.120" }
+chrono = { version = "0.4.38", features = ["serde"] }
+uuid = { version = "1.10.0", features = ["v4", "serde"] }
+
+anyhow = { version = "1.0.86" }
+
+[dev-dependencies]
+
+[lints.rust]
+async_fn_in_trait = "allow"
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+unused_mut = "allow"
+unused_assignments = "allow"
+unused_must_use = "allow"
+
+[lints.clippy]
+all = "allow"
+pedantic = "allow"
+nursery = "allow"
+cargo = "allow"
+map_unwrap_or = "allow"
+manual_map = "allow"
+option_map_or_none = "allow"
+derivable_impls = "allow"
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"
+todo = "allow"
+unimplemented = "allow"
+unreachable = "allow"

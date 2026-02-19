@@ -1,0 +1,606 @@
+# NexCore Hooks Catalog
+# =====================
+# All available hooks with metadata for config generation.
+#
+# Usage:
+#   nexcore hooks list                    # Show all hooks
+#   nexcore hooks enable <hook>           # Add to current config
+#   nexcore hooks generate --tier=dev     # Generate settings.json
+#
+# Tiers:
+#   dev     - Fast iteration, minimal blocking
+#   review  - Quality checks, warnings
+#   deploy  - Full validation, strict blocking
+#   all     - Every hook (for reference only)
+
+# =============================================================================
+# SESSION LIFECYCLE
+# =============================================================================
+
+SessionStart:
+  sessionstart_orphan_killer:
+    description: "Kills orphaned Claude processes from previous sessions"
+    tier: [dev, review, deploy]
+    timeout: 5
+    blocking: false
+
+  session_continuity_prompt:
+    description: "Prompts user about previous session handoffs"
+    tier: [dev, review, deploy]
+    timeout: 5
+    blocking: false
+
+  sessionstart_skill_loader:
+    description: "Loads skill definitions at session start"
+    tier: [review, deploy]
+    timeout: 5
+    blocking: false
+
+  session_handoff_loader:
+    description: "Loads previous session handoff context"
+    tier: [review, deploy]
+    timeout: 5
+    blocking: false
+
+  # From claude-hooks library (to migrate)
+  session_context:
+    description: "Injects session info, git status, project type, CWD"
+    tier: [dev, review, deploy]
+    timeout: 5
+    blocking: false
+    source: claude-hooks
+    migrate: true
+
+  git_context:
+    description: "Injects git branch and last commit info"
+    tier: [dev, review, deploy]
+    timeout: 5
+    blocking: false
+    source: claude-hooks
+    migrate: true
+
+SessionEnd:
+  sessionend_cleanup:
+    description: "Cleans up temporary files and state"
+    tier: [review, deploy]
+    timeout: 5
+    blocking: false
+
+  hook_metrics_reporter:
+    description: "Reports hook execution metrics summary"
+    tier: [review, deploy]
+    timeout: 5
+    blocking: false
+
+  session_handoff_generator:
+    description: "Generates handoff document for session continuity"
+    tier: [review, deploy]
+    timeout: 10
+    blocking: false
+
+# =============================================================================
+# PRE-TOOL USE: BASH
+# =============================================================================
+
+PreToolUse:Bash:
+  pretool_bash_interceptor:
+    description: "Intercepts and validates shell commands"
+    tier: [deploy]
+    timeout: 3
+    blocking: true
+
+  # From claude-hooks library (to migrate)
+  bash_validator:
+    description: "Blocks dangerous commands (rm -rf /), suggests rg/fd over grep/find"
+    tier: [dev, review, deploy]
+    timeout: 3
+    blocking: true
+    source: claude-hooks
+    migrate: true
+
+# =============================================================================
+# PRE-TOOL USE: EDIT/WRITE
+# =============================================================================
+
+PreToolUse:Edit|Write:
+  # --- TIER: DEV (always enabled) ---
+  pretool_python_blocker:
+    description: "Blocks Python file creation (100% Rust policy)"
+    tier: [dev, review, deploy]
+    timeout: 3
+    blocking: true
+
+  pretool_secret_scanner:
+    description: "Scans for hardcoded secrets and API keys"
+    tier: [dev, review, deploy]
+    timeout: 3
+    blocking: true
+
+  # From claude-hooks library (to migrate)
+  file_protector:
+    description: "Protects .env, lock files, .git, .ssh, *.pem, *.key"
+    tier: [dev, review, deploy]
+    timeout: 3
+    blocking: true
+    source: claude-hooks
+    migrate: true
+
+  # --- TIER: REVIEW (quality checks) ---
+  context_builder:
+    description: "Builds shared FileContext for subsequent hooks (speeds up chain)"
+    tier: [review, deploy]
+    timeout: 3
+    blocking: false
+
+  pretool_unsafe_gatekeeper:
+    description: "Requires SAFETY comments for unsafe blocks"
+    tier: [review, deploy]
+    timeout: 3
+    blocking: true
+
+  pretool_error_validator:
+    description: "Validates error handling patterns"
+    tier: [review, deploy]
+    timeout: 3
+    blocking: false
+
+  pretool_thread_enforcer:
+    description: "Enforces thread safety patterns"
+    tier: [review, deploy]
+    timeout: 3
+    blocking: false
+
+  pretool_complexity_verifier:
+    description: "Checks cyclomatic complexity limits"
+    tier: [review, deploy]
+    timeout: 3
+    blocking: false
+
+  pretool_cargo_auditor:
+    description: "Audits Cargo.toml for issues"
+    tier: [review, deploy]
+    timeout: 3
+    blocking: false
+
+  pretool_crate_validator:
+    description: "Validates crate selection choices"
+    tier: [review, deploy]
+    timeout: 3
+    blocking: false
+
+  # --- TIER: DEPLOY (strict enforcement) ---
+  pretool_panic_enforcer:
+    description: "Blocks .unwrap(), .expect(), panic!, unreachable!"
+    tier: [deploy]
+    timeout: 3
+    blocking: true
+
+  pretool_axiom_guard:
+    description: "Validates ToV/Vigilance axiom compliance"
+    tier: [deploy]
+    timeout: 3
+    blocking: true
+
+  pretool_pv_validator:
+    description: "Pharmacovigilance safety validation"
+    tier: [deploy]
+    timeout: 3
+    blocking: true
+
+  pretool_uaca_enforcer:
+    description: "UACA architecture purity enforcement"
+    tier: [deploy]
+    timeout: 3
+    blocking: true
+
+  pretool_antipattern_blocker:
+    description: "Blocks known anti-patterns"
+    tier: [deploy]
+    timeout: 3
+    blocking: true
+
+  pretool_clone_detector:
+    description: "Flags excessive .clone() usage"
+    tier: [deploy]
+    timeout: 3
+    blocking: false
+
+  pretool_allocation_gate:
+    description: "Audits heap allocations"
+    tier: [deploy]
+    timeout: 3
+    blocking: false
+
+  pretool_lock_detector:
+    description: "Checks mutex/lock patterns"
+    tier: [deploy]
+    timeout: 3
+    blocking: false
+
+  pretool_memory_detector:
+    description: "Detects memory pattern issues"
+    tier: [deploy]
+    timeout: 3
+    blocking: false
+
+  pretool_errorpath_verifier:
+    description: "Verifies error path coverage"
+    tier: [deploy]
+    timeout: 3
+    blocking: false
+
+  pretool_errortype_validator:
+    description: "Validates error type correctness"
+    tier: [deploy]
+    timeout: 3
+    blocking: false
+
+  pretool_api_enforcer:
+    description: "Enforces API design rules"
+    tier: [deploy]
+    timeout: 3
+    blocking: false
+
+  pretool_doc_validator:
+    description: "Validates documentation completeness"
+    tier: [deploy]
+    timeout: 3
+    blocking: true
+
+  pretool_test_enforcer:
+    description: "Enforces TDD (tests before implementation)"
+    tier: [deploy]
+    timeout: 3
+    blocking: true
+
+  pretool_rationale_gate:
+    description: "Requires rationale comments for decisions"
+    tier: [deploy]
+    timeout: 3
+    blocking: true
+
+  pretool_problem_gate:
+    description: "Requires problem statement before solution"
+    tier: [deploy]
+    timeout: 3
+    blocking: true
+
+  property_test_requirement:
+    description: "Requires property-based tests"
+    tier: [deploy]
+    timeout: 3
+    blocking: true
+
+  # --- LOW PRIORITY (not in any tier by default) ---
+  pretool_config_detector:
+    description: "Detects config patterns"
+    tier: []
+    timeout: 3
+    blocking: false
+
+  pretool_health_validator:
+    description: "Validates health check patterns"
+    tier: []
+    timeout: 3
+    blocking: false
+
+  pretool_resilience_validator:
+    description: "Validates resilience patterns"
+    tier: []
+    timeout: 3
+    blocking: false
+
+  pretool_budget_enforcer:
+    description: "Enforces resource budgets"
+    tier: []
+    timeout: 3
+    blocking: false
+
+  pretool_techdebt_blocker:
+    description: "Blocks tech debt patterns"
+    tier: []
+    timeout: 3
+    blocking: true
+
+  pretool_wheel_detector:
+    description: "Warns about reinventing the wheel"
+    tier: []
+    timeout: 3
+    blocking: false
+
+  pretool_assumption_audit:
+    description: "Audits assumption documentation"
+    tier: []
+    timeout: 3
+    blocking: false
+
+# =============================================================================
+# PRE-TOOL USE: TASK (Subagent spawning)
+# =============================================================================
+
+PreToolUse:Task:
+  pretool_knowledge_verifier:
+    description: "Verifies knowledge before spawning agents"
+    tier: [deploy]
+    timeout: 3
+    blocking: false
+
+  pretool_plan_validator:
+    description: "Validates plans before execution"
+    tier: [deploy]
+    timeout: 3
+    blocking: false
+
+# =============================================================================
+# POST-TOOL USE
+# =============================================================================
+
+PostToolUse:
+  # --- ESSENTIAL (all tiers) ---
+  posttool_mcp_telemetry:
+    description: "Logs MCP tool calls with arguments to watchtower telemetry"
+    tier: [dev, review, deploy]
+    timeout: 2
+    blocking: false
+    matcher: "mcp__*"
+
+  posttool_violation_confessor:
+    description: "Enforces Primitive Codex violation confession template"
+    tier: [review, deploy]
+    timeout: 3
+    blocking: true
+    matcher: "Edit|Write"
+
+  posttool_clippy_enforcer:
+    description: "Runs clippy after edits"
+    tier: [dev, review, deploy]
+    timeout: 10
+    blocking: false
+    matcher: "Edit|Write"
+
+  posttool_compile_verifier:
+    description: "Verifies code compiles after edits"
+    tier: [dev, review, deploy]
+    timeout: 5
+    blocking: false
+    matcher: "Edit|Write"
+
+  # --- REVIEW TIER ---
+  posttool_incremental_verifier:
+    description: "Verifies incremental build succeeds"
+    tier: [review, deploy]
+    timeout: 5
+    blocking: false
+
+  posttool_handoff_updater:
+    description: "Updates handoff documents after changes"
+    tier: [review, deploy]
+    timeout: 5
+    blocking: false
+
+  posttool_test_analyzer:
+    description: "Analyzes test quality"
+    tier: [review, deploy]
+    timeout: 5
+    blocking: false
+
+  posttool_async_analyzer:
+    description: "Analyzes async code patterns"
+    tier: [review, deploy]
+    timeout: 5
+    blocking: false
+
+  posttool_error_detector:
+    description: "Detects error handling issues"
+    tier: [review, deploy]
+    timeout: 5
+    blocking: false
+
+  # --- DEPLOY TIER ---
+  posttool_test_spec:
+    description: "Checks test specification compliance"
+    tier: [deploy]
+    timeout: 5
+    blocking: false
+
+  posttool_iterator_analyzer:
+    description: "Suggests iterator optimizations"
+    tier: [deploy]
+    timeout: 5
+    blocking: false
+
+  posttool_simd_detector:
+    description: "Identifies SIMD opportunities"
+    tier: [deploy]
+    timeout: 5
+    blocking: false
+
+  posttool_string_optimizer:
+    description: "Suggests string allocation optimizations"
+    tier: [deploy]
+    timeout: 5
+    blocking: false
+
+  posttool_observability_checker:
+    description: "Checks logging/tracing patterns"
+    tier: [deploy]
+    timeout: 5
+    blocking: false
+
+  posttool_agent_detector:
+    description: "Detects agent patterns"
+    tier: [deploy]
+    timeout: 5
+    blocking: false
+
+  posttool_agent_chainer:
+    description: "Manages agent chaining"
+    tier: [deploy]
+    timeout: 5
+    blocking: false
+
+  posttool_task_tracker:
+    description: "Tracks task progress"
+    tier: [deploy]
+    timeout: 5
+    blocking: false
+
+  # --- METRICS (optional) ---
+  mcp_usage_tracker:
+    description: "Tracks MCP tool usage"
+    tier: [deploy]
+    timeout: 5
+    blocking: false
+
+  metrics_collector:
+    description: "Collects general metrics"
+    tier: [deploy]
+    timeout: 5
+    blocking: false
+
+  decision_aggregator:
+    description: "Aggregates hook decisions into single report"
+    tier: [deploy]
+    timeout: 5
+    blocking: false
+
+# =============================================================================
+# OTHER EVENTS
+# =============================================================================
+
+SubagentStart:
+  subagent_timeout_tracker:
+    description: "Records subagent start time and emits telemetry for watchtower monitoring"
+    tier: [dev, review, deploy]
+    timeout: 2
+    blocking: false
+
+  subagent_validator:
+    description: "Validates subagent configuration"
+    tier: [deploy]
+    timeout: 5
+    blocking: false
+
+SubagentStop:
+  subagentstop_timeout_checker:
+    description: "Checks execution duration and emits telemetry with timing data"
+    tier: [dev, review, deploy]
+    timeout: 3
+    blocking: false
+
+  subagentstop_quality_evaluator:
+    description: "Evaluates subagent output quality"
+    tier: [review, deploy]
+    timeout: 5
+    blocking: false
+
+PreCompact:
+  precompact_state_saver:
+    description: "Saves state before context compaction"
+    tier: [review, deploy]
+    timeout: 5
+    blocking: false
+
+PermissionRequest:
+  permission_auto_approver:
+    description: "Auto-approves safe permission requests"
+    tier: [deploy]
+    timeout: 5
+    blocking: false
+
+PostToolUseFailure:
+  toolfail_responder:
+    description: "Handles tool failures gracefully"
+    tier: [deploy]
+    timeout: 5
+    blocking: false
+
+Stop:
+  stop_completion_checker:
+    description: "Verifies task completion before stopping"
+    tier: [dev, review, deploy]
+    timeout: 10
+    blocking: true
+
+  # From claude-hooks library (to migrate)
+  stop_checker:
+    description: "Verifies tests passed, no errors in transcript"
+    tier: [review, deploy]
+    timeout: 10
+    blocking: true
+    source: claude-hooks
+    migrate: true
+
+Setup:
+  setup_toolchain_validator:
+    description: "Validates Rust toolchain on --init"
+    tier: [deploy]
+    timeout: 10
+    blocking: false
+
+# =============================================================================
+# USER PROMPT SUBMIT
+# =============================================================================
+
+UserPromptSubmit:
+  prompt_memory_alert:
+    description: "Alerts on low memory conditions"
+    tier: [dev, review, deploy]
+    timeout: 3
+    blocking: false
+
+  prompt_skill_invoker:
+    description: "Auto-invokes relevant skills from prompt"
+    tier: [review, deploy]
+    timeout: 3
+    blocking: false
+
+  prompt_context_injector:
+    description: "Injects relevant context into prompts"
+    tier: [review, deploy]
+    timeout: 3
+    blocking: false
+
+  prompt_requirements_gate:
+    description: "Enforces requirement crystallization"
+    tier: [deploy]
+    timeout: 3
+    blocking: true
+
+  prompt_mcp_suggester:
+    description: "Suggests MCP tools for the task"
+    tier: [deploy]
+    timeout: 3
+    blocking: false
+
+  prompt_handoff_reviewer:
+    description: "Reviews handoffs for current context"
+    tier: [deploy]
+    timeout: 3
+    blocking: false
+
+  prompt_task_validator:
+    description: "Validates task structure"
+    tier: [deploy]
+    timeout: 3
+    blocking: false
+
+  prompt_agent_detector:
+    description: "Detects when agent spawning is appropriate"
+    tier: [deploy]
+    timeout: 3
+    blocking: false
+
+# =============================================================================
+# MIGRATION NOTES
+# =============================================================================
+#
+# Hooks marked with `source: claude-hooks` and `migrate: true` need to be
+# copied from ~/claude-hooks/examples/ to ~/.nexcore/crates/nexcore-hooks/bin/
+#
+# Migration steps:
+#   1. Copy source file
+#   2. Update imports: claude_hooks → nexcore_hooks
+#   3. Add [[bin]] entry to Cargo.toml
+#   4. cargo build --release
+#   5. Remove `migrate: true` from this catalog

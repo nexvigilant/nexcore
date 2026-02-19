@@ -1,0 +1,18 @@
+[package]
+name = "nucli"
+version = "1.0.0"
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Nucleotide text encoder: bijective byte↔DNA mapping with exhaustive proofs."
+
+[dependencies]
+
+[[bin]]
+name = "nucli"
+path = "src/main.rs"
+
+[lints]
+workspace = true

@@ -1,0 +1,34 @@
+{
+  "mcpServers": {
+    "nexcore": {
+      "type": "stdio",
+      "command": "/home/matthew/nexcore/crates/nexcore-mcp/target/release/nexcore-mcp",
+      "args": [],
+      "env": {}
+    },
+    "claude-fs": {
+      "type": "stdio",
+      "command": "/home/matthew/nexcore/target/release/claude-fs-mcp",
+      "args": [],
+      "env": {}
+    },
+    "claude-repl": {
+      "type": "stdio",
+      "command": "/home/matthew/nexcore/target/release/claude-repl-mcp",
+      "args": [],
+      "env": {}
+    },
+    "chrome-devtools": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/home/matthew/chrome-devtools-mcp/build/src/index.js",
+        "--headless",
+        "--no-usage-statistics",
+        "--no-performance-crux",
+        "--isolated"
+      ],
+      "env": {}
+    }
+  }
+}

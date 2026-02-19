@@ -1,0 +1,39 @@
+// compressed.true — Ultra-compact Prima for AI
+//
+// Symbols map to semantics:
+//   μ=fn  λ=let  ∂=if  Σ=match  σ=for/seq  →=arrow  ∅=void
+//   #=len  ↑=head  ↓=tail  ⊕=push  ⊖=pop  ⊙=concat  ‥=range
+//   ⌊=min  ⌈=max  ±=abs  τ=type  ‼=assert  ∈=contains
+//
+// AI writes. Human verifies: 1=true, 0=false.
+
+// Factorial (recursive)
+μ Φ(n: N) → N { ∂ n κ< 2 { 1 } else { n * Φ(n - 1) } }
+
+// Fibonacci (recursive)
+μ Ψ(n: N) → N { ∂ n κ< 2 { n } else { Ψ(n - 1) + Ψ(n - 2) } }
+
+λ r = Φ(5)        // 120
+λ f = Ψ(10)       // 55
+λ s = σ[1, 2, 3, 4]
+
+// Compressed operations
+ω(#(s))           // → 4 (cardinality)
+ω(↑(s))           // → 1 (head)
+ω(↓(s))           // → [2,3,4] (tail)
+ω(⌈(r, f))        // → 120 (max)
+ω(⌊(r, f))        // → 55 (min)
+
+// Assertions — verify truth
+‼(r κ= 120)       // factorial(5) = 120
+‼(f κ= 55)        // fibonacci(10) = 55
+‼(#(s) κ= 4)      // length = 4
+‼(∈(s, 3))        // 3 ∈ sequence
+
+// Type introspection
+ω(τ(r))           // → "N"
+ω(T(r))           // → "T1"
+ω(C(r))           // → "[N]"
+
+// Final: All values reduce to {0, 1}
+ω("∎")

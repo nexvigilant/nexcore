@@ -1,0 +1,32 @@
+[package]
+name = "nexcore-sop-anatomy"
+version = "1.0.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+description = "SOP-Anatomy-Code triple mapping: 18 governance sections through biological anatomy to software code structures. I.R.O.N.M.A.N. reactor and Capability Transfer Protocol."
+
+[dependencies]
+nexcore-lex-primitiva = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[[bin]]
+name = "sop-reactor"
+path = "src/bin/sop_reactor.rs"
+required-features = ["cli"]
+
+[features]
+cli = ["dep:clap"]
+
+[dependencies.clap]
+workspace = true
+optional = true
+
+[lints]
+workspace = true

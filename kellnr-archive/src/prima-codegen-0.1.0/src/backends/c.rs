@@ -1,0 +1,630 @@
+// Copyright © 2026 NexVigilant LLC. All Rights Reserved.
+// Intellectual Property of Matthew Alexander Campion, PharmD
+
+//! C code generation backend.
+//!
+//! ## Tier: T2-C (μ + σ + → + Σ)
+//!
+//! Maps Prima constructs to C89/C99 compatible code.
+//!
+//! **Constraints:**
+//! - No generics → void* for polymorphism
+//! - No closures → function pointers (limited)
+//! - Manual memory → malloc/free (user responsibility)
+//! - No sum types → tagged unions
+
+use crate::{Backend, CodegenError, EmitContext, PrimitiveMapping, TargetConstruct};
+use lex_primitiva::LexPrimitiva;
+use prima::ast::{BinOp, Expr, Literal, Pattern, TypeKind, UnOp};
+use prima::prelude::{Block, Program, Stmt};
+
+/// C code generation backend.
+///
+/// ## Tier: T2-C (μ + ς)
+#[derive(Debug, Clone, Default)]
+pub struct CBackend {
+    mapping: PrimitiveMapping,
+}
+
+impl CBackend {
+    /// Create new C backend
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            mapping: PrimitiveMapping::c(),
+        }
+    }
+
+    /// Emit a type annotation from TypeKind
+    fn emit_type_kind(&self, kind: &TypeKind) -> String {
+        match kind {
+            TypeKind::Primitive(p) => match p {
+                LexPrimitiva::Quantity => "int64_t".to_string(),
+                LexPrimitiva::Sequence => "void*".to_string(),
+                LexPrimitiva::Void => "void".to_string(),
+                LexPrimitiva::Comparison => "int".to_string(), // C uses int for bool
+                _ => format!("/* {:?} */", p),
+            },
+            TypeKind::Named(name) => name.clone(),
+            TypeKind::Sequence(inner) => format!("{}*", self.emit_type_kind(&inner.kind)),
+            TypeKind::Mapping(_k, _v) => {
+                // C doesn't have maps natively
+                "void*".to_string()
+            }
+            TypeKind::Sum(_variants) => {
+                // C uses tagged unions
+                "void*".to_string()
+            }
+            TypeKind::Function(params, ret) => {
+                // Function pointer type
+                let p: Vec<String> = params
+                    .iter()
+                    .map(|t| self.emit_type_kind(&t.kind))
+                    .collect();
+                format!(
+                    "{}(*)({})",
+                    self.emit_type_kind(&ret.kind),
+                    if p.is_empty() {
+                        "void".to_string()
+                    } else {
+                        p.join(", ")
+                    }
+                )
+            }
+            TypeKind::Optional(inner) => {
+                // C uses pointers for optional (NULL = absent)
+                format!("{}*", self.emit_type_kind(&inner.kind))
+            }
+            TypeKind::Void => "void".to_string(),
+            TypeKind::Infer => "void*".to_string(),
+        }
+    }
+
+    /// Emit a pattern for switch cases
+    fn emit_pattern(
+        &self,
+        pattern: &Pattern,
+        ctx: &mut EmitContext,
+    ) -> Result<String, CodegenError> {
+        match pattern {
+            Pattern::Wildcard { .. } => Ok("default".to_string()),
+            Pattern::Literal { value, .. } => match value {
+                Literal::Int(n) => Ok(n.to_string()),
+                Literal::Float(f) => Ok(f.to_string()),
+                Literal::String(s) => Ok(format!("\"{}\"", s)),
+                Literal::Bool(b) => Ok(if *b { "1" } else { "0" }.to_string()),
+                Literal::Void => Ok("/* void */".to_string()),
+                Literal::Symbol(s) => Ok(format!("\"{}\"", s)),
+            },
+            Pattern::Ident { name, .. } => {
+                ctx.add_to_scope(name);
+                Ok(name.clone())
+            }
+            Pattern::Constructor { name, .. } => {
+                // C doesn't have constructors, use name as enum variant
+                Ok(name.clone())
+            }
+        }
+    }
+
+    /// Emit a block
+    fn emit_block(&self, block: &Block, ctx: &mut EmitContext) -> Result<String, CodegenError> {
+        let mut lines = Vec::new();
+        for stmt in &block.statements {
+            lines.push(self.emit_stmt(stmt, ctx)?);
+        }
+        if let Some(expr) = &block.expr {
+            lines.push(format!(
+                "{}return {};",
+                ctx.indentation(),
+                self.emit_expr(expr, ctx)?
+            ));
+        }
+        Ok(lines.join("\n"))
+    }
+}
+
+impl Backend for CBackend {
+    fn name(&self) -> &'static str {
+        "C"
+    }
+
+    fn extension(&self) -> &'static str {
+        "c"
+    }
+
+    fn map_primitive(&self, prim: LexPrimitiva) -> TargetConstruct {
+        self.mapping.get(prim).cloned().unwrap_or_else(|| {
+            TargetConstruct::new("/* unknown */", crate::primitives::ConstructCategory::Type)
+        })
+    }
+
+    fn emit_program(
+        &self,
+        program: &Program,
+        ctx: &mut EmitContext,
+    ) -> Result<String, CodegenError> {
+        let mut lines = vec![
+            "/* Generated by Prima Code Generator */".to_string(),
+            "/* Tier: T2-C (μ + σ + →) */".to_string(),
+            String::new(),
+            "#include <stdint.h>".to_string(),
+            "#include <stdlib.h>".to_string(),
+            "#include <stdio.h>".to_string(),
+            String::new(),
+        ];
+
+        for stmt in &program.statements {
+            lines.push(self.emit_stmt(stmt, ctx)?);
+        }
+
+        Ok(lines.join("\n"))
+    }
+
+    fn emit_stmt(&self, stmt: &Stmt, ctx: &mut EmitContext) -> Result<String, CodegenError> {
+        let indent = ctx.indentation();
+        match stmt {
+            Stmt::Let { name, value, .. } => {
+                ctx.record_primitive(LexPrimitiva::Location);
+                ctx.add_to_scope(name);
+                let val = self.emit_expr(value, ctx)?;
+                // C requires explicit types - use auto-deduced placeholder
+                // User should replace with actual type
+                Ok(format!("{}/* auto */ int64_t {} = {};", indent, name, val))
+            }
+
+            Stmt::FnDef {
+                name,
+                params,
+                body,
+                ret,
+                ..
+            } => {
+                ctx.record_primitive(LexPrimitiva::Mapping);
+                ctx.record_primitive(LexPrimitiva::Causality);
+
+                let param_str: Vec<String> = params
+                    .iter()
+                    .map(|p| format!("{} {}", self.emit_type_kind(&p.ty.kind), p.name))
+                    .collect();
+
+                let ret_str = self.emit_type_kind(&ret.kind);
+
+                let params_decl = if param_str.is_empty() {
+                    "void".to_string()
+                } else {
+                    param_str.join(", ")
+                };
+
+                let mut fn_lines = vec![format!(
+                    "{}{} {}({}) {{",
+                    indent, ret_str, name, params_decl
+                )];
+
+                ctx.indent();
+                fn_lines.push(self.emit_block(body, ctx)?);
+                ctx.dedent();
+
+                fn_lines.push(format!("{}}}", indent));
+                Ok(fn_lines.join("\n"))
+            }
+
+            Stmt::Expr { expr, .. } => {
+                let e = self.emit_expr(expr, ctx)?;
+                Ok(format!("{}{};", indent, e))
+            }
+
+            Stmt::Return { value, .. } => {
+                ctx.record_primitive(LexPrimitiva::Causality);
+                match value {
+                    Some(e) => {
+                        let val = self.emit_expr(e, ctx)?;
+                        Ok(format!("{}return {};", indent, val))
+                    }
+                    None => Ok(format!("{}return;", indent)),
+                }
+            }
+
+            Stmt::TypeDef { name, .. } => {
+                ctx.warn(format!("Type definition {} - use typedef/struct", name));
+                Ok(format!("{}/* typedef {} */", indent, name))
+            }
+        }
+    }
+
+    fn emit_expr(&self, expr: &Expr, ctx: &mut EmitContext) -> Result<String, CodegenError> {
+        match expr {
+            Expr::Literal { value, .. } => match value {
+                Literal::Int(n) => {
+                    ctx.record_primitive(LexPrimitiva::Quantity);
+                    // Use LL suffix for int64_t
+                    Ok(format!("{}LL", n))
+                }
+                Literal::Float(f) => {
+                    ctx.record_primitive(LexPrimitiva::Quantity);
+                    Ok(f.to_string())
+                }
+                Literal::String(s) => Ok(format!("\"{}\"", s)),
+                Literal::Bool(b) => {
+                    ctx.record_primitive(LexPrimitiva::Comparison);
+                    // C uses 1/0 for true/false
+                    Ok(if *b { "1" } else { "0" }.to_string())
+                }
+                Literal::Void => {
+                    ctx.record_primitive(LexPrimitiva::Void);
+                    Ok("/* void */".to_string())
+                }
+                Literal::Symbol(s) => {
+                    ctx.record_primitive(LexPrimitiva::Location);
+                    // C uses strings for symbols
+                    Ok(format!("\"{}\"", s))
+                }
+            },
+
+            Expr::Ident { name, .. } => {
+                if !ctx.in_scope(name) {
+                    ctx.warn(format!("Identifier '{}' not in scope", name));
+                }
+                Ok(name.clone())
+            }
+
+            Expr::Binary {
+                left, op, right, ..
+            } => {
+                ctx.record_primitive(LexPrimitiva::Causality);
+                let l = self.emit_expr(left, ctx)?;
+                let r = self.emit_expr(right, ctx)?;
+                let op_str = match op {
+                    BinOp::Add => "+",
+                    BinOp::Sub => "-",
+                    BinOp::Mul => "*",
+                    BinOp::Div => "/",
+                    BinOp::Mod => "%",
+                    BinOp::Eq | BinOp::KappaEq => "==",
+                    BinOp::Ne | BinOp::KappaNe => "!=",
+                    BinOp::Lt | BinOp::KappaLt => "<",
+                    BinOp::Le | BinOp::KappaLe => "<=",
+                    BinOp::Gt | BinOp::KappaGt => ">",
+                    BinOp::Ge | BinOp::KappaGe => ">=",
+                    BinOp::And => "&&",
+                    BinOp::Or => "||",
+                };
+                Ok(format!("({} {} {})", l, op_str, r))
+            }
+
+            Expr::Unary { op, operand, .. } => {
+                let o = self.emit_expr(operand, ctx)?;
+                let op_str = match op {
+                    UnOp::Neg => "-",
+                    UnOp::Not => "!",
+                };
+                Ok(format!("({}{})", op_str, o))
+            }
+
+            Expr::Call { func, args, .. } => {
+                ctx.record_primitive(LexPrimitiva::Mapping);
+                let arg_strs: Vec<String> = args
+                    .iter()
+                    .map(|a| self.emit_expr(a, ctx))
+                    .collect::<Result<_, _>>()?;
+                Ok(format!("{}({})", func, arg_strs.join(", ")))
+            }
+
+            Expr::Sequence { elements, .. } => {
+                ctx.record_primitive(LexPrimitiva::Sequence);
+                // C array initialization
+                let elems: Vec<String> = elements
+                    .iter()
+                    .map(|i| self.emit_expr(i, ctx))
+                    .collect::<Result<_, _>>()?;
+                Ok(format!("{{ {} }}", elems.join(", ")))
+            }
+
+            Expr::If {
+                cond,
+                then_branch,
+                else_branch,
+                ..
+            } => {
+                ctx.record_primitive(LexPrimitiva::Boundary);
+                let c = self.emit_expr(cond, ctx)?;
+                let mut lines = vec![format!("if ({}) {{", c)];
+                ctx.indent();
+                lines.push(self.emit_block(then_branch, ctx)?);
+                ctx.dedent();
+                if let Some(else_b) = else_branch {
+                    lines.push("} else {".to_string());
+                    ctx.indent();
+                    lines.push(self.emit_block(else_b, ctx)?);
+                    ctx.dedent();
+                }
+                lines.push("}".to_string());
+                Ok(lines.join("\n"))
+            }
+
+            Expr::For {
+                var, iter, body, ..
+            } => {
+                ctx.record_primitive(LexPrimitiva::Sequence);
+                ctx.record_primitive(LexPrimitiva::Frequency);
+                let i = self.emit_expr(iter, ctx)?;
+                // C for loop - assume iter is an array with known size
+                // User would need to provide size separately in real code
+                let mut lines = vec![format!(
+                    "for (size_t __i = 0; __i < sizeof({0})/sizeof({0}[0]); __i++) {{",
+                    i
+                )];
+                ctx.indent();
+                lines.push(format!("{}void* {} = {}[__i];", ctx.indentation(), var, i));
+                lines.push(self.emit_block(body, ctx)?);
+                ctx.dedent();
+                lines.push("}".to_string());
+                Ok(lines.join("\n"))
+            }
+
+            Expr::Match {
+                scrutinee, arms, ..
+            } => {
+                ctx.record_primitive(LexPrimitiva::Sum);
+                let s = self.emit_expr(scrutinee, ctx)?;
+                // C uses switch for integer types
+                let mut lines = vec![format!("switch ((int64_t){}) {{", s)];
+                ctx.indent();
+                for arm in arms {
+                    let pat = self.emit_pattern(&arm.pattern, ctx)?;
+                    let body = self.emit_expr(&arm.body, ctx)?;
+                    if pat == "default" {
+                        lines.push(format!("{}default: {{", ctx.indentation()));
+                    } else {
+                        lines.push(format!("{}case {}: {{", ctx.indentation(), pat));
+                    }
+                    ctx.indent();
+                    lines.push(format!("{}return {};", ctx.indentation(), body));
+                    ctx.dedent();
+                    lines.push(format!("{}}}", ctx.indentation()));
+                }
+                ctx.dedent();
+                lines.push("}".to_string());
+                Ok(lines.join("\n"))
+            }
+
+            Expr::Lambda { params, body, .. } => {
+                ctx.record_primitive(LexPrimitiva::Mapping);
+                ctx.warn(
+                    "C doesn't support closures - generating function pointer stub".to_string(),
+                );
+                // C doesn't have closures, generate a comment
+                let param_str: Vec<String> = params.iter().map(|p| p.name.clone()).collect();
+                let b = self.emit_expr(body, ctx)?;
+                Ok(format!("/* lambda({}) -> {} */", param_str.join(", "), b))
+            }
+
+            Expr::Block { block, .. } => {
+                // C compound statement
+                let mut lines = vec!["{".to_string()];
+                ctx.indent();
+                lines.push(self.emit_block(block, ctx)?);
+                ctx.dedent();
+                lines.push("}".to_string());
+                Ok(lines.join("\n"))
+            }
+
+            _ => {
+                ctx.warn("Unhandled expression type".to_string());
+                Ok("/* unhandled */".to_string())
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TESTS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use prima::ast::{Param, TypeExpr, TypeKind};
+    use prima::prelude::{Lexer, Parser};
+    use prima::token::Span;
+
+    fn parse(source: &str) -> Program {
+        let tokens = Lexer::new(source).tokenize().ok().unwrap_or_default();
+        Parser::new(tokens)
+            .parse()
+            .unwrap_or_else(|_| Program { statements: vec![] })
+    }
+
+    fn dummy_span() -> Span {
+        Span::default()
+    }
+
+    fn dummy_type() -> TypeExpr {
+        TypeExpr {
+            kind: TypeKind::Infer,
+            span: dummy_span(),
+        }
+    }
+
+    #[test]
+    fn test_c_backend_name() {
+        let backend = CBackend::new();
+        assert_eq!(backend.name(), "C");
+        assert_eq!(backend.extension(), "c");
+    }
+
+    #[test]
+    fn test_emit_literal_int() {
+        let backend = CBackend::new();
+        let mut ctx = EmitContext::new();
+        let expr = Expr::Literal {
+            value: Literal::Int(42),
+            span: dummy_span(),
+        };
+        let code = backend.emit_expr(&expr, &mut ctx);
+        assert!(code.is_ok());
+        assert_eq!(code.ok().unwrap_or_default(), "42LL");
+    }
+
+    #[test]
+    fn test_emit_literal_string() {
+        let backend = CBackend::new();
+        let mut ctx = EmitContext::new();
+        let expr = Expr::Literal {
+            value: Literal::String("hello".to_string()),
+            span: dummy_span(),
+        };
+        let code = backend.emit_expr(&expr, &mut ctx);
+        assert!(code.is_ok());
+        assert_eq!(code.ok().unwrap_or_default(), "\"hello\"");
+    }
+
+    #[test]
+    fn test_emit_bool_true() {
+        let backend = CBackend::new();
+        let mut ctx = EmitContext::new();
+        let expr = Expr::Literal {
+            value: Literal::Bool(true),
+            span: dummy_span(),
+        };
+        let code = backend.emit_expr(&expr, &mut ctx);
+        assert!(code.is_ok());
+        assert_eq!(code.ok().unwrap_or_default(), "1");
+    }
+
+    #[test]
+    fn test_emit_bool_false() {
+        let backend = CBackend::new();
+        let mut ctx = EmitContext::new();
+        let expr = Expr::Literal {
+            value: Literal::Bool(false),
+            span: dummy_span(),
+        };
+        let code = backend.emit_expr(&expr, &mut ctx);
+        assert!(code.is_ok());
+        assert_eq!(code.ok().unwrap_or_default(), "0");
+    }
+
+    #[test]
+    fn test_emit_sequence() {
+        let backend = CBackend::new();
+        let mut ctx = EmitContext::new();
+        let expr = Expr::Sequence {
+            elements: vec![
+                Expr::Literal {
+                    value: Literal::Int(1),
+                    span: dummy_span(),
+                },
+                Expr::Literal {
+                    value: Literal::Int(2),
+                    span: dummy_span(),
+                },
+            ],
+            span: dummy_span(),
+        };
+        let code = backend.emit_expr(&expr, &mut ctx);
+        assert!(code.is_ok());
+        let result = code.ok().unwrap_or_default();
+        assert_eq!(result, "{ 1LL, 2LL }");
+    }
+
+    #[test]
+    fn test_emit_binary_equality() {
+        let backend = CBackend::new();
+        let mut ctx = EmitContext::new();
+        let expr = Expr::Binary {
+            left: Box::new(Expr::Literal {
+                value: Literal::Int(1),
+                span: dummy_span(),
+            }),
+            op: BinOp::Eq,
+            right: Box::new(Expr::Literal {
+                value: Literal::Int(1),
+                span: dummy_span(),
+            }),
+            span: dummy_span(),
+        };
+        let code = backend.emit_expr(&expr, &mut ctx);
+        assert!(code.is_ok());
+        assert_eq!(code.ok().unwrap_or_default(), "(1LL == 1LL)");
+    }
+
+    #[test]
+    fn test_emit_lambda_generates_comment() {
+        let backend = CBackend::new();
+        let mut ctx = EmitContext::new();
+        let expr = Expr::Lambda {
+            params: vec![Param {
+                name: "x".to_string(),
+                ty: dummy_type(),
+                span: dummy_span(),
+            }],
+            body: Box::new(Expr::Binary {
+                left: Box::new(Expr::Ident {
+                    name: "x".to_string(),
+                    span: dummy_span(),
+                }),
+                op: BinOp::Mul,
+                right: Box::new(Expr::Literal {
+                    value: Literal::Int(2),
+                    span: dummy_span(),
+                }),
+                span: dummy_span(),
+            }),
+            span: dummy_span(),
+        };
+        let code = backend.emit_expr(&expr, &mut ctx);
+        assert!(code.is_ok());
+        let result = code.ok().unwrap_or_default();
+        // C doesn't support closures, so we generate a comment
+        assert!(result.contains("/* lambda"));
+    }
+
+    #[test]
+    fn test_emit_simple_program() {
+        let backend = CBackend::new();
+        let program = parse("λ x = 42");
+        let mut ctx = EmitContext::new();
+        let code = backend.emit_program(&program, &mut ctx);
+        assert!(code.is_ok());
+        let result = code.ok().unwrap_or_default();
+        assert!(result.contains("#include <stdint.h>"));
+        assert!(result.contains("x = 42LL"));
+    }
+
+    #[test]
+    fn test_primitives_recorded() {
+        let backend = CBackend::new();
+        let mut ctx = EmitContext::new();
+        let _ = backend.emit_expr(
+            &Expr::Sequence {
+                elements: vec![Expr::Literal {
+                    value: Literal::Int(1),
+                    span: dummy_span(),
+                }],
+                span: dummy_span(),
+            },
+            &mut ctx,
+        );
+
+        assert!(ctx.primitives_used.contains(&LexPrimitiva::Sequence));
+        assert!(ctx.primitives_used.contains(&LexPrimitiva::Quantity));
+    }
+
+    #[test]
+    fn test_type_kind_function_pointer() {
+        let backend = CBackend::new();
+        let kind = TypeKind::Function(
+            vec![TypeExpr {
+                kind: TypeKind::Primitive(LexPrimitiva::Quantity),
+                span: dummy_span(),
+            }],
+            Box::new(TypeExpr {
+                kind: TypeKind::Primitive(LexPrimitiva::Quantity),
+                span: dummy_span(),
+            }),
+        );
+        let result = backend.emit_type_kind(&kind);
+        assert_eq!(result, "int64_t(*)(int64_t)");
+    }
+}

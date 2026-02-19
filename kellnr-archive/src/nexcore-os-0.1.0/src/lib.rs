@@ -1,0 +1,92 @@
+// Copyright (c) 2026 Matthew Campion, PharmD; NexVigilant
+// All Rights Reserved. See LICENSE file for details.
+
+//! # NexCore OS — Operating System Core Runtime
+//!
+//! The init system, service manager, and process model for NexCore OS.
+//!
+//! ## Architecture
+//!
+//! ```text
+//! ┌─────────────────────────────────────────────────────────┐
+//! │              NexCore Shell (UI Layer)                    │
+//! ├─────────────────────────────────────────────────────────┤
+//! │              NexCore App Runtime (Skills)                │
+//! ├─────────────────────────────────────────────────────────┤
+//! │              NexCore System Services                     │
+//! │  Guardian │ Brain │ Vigil │ Cortex │ Vault │ Sentinel    │
+//! ├─────────────────────────────────────────────────────────┤
+//! │           NexCore OS Core (this crate)                   │ ← You are here
+//! │  STOS │ Cytokine IPC │ Clearance │ Energy │ Network │ Audio │ PAL │
+//! ├─────────────────────────────────────────────────────────┤
+//! │         Platform Abstraction Layer (nexcore-pal)          │
+//! ├─────────────────────────────────────────────────────────┤
+//! │              Linux Kernel (6.x)                          │
+//! └─────────────────────────────────────────────────────────┘
+//! ```
+//!
+//! ## Boot Sequence (σ Sequence)
+//!
+//! 1. PAL initialization (hardware probing)
+//! 2. STOS kernel boot (state machine runtime)
+//! 3. System service startup (Guardian, Brain, etc.)
+//! 4. Shell launch (per-device UI)
+//!
+//! ## Primitive Grounding
+//!
+//! | Component     | Primitives           | Role                     |
+//! |---------------|----------------------|--------------------------|
+//! | Boot sequence | σ + → + ∂            | Ordered causal startup   |
+//! | Service mgr   | ς + Σ + ∃            | Service state tracking   |
+//! | Event loop    | σ + ν + ρ            | Recurring event dispatch |
+//! | Security      | ∂ + ς + κ            | Threat detection/response|
+//! | Vault         | ∂ + μ + π + ς        | Encrypted secret storage |
+//! | Network       | Σ + ∂ + ς + μ + →    | Interfaces/DNS/firewall  |
+//! | Audio         | Σ + σ + ν + ς + ∂ + N| Devices/streams/mixing   |
+//! | Secure boot   | σ + → + ∂ + ∝ + κ    | Measured boot chain      |
+//! | Users/Login   | ∂ + κ + ς + π + μ    | Authentication & sessions|
+//! | Persistence   | π + ∃ + ς            | State crash recovery     |
+//! | Shutdown      | σ + ∝ + ∅            | Irreversible teardown    |
+
+#![forbid(unsafe_code)]
+#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+
+pub mod app_clearance;
+pub mod audio;
+pub mod boot;
+pub mod error;
+pub mod ipc;
+pub mod kernel;
+pub mod network;
+pub mod persistence;
+pub mod repl;
+pub mod secure_boot;
+pub mod security;
+pub mod service;
+pub mod user;
+pub mod vault;
+
+// Re-export main types
+pub use app_clearance::{
+    AppClearanceGate, AppClearanceLevel, AppManifest, AppPermission, ClearanceResult,
+};
+pub use audio::{AudioManager, AudioState};
+pub use boot::BootSequence;
+pub use error::OsError;
+pub use ipc::EventBus;
+pub use kernel::NexCoreOs;
+pub use network::{NetworkManager, NetworkState};
+pub use persistence::{OsStateSnapshot, StatePersistence};
+pub use repl::{OsRepl, ReplCommand, ReplOutput};
+pub use secure_boot::{
+    AttestationRecord, BootPolicy, BootQuote, BootStage, ChainVerification, Measurement,
+    SecureBootChain, VerifyResult,
+};
+pub use security::{
+    Damp, Pamp, SecurityLevel, SecurityMonitor, SecurityResponse, ThreatPattern, ThreatSeverity,
+};
+pub use service::{Service, ServiceId, ServiceState};
+pub use user::{
+    AccountStatus, AuthError, Session, UserId, UserManager, UserRecord, UserRole, UserSummary,
+};
+pub use vault::{OsVault, SecretCategory, SecretInfo, VaultState};

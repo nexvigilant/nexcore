@@ -1,0 +1,31 @@
+
+[package]
+name = "nexcore-docs-mcp"
+version = "1.0.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+description = "MCP server for Claude Code documentation - consolidated from projects/claude-code-docs-mcp"
+
+[[bin]]
+name = "nexcore-docs-mcp"
+path = "src/main.rs"
+
+[dependencies]
+nexcore-constants = { workspace = true }
+
+# MCP SDK
+rmcp = { version = "0.14", features = ["server", "transport-io"] }
+tokio = { workspace = true, features = ["full"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+# HTTP client for fetching docs
+reqwest = { workspace = true, features = ["json"] }
+anyhow = { workspace = true }
+
+# Caching
+moka = { version = "0.12", features = ["future"] }
+
+[lints]
+workspace = true

@@ -1,0 +1,71 @@
+[workspace]
+
+[package]
+name = "nexcore-social"
+version = "1.0.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+repository = "https://github.com/nexvigilant/nexcore"
+description = "Social media API clients for value signal detection"
+
+[dependencies]
+# Lex Primitiva grounding
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+
+# HTTP client
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+
+# Async runtime
+tokio = { version = "1.38.0", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = { version = "1.0.120" }
+
+# Error handling
+thiserror = { version = "1.0.61" }
+anyhow = { version = "1.0.86" }
+
+# Logging
+tracing = { version = "0.1.40" }
+
+# Time
+chrono = { version = "0.4.38", features = ["serde"] }
+
+# URL encoding
+urlencoding = { version = "2.1.3" }
+
+[[example]]
+name = "reddit_fetch"
+path = "examples/reddit_fetch.rs"
+
+[dev-dependencies]
+tempfile = { version = "3.10.1" }
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+
+[lints.rust]
+async_fn_in_trait = "allow"
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+unused_mut = "allow"
+unused_assignments = "allow"
+unused_must_use = "allow"
+
+[lints.clippy]
+all = "allow"
+pedantic = "allow"
+nursery = "allow"
+cargo = "allow"
+map_unwrap_or = "allow"
+manual_map = "allow"
+option_map_or_none = "allow"
+derivable_impls = "allow"
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"
+todo = "allow"
+unimplemented = "allow"
+unreachable = "allow"

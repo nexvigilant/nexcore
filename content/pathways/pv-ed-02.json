@@ -1,0 +1,755 @@
+{
+  "$schema": "./pathway.schema.json",
+  "id": "pv-ed-02",
+  "title": "EPA Progression & Entrustment Assessment",
+  "description": "Comprehensive progression through all 20 Entrustable Professional Activities (EPAs) for pharmacovigilance. Core EPAs 1-10 cover operational competencies from ICSR processing to AI tool implementation. Executive EPAs 11-20 address strategic leadership from global PV strategy to industry transformation. Entrustment levels progress from observation-only (Level 1) through independent practice (Level 5).",
+  "domain": "pharmacovigilance",
+  "componentCount": 41,
+  "estimatedDuration": "14 hours",
+  "stages": [
+    {
+      "id": "pv-ed-02-01",
+      "title": "Core EPAs 1-3: ICSR Processing, Literature Screening & Stakeholder Communication",
+      "description": "Build foundational entrustment in EPA-1 (ICSR Processing), EPA-2 (Literature Screening for Safety Information), and EPA-3 (Stakeholder Communication). Assess readiness to progress from observation (Level 1) to direct supervision (Level 2).",
+      "bloomLevel": "Remember",
+      "passingScore": 70,
+      "estimatedDuration": "90 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-02-01-a01",
+          "title": "EPA Framework Introduction & Entrustment Principles",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-02-01-a02",
+          "title": "ICSR Processing Workflow Simulation",
+          "type": "interactive",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-02-01-a03",
+          "title": "Core EPAs 1-3 Entrustment Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-02-01-q01",
+                "type": "multiple-choice",
+                "question": "When processing an ICSR, which action must be completed within the first 24 hours of receipt for a serious adverse event from a spontaneous source?",
+                "options": [
+                  "Complete MedDRA coding and causality assessment",
+                  "Initial triage to determine seriousness and regulatory reportability",
+                  "Send follow-up request to the reporter for missing information",
+                  "Submit the completed report to the relevant regulatory authority"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "Initial triage within 24 hours is critical to determine if the case meets seriousness criteria and triggers expedited reporting timelines. Early identification of serious cases ensures regulatory timelines (15-day or 7-day) are met. Full coding and causality assessment follow during medical review."
+              },
+              {
+                "id": "pv-ed-02-01-q02",
+                "type": "true-false",
+                "question": "Literature screening for pharmacovigilance purposes requires searching only PubMed/MEDLINE, as it is the most comprehensive biomedical database.",
+                "correctAnswer": false,
+                "points": 1,
+                "explanation": "PV literature screening requires multiple databases including PubMed/MEDLINE, Embase, and regional databases. ICH E2C(R2) and GVP Module VI specify that MAHs must monitor worldwide scientific literature. Embase covers European journals not indexed in PubMed, and disease-specific databases may be needed."
+              },
+              {
+                "id": "pv-ed-02-01-q03",
+                "type": "multiple-choice",
+                "question": "At entrustment Level 2 (direct supervision) for EPA-1 (ICSR Processing), which capability is expected?",
+                "options": [
+                  "Independently processing cases including complex multi-drug reports",
+                  "Performing data entry and initial triage under direct observation by a supervisor",
+                  "Supervising other ICSR processors and conducting quality reviews",
+                  "Designing and implementing ICSR processing SOPs for the organization"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "Entrustment Level 2 (direct supervision) means the learner can perform the activity but requires a supervisor present who can step in if needed. For ICSR processing, this means handling data entry and initial triage steps while being observed, with the supervisor reviewing all outputs."
+              },
+              {
+                "id": "pv-ed-02-01-q04",
+                "type": "multiple-choice",
+                "question": "Which communication approach is most appropriate when presenting a safety signal to a cross-functional safety review committee?",
+                "options": [
+                  "Present only the raw disproportionality scores without clinical interpretation",
+                  "Provide a structured summary with clinical context, statistical evidence, regulatory implications, and proposed actions",
+                  "Email a spreadsheet of affected cases with minimal commentary",
+                  "Delegate the presentation to the biostatistics team for technical accuracy"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "Effective stakeholder communication requires a structured, multi-dimensional presentation integrating clinical context (what does this mean for patients?), statistical evidence (how strong is the signal?), regulatory implications (what are our obligations?), and proposed actions (what should we do next?)."
+              }
+            ]
+          }
+        },
+        {
+          "id": "pv-ed-02-01-a04",
+          "title": "Literature Screening Strategy Builder",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-02-01-a05",
+          "title": "Entrustment Self-Assessment: EPAs 1-3",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-02-02",
+      "title": "Core EPAs 4-6: Post-Marketing Analysis, Signal Detection & Regulatory Documents",
+      "description": "Develop competency in EPA-4 (Post-Marketing Data Analysis), EPA-5 (Signal Detection & Validation), and EPA-6 (Regulatory Document Development). Progress toward indirect supervision (Level 3).",
+      "bloomLevel": "Understand",
+      "passingScore": 72,
+      "estimatedDuration": "100 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-02-02-a01",
+          "title": "Post-Marketing Surveillance Data Sources & Methods",
+          "type": "reading",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-02-02-a02",
+          "title": "Signal Detection Workflow Simulation",
+          "type": "interactive",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-02-02-a03",
+          "title": "Core EPAs 4-6 Assessment",
+          "type": "quiz",
+          "estimatedDuration": "25 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-02-02-q01",
+                "type": "multiple-choice",
+                "question": "When conducting post-marketing data analysis, which statistical measure best accounts for the effect of confounding variables in observational safety data?",
+                "options": [
+                  "Crude proportional reporting ratio (PRR)",
+                  "Stratified or adjusted disproportionality analysis",
+                  "Simple frequency count of adverse event reports",
+                  "Unadjusted reporting odds ratio (ROR)"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "Stratified or adjusted disproportionality analysis accounts for confounders like age, gender, reporting year, and co-medications that can create spurious signals. Crude measures (PRR, ROR without stratification) are susceptible to confounding, particularly masking effects and protopathic bias."
+              },
+              {
+                "id": "pv-ed-02-02-q02",
+                "type": "multiple-choice",
+                "question": "In the signal management process defined by GVP Module IX, what distinguishes signal validation from signal confirmation?",
+                "options": [
+                  "Validation uses clinical data while confirmation uses statistical data",
+                  "Validation checks if evidence warrants further investigation; confirmation involves a more thorough evaluation with additional data",
+                  "Validation is performed by regulators while confirmation is performed by MAHs",
+                  "They are the same step described by different terms in EU and US regulations"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "Signal validation is an initial assessment of whether the evidence is sufficient to justify further investigation (filtering step). Signal confirmation involves a more comprehensive evaluation with additional data sources, clinical review, and scientific assessment to determine if a true safety concern exists."
+              },
+              {
+                "id": "pv-ed-02-02-q03",
+                "type": "true-false",
+                "question": "A Periodic Benefit-Risk Evaluation Report (PBRER) must include an evaluation of the overall benefit-risk balance of the medicinal product, not just a listing of adverse events.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Per ICH E2C(R2), the PBRER requires a comprehensive evaluation of the benefit-risk balance, integrating safety data, efficacy evidence, and overall risk-benefit assessment. This is a fundamental shift from the older PSUR format which focused primarily on safety data compilation."
+              },
+              {
+                "id": "pv-ed-02-02-q04",
+                "type": "multiple-choice",
+                "question": "When developing a regulatory submission document such as a safety variation to product labeling, which principle governs the language used to describe adverse reactions?",
+                "options": [
+                  "Use verbatim patient descriptions for authenticity",
+                  "Use MedDRA Preferred Terms aligned with the approved SmPC/USPI section conventions",
+                  "Use ICD-10 codes for international standardization",
+                  "Use the investigator's verbatim terms from clinical trial reports"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "Regulatory documents must use MedDRA Preferred Terms (PTs) following established SmPC/USPI conventions. This ensures consistency with existing labeling, enables regulatory database searches, and maintains standardized terminology recognized across regulatory agencies globally."
+              }
+            ]
+          }
+        },
+        {
+          "id": "pv-ed-02-02-a04",
+          "title": "Regulatory Document Drafting Exercise",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-02-02-a05",
+          "title": "Signal Validation Decision Tree Practice",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-02-03",
+      "title": "Core EPAs 7-10: Risk Minimization, Cross-Functional Investigations, QA & AI Tools",
+      "description": "Develop competency in EPA-7 (Risk Minimization Design), EPA-8 (Cross-Functional Safety Investigations), EPA-9 (Quality & Compliance Assurance), and EPA-10 (AI Tool Implementation in PV). Target entrustment Level 3-4.",
+      "bloomLevel": "Apply",
+      "passingScore": 75,
+      "estimatedDuration": "100 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-02-03-a01",
+          "title": "Risk Minimization Measures: Design Principles & Effectiveness Evaluation",
+          "type": "reading",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-02-03-a02",
+          "title": "Cross-Functional Safety Investigation Simulation",
+          "type": "interactive",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-02-03-a03",
+          "title": "Core EPAs 7-10 Assessment",
+          "type": "quiz",
+          "estimatedDuration": "25 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-02-03-q01",
+                "type": "multiple-choice",
+                "question": "Which of the following is considered an additional risk minimization measure (aRMM) beyond routine measures in the EU regulatory framework?",
+                "options": [
+                  "Summary of Product Characteristics (SmPC)",
+                  "Patient Information Leaflet (PIL)",
+                  "Educational materials for healthcare professionals with a key safety message",
+                  "Standard post-marketing adverse event reporting"
+                ],
+                "correctAnswer": 2,
+                "points": 2,
+                "explanation": "Additional RMMs go beyond routine measures (SmPC, PIL, pack size/design). They include educational materials, patient alert cards, controlled distribution systems, pregnancy prevention programs, and healthcare professional training. These are described in GVP Module XVI and EU-RMP Part V."
+              },
+              {
+                "id": "pv-ed-02-03-q02",
+                "type": "multiple-choice",
+                "question": "During a cross-functional safety investigation involving a cluster of hepatotoxicity reports, which team composition is most appropriate?",
+                "options": [
+                  "PV scientist and regulatory affairs specialist only",
+                  "PV scientist, medical affairs physician, hepatology expert, toxicologist, and regulatory affairs specialist",
+                  "Biostatistician and data management team only",
+                  "Quality assurance auditor and compliance officer only"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "Hepatotoxicity investigations require multidisciplinary expertise: PV scientists for signal context, medical affairs for clinical interpretation, organ-specific specialists (hepatologist) for diagnostic criteria, toxicologists for mechanism evaluation, and regulatory affairs for compliance and communication planning."
+              },
+              {
+                "id": "pv-ed-02-03-q03",
+                "type": "true-false",
+                "question": "When implementing AI tools for automated ICSR intake, the marketing authorization holder retains full regulatory responsibility for the accuracy and completeness of all submitted safety reports regardless of the technology used.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Regulatory responsibility for safety reporting cannot be delegated to technology. The MAH remains accountable for all ICSRs regardless of whether AI, vendors, or manual processes are used. This principle is reinforced in GVP Module I and applies to all automated/semi-automated PV processes."
+              },
+              {
+                "id": "pv-ed-02-03-q04",
+                "type": "multiple-choice",
+                "question": "In a PV quality management system, what is the primary purpose of a CAPA (Corrective and Preventive Action) program?",
+                "options": [
+                  "Tracking individual employee performance metrics",
+                  "Systematically identifying, investigating, and resolving quality deviations to prevent recurrence",
+                  "Creating training documentation for new hires",
+                  "Managing the budget for pharmacovigilance operations"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "CAPA programs systematically address quality deviations by identifying root causes, implementing corrective actions to fix the immediate issue, and preventive actions to eliminate the root cause and prevent recurrence. This is a core element of PV quality management per GVP Module I."
+              }
+            ]
+          }
+        },
+        {
+          "id": "pv-ed-02-03-a04",
+          "title": "AI Tool Validation Framework for PV",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-02-03-a05",
+          "title": "Quality System Self-Audit Exercise",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-02-04",
+      "title": "Executive EPAs 11-13: Global Strategy, Digital Transformation & Team Leadership",
+      "description": "Develop executive entrustment in EPA-11 (Global PV Strategy Development), EPA-12 (Digital Transformation Leadership), and EPA-13 (PV Team Leadership & Mentoring). Transition from operational to strategic competencies.",
+      "bloomLevel": "Analyze",
+      "passingScore": 78,
+      "estimatedDuration": "100 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-02-04-a01",
+          "title": "Global PV Strategy Frameworks & Operating Models",
+          "type": "reading",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-02-04-a02",
+          "title": "Digital Transformation Roadmap Builder",
+          "type": "interactive",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-02-04-a03",
+          "title": "Executive EPAs 11-13 Assessment",
+          "type": "quiz",
+          "estimatedDuration": "25 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-02-04-q01",
+                "type": "multiple-choice",
+                "question": "When designing a global PV strategy for a multinational pharmaceutical company, which factor most critically determines the operating model choice between centralized, decentralized, and hub-and-spoke?",
+                "options": [
+                  "The company's IT infrastructure capabilities",
+                  "The regulatory heterogeneity across markets and volume of products requiring local expertise",
+                  "The preference of the Chief Medical Officer",
+                  "The availability of external CRO partners"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "Regulatory heterogeneity — the degree of variation in local PV requirements, timelines, and language requirements — is the primary driver. Markets with unique requirements (Japan PMDA, China NMPA, Brazil ANVISA) may need local expertise, while harmonized regions can be managed centrally."
+              },
+              {
+                "id": "pv-ed-02-04-q02",
+                "type": "true-false",
+                "question": "Digital transformation in PV exclusively refers to implementing AI/ML technologies for automated case processing.",
+                "correctAnswer": false,
+                "points": 1,
+                "explanation": "Digital transformation encompasses much more than AI: cloud migration of safety databases, electronic reporting (E2B R3), real-world evidence integration, digital biomarkers, patient-facing apps for AE reporting, blockchain for data integrity, and process automation (RPA). It is a comprehensive organizational change, not just technology adoption."
+              },
+              {
+                "id": "pv-ed-02-04-q03",
+                "type": "multiple-choice",
+                "question": "Which leadership competency is most critical when managing a PV team during a major safety crisis such as an unexpected class-effect signal?",
+                "options": [
+                  "Delegating all decisions to the most senior team member",
+                  "Coordinating rapid cross-functional response while maintaining team resilience and regulatory compliance under pressure",
+                  "Suspending all routine PV operations until the crisis is resolved",
+                  "Restricting communication to prevent premature disclosure"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "Safety crisis leadership requires maintaining parallel workstreams (crisis response AND routine operations), coordinating across functions (medical, regulatory, legal, commercial), supporting team welfare under sustained pressure, and ensuring all regulatory obligations continue to be met. Restricting communication can violate transparency requirements."
+              },
+              {
+                "id": "pv-ed-02-04-q04",
+                "type": "multiple-choice",
+                "question": "At entrustment Level 4 (remote supervision) for EPA-11 (Global PV Strategy), what is expected of the professional?",
+                "options": [
+                  "Observing how the QPPV develops the strategy without participating",
+                  "Drafting strategy components under direct oversight of the QPPV",
+                  "Independently developing strategy proposals with QPPV review at defined checkpoints",
+                  "Leading the global PV function without any supervisory oversight"
+                ],
+                "correctAnswer": 2,
+                "points": 2,
+                "explanation": "Level 4 (remote supervision) means the professional works independently with the supervisor available for consultation at defined checkpoints. For strategic EPAs, this means independently developing proposals, analyses, and recommendations, with the QPPV or senior leader reviewing at milestone points rather than continuously."
+              }
+            ]
+          }
+        },
+        {
+          "id": "pv-ed-02-04-a04",
+          "title": "Team Leadership Scenario Lab",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-02-04-a05",
+          "title": "Digital Maturity Assessment Tool",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-02-05",
+      "title": "Executive EPAs 14-16: Regulatory Influence, PV Science Innovation & Enterprise Risk",
+      "description": "Develop advanced executive entrustment in EPA-14 (Regulatory Influence & Policy Shaping), EPA-15 (PV Science Innovation), and EPA-16 (Enterprise Risk Management). Focus on thought leadership and organizational impact.",
+      "bloomLevel": "Analyze",
+      "passingScore": 80,
+      "estimatedDuration": "100 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-02-05-a01",
+          "title": "Regulatory Influence Strategies: From Compliance to Co-Creation",
+          "type": "reading",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-02-05-a02",
+          "title": "PV Innovation Pipeline Development Workshop",
+          "type": "interactive",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-02-05-a03",
+          "title": "Executive EPAs 14-16 Assessment",
+          "type": "quiz",
+          "estimatedDuration": "25 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-02-05-q01",
+                "type": "multiple-choice",
+                "question": "Which mechanism allows pharmaceutical companies to proactively influence regulatory PV policy development rather than reactively complying?",
+                "options": [
+                  "Submitting adverse event reports faster than required timelines",
+                  "Participating in industry consortium responses to regulatory consultations and contributing to CIOMS working groups",
+                  "Hiring former regulators exclusively for PV leadership positions",
+                  "Publishing company safety data in peer-reviewed journals only"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "Regulatory influence is exercised through structured participation: responding to public consultations (e.g., EMA concept papers), contributing expertise to CIOMS working groups, engaging with industry associations (EFPIA, PhRMA, IFPMA), and participating in pilot programs for new regulatory approaches."
+              },
+              {
+                "id": "pv-ed-02-05-q02",
+                "type": "true-false",
+                "question": "Enterprise risk management in pharmacovigilance is limited to managing the risk of regulatory non-compliance and inspection findings.",
+                "correctAnswer": false,
+                "points": 1,
+                "explanation": "Enterprise PV risk management extends far beyond compliance: it includes operational risks (system failures, staff turnover, vendor dependency), strategic risks (pipeline safety failures, market withdrawals), reputational risks (safety crises, data breaches), and financial risks (product liability, regulatory fines). A comprehensive ERM framework addresses all categories."
+              },
+              {
+                "id": "pv-ed-02-05-q03",
+                "type": "multiple-choice",
+                "question": "Which innovation in PV science represents the most significant paradigm shift in signal detection methodology over the past decade?",
+                "options": [
+                  "Increasing the frequency of manual line listing reviews",
+                  "Integration of real-world data (electronic health records, claims data) with spontaneous reporting for multi-source signal detection",
+                  "Transitioning from paper-based to electronic ICSR processing",
+                  "Standardizing MedDRA coding across all global markets"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "Multi-source signal detection — combining spontaneous reports, EHR data, claims databases, social media, and clinical trial data — represents a paradigm shift from single-source analysis. It addresses limitations of spontaneous reporting (underreporting, reporting bias) and enables proactive safety surveillance."
+              }
+            ]
+          }
+        },
+        {
+          "id": "pv-ed-02-05-a04",
+          "title": "Enterprise Risk Register Construction",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-02-05-a05",
+          "title": "Innovation Impact Assessment Framework",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-02-06",
+      "title": "Executive EPAs 17-18: Leader Development & Strategic Partnerships",
+      "description": "Develop executive competency in EPA-17 (PV Leader Development & Succession Planning) and EPA-18 (Strategic Partnerships & Alliance Management). Focus on organizational capability building.",
+      "bloomLevel": "Evaluate",
+      "passingScore": 82,
+      "estimatedDuration": "90 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-02-06-a01",
+          "title": "PV Talent Pipeline & Succession Planning Frameworks",
+          "type": "reading",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-02-06-a02",
+          "title": "Strategic Partnership Evaluation Simulation",
+          "type": "interactive",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-02-06-a03",
+          "title": "Executive EPAs 17-18 Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-02-06-q01",
+                "type": "multiple-choice",
+                "question": "When developing a PV leader pipeline, which approach best ensures continuity of the Qualified Person for Pharmacovigilance (QPPV) function?",
+                "options": [
+                  "Hiring externally when the current QPPV departs",
+                  "Maintaining a succession plan with identified deputies who have progressive QPPV-level exposure and regulatory relationships",
+                  "Assigning the role to the most senior person in the PV department by default",
+                  "Outsourcing the QPPV function to a specialized consultancy"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "QPPV succession requires deliberate development: identified deputies need progressive exposure to QPPV-level responsibilities, regulatory authority interactions, safety crisis management, and PSMF oversight. This ensures seamless transition and maintained regulatory relationships when succession occurs."
+              },
+              {
+                "id": "pv-ed-02-06-q02",
+                "type": "true-false",
+                "question": "Under EU pharmacovigilance legislation, when PV activities are delegated to a third-party service provider, the marketing authorization holder's QPPV responsibilities are fully transferred to the service provider.",
+                "correctAnswer": false,
+                "points": 1,
+                "explanation": "EU legislation (Directive 2001/83/EC Article 104) is clear: the QPPV and MAH retain ultimate responsibility for PV compliance regardless of delegation. The QPPV must have oversight of all delegated activities and ensure the PV system operates correctly. Vendor agreements must include quality oversight provisions."
+              },
+              {
+                "id": "pv-ed-02-06-q03",
+                "type": "multiple-choice",
+                "question": "Which factor is most critical when evaluating a strategic partnership for PV technology innovation (e.g., AI vendor for signal detection)?",
+                "options": [
+                  "The vendor's overall market capitalization and brand recognition",
+                  "Validated performance on PV-specific data with transparent methodology, regulatory acceptability evidence, and data governance guarantees",
+                  "The lowest cost proposal among all bidders",
+                  "The vendor's experience in non-pharmaceutical AI applications"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "PV technology partnerships require domain-specific validation: demonstrated accuracy on pharmacovigilance data (not just general NLP benchmarks), transparent and explainable methodology, evidence of regulatory acceptability, and robust data governance to protect patient confidentiality and comply with GxP requirements."
+              }
+            ]
+          }
+        },
+        {
+          "id": "pv-ed-02-06-a04",
+          "title": "Vendor Oversight Framework Builder",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-02-06-a05",
+          "title": "Leadership Development Plan Template",
+          "type": "reading",
+          "estimatedDuration": "10 minutes"
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-02-07",
+      "title": "Executive EPAs 19-20: Public Communication & Industry Transformation",
+      "description": "Develop mastery in EPA-19 (Public Safety Communication & Crisis Management) and EPA-20 (Industry Transformation & Thought Leadership). Achieve Level 5 entrustment readiness for visionary PV leadership.",
+      "bloomLevel": "Evaluate",
+      "passingScore": 83,
+      "estimatedDuration": "90 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-02-07-a01",
+          "title": "Public Safety Communication: Crisis Playbook & Media Strategy",
+          "type": "reading",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-02-07-a02",
+          "title": "Safety Crisis Communication Simulation",
+          "type": "interactive",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-02-07-a03",
+          "title": "Executive EPAs 19-20 Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-02-07-q01",
+                "type": "multiple-choice",
+                "question": "During a public drug safety crisis (e.g., unexpected fatal adverse reactions), which communication principle should guide the first public statement?",
+                "options": [
+                  "Delay communication until the investigation is fully complete to ensure accuracy",
+                  "Acknowledge the situation transparently, state what is known and unknown, and describe actions being taken",
+                  "Minimize the severity to prevent public panic and prescriber overreaction",
+                  "Redirect all inquiries to the regulatory authority without issuing a company statement"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "Crisis communication best practice requires early, transparent acknowledgment. The Sandman model and WHO outbreak communication guidelines emphasize: state what you know, what you don't know, what you're doing about it, and when you'll provide updates. Delay or minimization erodes trust and amplifies the crisis."
+              },
+              {
+                "id": "pv-ed-02-07-q02",
+                "type": "true-false",
+                "question": "Industry transformation in PV refers exclusively to adopting new technologies; organizational culture and regulatory framework evolution are secondary concerns.",
+                "correctAnswer": false,
+                "points": 1,
+                "explanation": "Industry transformation is multidimensional: technology adoption, organizational culture shift (from compliance-centric to patient-centric), workforce upskilling, regulatory modernization (adaptive pathways, real-world evidence acceptance), cross-industry collaboration, and patient engagement models all contribute equally to transformative change."
+              },
+              {
+                "id": "pv-ed-02-07-q03",
+                "type": "multiple-choice",
+                "question": "Which characteristic best distinguishes a PV thought leader at the industry transformation level (EPA-20, Level 5)?",
+                "options": [
+                  "Managing the largest PV department by headcount in the industry",
+                  "Publishing the most regulatory submissions annually",
+                  "Shaping industry standards, influencing regulatory evolution, and pioneering approaches adopted across the sector",
+                  "Achieving the fastest ICSR processing times in the company"
+                ],
+                "correctAnswer": 2,
+                "points": 2,
+                "explanation": "Industry transformation leadership is measured by sector-wide impact: contributing to new standards (ICH, CIOMS), influencing regulatory modernization, pioneering methodologies adopted by peers, advancing the scientific basis of PV, and creating frameworks that shift how the industry approaches drug safety."
+              },
+              {
+                "id": "pv-ed-02-07-q04",
+                "type": "multiple-choice",
+                "question": "What is the role of patient advocacy organizations in modern pharmacovigilance transformation?",
+                "options": [
+                  "They have no formal role in the regulated PV system",
+                  "They serve only as sources of spontaneous adverse event reports",
+                  "They are strategic partners in drug safety communication, benefit-risk assessment, and participatory pharmacovigilance design",
+                  "They primarily serve a legal advocacy function during product liability cases"
+                ],
+                "correctAnswer": 2,
+                "points": 2,
+                "explanation": "Patient organizations are increasingly recognized as strategic PV partners: participating in regulatory advisory committees, contributing patient-relevant outcomes for benefit-risk assessment, co-designing risk communication materials, supporting patient reporting programs, and advancing patient-centered PV systems."
+              }
+            ]
+          }
+        },
+        {
+          "id": "pv-ed-02-07-a04",
+          "title": "Industry Transformation Vision Statement Workshop",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-02-07-a05",
+          "title": "Public Communication Audit & Feedback",
+          "type": "interactive",
+          "estimatedDuration": "10 minutes"
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-02-08",
+      "title": "Capstone: Multi-Source Entrustment Portfolio & Progression Planning",
+      "description": "Synthesize all 20 EPAs into a comprehensive entrustment portfolio. Integrate multi-source feedback (supervisor, peer, patient, self), construct evidence portfolios, design remediation pathways, and create individualized EPA progression plans from current level to target entrustment.",
+      "bloomLevel": "Create",
+      "passingScore": 85,
+      "estimatedDuration": "110 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-02-08-a01",
+          "title": "Multi-Source Feedback Integration Framework",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-02-08-a02",
+          "title": "Evidence Portfolio Construction Guide",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-02-08-a03",
+          "title": "Capstone Comprehensive EPA Assessment",
+          "type": "quiz",
+          "estimatedDuration": "25 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-02-08-q01",
+                "type": "multiple-choice",
+                "question": "In an EPA framework, what is the fundamental difference between competency-based assessment and entrustment-based assessment?",
+                "options": [
+                  "Competency focuses on knowledge recall; entrustment focuses on technical skills",
+                  "Competency assesses individual attributes in isolation; entrustment assesses readiness to perform the complete activity with specified supervision",
+                  "Entrustment is only used in medical education; competency is used in all professions",
+                  "There is no meaningful difference; the terms are interchangeable"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "The key distinction is that competencies assess individual attributes (knowledge, skills, attitudes) in isolation, while entrustment decisions assess whether a professional can be trusted to perform a complete, real-world professional activity at a specified level of supervision. EPAs integrate multiple competencies into authentic work units."
+              },
+              {
+                "id": "pv-ed-02-08-q02",
+                "type": "multiple-choice",
+                "question": "Which multi-source feedback configuration provides the most valid entrustment assessment for a PV professional?",
+                "options": [
+                  "Supervisor rating only",
+                  "Self-assessment combined with one peer review",
+                  "Structured assessments from direct supervisor, cross-functional peers, direct reports, external stakeholders, and calibrated self-assessment",
+                  "Anonymous online survey of all department members"
+                ],
+                "correctAnswer": 2,
+                "points": 2,
+                "explanation": "Valid entrustment decisions require multiple perspectives: the supervisor sees technical competence and judgment, cross-functional peers assess collaboration and communication, direct reports evaluate leadership and mentoring, external stakeholders provide context on regulatory/business impact, and calibrated self-assessment reveals insight and self-awareness."
+              },
+              {
+                "id": "pv-ed-02-08-q03",
+                "type": "true-false",
+                "question": "An entrustment decision should be based solely on the most recent assessment, as it represents the professional's current capability most accurately.",
+                "correctAnswer": false,
+                "points": 1,
+                "explanation": "Entrustment decisions should consider longitudinal trajectory — consistent performance over time, across contexts, and under varying conditions. A single assessment may be affected by circumstances. The pattern of performance growth, consistency, and reliability under pressure provides a more valid basis for entrustment."
+              },
+              {
+                "id": "pv-ed-02-08-q04",
+                "type": "multiple-choice",
+                "question": "When designing a remediation pathway for a PV professional who has not achieved expected entrustment level progression, which approach is most effective?",
+                "options": [
+                  "Repeating the same training modules until the assessment is passed",
+                  "Targeted gap analysis identifying specific competency deficits, followed by individualized learning with structured workplace-based practice and progressive reassessment",
+                  "Removing the professional from the EPA pathway entirely",
+                  "Assigning a mentor without any structured assessment framework"
+                ],
+                "correctAnswer": 1,
+                "points": 2,
+                "explanation": "Effective remediation requires diagnostic precision: identify specific gaps (not general failure), design targeted interventions matched to the deficit type (knowledge vs. skill vs. judgment), provide structured practice opportunities with feedback, and reassess progressively. This approach respects adult learning principles and maintains professional dignity."
+              },
+              {
+                "id": "pv-ed-02-08-q05",
+                "type": "multiple-choice",
+                "question": "What is the relationship between EPA progression and organizational capability maturity in a PV function?",
+                "options": [
+                  "They are independent — individual progression does not affect organizational capability",
+                  "Organizational maturity is determined only by technology adoption, not staff competency",
+                  "Aggregate EPA progression across the workforce directly indicates organizational PV capability maturity and risk capacity",
+                  "EPA progression is relevant only for junior staff; senior leaders determine organizational capability"
+                ],
+                "correctAnswer": 2,
+                "points": 2,
+                "explanation": "Organizational capability in PV is fundamentally a function of collective professional competency. Aggregate EPA data reveals workforce strengths, gaps, and risk areas. An organization where most professionals are entrusted at Level 3-4 across core EPAs has fundamentally different capability than one where most are at Level 1-2."
+              }
+            ]
+          }
+        },
+        {
+          "id": "pv-ed-02-08-a04",
+          "title": "EPA Progression Plan Builder",
+          "type": "interactive",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-02-08-a05",
+          "title": "Remediation Pathway Designer",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-02-08-a06",
+          "title": "Entrustment Portfolio Review & Submission",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        }
+      ]
+    }
+  ]
+}

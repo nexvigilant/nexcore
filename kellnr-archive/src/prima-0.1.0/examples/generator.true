@@ -1,0 +1,152 @@
+// generator.true — Prima Self-Hosted Code Generator
+//
+// Prima generating code for other languages.
+// Demonstrates homoiconicity: code and data are one.
+//
+// Tier: T2-C (μ + Σ + σ + →)
+//
+// "Code that compiles is true" — Matthew Campion, PharmD
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// §1. PRIMITIVE → TARGET MAPPINGS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Each T1 primitive maps to target language constructs
+
+μ primitive_to_rust(prim: S) → S {
+    Σ prim {
+        "σ" → "Vec",
+        "μ" → "fn",
+        "ς" → "struct",
+        "ρ" → "Box<Self>",
+        "∅" → "()",
+        "∂" → "Result",
+        "N" → "i64",
+        "→" → "->",
+        "κ" → "==",
+        "Σ" → "enum",
+        _   → "?"
+    }
+}
+
+μ primitive_to_python(prim: S) → S {
+    Σ prim {
+        "σ" → "list",
+        "μ" → "def",
+        "ς" → "class",
+        "ρ" → "self",
+        "∅" → "None",
+        "∂" → "try",
+        "N" → "int",
+        "→" → "->",
+        "κ" → "==",
+        "Σ" → "Union",
+        _   → "?"
+    }
+}
+
+μ primitive_to_ts(prim: S) → S {
+    Σ prim {
+        "σ" → "Array",
+        "μ" → "function",
+        "ς" → "interface",
+        "ρ" → "this",
+        "∅" → "void",
+        "∂" → "Result",
+        "N" → "number",
+        "→" → "=>",
+        "κ" → "===",
+        "Σ" → "union",
+        _   → "?"
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// §2. CODE EMISSION FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+μ emit_fn_rust(name: S, ret: S) → S {
+    "fn " + name + "() -> " + ret + " { todo!() }"
+}
+
+μ emit_fn_python(name: S) → S {
+    "def " + name + "(): pass"
+}
+
+μ emit_fn_ts(name: S, ret: S) → S {
+    "function " + name + "(): " + ret + " { }"
+}
+
+μ emit_seq_rust(items: S) → S {
+    "vec![" + items + "]"
+}
+
+μ emit_seq_python(items: S) → S {
+    "[" + items + "]"
+}
+
+μ emit_seq_ts(items: S) → S {
+    "[" + items + "]"
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// §3. DEMONSTRATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+println("═══════════════════════════════════════════════════════════════")
+println("  PRIMA CODE GENERATOR — Self-Hosted")
+println("═══════════════════════════════════════════════════════════════")
+println("")
+
+println("§1. PRIMITIVE MAPPINGS")
+println("")
+
+// Show mapping for key primitives
+println("  σ → Rust:" + primitive_to_rust("σ") + " | Py:" + primitive_to_python("σ"))
+println("  μ → Rust:" + primitive_to_rust("μ") + " | Py:" + primitive_to_python("μ"))
+println("  N → Rust:" + primitive_to_rust("N") + " | Py:" + primitive_to_python("N"))
+println("  ∅ → Rust:" + primitive_to_rust("∅") + " | Py:" + primitive_to_python("∅"))
+println("  → → Rust:" + primitive_to_rust("→") + " | Py:" + primitive_to_python("→"))
+println("  Σ → Rust:" + primitive_to_rust("Σ") + " | Py:" + primitive_to_python("Σ"))
+
+println("")
+println("§2. FUNCTION GENERATION")
+println("")
+
+λ fn_name = "process"
+
+println("Prima: μ " + fn_name + "() → N { ... }")
+println("")
+println("→ Rust:")
+println("  " + emit_fn_rust(fn_name, "i64"))
+println("")
+println("→ Python:")
+println("  " + emit_fn_python(fn_name))
+println("")
+println("→ TypeScript:")
+println("  " + emit_fn_ts(fn_name, "number"))
+
+println("")
+println("§3. SEQUENCE GENERATION")
+println("")
+
+λ items = "1, 2, 3"
+println("Prima: σ[" + items + "]")
+println("")
+println("→ Rust:       " + emit_seq_rust(items))
+println("→ Python:     " + emit_seq_python(items))
+println("→ TypeScript: " + emit_seq_ts(items))
+
+println("")
+println("═══════════════════════════════════════════════════════════════")
+println("  GROUNDING VERIFICATION")
+println("═══════════════════════════════════════════════════════════════")
+println("")
+
+print("Generator tier: ")
+println(T(emit_fn_rust))
+print("Primitive mapper tier: ")
+println(T(primitive_to_rust))
+
+println("")
+println("∎ generator.true — Code that generates code is true²")

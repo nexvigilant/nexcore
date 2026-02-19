@@ -1,0 +1,33 @@
+
+[package]
+name = "claude-fs-mcp"
+version = "1.0.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+description = "MCP server for full-access .claude filesystem operations with automatic backups"
+
+[[bin]]
+name = "claude-fs-mcp"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+rmcp = { version = "0.14", features = ["server", "transport-io"] }
+schemars = "1.2"
+flate2 = { workspace = true }
+tar = { workspace = true }
+walkdir = { workspace = true }
+chrono = { workspace = true, features = ["serde"] }
+dirs.workspace = true
+
+[dev-dependencies]
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

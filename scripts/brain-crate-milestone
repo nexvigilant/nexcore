@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# brain-crate-milestone: save+resolve crate-scoped milestone artifacts
+# Usage: brain-crate-milestone <crate> <task|plan|handoff> [content]
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage: brain-crate-milestone <crate> <task|plan|handoff> [content]
+
+Examples:
+  brain-crate-milestone nexcore-brain task "Implement artifact guardrails"
+  brain-crate-milestone nexcore-brain plan "Run check+clippy+tests"
+  brain-crate-milestone nexcore-brain handoff "Completed and validated"
+USAGE
+}
+
+ensure_crate_tag() {
+  local crate="$1"
+  local body="$2"
+  if printf '%s' "$body" | grep -qi "\\[$crate\\]"; then
+    printf '%s' "$body"
+  else
+    printf '[%s] %s' "$crate" "$body"
+  fi
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+if [[ $# -lt 2 || $# -gt 3 ]]; then
+  usage >&2
+  exit 1
+fi
+
+CRATE="$1"
+MILESTONE="$2"
+CONTENT="${3:-}"
+
+if [[ ! "$CRATE" =~ ^[a-z0-9][a-z0-9-]{0,62}$ ]]; then
+  echo "Invalid crate name: $CRATE" >&2
+  exit 2
+fi
+
+BASE_SCRIPT="${HOME}/.nexcore/skills/brain-dev/scripts/brain-milestone-save"
+if [[ ! -x "$BASE_SCRIPT" ]]; then
+  echo "Missing executable: $BASE_SCRIPT" >&2
+  exit 127
+fi
+
+if [[ -z "$CONTENT" ]]; then
+  ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  case "$MILESTONE" in
+    task) CONTENT="[$CRATE] task captured at $ts" ;;
+    plan) CONTENT="[$CRATE] plan captured at $ts" ;;
+    handoff) CONTENT="[$CRATE] handoff captured at $ts" ;;
+    *)
+      echo "Invalid milestone: $MILESTONE (expected task|plan|handoff)" >&2
+      exit 2
+      ;;
+  esac
+fi
+
+CONTENT="$(ensure_crate_tag "$CRATE" "$CONTENT")"
+"$BASE_SCRIPT" "$MILESTONE" "$CONTENT"

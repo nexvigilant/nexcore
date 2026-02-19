@@ -1,0 +1,28 @@
+
+[package]
+name = "skills-mcp"
+version = "1.0.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+description = "MCP server exposing vocabulary programs (LEARN, PROVE, VITALS, etc.) as callable tools"
+
+[[bin]]
+name = "skills-mcp"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+tokio = { workspace = true, features = ["full"] }
+chrono = { workspace = true, features = ["serde"] }
+rmcp = { version = "0.14", features = ["server", "transport-io"] }
+schemars = "1.2"
+rusqlite = { workspace = true }
+
+[lints]
+workspace = true

@@ -1,0 +1,673 @@
+{
+  "$schema": "./pathway.schema.json",
+  "id": "pv-ed-06",
+  "title": "Program Implementation & Coordination in PV Education",
+  "description": "Master the full lifecycle of pharmacovigilance education program implementation: readiness assessment, stakeholder alignment, resource allocation, delivery excellence, technology integration, quality monitoring, continuous improvement, and operational metric management. Achieve completion rates >95% and satisfaction scores >4.5/5.",
+  "domain": "pharmacovigilance",
+  "componentCount": 39,
+  "estimatedDuration": "15 hours",
+  "stages": [
+    {
+      "id": "pv-ed-06-01",
+      "title": "Program Readiness Assessment",
+      "description": "Understand the components of a comprehensive readiness assessment for launching a pharmacovigilance education program, including organizational capability analysis, infrastructure evaluation, stakeholder identification, and gap analysis against regulatory training requirements.",
+      "bloomLevel": "Remember",
+      "passingScore": 70,
+      "estimatedDuration": "50 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-06-01-a01",
+          "title": "Readiness Assessment Framework for PV Education",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-06-01-a02",
+          "title": "Organizational Capability Analysis Tool",
+          "type": "interactive",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-06-01-a03",
+          "title": "Regulatory Training Requirements Mapping",
+          "type": "reading",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "pv-ed-06-01-a04",
+          "title": "Program Readiness Assessment",
+          "type": "quiz",
+          "estimatedDuration": "13 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-06-01-q01",
+                "type": "multiple-choice",
+                "question": "Which regulatory requirement mandates that Marketing Authorization Holders ensure PV personnel are 'suitably qualified and trained'?",
+                "options": [
+                  "EU GVP Module I (Pharmacovigilance systems and their quality systems)",
+                  "ICH E6(R2) Good Clinical Practice",
+                  "FDA 21 CFR Part 11 Electronic Records",
+                  "ISO 9001 Quality Management Systems"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "EU GVP Module I requires that MAHs establish and maintain a pharmacovigilance system with appropriately qualified and trained personnel. This is a key regulatory driver for PV education programs and must be addressed in readiness assessment."
+              },
+              {
+                "id": "pv-ed-06-01-q02",
+                "type": "true-false",
+                "question": "A readiness assessment for a PV education program should include evaluation of existing learning management system (LMS) capabilities, including the ability to track completion rates and manage competency records.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Technology infrastructure is a critical readiness component. The LMS must support PV-specific requirements: tracking regulatory training completions, managing competency records, generating compliance reports, and supporting assessment delivery."
+              },
+              {
+                "id": "pv-ed-06-01-q03",
+                "type": "multiple-choice",
+                "question": "During a readiness assessment, a gap analysis reveals that 40% of PV staff lack training on E2B(R3) ICSR transmission standards. What type of gap does this represent?",
+                "options": [
+                  "A competency gap requiring targeted technical training intervention",
+                  "An infrastructure gap requiring new technology",
+                  "A resource gap requiring additional budget",
+                  "A stakeholder alignment gap requiring executive sponsorship"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "This is a competency gap — the difference between required knowledge (E2B(R3) standards for electronic ICSR transmission) and current staff capabilities. Competency gaps are addressed through targeted training programs, which is distinct from infrastructure, resource, or alignment gaps."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-06-02",
+      "title": "Stakeholder Alignment and Resource Allocation",
+      "description": "Understand stakeholder management frameworks for PV education programs across four key groups: Learners (progress and satisfaction tracking), Faculty (engagement and teaching effectiveness), Leadership (ROI and business outcomes), and Regulators (compliance demonstration). Learn resource allocation models for budget, personnel, and technology.",
+      "bloomLevel": "Understand",
+      "passingScore": 70,
+      "estimatedDuration": "60 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-06-02-a01",
+          "title": "Stakeholder Mapping for PV Education Programs",
+          "type": "reading",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-06-02-a02",
+          "title": "Four-Quadrant Stakeholder Management Model",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-06-02-a03",
+          "title": "Resource Allocation Models and Budget Planning",
+          "type": "reading",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-06-02-a04",
+          "title": "Faculty Resource Planning Workshop",
+          "type": "interactive",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "pv-ed-06-02-a05",
+          "title": "Stakeholder and Resource Assessment",
+          "type": "quiz",
+          "estimatedDuration": "11 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-06-02-q01",
+                "type": "multiple-choice",
+                "question": "Which stakeholder group is primarily interested in demonstrating that a PV education program meets GVP Module I requirements for 'appropriately qualified personnel'?",
+                "options": [
+                  "Regulators — they require evidence of compliance with training obligations",
+                  "Learners — they want career advancement",
+                  "Faculty — they want to demonstrate teaching effectiveness",
+                  "IT department — they want system utilization data"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Regulators are primarily concerned with compliance demonstration. During PV system inspections, they assess whether personnel are appropriately trained per GVP Module I. The program must generate auditable evidence of training completion and competency achievement."
+              },
+              {
+                "id": "pv-ed-06-02-q02",
+                "type": "multiple-select",
+                "question": "Which metrics are most relevant for demonstrating ROI to leadership stakeholders? Select all that apply.",
+                "options": [
+                  "Reduction in regulatory findings related to PV staff training during inspections",
+                  "Decrease in ICSR processing errors after training completion",
+                  "Improvement in regulatory submission timeliness (e.g., 15-day expedited report compliance)",
+                  "Number of social media mentions of the training program"
+                ],
+                "correctAnswer": [0, 1, 2],
+                "points": 3,
+                "explanation": "Leadership ROI is demonstrated through business-relevant outcomes: fewer regulatory findings (risk reduction), fewer processing errors (quality improvement), and better submission timeliness (compliance improvement). Social media mentions are not a meaningful PV education ROI metric."
+              },
+              {
+                "id": "pv-ed-06-02-q03",
+                "type": "true-false",
+                "question": "Faculty engagement in a PV education program should be measured by both teaching effectiveness (learner outcomes) and subject-matter currency (staying current with evolving PV regulations and practices).",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "PV faculty must be both effective educators and current practitioners. Teaching effectiveness is measured through learner outcomes and feedback. Subject-matter currency ensures faculty can teach current regulations (e.g., recent EU GVP module revisions, new FDA guidances)."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-06-03",
+      "title": "Timeline Management and Program Launch",
+      "description": "Apply project management principles to PV education program launches, including milestone planning with regulatory compliance deadlines, critical path analysis for curriculum development, pilot testing protocols, and go-live readiness checklists. Integrate program timelines with organizational PV system audit cycles.",
+      "bloomLevel": "Apply",
+      "passingScore": 75,
+      "estimatedDuration": "65 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-06-03-a01",
+          "title": "Program Launch Timeline Design",
+          "type": "reading",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-06-03-a02",
+          "title": "Critical Path Analysis for Curriculum Development",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-06-03-a03",
+          "title": "Pilot Testing Protocol Design",
+          "type": "interactive",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-06-03-a04",
+          "title": "Go-Live Readiness Checklist Builder",
+          "type": "case-study",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-06-03-a05",
+          "title": "Timeline and Launch Assessment",
+          "type": "quiz",
+          "estimatedDuration": "14 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-06-03-q01",
+                "type": "multiple-choice",
+                "question": "When planning a PV education program launch, which external deadline is most critical to integrate into the timeline?",
+                "options": [
+                  "Regulatory inspection dates and PSMF (Pharmacovigilance System Master File) update deadlines",
+                  "The organization's annual holiday party",
+                  "Industry conference submission deadlines",
+                  "New employee orientation schedules"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Regulatory inspection dates drive training urgency — PV staff must be demonstrably trained before inspections. PSMF updates must reference the training system. These are hard external deadlines that the program timeline must accommodate."
+              },
+              {
+                "id": "pv-ed-06-03-q02",
+                "type": "multiple-choice",
+                "question": "A pilot test of a new PV signal detection training module should include which of the following?",
+                "options": [
+                  "A representative sample of target learners, structured feedback collection, and pre/post competency measurement",
+                  "Only senior PV scientists who already know signal detection",
+                  "Only the program development team for internal review",
+                  "Random selection of employees across all departments"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Effective piloting requires representative learners (matching the target audience), structured feedback (to identify issues systematically), and pre/post measurement (to verify learning effectiveness). Testing only with experts, developers, or random employees does not validate the program for its intended audience."
+              },
+              {
+                "id": "pv-ed-06-03-q03",
+                "type": "true-false",
+                "question": "A go-live readiness checklist for a PV education program should verify that assessment instruments have been validated, LMS configurations are tested, and faculty briefings are complete before launch.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Go-live readiness requires verification across three domains: content readiness (validated assessments, reviewed materials), technology readiness (tested LMS configurations, working integrations), and people readiness (briefed faculty, enrolled learners, support team prepared)."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-06-04",
+      "title": "Delivery Excellence: Faculty and Learner Support",
+      "description": "Apply best practices for delivery excellence in PV education, including faculty coordination and calibration, learner support systems, mentoring frameworks, and interventions for struggling learners. Establish mechanisms for real-time quality monitoring during program delivery.",
+      "bloomLevel": "Apply",
+      "passingScore": 75,
+      "estimatedDuration": "65 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-06-04-a01",
+          "title": "Faculty Coordination and Calibration",
+          "type": "reading",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-06-04-a02",
+          "title": "Learner Support Framework Design",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-06-04-a03",
+          "title": "PV Mentoring Program Structure",
+          "type": "interactive",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-06-04-a04",
+          "title": "Intervening with Struggling Learners: PV Case Studies",
+          "type": "case-study",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-06-04-a05",
+          "title": "Delivery Excellence Assessment",
+          "type": "quiz",
+          "estimatedDuration": "14 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-06-04-q01",
+                "type": "multiple-choice",
+                "question": "Faculty calibration sessions in a PV education program should ensure that:",
+                "options": [
+                  "All assessors rate the same learner performance samples consistently (inter-rater reliability >0.80)",
+                  "All faculty use identical lecture slides",
+                  "Faculty are assigned equal numbers of learners",
+                  "Faculty meet weekly for social events"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Calibration ensures assessment consistency. Faculty review standardized performance samples (e.g., sample ICSRs, causality assessment recordings) and practice scoring until they achieve inter-rater reliability above 0.80. This is essential for fair, reliable assessment."
+              },
+              {
+                "id": "pv-ed-06-04-q02",
+                "type": "multiple-select",
+                "question": "Which learner support interventions are appropriate when a PV trainee is struggling with MedDRA coding accuracy? Select all that apply.",
+                "options": [
+                  "Additional supervised practice with feedback on coding decisions",
+                  "Peer tutoring from a trainee who has demonstrated MedDRA proficiency",
+                  "Access to supplementary MedDRA learning resources and coding exercises",
+                  "Immediate removal from the training program"
+                ],
+                "correctAnswer": [0, 1, 2],
+                "points": 3,
+                "explanation": "Appropriate interventions include supervised practice (guided repetition with feedback), peer tutoring (social learning from proficient peers), and supplementary resources (additional learning opportunities). Immediate removal without remediation is not appropriate support."
+              },
+              {
+                "id": "pv-ed-06-04-q03",
+                "type": "true-false",
+                "question": "In a PV mentoring program, mentors should be experienced PV professionals who can provide both technical guidance on pharmacovigilance practices and career development advice.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Effective PV mentoring combines technical mentorship (guidance on signal detection, causality assessment, regulatory submissions) with professional development (career planning, networking, leadership skills). Dual-focus mentoring improves both competency and retention."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-06-05",
+      "title": "Technology Integration and Quality Monitoring",
+      "description": "Analyze technology integration strategies for PV education programs, including LMS configuration for competency tracking, safety database integration for authentic practice environments, virtual simulation platforms, and real-time quality monitoring dashboards. Evaluate technology solutions against program requirements.",
+      "bloomLevel": "Analyze",
+      "passingScore": 80,
+      "estimatedDuration": "70 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-06-05-a01",
+          "title": "LMS Configuration for PV Competency Tracking",
+          "type": "reading",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-06-05-a02",
+          "title": "Safety Database Integration for Training Environments",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-06-05-a03",
+          "title": "Real-Time Quality Monitoring Dashboard Design",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-06-05-a04",
+          "title": "Technology Solution Evaluation Case Study",
+          "type": "case-study",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-06-05-a05",
+          "title": "Technology Integration Assessment",
+          "type": "quiz",
+          "estimatedDuration": "16 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-06-05-q01",
+                "type": "multiple-choice",
+                "question": "Which LMS capability is most critical for a PV education program that must demonstrate regulatory compliance?",
+                "options": [
+                  "Automated tracking of training completion with audit trail and electronic signatures per 21 CFR Part 11",
+                  "Gamification features with leaderboards and badges",
+                  "Social learning forums for informal discussion",
+                  "Mobile app availability for offline access"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Regulatory compliance requires auditable training records. The LMS must track completion with electronic signatures that comply with 21 CFR Part 11 (electronic records/electronic signatures) and EU Annex 11 (computerised systems). This audit trail is what regulators inspect."
+              },
+              {
+                "id": "pv-ed-06-05-q02",
+                "type": "multiple-choice",
+                "question": "Integrating a training environment with a safety database sandbox allows learners to:",
+                "options": [
+                  "Practice ICSR data entry, MedDRA coding, and case processing in a realistic but non-production environment",
+                  "Submit real adverse event reports to regulatory authorities",
+                  "Access actual patient data for training purposes",
+                  "Modify production database configurations"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "A safety database sandbox provides a realistic training environment where learners practice with synthetic/anonymized data. They never access real patient data or production systems during training. This protects data integrity while providing authentic practice."
+              },
+              {
+                "id": "pv-ed-06-05-q03",
+                "type": "true-false",
+                "question": "A real-time quality monitoring dashboard for PV education should track leading indicators (e.g., assessment completion rates, engagement metrics) in addition to lagging indicators (e.g., final competency scores, certification rates).",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Leading indicators (completion pace, engagement, formative assessment scores) enable early intervention before problems become critical. Lagging indicators (final scores, certification rates) confirm outcomes but are too late for corrective action. Both are needed for effective quality monitoring."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-06-06",
+      "title": "Continuous Improvement and Performance Analysis",
+      "description": "Analyze continuous improvement methodologies applied to PV education programs, including feedback integration from multiple stakeholder groups, performance analysis using operational metrics, gap identification through data-driven assessment review, and innovation implementation cycles. Apply Plan-Do-Study-Act (PDSA) cycles to program improvement.",
+      "bloomLevel": "Analyze",
+      "passingScore": 80,
+      "estimatedDuration": "75 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-06-06-a01",
+          "title": "PDSA Cycles for PV Education Improvement",
+          "type": "reading",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-06-06-a02",
+          "title": "Multi-Stakeholder Feedback Integration",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-06-06-a03",
+          "title": "Performance Gap Analysis Workshop",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-06-06-a04",
+          "title": "Data-Driven Improvement Case Study",
+          "type": "case-study",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-06-06-a05",
+          "title": "Continuous Improvement Assessment",
+          "type": "quiz",
+          "estimatedDuration": "18 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-06-06-q01",
+                "type": "multiple-choice",
+                "question": "In the Plan-Do-Study-Act (PDSA) cycle applied to PV education, the 'Study' phase involves:",
+                "options": [
+                  "Analyzing collected data to determine whether the improvement intervention achieved the intended outcome",
+                  "Designing the improvement intervention",
+                  "Implementing the improvement in a pilot group",
+                  "Scaling the improvement across the entire program"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "The 'Study' phase in PDSA involves analyzing results of the intervention. In PV education, this means comparing pre/post metrics (e.g., did the revised signal detection module improve learner accuracy from 72% to 85%?). 'Plan' designs, 'Do' implements, 'Act' scales or revises."
+              },
+              {
+                "id": "pv-ed-06-06-q02",
+                "type": "multiple-select",
+                "question": "Which data sources are valuable for identifying performance gaps in a PV education program? Select all that apply.",
+                "options": [
+                  "Assessment score distributions showing competency areas where learners consistently underperform",
+                  "Learner feedback surveys identifying unclear content or insufficient practice opportunities",
+                  "Faculty observations of common learner errors during workplace-based assessments",
+                  "Industry stock prices of pharmaceutical companies"
+                ],
+                "correctAnswer": [0, 1, 2],
+                "points": 3,
+                "explanation": "Assessment data reveals competency-specific gaps, learner feedback identifies instructional issues, and faculty observations surface practice-based errors. Together these provide a comprehensive view. Stock prices are irrelevant to educational performance analysis."
+              },
+              {
+                "id": "pv-ed-06-06-q03",
+                "type": "true-false",
+                "question": "Continuous improvement in PV education should incorporate regulatory updates (e.g., new EU GVP modules, revised FDA guidances) into program content within a defined update cycle.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "PV regulations evolve regularly. Programs must have defined processes for monitoring regulatory changes and incorporating updates. For example, when the EU GVP is revised or FDA issues new guidance on safety reporting, curriculum must be updated to maintain regulatory currency and compliance."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-06-07",
+      "title": "Operational Metrics and Program Evaluation",
+      "description": "Evaluate PV education program effectiveness using operational metrics: completion rates (target >95%), learner satisfaction (target >4.5/5.0), competency achievement rates, EPA progression velocity, time-to-competency benchmarks, and return on investment calculations. Design comprehensive program evaluation frameworks.",
+      "bloomLevel": "Evaluate",
+      "passingScore": 85,
+      "estimatedDuration": "75 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-06-07-a01",
+          "title": "Kirkpatrick's Four Levels Applied to PV Education",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-06-07-a02",
+          "title": "Operational Metrics Dashboard Design",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-06-07-a03",
+          "title": "ROI Calculation for PV Training Programs",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-06-07-a04",
+          "title": "Program Evaluation Case Study: Benchmarking Against Targets",
+          "type": "case-study",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-06-07-a05",
+          "title": "Operational Metrics Assessment",
+          "type": "quiz",
+          "estimatedDuration": "18 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-06-07-q01",
+                "type": "multiple-choice",
+                "question": "In Kirkpatrick's evaluation model, measuring whether PV trainees apply signal detection skills correctly in their daily work represents which level?",
+                "options": [
+                  "Level 3: Behavior — transfer of learning to the workplace",
+                  "Level 1: Reaction — learner satisfaction",
+                  "Level 2: Learning — knowledge and skill acquisition",
+                  "Level 4: Results — organizational impact"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Level 3 (Behavior) measures whether learning transfers to workplace performance. Observing whether trainees correctly apply signal detection skills in their daily PV work assesses behavioral change, which is the bridge between learning (L2) and organizational results (L4)."
+              },
+              {
+                "id": "pv-ed-06-07-q02",
+                "type": "multiple-choice",
+                "question": "A PV education program reports 92% completion rate against a target of >95%. Which action is most appropriate?",
+                "options": [
+                  "Analyze the 8% non-completion cohort to identify barriers (scheduling, workload, content difficulty) and implement targeted interventions",
+                  "Lower the completion rate target to 90%",
+                  "Remove the non-completing learners from the program",
+                  "Declare the program successful since 92% is close to target"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "When a metric falls below target, the appropriate response is root cause analysis. Analyzing why 8% did not complete reveals actionable barriers. Lowering targets, removing learners, or ignoring the gap undermines program quality and regulatory compliance."
+              },
+              {
+                "id": "pv-ed-06-07-q03",
+                "type": "multiple-select",
+                "question": "Which elements should be included in an ROI calculation for a PV education program? Select all that apply.",
+                "options": [
+                  "Cost savings from reduced regulatory findings and remediation expenses",
+                  "Value of improved ICSR quality and reduced error rates",
+                  "Revenue impact from faster regulatory submission timelines",
+                  "Total program costs including development, delivery, technology, and personnel"
+                ],
+                "correctAnswer": [0, 1, 2, 3],
+                "points": 4,
+                "explanation": "Comprehensive ROI includes both benefits (reduced findings, improved quality, faster submissions) and costs (development, delivery, technology, personnel). ROI = (Total Benefits - Total Costs) / Total Costs. All four elements are necessary for a complete calculation."
+              },
+              {
+                "id": "pv-ed-06-07-q04",
+                "type": "true-false",
+                "question": "EPA progression velocity measures how quickly learners advance through entrustment levels (from direct supervision to unsupervised practice) and is a key metric for competency-based PV education programs.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "EPA progression velocity tracks the rate at which learners progress through entrustment levels. Faster progression (with maintained quality) indicates effective instruction. Slow progression may indicate instructional gaps or insufficient practice opportunities."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-06-08",
+      "title": "Comprehensive Program Implementation Plan",
+      "description": "Create a comprehensive PV education program implementation plan that integrates readiness assessment, stakeholder alignment, resource allocation, timeline management, delivery excellence, technology integration, quality monitoring, continuous improvement, and operational metrics into a cohesive, executable program document.",
+      "bloomLevel": "Create",
+      "passingScore": 85,
+      "estimatedDuration": "90 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-06-08-a01",
+          "title": "Implementation Plan Architecture",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-06-08-a02",
+          "title": "Stakeholder Communication Plan Builder",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-06-08-a03",
+          "title": "Risk Mitigation Planning for PV Education",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-06-08-a04",
+          "title": "Comprehensive Implementation Plan Case Study",
+          "type": "case-study",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-06-08-a05",
+          "title": "Program Implementation Plan Assessment",
+          "type": "quiz",
+          "estimatedDuration": "25 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-06-08-q01",
+                "type": "multiple-choice",
+                "question": "A comprehensive PV education implementation plan should be structured around which core framework?",
+                "options": [
+                  "A phased rollout with defined gates: Readiness > Pilot > Launch > Steady State > Continuous Improvement",
+                  "A single big-bang launch with no phases",
+                  "An indefinite soft launch with no defined milestones",
+                  "A reverse chronological plan starting from the desired end state"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Phased rollout with defined gates enables controlled progression. Each gate requires specific criteria to be met before advancing: Readiness (infrastructure verified), Pilot (validated with representative group), Launch (full deployment), Steady State (operational), and Continuous Improvement (optimizing)."
+              },
+              {
+                "id": "pv-ed-06-08-q02",
+                "type": "multiple-select",
+                "question": "Which risks should be included in a PV education program risk mitigation plan? Select all that apply.",
+                "options": [
+                  "Faculty attrition leaving gaps in PV subject-matter expertise",
+                  "Regulatory changes requiring rapid curriculum updates",
+                  "Technology platform failures disrupting assessment delivery",
+                  "Learner workload conflicts reducing engagement and completion rates"
+                ],
+                "correctAnswer": [0, 1, 2, 3],
+                "points": 4,
+                "explanation": "All four are significant risks for PV education programs. Faculty attrition (people risk), regulatory changes (compliance risk), technology failures (infrastructure risk), and workload conflicts (operational risk) must all have documented mitigation strategies."
+              },
+              {
+                "id": "pv-ed-06-08-q03",
+                "type": "multiple-choice",
+                "question": "In a stakeholder communication plan for a PV education program, which communication cadence is most appropriate for regulatory affairs leadership?",
+                "options": [
+                  "Quarterly compliance reports showing training completion rates, competency metrics, and inspection readiness status",
+                  "Daily email updates on learner login activity",
+                  "Annual summary only at fiscal year end",
+                  "No regular communication — only when they request information"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Regulatory affairs leadership needs regular compliance visibility. Quarterly reports provide sufficient frequency to monitor training compliance, track competency achievement, and prepare for inspections. Daily updates are excessive; annual or on-demand is insufficient for compliance oversight."
+              },
+              {
+                "id": "pv-ed-06-08-q04",
+                "type": "true-false",
+                "question": "A comprehensive PV education implementation plan should include a sustainability section addressing long-term funding, faculty pipeline, content maintenance, and technology evolution.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Sustainability ensures the program endures beyond initial launch. This includes securing recurring funding, developing faculty pipelines (training future PV educators), establishing content maintenance processes (regulatory updates), and planning for technology evolution (LMS upgrades, new learning modalities)."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

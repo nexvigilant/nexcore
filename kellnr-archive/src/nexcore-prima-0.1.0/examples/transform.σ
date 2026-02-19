@@ -1,0 +1,34 @@
+// Data Transformation Pipeline in Prima
+// File: transform.σ
+//
+// Demonstrates σ (Sequence) and μ (Mapping) primitives.
+
+fn double(x: N) → N {
+    x * 2
+}
+
+fn add_one(x: N) → N {
+    x + 1
+}
+
+// Create a sequence (grounded to σ)
+let data = σ[1, 2, 3, 4, 5]
+
+// Apply transformations
+let doubled = data.map(double)
+let incremented = doubled.map(add_one)
+
+println("Original:", data)
+println("Doubled:", doubled)
+println("Final:", incremented)
+
+// Check grounding
+println("Data tier:", data.tier())
+println("Data composition:", data.composition())
+
+// Output:
+// Original: σ[1, 2, 3, 4, 5]
+// Doubled: σ[2, 4, 6, 8, 10]
+// Final: σ[3, 5, 7, 9, 11]
+// Data tier: T2-P
+// Data composition: [σ + N]

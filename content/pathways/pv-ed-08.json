@@ -1,0 +1,523 @@
+{
+  "$schema": "./pathway.schema.json",
+  "id": "pv-ed-08",
+  "title": "Client Success & PV Consulting Integration",
+  "description": "Master the discipline of translating pharmacovigilance education into measurable client outcomes. From competency needs analysis and gap assessment through solution design, value delivery, and ROI measurement to comprehensive organizational transformation strategies.",
+  "domain": "pharmacovigilance",
+  "componentCount": 26,
+  "estimatedDuration": "14 hours",
+  "stages": [
+    {
+      "id": "pv-ed-08-01",
+      "title": "PV Consulting Foundations",
+      "description": "Learn the core models for pharmacovigilance consulting engagements: advisory, embedded, managed service, and hybrid delivery models. Identify key stakeholders, engagement lifecycles, and the relationship between education and consulting in the PV domain.",
+      "bloomLevel": "Remember",
+      "passingScore": 70,
+      "estimatedDuration": "45 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-08-01-a01",
+          "title": "Introduction to PV Consulting Models",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-08-01-a02",
+          "title": "Client Engagement Lifecycle Explorer",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-08-01-a03",
+          "title": "PV Consulting Foundations Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-08-01-q01",
+                "type": "multiple-choice",
+                "question": "In a PV consulting engagement, what is the primary purpose of a needs analysis phase?",
+                "options": [
+                  "To identify gaps between current organizational PV capabilities and regulatory requirements",
+                  "To sell the maximum number of training courses",
+                  "To conduct a full GVP inspection simulation",
+                  "To replace the client's existing QPPV"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Needs analysis systematically identifies the gap between an organization's current PV capabilities and what is required by regulations, industry best practices, or strategic objectives. This gap analysis drives the entire consulting engagement scope."
+              },
+              {
+                "id": "pv-ed-08-01-q02",
+                "type": "true-false",
+                "question": "A managed PV service model typically involves the consulting firm taking operational responsibility for defined pharmacovigilance activities on behalf of the client.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "In a managed service model, the consulting provider assumes operational responsibility for specific PV activities (e.g., case processing, aggregate reporting, signal management) under a service-level agreement, while the MAH retains overall regulatory accountability."
+              },
+              {
+                "id": "pv-ed-08-01-q03",
+                "type": "multiple-choice",
+                "question": "Which stakeholder typically holds ultimate regulatory accountability for pharmacovigilance activities regardless of outsourcing arrangements?",
+                "options": [
+                  "The Marketing Authorization Holder (MAH)",
+                  "The outsourced service provider",
+                  "The contract research organization",
+                  "The local safety officer at each affiliate"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Under both EU GVP and FDA regulations, the Marketing Authorization Holder retains ultimate regulatory responsibility for all PV activities, even when operations are outsourced. This is a fundamental principle that shapes all consulting engagement structures."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-08-02",
+      "title": "Competency Needs Analysis & Gap Assessment",
+      "description": "Understand methodologies for assessing PV competency gaps: current-state vs. required-state analysis, regulatory requirement mapping, organizational maturity assessment using PV-specific maturity models, and strategic objective alignment to ensure education programs target the right deficiencies.",
+      "bloomLevel": "Understand",
+      "passingScore": 70,
+      "estimatedDuration": "60 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-08-02-a01",
+          "title": "Competency Gap Assessment Frameworks",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-08-02-a02",
+          "title": "Regulatory Requirement Mapping Exercise",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-08-02-a03",
+          "title": "Organizational Maturity Assessment Case Study",
+          "type": "case-study",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-08-02-a04",
+          "title": "Needs Analysis Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-08-02-q01",
+                "type": "multiple-choice",
+                "question": "When conducting a PV competency gap analysis, what is the correct sequence of assessment steps?",
+                "options": [
+                  "Define required competencies from regulations/standards, assess current state, identify gaps, prioritize by risk",
+                  "Assess current state, purchase training, define requirements afterward",
+                  "Prioritize by budget, select courses, then define competencies",
+                  "Conduct training first, then assess whether it addressed the right gaps"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Effective gap analysis follows a structured approach: first define the target state from regulatory requirements and best practices, then objectively assess current capabilities, identify the delta, and prioritize gaps based on regulatory risk and business impact."
+              },
+              {
+                "id": "pv-ed-08-02-q02",
+                "type": "multiple-select",
+                "question": "Which data sources are appropriate for assessing current PV competency levels within an organization? Select all that apply.",
+                "options": [
+                  "Regulatory inspection findings and CAPA records",
+                  "Individual performance assessments and training records",
+                  "Case processing quality metrics (error rates, timeliness)",
+                  "Competitor employee LinkedIn profiles"
+                ],
+                "correctAnswer": [0, 1, 2],
+                "points": 3,
+                "explanation": "Valid data sources include internal quality data (inspection findings, CAPAs), individual assessments (performance reviews, training history), and operational metrics (error rates, compliance timelines). Competitor employee profiles are not a valid internal competency data source."
+              },
+              {
+                "id": "pv-ed-08-02-q03",
+                "type": "true-false",
+                "question": "GVP Module I requires that Marketing Authorization Holders ensure their personnel involved in PV activities are appropriately qualified and trained.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "EMA GVP Module I (Pharmacovigilance systems and their quality systems) requires MAHs to ensure that all personnel involved in PV are suitably qualified, trained, and have defined roles and responsibilities. This creates the regulatory basis for competency-based training programs."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-08-03",
+      "title": "Solution Design & Program Customization",
+      "description": "Apply solution design principles to create tailored PV education programs: map competency gaps to learning interventions, integrate technology-enabled delivery (LMS, simulation, e-learning), incorporate change management strategies, and design blended programs that combine education with on-the-job coaching.",
+      "bloomLevel": "Apply",
+      "passingScore": 75,
+      "estimatedDuration": "55 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-08-03-a01",
+          "title": "Designing Tailored PV Education Solutions",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-08-03-a02",
+          "title": "Technology-Enabled Learning Configuration",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-08-03-a03",
+          "title": "Solution Design Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-08-03-q01",
+                "type": "multiple-choice",
+                "question": "When designing a PV education solution for a company that recently received inspection findings related to signal management, which approach is most effective?",
+                "options": [
+                  "Target signal management competencies specifically, using the inspection findings to define learning objectives and practical exercises",
+                  "Provide a general PV overview course covering all topics equally",
+                  "Focus exclusively on case processing since it is the most common PV activity",
+                  "Delay training until after the next inspection to see if findings recur"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Effective solution design is gap-driven. Inspection findings provide direct evidence of competency deficiencies. Targeted training that addresses the specific findings, with practical exercises mirroring the failed activities, delivers maximum impact and demonstrates CAPA effectiveness."
+              },
+              {
+                "id": "pv-ed-08-03-q02",
+                "type": "true-false",
+                "question": "Change management is an essential component of PV education solution design because training alone does not guarantee that new knowledge will be applied in daily practice.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "The knowledge-to-practice gap is well-documented. Change management addresses organizational barriers to adoption: leadership support, process redesign, reinforcement mechanisms, and performance measurement. Without it, training investment often fails to translate into improved PV operations."
+              },
+              {
+                "id": "pv-ed-08-03-q03",
+                "type": "multiple-choice",
+                "question": "In a blended PV learning program, what is the primary advantage of combining e-learning modules with instructor-led workshops?",
+                "options": [
+                  "E-learning delivers foundational knowledge efficiently while workshops develop practical application skills through case-based discussion",
+                  "E-learning is always cheaper than instructor-led training",
+                  "Workshops are unnecessary if e-learning assessments are comprehensive",
+                  "Blended programs are only effective for large organizations"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Blended learning leverages the strengths of each modality: e-learning for self-paced knowledge acquisition (Remember/Understand in Bloom's taxonomy) and instructor-led sessions for higher-order skills (Apply/Analyze/Evaluate) requiring discussion, case work, and expert facilitation."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-08-04",
+      "title": "Value Delivery & Quick Wins",
+      "description": "Apply rapid value delivery strategies in PV consulting: identify quick wins that demonstrate immediate impact (SOP improvements, reporting template standardization, triage process optimization), balance short-term gains with long-term transformation objectives, and document success stories for organizational buy-in.",
+      "bloomLevel": "Apply",
+      "passingScore": 75,
+      "estimatedDuration": "65 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-08-04-a01",
+          "title": "Quick Wins in PV Consulting",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-08-04-a02",
+          "title": "Implementing Rapid Value Initiatives",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-08-04-a03",
+          "title": "Quick Win Identification Case Study",
+          "type": "case-study",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-08-04-a04",
+          "title": "Value Delivery Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-08-04-q01",
+                "type": "multiple-choice",
+                "question": "Which PV activity typically represents the highest-value quick win when starting a consulting engagement with a company that has case processing backlogs?",
+                "options": [
+                  "Standardizing triage criteria and case prioritization to ensure serious/unexpected cases are processed within regulatory timelines",
+                  "Redesigning the entire safety database system",
+                  "Recruiting additional permanent staff before any process changes",
+                  "Waiting for the backlog to clear naturally before intervening"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Triage standardization is a high-impact quick win because it immediately ensures regulatory-critical cases (serious, unexpected, expedited) are identified and processed first. This reduces compliance risk while the broader backlog is addressed through systematic improvement."
+              },
+              {
+                "id": "pv-ed-08-04-q02",
+                "type": "true-false",
+                "question": "Documenting quick win successes with quantified outcomes (e.g., 'reduced average case processing time from 12 days to 7 days') is essential for securing organizational commitment to longer-term PV transformation initiatives.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Quantified quick win documentation builds credibility and organizational trust. Concrete metrics demonstrate the consulting value proposition and create momentum for larger investments in PV system transformation. Without measurable proof points, long-term initiatives lose executive sponsorship."
+              },
+              {
+                "id": "pv-ed-08-04-q03",
+                "type": "multiple-choice",
+                "question": "When balancing quick wins against long-term PV transformation, what risk must be managed?",
+                "options": [
+                  "Over-investing in quick fixes that create technical debt and delay fundamental capability building",
+                  "Quick wins always align perfectly with long-term strategy",
+                  "Long-term transformation never requires short-term compromises",
+                  "Quick wins are never valuable in PV consulting"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Quick wins can become crutches if they create workarounds that accumulate technical or process debt. The risk is that short-term patches become permanent solutions, undermining the strategic transformation needed for sustainable PV excellence. Consultants must explicitly connect quick wins to the long-term roadmap."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-08-05",
+      "title": "Education-to-Consulting Integration",
+      "description": "Analyze integration frameworks that bridge PV education and consulting: education-to-consulting transition models, knowledge-to-practice application methodologies, individual-to-organization scaling strategies, and local-to-global transformation pathways that extend learnings across multinational operations.",
+      "bloomLevel": "Analyze",
+      "passingScore": 80,
+      "estimatedDuration": "70 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-08-05-a01",
+          "title": "Bridging Education and Consulting in PV",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-08-05-a02",
+          "title": "Knowledge-to-Practice Translation Exercise",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-08-05-a03",
+          "title": "Individual-to-Organization Scaling Case Study",
+          "type": "case-study",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-08-05-a04",
+          "title": "Integration Frameworks Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-08-05-q01",
+                "type": "multiple-choice",
+                "question": "The Kirkpatrick model, adapted for PV education evaluation, measures training effectiveness at four levels. Which level assesses whether trained behaviors are applied in the workplace?",
+                "options": [
+                  "Level 3: Behavior (transfer of learning to job performance)",
+                  "Level 1: Reaction (learner satisfaction)",
+                  "Level 2: Learning (knowledge acquisition)",
+                  "Level 4: Results (organizational impact)"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Kirkpatrick Level 3 (Behavior) measures the transfer of learning to workplace application. In PV, this means assessing whether trained individuals actually apply new signal management, case processing, or reporting skills in their daily work. This is the critical bridge between education and consulting impact."
+              },
+              {
+                "id": "pv-ed-08-05-q02",
+                "type": "multiple-select",
+                "question": "When scaling a PV competency improvement from individual training to organizational capability, which strategies are effective? Select all that apply.",
+                "options": [
+                  "Creating internal PV champion networks who mentor colleagues",
+                  "Embedding new competencies into SOPs and job descriptions",
+                  "Integrating competency metrics into performance review systems",
+                  "Relying solely on annual refresher training without process changes"
+                ],
+                "correctAnswer": [0, 1, 2],
+                "points": 3,
+                "explanation": "Organizational scaling requires structural reinforcement: champion networks provide peer support, SOP integration institutionalizes new practices, and performance metrics sustain accountability. Annual refresher training alone (without process integration) typically fails to sustain organizational change."
+              },
+              {
+                "id": "pv-ed-08-05-q03",
+                "type": "true-false",
+                "question": "Local-to-global transformation in PV requires adapting a core competency framework to accommodate regional regulatory differences while maintaining consistent quality standards.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Global PV organizations must balance standardization (consistent quality, harmonized processes) with localization (regional regulatory compliance, local language requirements, jurisdiction-specific reporting). A core framework with regional adaptations is the standard approach for multinational PV operations."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-08-06",
+      "title": "Client Success Metrics & ROI",
+      "description": "Evaluate client success through quantified metrics: competency improvement rates (pre/post assessment scores), EPA progression (entrustable professional activity advancement), regulatory inspection readiness indicators, business outcome achievement (reduced findings, faster processing, fewer queries), and education program ROI calculation methodologies.",
+      "bloomLevel": "Evaluate",
+      "passingScore": 80,
+      "estimatedDuration": "75 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-08-06-a01",
+          "title": "Measuring PV Education ROI",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-08-06-a02",
+          "title": "Building Client Success Metrics Dashboards",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-08-06-a03",
+          "title": "ROI Calculation Case Study",
+          "type": "case-study",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-08-06-a04",
+          "title": "Client Success Metrics Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-08-06-q01",
+                "type": "multiple-choice",
+                "question": "When calculating ROI for a PV education program, which cost-avoidance metric provides the strongest business case to executive stakeholders?",
+                "options": [
+                  "Reduction in regulatory inspection findings and associated CAPA remediation costs",
+                  "Number of training hours completed per employee",
+                  "Satisfaction scores from post-training surveys",
+                  "Total number of e-learning modules deployed"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Regulatory findings carry direct costs (CAPA implementation, consultant remediation, potential warning letters) and indirect costs (brand damage, delayed approvals). Demonstrating that training reduces findings provides a quantifiable financial return that resonates with executive decision-makers."
+              },
+              {
+                "id": "pv-ed-08-06-q02",
+                "type": "multiple-choice",
+                "question": "In the Entrustable Professional Activities (EPA) framework applied to PV, advancing from 'direct supervision required' to 'indirect supervision sufficient' indicates what about the learner?",
+                "options": [
+                  "The learner can perform the PV activity competently with oversight available but not actively observing",
+                  "The learner no longer needs any quality checks on their work",
+                  "The learner is qualified to supervise others performing the activity",
+                  "The learner has completed all available training modules"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "EPA progression levels reflect increasing autonomy. Moving from direct to indirect supervision means the professional can perform the activity independently with a supervisor available for consultation but not directly observing each step. Quality checks and periodic audits still apply."
+              },
+              {
+                "id": "pv-ed-08-06-q03",
+                "type": "multiple-select",
+                "question": "Which are valid indicators of regulatory inspection readiness for a PV organization? Select all that apply.",
+                "options": [
+                  "Up-to-date training records for all PV personnel with documented competency assessments",
+                  "SOPs that reflect current regulatory requirements with evidence of periodic review",
+                  "Documented signal management process with evaluation records",
+                  "A training budget that exceeds industry average spending"
+                ],
+                "correctAnswer": [0, 1, 2],
+                "points": 3,
+                "explanation": "Inspection readiness depends on demonstrable compliance: documented training/competency (GVP Module I), current SOPs with review evidence (quality system requirements), and operational evidence of PV activities (signal management records). Budget size is not an inspection criterion."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-08-07",
+      "title": "Comprehensive Client Transformation Strategy",
+      "description": "Create end-to-end client transformation strategies that integrate needs analysis findings, customized solution designs, measured value delivery, and sustainable organizational change. Develop transformation roadmaps that scale from individual competency building through team capability development to enterprise-wide PV excellence.",
+      "bloomLevel": "Create",
+      "passingScore": 85,
+      "estimatedDuration": "90 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-08-07-a01",
+          "title": "Long-Term PV Transformation Strategy",
+          "type": "reading",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-08-07-a02",
+          "title": "Designing Transformation Roadmaps",
+          "type": "interactive",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-08-07-a03",
+          "title": "Global Transformation Case Study",
+          "type": "case-study",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-08-07-a04",
+          "title": "Client Transformation Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-08-07-q01",
+                "type": "multiple-choice",
+                "question": "A pharmaceutical company needs to transform its PV operations from a reactive, compliance-focused model to a proactive, science-driven approach. Which phased strategy is most appropriate?",
+                "options": [
+                  "Phase 1: Stabilize compliance gaps; Phase 2: Build analytical capabilities; Phase 3: Implement proactive signal detection and benefit-risk assessment",
+                  "Immediately implement advanced AI-driven signal detection without addressing baseline compliance",
+                  "Focus exclusively on hiring more experienced staff without changing processes",
+                  "Outsource all PV activities to avoid the need for internal transformation"
+                ],
+                "correctAnswer": 0,
+                "points": 3,
+                "explanation": "Effective transformation follows a maturity progression: first ensure regulatory compliance is stable (reduce risk), then build analytical and scientific capabilities, and finally implement proactive, technology-enabled approaches. Skipping foundational stages leads to failure because advanced capabilities require a solid compliance and process foundation."
+              },
+              {
+                "id": "pv-ed-08-07-q02",
+                "type": "multiple-choice",
+                "question": "When scaling PV transformation from a single site to a global organization, what is the most critical success factor?",
+                "options": [
+                  "Executive sponsorship at global level combined with local change champions in each region",
+                  "Using the exact same training materials in all languages without cultural adaptation",
+                  "Implementing all changes simultaneously across all regions",
+                  "Selecting only one region for permanent implementation"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Global scaling requires both top-down authority (executive sponsorship for resource allocation and priority setting) and bottom-up adoption (local champions who understand regional context and drive change). This dual approach is validated by change management research and multinational PV operations experience."
+              },
+              {
+                "id": "pv-ed-08-07-q03",
+                "type": "true-false",
+                "question": "Documenting client transformation success stories with quantified before-and-after metrics serves as both a client retention tool and a business development asset for future engagements.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Quantified success documentation serves dual purposes: it demonstrates ongoing value to the current client (supporting retention and expansion), and it provides credible evidence of capability for prospective clients. Case studies with measurable outcomes are the strongest form of consulting credibility."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

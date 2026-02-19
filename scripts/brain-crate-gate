@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# brain-crate-gate: verify current session has required resolved milestones for crate work
+# Usage: brain-crate-gate <crate> [--strict-markers|--warn-markers]
+set -euo pipefail
+
+if [[ $# -lt 1 || $# -gt 2 ]]; then
+  echo "Usage: brain-crate-gate <crate> [--strict-markers|--warn-markers]" >&2
+  exit 1
+fi
+
+CRATE="$1"
+MARKER_MODE="${2:---strict-markers}"
+if [[ ! "$CRATE" =~ ^[a-z0-9][a-z0-9-]{0,62}$ ]]; then
+  echo "Invalid crate name: $CRATE" >&2
+  exit 2
+fi
+case "$MARKER_MODE" in
+  --strict-markers|--warn-markers) ;;
+  *)
+    echo "Invalid marker mode: $MARKER_MODE" >&2
+    echo "Allowed: --strict-markers, --warn-markers" >&2
+    exit 2
+    ;;
+esac
+
+if ! command -v brain >/dev/null 2>&1; then
+  echo "brain CLI not found in PATH" >&2
+  exit 127
+fi
+
+SESSION_ID="$(brain session current 2>/dev/null || true)"
+if [[ -z "$SESSION_ID" ]]; then
+  echo "No active brain session" >&2
+  exit 2
+fi
+
+SESSION_DIR="${HOME}/.claude/brain/sessions/${SESSION_ID}"
+if [[ ! -d "$SESSION_DIR" ]]; then
+  echo "Missing session dir: $SESSION_DIR" >&2
+  exit 2
+fi
+
+required=(task.md plan.md handoff.md)
+missing=()
+for name in "${required[@]}"; do
+  [[ -f "${SESSION_DIR}/${name}.resolved" ]] || missing+=("$name")
+done
+
+if (( ${#missing[@]} > 0 )); then
+  echo "Gate failed for crate $CRATE: missing resolved artifacts: $(IFS=,; echo "${missing[*]}")" >&2
+  echo "Run: just brain-crate-task $CRATE \"...\"; just brain-crate-plan $CRATE \"...\"; just brain-crate-handoff $CRATE \"...\"" >&2
+  exit 3
+fi
+
+marker_missing=()
+for name in "${required[@]}"; do
+  if ! grep -qi "\[$CRATE\]" "${SESSION_DIR}/${name}.resolved" 2>/dev/null; then
+    marker_missing+=("${name}.resolved")
+  fi
+done
+
+if (( ${#marker_missing[@]} > 0 )); then
+  msg="Crate marker [$CRATE] missing in: $(IFS=,; echo "${marker_missing[*]}")"
+  if [[ "$MARKER_MODE" == "--strict-markers" ]]; then
+    echo "Gate failed for crate $CRATE: ${msg}" >&2
+    echo "Re-save milestones with: just brain-crate-task|plan|handoff $CRATE \"...\"" >&2
+    exit 4
+  else
+    echo "Gate warning for crate $CRATE: ${msg}" >&2
+  fi
+fi
+
+echo "Gate passed for crate $CRATE in session $SESSION_ID"

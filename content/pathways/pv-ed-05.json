@@ -1,0 +1,673 @@
+{
+  "$schema": "./pathway.schema.json",
+  "id": "pv-ed-05",
+  "title": "Assessment & Portfolio Management in Pharmacovigilance Education",
+  "description": "Master multi-method assessment design, portfolio architecture across professional levels, quality assurance frameworks, and digital assessment technologies for pharmacovigilance competency evaluation. Builds from foundational assessment literacy through advanced portfolio analysis and certification management.",
+  "domain": "pharmacovigilance",
+  "componentCount": 39,
+  "estimatedDuration": "16 hours",
+  "stages": [
+    {
+      "id": "pv-ed-05-01",
+      "title": "Assessment Foundations in PV Education",
+      "description": "Understand the core principles of competency assessment in pharmacovigilance education, including the distinction between formative and summative assessment, criterion-referenced vs. norm-referenced approaches, and the role of assessment in competency-based PV training programs.",
+      "bloomLevel": "Remember",
+      "passingScore": 70,
+      "estimatedDuration": "50 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-05-01-a01",
+          "title": "Assessment Paradigms in Health Professions Education",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-05-01-a02",
+          "title": "Formative vs. Summative Assessment Explorer",
+          "type": "interactive",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "pv-ed-05-01-a03",
+          "title": "Miller's Pyramid of Clinical Competence",
+          "type": "reading",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "pv-ed-05-01-a04",
+          "title": "Assessment Foundations Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-05-01-q01",
+                "type": "multiple-choice",
+                "question": "In Miller's Pyramid of Clinical Competence, which level represents the ability to actually perform a task in real practice, such as conducting a causality assessment on a live ICSR?",
+                "options": [
+                  "Does (Action)",
+                  "Shows How (Performance)",
+                  "Knows How (Competence)",
+                  "Knows (Knowledge)"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "The 'Does' level at the top of Miller's Pyramid represents actual performance in clinical/professional practice. In PV, this means independently performing causality assessments, signal evaluations, or ICSR processing in real work settings, not simulations."
+              },
+              {
+                "id": "pv-ed-05-01-q02",
+                "type": "true-false",
+                "question": "Criterion-referenced assessment compares a learner's PV competency against a fixed standard (e.g., ICH E2B compliance criteria), while norm-referenced assessment ranks learners against each other.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Criterion-referenced assessment measures against fixed criteria (e.g., can the learner correctly complete an E2B(R3) ICSR within regulatory timelines?). Norm-referenced assessment ranks learners relative to peers. Competency-based PV education predominantly uses criterion-referenced approaches."
+              },
+              {
+                "id": "pv-ed-05-01-q03",
+                "type": "multiple-choice",
+                "question": "Which assessment approach is most aligned with the EPA (Entrustable Professional Activity) framework used in health professions education?",
+                "options": [
+                  "Workplace-based assessment with direct observation and entrustment decisions",
+                  "Written multiple-choice examinations only",
+                  "Annual performance reviews by supervisors",
+                  "Self-assessment questionnaires"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "EPAs require workplace-based assessment where supervisors directly observe learners performing professional activities and make entrustment decisions (from close supervision to unsupervised practice). This is central to competency-based education in PV."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-05-02",
+      "title": "Multi-Method Assessment Design",
+      "description": "Understand the five core assessment methods for pharmacovigilance competency: Direct Observation of procedural skills, Work Product Review of ICSRs and signal reports, 360-degree Feedback from multidisciplinary teams, Simulation-based assessment using case scenarios, and Portfolio Analysis for longitudinal competency evidence.",
+      "bloomLevel": "Understand",
+      "passingScore": 70,
+      "estimatedDuration": "60 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-05-02-a01",
+          "title": "Direct Observation Methods in PV",
+          "type": "reading",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-05-02-a02",
+          "title": "Work Product Review: ICSRs, PSURs, and Signal Reports",
+          "type": "reading",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-05-02-a03",
+          "title": "360-Degree Feedback in PV Teams",
+          "type": "interactive",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "pv-ed-05-02-a04",
+          "title": "Simulation-Based Assessment Design",
+          "type": "interactive",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "pv-ed-05-02-a05",
+          "title": "Multi-Method Assessment Assessment",
+          "type": "quiz",
+          "estimatedDuration": "16 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-05-02-q01",
+                "type": "multiple-choice",
+                "question": "When assessing a PV professional's ability to conduct WHO-UMC causality assessment, which method provides the most valid evidence of actual performance?",
+                "options": [
+                  "Direct observation during real ICSR processing with a structured rating form",
+                  "A written examination on WHO-UMC causality categories",
+                  "Self-reported confidence survey on causality assessment skills",
+                  "Annual supervisor performance rating"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Direct observation of actual ICSR processing provides the most valid evidence of real-world performance (Miller's 'Does' level). Written exams only assess knowledge, not application. Self-report and annual reviews lack standardization and direct performance evidence."
+              },
+              {
+                "id": "pv-ed-05-02-q02",
+                "type": "multiple-select",
+                "question": "Which work products are appropriate for assessing PV competency through Work Product Review? Select all that apply.",
+                "options": [
+                  "Completed ICSR forms with documented causality assessments",
+                  "PSUR/PBRER aggregate analysis sections authored by the learner",
+                  "Signal validation reports with disproportionality calculations",
+                  "Personal journal entries about work satisfaction"
+                ],
+                "correctAnswer": [0, 1, 2],
+                "points": 3,
+                "explanation": "ICSRs, PSUR/PBRER sections, and signal validation reports are all authentic PV work products that demonstrate domain competency. Personal journal entries may support reflective practice but are not PV-specific work products for competency assessment."
+              },
+              {
+                "id": "pv-ed-05-02-q03",
+                "type": "true-false",
+                "question": "360-degree feedback in pharmacovigilance should include input from regulatory affairs, medical affairs, clinical operations, and quality assurance colleagues who interact with the PV professional.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "PV professionals operate at the intersection of multiple functions. 360-degree feedback should capture perspectives from all stakeholders who interact with the PV professional, including regulatory affairs (submission coordination), medical affairs (benefit-risk input), clinical operations (trial safety data), and QA (compliance oversight)."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-05-03",
+      "title": "Foundation-Level Portfolio Architecture",
+      "description": "Apply portfolio design principles at the Foundation level, including activity documentation for ICSR processing and adverse event reporting, skill demonstration artifacts for MedDRA coding and signal triage, and structured learning reflections that connect practice experiences to PV competency frameworks.",
+      "bloomLevel": "Apply",
+      "passingScore": 75,
+      "estimatedDuration": "70 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-05-03-a01",
+          "title": "Foundation Portfolio Requirements and Structure",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-05-03-a02",
+          "title": "Activity Documentation Templates for PV",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-05-03-a03",
+          "title": "Building a Skill Demonstration Artifact",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-05-03-a04",
+          "title": "Writing Effective Learning Reflections",
+          "type": "case-study",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "pv-ed-05-03-a05",
+          "title": "Foundation Portfolio Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-05-03-q01",
+                "type": "multiple-choice",
+                "question": "A Foundation-level PV trainee's portfolio should include which of the following as an activity documentation artifact?",
+                "options": [
+                  "A logbook of ICSR cases processed with timestamps, MedDRA codes applied, and supervisor sign-off",
+                  "A published peer-reviewed manuscript on signal detection methodology",
+                  "A strategic plan for organizational PV system transformation",
+                  "An industry benchmarking analysis of global PV operations"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Foundation-level portfolios focus on activity documentation — recording what was done, when, and with what quality. An ICSR processing logbook with supervisor verification is the appropriate artifact. Published manuscripts, strategic plans, and benchmarking analyses represent Professional and Executive level work."
+              },
+              {
+                "id": "pv-ed-05-03-q02",
+                "type": "multiple-choice",
+                "question": "In a structured learning reflection for PV education, which reflective framework component asks the learner to connect a specific ICSR processing experience to broader PV competency standards?",
+                "options": [
+                  "The 'So What?' component — linking experience to professional development implications",
+                  "The 'What?' component — describing the factual events",
+                  "The 'Now What?' component — planning future actions",
+                  "The 'Who?' component — identifying stakeholders"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "The 'So What?' component of Driscoll's reflective framework (What? So What? Now What?) asks learners to analyze the significance of their experience and connect it to broader learning objectives and competency standards. This is where ICSR experiences link to PV competency frameworks."
+              },
+              {
+                "id": "pv-ed-05-03-q03",
+                "type": "true-false",
+                "question": "A Foundation-level skill demonstration artifact should show that the learner can perform MedDRA coding of adverse events with supervisor guidance, not necessarily independently.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Foundation level corresponds to early EPA entrustment levels where tasks are performed under supervision. Demonstrating competency with guidance is appropriate. Independent performance is expected at the Professional level."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-05-04",
+      "title": "Professional and Executive Portfolio Architecture",
+      "description": "Apply portfolio design principles at Professional and Executive levels. Professional portfolios include independent work examples (signal evaluations, benefit-risk assessments), quality metrics (accuracy rates, timeliness), and innovation attempts. Executive portfolios document transformation initiatives, industry influence (publications, committee work), and legacy documentation.",
+      "bloomLevel": "Apply",
+      "passingScore": 75,
+      "estimatedDuration": "70 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-05-04-a01",
+          "title": "Professional Portfolio: Independent Work and Quality Metrics",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-05-04-a02",
+          "title": "Professional Portfolio: Innovation Documentation",
+          "type": "interactive",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-05-04-a03",
+          "title": "Executive Portfolio: Transformation and Influence",
+          "type": "reading",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-05-04-a04",
+          "title": "Portfolio Level Differentiation Workshop",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-05-04-a05",
+          "title": "Professional and Executive Portfolio Assessment",
+          "type": "quiz",
+          "estimatedDuration": "16 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-05-04-q01",
+                "type": "multiple-choice",
+                "question": "A Professional-level PV portfolio should include quality metrics. Which metric best demonstrates signal detection competency?",
+                "options": [
+                  "Sensitivity and specificity rates for signal identification against a validated reference standard",
+                  "Number of years in a PV role",
+                  "Number of training certificates obtained",
+                  "Supervisor satisfaction ratings"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Sensitivity (true positive rate) and specificity (true negative rate) against a validated reference standard directly measure signal detection accuracy. Years of experience, certificates, and supervisor ratings are proxy measures that don't directly assess competency."
+              },
+              {
+                "id": "pv-ed-05-04-q02",
+                "type": "multiple-select",
+                "question": "Which artifacts are appropriate for an Executive-level PV portfolio? Select all that apply.",
+                "options": [
+                  "Documentation of a PV system transformation initiative with measurable outcomes",
+                  "Evidence of industry influence through CIOMS working group participation",
+                  "A legacy documentation package for knowledge transfer to successors",
+                  "A basic ICSR processing logbook"
+                ],
+                "correctAnswer": [0, 1, 2],
+                "points": 3,
+                "explanation": "Executive portfolios document transformation (system-level change), influence (industry leadership such as CIOMS, ICH, or regulatory advisory committee participation), and legacy (knowledge transfer). A basic ICSR logbook is a Foundation-level artifact."
+              },
+              {
+                "id": "pv-ed-05-04-q03",
+                "type": "true-false",
+                "question": "An innovation attempt in a Professional-level portfolio must demonstrate successful implementation to count as valid evidence of competency.",
+                "correctAnswer": false,
+                "points": 1,
+                "explanation": "Innovation attempts are valued regardless of outcome. A well-documented attempt that identifies a problem, proposes a solution, tests it, and reflects on results demonstrates analytical and creative competency even if the innovation was ultimately not adopted."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-05-05",
+      "title": "Assessment Quality Assurance",
+      "description": "Analyze the four pillars of assessment quality in PV education: Validity (does the assessment measure what it claims?), Reliability (inter-rater reliability >0.80), Authenticity (does it reflect real PV practice?), and Fairness (is it equitable across diverse learner populations?). Apply quality frameworks to evaluate assessment instruments.",
+      "bloomLevel": "Analyze",
+      "passingScore": 80,
+      "estimatedDuration": "75 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-05-05-a01",
+          "title": "Validity Frameworks for PV Assessment",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-05-05-a02",
+          "title": "Inter-Rater Reliability in Competency Assessment",
+          "type": "reading",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-05-05-a03",
+          "title": "Reliability Calibration Exercise",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-05-05-a04",
+          "title": "Authenticity and Fairness in Assessment",
+          "type": "case-study",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-05-05-a05",
+          "title": "Assessment Quality Assurance Assessment",
+          "type": "quiz",
+          "estimatedDuration": "18 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-05-05-q01",
+                "type": "multiple-choice",
+                "question": "An assessment requires PV trainees to process simulated ICSRs that closely mirror real-world cases, using actual safety database interfaces. Which quality criterion does this primarily address?",
+                "options": [
+                  "Authenticity — the assessment reflects real professional practice conditions",
+                  "Reliability — the assessment produces consistent scores across raters",
+                  "Fairness — the assessment is equitable for all learners",
+                  "Feasibility — the assessment is practical to administer"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Authenticity ensures assessments reflect real professional practice. Using realistic ICSRs with actual database interfaces creates authentic assessment conditions that mirror what PV professionals encounter in practice."
+              },
+              {
+                "id": "pv-ed-05-05-q02",
+                "type": "multiple-choice",
+                "question": "What is the minimum acceptable inter-rater reliability coefficient for high-stakes PV competency assessments?",
+                "options": [
+                  "0.80 (Cohen's kappa or ICC)",
+                  "0.50",
+                  "0.60",
+                  "0.95"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "An inter-rater reliability coefficient of 0.80 or above (measured by Cohen's kappa or intraclass correlation coefficient) is the established threshold for high-stakes competency assessments. Below 0.80 indicates unacceptable variability between assessors."
+              },
+              {
+                "id": "pv-ed-05-05-q03",
+                "type": "multiple-choice",
+                "question": "Construct validity evidence for a PV signal detection assessment would include which of the following?",
+                "options": [
+                  "Demonstration that experienced PV scientists score significantly higher than novice trainees",
+                  "High internal consistency (Cronbach's alpha) among test items",
+                  "A large number of test items",
+                  "Administration in a standardized testing center"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Construct validity evidence includes known-groups validation — demonstrating that the assessment discriminates between groups expected to differ (experts vs. novices). Internal consistency relates to reliability, not validity. Item count and testing location are administrative considerations."
+              },
+              {
+                "id": "pv-ed-05-05-q04",
+                "type": "true-false",
+                "question": "Assessment fairness in PV education requires that assessments use only English-language materials, since English is the regulatory standard for ICH submissions.",
+                "correctAnswer": false,
+                "points": 1,
+                "explanation": "While English is used for ICH submissions, assessment fairness requires accommodating linguistic and cultural diversity. Many PV professionals work with local-language reporting and national regulatory authorities. Fair assessments consider language accommodations, cultural context, and diverse regulatory environments."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-05-06",
+      "title": "Digital Assessment Technologies",
+      "description": "Analyze digital tools that enhance PV competency assessment: AI-powered portfolio analysis for automated evidence classification, automated competency mapping against regulatory frameworks, progress visualization dashboards for learner and program tracking, and predictive success modeling to identify at-risk learners early.",
+      "bloomLevel": "Analyze",
+      "passingScore": 80,
+      "estimatedDuration": "70 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-05-06-a01",
+          "title": "AI-Powered Portfolio Analysis",
+          "type": "reading",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-05-06-a02",
+          "title": "Automated Competency Mapping Demo",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-05-06-a03",
+          "title": "Progress Visualization Dashboard Design",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-05-06-a04",
+          "title": "Predictive Success Modeling",
+          "type": "case-study",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-05-06-a05",
+          "title": "Digital Assessment Technologies Assessment",
+          "type": "quiz",
+          "estimatedDuration": "16 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-05-06-q01",
+                "type": "multiple-choice",
+                "question": "AI-powered portfolio analysis in PV education can automatically classify which of the following evidence types?",
+                "options": [
+                  "Work products by competency domain, linking ICSR samples to specific PV competency standards",
+                  "Only text documents, excluding numerical data and images",
+                  "Only artifacts submitted in the past 30 days",
+                  "Only artifacts tagged by the learner themselves"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "AI-powered portfolio analysis uses natural language processing and document classification to automatically map work products (ICSRs, signal reports, PSURs) to competency domains, regardless of format, timeframe, or manual tagging."
+              },
+              {
+                "id": "pv-ed-05-06-q02",
+                "type": "true-false",
+                "question": "Predictive success modeling in PV education uses early performance indicators (e.g., ICSR processing accuracy in weeks 1-4, quiz scores, engagement patterns) to identify learners at risk of not achieving competency milestones.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Predictive models analyze early performance data — processing accuracy, assessment scores, platform engagement, time-on-task — to flag learners who may need additional support before they fall critically behind on competency progression."
+              },
+              {
+                "id": "pv-ed-05-06-q03",
+                "type": "multiple-choice",
+                "question": "Which competency framework is most appropriate for automated competency mapping in pharmacovigilance education?",
+                "options": [
+                  "A PV-specific framework aligned with ICH guidelines and national regulatory requirements",
+                  "A generic corporate leadership competency model",
+                  "The CanMEDS physician competency framework without modification",
+                  "ISO 9001 quality management system requirements"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Automated competency mapping requires a domain-specific framework. A PV-specific framework aligned with ICH E2A/E2B/E2C/E2D/E2E guidelines and relevant national regulations (e.g., EU GVP, FDA 21 CFR 314.80) provides the most relevant competency domains for mapping."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-05-07",
+      "title": "Certification and Credentialing Systems",
+      "description": "Evaluate certification management frameworks for PV professionals, including competency-based certification criteria, recertification and continuing professional development (CPD) requirements, certification body standards (e.g., RAPS, DIA), and the relationship between portfolio evidence and certification decisions.",
+      "bloomLevel": "Evaluate",
+      "passingScore": 85,
+      "estimatedDuration": "75 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-05-07-a01",
+          "title": "PV Certification Landscape and Standards",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-05-07-a02",
+          "title": "Competency-Based Certification Criteria Design",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-05-07-a03",
+          "title": "CPD and Recertification Models",
+          "type": "case-study",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-05-07-a04",
+          "title": "Portfolio-to-Certification Decision Framework",
+          "type": "interactive",
+          "estimatedDuration": "12 minutes"
+        },
+        {
+          "id": "pv-ed-05-07-a05",
+          "title": "Certification Management Assessment",
+          "type": "quiz",
+          "estimatedDuration": "18 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-05-07-q01",
+                "type": "multiple-choice",
+                "question": "In a competency-based PV certification program, what is the primary basis for a certification decision?",
+                "options": [
+                  "Demonstrated competency through portfolio evidence mapped to defined standards with verified assessments",
+                  "Completion of a fixed number of training hours regardless of performance",
+                  "Passing a single written examination",
+                  "Years of experience in a PV role"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Competency-based certification requires demonstrated competency through multiple evidence sources (portfolio artifacts, workplace assessments, examinations) mapped to defined standards. Time-based, single-exam, or experience-based criteria alone are insufficient for competency-based certification."
+              },
+              {
+                "id": "pv-ed-05-07-q02",
+                "type": "multiple-select",
+                "question": "Which elements should a PV recertification program include? Select all that apply.",
+                "options": [
+                  "Continuing professional development (CPD) activities in current PV practices",
+                  "Evidence of ongoing competency through workplace-based assessments",
+                  "Demonstration of awareness of regulatory updates (e.g., new EU GVP modules, FDA guidances)",
+                  "A requirement to repeat all original certification examinations in full"
+                ],
+                "correctAnswer": [0, 1, 2],
+                "points": 3,
+                "explanation": "Recertification should include CPD activities, ongoing workplace-based assessment, and regulatory currency. Repeating all original exams is inefficient and does not reflect current best practice in continuing certification. Targeted reassessment of updated content is more appropriate."
+              },
+              {
+                "id": "pv-ed-05-07-q03",
+                "type": "true-false",
+                "question": "The Regulatory Affairs Professionals Society (RAPS) offers the RAC (Regulatory Affairs Certification) which covers pharmacovigilance regulatory knowledge as part of its broader regulatory affairs scope.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "RAPS RAC certification includes pharmacovigilance and safety reporting as part of the broader regulatory affairs body of knowledge. It is one of several professional certifications relevant to PV professionals, alongside certifications from organizations like DIA."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-05-08",
+      "title": "Integrated Assessment System Design",
+      "description": "Create a comprehensive, integrated assessment system for a PV education program that combines multi-method assessments, portfolio architecture across all levels, quality assurance mechanisms, digital technologies, and certification pathways into a coherent whole. Design assessment blueprints and programmatic assessment plans.",
+      "bloomLevel": "Create",
+      "passingScore": 85,
+      "estimatedDuration": "90 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-05-08-a01",
+          "title": "Programmatic Assessment Principles",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-05-08-a02",
+          "title": "Assessment Blueprint Design Workshop",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-05-08-a03",
+          "title": "Designing a Competency Committee Review Process",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-05-08-a04",
+          "title": "Integrated Assessment Case Study: Building a PV Training Program Assessment Plan",
+          "type": "case-study",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-05-08-a05",
+          "title": "Integrated Assessment System Design Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-05-08-q01",
+                "type": "multiple-choice",
+                "question": "In programmatic assessment for PV education, what is the role of a competency committee?",
+                "options": [
+                  "To make holistic entrustment and progression decisions by reviewing aggregated assessment data from multiple sources",
+                  "To write individual examination questions",
+                  "To grade individual assessments independently",
+                  "To observe every learner encounter directly"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Competency committees in programmatic assessment review aggregated data from multiple assessment methods (direct observations, work products, portfolios, exams) to make holistic decisions about learner progression and entrustment. They do not write items, grade individually, or observe directly."
+              },
+              {
+                "id": "pv-ed-05-08-q02",
+                "type": "multiple-choice",
+                "question": "An assessment blueprint for a PV signal detection module should map which elements together?",
+                "options": [
+                  "Competency standards, assessment methods, Bloom's taxonomy levels, and required evidence types",
+                  "Only topic areas and time allocations",
+                  "Only assessment methods and grading scales",
+                  "Only learning objectives and lecture schedules"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "A comprehensive assessment blueprint maps competency standards (what to assess), assessment methods (how to assess), cognitive levels (Bloom's taxonomy), and required evidence types (what counts as evidence). This ensures alignment between learning objectives, instructional methods, and assessment strategies."
+              },
+              {
+                "id": "pv-ed-05-08-q03",
+                "type": "multiple-select",
+                "question": "Which design principles are essential for an integrated PV assessment system? Select all that apply.",
+                "options": [
+                  "Multiple data points per competency from different assessment methods",
+                  "Longitudinal tracking of competency development over time",
+                  "Alignment between assessment and real-world PV practice requirements",
+                  "Reliance on a single high-stakes examination for all decisions"
+                ],
+                "correctAnswer": [0, 1, 2],
+                "points": 3,
+                "explanation": "Integrated assessment systems require triangulation (multiple data points), longitudinal tracking (development over time), and authenticity (alignment with practice). Reliance on a single exam contradicts the principle of programmatic assessment, which aggregates evidence across methods and time."
+              },
+              {
+                "id": "pv-ed-05-08-q04",
+                "type": "true-false",
+                "question": "In an integrated PV assessment system, formative assessments should feed forward into summative decisions by contributing data points to the competency committee's review.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "In programmatic assessment, the distinction between formative and summative is not about individual assessments but about the stakes of decisions. Low-stakes formative assessments contribute data points that aggregate into high-stakes summative decisions by competency committees."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

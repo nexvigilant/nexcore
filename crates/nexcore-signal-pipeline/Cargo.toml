@@ -1,0 +1,32 @@
+
+[package]
+name = "nexcore-signal-pipeline"
+version = "1.0.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+repository = "https://github.com/nexvigilant/nexcore"
+rust-version = "1.85"
+description = "PV signal detection pipeline: ingest, normalize, detect, threshold, store, alert, report, stats, orchestrate"
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+chrono = { workspace = true, features = ["serde"] }
+nexcore-id = { workspace = true, features = ["serde"] }
+nexcore-lex-primitiva = { workspace = true }
+nexcore-primitives = { workspace = true }
+stem-math = { workspace = true }
+axum = { workspace = true, features = ["macros"] }
+tokio = { workspace = true, features = ["full"] }
+bytes = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+phf = { workspace = true, features = ["macros"] }
+
+[dev-dependencies]
+tower = { workspace = true, features = ["full"] }
+http-body-util = { workspace = true }
+
+[lints]
+workspace = true

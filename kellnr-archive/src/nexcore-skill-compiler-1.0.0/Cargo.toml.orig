@@ -1,0 +1,55 @@
+[workspace]
+
+[package]
+name = "nexcore-skill-compiler"
+version = "1.0.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+description = "Skill Compiler - compose 2+ skills into a single compound skill binary"
+keywords = ["skills", "compiler", "composition", "orchestration"]
+categories = ["command-line-utilities"]
+
+[[bin]]
+name = "skill-compile"
+path = "bin/skill-compile.rs"
+
+[dependencies]
+nexcore-skill-exec = { version = "1.0.0", path = "../nexcore-skill-exec", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = { version = "1.0.120" }
+toml = { version = "0.8.15" }
+thiserror = { version = "1.0.61" }
+tracing = { version = "0.1.40" }
+dirs = { version = "5.0.1" }
+clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+
+[dev-dependencies]
+tempfile = { version = "3.10.1" }
+
+[lints.rust]
+async_fn_in_trait = "allow"
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+unused_mut = "allow"
+unused_assignments = "allow"
+unused_must_use = "allow"
+
+[lints.clippy]
+all = "allow"
+pedantic = "allow"
+nursery = "allow"
+cargo = "allow"
+map_unwrap_or = "allow"
+manual_map = "allow"
+option_map_or_none = "allow"
+derivable_impls = "allow"
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"
+todo = "allow"
+unimplemented = "allow"
+unreachable = "allow"

@@ -1,0 +1,40 @@
+[workspace]
+
+[package]
+name = "nexcore-skill-verify"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Skill verification infrastructure for Claude Code skills"
+license = "MIT"
+
+[dependencies]
+thiserror = "2.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+clap = { version = "4.0", features = ["derive"] }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+
+[dev-dependencies]
+tempfile = "3.15"
+
+[[bin]]
+name = "skill-verify"
+path = "bin/skill-verify.rs"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+must_use_candidate = "allow"
+return_self_not_must_use = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+doc_markdown = "allow"
+match_same_arms = "allow"
+format_push_string = "allow"
+bool_to_int_with_if = "allow"
+unnecessary_debug_formatting = "allow"

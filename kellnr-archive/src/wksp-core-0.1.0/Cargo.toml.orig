@@ -1,0 +1,13 @@
+[package]
+name = "wksp-core"
+version = "0.1.0"
+edition = "2024"
+description = "Ferrostack workspace core — shared error types and configuration for NexVigilant frontend apps"
+publish = ["nexcore"]
+
+[dependencies]
+leptos = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }

@@ -1,0 +1,615 @@
+{
+  "$schema": "./pathway.schema.json",
+  "id": "tov-01",
+  "title": "Theory of Vigilance: Foundations",
+  "description": "Master the five axioms, eight harm types, eleven conservation laws, and three principal theorems of the Theory of Vigilance. This pathway builds from system decomposition to emergent behavior, equipping practitioners to predict, detect, and attenuate pharmaceutical safety signals.",
+  "domain": "vigilance",
+  "componentCount": 39,
+  "estimatedDuration": "12 hours",
+  "stages": [
+    {
+      "id": "tov-01-01",
+      "title": "System Decomposition",
+      "description": "Axiom A1 — Every pharmacovigilance system decomposes into measurable subsystems. Learn to identify system boundaries and decompose complex drug safety processes into primitive components.",
+      "bloomLevel": "Remember",
+      "passingScore": 70,
+      "estimatedDuration": "45 minutes",
+      "activities": [
+        {
+          "id": "tov-01-01-a01",
+          "title": "Identifying System Boundaries",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "tov-01-01-a02",
+          "title": "Decomposition in Practice",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "tov-01-01-a03",
+          "title": "System Decomposition Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "tov-01-01-q01",
+                "type": "multiple-choice",
+                "question": "According to Axiom A1 (System Decomposition), what is the fundamental requirement for any pharmacovigilance system?",
+                "options": [
+                  "It must decompose into measurable subsystems",
+                  "It must operate as a single monolithic unit",
+                  "It must rely on qualitative assessment only",
+                  "It must be validated by external auditors"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Axiom A1 states that every PV system decomposes into measurable subsystems. This is the foundational axiom upon which all other axioms depend."
+              },
+              {
+                "id": "tov-01-01-q02",
+                "type": "true-false",
+                "question": "System Decomposition (A1) has no dependencies on other axioms and serves as a root axiom in the Theory of Vigilance.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "A1 is at depth 0 in the axiom dependency DAG with no dependencies, making it one of two root axioms alongside A3."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tov-01-02",
+      "title": "Hierarchical Organization",
+      "description": "Axiom A2 — Subsystems organize into hierarchical levels. Understand how decomposed components arrange into layers of increasing complexity and how this hierarchy governs information flow in safety surveillance.",
+      "bloomLevel": "Understand",
+      "passingScore": 70,
+      "estimatedDuration": "50 minutes",
+      "activities": [
+        {
+          "id": "tov-01-02-a01",
+          "title": "Hierarchy Levels in Drug Safety",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "tov-01-02-a02",
+          "title": "Mapping Organizational Hierarchies",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "tov-01-02-a03",
+          "title": "Hierarchy and Information Flow",
+          "type": "case-study",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "tov-01-02-a04",
+          "title": "Hierarchical Organization Assessment",
+          "type": "quiz",
+          "estimatedDuration": "10 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "tov-01-02-q01",
+                "type": "multiple-choice",
+                "question": "Axiom A2 (Hierarchical Organization) directly depends on which other axiom?",
+                "options": [
+                  "A1 (System Decomposition)",
+                  "A3 (Conservation Constraints)",
+                  "A4 (Safety Manifold)",
+                  "A5 (Emergence)"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "A2 depends on A1. You must first decompose a system (A1) before you can organize its parts into a hierarchy (A2)."
+              },
+              {
+                "id": "tov-01-02-q02",
+                "type": "true-false",
+                "question": "In the Theory of Vigilance, Hierarchical Organization (A2) is at depth 1 in the axiom dependency DAG.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "A2 is at depth 1, depending only on A1 (depth 0). This places it one level above the root axioms."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tov-01-03",
+      "title": "Conservation Constraints",
+      "description": "Axiom A3 — Measurable quantities obey conservation laws. Learn the eleven conservation laws that govern pharmacovigilance systems: Mass/Amount, Energy/Gradient, State Normalization, Flux Continuity, Catalyst Invariance, Entropy Increase, Momentum, Capacity/Saturation, Charge Conservation, Stoichiometry, and Structural Invariant.",
+      "bloomLevel": "Understand",
+      "passingScore": 75,
+      "estimatedDuration": "60 minutes",
+      "activities": [
+        {
+          "id": "tov-01-03-a01",
+          "title": "Conservation Laws Overview",
+          "type": "reading",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "tov-01-03-a02",
+          "title": "Mass/Amount and Energy/Gradient Laws",
+          "type": "interactive",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "tov-01-03-a03",
+          "title": "State Normalization and Flux Continuity",
+          "type": "interactive",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "tov-01-03-a04",
+          "title": "Conservation Laws Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "tov-01-03-q01",
+                "type": "multiple-choice",
+                "question": "Which conservation law states that the total number of adverse event reports in a closed system cannot spontaneously increase or decrease?",
+                "options": [
+                  "Mass/Amount Conservation (Law 1)",
+                  "Energy/Gradient Conservation (Law 2)",
+                  "Flux Continuity (Law 4)",
+                  "Stoichiometry (Law 10)"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Law 1 (Mass/Amount Conservation) ensures that quantities are preserved. Reports cannot appear or disappear without an identifiable source or sink."
+              },
+              {
+                "id": "tov-01-03-q02",
+                "type": "multiple-select",
+                "question": "Which of the following are conservation laws in the Theory of Vigilance? Select all that apply.",
+                "options": [
+                  "Catalyst Invariance (Law 5)",
+                  "Signal Amplification (Law 12)",
+                  "Entropy Increase (Law 6)",
+                  "Momentum (Law 7)"
+                ],
+                "correctAnswer": [0, 2, 3],
+                "points": 3,
+                "explanation": "Laws 5 (Catalyst Invariance), 6 (Entropy Increase), and 7 (Momentum) are three of the eleven conservation laws. There is no Law 12 — the ToV defines exactly eleven conservation laws."
+              },
+              {
+                "id": "tov-01-03-q03",
+                "type": "true-false",
+                "question": "Axiom A3 (Conservation Constraints) is a root axiom with no dependencies, alongside A1 (System Decomposition).",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "A3 is at depth 0 with no dependencies. It and A1 are the two root axioms of the Theory of Vigilance."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tov-01-04",
+      "title": "Safety Manifold",
+      "description": "Axiom A4 — System states form a manifold with a safety boundary. Apply the concept of d(s) — the distance from current state to the safety boundary — and understand how the Safety Manifold integrates System Decomposition (A1) and Conservation Constraints (A3) to define operational safety regions.",
+      "bloomLevel": "Apply",
+      "passingScore": 75,
+      "estimatedDuration": "70 minutes",
+      "activities": [
+        {
+          "id": "tov-01-04-a01",
+          "title": "The Safety Boundary Concept",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "tov-01-04-a02",
+          "title": "Computing d(s) Safety Distance",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "tov-01-04-a03",
+          "title": "Safety Manifold Case Study",
+          "type": "case-study",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "tov-01-04-a04",
+          "title": "Signal Detection Thresholds",
+          "type": "interactive",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "tov-01-04-a05",
+          "title": "Safety Manifold Assessment",
+          "type": "quiz",
+          "estimatedDuration": "10 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "tov-01-04-q01",
+                "type": "multiple-choice",
+                "question": "Axiom A4 (Safety Manifold) depends on which axioms?",
+                "options": [
+                  "A1 (System Decomposition) and A3 (Conservation Constraints)",
+                  "A1 (System Decomposition) and A2 (Hierarchical Organization)",
+                  "A2 (Hierarchical Organization) and A3 (Conservation Constraints)",
+                  "A3 (Conservation Constraints) only"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "A4 depends on both A1 and A3. The safety manifold requires decomposed subsystems (A1) that obey conservation laws (A3) to define meaningful state boundaries."
+              },
+              {
+                "id": "tov-01-04-q02",
+                "type": "multiple-choice",
+                "question": "What is the default PRR (Proportional Reporting Ratio) threshold for signal detection in the Theory of Vigilance?",
+                "options": [
+                  "2.0",
+                  "1.0",
+                  "3.841",
+                  "0.5"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "The default PRR threshold is 2.0. This means a drug-event combination must be reported at least twice as often as expected to constitute a potential signal."
+              },
+              {
+                "id": "tov-01-04-q03",
+                "type": "multiple-select",
+                "question": "Which signal detection thresholds are defined in the Theory of Vigilance? Select all that apply.",
+                "options": [
+                  "Chi-square >= 3.841",
+                  "ROR lower CI > 1.0",
+                  "IC025 > 0",
+                  "EB05 >= 2.0"
+                ],
+                "correctAnswer": [0, 1, 2, 3],
+                "points": 4,
+                "explanation": "All four are standard signal detection thresholds: Chi-sq >= 3.841 (p < 0.05), ROR lower 95% CI > 1.0, IC025 > 0 (Bayesian), and EB05 >= 2.0 (Empirical Bayes)."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tov-01-05",
+      "title": "Emergence",
+      "description": "Axiom A5 — System-level behaviors emerge from component interactions. Analyze how cascading effects arise when hierarchically organized subsystems (A2) interact near the safety boundary (A4), producing emergent phenomena that cannot be predicted from components alone.",
+      "bloomLevel": "Analyze",
+      "passingScore": 80,
+      "estimatedDuration": "75 minutes",
+      "activities": [
+        {
+          "id": "tov-01-05-a01",
+          "title": "Emergence in Complex Systems",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "tov-01-05-a02",
+          "title": "Cascading Failure Analysis",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "tov-01-05-a03",
+          "title": "Emergence in Drug Safety Signals",
+          "type": "case-study",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "tov-01-05-a04",
+          "title": "Emergence Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "tov-01-05-q01",
+                "type": "multiple-choice",
+                "question": "Axiom A5 (Emergence) is at what depth in the axiom dependency DAG?",
+                "options": [
+                  "Depth 2 — it depends on A2 and A4",
+                  "Depth 0 — it is a root axiom",
+                  "Depth 1 — it depends only on A1",
+                  "Depth 3 — it depends on all other axioms"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "A5 is at depth 2, depending on A2 (Hierarchical Organization) and A4 (Safety Manifold). It is the deepest axiom in the DAG."
+              },
+              {
+                "id": "tov-01-05-q02",
+                "type": "true-false",
+                "question": "Emergent safety signals can always be predicted by analyzing individual component behaviors in isolation.",
+                "correctAnswer": false,
+                "points": 1,
+                "explanation": "By definition, emergence produces behaviors that cannot be predicted from components alone. This is precisely why Axiom A5 exists — to account for system-level phenomena."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tov-01-06",
+      "title": "Harm Types A through H",
+      "description": "Analyze the eight harm type classifications: Acute (A), Cumulative (B), Off-Target (C), Cascade (D), Idiosyncratic (E), Saturation (F), Interaction (G), and Population (H). Map each harm type to its conservation law and affected hierarchy levels.",
+      "bloomLevel": "Analyze",
+      "passingScore": 80,
+      "estimatedDuration": "80 minutes",
+      "activities": [
+        {
+          "id": "tov-01-06-a01",
+          "title": "Harm Type Classification Framework",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "tov-01-06-a02",
+          "title": "Acute and Cumulative Harm",
+          "type": "interactive",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "tov-01-06-a03",
+          "title": "Off-Target and Cascade Harm",
+          "type": "interactive",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "tov-01-06-a04",
+          "title": "Idiosyncratic and Saturation Harm",
+          "type": "interactive",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "tov-01-06-a05",
+          "title": "Interaction and Population Harm",
+          "type": "interactive",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "tov-01-06-a06",
+          "title": "Harm Type Case Studies",
+          "type": "case-study",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "tov-01-06-a07",
+          "title": "Harm Types Assessment",
+          "type": "quiz",
+          "estimatedDuration": "10 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "tov-01-06-q01",
+                "type": "multiple-choice",
+                "question": "Which harm type is characterized by effects at hierarchy levels 4, 5, 6, and 7, and is governed by Conservation Law 4 (Flux Continuity)?",
+                "options": [
+                  "Cascade (D)",
+                  "Acute (A)",
+                  "Population (H)",
+                  "Interaction (G)"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Cascade harm (Type D) affects levels 4-7 and is governed by Flux Continuity (Law 4). Cascading effects propagate through the hierarchy when flux conservation is violated."
+              },
+              {
+                "id": "tov-01-06-q02",
+                "type": "multiple-select",
+                "question": "Which harm types have NO associated conservation law? Select all that apply.",
+                "options": [
+                  "Idiosyncratic (E)",
+                  "Population (H)",
+                  "Acute (A)",
+                  "Off-Target (C)"
+                ],
+                "correctAnswer": [0, 1],
+                "points": 3,
+                "explanation": "Idiosyncratic (E) and Population (H) have no associated conservation law. Acute maps to Law 1, Off-Target maps to Law 2."
+              },
+              {
+                "id": "tov-01-06-q03",
+                "type": "multiple-choice",
+                "question": "Saturation harm (Type F) is governed by which conservation law?",
+                "options": [
+                  "Capacity/Saturation (Law 8)",
+                  "Mass/Amount (Law 1)",
+                  "Entropy Increase (Law 6)",
+                  "Catalyst Invariance (Law 5)"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Saturation harm (Type F) maps to Law 8 (Capacity/Saturation). When processing capacity is exceeded, saturation-type harm occurs at levels 3, 4, and 5."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tov-01-07",
+      "title": "Conservation Laws in Practice",
+      "description": "Evaluate the eleven conservation laws in real-world pharmacovigilance scenarios. Assess how violations of Capacity/Saturation, Charge Conservation, Stoichiometry, and Structural Invariant laws produce detectable safety signals.",
+      "bloomLevel": "Evaluate",
+      "passingScore": 85,
+      "estimatedDuration": "85 minutes",
+      "activities": [
+        {
+          "id": "tov-01-07-a01",
+          "title": "Conservation Law Violations as Signals",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "tov-01-07-a02",
+          "title": "Detecting Mass/Amount and Energy Violations",
+          "type": "case-study",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "tov-01-07-a03",
+          "title": "Catalyst Invariance and Entropy Analysis",
+          "type": "case-study",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "tov-01-07-a04",
+          "title": "Charge, Stoichiometry, and Structural Invariant",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "tov-01-07-a05",
+          "title": "Conservation Law Scenario Analysis",
+          "type": "case-study",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "tov-01-07-a06",
+          "title": "Conservation Laws Assessment",
+          "type": "quiz",
+          "estimatedDuration": "10 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "tov-01-07-q01",
+                "type": "multiple-choice",
+                "question": "A pharmacovigilance system shows reports entering at a rate of 100/day but only 85/day are processed and 10/day are archived. Which conservation law is violated?",
+                "options": [
+                  "Mass/Amount Conservation (Law 1) — 5 reports/day are unaccounted for",
+                  "Energy/Gradient Conservation (Law 2) — processing energy is insufficient",
+                  "Flux Continuity (Law 4) — flow rate is discontinuous",
+                  "Capacity/Saturation (Law 8) — system is overloaded"
+                ],
+                "correctAnswer": 0,
+                "points": 3,
+                "explanation": "100 in - 85 processed - 10 archived = 5 unaccounted. Mass/Amount Conservation (Law 1) requires that all quantities are traceable. The missing 5 reports per day indicate a conservation violation."
+              },
+              {
+                "id": "tov-01-07-q02",
+                "type": "true-false",
+                "question": "The Structural Invariant law (Law 11) ensures that the fundamental topology of a pharmacovigilance system remains stable under normal operating conditions.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Law 11 (Structural Invariant) preserves the fundamental architecture. Changes to system structure indicate a phase transition or boundary violation."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tov-01-08",
+      "title": "Theorems and Integration",
+      "description": "Synthesize all five axioms through the three principal theorems: the Predictability Theorem (requires A1-A5), the Attenuation Theorem (requires A2, A5), and the Intervention Theorem (requires A3, A4, A5). Create integrated safety assessments using the complete Theory of Vigilance framework.",
+      "bloomLevel": "Create",
+      "passingScore": 85,
+      "estimatedDuration": "90 minutes",
+      "activities": [
+        {
+          "id": "tov-01-08-a01",
+          "title": "The Predictability Theorem",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "tov-01-08-a02",
+          "title": "The Attenuation Theorem",
+          "type": "reading",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "tov-01-08-a03",
+          "title": "The Intervention Theorem",
+          "type": "reading",
+          "estimatedDuration": "10 minutes"
+        },
+        {
+          "id": "tov-01-08-a04",
+          "title": "Theorem Application Workshop",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "tov-01-08-a05",
+          "title": "Integrated Safety Assessment Design",
+          "type": "case-study",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "tov-01-08-a06",
+          "title": "Theorems and Integration Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "tov-01-08-q01",
+                "type": "multiple-choice",
+                "question": "The Predictability Theorem requires which axioms?",
+                "options": [
+                  "All five: A1, A2, A3, A4, and A5",
+                  "Only A1 and A5",
+                  "A2 and A5",
+                  "A3, A4, and A5"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "The Predictability Theorem is the most demanding theorem, requiring all five axioms (A1-A5). Only when all conditions hold can system behavior be predicted."
+              },
+              {
+                "id": "tov-01-08-q02",
+                "type": "multiple-choice",
+                "question": "Which theorem requires Axioms A3, A4, and A5 and provides the basis for designing safety interventions?",
+                "options": [
+                  "The Intervention Theorem",
+                  "The Predictability Theorem",
+                  "The Attenuation Theorem",
+                  "There is no such theorem"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "The Intervention Theorem requires A3 (Conservation Constraints), A4 (Safety Manifold), and A5 (Emergence). It establishes that interventions must respect conservation laws and safety boundaries while accounting for emergent effects."
+              },
+              {
+                "id": "tov-01-08-q03",
+                "type": "multiple-choice",
+                "question": "The Attenuation Theorem depends on which axioms?",
+                "options": [
+                  "A2 (Hierarchical Organization) and A5 (Emergence)",
+                  "A1 (System Decomposition) and A3 (Conservation Constraints)",
+                  "A4 (Safety Manifold) only",
+                  "All five axioms"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "The Attenuation Theorem requires A2 (Hierarchical Organization) and A5 (Emergence). It describes how signals attenuate as they propagate through hierarchical levels."
+              },
+              {
+                "id": "tov-01-08-q04",
+                "type": "true-false",
+                "question": "The Theory of Vigilance defines exactly three principal theorems: Predictability, Attenuation, and Intervention.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "The three principal theorems are: Predictability (A1-A5), Attenuation (A2, A5), and Intervention (A3, A4, A5). Together they cover prediction, signal propagation, and corrective action."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

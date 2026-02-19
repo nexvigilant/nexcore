@@ -1,0 +1,15 @@
+[package]
+name = "wksp-types"
+version.workspace = true
+edition.workspace = true
+description = "Ferrostack shared domain types — serializable models for NexVigilant frontend apps"
+publish = ["nexcore"]
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+
+[lints]
+workspace = true

@@ -1,0 +1,721 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+STATE_DIR="$ROOT_DIR/.gemini/autopilot"
+PID_FILE="$STATE_DIR/autopilot.pid"
+APP_PID_FILE="$STATE_DIR/app.pid"
+VIGIL_PID_FILE="$STATE_DIR/vigil.pid"
+BUILD_LOG="$STATE_DIR/build.log"
+APP_LOG="$STATE_DIR/app.log"
+VIGIL_LOG="$STATE_DIR/vigil.log"
+DAEMON_LOG="$STATE_DIR/daemon.log"
+METRICS_LOG="$STATE_DIR/metrics.log"
+REVIEW_LOG="$STATE_DIR/review.log"
+TELEMETRY_JSONL="$STATE_DIR/telemetry.jsonl"
+HEALTH_GRACE_FILE="$STATE_DIR/health_grace_until"
+SERVICE_NAME="nexcore-gemini-autopilot.service"
+SERVICE_FILE="$HOME/.config/systemd/user/$SERVICE_NAME"
+
+mkdir -p "$STATE_DIR"
+
+target_port() {
+  local port="${AUTOPILOT_PORT:-3031}"
+  if has_systemd_user && [[ -f "$SERVICE_FILE" ]]; then
+    local service_port
+    service_port="$(systemctl --user show "$SERVICE_NAME" --property=Environment --value 2>/dev/null \
+      | tr ' ' '\n' | rg '^AUTOPILOT_PORT=' | head -n1 | cut -d= -f2 || true)"
+    if [[ -n "$service_port" ]]; then
+      port="$service_port"
+    fi
+  fi
+  echo "$port"
+}
+
+telemetry_append() {
+  local event="$1"
+  local status="$2"
+  local duration_ms="${3:-0}"
+  local detail="${4:-}"
+  local ts epoch escaped
+  ts="$(date -Iseconds)"
+  epoch="$(date +%s)"
+  escaped="${detail//\\/\\\\}"
+  escaped="${escaped//\"/\\\"}"
+  escaped="${escaped//$'\n'/ }"
+  printf '{"ts":"%s","epoch":%s,"event":"%s","status":"%s","duration_ms":%s,"detail":"%s"}\n' \
+    "$ts" "$epoch" "$event" "$status" "$duration_ms" "$escaped" >> "$TELEMETRY_JSONL"
+}
+
+set_health_grace() {
+  local grace_seconds="${AUTOPILOT_HEALTH_GRACE_SECONDS:-20}"
+  local until_epoch
+  until_epoch="$(( $(date +%s) + grace_seconds ))"
+  echo "$until_epoch" > "$HEALTH_GRACE_FILE"
+}
+
+in_health_grace() {
+  if [[ ! -f "$HEALTH_GRACE_FILE" ]]; then
+    return 1
+  fi
+  local until_epoch now_epoch
+  until_epoch="$(cat "$HEALTH_GRACE_FILE" 2>/dev/null || echo 0)"
+  now_epoch="$(date +%s)"
+  [[ "$until_epoch" =~ ^[0-9]+$ ]] || return 1
+  (( now_epoch < until_epoch ))
+}
+
+probe_health_ok() {
+  local port="$1"
+  curl --noproxy '*' -sS --max-time 1 -o /dev/null -w "%{http_code}" "http://127.0.0.1:${port}/health" 2>/dev/null | rg -q '^200$'
+}
+
+list_daemon_pids() {
+  (
+    pgrep -f "$ROOT_DIR/scripts/gemini-autopilot daemon" 2>/dev/null || true
+    pgrep -f "scripts/gemini-autopilot daemon" 2>/dev/null || true
+    pgrep -f "gemini-autopilot daemon" 2>/dev/null || true
+  ) | sort -u
+}
+
+has_systemd_user() {
+  systemctl --user show-environment >/dev/null 2>&1
+}
+
+service_active() {
+  systemctl --user is-active --quiet "$SERVICE_NAME"
+}
+
+install_service_unit() {
+  mkdir -p "$(dirname "$SERVICE_FILE")"
+  cat > "$SERVICE_FILE" <<SERVICE
+[Unit]
+Description=NexCore Gemini Autopilot
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=$ROOT_DIR
+Environment=AUTOPILOT_PORT=3031
+Environment=AUTOPILOT_ENFORCE_SINGLE_API=1
+Environment=AUTOPILOT_ENABLE_VIGIL=1
+Environment=AUTOPILOT_METRICS_SECONDS=60
+Environment=AUTOPILOT_HEALTH_GRACE_SECONDS=20
+ExecStart=$ROOT_DIR/scripts/gemini-autopilot daemon nexcore-api
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target
+SERVICE
+  systemctl --user daemon-reload
+}
+
+stop_all_daemons() {
+  local pids
+  pids="$(list_daemon_pids)"
+  if [[ -n "$pids" ]]; then
+    while IFS= read -r pid; do
+      [[ -z "$pid" ]] && continue
+      kill "$pid" 2>/dev/null || true
+    done <<< "$pids"
+    sleep 1
+    while IFS= read -r pid; do
+      [[ -z "$pid" ]] && continue
+      kill -9 "$pid" 2>/dev/null || true
+    done <<< "$pids"
+  fi
+}
+
+is_running() {
+  if [[ -f "$PID_FILE" ]]; then
+    local pid
+    pid="$(cat "$PID_FILE" 2>/dev/null || true)"
+    if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+      return 0
+    fi
+    rm -f "$PID_FILE"
+    return 1
+  else
+    return 1
+  fi
+}
+
+stop_app() {
+  if [[ -f "$APP_PID_FILE" ]]; then
+    local pid
+    pid="$(cat "$APP_PID_FILE" 2>/dev/null || true)"
+    if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+      kill "$pid" 2>/dev/null || true
+      sleep 1
+      kill -9 "$pid" 2>/dev/null || true
+    fi
+    rm -f "$APP_PID_FILE"
+  fi
+}
+
+app_running() {
+  if [[ -f "$APP_PID_FILE" ]]; then
+    local pid
+    pid="$(cat "$APP_PID_FILE" 2>/dev/null || true)"
+    [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null
+  else
+    return 1
+  fi
+}
+
+stop_vigil() {
+  if [[ -f "$VIGIL_PID_FILE" ]]; then
+    local pid
+    pid="$(cat "$VIGIL_PID_FILE" 2>/dev/null || true)"
+    if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+      kill "$pid" 2>/dev/null || true
+      sleep 1
+      kill -9 "$pid" 2>/dev/null || true
+    fi
+    rm -f "$VIGIL_PID_FILE"
+  fi
+}
+
+vigil_running() {
+  if [[ -f "$VIGIL_PID_FILE" ]]; then
+    local pid
+    pid="$(cat "$VIGIL_PID_FILE" 2>/dev/null || true)"
+    [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null
+  else
+    return 1
+  fi
+}
+
+start_vigil() {
+  local enabled="${AUTOPILOT_ENABLE_VIGIL:-1}"
+  [[ "$enabled" == "1" ]] || return 0
+  if vigil_running; then
+    return 0
+  fi
+  (
+    cd "$ROOT_DIR"
+    mkdir -p "$ROOT_DIR/ksb"
+    local anthropic_key="${ANTHROPIC_API_KEY:-autopilot-placeholder}"
+    echo "[$(date -Iseconds)] starting vigil: cargo run -p nexcore-vigil --bin friday -- run" >> "$VIGIL_LOG"
+    KSB_ROOT="$ROOT_DIR/ksb" ANTHROPIC_API_KEY="$anthropic_key" \
+      nohup cargo run -p nexcore-vigil --bin friday -- run >> "$VIGIL_LOG" 2>&1 &
+    echo $! > "$VIGIL_PID_FILE"
+    set_health_grace
+  )
+}
+
+enforce_single_api_instance() {
+  local enabled="${AUTOPILOT_ENFORCE_SINGLE_API:-1}"
+  [[ "$enabled" == "1" ]] || return 0
+  [[ -f "$APP_PID_FILE" ]] || return 0
+  local managed_pid
+  managed_pid="$(cat "$APP_PID_FILE" 2>/dev/null || true)"
+  [[ -n "$managed_pid" ]] || return 0
+  kill -0 "$managed_pid" 2>/dev/null || return 0
+
+  local pids
+  pids="$(ss -ltnp 2>/dev/null | rg -o 'users:\(\(\"nexcore-api\",pid=[0-9]+' | rg -o '[0-9]+$' | sort -u || true)"
+  [[ -n "$pids" ]] || return 0
+
+  while IFS= read -r pid; do
+    [[ -z "$pid" ]] && continue
+    [[ "$pid" == "$managed_pid" ]] && continue
+    echo "[$(date -Iseconds)] stopping unmanaged nexcore-api pid=$pid" >> "$DAEMON_LOG"
+    kill "$pid" 2>/dev/null || true
+    sleep 1
+    kill -9 "$pid" 2>/dev/null || true
+  done <<< "$pids"
+}
+
+record_kpi_snapshot() {
+  local port="$1"
+  if in_health_grace; then
+    telemetry_append "health_snapshot" "grace" 0 "port=${port} skip=grace-window"
+    return 0
+  fi
+  local ts
+  ts="$(date -Iseconds)"
+  local health_code health_time ready_code ready_time mesh_code mesh_time vigil_code vigil_time
+  health_code="$(curl --noproxy '*' -sS -o /dev/null -w "%{http_code}" "http://127.0.0.1:${port}/health" || echo "000")"
+  health_time="$(curl --noproxy '*' -sS -o /dev/null -w "%{time_total}" "http://127.0.0.1:${port}/health" || echo "0")"
+  ready_code="$(curl --noproxy '*' -sS -o /dev/null -w "%{http_code}" "http://127.0.0.1:${port}/health/ready" || echo "000")"
+  ready_time="$(curl --noproxy '*' -sS -o /dev/null -w "%{time_total}" "http://127.0.0.1:${port}/health/ready" || echo "0")"
+  mesh_code="$(curl --noproxy '*' -sS -o /dev/null -w "%{http_code}" "http://127.0.0.1:${port}/api/v1/mesh/health" || echo "000")"
+  mesh_time="$(curl --noproxy '*' -sS -o /dev/null -w "%{time_total}" "http://127.0.0.1:${port}/api/v1/mesh/health" || echo "0")"
+  vigil_code="$(curl --noproxy '*' -sS -o /tmp/nx_vigil_body -w "%{http_code}" "http://127.0.0.1:${port}/api/v1/vigil/health" || echo "000")"
+  vigil_time="$(curl --noproxy '*' -sS -o /dev/null -w "%{time_total}" "http://127.0.0.1:${port}/api/v1/vigil/health" || echo "0")"
+  local vigil_status="unknown"
+  if [[ -f /tmp/nx_vigil_body ]]; then
+    vigil_status="$(rg -o '"status":"[^"]+"' /tmp/nx_vigil_body | head -n1 | cut -d: -f2 | tr -d '"' || true)"
+    [[ -n "$vigil_status" ]] || vigil_status="unknown"
+  fi
+  echo "${ts} port=${port} health=${health_code}@${health_time}s ready=${ready_code}@${ready_time}s mesh=${mesh_code}@${mesh_time}s vigil=${vigil_code}@${vigil_time}s vigil_status=${vigil_status}" >> "$METRICS_LOG"
+  telemetry_append "health_snapshot" "ok" 0 "port=${port} health=${health_code} ready=${ready_code} mesh=${mesh_code} vigil=${vigil_code} vigil_status=${vigil_status}"
+}
+
+print_http_metrics() {
+  local port="$1"
+  local endpoint="$2"
+  local samples="${3:-30}"
+  local url="http://127.0.0.1:${port}${endpoint}"
+
+  local code
+  code="$(curl --noproxy '*' -sS -o /tmp/nexcore_ap_body -w "%{http_code}" "$url" || true)"
+  if [[ "$code" == "000" ]]; then
+    echo "$endpoint -> unreachable"
+    return 1
+  fi
+
+  local status
+  status="$(head -c 180 /tmp/nexcore_ap_body | tr '\n' ' ')"
+  echo "$endpoint -> $code $status"
+
+  for _ in $(seq 1 "$samples"); do
+    curl --noproxy '*' -sS -o /dev/null -w "%{time_total}\n" "$url" || echo "nan"
+  done | awk '
+    BEGIN{min=1e9;max=0;sum=0;n=0}
+    $1+0==$1 {v=$1; if(v<min)min=v; if(v>max)max=v; sum+=v; a[n++]=v}
+    END{
+      if(n==0){print "  latency: no samples"; exit}
+      for(i=0;i<n;i++) for(j=i+1;j<n;j++) if(a[j]<a[i]){t=a[i];a[i]=a[j];a[j]=t}
+      p95_idx=int((n-1)*0.95)
+      printf("  latency: n=%d avg=%.4f min=%.4f p95=%.4f max=%.4f\n",n,sum/n,min,a[p95_idx],max)
+    }'
+}
+
+start_app() {
+  local package="$1"
+  shift || true
+  local app_port="${AUTOPILOT_PORT:-3031}"
+
+  stop_app
+  (
+    cd "$ROOT_DIR"
+    local app_bin="$ROOT_DIR/target/debug/$package"
+    if [[ -x "$app_bin" ]]; then
+      echo "[$(date -Iseconds)] starting app: PORT=$app_port $app_bin $*" >> "$APP_LOG"
+      PORT="$app_port" nohup "$app_bin" "$@" >> "$APP_LOG" 2>&1 &
+    else
+      echo "[$(date -Iseconds)] starting app fallback: PORT=$app_port cargo run -p $package -- $*" >> "$APP_LOG"
+      PORT="$app_port" nohup cargo run -p "$package" -- "$@" >> "$APP_LOG" 2>&1 &
+    fi
+    echo $! > "$APP_PID_FILE"
+    set_health_grace
+    if kill -0 "$!" 2>/dev/null; then
+      telemetry_append "app_start" "pass" 0 "package=${package} port=${app_port}"
+    else
+      telemetry_append "app_start" "fail" 0 "package=${package} port=${app_port}"
+    fi
+  )
+}
+
+fingerprint_tree() {
+  (
+    cd "$ROOT_DIR"
+    {
+      find Cargo.toml crates tools scripts -type f \
+        \( -name '*.rs' -o -name 'Cargo.toml' -o -name '*.toml' -o -name '*.md' -o -name '*.sh' \) \
+        -not -path '*/target/*' \
+        -printf '%T@ %p\n' 2>/dev/null
+      echo "APP_PACKAGE=${APP_PACKAGE:-}"
+      echo "APP_ARGS=${APP_ARGS:-}"
+    } | sha256sum | awk '{print $1}'
+  )
+}
+
+run_daemon() {
+  local package="$1"
+  shift || true
+  local -a app_args=("$@")
+  local poll_seconds="${AUTOPILOT_POLL_SECONDS:-3}"
+  local metrics_seconds="${AUTOPILOT_METRICS_SECONDS:-60}"
+  local app_port="${AUTOPILOT_PORT:-3031}"
+  local review_on_change="${AUTOPILOT_REVIEW_ON_CHANGE:-1}"
+  local health_fail_threshold="${AUTOPILOT_HEALTH_FAIL_THRESHOLD:-3}"
+  local consecutive_health_failures=0
+  local last_metrics_epoch=0
+
+  exec 9>"$STATE_DIR/daemon.lock"
+  if ! flock -n 9; then
+    echo "[$(date -Iseconds)] daemon lock held; exiting duplicate daemon" >> "$DAEMON_LOG"
+    exit 0
+  fi
+
+  echo "[$(date -Iseconds)] autopilot daemon booting package=$package" >> "$DAEMON_LOG"
+  echo $$ > "$PID_FILE"
+  trap 'echo "[$(date -Iseconds)] autopilot daemon exiting" >> "$DAEMON_LOG"; stop_app; stop_vigil; rm -f "$PID_FILE"' EXIT INT TERM
+
+  local last_fp=""
+  start_vigil
+
+  while true; do
+    local fp
+    fp="$(fingerprint_tree || true)"
+    if [[ -z "$fp" ]]; then
+      echo "[$(date -Iseconds)] fingerprint failed; retrying" >> "$DAEMON_LOG"
+      sleep "$poll_seconds"
+      continue
+    fi
+
+    if [[ "$fp" != "$last_fp" ]]; then
+      local check_t0 check_t1 build_t0 build_t1
+      echo "[$(date -Iseconds)] change detected (fp=$fp)" >> "$DAEMON_LOG"
+      echo "[$(date -Iseconds)] change detected; running cargo check --workspace --all-targets" | tee -a "$BUILD_LOG"
+      check_t0="$(date +%s%3N)"
+      if (cd "$ROOT_DIR" && cargo check --workspace --all-targets >> "$BUILD_LOG" 2>&1); then
+        check_t1="$(date +%s%3N)"
+        telemetry_append "workspace_check" "pass" "$((check_t1 - check_t0))" "all-targets"
+        echo "[$(date -Iseconds)] check passed; building package $package" | tee -a "$BUILD_LOG"
+        build_t0="$(date +%s%3N)"
+        if (cd "$ROOT_DIR" && cargo build -p "$package" >> "$BUILD_LOG" 2>&1); then
+          build_t1="$(date +%s%3N)"
+          telemetry_append "package_build" "pass" "$((build_t1 - build_t0))" "$package"
+          if [[ "$review_on_change" == "1" ]]; then
+            run_review_gate || true
+          fi
+          echo "[$(date -Iseconds)] build passed; restarting app" | tee -a "$BUILD_LOG"
+          start_app "$package" "${app_args[@]}"
+          last_fp="$fp"
+        else
+          build_t1="$(date +%s%3N)"
+          telemetry_append "package_build" "fail" "$((build_t1 - build_t0))" "$package"
+          echo "[$(date -Iseconds)] build failed for $package; app not restarted" | tee -a "$BUILD_LOG"
+          last_fp="$fp"
+        fi
+      else
+        check_t1="$(date +%s%3N)"
+        telemetry_append "workspace_check" "fail" "$((check_t1 - check_t0))" "all-targets"
+        echo "[$(date -Iseconds)] workspace check failed; app not restarted" | tee -a "$BUILD_LOG"
+        last_fp="$fp"
+      fi
+    fi
+
+    if ! app_running && [[ -n "$last_fp" ]]; then
+      echo "[$(date -Iseconds)] app process not running; restarting" >> "$DAEMON_LOG"
+      start_app "$package" "${app_args[@]}"
+    fi
+
+    if app_running; then
+      if probe_health_ok "$app_port"; then
+        consecutive_health_failures=0
+      else
+        consecutive_health_failures=$((consecutive_health_failures + 1))
+        telemetry_append "health_probe" "fail" 0 "consecutive=${consecutive_health_failures} port=${app_port}"
+        if (( consecutive_health_failures >= health_fail_threshold )); then
+          echo "[$(date -Iseconds)] health probe failed ${consecutive_health_failures} times; restarting app" >> "$DAEMON_LOG"
+          telemetry_append "self_heal" "restart_app" 0 "reason=health_probe_failures"
+          start_app "$package" "${app_args[@]}"
+          consecutive_health_failures=0
+        fi
+      fi
+    fi
+
+    if [[ "${AUTOPILOT_ENABLE_VIGIL:-1}" == "1" ]] && ! vigil_running; then
+      echo "[$(date -Iseconds)] vigil process not running; restarting" >> "$DAEMON_LOG"
+      start_vigil
+    fi
+
+    enforce_single_api_instance
+
+    local now_epoch
+    now_epoch="$(date +%s)"
+    if (( now_epoch - last_metrics_epoch >= metrics_seconds )); then
+      record_kpi_snapshot "$app_port"
+      last_metrics_epoch="$now_epoch"
+    fi
+
+    sleep "$poll_seconds"
+  done
+}
+
+run_review_gate() {
+  local t0 t1
+  t0="$(date +%s%3N)"
+  if command -v just >/dev/null 2>&1; then
+    echo "[$(date -Iseconds)] review: just brain-crate-ready nexcore-mcp" | tee -a "$REVIEW_LOG"
+    if (cd "$ROOT_DIR" && just brain-crate-ready nexcore-mcp >> "$REVIEW_LOG" 2>&1); then
+      echo "[$(date -Iseconds)] review passed: nexcore-mcp (brain-crate-ready)" | tee -a "$REVIEW_LOG"
+      t1="$(date +%s%3N)"
+      telemetry_append "review_gate" "pass" "$((t1 - t0))" "brain-crate-ready"
+      return 0
+    fi
+    echo "[$(date -Iseconds)] review primary failed; falling back to cargo gates" | tee -a "$REVIEW_LOG"
+  else
+    echo "[$(date -Iseconds)] review fallback: just not installed" | tee -a "$REVIEW_LOG"
+  fi
+
+  if (cd "$ROOT_DIR" \
+      && cargo check -p nexcore-mcp >> "$REVIEW_LOG" 2>&1 \
+      && cargo clippy -p nexcore-mcp -- -D warnings >> "$REVIEW_LOG" 2>&1 \
+      && cargo test -p nexcore-mcp >> "$REVIEW_LOG" 2>&1); then
+    echo "[$(date -Iseconds)] review passed: nexcore-mcp (cargo fallback)" | tee -a "$REVIEW_LOG"
+    t1="$(date +%s%3N)"
+    telemetry_append "review_gate" "pass" "$((t1 - t0))" "cargo-fallback"
+    return 0
+  fi
+
+  echo "[$(date -Iseconds)] review failed: nexcore-mcp" | tee -a "$REVIEW_LOG"
+  t1="$(date +%s%3N)"
+  telemetry_append "review_gate" "fail" "$((t1 - t0))" "nexcore-mcp"
+  return 1
+}
+
+print_report() {
+  local now_epoch h1_start h24_start
+  now_epoch="$(date +%s)"
+  h1_start="$((now_epoch - 3600))"
+  h24_start="$((now_epoch - 86400))"
+
+  python3 - "$STATE_DIR" "$h1_start" "$h24_start" <<'PY'
+import json, re, sys
+from pathlib import Path
+import datetime
+
+state = Path(sys.argv[1])
+h1 = int(sys.argv[2])
+h24 = int(sys.argv[3])
+
+telemetry = state / "telemetry.jsonl"
+metrics = state / "metrics.log"
+build = state / "build.log"
+review = state / "review.log"
+
+events = []
+if telemetry.exists():
+    for line in telemetry.read_text(errors="ignore").splitlines():
+        try:
+            events.append(json.loads(line))
+        except Exception:
+            pass
+
+def rate(event_name, since):
+    rows = [e for e in events if e.get("event") == event_name and int(e.get("epoch", 0)) >= since]
+    if not rows:
+        return (0, 0, 0.0, 0.0, 0.0)
+    passes = [r for r in rows if r.get("status") == "pass"]
+    durations = sorted(float(r.get("duration_ms", 0)) for r in rows)
+    p95 = durations[int((len(durations) - 1) * 0.95)]
+    return (len(passes), len(rows), (len(passes) / len(rows)) * 100.0, sum(durations) / len(durations), p95)
+
+check_1h = rate("workspace_check", h1)
+build_1h = rate("package_build", h1)
+review_1h = rate("review_gate", h1)
+check_24 = rate("workspace_check", h24)
+build_24 = rate("package_build", h24)
+review_24 = rate("review_gate", h24)
+
+metric_rows = []
+if metrics.exists():
+    pat = re.compile(r'^(\S+) port=(\d+) health=(\d+)@([0-9.]+)s ready=(\d+)@([0-9.]+)s mesh=(\d+)@([0-9.]+)s vigil=(\d+)@([0-9.]+)s vigil_status=(\w+)')
+    for line in metrics.read_text(errors="ignore").splitlines():
+        m = pat.match(line.strip())
+        if not m:
+            continue
+        ts, _, hc, ht, rc, rt, mc, mt, vc, vt, vs = m.groups()
+        try:
+            ep = int(datetime.datetime.fromisoformat(ts).timestamp())
+        except Exception:
+            ep = 0
+        metric_rows.append({"epoch": ep, "hc": hc, "ht": float(ht), "rc": rc, "rt": float(rt), "mc": mc, "mt": float(mt), "vc": vc, "vt": float(vt), "vs": vs})
+
+def avail(rows, key):
+    if not rows:
+        return (0, 0, 0.0)
+    ok = sum(1 for r in rows if r[key] == "200")
+    n = len(rows)
+    return (ok, n, ok * 100.0 / n)
+
+def lat(rows, key):
+    if not rows:
+        return (0.0, 0.0)
+    vals = sorted(r[key] for r in rows)
+    p95 = vals[int((len(vals) - 1) * 0.95)]
+    return (sum(vals) / len(vals), p95)
+
+rows24 = [r for r in metric_rows if r["epoch"] >= h24]
+ah24, ar24, am24, av24 = avail(rows24, "hc"), avail(rows24, "rc"), avail(rows24, "mc"), avail(rows24, "vc")
+lh24, lr24, lm24, lv24 = lat(rows24, "ht"), lat(rows24, "rt"), lat(rows24, "mt"), lat(rows24, "vt")
+
+mttr, uptime = [], []
+if rows24:
+    in_down = rows24[0]["hc"] != "200"
+    last = rows24[0]["epoch"]
+    for r in rows24[1:]:
+        up = r["hc"] == "200"
+        if in_down and up:
+            mttr.append(max(0, r["epoch"] - last)); in_down = False; last = r["epoch"]
+        elif (not in_down) and (not up):
+            uptime.append(max(0, r["epoch"] - last)); in_down = True; last = r["epoch"]
+mttr_avg = (sum(mttr) / len(mttr)) if mttr else 0.0
+mtbf_avg = (sum(uptime) / len(uptime)) if uptime else 0.0
+
+build_txt = build.read_text(errors="ignore") if build.exists() else ""
+review_txt = review.read_text(errors="ignore") if review.exists() else ""
+all_txt = build_txt + "\n" + review_txt
+compile_errors = len(re.findall(r'error\[E\d+\]', all_txt))
+lock_contention = len(re.findall(r'Blocking waiting for file lock', all_txt))
+env_missing = len(re.findall(r'not set|not found|just not installed|brain CLI not found', all_txt, flags=re.IGNORECASE))
+dependency_down = len(re.findall(r'Couldn\'t connect to server|h2 protocol error|Failed to obtain server version|qdrant', all_txt, flags=re.IGNORECASE))
+
+print("BUILD_1H check={}/{} ({:.1f}%) build={}/{} ({:.1f}%) review={}/{} ({:.1f}%)".format(check_1h[0], check_1h[1], check_1h[2], build_1h[0], build_1h[1], build_1h[2], review_1h[0], review_1h[1], review_1h[2]))
+print("BUILD_24H check={}/{} ({:.1f}%) build={}/{} ({:.1f}%) review={}/{} ({:.1f}%)".format(check_24[0], check_24[1], check_24[2], build_24[0], build_24[1], build_24[2], review_24[0], review_24[1], review_24[2]))
+print("DUR_24H_MS workspace_check avg={:.1f} p95={:.1f} | package_build avg={:.1f} p95={:.1f} | review avg={:.1f} p95={:.1f}".format(check_24[3], check_24[4], build_24[3], build_24[4], review_24[3], review_24[4]))
+print("AVAIL_24H health={}/{} ({:.1f}%) ready={}/{} ({:.1f}%) mesh={}/{} ({:.1f}%) vigil={}/{} ({:.1f}%)".format(ah24[0], ah24[1], ah24[2], ar24[0], ar24[1], ar24[2], am24[0], am24[1], am24[2], av24[0], av24[1], av24[2]))
+print("LAT_24H_SEC health avg={:.4f} p95={:.4f} | ready avg={:.4f} p95={:.4f} | mesh avg={:.4f} p95={:.4f} | vigil avg={:.4f} p95={:.4f}".format(lh24[0], lh24[1], lr24[0], lr24[1], lm24[0], lm24[1], lv24[0], lv24[1]))
+print("RECOVERY_24H mttr_avg_s={:.1f} mtbf_avg_s={:.1f}".format(mttr_avg, mtbf_avg))
+print("FAILURE_24H compile_errors={} lock_contention={} env_missing={} dependency_down={}".format(compile_errors, lock_contention, env_missing, dependency_down))
+
+alerts = []
+if check_24[1] > 0 and check_24[2] < 95.0:
+    alerts.append("ALERT check_success_24h < 95%")
+if ah24[1] > 0 and ah24[2] < 99.0:
+    alerts.append("ALERT health_availability_24h < 99%")
+if rows24 and lv24[1] > 0.250:
+    alerts.append("ALERT vigil_health_p95 > 250ms")
+if not alerts:
+    alerts.append("ALERT none")
+for a in alerts:
+    print(a)
+PY
+}
+
+cmd="${1:-start}"
+case "$cmd" in
+  start)
+    shift || true
+    package="${1:-nexcore-api}"
+    shift || true
+    if has_systemd_user; then
+      stop_all_daemons
+      stop_app
+      stop_vigil
+      install_service_unit
+      systemctl --user restart "$SERVICE_NAME"
+      sleep 1
+      if service_active; then
+        echo "autopilot started via systemd ($SERVICE_NAME)"
+      else
+        echo "failed to start autopilot service"
+        exit 1
+      fi
+      exit 0
+    fi
+    stop_all_daemons
+    stop_app
+    rm -f "$PID_FILE" "$APP_PID_FILE"
+    if is_running; then
+      echo "autopilot already running (pid $(cat "$PID_FILE"))"
+      exit 0
+    fi
+    : > "$DAEMON_LOG"
+    nohup "$0" daemon "$package" "$@" >> "$DAEMON_LOG" 2>&1 &
+    sleep 1
+    if is_running; then
+      echo "autopilot started (pid $(cat "$PID_FILE")) package=$package"
+    else
+      echo "failed to start autopilot"
+      exit 1
+    fi
+    ;;
+  stop)
+    if has_systemd_user; then
+      systemctl --user stop "$SERVICE_NAME" 2>/dev/null || true
+    fi
+    stop_all_daemons
+    rm -f "$PID_FILE"
+    stop_app
+    stop_vigil
+    echo "autopilot stopped"
+    ;;
+  status)
+    port="$(target_port)"
+    if has_systemd_user; then
+      if service_active; then
+        echo "autopilot service running ($SERVICE_NAME)"
+      else
+        echo "autopilot service stopped ($SERVICE_NAME)"
+      fi
+    fi
+    if is_running; then
+      echo "autopilot running (pid $(cat "$PID_FILE"))"
+    else
+      echo "autopilot stopped"
+    fi
+    if [[ -f "$APP_PID_FILE" ]] && kill -0 "$(cat "$APP_PID_FILE")" 2>/dev/null; then
+      echo "app running (pid $(cat "$APP_PID_FILE"))"
+    else
+      echo "app stopped"
+    fi
+    if [[ -f "$VIGIL_PID_FILE" ]] && kill -0 "$(cat "$VIGIL_PID_FILE")" 2>/dev/null; then
+      echo "vigil running (pid $(cat "$VIGIL_PID_FILE"))"
+    else
+      echo "vigil stopped"
+    fi
+    echo "target port $port"
+    echo "listening nexcore-api:"
+    ss -ltnp | rg 'nexcore-api' || true
+    ;;
+  logs)
+    echo "== daemon.log =="
+    tail -n 80 "$DAEMON_LOG" 2>/dev/null || true
+    echo "== build.log =="
+    tail -n 120 "$BUILD_LOG" 2>/dev/null || true
+    echo "== app.log =="
+    tail -n 120 "$APP_LOG" 2>/dev/null || true
+    echo "== vigil.log =="
+    tail -n 120 "$VIGIL_LOG" 2>/dev/null || true
+    echo "== metrics.log =="
+    tail -n 120 "$METRICS_LOG" 2>/dev/null || true
+    echo "== review.log =="
+    tail -n 120 "$REVIEW_LOG" 2>/dev/null || true
+    if has_systemd_user; then
+      echo "== systemd =="
+      journalctl --user -u "$SERVICE_NAME" -n 80 --no-pager 2>/dev/null || true
+    fi
+    ;;
+  review)
+    run_review_gate
+    echo "Ran: just brain-crate-ready nexcore-mcp"
+    ;;
+  report)
+    print_report
+    ;;
+  daemon)
+    shift || true
+    package="${1:-nexcore-api}"
+    shift || true
+    run_daemon "$package" "$@"
+    ;;
+  metrics)
+    shift || true
+    port="${1:-$(target_port)}"
+    echo "metrics for http://127.0.0.1:$port"
+    print_http_metrics "$port" "/health" 30 || true
+    print_http_metrics "$port" "/health/ready" 30 || true
+    print_http_metrics "$port" "/api/v1/mesh/health" 30 || true
+    print_http_metrics "$port" "/api/v1/vigil/health" 30 || true
+    ;;
+  validate)
+    if command -v just >/dev/null 2>&1; then
+      echo "[validate] just brain-crate-ready nexcore-mcp"
+      (cd "$ROOT_DIR" && just brain-crate-ready nexcore-mcp)
+      echo "Ran: just brain-crate-ready nexcore-mcp"
+    else
+      echo "[validate] skipping brain-crate-ready (just not installed)"
+    fi
+    echo "[validate] cargo check --workspace --all-targets"
+    (cd "$ROOT_DIR" && cargo check --workspace --all-targets)
+    echo "[validate] cargo test -p nexcore-api --tests -q"
+    (cd "$ROOT_DIR" && cargo test -p nexcore-api --tests -q)
+    echo "[validate] cargo test -p nexcore-vigil --tests -q"
+    (cd "$ROOT_DIR" && cargo test -p nexcore-vigil --tests -q)
+    echo "[validate] cargo test -p nexcore-hooks --test hook_validation -q"
+    (cd "$ROOT_DIR" && cargo test -p nexcore-hooks --test hook_validation -q)
+    echo "[validate] complete"
+    ;;
+  *)
+    echo "usage: $0 {start [package] [-- app args...]|stop|status|logs|metrics [port]|validate|review|report}"
+    exit 2
+    ;;
+esac

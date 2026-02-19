@@ -1,0 +1,517 @@
+{
+  "$schema": "./pathway.schema.json",
+  "id": "pv-ed-07",
+  "title": "Global PV Standards & Accreditation",
+  "description": "Master international pharmacovigilance standards, regulatory frameworks, and accreditation pathways. From ICH E2 series guidelines through FDA, EMA, and PMDA regional requirements to professional certification design and global benchmarking.",
+  "domain": "pharmacovigilance",
+  "componentCount": 26,
+  "estimatedDuration": "14 hours",
+  "stages": [
+    {
+      "id": "pv-ed-07-01",
+      "title": "ICH Pharmacovigilance Guidelines",
+      "description": "Learn the ICH E2 series guidelines that form the global foundation for pharmacovigilance practice: E2A (clinical safety reporting), E2B (ICSR data elements), E2C (periodic safety reports), E2D (post-approval safety reporting), E2E (pharmacovigilance planning), and E2F (DSUR).",
+      "bloomLevel": "Remember",
+      "passingScore": 70,
+      "estimatedDuration": "45 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-07-01-a01",
+          "title": "Introduction to the ICH E2 Series",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-07-01-a02",
+          "title": "Mapping ICH Guidelines to PV Activities",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-07-01-a03",
+          "title": "ICH Guidelines Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-07-01-q01",
+                "type": "multiple-choice",
+                "question": "Which ICH guideline establishes the data elements and message standards for Individual Case Safety Reports (ICSRs)?",
+                "options": [
+                  "ICH E2B(R3)",
+                  "ICH E2A",
+                  "ICH E2C(R2)",
+                  "ICH E2D"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "ICH E2B(R3) defines the electronic data elements and messaging format for ICSRs, using the HL7/ISO 27953 standard for structured transmission between regulatory authorities and MAHs."
+              },
+              {
+                "id": "pv-ed-07-01-q02",
+                "type": "multiple-choice",
+                "question": "ICH E2E provides guidance on which pharmacovigilance activity?",
+                "options": [
+                  "Pharmacovigilance planning",
+                  "Expedited reporting of clinical trial adverse events",
+                  "Periodic Benefit-Risk Evaluation Reports",
+                  "Development Safety Update Reports"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "ICH E2E covers pharmacovigilance planning, including the development of safety specifications and pharmacovigilance plans for the post-approval period. It was a precursor to the risk management planning framework."
+              },
+              {
+                "id": "pv-ed-07-01-q03",
+                "type": "true-false",
+                "question": "ICH E2F provides guidance on the Development Safety Update Report (DSUR), which summarizes safety information during the clinical development phase of a drug.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "ICH E2F establishes the DSUR as an annual safety report for investigational products during clinical development, providing a comprehensive review of safety data to regulatory authorities and ethics committees."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-07-02",
+      "title": "Regional Regulatory Frameworks",
+      "description": "Understand major regional pharmacovigilance requirements: FDA 21 CFR Part 312/314 (IND/NDA reporting), 21 CFR 600.80 (biologics), EMA Good Pharmacovigilance Practices (GVP) module system, and PMDA GPSP/GVP requirements. Compare timelines, definitions, and reporting thresholds across regions.",
+      "bloomLevel": "Understand",
+      "passingScore": 70,
+      "estimatedDuration": "60 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-07-02-a01",
+          "title": "FDA Pharmacovigilance Regulations",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-07-02-a02",
+          "title": "EMA Good Pharmacovigilance Practices Modules",
+          "type": "interactive",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-07-02-a03",
+          "title": "Regional Divergence Case Study: Expedited Reporting Timelines",
+          "type": "case-study",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-07-02-a04",
+          "title": "Regional Frameworks Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-07-02-q01",
+                "type": "multiple-choice",
+                "question": "Under FDA regulations, 21 CFR 314.80 requires Marketing Authorization Holders to submit 15-day Alert Reports for which type of adverse events?",
+                "options": [
+                  "Serious and unexpected adverse experiences",
+                  "All adverse experiences regardless of seriousness",
+                  "Only fatal adverse experiences",
+                  "Only adverse experiences with a positive rechallenge"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "21 CFR 314.80 requires 15-day Alert Reports for adverse drug experiences that are both serious and unexpected. The combination of seriousness criteria and unlisted/unexpected nature triggers the expedited timeline."
+              },
+              {
+                "id": "pv-ed-07-02-q02",
+                "type": "multiple-select",
+                "question": "Which of the following are EMA Good Pharmacovigilance Practices (GVP) modules? Select all that apply.",
+                "options": [
+                  "Module VI: Collection, management, and submission of ICSRs",
+                  "Module VII: Periodic Safety Update Reports",
+                  "Module IX: Signal management",
+                  "Module XII: Post-authorization efficacy studies"
+                ],
+                "correctAnswer": [0, 1, 2],
+                "points": 3,
+                "explanation": "Modules VI, VII, and IX are established EMA GVP modules. There is no Module XII for post-authorization efficacy studies. GVP Module XVI covers risk minimization measures, and post-authorization efficacy studies (PAES) are covered under separate guidance."
+              },
+              {
+                "id": "pv-ed-07-02-q03",
+                "type": "true-false",
+                "question": "Japan's PMDA requires submission of Periodic Safety Update Reports (PSURs) with the same periodicity as the EMA for all marketed products.",
+                "correctAnswer": false,
+                "points": 1,
+                "explanation": "Japan has its own periodic reporting system with different periodicity requirements. While ICH E2C(R2) harmonized the PBRER format, Japan still maintains distinct submission intervals, particularly during the re-examination period, which typically requires semi-annual reports."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-07-03",
+      "title": "Industry Standards & Professional Bodies",
+      "description": "Apply industry standards from key professional organizations: DIA (Drug Information Association) training and competency frameworks, ISPE (International Society for Pharmaceutical Engineering) quality guidelines, and PIPA (Pharmaceutical Information and Pharmacovigilance Association) best practices for PV professionals.",
+      "bloomLevel": "Apply",
+      "passingScore": 75,
+      "estimatedDuration": "50 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-07-03-a01",
+          "title": "Professional Organizations in Pharmacovigilance",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-07-03-a02",
+          "title": "Aligning Organizational Practices with Industry Standards",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-07-03-a03",
+          "title": "Industry Standards Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-07-03-q01",
+                "type": "multiple-choice",
+                "question": "The Drug Information Association (DIA) contributes to pharmacovigilance education primarily through which mechanism?",
+                "options": [
+                  "Providing training programs, conferences, and competency frameworks for PV professionals",
+                  "Issuing legally binding regulatory guidance for drug safety",
+                  "Conducting GMP inspections of pharmaceutical manufacturing sites",
+                  "Publishing mandatory reporting standards for clinical trial adverse events"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "DIA is a professional association that contributes through training, conferences, publications, and competency development for drug safety professionals. It does not have regulatory authority to issue binding guidance or conduct inspections."
+              },
+              {
+                "id": "pv-ed-07-03-q02",
+                "type": "true-false",
+                "question": "PIPA (Pharmaceutical Information and Pharmacovigilance Association) specifically focuses on the intersection of medical information and drug safety, promoting best practices for pharmacovigilance professionals in industry.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "PIPA is a UK-based professional body that focuses on medical information and pharmacovigilance practice within the pharmaceutical industry. It provides training, networking, and best practice guidance for PV and MI professionals."
+              },
+              {
+                "id": "pv-ed-07-03-q03",
+                "type": "multiple-choice",
+                "question": "When designing a PV training program aligned with industry standards, which approach best ensures global portability of competencies?",
+                "options": [
+                  "Map competencies to ICH guidelines and validate against multiple regional requirements",
+                  "Design exclusively to FDA requirements as the most stringent",
+                  "Use only EMA GVP modules as the training framework",
+                  "Focus solely on PMDA requirements for the most conservative approach"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Global portability requires mapping to the internationally harmonized ICH framework, then validating against multiple regional requirements. Single-region focus creates competency gaps when professionals work across jurisdictions."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-07-04",
+      "title": "Accreditation Program Design",
+      "description": "Apply accreditation principles to pharmacovigilance education: program-level certification vs. individual professional certification, ISO 17024 (conformity assessment for personnel certification), ISO 9001 quality management integration, and continuous compliance monitoring through systematic review cycles.",
+      "bloomLevel": "Apply",
+      "passingScore": 75,
+      "estimatedDuration": "65 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-07-04-a01",
+          "title": "Certification and Accreditation Frameworks",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-07-04-a02",
+          "title": "Designing a PV Professional Certification Program",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-07-04-a03",
+          "title": "ISO Integration for PV Education Programs",
+          "type": "case-study",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-07-04-a04",
+          "title": "Accreditation Design Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-07-04-q01",
+                "type": "multiple-choice",
+                "question": "ISO/IEC 17024 provides requirements for which type of accreditation?",
+                "options": [
+                  "Bodies operating certification of persons",
+                  "Laboratories performing calibration and testing",
+                  "Organizations providing management system audits",
+                  "Companies manufacturing pharmaceutical products"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "ISO/IEC 17024 specifies requirements for bodies that certify persons against specific requirements, including examination development, assessment processes, and certification maintenance. It is the standard for professional certification bodies."
+              },
+              {
+                "id": "pv-ed-07-04-q02",
+                "type": "multiple-choice",
+                "question": "In accreditation program design, what distinguishes program-level certification from individual professional certification?",
+                "options": [
+                  "Program certification validates the educational offering itself; individual certification validates a person's competencies",
+                  "Program certification is always more rigorous than individual certification",
+                  "Individual certification does not require ongoing maintenance",
+                  "Program certification is only needed for academic institutions"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Program certification evaluates whether an educational program meets defined quality standards and learning outcomes. Individual certification assesses whether a person possesses required knowledge, skills, and competencies. Both serve distinct but complementary purposes."
+              },
+              {
+                "id": "pv-ed-07-04-q03",
+                "type": "true-false",
+                "question": "Maintaining professional PV certification typically requires documented continuing professional development (CPD) activities to ensure competencies remain current.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Most professional certification schemes require ongoing CPD to maintain certification. This is essential in pharmacovigilance where regulatory requirements, scientific knowledge, and best practices evolve continuously."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-07-05",
+      "title": "Benchmarking & Gap Analysis",
+      "description": "Analyze pharmacovigilance programs through systematic benchmarking and gap analysis: compare organizational capabilities against regulatory expectations and industry leaders, identify competency gaps using maturity models, track innovation adoption, and measure program outcomes against defined performance indicators.",
+      "bloomLevel": "Analyze",
+      "passingScore": 80,
+      "estimatedDuration": "70 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-07-05-a01",
+          "title": "Benchmarking Frameworks for PV Programs",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-07-05-a02",
+          "title": "Conducting a PV Competency Gap Analysis",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-07-05-a03",
+          "title": "Competitor and Innovation Benchmarking",
+          "type": "case-study",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-07-05-a04",
+          "title": "Benchmarking Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-07-05-q01",
+                "type": "multiple-choice",
+                "question": "In a pharmacovigilance maturity model, what distinguishes a 'managed' organization (Level 3) from a 'defined' organization (Level 2)?",
+                "options": [
+                  "A managed organization measures and controls its PV processes quantitatively, while a defined organization has documented but unmonitored processes",
+                  "A defined organization has more staff than a managed organization",
+                  "A managed organization has regulatory approval while a defined organization does not",
+                  "There is no meaningful difference between these maturity levels"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Following CMMI-style maturity models applied to PV, Level 2 (Defined) means processes are documented and standardized, while Level 3 (Managed) adds quantitative measurement and control. The key differentiator is data-driven process management."
+              },
+              {
+                "id": "pv-ed-07-05-q02",
+                "type": "multiple-select",
+                "question": "Which are valid components of a PV education program gap analysis? Select all that apply.",
+                "options": [
+                  "Current competency assessment against regulatory requirements",
+                  "Comparison of training content to ICH guideline updates",
+                  "Analysis of inspection findings and CAPAs related to training",
+                  "Revenue comparison with competitor education providers"
+                ],
+                "correctAnswer": [0, 1, 2],
+                "points": 3,
+                "explanation": "Effective gap analysis compares current state against requirements (regulatory, ICH), identifies where inspection findings reveal training deficiencies, and maps content currency. Revenue comparison is a business metric, not a competency gap analysis component."
+              },
+              {
+                "id": "pv-ed-07-05-q03",
+                "type": "true-false",
+                "question": "Key Performance Indicators (KPIs) for PV education programs should include both process metrics (e.g., course completion rates) and outcome metrics (e.g., reduction in reporting errors after training).",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Effective PV program evaluation requires both process metrics (tracking activity and engagement) and outcome metrics (measuring real-world impact). Process metrics alone cannot demonstrate that training improved actual PV practice."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-07-06",
+      "title": "Recognition Pathway Development",
+      "description": "Evaluate strategies for building recognition pathways: securing endorsement from professional bodies (DIA, ISPE, Royal Pharmaceutical Society), regulatory agency acknowledgment, establishing academic institution credit partnerships (CPD, CE, academic credits), and engaging industry advisory boards to validate curriculum relevance.",
+      "bloomLevel": "Evaluate",
+      "passingScore": 80,
+      "estimatedDuration": "70 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-07-06-a01",
+          "title": "Building Professional Recognition Pathways",
+          "type": "reading",
+          "estimatedDuration": "15 minutes"
+        },
+        {
+          "id": "pv-ed-07-06-a02",
+          "title": "Evaluating Recognition Strategies",
+          "type": "interactive",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-07-06-a03",
+          "title": "Academic Credit Partnership Design",
+          "type": "case-study",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-07-06-a04",
+          "title": "Recognition Pathways Assessment",
+          "type": "quiz",
+          "estimatedDuration": "15 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-07-06-q01",
+                "type": "multiple-choice",
+                "question": "When seeking academic credit partnerships for a PV education program, which factor is most critical for institutional acceptance?",
+                "options": [
+                  "Demonstrated alignment between program learning outcomes and academic credit-level descriptors (e.g., QAA FHEQ levels)",
+                  "Having the largest number of enrolled learners",
+                  "Offering the program at the lowest cost",
+                  "Using the same learning management system as the academic institution"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Academic institutions grant credit based on demonstrated equivalence between program learning outcomes and their credit-level descriptors. Quality frameworks (e.g., QAA FHEQ in the UK, Bologna Framework in Europe) define the standards that external programs must meet for credit recognition."
+              },
+              {
+                "id": "pv-ed-07-06-q02",
+                "type": "multiple-choice",
+                "question": "An industry advisory board for a PV education program primarily serves which function?",
+                "options": [
+                  "Validating curriculum relevance to current industry practice and emerging regulatory trends",
+                  "Providing direct funding for program operations",
+                  "Replacing the need for formal accreditation",
+                  "Conducting final examinations for certification candidates"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Advisory boards ensure curriculum stays relevant to actual industry needs and anticipates emerging requirements. They validate content against real-world practice, identify skill gaps, and provide strategic direction. They complement but do not replace formal accreditation."
+              },
+              {
+                "id": "pv-ed-07-06-q03",
+                "type": "true-false",
+                "question": "Continuing Professional Development (CPD) credits awarded by professional pharmacy bodies can be used to demonstrate ongoing competence in pharmacovigilance for regulatory inspections.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "Regulatory inspectors review training records during GVP inspections. CPD credits from recognized professional bodies provide documented evidence of ongoing competence development, supporting compliance with GVP Module I requirements for qualified personnel."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pv-ed-07-07",
+      "title": "Integrated Global Standards Strategy",
+      "description": "Create a comprehensive global PV standards strategy that harmonizes ICH guidelines with regional requirements, integrates industry best practices, establishes sustainable accreditation pathways, and ensures global portability of professional credentials across regulatory jurisdictions.",
+      "bloomLevel": "Create",
+      "passingScore": 85,
+      "estimatedDuration": "90 minutes",
+      "activities": [
+        {
+          "id": "pv-ed-07-07-a01",
+          "title": "Synthesizing Global PV Standards Frameworks",
+          "type": "reading",
+          "estimatedDuration": "20 minutes"
+        },
+        {
+          "id": "pv-ed-07-07-a02",
+          "title": "Building a Harmonized Standards Framework",
+          "type": "interactive",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-07-07-a03",
+          "title": "Global Harmonization Strategy Workshop",
+          "type": "case-study",
+          "estimatedDuration": "25 minutes"
+        },
+        {
+          "id": "pv-ed-07-07-a04",
+          "title": "Global Standards Integration Assessment",
+          "type": "quiz",
+          "estimatedDuration": "20 minutes",
+          "quiz": {
+            "questions": [
+              {
+                "id": "pv-ed-07-07-q01",
+                "type": "multiple-choice",
+                "question": "When designing a globally portable PV credential, what is the most effective approach to handling regional regulatory divergences?",
+                "options": [
+                  "Build a core ICH-aligned competency framework with regional modules that address jurisdiction-specific requirements",
+                  "Design separate credentials for each regulatory region with no common core",
+                  "Use only FDA requirements as the global standard since they are the most comprehensive",
+                  "Ignore regional differences and test only on internationally harmonized content"
+                ],
+                "correctAnswer": 0,
+                "points": 3,
+                "explanation": "A modular approach with an ICH-harmonized core plus regional supplements provides both global portability and local relevance. This mirrors how multinational companies structure their PV operations: global SOPs with regional addenda."
+              },
+              {
+                "id": "pv-ed-07-07-q02",
+                "type": "multiple-choice",
+                "question": "Which element is essential for sustaining a PV accreditation program over multiple years?",
+                "options": [
+                  "A systematic review cycle that updates curriculum based on regulatory changes, inspection findings, and emerging safety science",
+                  "Keeping all content unchanged to maintain consistency across certification cohorts",
+                  "Relying exclusively on external advisory board recommendations",
+                  "Requiring all certified professionals to repeat the full program every two years"
+                ],
+                "correctAnswer": 0,
+                "points": 2,
+                "explanation": "Sustainable accreditation requires structured review cycles triggered by regulatory updates (new ICH guidelines, GVP revisions), inspection trend analysis, and advances in safety science. Static content rapidly becomes obsolete in the evolving PV landscape."
+              },
+              {
+                "id": "pv-ed-07-07-q03",
+                "type": "true-false",
+                "question": "A well-designed global PV standards strategy should integrate the ICH-GCG (Global Cooperation Group) initiatives, which aim to extend ICH harmonization to non-ICH member regulatory authorities.",
+                "correctAnswer": true,
+                "points": 1,
+                "explanation": "The ICH Global Cooperation Group works with non-ICH regulators to extend harmonization. Including GCG initiatives in a global strategy ensures the accreditation program remains relevant as more regulatory authorities adopt ICH-aligned frameworks."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

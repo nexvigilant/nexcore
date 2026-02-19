@@ -1,0 +1,19 @@
+
+[package]
+name = "nexcore-word-spectroscopy"
+version = "1.0.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+description = "Virtual laboratory for word/concept spectroscopy via primitive decomposition"
+
+[dependencies]
+nexcore-laboratory = { workspace = true }
+nexcore-lex-primitiva = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+clap = { workspace = true, features = ["derive", "cargo", "env"] }
+
+[lints]
+workspace = true

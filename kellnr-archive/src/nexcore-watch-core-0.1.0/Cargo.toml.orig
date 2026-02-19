@@ -1,0 +1,18 @@
+[package]
+name = "nexcore-watch-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license = "LicenseRef-NexVigilant-Proprietary"
+description = "NexCore watch core — pure computation for signal detection, Guardian status, and P0-P5 alerts"
+publish = ["nexcore"]
+
+[lib]
+name = "nexcore_watch_core"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+nexcore-pvos = { workspace = true }
+nexcore-lex-primitiva = { workspace = true }

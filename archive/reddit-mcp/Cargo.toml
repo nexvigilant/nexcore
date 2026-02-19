@@ -1,0 +1,47 @@
+
+[package]
+name = "reddit-mcp"
+version = "1.0.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+repository = "https://github.com/nexvigilant/nexcore"
+description = "MCP server for Reddit API integration"
+
+[[bin]]
+name = "reddit-mcp"
+path = "src/main.rs"
+
+[dependencies]
+# Reddit API client
+nexcore-social = { version = "1.0.0", path = "../nexcore-social", registry = "nexcore" }
+
+# Value mining (signal detection)
+nexcore-value-mining = { workspace = true }
+
+# MCP server framework
+rmcp = { version = "0.14", features = ["server", "transport-io"] }
+
+# Async runtime
+tokio = { workspace = true, features = ["full"] }
+
+# Serialization
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+
+# Environment variables
+dotenvy = "0.15"
+
+# Thread-safe state
+parking_lot = "0.12"
+
+[lints]
+workspace = true

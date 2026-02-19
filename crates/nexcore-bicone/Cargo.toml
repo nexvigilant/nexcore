@@ -1,0 +1,11 @@
+[package]
+name = "nexcore-bicone"
+version = "0.1.0"
+edition = "2024"
+description = "Bicone geometry analysis — mathematical extractions from width sequences"
+license = "MIT"
+
+[dependencies]
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

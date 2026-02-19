@@ -407,3 +407,6 @@ pub mod learning_dag;
 
 // Observatory Personalization (detect, get, set, validate)
 pub mod observatory;
+
+// Stoichiometry (encode/decode concepts as balanced primitive equations)
+pub mod stoichiometry;

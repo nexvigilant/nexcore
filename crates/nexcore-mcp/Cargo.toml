@@ -87,6 +87,7 @@ pvos-primitive-expansion = { workspace = true }
 nexcore-orchestration = { workspace = true }
 nexcore-vault = { workspace = true }
 nexcore-statemind = { workspace = true }
+nexcore-stoichiometry = { workspace = true }
 nexcore-model-checker = { workspace = true }
 nexcore-combinatorics = { workspace = true }
 nexcore-cloud = { workspace = true }

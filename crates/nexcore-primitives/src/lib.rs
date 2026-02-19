@@ -9,6 +9,8 @@ pub mod grounding;
 pub mod measurement;
 pub mod quantum;
 pub mod spatial_bridge;
+pub mod relay;
 pub mod transfer;
 
 pub use measurement::{Confidence, Measured};
+pub use relay::{Fidelity, RelayChain, RelayHop};

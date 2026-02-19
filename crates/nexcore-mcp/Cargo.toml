@@ -30,7 +30,7 @@ nexcore-skill-compiler = { workspace = true }
 nexcore-telemetry-core = { workspace = true }
 nexcore-compliance = { workspace = true }
 nexcore-algovigilance = { workspace = true }
-nexcore-dna = { workspace = true, features = ["ncbi"] }
+nexcore-dna = { workspace = true }
 nexcore-dtree = { workspace = true }
 nexcore-organize = { workspace = true }
 nexcore-sentinel = { workspace = true }
@@ -110,6 +110,8 @@ nexcore-state-theory = { workspace = true }
 nexcore-ctvp = { workspace = true }
 # Pharmacovigilance DSL extracted from vigilance megacrate
 nexcore-pvdsl = { workspace = true }
+# TRIAL Framework (universal experimentation — FDA clinical trial methodology)
+nexcore-trial = { path = "../nexcore-trial" }
 # Pharmacovigilance Operating System substrate
 nexcore-pvos = { workspace = true }
 # Skill Ecosystem Registry (compliance, ToV monitoring, promotion)

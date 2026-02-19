@@ -4,6 +4,7 @@ members = [
     "tools/*",
 ]
 exclude = [
+    "crates/nexcore-claude-hooks",
 ]
 resolver = "2"
 

@@ -363,3 +363,7 @@ pub use observatory::*;
 // Stoichiometry (encode/decode concepts as balanced primitive equations)
 pub mod stoichiometry;
 pub use stoichiometry::*;
+
+// TRIAL Framework (universal experimentation — protocol, power, randomize, interim, safety, endpoint, multiplicity, adapt, report)
+pub mod trial;
+pub use trial::*;

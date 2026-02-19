@@ -410,3 +410,6 @@ pub mod observatory;
 
 // Stoichiometry (encode/decode concepts as balanced primitive equations)
 pub mod stoichiometry;
+
+// TRIAL Framework (universal experimentation — 10 MCP tools)
+pub mod trial;

@@ -324,7 +324,7 @@ mod tests {
         let protocol = make_protocol();
         let data = InterimData {
             information_fraction: 0.50,
-            treatment_successes: 55,
+            treatment_successes: 60,
             treatment_n: 100,
             control_successes: 45,
             control_n: 100,

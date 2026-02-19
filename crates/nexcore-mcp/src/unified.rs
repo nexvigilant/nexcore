@@ -2072,6 +2072,20 @@ async fn dispatch_inner(
         "stoichiometry_dictionary" => typed(params, tools::stoichiometry::dictionary),
 
         // ====================================================================
+        // TRIAL Framework (10) — universal experimentation (FDA clinical trial methodology)
+        // ====================================================================
+        "trial_protocol_register" => typed(params, tools::trial::protocol_register),
+        "trial_power_analysis" => typed(params, tools::trial::power_analysis),
+        "trial_randomize" => typed(params, tools::trial::randomize),
+        "trial_blind_verify" => typed(params, tools::trial::blind_verify),
+        "trial_interim_analyze" => typed(params, tools::trial::interim_analyze),
+        "trial_safety_check" => typed(params, tools::trial::safety_check),
+        "trial_endpoint_evaluate" => typed(params, tools::trial::endpoint_evaluate),
+        "trial_multiplicity_adjust" => typed(params, tools::trial::multiplicity_adjust),
+        "trial_adapt_decide" => typed(params, tools::trial::adapt_decide),
+        "trial_report_generate" => typed(params, tools::trial::report_generate),
+
+        // ====================================================================
         // Unknown command
         // ====================================================================
         _ => Err(McpError::invalid_params(
@@ -2440,6 +2454,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "kellnr_registry": ["kellnr_search_crates", "kellnr_get_crate_metadata", "kellnr_list_crate_versions", "kellnr_get_version_details", "kellnr_list_owners", "kellnr_add_owner", "kellnr_remove_owner", "kellnr_yank_version", "kellnr_unyank_version", "kellnr_list_all_crates", "kellnr_get_dependencies", "kellnr_get_dependents", "kellnr_health_check", "kellnr_download_crate", "kellnr_registry_stats"],
             "registry": ["registry_assess_skill", "registry_assess_all", "registry_gap_report", "registry_promotable", "registry_promotion_plan", "registry_tov_safety", "registry_tov_harm", "registry_tov_is_safe"],
             "stoichiometry": ["stoichiometry_encode", "stoichiometry_decode", "stoichiometry_sisters", "stoichiometry_mass_state", "stoichiometry_dictionary"],
+            "trial": ["trial_protocol_register", "trial_power_analysis", "trial_randomize", "trial_blind_verify", "trial_interim_analyze", "trial_safety_check", "trial_endpoint_evaluate", "trial_multiplicity_adjust", "trial_adapt_decide", "trial_report_generate"],
         }
     });
 

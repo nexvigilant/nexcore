@@ -22,26 +22,26 @@
 //! use nexcore_reason::counterfactual::{CounterfactualEngine, Intervention};
 //!
 //! let mut dag = CausalDag::new();
-//! dag.add_node(CausalNode { id: "a".to_string(), label: "A".to_string(), node_type: NodeType::Root });
-//! dag.add_node(CausalNode { id: "b".to_string(), label: "B".to_string(), node_type: NodeType::Factor });
-//! dag.add_node(CausalNode { id: "c".to_string(), label: "C".to_string(), node_type: NodeType::Risk });
-//! dag.add_link(CausalLink { from: "a".to_string(), to: "b".to_string(), strength: 0.9 });
-//! dag.add_link(CausalLink { from: "b".to_string(), to: "c".to_string(), strength: 0.8 });
+//! dag.add_node(CausalNode { id: NodeId::new("a"), label: "A".to_string(), node_type: NodeType::Module });
+//! dag.add_node(CausalNode { id: NodeId::new("b"), label: "B".to_string(), node_type: NodeType::Pattern });
+//! dag.add_node(CausalNode { id: NodeId::new("c"), label: "C".to_string(), node_type: NodeType::Risk });
+//! dag.add_link(CausalLink { from: NodeId::new("a"), to: NodeId::new("b"), strength: 0.9, evidence: "direct".to_string() }).unwrap();
+//! dag.add_link(CausalLink { from: NodeId::new("b"), to: NodeId::new("c"), strength: 0.8, evidence: "direct".to_string() }).unwrap();
 //!
 //! let engine = CounterfactualEngine::new(dag);
-//! let result = engine.evaluate(&Intervention::RemoveNode("b".to_string())).unwrap();
+//! let result = engine.evaluate(&Intervention::RemoveNode(NodeId::new("b"))).unwrap();
 //!
-//! // Removing the bridge node "b" severs the a → c path.
-//! assert!(result.broken_paths.contains(&("a".to_string(), "c".to_string())));
+//! // Removing the bridge node "b" severs the a -> c path.
+//! assert!(result.broken_paths.contains(&(NodeId::new("a"), NodeId::new("c"))));
 //! assert!(result.impact_score > 0.0);
 //! ```
 
 use std::collections::{HashMap, HashSet, VecDeque};
 
-use anyhow::{Context as _, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::dag::{CausalDag, CausalLink, CausalNode, NodeId, NodeType};
+use crate::dag::{CausalDag, CausalLink, CausalNode, NodeId};
 
 // ---------------------------------------------------------------------------
 // Intervention
@@ -56,10 +56,10 @@ use crate::dag::{CausalDag, CausalLink, CausalNode, NodeId, NodeType};
 /// # Example
 ///
 /// ```
+/// use nexcore_reason::dag::NodeId;
 /// use nexcore_reason::counterfactual::Intervention;
 ///
-/// let iv = Intervention::RemoveNode("drug_exposure".to_string());
-/// // Pattern-match to inspect the variant.
+/// let iv = Intervention::RemoveNode(NodeId::new("drug_exposure"));
 /// assert!(matches!(iv, Intervention::RemoveNode(_)));
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -92,17 +92,14 @@ pub enum Intervention {
         /// Target of the link whose strength changes.
         to: NodeId,
         /// Replacement strength value in `[0.0, 1.0]`.  Values outside that
-        /// range are clamped by the DAG's mutation helpers.
+        /// range are clamped by the mutation helpers.
         new_strength: f64,
     },
 
     /// Inject a hypothetical [`CausalNode`] into the graph.
     ///
     /// The node is appended as an isolated vertex (no links are added
-    /// automatically).  The caller is responsible for adding connecting links
-    /// as additional [`AdjustStrength`] or follow-up interventions if needed.
-    ///
-    /// [`AdjustStrength`]: Intervention::AdjustStrength
+    /// automatically).
     InjectNode(CausalNode),
 }
 
@@ -118,23 +115,23 @@ pub enum Intervention {
 /// # Example
 ///
 /// ```
-/// use nexcore_reason::dag::{CausalDag, CausalLink, CausalNode, NodeType};
+/// use nexcore_reason::dag::{CausalDag, CausalLink, CausalNode, NodeId, NodeType};
 /// use nexcore_reason::counterfactual::{CounterfactualEngine, Intervention};
 ///
 /// let mut dag = CausalDag::new();
-/// dag.add_node(CausalNode { id: "x".to_string(), label: "X".to_string(), node_type: NodeType::Root });
-/// dag.add_node(CausalNode { id: "y".to_string(), label: "Y".to_string(), node_type: NodeType::Risk });
-/// dag.add_link(CausalLink { from: "x".to_string(), to: "y".to_string(), strength: 0.5 });
+/// dag.add_node(CausalNode { id: NodeId::new("x"), label: "X".to_string(), node_type: NodeType::Module });
+/// dag.add_node(CausalNode { id: NodeId::new("y"), label: "Y".to_string(), node_type: NodeType::Risk });
+/// dag.add_link(CausalLink { from: NodeId::new("x"), to: NodeId::new("y"), strength: 0.5, evidence: String::new() }).unwrap();
 ///
 /// let engine = CounterfactualEngine::new(dag);
 /// let result = engine
 ///     .evaluate(&Intervention::RemoveLink {
-///         from: "x".to_string(),
-///         to: "y".to_string(),
+///         from: NodeId::new("x"),
+///         to: NodeId::new("y"),
 ///     })
 ///     .unwrap();
 ///
-/// assert_eq!(result.broken_paths, vec![("x".to_string(), "y".to_string())]);
+/// assert_eq!(result.broken_paths, vec![(NodeId::new("x"), NodeId::new("y"))]);
 /// assert!((result.impact_score - 1.0).abs() < 1e-6);
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -172,31 +169,30 @@ pub struct CounterfactualResult {
 
 /// Returns all node IDs present in a DAG as a `HashSet<NodeId>`.
 fn node_id_set(dag: &CausalDag) -> HashSet<NodeId> {
-    dag.nodes().iter().map(|n| n.id.clone()).collect()
+    dag.nodes.iter().map(|n| n.id.clone()).collect()
 }
 
 /// Returns `true` when `dag` contains a directed path from `from` to `to`.
 ///
-/// BFS over the link list.  O(V + E).
+/// BFS over the link list. O(V + E).
 fn can_reach(dag: &CausalDag, from: &NodeId, to: &NodeId) -> bool {
     if from == to {
         return true;
     }
-    // Build an outgoing adjacency map on the fly from the link slice.
-    let mut adj: HashMap<&str, Vec<&str>> = HashMap::new();
-    for link in dag.links() {
-        adj.entry(link.from.as_str()).or_default().push(link.to.as_str());
+    let mut adj: HashMap<&NodeId, Vec<&NodeId>> = HashMap::new();
+    for link in &dag.links {
+        adj.entry(&link.from).or_default().push(&link.to);
     }
 
-    let mut visited: HashSet<&str> = HashSet::new();
-    let mut queue: VecDeque<&str> = VecDeque::new();
-    queue.push_back(from.as_str());
-    visited.insert(from.as_str());
+    let mut visited: HashSet<&NodeId> = HashSet::new();
+    let mut queue: VecDeque<&NodeId> = VecDeque::new();
+    queue.push_back(from);
+    visited.insert(from);
 
     while let Some(current) = queue.pop_front() {
         if let Some(neighbors) = adj.get(current) {
             for &neighbor in neighbors {
-                if neighbor == to.as_str() {
+                if neighbor == to {
                     return true;
                 }
                 if visited.insert(neighbor) {
@@ -210,16 +206,16 @@ fn can_reach(dag: &CausalDag, from: &NodeId, to: &NodeId) -> bool {
 
 /// Returns the set of node IDs that have at least one incoming link.
 fn nodes_with_incoming(dag: &CausalDag) -> HashSet<NodeId> {
-    dag.links().iter().map(|l| l.to.clone()).collect()
+    dag.links.iter().map(|l| l.to.clone()).collect()
 }
 
 /// Returns the set of node IDs that have at least one outgoing link.
 fn nodes_with_outgoing(dag: &CausalDag) -> HashSet<NodeId> {
-    dag.links().iter().map(|l| l.from.clone()).collect()
+    dag.links.iter().map(|l| l.from.clone()).collect()
 }
 
 /// Returns node IDs that are structural roots: present in the graph but
-/// **not** the target of any link.
+/// not the target of any link.
 fn structural_roots(dag: &CausalDag) -> HashSet<NodeId> {
     let all = node_id_set(dag);
     let with_incoming = nodes_with_incoming(dag);
@@ -227,27 +223,30 @@ fn structural_roots(dag: &CausalDag) -> HashSet<NodeId> {
 }
 
 /// Returns node IDs that are structural leaves: present in the graph but
-/// **not** the source of any link.
+/// not the source of any link.
 fn structural_leaves(dag: &CausalDag) -> HashSet<NodeId> {
     let all = node_id_set(dag);
     let with_outgoing = nodes_with_outgoing(dag);
     all.difference(&with_outgoing).cloned().collect()
 }
 
+/// Looks up the first link matching `from -> to` in `dag`.
+fn link_between<'d>(dag: &'d CausalDag, from: &NodeId, to: &NodeId) -> Option<&'d CausalLink> {
+    dag.links
+        .iter()
+        .find(|l| &l.from == from && &l.to == to)
+}
+
 /// Removes `node_id` and all links that touch it from `dag`.
 fn remove_node_from(dag: &mut CausalDag, node_id: &NodeId) {
-    // Reconstruct the dag in-place: replace its vec-based storage with
-    // filtered copies.  The public API only exposes `&[CausalNode]` and
-    // `&[CausalLink]` for reading, so we must use `add_node`/`add_link` on a
-    // fresh instance and swap it in.
     let surviving_nodes: Vec<CausalNode> = dag
-        .nodes()
+        .nodes
         .iter()
         .filter(|n| &n.id != node_id)
         .cloned()
         .collect();
     let surviving_links: Vec<CausalLink> = dag
-        .links()
+        .links
         .iter()
         .filter(|l| &l.from != node_id && &l.to != node_id)
         .cloned()
@@ -257,17 +256,17 @@ fn remove_node_from(dag: &mut CausalDag, node_id: &NodeId) {
     for n in surviving_nodes {
         fresh.add_node(n);
     }
-    for l in surviving_links {
-        fresh.add_link(l);
-    }
+    // Surviving links are already known-acyclic; push directly to avoid the
+    // cycle check overhead.
+    fresh.links = surviving_links;
     *dag = fresh;
 }
 
-/// Removes the first link matching `from → to` from `dag`.
+/// Removes the first link matching `from -> to` from `dag`.
 fn remove_link_from(dag: &mut CausalDag, from: &NodeId, to: &NodeId) {
     let mut removed = false;
     let surviving_links: Vec<CausalLink> = dag
-        .links()
+        .links
         .iter()
         .filter(|l| {
             if !removed && &l.from == from && &l.to == to {
@@ -280,21 +279,19 @@ fn remove_link_from(dag: &mut CausalDag, from: &NodeId, to: &NodeId) {
         .cloned()
         .collect();
 
-    let nodes: Vec<CausalNode> = dag.nodes().to_vec();
+    let nodes: Vec<CausalNode> = dag.nodes.clone();
     let mut fresh = CausalDag::new();
     for n in nodes {
         fresh.add_node(n);
     }
-    for l in surviving_links {
-        fresh.add_link(l);
-    }
+    fresh.links = surviving_links;
     *dag = fresh;
 }
 
-/// Adjusts the strength of the first link matching `from → to` in `dag`.
+/// Adjusts the strength of the first link matching `from -> to` in `dag`.
 fn adjust_strength_in(dag: &mut CausalDag, from: &NodeId, to: &NodeId, new_strength: f64) {
     let updated_links: Vec<CausalLink> = dag
-        .links()
+        .links
         .iter()
         .map(|l| {
             if &l.from == from && &l.to == to {
@@ -302,6 +299,7 @@ fn adjust_strength_in(dag: &mut CausalDag, from: &NodeId, to: &NodeId, new_stren
                     from: l.from.clone(),
                     to: l.to.clone(),
                     strength: new_strength.clamp(0.0, 1.0),
+                    evidence: l.evidence.clone(),
                 }
             } else {
                 l.clone()
@@ -309,14 +307,12 @@ fn adjust_strength_in(dag: &mut CausalDag, from: &NodeId, to: &NodeId, new_stren
         })
         .collect();
 
-    let nodes: Vec<CausalNode> = dag.nodes().to_vec();
+    let nodes: Vec<CausalNode> = dag.nodes.clone();
     let mut fresh = CausalDag::new();
     for n in nodes {
         fresh.add_node(n);
     }
-    for l in updated_links {
-        fresh.add_link(l);
-    }
+    fresh.links = updated_links;
     *dag = fresh;
 }
 
@@ -335,21 +331,21 @@ fn adjust_strength_in(dag: &mut CausalDag, from: &NodeId, to: &NodeId, new_stren
 /// # Example
 ///
 /// ```
-/// use nexcore_reason::dag::{CausalDag, CausalLink, CausalNode, NodeType};
+/// use nexcore_reason::dag::{CausalDag, CausalLink, CausalNode, NodeId, NodeType};
 /// use nexcore_reason::counterfactual::{CounterfactualEngine, Intervention};
 ///
 /// let mut dag = CausalDag::new();
-/// dag.add_node(CausalNode { id: "cause".to_string(), label: "Cause".to_string(), node_type: NodeType::Root });
-/// dag.add_node(CausalNode { id: "effect".to_string(), label: "Effect".to_string(), node_type: NodeType::Risk });
-/// dag.add_link(CausalLink { from: "cause".to_string(), to: "effect".to_string(), strength: 0.75 });
+/// dag.add_node(CausalNode { id: NodeId::new("cause"), label: "Cause".to_string(), node_type: NodeType::Metric });
+/// dag.add_node(CausalNode { id: NodeId::new("effect"), label: "Effect".to_string(), node_type: NodeType::Risk });
+/// dag.add_link(CausalLink { from: NodeId::new("cause"), to: NodeId::new("effect"), strength: 0.75, evidence: String::new() }).unwrap();
 ///
 /// let engine = CounterfactualEngine::new(dag);
 /// let batch = engine
 ///     .evaluate_batch(&[
-///         Intervention::RemoveNode("cause".to_string()),
+///         Intervention::RemoveNode(NodeId::new("cause")),
 ///         Intervention::AdjustStrength {
-///             from: "cause".to_string(),
-///             to: "effect".to_string(),
+///             from: NodeId::new("cause"),
+///             to: NodeId::new("effect"),
 ///             new_strength: 0.1,
 ///         },
 ///     ])
@@ -389,8 +385,8 @@ impl CounterfactualEngine {
     ///
     /// Returns an error when:
     ///
-    /// - A [`RemoveNode`] or [`RemoveLink`] targets an id that does not exist
-    ///   in the baseline graph.
+    /// - A [`RemoveNode`] targets an id that does not exist in the baseline.
+    /// - A [`RemoveLink`] targets a link that does not exist.
     /// - An [`AdjustStrength`] targets a link that does not exist.
     /// - An [`InjectNode`] supplies a node whose id already exists.
     ///
@@ -402,22 +398,22 @@ impl CounterfactualEngine {
     /// # Example
     ///
     /// ```
-    /// use nexcore_reason::dag::{CausalDag, CausalLink, CausalNode, NodeType};
+    /// use nexcore_reason::dag::{CausalDag, CausalLink, CausalNode, NodeId, NodeType};
     /// use nexcore_reason::counterfactual::{CounterfactualEngine, Intervention};
     ///
     /// let mut dag = CausalDag::new();
-    /// dag.add_node(CausalNode { id: "p".to_string(), label: "P".to_string(), node_type: NodeType::Root });
-    /// dag.add_node(CausalNode { id: "q".to_string(), label: "Q".to_string(), node_type: NodeType::Risk });
-    /// dag.add_link(CausalLink { from: "p".to_string(), to: "q".to_string(), strength: 0.6 });
+    /// dag.add_node(CausalNode { id: NodeId::new("p"), label: "P".to_string(), node_type: NodeType::Module });
+    /// dag.add_node(CausalNode { id: NodeId::new("q"), label: "Q".to_string(), node_type: NodeType::Risk });
+    /// dag.add_link(CausalLink { from: NodeId::new("p"), to: NodeId::new("q"), strength: 0.6, evidence: String::new() }).unwrap();
     ///
     /// let engine = CounterfactualEngine::new(dag);
-    /// let result = engine.evaluate(&Intervention::RemoveNode("p".to_string())).unwrap();
+    /// let result = engine.evaluate(&Intervention::RemoveNode(NodeId::new("p"))).unwrap();
     ///
     /// // "p" is gone, so "q" becomes a new root.
-    /// assert!(result.new_roots.contains(&"q".to_string()));
+    /// assert!(result.new_roots.contains(&NodeId::new("q")));
     /// ```
     pub fn evaluate(&self, intervention: &Intervention) -> Result<CounterfactualResult> {
-        let original_node_count = self.dag.nodes().len();
+        let original_node_count = self.dag.nodes.len();
 
         // Snapshot structural properties of the baseline.
         let original_roots: HashSet<NodeId> = structural_roots(&self.dag);
@@ -426,7 +422,7 @@ impl CounterfactualEngine {
 
         // All pairs that are reachable in the original (excluding self-pairs).
         let original_reachable: HashSet<(NodeId, NodeId)> = {
-            let ids: Vec<&NodeId> = self.dag.nodes().iter().map(|n| &n.id).collect();
+            let ids: Vec<&NodeId> = self.dag.nodes.iter().map(|n| &n.id).collect();
             let mut set = HashSet::new();
             for &a in &ids {
                 for &b in &ids {
@@ -465,8 +461,6 @@ impl CounterfactualEngine {
         let broken_paths: Vec<(NodeId, NodeId)> = original_reachable
             .iter()
             .filter(|(a, b)| {
-                // Both endpoints must still exist for the path to be broken
-                // rather than simply removed.
                 modified_ids.contains(a)
                     && modified_ids.contains(b)
                     && !can_reach(&modified, a, b)
@@ -487,12 +481,8 @@ impl CounterfactualEngine {
             intervention,
         );
 
-        // Impact score.
-        let impact_score = self.compute_impact_score(
-            intervention,
-            &affected_nodes,
-            original_node_count,
-        );
+        let impact_score =
+            self.compute_impact_score(intervention, &affected_nodes, original_node_count);
 
         Ok(CounterfactualResult {
             intervention: intervention.clone(),
@@ -517,11 +507,10 @@ impl CounterfactualEngine {
     /// # Example
     ///
     /// ```
-    /// use nexcore_reason::dag::{CausalDag, CausalLink, CausalNode, NodeType};
-    /// use nexcore_reason::counterfactual::{CounterfactualEngine, Intervention};
+    /// use nexcore_reason::dag::CausalDag;
+    /// use nexcore_reason::counterfactual::CounterfactualEngine;
     ///
-    /// let dag = CausalDag::new();
-    /// let engine = CounterfactualEngine::new(dag);
+    /// let engine = CounterfactualEngine::new(CausalDag::new());
     /// let results = engine.evaluate_batch(&[]).unwrap();
     /// assert!(results.is_empty());
     /// ```
@@ -558,7 +547,7 @@ impl CounterfactualEngine {
 
             Intervention::RemoveLink { from, to } => {
                 anyhow::ensure!(
-                    modified.link_between(from, to).is_some(),
+                    link_between(modified, from, to).is_some(),
                     "RemoveLink: no link from '{}' to '{}' exists in the DAG",
                     from,
                     to
@@ -572,7 +561,7 @@ impl CounterfactualEngine {
                 new_strength,
             } => {
                 anyhow::ensure!(
-                    modified.link_between(from, to).is_some(),
+                    link_between(modified, from, to).is_some(),
                     "AdjustStrength: no link from '{}' to '{}' exists in the DAG",
                     from,
                     to
@@ -593,13 +582,6 @@ impl CounterfactualEngine {
     }
 
     /// Determines which nodes were meaningfully affected by the intervention.
-    ///
-    /// A node is "affected" when any of the following are true:
-    ///
-    /// - Its reachability set changed (it can now reach fewer or more nodes).
-    /// - It became a root or leaf where it was not before.
-    /// - It is the direct target of the intervention (the removed / adjusted
-    ///   node or link endpoints).
     #[allow(clippy::too_many_arguments)]
     fn compute_affected_nodes(
         &self,
@@ -633,7 +615,7 @@ impl CounterfactualEngine {
                 .filter(|(a, _)| a == id)
                 .count();
             let modified_reach_count = modified
-                .nodes()
+                .nodes
                 .iter()
                 .filter(|n| &n.id != id && can_reach(modified, id, &n.id))
                 .count();
@@ -646,7 +628,6 @@ impl CounterfactualEngine {
         match intervention {
             Intervention::RemoveLink { from, to }
             | Intervention::AdjustStrength { from, to, .. } => {
-                // Endpoints of the modified link are affected.
                 if modified_ids.contains(from) {
                     affected.insert(from.clone());
                 }
@@ -655,7 +636,6 @@ impl CounterfactualEngine {
                 }
             }
             Intervention::InjectNode(node) => {
-                // The newly injected node is itself affected.
                 affected.insert(node.id.clone());
             }
             Intervention::RemoveNode(_) => {
@@ -665,19 +645,11 @@ impl CounterfactualEngine {
         }
 
         let mut result: Vec<NodeId> = affected.into_iter().collect();
-        result.sort();
+        result.sort_by(|a, b| a.0.cmp(&b.0));
         result
     }
 
     /// Computes an impact score in `[0.0, 1.0]`.
-    ///
-    /// - For structural interventions (RemoveNode, RemoveLink, InjectNode):
-    ///   `affected_count / original_node_count`.
-    /// - For [`AdjustStrength`]: the normalised absolute strength delta
-    ///   (`|old - new| / 1.0`), with the number of affected endpoint nodes
-    ///   layered on top as a secondary weight.
-    ///
-    /// [`AdjustStrength`]: Intervention::AdjustStrength
     fn compute_impact_score(
         &self,
         intervention: &Intervention,
@@ -690,23 +662,16 @@ impl CounterfactualEngine {
 
         match intervention {
             Intervention::AdjustStrength { from, to, new_strength } => {
-                // Derive impact from the magnitude of the strength change.
-                let old_strength = self
-                    .dag
-                    .link_between(from, to)
+                let old_strength = link_between(&self.dag, from, to)
                     .map(|l| l.strength)
                     .unwrap_or(0.0);
                 let delta = (old_strength - new_strength.clamp(0.0, 1.0)).abs();
-                // Weight the delta by the fraction of affected nodes so that
-                // a tiny delta on a highly connected link still reflects some
-                // structural significance.
                 let node_fraction =
                     affected_nodes.len() as f64 / original_node_count as f64;
                 (delta + node_fraction * 0.1_f64).clamp(0.0, 1.0)
             }
             _ => {
-                let fraction =
-                    affected_nodes.len() as f64 / original_node_count as f64;
+                let fraction = affected_nodes.len() as f64 / original_node_count as f64;
                 fraction.clamp(0.0, 1.0)
             }
         }
@@ -720,7 +685,7 @@ impl CounterfactualEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dag::{CausalDag, CausalLink, CausalNode, NodeType};
+    use crate::dag::{CausalDag, CausalLink, CausalNode, NodeId, NodeType};
 
     // -----------------------------------------------------------------------
     // Helpers
@@ -728,42 +693,44 @@ mod tests {
 
     fn node(id: &str, nt: NodeType) -> CausalNode {
         CausalNode {
-            id: id.to_string(),
+            id: NodeId::new(id),
             label: id.to_string(),
             node_type: nt,
         }
     }
 
-    fn link(from: &str, to: &str, s: f64) -> CausalLink {
+    fn edge(from: &str, to: &str, s: f64) -> CausalLink {
         CausalLink {
-            from: from.to_string(),
-            to: to.to_string(),
+            from: NodeId::new(from),
+            to: NodeId::new(to),
             strength: s,
+            evidence: format!("{from} causes {to}"),
         }
     }
 
-    /// Builds a linear three-node chain: a → b → c.
+    /// Builds a linear three-node chain: a -> b -> c.
     fn chain_dag() -> CausalDag {
         let mut dag = CausalDag::new();
-        dag.add_node(node("a", NodeType::Root));
-        dag.add_node(node("b", NodeType::Factor));
+        dag.add_node(node("a", NodeType::Module));
+        dag.add_node(node("b", NodeType::Pattern));
         dag.add_node(node("c", NodeType::Risk));
-        dag.add_link(link("a", "b", 0.9));
-        dag.add_link(link("b", "c", 0.8));
+        // Push directly — chain is known-acyclic.
+        dag.links.push(edge("a", "b", 0.9));
+        dag.links.push(edge("b", "c", 0.8));
         dag
     }
 
-    /// Builds a diamond: a → b, a → c, b → d, c → d.
+    /// Builds a diamond: a -> b, a -> c, b -> d, c -> d.
     fn diamond_dag() -> CausalDag {
         let mut dag = CausalDag::new();
-        dag.add_node(node("a", NodeType::Root));
-        dag.add_node(node("b", NodeType::Factor));
-        dag.add_node(node("c", NodeType::Factor));
+        dag.add_node(node("a", NodeType::Module));
+        dag.add_node(node("b", NodeType::Pattern));
+        dag.add_node(node("c", NodeType::Pattern));
         dag.add_node(node("d", NodeType::Risk));
-        dag.add_link(link("a", "b", 0.9));
-        dag.add_link(link("a", "c", 0.7));
-        dag.add_link(link("b", "d", 0.8));
-        dag.add_link(link("c", "d", 0.6));
+        dag.links.push(edge("a", "b", 0.9));
+        dag.links.push(edge("a", "c", 0.7));
+        dag.links.push(edge("b", "d", 0.8));
+        dag.links.push(edge("c", "d", 0.6));
         dag
     }
 
@@ -775,14 +742,14 @@ mod tests {
     fn remove_node_breaks_transitive_path() {
         let engine = CounterfactualEngine::new(chain_dag());
         let result = engine
-            .evaluate(&Intervention::RemoveNode("b".to_string()))
+            .evaluate(&Intervention::RemoveNode(NodeId::new("b")))
             .expect("evaluation failed");
 
         assert!(
             result
                 .broken_paths
-                .contains(&("a".to_string(), "c".to_string())),
-            "expected a→c to be broken, got {:?}",
+                .contains(&(NodeId::new("a"), NodeId::new("c"))),
+            "expected a->c to be broken, got {:?}",
             result.broken_paths
         );
     }
@@ -791,12 +758,11 @@ mod tests {
     fn remove_node_makes_downstream_new_root() {
         let engine = CounterfactualEngine::new(chain_dag());
         let result = engine
-            .evaluate(&Intervention::RemoveNode("a".to_string()))
+            .evaluate(&Intervention::RemoveNode(NodeId::new("a")))
             .expect("evaluation failed");
 
-        // Removing "a" leaves "b" with no incoming links — it becomes a root.
         assert!(
-            result.new_roots.contains(&"b".to_string()),
+            result.new_roots.contains(&NodeId::new("b")),
             "expected b to become a new root, got {:?}",
             result.new_roots
         );
@@ -805,7 +771,7 @@ mod tests {
     #[test]
     fn remove_nonexistent_node_returns_error() {
         let engine = CounterfactualEngine::new(chain_dag());
-        let err = engine.evaluate(&Intervention::RemoveNode("ghost".to_string()));
+        let err = engine.evaluate(&Intervention::RemoveNode(NodeId::new("ghost")));
         assert!(err.is_err(), "expected error for missing node");
     }
 
@@ -813,7 +779,7 @@ mod tests {
     fn remove_node_impact_score_nonzero() {
         let engine = CounterfactualEngine::new(chain_dag());
         let result = engine
-            .evaluate(&Intervention::RemoveNode("b".to_string()))
+            .evaluate(&Intervention::RemoveNode(NodeId::new("b")))
             .expect("evaluation failed");
 
         assert!(
@@ -823,7 +789,7 @@ mod tests {
         );
         assert!(
             result.impact_score <= 1.0,
-            "impact score must be ≤ 1.0, got {}",
+            "impact score must be <= 1.0, got {}",
             result.impact_score
         );
     }
@@ -837,44 +803,44 @@ mod tests {
         let engine = CounterfactualEngine::new(chain_dag());
         let result = engine
             .evaluate(&Intervention::RemoveLink {
-                from: "a".to_string(),
-                to: "b".to_string(),
+                from: NodeId::new("a"),
+                to: NodeId::new("b"),
             })
             .expect("evaluation failed");
 
         assert!(
             result
                 .broken_paths
-                .contains(&("a".to_string(), "b".to_string())),
-            "expected a→b to be broken, got {:?}",
+                .contains(&(NodeId::new("a"), NodeId::new("b"))),
+            "expected a->b to be broken, got {:?}",
             result.broken_paths
         );
         assert!(
             result
                 .broken_paths
-                .contains(&("a".to_string(), "c".to_string())),
-            "expected a→c to be broken too, got {:?}",
+                .contains(&(NodeId::new("a"), NodeId::new("c"))),
+            "expected a->c to be broken too, got {:?}",
             result.broken_paths
         );
     }
 
     #[test]
     fn remove_link_leaves_alternate_path_intact() {
-        // In the diamond, removing a→b should NOT break a→d because a→c→d
+        // In the diamond, removing a->b should NOT break a->d because a->c->d
         // still exists.
         let engine = CounterfactualEngine::new(diamond_dag());
         let result = engine
             .evaluate(&Intervention::RemoveLink {
-                from: "a".to_string(),
-                to: "b".to_string(),
+                from: NodeId::new("a"),
+                to: NodeId::new("b"),
             })
             .expect("evaluation failed");
 
         assert!(
             !result
                 .broken_paths
-                .contains(&("a".to_string(), "d".to_string())),
-            "a→d should still be reachable via c, broken_paths: {:?}",
+                .contains(&(NodeId::new("a"), NodeId::new("d"))),
+            "a->d should still be reachable via c, broken_paths: {:?}",
             result.broken_paths
         );
     }
@@ -883,8 +849,8 @@ mod tests {
     fn remove_nonexistent_link_returns_error() {
         let engine = CounterfactualEngine::new(chain_dag());
         let err = engine.evaluate(&Intervention::RemoveLink {
-            from: "c".to_string(),
-            to: "a".to_string(),
+            from: NodeId::new("c"),
+            to: NodeId::new("a"),
         });
         assert!(err.is_err(), "expected error for missing link");
     }
@@ -898,13 +864,12 @@ mod tests {
         let engine = CounterfactualEngine::new(chain_dag());
         let result = engine
             .evaluate(&Intervention::AdjustStrength {
-                from: "a".to_string(),
-                to: "b".to_string(),
+                from: NodeId::new("a"),
+                to: NodeId::new("b"),
                 new_strength: 0.1,
             })
             .expect("evaluation failed");
 
-        // No paths should be structurally broken.
         assert!(
             result.broken_paths.is_empty(),
             "AdjustStrength should not break paths, got {:?}",
@@ -918,23 +883,23 @@ mod tests {
 
         let large_delta = engine
             .evaluate(&Intervention::AdjustStrength {
-                from: "a".to_string(),
-                to: "b".to_string(),
+                from: NodeId::new("a"),
+                to: NodeId::new("b"),
                 new_strength: 0.0,
             })
             .expect("evaluation failed");
 
         let small_delta = engine
             .evaluate(&Intervention::AdjustStrength {
-                from: "a".to_string(),
-                to: "b".to_string(),
+                from: NodeId::new("a"),
+                to: NodeId::new("b"),
                 new_strength: 0.85,
             })
             .expect("evaluation failed");
 
         assert!(
             large_delta.impact_score > small_delta.impact_score,
-            "larger strength delta should produce higher impact score: {} vs {}",
+            "larger strength delta should produce higher impact: {} vs {}",
             large_delta.impact_score,
             small_delta.impact_score
         );
@@ -944,8 +909,8 @@ mod tests {
     fn adjust_nonexistent_link_returns_error() {
         let engine = CounterfactualEngine::new(chain_dag());
         let err = engine.evaluate(&Intervention::AdjustStrength {
-            from: "z".to_string(),
-            to: "a".to_string(),
+            from: NodeId::new("z"),
+            to: NodeId::new("a"),
             new_strength: 0.5,
         });
         assert!(err.is_err(), "expected error for missing link");
@@ -959,18 +924,16 @@ mod tests {
     fn inject_node_appears_as_new_root_and_leaf() {
         let engine = CounterfactualEngine::new(chain_dag());
         let result = engine
-            .evaluate(&Intervention::InjectNode(node("hypo", NodeType::Hypothetical)))
+            .evaluate(&Intervention::InjectNode(node("hypo", NodeType::Recommendation)))
             .expect("evaluation failed");
 
-        // The injected isolated node has no links, so it is both a root and a
-        // leaf in the modified graph but was not in the original.
         assert!(
-            result.new_roots.contains(&"hypo".to_string()),
+            result.new_roots.contains(&NodeId::new("hypo")),
             "injected node should be a new root, got {:?}",
             result.new_roots
         );
         assert!(
-            result.new_leaves.contains(&"hypo".to_string()),
+            result.new_leaves.contains(&NodeId::new("hypo")),
             "injected node should be a new leaf, got {:?}",
             result.new_leaves
         );
@@ -979,7 +942,7 @@ mod tests {
     #[test]
     fn inject_duplicate_node_returns_error() {
         let engine = CounterfactualEngine::new(chain_dag());
-        let err = engine.evaluate(&Intervention::InjectNode(node("a", NodeType::Hypothetical)));
+        let err = engine.evaluate(&Intervention::InjectNode(node("a", NodeType::Recommendation)));
         assert!(err.is_err(), "expected error for duplicate node id");
     }
 
@@ -991,14 +954,14 @@ mod tests {
     fn batch_evaluates_all_interventions() {
         let engine = CounterfactualEngine::new(chain_dag());
         let interventions = vec![
-            Intervention::RemoveNode("a".to_string()),
+            Intervention::RemoveNode(NodeId::new("a")),
             Intervention::RemoveLink {
-                from: "a".to_string(),
-                to: "b".to_string(),
+                from: NodeId::new("a"),
+                to: NodeId::new("b"),
             },
             Intervention::AdjustStrength {
-                from: "b".to_string(),
-                to: "c".to_string(),
+                from: NodeId::new("b"),
+                to: NodeId::new("c"),
                 new_strength: 0.3,
             },
         ];
@@ -1024,14 +987,14 @@ mod tests {
     fn impact_score_is_always_in_unit_range() {
         let engine = CounterfactualEngine::new(diamond_dag());
         let interventions = [
-            Intervention::RemoveNode("b".to_string()),
+            Intervention::RemoveNode(NodeId::new("b")),
             Intervention::RemoveLink {
-                from: "a".to_string(),
-                to: "b".to_string(),
+                from: NodeId::new("a"),
+                to: NodeId::new("b"),
             },
             Intervention::AdjustStrength {
-                from: "a".to_string(),
-                to: "c".to_string(),
+                from: NodeId::new("a"),
+                to: NodeId::new("c"),
                 new_strength: 0.0,
             },
         ];

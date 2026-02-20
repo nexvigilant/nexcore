@@ -583,8 +583,8 @@ impl CausalDag {
         // Seed the queue with zero-in-degree nodes.
         let mut queue: VecDeque<&NodeId> = in_degree
             .iter()
-            .filter(|(_, &deg)| deg == 0)
-            .map(|(&id, _)| id)
+            .filter(|(_, deg)| **deg == 0)
+            .map(|(id, _)| *id)
             .collect();
 
         let mut processed: usize = 0;
@@ -592,11 +592,11 @@ impl CausalDag {
         while let Some(current) = queue.pop_front() {
             processed += 1;
             if let Some(neighbours) = adj.get(current) {
-                for &nb in neighbours {
-                    let deg = in_degree.entry(nb).or_insert(0);
+                for nb in neighbours {
+                    let deg = in_degree.entry(*nb).or_insert(0);
                     *deg = deg.saturating_sub(1);
                     if *deg == 0 {
-                        queue.push_back(nb);
+                        queue.push_back(*nb);
                     }
                 }
             }
@@ -674,8 +674,8 @@ impl CausalDag {
         // deterministic output.
         let mut zero_deg: Vec<&NodeId> = in_degree
             .iter()
-            .filter(|(_, &deg)| deg == 0)
-            .map(|(&id, _)| id)
+            .filter(|(_, deg)| **deg == 0)
+            .map(|(id, _)| *id)
             .collect();
         zero_deg.sort_by_key(|id| node_index.get(id).copied().unwrap_or(usize::MAX));
 

@@ -1,0 +1,15 @@
+[package]
+name = "nexcore-reason"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+description = "Causal reasoning engine — DAG construction, inference, counterfactual testing"
+license.workspace = true
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+nexcore-lex-primitiva = { workspace = true }
+nexcore-foundry = { path = "../nexcore-foundry" }
+anyhow = { workspace = true }

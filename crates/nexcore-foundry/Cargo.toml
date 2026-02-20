@@ -1,0 +1,15 @@
+[package]
+name = "nexcore-foundry"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+description = "Typed artifact schemas for The Foundry assembly line architecture"
+license.workspace = true
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+nexcore-lex-primitiva = { workspace = true }
+anyhow = { workspace = true }

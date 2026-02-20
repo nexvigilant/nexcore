@@ -861,7 +861,7 @@ impl NexCoreMcpServer {
         &self,
         Parameters(params): Parameters<params::guardian::GuardianInjectSignalParams>,
     ) -> Result<CallToolResult, McpError> {
-        tools::guardian::inject_signal(params).await
+        tools::guardian::inject_signal(params)
     }
 
     #[tool(
@@ -951,18 +951,14 @@ impl NexCoreMcpServer {
     #[tool(
         description = "Get the pre-configured 7-stage PV signal pipeline relay chain with verification. Shows fidelity at each stage: ingest → normalize → detect → threshold → store → alert → report. Returns total F, signal loss, and whether it meets safety-critical threshold (F_min=0.80)."
     )]
-    async fn relay_pv_pipeline(
-        &self,
-    ) -> Result<CallToolResult, McpError> {
+    async fn relay_pv_pipeline(&self) -> Result<CallToolResult, McpError> {
         tools::relay::relay_pv_pipeline()
     }
 
     #[tool(
         description = "Get the core 4-stage detection relay chain: ingest → detect → threshold → alert. This is the minimal safe pipeline that passes safety-critical fidelity (F>0.80). Compare with relay_pv_pipeline to see the effect of additional hops."
     )]
-    async fn relay_core_detection(
-        &self,
-    ) -> Result<CallToolResult, McpError> {
+    async fn relay_core_detection(&self) -> Result<CallToolResult, McpError> {
         tools::relay::relay_core_detection()
     }
 
@@ -1786,9 +1782,7 @@ impl NexCoreMcpServer {
         tools::fda_guidance::categories()
     }
 
-    #[tool(
-        description = "Get the PDF download URL for an FDA guidance document by slug."
-    )]
+    #[tool(description = "Get the PDF download URL for an FDA guidance document by slug.")]
     async fn fda_guidance_url(
         &self,
         Parameters(params): Parameters<params::knowledge::FdaGuidanceUrlParams>,
@@ -3458,6 +3452,121 @@ impl NexCoreMcpServer {
         tools::academy_forge::forge_compile(params)
     }
 
+    #[tool(
+        description = "Scaffold a pathway from an FDA guidance document. Looks up the guidance by slug or keyword in the embedded 2,794+ doc index, extracts metadata (title, topics, centers, status), and generates a complete StaticPathway JSON scaffold. Optionally provide section titles to structure stages; otherwise stages auto-generate from guidance topics. Output includes TODO markers for content authoring."
+    )]
+    async fn forge_scaffold_from_guidance(
+        &self,
+        Parameters(params): Parameters<params::ForgeGuidanceScaffoldParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::academy_forge::forge_scaffold_from_guidance(params)
+    }
+
+    // ========================================================================
+    // Transform Tools (5) - Cross-Domain Text Transformation
+    // ========================================================================
+
+    #[tool(
+        description = "List all available domain transformation profiles with vocabulary counts, bridge counts, and known source domains. Use to discover available target profiles before running transform_compile_plan."
+    )]
+    async fn transform_list_profiles(&self) -> Result<CallToolResult, McpError> {
+        tools::transform::transform_list_profiles()
+    }
+
+    #[tool(
+        description = "Get detailed information about a domain profile including full vocabulary, bridge mappings with confidence scores, rhetorical notes, and source-specific bridges."
+    )]
+    async fn transform_get_profile(
+        &self,
+        Parameters(params): Parameters<params::TransformGetProfileParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::transform::transform_get_profile(params)
+    }
+
+    #[tool(
+        description = "Segment raw text into indexed paragraphs with word counts. First step before compiling a transformation plan. Returns paragraph index, word count, and preview for each segment."
+    )]
+    async fn transform_segment(
+        &self,
+        Parameters(params): Parameters<params::TransformSegmentParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::transform::transform_segment(params)
+    }
+
+    #[tool(
+        description = "Compile a full transformation plan from source text to target domain profile. Returns per-paragraph instructions with replacements, rhetorical roles, guidance, and a ledger of all concept mappings with confidence scores."
+    )]
+    async fn transform_compile_plan(
+        &self,
+        Parameters(params): Parameters<params::TransformCompilePlanParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::transform::transform_compile_plan(params)
+    }
+
+    #[tool(
+        description = "Score the fidelity of a transformation output. Returns paragraph match ratio, mean coverage, aggregate confidence, and an overall fidelity score with grade (Excellent/Good/Acceptable/Poor)."
+    )]
+    async fn transform_score_fidelity(
+        &self,
+        Parameters(params): Parameters<params::TransformScoreFidelityParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::transform::transform_score_fidelity(params)
+    }
+
+    // ========================================================================
+    // Knowledge Engine Tools (5) - Ingest, Compress, Compile, Query, Stats
+    // ========================================================================
+
+    #[tool(
+        description = "Ingest text as a knowledge fragment. Extracts concepts, maps to Lex Primitiva, computes Compendious Score (Cs = I/E × C × R). Returns fragment ID, concepts, primitives, and density metrics."
+    )]
+    async fn knowledge_ingest(
+        &self,
+        Parameters(params): Parameters<params::KnowledgeIngestParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::knowledge_engine::ingest(params)
+    }
+
+    #[tool(
+        description = "Compress text and return before/after Compendious Scores with compression ratio. Removes filler while preserving information density."
+    )]
+    async fn knowledge_compress(
+        &self,
+        Parameters(params): Parameters<params::KnowledgeCompressParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::knowledge_engine::compress(params)
+    }
+
+    #[tool(
+        description = "Compile knowledge from multiple sources into a versioned knowledge pack. Aggregates fragments, deduplicates concepts, computes pack-level statistics. Options: include brain distillations, artifacts, implicit knowledge."
+    )]
+    async fn knowledge_compile(
+        &self,
+        Parameters(params): Parameters<params::KnowledgeCompileParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::knowledge_engine::compile(params)
+    }
+
+    #[tool(
+        description = "Query knowledge packs by keyword, concept, or domain. Returns matching fragments with relevance scores, concept lists, and domains. Supports pack filtering and result limiting."
+    )]
+    async fn knowledge_query(
+        &self,
+        Parameters(params): Parameters<params::KnowledgeQueryParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::knowledge_engine::query(params)
+    }
+
+    #[tool(
+        description = "Get knowledge engine statistics: pack inventory, fragment counts, concept counts, average Compendious Scores. Optionally filter by pack name."
+    )]
+    async fn knowledge_stats(
+        &self,
+        Parameters(params): Parameters<params::KnowledgeStatsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::knowledge_engine::stats(params)
+    }
+
     // ========================================================================
     // Game Theory Tools (5) - 2x2 Nash + Forge N×M Pipeline
     // ========================================================================
@@ -3746,6 +3855,50 @@ impl NexCoreMcpServer {
         Parameters(params): Parameters<params::stem::StemSpatialOrientationParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::stem::spatial_orientation(params)
+    }
+
+    // ========================================================================
+    // Statistics Tools (4) — stem-math statistical inference
+    // ========================================================================
+
+    #[tool(
+        description = "One-sample z-test with full statistical outcome. Returns z-score, p-value, confidence interval, and significance classification (***/**/*/ ns). Grounds to COMPARISON+QUANTITY+BOUNDARY+STATE+MAPPING."
+    )]
+    async fn stem_stats_z_test(
+        &self,
+        Parameters(params): Parameters<params::stem::StemStatsZTestParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::stats_z_test(params)
+    }
+
+    #[tool(
+        description = "Construct a confidence interval (mean, proportion, or difference of means). Returns estimate, lower/upper bounds, margin of error, z-critical, and width. Grounds to BOUNDARY+QUANTITY."
+    )]
+    async fn stem_stats_ci(
+        &self,
+        Parameters(params): Parameters<params::stem::StemStatsCiParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::stats_ci(params)
+    }
+
+    #[tool(
+        description = "Compute p-value from z-score or from observed/null/SE. Returns p-value, significance level (***/**/*/ ns), and alpha threshold. Grounds to COMPARISON+STATE."
+    )]
+    async fn stem_stats_p_value(
+        &self,
+        Parameters(params): Parameters<params::stem::StemStatsPValueParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::stats_p_value(params)
+    }
+
+    #[tool(
+        description = "Full sample analysis: descriptive stats (mean, variance, SE), z-test against null hypothesis, and confidence interval. Provide a numeric array and get complete statistical evidence. Grounds to κ+N+∂+ς+μ."
+    )]
+    async fn stem_stats_analyze(
+        &self,
+        Parameters(params): Parameters<params::stem::StemStatsAnalyzeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::stem::stats_analyze(params)
     }
 
     // ========================================================================
@@ -4876,6 +5029,60 @@ impl NexCoreMcpServer {
         Parameters(params): Parameters<params::sop_anatomy::SopAnatomyCoverageParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::sop_anatomy::sop_anatomy_coverage(params)
+    }
+
+    // ========================================================================
+    // The Foundry — dual-pipeline assembly line (5 tools)
+    // ========================================================================
+
+    #[tool(
+        description = "Validate a deliverable against The Foundry's B3 quality gate. Checks build pass, test pass/total, lint pass, coverage, and failures. Returns GREEN/RED verdict and ship-readiness."
+    )]
+    async fn foundry_validate_artifact(
+        &self,
+        Parameters(params): Parameters<params::foundry::FoundryValidateArtifactParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::foundry::foundry_validate_artifact(params)
+    }
+
+    #[tool(
+        description = "Validate alignment of a SMART goal cascade (Strategic → Team → Operational). Computes alignment percentage, reports gaps, and flags whether all operational goals trace to strategic level."
+    )]
+    async fn foundry_cascade_validate(
+        &self,
+        Parameters(params): Parameters<params::foundry::FoundryCascadeValidateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::foundry::foundry_cascade_validate(params)
+    }
+
+    #[tool(
+        description = "Render an A3 intelligence report as markdown. Accepts findings, recommendations, risk level (low/moderate/high/critical), and confidence. Returns formatted markdown with sections."
+    )]
+    async fn foundry_render_intelligence(
+        &self,
+        Parameters(params): Parameters<params::foundry::FoundryRenderIntelligenceParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::foundry::foundry_render_intelligence(params)
+    }
+
+    #[tool(
+        description = "Return The Foundry's VDAG pipeline ordering. Variants: 'full' (14 stations with bridges), 'builder' (B1→B2→B3), 'analyst' (A1→A2→A3). Shows topological station sequence."
+    )]
+    async fn foundry_vdag_order(
+        &self,
+        Parameters(params): Parameters<params::foundry::FoundryVdagOrderParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::foundry::foundry_vdag_order(params)
+    }
+
+    #[tool(
+        description = "Run causal inference over a DAG. Provide nodes (id, label, node_type) and links (from, to, strength, evidence). Builds CausalDag, runs InferenceEngine, returns IntelligenceReport with risk level, findings, recommendations, and markdown."
+    )]
+    async fn foundry_infer(
+        &self,
+        Parameters(params): Parameters<params::foundry::FoundryInferParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::foundry::foundry_infer(params)
     }
 }
 

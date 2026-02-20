@@ -53,11 +53,11 @@ pub mod forge;
 pub mod foundation;
 
 // Frontend & Accessibility (WCAG contrast, touch targets, type scale, spacing, a11y audit)
+pub mod fda_guidance;
 pub mod frontend;
 pub mod gcloud;
 pub mod grammar;
 pub mod guardian;
-pub mod fda_guidance;
 pub mod guidelines;
 pub mod hitl;
 pub mod hooks;
@@ -89,6 +89,9 @@ pub mod wolfram;
 
 // Endocrine system (persistent behavioral state)
 pub mod hormones;
+
+// Cognition (transformer algorithm — attention, generation, metrics)
+pub mod cognition;
 
 // Cognitive Evolution Pipeline (8-stage knowledge discovery)
 pub mod cep;
@@ -412,3 +415,6 @@ pub mod stoichiometry;
 
 // TRIAL Framework (universal experimentation — 10 MCP tools)
 pub mod trial;
+
+// The Foundry (dual-pipeline assembly line — validate, cascade, infer, render, VDAG)
+pub mod foundry;

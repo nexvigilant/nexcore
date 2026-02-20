@@ -46,6 +46,7 @@ nexcore-hormones = { workspace = true }
 nexcore-immunity = { workspace = true }
 nexcore-insight = { workspace = true }
 stem = { workspace = true }
+stem-math = { workspace = true }
 nexcore-viz = { workspace = true }
 nexcore-synth = { workspace = true }
 nexcore-trust = { workspace = true }
@@ -112,6 +113,9 @@ nexcore-ctvp = { workspace = true }
 nexcore-pvdsl = { workspace = true }
 # TRIAL Framework (universal experimentation — FDA clinical trial methodology)
 nexcore-trial = { path = "../nexcore-trial" }
+# The Foundry (dual-pipeline assembly line — typed artifacts + causal reasoning)
+nexcore-foundry = { path = "../nexcore-foundry" }
+nexcore-reason = { path = "../nexcore-reason" }
 # Pharmacovigilance Operating System substrate
 nexcore-pvos = { workspace = true }
 # Skill Ecosystem Registry (compliance, ToV monitoring, promotion)
@@ -193,6 +197,9 @@ nexcore-word = { workspace = true }
 nexcore-grammar-lab = { workspace = true }
 primitive-innovation = { workspace = true }
 nexcore-primitive-scanner = { workspace = true }
+
+# Cognition (transformer algorithm as strict Rust — attention, generation, metrics)
+nexcore-cognition = { workspace = true }
 
 # Cortex (local LLM inference engine)
 nexcore-cortex = { workspace = true }

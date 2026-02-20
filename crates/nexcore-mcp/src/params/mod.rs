@@ -31,6 +31,7 @@ pub mod cep;
 pub mod chemistry;
 pub mod claude_fs;
 pub mod clearance;
+pub mod cognition;
 pub mod compendious;
 pub mod compliance;
 pub mod compositor;
@@ -125,8 +126,8 @@ pub mod prima;
 pub mod primitive_scanner;
 pub mod primitive_validation;
 pub mod principles;
-pub mod relay;
 pub mod registry;
+pub mod relay;
 pub mod value_mining;
 pub mod visual;
 
@@ -156,6 +157,7 @@ pub use cep::*;
 pub use chemistry::*;
 pub use claude_fs::*;
 pub use clearance::*;
+pub use cognition::*;
 pub use compendious::*;
 pub use compliance::*;
 pub use compositor::*;
@@ -232,8 +234,8 @@ pub use organize::*;
 pub use prima::*;
 pub use primitive_validation::*;
 pub use principles::*;
-pub use relay::*;
 pub use registry::*;
+pub use relay::*;
 pub use value_mining::*;
 pub use visual::*;
 
@@ -365,3 +367,7 @@ pub use stoichiometry::*;
 // TRIAL Framework (universal experimentation — protocol, power, randomize, interim, safety, endpoint, multiplicity, adapt, report)
 pub mod trial;
 pub use trial::*;
+
+// The Foundry (dual-pipeline assembly line — validate, cascade, infer, render, VDAG)
+pub mod foundry;
+pub use foundry::*;

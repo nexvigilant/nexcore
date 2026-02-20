@@ -13,3 +13,6 @@ serde_json = { workspace = true }
 nexcore-lex-primitiva = { workspace = true }
 nexcore-foundry = { path = "../nexcore-foundry" }
 anyhow = { workspace = true }
+
+[dev-dependencies]
+chrono = { workspace = true }

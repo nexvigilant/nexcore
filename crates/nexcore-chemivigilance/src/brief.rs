@@ -25,9 +25,9 @@
 //! ```
 
 use chrono::{DateTime, Utc};
+use nexcore_metabolite::types::MetaboliteTree;
 use nexcore_molcore::descriptor::Descriptors;
 use nexcore_qsar::types::{RiskLevel, ToxProfile};
-use nexcore_metabolite::types::MetaboliteTree;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -282,7 +282,10 @@ mod tests {
         };
         let json = serde_json::to_string(&summary).unwrap_or_default();
         assert!(json.contains("M7-001"), "id must appear in JSON");
-        assert!(json.contains("Mutagenicity"), "category must appear in JSON");
+        assert!(
+            json.contains("Mutagenicity"),
+            "category must appear in JSON"
+        );
 
         let round_tripped: AlertSummary =
             serde_json::from_str(&json).unwrap_or_else(|_| AlertSummary {
@@ -305,14 +308,26 @@ mod tests {
 
     #[test]
     fn test_regulatory_flag_type_eq() {
-        assert_eq!(RegulatoryFlagType::IchM7Alert, RegulatoryFlagType::IchM7Alert);
-        assert_ne!(RegulatoryFlagType::IchM7Alert, RegulatoryFlagType::HighMutagenicity);
+        assert_eq!(
+            RegulatoryFlagType::IchM7Alert,
+            RegulatoryFlagType::IchM7Alert
+        );
+        assert_ne!(
+            RegulatoryFlagType::IchM7Alert,
+            RegulatoryFlagType::HighMutagenicity
+        );
     }
 
     #[test]
     fn test_limitation_category_eq() {
-        assert_eq!(LimitationCategory::ModelScope, LimitationCategory::ModelScope);
-        assert_ne!(LimitationCategory::ModelScope, LimitationCategory::DataQuality);
+        assert_eq!(
+            LimitationCategory::ModelScope,
+            LimitationCategory::ModelScope
+        );
+        assert_ne!(
+            LimitationCategory::ModelScope,
+            LimitationCategory::DataQuality
+        );
     }
 
     #[test]

@@ -31,8 +31,8 @@
 //! assert!(flags.iter().any(|f| f.flag_type == RegulatoryFlagType::OutOfDomain));
 //! ```
 
-use nexcore_qsar::types::{DomainStatus, ToxProfile};
 use nexcore_metabolite::types::MetaboliteTree;
+use nexcore_qsar::types::{DomainStatus, ToxProfile};
 
 use crate::brief::{RegulatoryFlag, RegulatoryFlagType};
 
@@ -123,18 +123,21 @@ pub fn check_watchlist(
                  Glutathione conjugation or protein adduct formation may occur.",
                 metabolite_tree.reactive_intermediates.len()
             ),
-            reference: "EMA Guideline on the Investigation of Drug Interactions (CPMP/EWP/560/95)".to_string(),
+            reference: "EMA Guideline on the Investigation of Drug Interactions (CPMP/EWP/560/95)"
+                .to_string(),
         });
     }
 
     // Applicability domain flag.
-    if matches!(tox_profile.applicability_domain, DomainStatus::OutOfDomain { .. }) {
+    if matches!(
+        tox_profile.applicability_domain,
+        DomainStatus::OutOfDomain { .. }
+    ) {
         flags.push(RegulatoryFlag {
             flag_type: RegulatoryFlagType::OutOfDomain,
-            description:
-                "Compound falls outside the applicability domain of the QSAR models. \
+            description: "Compound falls outside the applicability domain of the QSAR models. \
                  Predictions may be unreliable; expert review is strongly recommended."
-                    .to_string(),
+                .to_string(),
             reference: "OECD Principles for the Validation of QSAR Models (2007)".to_string(),
         });
     }
@@ -166,9 +169,7 @@ pub fn check_watchlist(
 /// ```
 #[must_use]
 pub fn check_ich_m7_flag(alert_summary: &[crate::brief::AlertSummary]) -> Vec<RegulatoryFlag> {
-    let has_mutagenicity = alert_summary
-        .iter()
-        .any(|a| a.category == "Mutagenicity");
+    let has_mutagenicity = alert_summary.iter().any(|a| a.category == "Mutagenicity");
 
     if has_mutagenicity {
         vec![RegulatoryFlag {
@@ -239,7 +240,9 @@ mod tests {
         let tree = MetaboliteTree::default();
         let flags = check_watchlist(0, &profile, &tree);
         assert!(
-            flags.iter().any(|f| f.flag_type == RegulatoryFlagType::HighMutagenicity),
+            flags
+                .iter()
+                .any(|f| f.flag_type == RegulatoryFlagType::HighMutagenicity),
             "high mutagenicity probability must raise HighMutagenicity flag"
         );
     }
@@ -260,7 +263,9 @@ mod tests {
 
         let flags = check_watchlist(0, &profile, &tree);
         assert!(
-            flags.iter().any(|f| f.flag_type == RegulatoryFlagType::ReactiveIntermediate),
+            flags
+                .iter()
+                .any(|f| f.flag_type == RegulatoryFlagType::ReactiveIntermediate),
             "non-empty reactive intermediates must raise ReactiveIntermediate flag"
         );
     }
@@ -275,7 +280,9 @@ mod tests {
         let tree = MetaboliteTree::default();
         let flags = check_watchlist(0, &profile, &tree);
         assert!(
-            flags.iter().any(|f| f.flag_type == RegulatoryFlagType::OutOfDomain),
+            flags
+                .iter()
+                .any(|f| f.flag_type == RegulatoryFlagType::OutOfDomain),
             "OutOfDomain status must raise OutOfDomain flag"
         );
     }
@@ -287,7 +294,9 @@ mod tests {
         let tree = MetaboliteTree::default();
         let flags = check_watchlist(0, &profile, &tree);
         assert!(
-            flags.iter().any(|f| f.flag_type == RegulatoryFlagType::HighHepatotoxicity),
+            flags
+                .iter()
+                .any(|f| f.flag_type == RegulatoryFlagType::HighHepatotoxicity),
             "hepatotoxicity probability >= 0.5 must raise HighHepatotoxicity flag"
         );
     }
@@ -299,7 +308,9 @@ mod tests {
         let tree = MetaboliteTree::default();
         let flags = check_watchlist(0, &profile, &tree);
         assert!(
-            flags.iter().any(|f| f.flag_type == RegulatoryFlagType::HighCardiotoxicity),
+            flags
+                .iter()
+                .any(|f| f.flag_type == RegulatoryFlagType::HighCardiotoxicity),
             "cardiotoxicity probability >= 0.5 must raise HighCardiotoxicity flag"
         );
     }
@@ -341,7 +352,9 @@ mod tests {
         let flags = check_watchlist(0, &profile, &tree);
         // Default ToxProfile has OutOfDomain status.
         assert!(
-            flags.iter().any(|f| f.flag_type == RegulatoryFlagType::OutOfDomain),
+            flags
+                .iter()
+                .any(|f| f.flag_type == RegulatoryFlagType::OutOfDomain),
             "default ToxProfile (OutOfDomain) must raise OutOfDomain flag"
         );
     }

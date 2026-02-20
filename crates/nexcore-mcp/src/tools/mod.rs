@@ -419,3 +419,6 @@ pub mod trial;
 
 // The Foundry (dual-pipeline assembly line — validate, cascade, infer, render, VDAG)
 pub mod foundry;
+
+// Chemivigilance (SMILES, descriptors, QSAR, metabolites, SafetyBrief — 15 tools)
+pub mod chemivigilance;

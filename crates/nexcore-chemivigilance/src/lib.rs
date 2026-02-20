@@ -39,4 +39,4 @@ pub use brief::{
     RegulatoryFlag, RegulatoryFlagType, SafetyBrief,
 };
 pub use error::{ChemivigilanceError, ChemivigilanceResult};
-pub use pipeline::{generate_safety_brief, ChemivigilanceConfig};
+pub use pipeline::{ChemivigilanceConfig, generate_safety_brief};

@@ -2,11 +2,11 @@
 
 //! SMILES parser — converts token stream into prima_chem::Molecule.
 
-use prima_chem::{Atom, Bond, Molecule};
-use prima_chem::types::BondOrder;
-use prima_chem::element::Element;
-use crate::error::{MolcoreError, MolcoreResult};
 use super::token::{BondToken, SmilesToken};
+use crate::error::{MolcoreError, MolcoreResult};
+use prima_chem::element::Element;
+use prima_chem::types::BondOrder;
+use prima_chem::{Atom, Bond, Molecule};
 use std::collections::HashMap;
 
 /// Parse a SMILES string into a Molecule.
@@ -28,9 +28,8 @@ pub fn parse_tokens(tokens: &[SmilesToken]) -> MolcoreResult<Molecule> {
     for token in tokens {
         match token {
             SmilesToken::OrganicAtom { symbol, aromatic } => {
-                let elem = Element::from_symbol(symbol).ok_or_else(|| {
-                    MolcoreError::UnknownElement(symbol.clone())
-                })?;
+                let elem = Element::from_symbol(symbol)
+                    .ok_or_else(|| MolcoreError::UnknownElement(symbol.clone()))?;
                 let mut atom = Atom::new(elem);
                 if *aromatic {
                     atom.aromatic = true;
@@ -63,9 +62,8 @@ pub fn parse_tokens(tokens: &[SmilesToken]) -> MolcoreResult<Molecule> {
                 charge,
                 class: _,
             } => {
-                let elem = Element::from_symbol(symbol).ok_or_else(|| {
-                    MolcoreError::UnknownElement(symbol.clone())
-                })?;
+                let elem = Element::from_symbol(symbol)
+                    .ok_or_else(|| MolcoreError::UnknownElement(symbol.clone()))?;
                 let mut atom = Atom::new(elem);
                 atom.aromatic = *aromatic;
                 atom.charge = *charge;
@@ -188,10 +186,7 @@ fn fill_implicit_hydrogens(mol: &mut Molecule) {
 
         let valence = elem.default_valence();
         let bonds = mol.bonds_for_atom(idx);
-        let bond_sum: u8 = bonds
-            .iter()
-            .map(|b| b.order.valence_contribution())
-            .sum();
+        let bond_sum: u8 = bonds.iter().map(|b| b.order.valence_contribution()).sum();
         let charge_adj = mol.atoms[idx].charge.unsigned_abs();
 
         // For aromatic atoms (lowercase SMILES), the pi system effectively

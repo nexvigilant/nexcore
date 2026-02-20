@@ -10,10 +10,7 @@ use thiserror::Error;
 pub enum MolcoreError {
     /// Invalid SMILES syntax.
     #[error("Invalid SMILES at position {position}: {message}")]
-    InvalidSmiles {
-        position: usize,
-        message: String,
-    },
+    InvalidSmiles { position: usize, message: String },
 
     /// Unexpected end of SMILES string.
     #[error("Unexpected end of SMILES string")]

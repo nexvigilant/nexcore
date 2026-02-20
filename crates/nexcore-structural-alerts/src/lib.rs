@@ -7,12 +7,12 @@
 #![deny(clippy::expect_used)]
 #![deny(clippy::panic)]
 
-pub mod error;
 pub mod alert;
+pub mod error;
 pub mod library;
 pub mod matcher;
 
-pub use error::{AlertError, AlertResult};
 pub use alert::{AlertCategory, AlertMatch, AlertSource, StructuralAlert};
+pub use error::{AlertError, AlertResult};
 pub use library::AlertLibrary;
 pub use matcher::{scan, scan_smiles};

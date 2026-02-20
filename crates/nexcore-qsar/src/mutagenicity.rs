@@ -76,7 +76,11 @@ pub fn predict_mutagenicity(
     let classification = classify(probability);
 
     // Higher confidence when structural alerts drive the prediction.
-    let confidence = if structural_alert_count > 0 { 0.75 } else { 0.50 };
+    let confidence = if structural_alert_count > 0 {
+        0.75
+    } else {
+        0.50
+    };
 
     PredictionResult {
         probability,

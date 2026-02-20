@@ -379,6 +379,7 @@ async fn dispatch_inner(
         "vocab_skill_lookup" => typed(params, tools::skills::vocab_skill_lookup),
         "primitive_skill_lookup" => typed(params, tools::skills::primitive_skill_lookup),
         "skill_chain_lookup" => typed(params, tools::skills::skill_chain_lookup),
+        "skill_route" => typed(params, |p| tools::skills::route(&server.registry, p)),
         "vocab_list" => tools::skills::vocab_list(),
         "nexcore_assist" => typed(params, |p| tools::assist::search(&server.assist_index, p)),
 
@@ -2169,6 +2170,25 @@ async fn dispatch_inner(
         "foundry_infer" => typed(params, tools::foundry::foundry_infer),
 
         // ====================================================================
+        // Chemivigilance Tools (15) — SMILES, descriptors, QSAR, SafetyBrief
+        // ====================================================================
+        "chem_parse_smiles" => typed(params, tools::chemivigilance::chem_parse_smiles),
+        "chem_descriptors" => typed(params, tools::chemivigilance::chem_descriptors),
+        "chem_fingerprint" => typed(params, tools::chemivigilance::chem_fingerprint),
+        "chem_similarity" => typed(params, tools::chemivigilance::chem_similarity),
+        "chem_structural_alerts" => typed(params, tools::chemivigilance::chem_structural_alerts),
+        "chem_predict_toxicity" => typed(params, tools::chemivigilance::chem_predict_toxicity),
+        "chem_predict_metabolites" => typed(params, tools::chemivigilance::chem_predict_metabolites),
+        "chem_predict_degradants" => typed(params, tools::chemivigilance::chem_predict_degradants),
+        "chem_safety_brief" => typed(params, tools::chemivigilance::chem_safety_brief),
+        "chem_substructure" => typed(params, tools::chemivigilance::chem_substructure),
+        "chem_watchlist" => typed(params, tools::chemivigilance::chem_watchlist),
+        "chem_alert_library" => typed(params, tools::chemivigilance::chem_alert_library),
+        "chem_ring_scan" => typed(params, tools::chemivigilance::chem_ring_scan),
+        "chem_aromaticity" => typed(params, tools::chemivigilance::chem_aromaticity),
+        "chem_molecular_formula" => typed(params, tools::chemivigilance::chem_molecular_formula),
+
+        // ====================================================================
         // Unknown command
         // ====================================================================
         _ => Err(McpError::invalid_params(
@@ -2355,7 +2375,7 @@ fn help_catalog_json() -> serde_json::Value {
             "vigilance": ["vigilance_safety_margin", "vigilance_risk_score", "vigilance_harm_types", "vigilance_map_to_tov"],
             "guardian": ["guardian_homeostasis_tick", "guardian_evaluate_pv", "guardian_status", "guardian_reset", "guardian_inject_signal", "guardian_sensors_list", "guardian_actuators_list", "guardian_history", "guardian_originator_classify", "guardian_ceiling_for_originator", "guardian_space3d_compute"],
             "vigil": ["vigil_status", "vigil_health", "vigil_emit_event", "vigil_memory_search", "vigil_memory_stats", "vigil_llm_stats", "vigil_source_control", "vigil_executor_control", "vigil_authority_config", "vigil_context_assemble", "vigil_authority_verify", "vigil_webhook_test", "vigil_source_config"],
-            "skills": ["skill_scan", "skill_list", "skill_get", "skill_validate", "skill_search_by_tag", "skill_list_nested", "skill_taxonomy_query", "skill_taxonomy_list", "skill_categories_compute_intensive", "skill_orchestration_analyze", "skill_execute", "skill_schema", "skill_compile", "skill_compile_check", "vocab_skill_lookup", "primitive_skill_lookup", "skill_chain_lookup", "vocab_list", "nexcore_assist"],
+            "skills": ["skill_scan", "skill_list", "skill_get", "skill_validate", "skill_search_by_tag", "skill_list_nested", "skill_taxonomy_query", "skill_taxonomy_list", "skill_categories_compute_intensive", "skill_orchestration_analyze", "skill_execute", "skill_schema", "skill_compile", "skill_compile_check", "vocab_skill_lookup", "primitive_skill_lookup", "skill_chain_lookup", "skill_route", "vocab_list", "nexcore_assist"],
             "guidelines": ["guidelines_search", "guidelines_get", "guidelines_categories", "guidelines_pv_all", "guidelines_url", "ich_lookup", "ich_search", "ich_guideline", "ich_stats"],
             "fda_guidance": ["fda_guidance_search", "fda_guidance_get", "fda_guidance_categories", "fda_guidance_url", "fda_guidance_status"],
             "faers": ["faers_search", "faers_drug_events", "faers_signal_check", "faers_disproportionality", "faers_compare_drugs"],
@@ -2385,7 +2405,8 @@ fn help_catalog_json() -> serde_json::Value {
             "pvdsl": ["pvdsl_compile", "pvdsl_execute", "pvdsl_eval", "pvdsl_functions"],
             "dtree": ["dtree_train", "dtree_predict", "dtree_importance", "dtree_prune", "dtree_export", "dtree_info"],
             "game_theory": ["game_theory_nash_2x2", "forge_payoff_matrix", "forge_nash_solve", "forge_quality_score", "forge_code_generate"],
-            "epi": ["epi_relative_risk", "epi_odds_ratio", "epi_attributable_risk", "epi_nnt_nnh", "epi_attributable_fraction", "epi_population_af", "epi_incidence_rate", "epi_prevalence", "epi_kaplan_meier", "epi_smr", "epi_pv_mappings"]
+            "epi": ["epi_relative_risk", "epi_odds_ratio", "epi_attributable_risk", "epi_nnt_nnh", "epi_attributable_fraction", "epi_population_af", "epi_incidence_rate", "epi_prevalence", "epi_kaplan_meier", "epi_smr", "epi_pv_mappings"],
+            "chemivigilance": ["chem_parse_smiles", "chem_descriptors", "chem_fingerprint", "chem_similarity", "chem_structural_alerts", "chem_predict_toxicity", "chem_predict_metabolites", "chem_predict_degradants", "chem_safety_brief", "chem_substructure", "chem_watchlist", "chem_alert_library", "chem_ring_scan", "chem_aromaticity", "chem_molecular_formula"]
         }
     })
 }
@@ -2415,7 +2436,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "vigil": ["vigil_status", "vigil_health", "vigil_emit_event", "vigil_memory_search", "vigil_memory_stats", "vigil_llm_stats", "vigil_source_control", "vigil_executor_control", "vigil_authority_config", "vigil_context_assemble", "vigil_authority_verify", "vigil_webhook_test", "vigil_source_config"],
             "pv_pipeline": ["pv_pipeline"],
             "pv_axioms": ["pv_axioms_ksb_lookup", "pv_axioms_regulation_search", "pv_axioms_traceability_chain", "pv_axioms_domain_dashboard", "pv_axioms_query"],
-            "skills": ["skill_scan", "skill_list", "skill_get", "skill_validate", "skill_search_by_tag", "skill_list_nested", "skill_taxonomy_query", "skill_taxonomy_list", "skill_categories_compute_intensive", "skill_orchestration_analyze", "skill_execute", "skill_schema", "skill_compile", "skill_compile_check", "vocab_skill_lookup", "primitive_skill_lookup", "skill_chain_lookup", "vocab_list", "nexcore_assist"],
+            "skills": ["skill_scan", "skill_list", "skill_get", "skill_validate", "skill_search_by_tag", "skill_list_nested", "skill_taxonomy_query", "skill_taxonomy_list", "skill_categories_compute_intensive", "skill_orchestration_analyze", "skill_execute", "skill_schema", "skill_compile", "skill_compile_check", "vocab_skill_lookup", "primitive_skill_lookup", "skill_chain_lookup", "skill_route", "vocab_list", "nexcore_assist"],
             "guidelines": ["guidelines_search", "guidelines_get", "guidelines_categories", "guidelines_pv_all", "guidelines_url", "ich_lookup", "ich_search", "ich_guideline", "ich_stats"],
             "fda_guidance": ["fda_guidance_search", "fda_guidance_get", "fda_guidance_categories", "fda_guidance_url", "fda_guidance_status"],
             "mesh": ["mesh_lookup", "mesh_search", "mesh_tree", "mesh_crossref", "mesh_enrich_pubmed", "mesh_consistency"],

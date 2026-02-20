@@ -168,10 +168,9 @@ fn builtin_alerts() -> Vec<StructuralAlert> {
             category: AlertCategory::Mutagenicity,
             source: AlertSource::IchM7,
             confidence: 0.92,
-            description:
-                "Primary aromatic amines can form reactive arylnitrenium ions that \
+            description: "Primary aromatic amines can form reactive arylnitrenium ions that \
                  alkylate DNA."
-                    .to_string(),
+                .to_string(),
         },
         StructuralAlert {
             id: "M7-002".to_string(),
@@ -180,10 +179,9 @@ fn builtin_alerts() -> Vec<StructuralAlert> {
             category: AlertCategory::Mutagenicity,
             source: AlertSource::IchM7,
             confidence: 0.88,
-            description:
-                "Nitro groups are bioreductively activated to reactive hydroxylamines \
+            description: "Nitro groups are bioreductively activated to reactive hydroxylamines \
                  and nitroso intermediates."
-                    .to_string(),
+                .to_string(),
         },
         StructuralAlert {
             id: "M7-003".to_string(),
@@ -192,10 +190,9 @@ fn builtin_alerts() -> Vec<StructuralAlert> {
             category: AlertCategory::Genotoxicity,
             source: AlertSource::IchM7,
             confidence: 0.70,
-            description:
-                "Aliphatic aldehydes form Schiff bases with DNA bases and may \
+            description: "Aliphatic aldehydes form Schiff bases with DNA bases and may \
                  cross-link proteins."
-                    .to_string(),
+                .to_string(),
         },
         StructuralAlert {
             id: "M7-004".to_string(),
@@ -204,9 +201,8 @@ fn builtin_alerts() -> Vec<StructuralAlert> {
             category: AlertCategory::Genotoxicity,
             source: AlertSource::IchM7,
             confidence: 0.85,
-            description:
-                "Epoxides are electrophilic and alkylate nucleophilic sites on DNA."
-                    .to_string(),
+            description: "Epoxides are electrophilic and alkylate nucleophilic sites on DNA."
+                .to_string(),
         },
         StructuralAlert {
             id: "M7-005".to_string(),
@@ -215,10 +211,9 @@ fn builtin_alerts() -> Vec<StructuralAlert> {
             category: AlertCategory::Mutagenicity,
             source: AlertSource::IchM7,
             confidence: 0.78,
-            description:
-                "Alkyl chlorides are SN2-reactive electrophiles capable of alkylating \
+            description: "Alkyl chlorides are SN2-reactive electrophiles capable of alkylating \
                  DNA."
-                    .to_string(),
+                .to_string(),
         },
         StructuralAlert {
             id: "M7-006".to_string(),
@@ -227,10 +222,9 @@ fn builtin_alerts() -> Vec<StructuralAlert> {
             category: AlertCategory::Mutagenicity,
             source: AlertSource::IchM7,
             confidence: 0.80,
-            description:
-                "Alkyl bromides are potent SN2 alkylating agents with higher reactivity \
+            description: "Alkyl bromides are potent SN2 alkylating agents with higher reactivity \
                  than chlorides."
-                    .to_string(),
+                .to_string(),
         },
         StructuralAlert {
             id: "M7-007".to_string(),
@@ -239,10 +233,9 @@ fn builtin_alerts() -> Vec<StructuralAlert> {
             category: AlertCategory::Carcinogenicity,
             source: AlertSource::IchM7,
             confidence: 0.93,
-            description:
-                "N-nitrosamines are bioactivated by CYP450 to diazonium ions that \
+            description: "N-nitrosamines are bioactivated by CYP450 to diazonium ions that \
                  alkylate DNA — a major class of carcinogens."
-                    .to_string(),
+                .to_string(),
         },
         StructuralAlert {
             id: "M7-008".to_string(),
@@ -251,10 +244,9 @@ fn builtin_alerts() -> Vec<StructuralAlert> {
             category: AlertCategory::General,
             source: AlertSource::IchM7,
             confidence: 0.82,
-            description:
-                "Acyl chlorides are highly reactive acylating agents that modify \
+            description: "Acyl chlorides are highly reactive acylating agents that modify \
                  proteins and nucleic acids."
-                    .to_string(),
+                .to_string(),
         },
         StructuralAlert {
             id: "M7-009".to_string(),
@@ -263,10 +255,9 @@ fn builtin_alerts() -> Vec<StructuralAlert> {
             category: AlertCategory::Genotoxicity,
             source: AlertSource::IchM7,
             confidence: 0.75,
-            description:
-                "Alpha,beta-unsaturated carbonyls undergo Michael addition with \
+            description: "Alpha,beta-unsaturated carbonyls undergo Michael addition with \
                  nucleophilic thiol and amine groups on DNA."
-                    .to_string(),
+                .to_string(),
         },
         StructuralAlert {
             id: "M7-010".to_string(),
@@ -275,10 +266,9 @@ fn builtin_alerts() -> Vec<StructuralAlert> {
             category: AlertCategory::Mutagenicity,
             source: AlertSource::IchM7,
             confidence: 0.80,
-            description:
-                "Hydrazines are oxidatively activated to diazenes and reactive \
+            description: "Hydrazines are oxidatively activated to diazenes and reactive \
                  radical species that damage DNA."
-                    .to_string(),
+                .to_string(),
         },
         StructuralAlert {
             id: "M7-011".to_string(),
@@ -287,10 +277,9 @@ fn builtin_alerts() -> Vec<StructuralAlert> {
             category: AlertCategory::Mutagenicity,
             source: AlertSource::IchM7,
             confidence: 0.91,
-            description:
-                "Nitroaromatic compounds combine the mutagenic liability of both the \
+            description: "Nitroaromatic compounds combine the mutagenic liability of both the \
                  aromatic ring and the nitro group."
-                    .to_string(),
+                .to_string(),
         },
         StructuralAlert {
             id: "M7-012".to_string(),
@@ -299,10 +288,9 @@ fn builtin_alerts() -> Vec<StructuralAlert> {
             category: AlertCategory::General,
             source: AlertSource::IchM7,
             confidence: 0.65,
-            description:
-                "Pyridine-type aromatic N-oxides can generate reactive intermediates \
+            description: "Pyridine-type aromatic N-oxides can generate reactive intermediates \
                  under metabolic reduction."
-                    .to_string(),
+                .to_string(),
         },
         StructuralAlert {
             id: "M7-013".to_string(),
@@ -311,10 +299,9 @@ fn builtin_alerts() -> Vec<StructuralAlert> {
             category: AlertCategory::Hepatotoxicity,
             source: AlertSource::IchM7,
             confidence: 0.60,
-            description:
-                "Phenols are oxidised to quinones and semi-quinone radicals that \
+            description: "Phenols are oxidised to quinones and semi-quinone radicals that \
                  covalently bind hepatic proteins."
-                    .to_string(),
+                .to_string(),
         },
         StructuralAlert {
             id: "M7-014".to_string(),
@@ -323,10 +310,9 @@ fn builtin_alerts() -> Vec<StructuralAlert> {
             category: AlertCategory::Mutagenicity,
             source: AlertSource::DerekNexus,
             confidence: 0.94,
-            description:
-                "Aniline and its derivatives are N-hydroxylated to electrophilic \
+            description: "Aniline and its derivatives are N-hydroxylated to electrophilic \
                  arylhydroxylamines."
-                    .to_string(),
+                .to_string(),
         },
         StructuralAlert {
             id: "M7-015".to_string(),
@@ -335,10 +321,9 @@ fn builtin_alerts() -> Vec<StructuralAlert> {
             category: AlertCategory::Genotoxicity,
             source: AlertSource::IchM7,
             confidence: 0.83,
-            description:
-                "Quinones are bi-electrophilic Michael acceptors and redox-cyclers \
+            description: "Quinones are bi-electrophilic Michael acceptors and redox-cyclers \
                  that generate reactive oxygen species and strand breaks."
-                    .to_string(),
+                .to_string(),
         },
     ]
 }

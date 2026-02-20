@@ -70,13 +70,8 @@ impl SignalRecord {
     /// - PRR ≥ 2.0 AND chi-sq ≥ 3.841
     /// - ROR lower CI > 1.0
     pub fn is_significant(&self) -> bool {
-        let prr_sig = self.prr >= 2.0
-            && self
-                .prr_chi_sq
-                .is_some_and(|chi| chi >= 3.841);
-        let ror_sig = self
-            .ror_lci
-            .is_some_and(|lci| lci > 1.0);
+        let prr_sig = self.prr >= 2.0 && self.prr_chi_sq.is_some_and(|chi| chi >= 3.841);
+        let ror_sig = self.ror_lci.is_some_and(|lci| lci > 1.0);
         prr_sig || ror_sig || self.prr >= 2.0
     }
 }
@@ -142,9 +137,7 @@ pub struct StructuredSignal {
 impl StructuredSignal {
     /// Returns the SMILES string if both compound and SMILES are present.
     pub fn smiles(&self) -> Option<&str> {
-        self.compound
-            .as_ref()
-            .and_then(|c| c.smiles.as_deref())
+        self.compound.as_ref().and_then(|c| c.smiles.as_deref())
     }
 }
 

@@ -96,16 +96,19 @@ pub fn predict_degradants(graph: &MolGraph) -> Vec<Metabolite> {
                 if order != BondOrder::Single {
                     continue;
                 }
-                let nbr_is_carbonyl_c =
-                    graph.molecule.atoms.get(nbr).is_some_and(|a| a.atomic_number == 6)
-                        && graph.neighbors(nbr).iter().any(|&(nn, o)| {
-                            o == BondOrder::Double
-                                && graph
-                                    .molecule
-                                    .atoms
-                                    .get(nn)
-                                    .is_some_and(|a| a.atomic_number == 8)
-                        });
+                let nbr_is_carbonyl_c = graph
+                    .molecule
+                    .atoms
+                    .get(nbr)
+                    .is_some_and(|a| a.atomic_number == 6)
+                    && graph.neighbors(nbr).iter().any(|&(nn, o)| {
+                        o == BondOrder::Double
+                            && graph
+                                .molecule
+                                .atoms
+                                .get(nn)
+                                .is_some_and(|a| a.atomic_number == 8)
+                    });
 
                 if nbr_is_carbonyl_c {
                     degradants.push(Metabolite {

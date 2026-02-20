@@ -199,7 +199,13 @@ fn compute_logp(graph: &MolGraph) -> f64 {
     let mut logp = 0.0_f64;
 
     for (atom_idx, atom) in graph.molecule.atoms.iter().enumerate() {
-        let contribution = logp_atom_contribution(graph, atom_idx, atom.atomic_number, atom.aromatic, atom.implicit_h);
+        let contribution = logp_atom_contribution(
+            graph,
+            atom_idx,
+            atom.atomic_number,
+            atom.aromatic,
+            atom.implicit_h,
+        );
         logp += contribution;
     }
 
@@ -268,11 +274,12 @@ fn carbon_logp(graph: &MolGraph, atom_idx: usize, is_aromatic: bool) -> f64 {
 
     // Bonded to a halogen (F, Cl, Br, I).
     let has_halogen = neighbors.iter().any(|&(nbr, _)| {
-        graph
-            .molecule
-            .atoms
-            .get(nbr)
-            .is_some_and(|a| matches!(a.atomic_number, AN_FLUORINE | AN_CHLORINE | AN_BROMINE | AN_IODINE))
+        graph.molecule.atoms.get(nbr).is_some_and(|a| {
+            matches!(
+                a.atomic_number,
+                AN_FLUORINE | AN_CHLORINE | AN_BROMINE | AN_IODINE
+            )
+        })
     });
     if has_halogen {
         return crippen::C_HALOGEN;
@@ -314,7 +321,13 @@ fn compute_tpsa(graph: &MolGraph) -> f64 {
     let mut tpsa = 0.0_f64;
 
     for (atom_idx, atom) in graph.molecule.atoms.iter().enumerate() {
-        let contribution = tpsa_contribution(graph, atom_idx, atom.atomic_number, atom.aromatic, atom.implicit_h);
+        let contribution = tpsa_contribution(
+            graph,
+            atom_idx,
+            atom.atomic_number,
+            atom.aromatic,
+            atom.implicit_h,
+        );
         tpsa += contribution;
     }
 
@@ -424,9 +437,7 @@ fn compute_hbd(graph: &MolGraph) -> u8 {
         .molecule
         .atoms
         .iter()
-        .filter(|a| {
-            matches!(a.atomic_number, AN_NITROGEN | AN_OXYGEN) && a.implicit_h > 0
-        })
+        .filter(|a| matches!(a.atomic_number, AN_NITROGEN | AN_OXYGEN) && a.implicit_h > 0)
         .count();
     count.min(u8::MAX as usize) as u8
 }
@@ -494,13 +505,21 @@ mod tests {
     #[test]
     fn test_ethanol_mw() {
         let d = descriptors_for("CCO");
-        assert!((d.molecular_weight - 46.07).abs() < 0.1, "ethanol MW expected ~46.07, got {}", d.molecular_weight);
+        assert!(
+            (d.molecular_weight - 46.07).abs() < 0.1,
+            "ethanol MW expected ~46.07, got {}",
+            d.molecular_weight
+        );
     }
 
     #[test]
     fn test_water_mw() {
         let d = descriptors_for("[OH2]");
-        assert!((d.molecular_weight - 18.02).abs() < 0.1, "water MW expected ~18.02, got {}", d.molecular_weight);
+        assert!(
+            (d.molecular_weight - 18.02).abs() < 0.1,
+            "water MW expected ~18.02, got {}",
+            d.molecular_weight
+        );
     }
 
     // ------------------------------------------------------------------
@@ -567,20 +586,32 @@ mod tests {
     fn test_ethane_rotatable() {
         // Both carbons are terminal (degree 1) → no rotatable bonds.
         let d = descriptors_for("CC");
-        assert_eq!(d.rotatable_bonds, 0, "ethane: both atoms terminal, got {}", d.rotatable_bonds);
+        assert_eq!(
+            d.rotatable_bonds, 0,
+            "ethane: both atoms terminal, got {}",
+            d.rotatable_bonds
+        );
     }
 
     #[test]
     fn test_butane_rotatable() {
         // C-C-C-C: the central C–C bond (atoms 1–2) is non-terminal and acyclic.
         let d = descriptors_for("CCCC");
-        assert!(d.rotatable_bonds >= 1, "butane should have >=1 rotatable bond, got {}", d.rotatable_bonds);
+        assert!(
+            d.rotatable_bonds >= 1,
+            "butane should have >=1 rotatable bond, got {}",
+            d.rotatable_bonds
+        );
     }
 
     #[test]
     fn test_benzene_no_rotatable() {
         let d = descriptors_for("c1ccccc1");
-        assert_eq!(d.rotatable_bonds, 0, "benzene has no rotatable bonds, got {}", d.rotatable_bonds);
+        assert_eq!(
+            d.rotatable_bonds, 0,
+            "benzene has no rotatable bonds, got {}",
+            d.rotatable_bonds
+        );
     }
 
     // ------------------------------------------------------------------
@@ -592,13 +623,21 @@ mod tests {
         let d = descriptors_for("CCO");
         // Simplified Crippen gives approximate values; real ethanol LogP is
         // about -0.31.  Assert it is noticeably lower than benzene (~1.6).
-        assert!(d.logp < 1.0, "ethanol LogP should be low (< 1.0), got {}", d.logp);
+        assert!(
+            d.logp < 1.0,
+            "ethanol LogP should be low (< 1.0), got {}",
+            d.logp
+        );
     }
 
     #[test]
     fn test_logp_benzene_positive() {
         let d = descriptors_for("c1ccccc1");
-        assert!(d.logp > 0.0, "benzene LogP should be positive, got {}", d.logp);
+        assert!(
+            d.logp > 0.0,
+            "benzene LogP should be positive, got {}",
+            d.logp
+        );
     }
 
     // ------------------------------------------------------------------
@@ -608,13 +647,21 @@ mod tests {
     #[test]
     fn test_tpsa_benzene_zero() {
         let d = descriptors_for("c1ccccc1");
-        assert!(d.tpsa < 1.0, "benzene has no polar atoms, got TPSA={}", d.tpsa);
+        assert!(
+            d.tpsa < 1.0,
+            "benzene has no polar atoms, got TPSA={}",
+            d.tpsa
+        );
     }
 
     #[test]
     fn test_tpsa_ethanol_positive() {
         let d = descriptors_for("CCO");
-        assert!(d.tpsa > 10.0, "ethanol has OH, TPSA should be >10, got {}", d.tpsa);
+        assert!(
+            d.tpsa > 10.0,
+            "ethanol has OH, TPSA should be >10, got {}",
+            d.tpsa
+        );
     }
 
     // ------------------------------------------------------------------
@@ -631,6 +678,10 @@ mod tests {
         );
         assert!(d.hba >= 3, "aspirin has >=3 HBA (O atoms), got {}", d.hba);
         assert_eq!(d.num_aromatic_rings, 1, "aspirin has 1 aromatic ring");
-        assert!(d.heavy_atom_count >= 13, "aspirin has >=13 heavy atoms, got {}", d.heavy_atom_count);
+        assert!(
+            d.heavy_atom_count >= 13,
+            "aspirin has >=13 heavy atoms, got {}",
+            d.heavy_atom_count
+        );
     }
 }

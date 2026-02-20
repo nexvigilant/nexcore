@@ -209,38 +209,38 @@ pub fn extract_features(smiles: Option<&str>) -> Vec<f64> {
     // Dims 128–159: Selected SMILES bigram normalized frequencies
     // These bigrams correspond to important chemical motifs
     let bigrams: [(&[u8], usize); 32] = [
-        (b"C=", 128),  // C=X double bond
-        (b"=O", 129),  // ketone/aldehyde
-        (b"C(", 130),  // branch start
-        (b"(=", 131),  // branch with double bond
-        (b"O)", 132),  // oxygen branch close
-        (b"c1", 133),  // aromatic ring open
-        (b"cc", 134),  // aromatic C-C
-        (b"cn", 135),  // aromatic C-N
-        (b"c(", 136),  // aromatic branch
-        (b"N(", 137),  // nitrogen branch
-        (b"C#", 138),  // triple bond
-        (b"C@", 139),  // stereo center
-        (b"[N", 140),  // bracket nitrogen
-        (b"[C", 141),  // bracket carbon
-        (b"[O", 142),  // bracket oxygen
-        (b"+]", 143),  // positive charge
-        (b"-]", 144),  // negative charge  (note: raw byte - not bond)
-        (b"OC", 145),  // ether/alcohol
-        (b"NC", 146),  // amine
-        (b"SC", 147),  // thioether
-        (b"FC", 148),  // fluoride
-        (b"Cl", 149),  // chloride
-        (b"Br", 150),  // bromide
-        (b"c2", 151),  // second aromatic ring
-        (b"c3", 152),  // third aromatic ring
-        (b"n1", 153),  // aromatic N ring
-        (b"o1", 154),  // aromatic O ring
-        (b"s1", 155),  // aromatic S ring
-        (b"C1", 156),  // aliphatic ring C
-        (b"N1", 157),  // aliphatic ring N
-        (b"O1", 158),  // aliphatic ring O
-        (b"C2", 159),  // second aliphatic ring
+        (b"C=", 128), // C=X double bond
+        (b"=O", 129), // ketone/aldehyde
+        (b"C(", 130), // branch start
+        (b"(=", 131), // branch with double bond
+        (b"O)", 132), // oxygen branch close
+        (b"c1", 133), // aromatic ring open
+        (b"cc", 134), // aromatic C-C
+        (b"cn", 135), // aromatic C-N
+        (b"c(", 136), // aromatic branch
+        (b"N(", 137), // nitrogen branch
+        (b"C#", 138), // triple bond
+        (b"C@", 139), // stereo center
+        (b"[N", 140), // bracket nitrogen
+        (b"[C", 141), // bracket carbon
+        (b"[O", 142), // bracket oxygen
+        (b"+]", 143), // positive charge
+        (b"-]", 144), // negative charge  (note: raw byte - not bond)
+        (b"OC", 145), // ether/alcohol
+        (b"NC", 146), // amine
+        (b"SC", 147), // thioether
+        (b"FC", 148), // fluoride
+        (b"Cl", 149), // chloride
+        (b"Br", 150), // bromide
+        (b"c2", 151), // second aromatic ring
+        (b"c3", 152), // third aromatic ring
+        (b"n1", 153), // aromatic N ring
+        (b"o1", 154), // aromatic O ring
+        (b"s1", 155), // aromatic S ring
+        (b"C1", 156), // aliphatic ring C
+        (b"N1", 157), // aliphatic ring N
+        (b"O1", 158), // aliphatic ring O
+        (b"C2", 159), // second aliphatic ring
     ];
 
     for (bigram, dim) in &bigrams {
@@ -268,12 +268,7 @@ pub fn dataset_stats(dataset: &TrainingDataset) -> DatasetStats {
     let mean_prr: f64 = if total == 0 {
         0.0
     } else {
-        dataset
-            .records
-            .iter()
-            .filter_map(|r| r.prr)
-            .sum::<f64>()
-            / total as f64
+        dataset.records.iter().filter_map(|r| r.prr).sum::<f64>() / total as f64
     };
 
     DatasetStats {
@@ -304,7 +299,11 @@ mod tests {
     use super::*;
     use crate::types::{RetrocastResult as RetrocastAnalysis, SignalRecord};
 
-    fn make_result(drug: &str, smiles: Option<&str>, events: Vec<(&str, f64)>) -> RetrocastAnalysis {
+    fn make_result(
+        drug: &str,
+        smiles: Option<&str>,
+        events: Vec<(&str, f64)>,
+    ) -> RetrocastAnalysis {
         let signals = events
             .into_iter()
             .map(|(event, prr)| SignalRecord {
@@ -400,7 +399,10 @@ mod tests {
             .sum::<f64>()
             .sqrt();
 
-        assert!(diff > 0.0, "Aspirin and caffeine should have different feature vectors");
+        assert!(
+            diff > 0.0,
+            "Aspirin and caffeine should have different feature vectors"
+        );
     }
 
     #[test]

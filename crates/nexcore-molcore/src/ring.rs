@@ -179,8 +179,8 @@ fn extract_cycle(parent: &[Option<usize>], ancestor: usize, descendant: usize) -
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::smiles::parse;
     use crate::graph::MolGraph;
+    use crate::smiles::parse;
 
     fn rings_for(smiles: &str) -> Vec<Ring> {
         let mol = parse(smiles).unwrap_or_default();

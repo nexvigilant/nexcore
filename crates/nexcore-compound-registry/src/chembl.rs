@@ -133,11 +133,13 @@ async fn fetch_chembl_molecule(
     }
 
     let search: ChemblMoleculeSearchResponse = response.json().await?;
-    let molecule = search.molecules.into_iter().next().ok_or_else(|| {
-        RegistryError::NotFound {
+    let molecule = search
+        .molecules
+        .into_iter()
+        .next()
+        .ok_or_else(|| RegistryError::NotFound {
             name: name.to_string(),
-        }
-    })?;
+        })?;
 
     Ok(parse_chembl_molecule(molecule))
 }
@@ -217,10 +219,7 @@ mod tests {
 
         assert_eq!(record.chembl_id, "CHEMBL25");
         assert_eq!(record.pref_name.as_deref(), Some("ASPIRIN"));
-        assert_eq!(
-            record.smiles.as_deref(),
-            Some("CC(=O)Oc1ccccc1C(=O)O")
-        );
+        assert_eq!(record.smiles.as_deref(), Some("CC(=O)Oc1ccccc1C(=O)O"));
         assert_eq!(
             record.inchi_key.as_deref(),
             Some("BSYNRYMUTXBXSQ-UHFFFAOYSA-N")

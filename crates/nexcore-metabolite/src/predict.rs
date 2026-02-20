@@ -99,14 +99,20 @@ mod tests {
     fn test_ethanol_metabolites() {
         let tree = predict_from_smiles("CCO").unwrap_or_default();
         // Ethanol has an OH group → must have Phase II metabolites (glucuronidation).
-        assert!(!tree.phase2.is_empty(), "ethanol should have Phase II metabolites");
+        assert!(
+            !tree.phase2.is_empty(),
+            "ethanol should have Phase II metabolites"
+        );
     }
 
     #[test]
     fn test_benzene_hydroxylation() {
         let tree = predict_from_smiles("c1ccccc1").unwrap_or_default();
         // Benzene has aromatic C with H → Phase I hydroxylation.
-        assert!(!tree.phase1.is_empty(), "benzene should have Phase I metabolites");
+        assert!(
+            !tree.phase1.is_empty(),
+            "benzene should have Phase I metabolites"
+        );
         let has_hydroxylation = tree
             .phase1
             .iter()
@@ -118,7 +124,10 @@ mod tests {
     fn test_aspirin_ester_hydrolysis() {
         let tree = predict_from_smiles("CC(=O)Oc1ccccc1C(=O)O").unwrap_or_default();
         // Aspirin has an ester bond → should predict hydrolysis as a degradant.
-        assert!(!tree.degradants.is_empty(), "aspirin should have degradation products");
+        assert!(
+            !tree.degradants.is_empty(),
+            "aspirin should have degradation products"
+        );
         let has_hydrolysis = tree
             .degradants
             .iter()
@@ -142,7 +151,10 @@ mod tests {
         let tree = predict_from_smiles("c1ccccc1").unwrap_or_default();
         // Benzene epoxidation produces a reactive arene oxide intermediate.
         let has_epoxide = tree.phase1.iter().any(|m| m.reactive_intermediate);
-        assert!(has_epoxide, "benzene should have a reactive epoxide intermediate");
+        assert!(
+            has_epoxide,
+            "benzene should have a reactive epoxide intermediate"
+        );
         assert!(
             !tree.reactive_intermediates.is_empty(),
             "reactive_intermediates should be populated from phase1"
@@ -192,8 +204,9 @@ mod tests {
         let tree = predict_from_smiles("c1ccccc1").unwrap_or_default();
         for ri in &tree.reactive_intermediates {
             assert!(
-                tree.phase1.iter().any(|m| m.reactive_intermediate
-                    && m.transformation == ri.transformation),
+                tree.phase1
+                    .iter()
+                    .any(|m| m.reactive_intermediate && m.transformation == ri.transformation),
                 "reactive intermediate not found in phase1: {:?}",
                 ri.transformation
             );
@@ -203,8 +216,8 @@ mod tests {
     #[test]
     fn test_codeine_o_dealkylation() {
         // Codeine SMILES — has O-methyl group → O-dealkylation to morphine.
-        let tree = predict_from_smiles("COc1ccc2c(c1)C[C@@H]3N(CC[C@]24CCO[C@H]3O4)C")
-            .unwrap_or_default();
+        let tree =
+            predict_from_smiles("COc1ccc2c(c1)C[C@@H]3N(CC[C@]24CCO[C@H]3O4)C").unwrap_or_default();
         let has_odealk = tree
             .phase1
             .iter()

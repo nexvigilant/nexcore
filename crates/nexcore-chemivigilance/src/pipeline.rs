@@ -41,7 +41,7 @@ use nexcore_molcore::graph::MolGraph;
 use nexcore_molcore::smiles::parse;
 use nexcore_qsar::predict::predict_from_descriptors;
 use nexcore_qsar::types::{DomainStatus, RiskLevel};
-use nexcore_structural_alerts::{scan_smiles, AlertCategory, AlertLibrary};
+use nexcore_structural_alerts::{AlertCategory, AlertLibrary, scan_smiles};
 
 use crate::brief::{AlertSummary, DescriptorSummary, SafetyBrief};
 use crate::error::{ChemivigilanceError, ChemivigilanceResult};
@@ -115,8 +115,7 @@ pub fn generate_safety_brief(
     // ------------------------------------------------------------------
     // Stage 1: Parse SMILES → MolGraph
     // ------------------------------------------------------------------
-    let molecule = parse(smiles)
-        .map_err(|e| ChemivigilanceError::MolcoreError(e.to_string()))?;
+    let molecule = parse(smiles).map_err(|e| ChemivigilanceError::MolcoreError(e.to_string()))?;
     let graph = MolGraph::from_molecule(molecule);
 
     // ------------------------------------------------------------------
@@ -128,8 +127,7 @@ pub fn generate_safety_brief(
     // Stage 3: Structural alert scan
     // ------------------------------------------------------------------
     let alert_library = AlertLibrary::default_library();
-    let alert_matches = scan_smiles(smiles, &alert_library)
-        .map_err(ChemivigilanceError::from)?;
+    let alert_matches = scan_smiles(smiles, &alert_library).map_err(ChemivigilanceError::from)?;
 
     let alert_summary: Vec<AlertSummary> = alert_matches
         .iter()
@@ -174,7 +172,9 @@ pub fn generate_safety_brief(
     let limitations = generate_limitations(&descriptors, &tox_profile, alert_count);
 
     if limitations.len() < 3 {
-        return Err(ChemivigilanceError::InsufficientLimitations(limitations.len()));
+        return Err(ChemivigilanceError::InsufficientLimitations(
+            limitations.len(),
+        ));
     }
 
     // ------------------------------------------------------------------
@@ -457,21 +457,30 @@ mod tests {
     fn test_minimum_three_limitations_aspirin() {
         let brief = generate_safety_brief("CC(=O)Oc1ccccc1C(=O)O", &default_config())
             .unwrap_or_else(|e| panic!("failed: {e}"));
-        assert!(brief.limitations.len() >= 3, "ToV Axiom 4: min 3 limitations required");
+        assert!(
+            brief.limitations.len() >= 3,
+            "ToV Axiom 4: min 3 limitations required"
+        );
     }
 
     #[test]
     fn test_minimum_three_limitations_ethanol() {
         let brief = generate_safety_brief("CCO", &default_config())
             .unwrap_or_else(|e| panic!("failed: {e}"));
-        assert!(brief.limitations.len() >= 3, "ToV Axiom 4: min 3 limitations required");
+        assert!(
+            brief.limitations.len() >= 3,
+            "ToV Axiom 4: min 3 limitations required"
+        );
     }
 
     #[test]
     fn test_minimum_three_limitations_benzene() {
         let brief = generate_safety_brief("c1ccccc1", &default_config())
             .unwrap_or_else(|e| panic!("failed: {e}"));
-        assert!(brief.limitations.len() >= 3, "ToV Axiom 4: min 3 limitations required");
+        assert!(
+            brief.limitations.len() >= 3,
+            "ToV Axiom 4: min 3 limitations required"
+        );
     }
 
     // ------------------------------------------------------------------
@@ -528,9 +537,11 @@ mod tests {
     #[test]
     fn test_config_alert_count_override() {
         // A config that forces 3 structural alerts into the QSAR model.
-        let config = ChemivigilanceConfig { alert_count_for_qsar: 3 };
-        let brief_forced = generate_safety_brief("c1ccccc1", &config)
-            .unwrap_or_else(|e| panic!("failed: {e}"));
+        let config = ChemivigilanceConfig {
+            alert_count_for_qsar: 3,
+        };
+        let brief_forced =
+            generate_safety_brief("c1ccccc1", &config).unwrap_or_else(|e| panic!("failed: {e}"));
         let brief_natural = generate_safety_brief("c1ccccc1", &default_config())
             .unwrap_or_else(|e| panic!("failed: {e}"));
 

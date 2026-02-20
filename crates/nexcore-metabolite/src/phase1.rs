@@ -139,10 +139,7 @@ pub fn predict_phase1(graph: &MolGraph) -> Vec<Metabolite> {
                     site1: bond.atom1,
                     site2: bond.atom2,
                 },
-                site_description: format!(
-                    "Aromatic bond C{}-C{}",
-                    bond.atom1, bond.atom2
-                ),
+                site_description: format!("Aromatic bond C{}-C{}", bond.atom1, bond.atom2),
                 probability: 0.2,
                 reactive_intermediate: true,
                 enzyme: Some("CYP1A2".to_string()),

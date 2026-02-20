@@ -53,7 +53,10 @@ pub fn correlate_alerts(
     // Build drug → signals index for fast lookup
     let mut drug_signals: HashMap<&str, Vec<&StructuredSignal>> = HashMap::new();
     for sig in signals {
-        drug_signals.entry(sig.signal.drug.as_str()).or_default().push(sig);
+        drug_signals
+            .entry(sig.signal.drug.as_str())
+            .or_default()
+            .push(sig);
     }
 
     let mut candidates: Vec<AlertCandidate> = Vec::new();
@@ -85,12 +88,11 @@ pub fn correlate_alerts(
                 continue;
             }
 
-            let mean_prr = supporters.iter().map(|(_, prr)| prr).sum::<f64>()
-                / supporters.len() as f64;
+            let mean_prr =
+                supporters.iter().map(|(_, prr)| prr).sum::<f64>() / supporters.len() as f64;
 
             let support_count = supporters.len();
-            let supporting_drugs: Vec<String> =
-                supporters.into_iter().map(|(d, _)| d).collect();
+            let supporting_drugs: Vec<String> = supporters.into_iter().map(|(d, _)| d).collect();
 
             // For each common fragment, create an alert candidate
             let fragments_to_emit: Vec<String> = if cluster.common_fragments.is_empty() {
@@ -101,11 +103,7 @@ pub fn correlate_alerts(
             };
 
             for fragment in fragments_to_emit {
-                let confidence = compute_confidence(
-                    support_count,
-                    cluster.members.len(),
-                    mean_prr,
-                );
+                let confidence = compute_confidence(support_count, cluster.members.len(), mean_prr);
 
                 if confidence >= min_confidence {
                     candidates.push(AlertCandidate {
@@ -295,11 +293,17 @@ mod tests {
         let result = correlate_alerts(&[cluster], &signals, 0.0);
         assert!(result.is_ok());
         if let Ok(candidates) = result {
-            assert!(!candidates.is_empty(), "Expected at least one alert candidate");
-            let gi_candidate = candidates.iter().find(|c| {
-                c.associated_events.iter().any(|e| e.contains("bleeding"))
-            });
-            assert!(gi_candidate.is_some(), "Expected GI bleeding alert candidate");
+            assert!(
+                !candidates.is_empty(),
+                "Expected at least one alert candidate"
+            );
+            let gi_candidate = candidates
+                .iter()
+                .find(|c| c.associated_events.iter().any(|e| e.contains("bleeding")));
+            assert!(
+                gi_candidate.is_some(),
+                "Expected GI bleeding alert candidate"
+            );
         }
     }
 
@@ -312,7 +316,10 @@ mod tests {
         let result = correlate_alerts(&[cluster], &signals, 0.0);
         assert!(result.is_ok());
         if let Ok(candidates) = result {
-            assert!(candidates.is_empty(), "Single-member cluster should produce no candidates");
+            assert!(
+                candidates.is_empty(),
+                "Single-member cluster should produce no candidates"
+            );
         }
     }
 
@@ -337,7 +344,10 @@ mod tests {
         // mean_prr=100 — prr_score should cap at 1.0
         let c = compute_confidence(5, 5, 100.0);
         // density=1.0, prr_score=1.0 → confidence=1.0
-        assert!((c - 1.0).abs() < f64::EPSILON, "Should be capped at 1.0, got {c}");
+        assert!(
+            (c - 1.0).abs() < f64::EPSILON,
+            "Should be capped at 1.0, got {c}"
+        );
     }
 
     #[test]
@@ -371,25 +381,26 @@ mod tests {
             make_structured_signal("aspirin", "rash", 2.2),
             make_structured_signal("ibuprofen", "rash", 2.1),
         ];
-        let cluster = make_cluster(
-            0,
-            vec!["aspirin", "ibuprofen"],
-            vec!["C("],
-            vec!["rash"],
-        );
+        let cluster = make_cluster(0, vec!["aspirin", "ibuprofen"], vec!["C("], vec!["rash"]);
 
         // With min_confidence=0.99, no candidates should pass
         let strict = correlate_alerts(&[cluster.clone()], &signals, 0.99);
         assert!(strict.is_ok());
         if let Ok(candidates) = strict {
-            assert!(candidates.is_empty(), "Strict threshold should filter all candidates");
+            assert!(
+                candidates.is_empty(),
+                "Strict threshold should filter all candidates"
+            );
         }
 
         // With min_confidence=0.0, candidates should emerge
         let open = correlate_alerts(&[cluster], &signals, 0.0);
         assert!(open.is_ok());
         if let Ok(candidates) = open {
-            assert!(!candidates.is_empty(), "Zero threshold should allow candidates");
+            assert!(
+                !candidates.is_empty(),
+                "Zero threshold should allow candidates"
+            );
         }
     }
 }

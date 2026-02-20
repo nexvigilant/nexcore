@@ -131,9 +131,9 @@ fn single_linkage_cluster(sim_matrix: &[Vec<f64>], n: usize, threshold: f64) -> 
                     // Merge cluster_of[j] into cluster_of[i]
                     let old_id = cluster_of[j];
                     let new_id = cluster_of[i];
-                    for k in 0..n {
-                        if cluster_of[k] == old_id {
-                            cluster_of[k] = new_id;
+                    for slot in cluster_of.iter_mut().take(n) {
+                        if *slot == old_id {
+                            *slot = new_id;
                         }
                     }
                     changed = true;
@@ -257,7 +257,8 @@ fn extract_common_fragments(smiles_list: &[&str]) -> Vec<String> {
 
     // Only keep chemically meaningful fragments (not single letters)
     result.retain(|f| {
-        !f.chars().all(|c| c.is_ascii_digit() || c.is_ascii_whitespace())
+        !f.chars()
+            .all(|c| c.is_ascii_digit() || c.is_ascii_whitespace())
     });
     result.sort();
     result
@@ -301,7 +302,10 @@ mod tests {
     fn test_smiles_bigram_jaccard_identical() {
         let smiles = "CC(=O)Oc1ccccc1C(=O)O";
         let sim = smiles_bigram_jaccard(smiles, smiles);
-        assert!((sim - 1.0).abs() < f64::EPSILON, "Identical SMILES should have sim=1.0");
+        assert!(
+            (sim - 1.0).abs() < f64::EPSILON,
+            "Identical SMILES should have sim=1.0"
+        );
     }
 
     #[test]
@@ -309,7 +313,10 @@ mod tests {
         let aspirin = "CC(=O)Oc1ccccc1C(=O)O";
         let caffeine = "Cn1cnc2c1c(=O)n(c(=O)n2C)C";
         let sim = smiles_bigram_jaccard(aspirin, caffeine);
-        assert!(sim < 0.9, "Dissimilar molecules should have sim < 0.9, got {sim}");
+        assert!(
+            sim < 0.9,
+            "Dissimilar molecules should have sim < 0.9, got {sim}"
+        );
     }
 
     #[test]
@@ -340,7 +347,11 @@ mod tests {
         assert!(result.is_ok());
         if let Ok(clusters) = result {
             // threshold=0.0 means all pairs qualify — single cluster
-            assert_eq!(clusters.len(), 1, "All compounds should cluster at threshold=0");
+            assert_eq!(
+                clusters.len(),
+                1,
+                "All compounds should cluster at threshold=0"
+            );
         }
     }
 
@@ -403,8 +414,16 @@ mod tests {
     #[test]
     fn test_shared_events_extraction() {
         let sig1 = make_structured("aspirin", Some("CC(=O)Oc1ccccc1C(=O)O"), "GI bleeding");
-        let sig2 = make_structured("ibuprofen", Some("CC(C)Cc1ccc(cc1)C(C)C(=O)O"), "GI bleeding");
-        let sig3 = make_structured("naproxen", Some("COc1ccc2cc(ccc2c1)C(C)C(=O)O"), "GI bleeding");
+        let sig2 = make_structured(
+            "ibuprofen",
+            Some("CC(C)Cc1ccc(cc1)C(C)C(=O)O"),
+            "GI bleeding",
+        );
+        let sig3 = make_structured(
+            "naproxen",
+            Some("COc1ccc2cc(ccc2c1)C(C)C(=O)O"),
+            "GI bleeding",
+        );
 
         let members: Vec<&StructuredSignal> = vec![&sig1, &sig2, &sig3];
         let shared = extract_shared_events(&members);

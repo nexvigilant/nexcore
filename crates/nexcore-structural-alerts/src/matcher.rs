@@ -58,9 +58,8 @@ pub fn scan(molecule: &MolGraph, library: &AlertLibrary) -> AlertResult<Vec<Aler
     let mut matches = Vec::new();
 
     for alert in library.alerts() {
-        let pattern_mol = parse(&alert.smiles_pattern).map_err(|e| {
-            AlertError::InvalidPattern(format!("{}: {e}", alert.id))
-        })?;
+        let pattern_mol = parse(&alert.smiles_pattern)
+            .map_err(|e| AlertError::InvalidPattern(format!("{}: {e}", alert.id)))?;
         let pattern_graph = MolGraph::from_molecule(pattern_mol);
 
         if has_substructure(molecule, &pattern_graph) {
@@ -95,8 +94,7 @@ pub fn scan(molecule: &MolGraph, library: &AlertLibrary) -> AlertResult<Vec<Aler
 /// assert!(!matches.is_empty());
 /// ```
 pub fn scan_smiles(smiles: &str, library: &AlertLibrary) -> AlertResult<Vec<AlertMatch>> {
-    let mol = parse(smiles)
-        .map_err(|e| AlertError::SmilesParse(e.to_string()))?;
+    let mol = parse(smiles).map_err(|e| AlertError::SmilesParse(e.to_string()))?;
     let graph = MolGraph::from_molecule(mol);
     scan(&graph, library)
 }
@@ -145,14 +143,20 @@ mod tests {
         let has_mutagen = matches
             .iter()
             .any(|m| m.alert.category == AlertCategory::Mutagenicity);
-        assert!(has_mutagen, "nitrobenzene should trigger a mutagenicity alert");
+        assert!(
+            has_mutagen,
+            "nitrobenzene should trigger a mutagenicity alert"
+        );
     }
 
     #[test]
     fn test_aniline_alert() {
         let lib = AlertLibrary::default_library();
         let matches = scan_smiles("c1ccccc1N", &lib).unwrap_or_default();
-        assert!(!matches.is_empty(), "aniline should trigger at least one alert");
+        assert!(
+            !matches.is_empty(),
+            "aniline should trigger at least one alert"
+        );
     }
 
     #[test]
@@ -186,17 +190,13 @@ mod tests {
             description: "Test".to_string(),
         });
         let matches = scan_smiles("CCCC", &lib).unwrap_or_default();
-        assert!(
-            !matches.is_empty(),
-            "custom CC pattern should match CCCC"
-        );
+        assert!(!matches.is_empty(), "custom CC pattern should match CCCC");
     }
 
     #[test]
     fn test_empty_library_no_matches() {
         let lib = AlertLibrary::new();
-        let matches =
-            scan_smiles("c1ccccc1[N+](=O)[O-]", &lib).unwrap_or_default();
+        let matches = scan_smiles("c1ccccc1[N+](=O)[O-]", &lib).unwrap_or_default();
         assert!(matches.is_empty(), "empty library must produce no matches");
     }
 

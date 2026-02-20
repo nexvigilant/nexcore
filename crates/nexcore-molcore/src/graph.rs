@@ -29,8 +29,8 @@
 
 use std::collections::VecDeque;
 
-use prima_chem::types::{AtomId, BondOrder};
 use prima_chem::Molecule;
+use prima_chem::types::{AtomId, BondOrder};
 
 /// Molecular graph with adjacency list representation.
 ///
@@ -79,7 +79,10 @@ impl MolGraph {
             }
         }
 
-        Self { molecule: mol, adjacency }
+        Self {
+            molecule: mol,
+            adjacency,
+        }
     }
 
     /// Return the neighbours of `idx` together with their bond orders.
@@ -348,7 +351,11 @@ mod tests {
         let mol = parse("c1ccccc1").unwrap_or_default();
         let g = MolGraph::from_molecule(mol);
         for atom in 0..6 {
-            assert_eq!(g.degree(atom), 2, "benzene atom {atom} should have degree 2");
+            assert_eq!(
+                g.degree(atom),
+                2,
+                "benzene atom {atom} should have degree 2"
+            );
         }
     }
 
@@ -392,7 +399,11 @@ mod tests {
         let g = MolGraph::from_molecule(mol);
         let path = g.shortest_path(0, 3).unwrap_or_default();
         // Length is 4 (three intermediate atoms: two possible routes of len 4).
-        assert_eq!(path.len(), 4, "shortest path in benzene 0→3 must have 4 nodes");
+        assert_eq!(
+            path.len(),
+            4,
+            "shortest path in benzene 0→3 must have 4 nodes"
+        );
         assert_eq!(*path.first().unwrap_or(&usize::MAX), 0);
         assert_eq!(*path.last().unwrap_or(&usize::MAX), 3);
     }

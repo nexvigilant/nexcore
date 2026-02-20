@@ -86,10 +86,7 @@ pub async fn resolve_by_name(
 /// Resolve a compound by PubChem CID.
 ///
 /// Queries `GET /compound/cid/{cid}/JSON`.
-pub async fn resolve_by_cid(
-    client: &reqwest::Client,
-    cid: u64,
-) -> RegistryResult<CompoundRecord> {
+pub async fn resolve_by_cid(client: &reqwest::Client, cid: u64) -> RegistryResult<CompoundRecord> {
     let url = format!("{PUBCHEM_BASE}/compound/cid/{cid}/JSON");
     fetch_and_parse(client, &url, &format!("CID:{cid}")).await
 }
@@ -142,15 +139,14 @@ async fn fetch_and_parse(
 ///
 /// Extracts SMILES, InChI, and InChIKey from the props array.
 /// Separated for unit testability without HTTP calls.
-fn parse_pug_response(
-    name: &str,
-    pug: PugRestResponse,
-) -> RegistryResult<CompoundRecord> {
-    let compound = pug.pc_compounds.into_iter().next().ok_or_else(|| {
-        RegistryError::NotFound {
+fn parse_pug_response(name: &str, pug: PugRestResponse) -> RegistryResult<CompoundRecord> {
+    let compound = pug
+        .pc_compounds
+        .into_iter()
+        .next()
+        .ok_or_else(|| RegistryError::NotFound {
             name: name.to_string(),
-        }
-    })?;
+        })?;
 
     let cid = compound.id.id.cid;
     let mut smiles: Option<String> = None;
@@ -240,10 +236,7 @@ mod tests {
         if let Ok(record) = result {
             assert_eq!(record.name, "aspirin");
             assert_eq!(record.pubchem_cid, Some(2244));
-            assert_eq!(
-                record.smiles.as_deref(),
-                Some("CC(=O)Oc1ccccc1C(=O)O")
-            );
+            assert_eq!(record.smiles.as_deref(), Some("CC(=O)Oc1ccccc1C(=O)O"));
             assert_eq!(
                 record.inchi_key.as_deref(),
                 Some("BSYNRYMUTXBXSQ-UHFFFAOYSA-N")

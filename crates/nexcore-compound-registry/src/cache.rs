@@ -139,8 +139,7 @@ impl CacheStore {
     /// # Errors
     /// Returns `RegistryError::Database` on write failure.
     pub fn put(&self, record: &CompoundRecord) -> RegistryResult<()> {
-        let synonyms_json = serde_json::to_string(&record.synonyms)
-            .map_err(RegistryError::Json)?;
+        let synonyms_json = serde_json::to_string(&record.synonyms).map_err(RegistryError::Json)?;
         let resolved_at = record.resolved_at.to_rfc3339();
         let source = record.source.to_string();
 
@@ -222,8 +221,7 @@ fn row_to_record(row: &rusqlite::Row<'_>) -> RegistryResult<CompoundRecord> {
     let resolved_at_str: String = row.get(9)?;
 
     let synonyms: Vec<String> = serde_json::from_str(&synonyms_json).unwrap_or_default();
-    let source = ResolutionSource::from_str(&source_str)
-        .unwrap_or(ResolutionSource::LocalCache);
+    let source = ResolutionSource::from_str(&source_str).unwrap_or(ResolutionSource::LocalCache);
     let resolved_at = chrono::DateTime::parse_from_rfc3339(&resolved_at_str)
         .map(|dt| dt.with_timezone(&chrono::Utc))
         .unwrap_or_else(|_| chrono::Utc::now());
@@ -291,10 +289,7 @@ mod tests {
             if let Ok(Some(fetched)) = get_result {
                 assert_eq!(fetched.name, "aspirin");
                 assert_eq!(fetched.pubchem_cid, Some(2244));
-                assert_eq!(
-                    fetched.smiles.as_deref(),
-                    Some("CC(=O)Oc1ccccc1C(=O)O")
-                );
+                assert_eq!(fetched.smiles.as_deref(), Some("CC(=O)Oc1ccccc1C(=O)O"));
                 assert_eq!(fetched.synonyms.len(), 2);
             } else {
                 assert!(false, "Expected Some(record)");

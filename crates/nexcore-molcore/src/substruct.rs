@@ -143,7 +143,9 @@ pub fn count_matches(molecule: &MolGraph, pattern: &MolGraph) -> usize {
     let mut count = 0usize;
 
     for mapping in &all {
-        let overlaps = mapping.iter().any(|&(_, m)| used.get(m).copied().unwrap_or(false));
+        let overlaps = mapping
+            .iter()
+            .any(|&(_, m)| used.get(m).copied().unwrap_or(false));
         if !overlaps {
             count += 1;
             for &(_, m) in mapping {
@@ -475,7 +477,10 @@ mod tests {
         let empty_mol = Molecule::new();
         let pat = MolGraph::from_molecule(empty_mol);
         let matches = substructure_match(&mol, &pat);
-        assert!(!matches.is_empty(), "empty pattern should produce one mapping");
+        assert!(
+            !matches.is_empty(),
+            "empty pattern should produce one mapping"
+        );
     }
 
     // -----------------------------------------------------------------------

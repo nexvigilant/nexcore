@@ -10,20 +10,20 @@
 #![deny(clippy::expect_used)]
 #![deny(clippy::panic)]
 
-pub mod error;
-pub mod smiles;
-pub mod graph;
-pub mod ring;
 pub mod arom;
 pub mod descriptor;
+pub mod error;
 pub mod fingerprint;
+pub mod graph;
+pub mod ring;
+pub mod smiles;
 pub mod substruct;
 
 pub use error::{MolcoreError, MolcoreResult};
 
 /// Re-export prima-chem types used throughout.
 pub mod prelude {
-    pub use prima_chem::prelude::*;
     pub use crate::error::{MolcoreError, MolcoreResult};
     pub use crate::graph::MolGraph;
+    pub use prima_chem::prelude::*;
 }

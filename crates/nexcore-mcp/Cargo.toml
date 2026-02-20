@@ -121,6 +121,13 @@ nexcore-pvos = { workspace = true }
 # Skill Ecosystem Registry (compliance, ToV monitoring, promotion)
 nexcore-registry = { workspace = true }
 
+# Chemivigilance Platform (7 new crates — SMILES, descriptors, alerts, QSAR, metabolites, SafetyBrief)
+nexcore-molcore = { path = "../nexcore-molcore" }
+nexcore-structural-alerts = { path = "../nexcore-structural-alerts" }
+nexcore-qsar = { path = "../nexcore-qsar" }
+nexcore-metabolite = { path = "../nexcore-metabolite" }
+nexcore-chemivigilance = { path = "../nexcore-chemivigilance" }
+
 # MCP server framework
 rmcp = { version = "0.14", features = ["server", "transport-io"] }
 

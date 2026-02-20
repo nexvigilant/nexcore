@@ -118,9 +118,7 @@ pub fn group_by_event(
     let mut map: std::collections::HashMap<String, Vec<&StructuredSignal>> =
         std::collections::HashMap::new();
     for sig in signals {
-        map.entry(sig.signal.event.clone())
-            .or_default()
-            .push(sig);
+        map.entry(sig.signal.event.clone()).or_default().push(sig);
     }
     map
 }
@@ -129,7 +127,10 @@ pub fn group_by_event(
 mod tests {
     use super::*;
     use crate::types::SignalRecord;
-    use nexcore_compound_registry::{CacheStore, types::{CompoundRecord, ResolutionSource}};
+    use nexcore_compound_registry::{
+        CacheStore,
+        types::{CompoundRecord, ResolutionSource},
+    };
 
     fn make_signal(drug: &str, event: &str, prr: f64) -> SignalRecord {
         SignalRecord {
@@ -261,11 +262,7 @@ mod tests {
         let store_result = CacheStore::new_in_memory();
         assert!(store_result.is_ok());
         if let Ok(store) = store_result {
-            let signals = vec![make_signal(
-                "zzzz_nonexistent_drug_99999",
-                "headache",
-                2.1,
-            )];
+            let signals = vec![make_signal("zzzz_nonexistent_drug_99999", "headache", 2.1)];
             let client = reqwest::Client::builder()
                 .timeout(std::time::Duration::from_millis(500))
                 .build()

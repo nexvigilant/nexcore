@@ -14,11 +14,8 @@ use serde::{Deserialize, Serialize};
 pub enum SmilesToken {
     /// Organic subset atom: B, C, N, O, P, S, F, Cl, Br, I
     /// Lowercase = aromatic: b, c, n, o, p, s
-    OrganicAtom {
-        symbol: String,
-        aromatic: bool,
-    },
-    /// Bracket atom: [Fe], [NH4+], [13C], [2H]
+    OrganicAtom { symbol: String, aromatic: bool },
+    /// Bracket atom: \[Fe\], \[NH4+\], \[13C\], \[2H\]
     BracketAtom {
         isotope: Option<u16>,
         symbol: String,

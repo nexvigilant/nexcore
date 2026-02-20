@@ -112,20 +112,16 @@ pub fn generate_limitations(
 
     // Domain applicability warning.
     let domain_warning = match &tox_profile.applicability_domain {
-        DomainStatus::OutOfDomain { warning, .. } => {
-            Some(format!(
-                "The compound falls outside the applicability domain of the QSAR models \
+        DomainStatus::OutOfDomain { warning, .. } => Some(format!(
+            "The compound falls outside the applicability domain of the QSAR models \
                  ({warning}). Predictions for out-of-domain compounds carry substantially \
                  higher uncertainty and should be treated as preliminary.",
-            ))
-        }
-        DomainStatus::Borderline { warning, .. } => {
-            Some(format!(
-                "The compound is at the boundary of the QSAR applicability domain ({warning}). \
+        )),
+        DomainStatus::Borderline { warning, .. } => Some(format!(
+            "The compound is at the boundary of the QSAR applicability domain ({warning}). \
                  Confidence in endpoint predictions is reduced; independent confirmation \
                  is recommended.",
-            ))
-        }
+        )),
         DomainStatus::InDomain { .. } => None,
     };
 
@@ -265,7 +261,10 @@ mod tests {
         let has_domain = lims
             .iter()
             .any(|l| l.category == LimitationCategory::MethodologicalConstraint);
-        assert!(has_domain, "Borderline domain must add MethodologicalConstraint");
+        assert!(
+            has_domain,
+            "Borderline domain must add MethodologicalConstraint"
+        );
     }
 
     #[test]
@@ -286,15 +285,28 @@ mod tests {
         let profile = in_domain_profile();
         let lims = generate_limitations(&desc, &profile, 0);
 
-        let has_model_scope = lims.iter().any(|l| l.category == LimitationCategory::ModelScope);
-        let has_data_quality = lims.iter().any(|l| l.category == LimitationCategory::DataQuality);
+        let has_model_scope = lims
+            .iter()
+            .any(|l| l.category == LimitationCategory::ModelScope);
+        let has_data_quality = lims
+            .iter()
+            .any(|l| l.category == LimitationCategory::DataQuality);
         let has_regulatory = lims
             .iter()
             .any(|l| l.category == LimitationCategory::RegulatoryDisclaimer);
 
-        assert!(has_model_scope, "ModelScope limitation must always be present");
-        assert!(has_data_quality, "DataQuality limitation must always be present");
-        assert!(has_regulatory, "RegulatoryDisclaimer limitation must always be present");
+        assert!(
+            has_model_scope,
+            "ModelScope limitation must always be present"
+        );
+        assert!(
+            has_data_quality,
+            "DataQuality limitation must always be present"
+        );
+        assert!(
+            has_regulatory,
+            "RegulatoryDisclaimer limitation must always be present"
+        );
     }
 
     #[test]
@@ -303,7 +315,8 @@ mod tests {
         let profile = in_domain_profile();
         let lims = generate_limitations(&desc, &profile, 0);
         assert!(
-            lims.iter().any(|l| l.category == LimitationCategory::TemporalValidity),
+            lims.iter()
+                .any(|l| l.category == LimitationCategory::TemporalValidity),
             "TemporalValidity limitation must always be present"
         );
     }

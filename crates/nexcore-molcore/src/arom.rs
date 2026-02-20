@@ -150,7 +150,14 @@ fn count_pi_electrons(graph: &MolGraph, ring: &[usize]) -> Option<usize> {
 
     for &atom_id in ring {
         let atom = graph.molecule.atoms.get(atom_id)?;
-        let pi = pi_from_atom(graph, atom_id, atom.atomic_number, atom.aromatic, atom.implicit_h, &ring_members);
+        let pi = pi_from_atom(
+            graph,
+            atom_id,
+            atom.atomic_number,
+            atom.aromatic,
+            atom.implicit_h,
+            &ring_members,
+        );
         total_pi += pi;
     }
 
@@ -185,9 +192,7 @@ fn pi_from_atom(
         .collect();
 
     let has_ring_double = ring_bonds.contains(&BondOrder::Double);
-    let all_aromatic = ring_bonds
-        .iter()
-        .all(|&o| o == BondOrder::Aromatic);
+    let all_aromatic = ring_bonds.iter().all(|&o| o == BondOrder::Aromatic);
 
     match atomic_number {
         AN_CARBON => {
@@ -227,8 +232,8 @@ fn pi_from_atom(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::smiles::parse;
     use crate::graph::MolGraph;
+    use crate::smiles::parse;
 
     fn aromatic_rings_for(smiles: &str) -> Vec<AromaticRing> {
         let mol = parse(smiles).unwrap_or_default();
@@ -263,7 +268,11 @@ mod tests {
     #[test]
     fn test_benzene_is_aromatic() {
         let rings = aromatic_rings_for("c1ccccc1");
-        assert_eq!(rings.len(), 1, "benzene must have exactly one aromatic ring");
+        assert_eq!(
+            rings.len(),
+            1,
+            "benzene must have exactly one aromatic ring"
+        );
     }
 
     #[test]

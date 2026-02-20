@@ -14,7 +14,7 @@
 //! | [`predict_toxicity`] | Input is a pre-built [`MolGraph`] |
 //! | [`predict_from_descriptors`] | Descriptors already computed |
 
-use nexcore_molcore::descriptor::{calculate_descriptors, Descriptors};
+use nexcore_molcore::descriptor::{Descriptors, calculate_descriptors};
 use nexcore_molcore::graph::MolGraph;
 use nexcore_molcore::smiles::parse;
 
@@ -80,7 +80,11 @@ pub fn predict_toxicity(
     reactive_metabolite_alerts: usize,
 ) -> ToxProfile {
     let descriptors = calculate_descriptors(graph);
-    predict_from_descriptors(&descriptors, structural_alert_count, reactive_metabolite_alerts)
+    predict_from_descriptors(
+        &descriptors,
+        structural_alert_count,
+        reactive_metabolite_alerts,
+    )
 }
 
 /// Predict the full toxicity profile from pre-computed molecular descriptors.
@@ -182,7 +186,10 @@ mod tests {
             profile.applicability_domain,
             DomainStatus::OutOfDomain { .. } | DomainStatus::Borderline { .. }
         );
-        assert!(is_flagged, "ethanol should be flagged as out-of-domain or borderline");
+        assert!(
+            is_flagged,
+            "ethanol should be flagged as out-of-domain or borderline"
+        );
     }
 
     #[test]

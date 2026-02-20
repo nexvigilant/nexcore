@@ -42,8 +42,8 @@
 //! assert!((t - 1.0).abs() < f64::EPSILON);
 //! ```
 
-use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 
 use prima_chem::types::AtomId;
 
@@ -146,7 +146,8 @@ impl Fingerprint {
 /// for fingerprint projection.
 #[inline]
 fn hash_combine(seed: u64, value: u64) -> u64 {
-    seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(value)
+    seed.wrapping_mul(6_364_136_223_846_793_005)
+        .wrapping_add(value)
 }
 
 /// Hash a single `u64` value through [`DefaultHasher`].
@@ -366,8 +367,8 @@ fn bit_intersection(a: &Fingerprint, b: &Fingerprint) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::smiles::parse;
     use crate::graph::MolGraph;
+    use crate::smiles::parse;
 
     /// Parse a SMILES string and build a fingerprint with ECFP4 defaults.
     fn fp_for(smiles: &str) -> Fingerprint {
@@ -410,7 +411,10 @@ mod tests {
         let benzene = fp_for("c1ccccc1");
         let ethanol = fp_for("CCO");
         let t = tanimoto(&benzene, &ethanol);
-        assert!(t < 1.0, "different molecules should have tanimoto < 1.0, got {t}");
+        assert!(
+            t < 1.0,
+            "different molecules should have tanimoto < 1.0, got {t}"
+        );
         assert!(t >= 0.0, "tanimoto must be non-negative, got {t}");
     }
 
@@ -433,7 +437,10 @@ mod tests {
         let fp1 = fp_for("c1ccccc1");
         let fp2 = fp_for("CCCC");
         let d = dice(&fp1, &fp2);
-        assert!(d < 1.0, "dice for different molecules must be < 1.0, got {d}");
+        assert!(
+            d < 1.0,
+            "dice for different molecules must be < 1.0, got {d}"
+        );
         assert!(d >= 0.0, "dice must be non-negative, got {d}");
     }
 
@@ -444,10 +451,7 @@ mod tests {
     #[test]
     fn test_fingerprint_has_bits_set() {
         let fp = fp_for("c1ccccc1");
-        assert!(
-            fp.popcount() > 0,
-            "benzene fingerprint must have bits set"
-        );
+        assert!(fp.popcount() > 0, "benzene fingerprint must have bits set");
     }
 
     // ------------------------------------------------------------------
@@ -485,7 +489,10 @@ mod tests {
         let mol = parse("CCO").unwrap_or_default();
         let g = MolGraph::from_molecule(mol);
         let fp = morgan_fingerprint(&g, 0, 2048);
-        assert!(fp.popcount() > 0, "radius-0 fingerprint must still have bits set");
+        assert!(
+            fp.popcount() > 0,
+            "radius-0 fingerprint must still have bits set"
+        );
     }
 
     // ------------------------------------------------------------------

@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod cellular_tests {
-    use crate::genetics::{GenomeRequirement, GeneticGuard};
-    use crate::phenotypes::{TissuePhenotype, SomaticSpecialization};
+    use crate::genetics::{GeneticGuard, GenomeRequirement};
+    use crate::phenotypes::{SomaticSpecialization, TissuePhenotype};
     use nexcore_lex_primitiva::LexPrimitiva;
 
     #[test]
@@ -18,10 +18,7 @@ mod cellular_tests {
         assert!(!guard.is_mutation_lethal(&healthy_prims, false));
 
         // Lethal mutation (missing π Persistence)
-        let drifting_prims = vec![
-            LexPrimitiva::Boundary,
-            LexPrimitiva::Sequence,
-        ];
+        let drifting_prims = vec![LexPrimitiva::Boundary, LexPrimitiva::Sequence];
         assert!(guard.is_mutation_lethal(&drifting_prims, false));
 
         // Lethal mutation (contains unsafe)
@@ -35,6 +32,10 @@ mod cellular_tests {
         assert_eq!(immune.target_vsat, 0.85);
 
         let muscular = SomaticSpecialization::for_phenotype(TissuePhenotype::Muscular);
-        assert!(muscular.tool_allowlist.contains(&"run_shell_command".to_string()));
+        assert!(
+            muscular
+                .tool_allowlist
+                .contains(&"run_shell_command".to_string())
+        );
     }
 }

@@ -83,11 +83,7 @@ impl AtomRegistry {
     }
 
     /// Crystallize a new atom into the registry.
-    pub fn crystallize(
-        &mut self,
-        atom: Atom,
-        provenance: AtomProvenance,
-    ) -> CrystallizationResult {
+    pub fn crystallize(&mut self, atom: Atom, provenance: AtomProvenance) -> CrystallizationResult {
         if let Some(&existing_id) = self.label_index.get(&atom.label) {
             return CrystallizationResult::AlreadyExists {
                 existing_id,
@@ -169,25 +165,16 @@ impl AtomRegistry {
             ("Hepatobiliary disorders", "10019805"),
             ("Immune system disorders", "10021428"),
             ("Infections and infestations", "10021881"),
-            (
-                "Injury, poisoning and procedural complications",
-                "10022117",
-            ),
+            ("Injury, poisoning and procedural complications", "10022117"),
             ("Investigations", "10022891"),
             ("Metabolism and nutrition disorders", "10027433"),
             (
                 "Musculoskeletal and connective tissue disorders",
                 "10028395",
             ),
-            (
-                "Neoplasms benign, malignant and unspecified",
-                "10029104",
-            ),
+            ("Neoplasms benign, malignant and unspecified", "10029104"),
             ("Nervous system disorders", "10029205"),
-            (
-                "Pregnancy, puerperium and perinatal conditions",
-                "10036585",
-            ),
+            ("Pregnancy, puerperium and perinatal conditions", "10036585"),
             ("Psychiatric disorders", "10037175"),
             ("Renal and urinary disorders", "10038359"),
             ("Reproductive system and breast disorders", "10038604"),

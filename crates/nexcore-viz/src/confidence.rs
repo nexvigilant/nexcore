@@ -9,7 +9,7 @@
 //! - Derivation arrows show parent->child relationships
 //! - The system confidence (min of all) is shown at the bottom
 
-use crate::svg::{self, palette, SvgDoc};
+use crate::svg::{self, SvgDoc, palette};
 
 /// A claim in a confidence chain.
 #[derive(Debug, Clone)]
@@ -229,9 +229,24 @@ mod tests {
     #[test]
     fn system_conf_is_minimum() {
         let claims = vec![
-            Claim { text: "A".into(), confidence: 0.99, proof_type: "asserted".into(), parent: None },
-            Claim { text: "B".into(), confidence: 0.70, proof_type: "empirical".into(), parent: None },
-            Claim { text: "C".into(), confidence: 0.95, proof_type: "computational".into(), parent: None },
+            Claim {
+                text: "A".into(),
+                confidence: 0.99,
+                proof_type: "asserted".into(),
+                parent: None,
+            },
+            Claim {
+                text: "B".into(),
+                confidence: 0.70,
+                proof_type: "empirical".into(),
+                parent: None,
+            },
+            Claim {
+                text: "C".into(),
+                confidence: 0.95,
+                proof_type: "computational".into(),
+                parent: None,
+            },
         ];
         let svg = render_confidence_chain(&claims, "Test");
         assert!(svg.contains("0.70")); // system_conf should be min

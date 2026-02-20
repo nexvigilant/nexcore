@@ -4,7 +4,9 @@
 //! Dominant primitive: ∂ (Boundary). Core thesis: "All detection is boundary drawing."
 
 use crate::params::{
-    SignalTheoryConservationCheckParams, SignalTheoryDecisionMatrixParams, SignalTheoryDetectParams,
+    SignalTheoryCascadeParams, SignalTheoryConservationCheckParams,
+    SignalTheoryDecisionMatrixParams, SignalTheoryDetectParams, SignalTheoryParallelParams,
+    SignalTheoryPipelineParams,
 };
 use nexcore_signal_theory::prelude::*;
 use rmcp::ErrorData as McpError;
@@ -227,6 +229,130 @@ pub fn conservation_check(
             {"id": "L3", "name": "Sensitivity-Specificity Tradeoff", "statement": "Improving one degrades the other"},
             {"id": "L4", "name": "Information Conservation", "statement": "Detection cannot create signal info"},
         ],
+    });
+
+    Ok(CallToolResult::success(vec![Content::text(
+        result.to_string(),
+    )]))
+}
+
+/// Run a multi-stage signal detection pipeline.
+///
+/// Passes a value through sequential stages; each stage has its own threshold.
+/// Reports which stages passed and the overall verdict.
+pub fn pipeline(params: SignalTheoryPipelineParams) -> Result<CallToolResult, McpError> {
+    let mut stages_result = Vec::new();
+    let mut all_passed = true;
+    let mut first_failure: Option<String> = None;
+
+    for (i, stage) in params.stages.iter().enumerate() {
+        let boundary = FixedBoundary::above(stage.threshold, "detection");
+        let passed = boundary.evaluate(params.value);
+
+        if !passed && first_failure.is_none() {
+            first_failure = Some(stage.name.clone());
+            all_passed = false;
+        }
+
+        stages_result.push(json!({
+            "stage": i + 1,
+            "name": stage.name,
+            "phase": stage.phase,
+            "threshold": stage.threshold,
+            "value": params.value,
+            "passed": passed,
+        }));
+    }
+
+    let result = json!({
+        "label": params.label,
+        "value": params.value,
+        "stage_count": params.stages.len(),
+        "all_passed": all_passed,
+        "first_failure": first_failure,
+        "stages": stages_result,
+        "verdict": if all_passed { "SIGNAL_DETECTED" } else { "NOT_DETECTED" },
+    });
+
+    Ok(CallToolResult::success(vec![Content::text(
+        result.to_string(),
+    )]))
+}
+
+/// Cascading threshold evaluation — find the highest severity level exceeded.
+///
+/// Thresholds must be in ascending order. Reports the highest level exceeded.
+pub fn cascade(params: SignalTheoryCascadeParams) -> Result<CallToolResult, McpError> {
+    if params.thresholds.len() != params.labels.len() {
+        let err = json!({
+            "error": "thresholds and labels must have equal length",
+            "thresholds_len": params.thresholds.len(),
+            "labels_len": params.labels.len(),
+        });
+        return Ok(CallToolResult::success(vec![Content::text(
+            err.to_string(),
+        )]));
+    }
+
+    let mut levels = Vec::new();
+    let mut highest_level: Option<usize> = None;
+
+    for (i, (threshold, label)) in params
+        .thresholds
+        .iter()
+        .zip(params.labels.iter())
+        .enumerate()
+    {
+        let boundary = FixedBoundary::above(*threshold, "cascade");
+        let exceeded = boundary.evaluate(params.value);
+        if exceeded {
+            highest_level = Some(i);
+        }
+        levels.push(json!({
+            "level": i + 1,
+            "label": label,
+            "threshold": threshold,
+            "exceeded": exceeded,
+        }));
+    }
+
+    let result = json!({
+        "value": params.value,
+        "levels": levels,
+        "highest_level_exceeded": highest_level.map(|l| l + 1),
+        "highest_label": highest_level.and_then(|l| params.labels.get(l)),
+        "verdict": if highest_level.is_some() { "SIGNAL_DETECTED" } else { "NOT_DETECTED" },
+    });
+
+    Ok(CallToolResult::success(vec![Content::text(
+        result.to_string(),
+    )]))
+}
+
+/// Parallel signal detection across two independent detectors.
+///
+/// Mode "both" (AND): signal only if both detectors fire.
+/// Mode "either" (OR): signal if at least one detector fires.
+pub fn parallel(params: SignalTheoryParallelParams) -> Result<CallToolResult, McpError> {
+    let b1 = FixedBoundary::above(params.threshold_1, "detector_1");
+    let b2 = FixedBoundary::above(params.threshold_2, "detector_2");
+
+    let d1 = b1.evaluate(params.value);
+    let d2 = b2.evaluate(params.value);
+
+    let combined = if params.mode == "either" {
+        d1 || d2
+    } else {
+        d1 && d2
+    };
+
+    let result = json!({
+        "value": params.value,
+        "mode": params.mode,
+        "detector_1": { "label": params.label_1, "threshold": params.threshold_1, "detected": d1 },
+        "detector_2": { "label": params.label_2, "threshold": params.threshold_2, "detected": d2 },
+        "combined_result": combined,
+        "verdict": if combined { "SIGNAL_DETECTED" } else { "NOT_DETECTED" },
     });
 
     Ok(CallToolResult::success(vec![Content::text(

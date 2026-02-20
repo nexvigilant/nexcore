@@ -295,6 +295,20 @@ impl NexCoreMcpServer {
     }
 
     // ========================================================================
+    // API Tools (2)
+    // ========================================================================
+
+    #[tool(description = "Check NexCore REST API health.")]
+    async fn api_health(&self) -> Result<CallToolResult, McpError> {
+        tools::api::health(tools::api::ApiHealthParams {}).await
+    }
+
+    #[tool(description = "List available NexCore REST API routes.")]
+    async fn api_list_routes(&self) -> Result<CallToolResult, McpError> {
+        tools::api::list_routes(tools::api::ApiRouteParams {}).await
+    }
+
+    // ========================================================================
     // Foundation Tools (7)
     // ========================================================================
 

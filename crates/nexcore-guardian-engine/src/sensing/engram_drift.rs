@@ -13,8 +13,8 @@
 //! Tier: T3 (μ Mapping + σ Sequence + ∂ Boundary)
 //! Grounding: ρ (Recursion) + Σ (Sum) + κ (Comparison)
 
-use antitransformer::pipeline::{self, AnalysisConfig, AnalysisResult};
 use crate::sensing::{Measured, Sensor, SignalSource, ThreatLevel, ThreatSignal};
+use antitransformer::pipeline::{self, AnalysisConfig, AnalysisResult};
 use nexcore_brain::implicit::ImplicitKnowledge;
 
 /// Engram Drift Sensor — monitors the "naturalness" of learned patterns.

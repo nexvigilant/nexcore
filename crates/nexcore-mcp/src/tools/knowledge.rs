@@ -4,7 +4,10 @@
 
 use std::path::Path;
 
-use crate::params::{KnowledgeGetParams, KnowledgeSearchParams, KnowledgeStatsParams};
+use crate::params::{
+    KsbGetParams as KnowledgeGetParams, KsbSearchParams as KnowledgeSearchParams,
+    KsbStatsParams as KnowledgeStatsParams,
+};
 use nexcore_knowledge::{KsbIndex, default_ksb_path, search_articles};
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
@@ -19,7 +22,9 @@ pub fn get(params: KnowledgeGetParams) -> Result<CallToolResult, McpError> {
                 "error": "KSB path not found",
                 "hint": "Set NEXCORE_KSB_PATH or create ~/nexcore/knowledge/pv-ksb/",
             });
-            return Ok(CallToolResult::success(vec![Content::text(json.to_string())]));
+            return Ok(CallToolResult::success(vec![Content::text(
+                json.to_string(),
+            )]));
         }
     };
 
@@ -29,7 +34,9 @@ pub fn get(params: KnowledgeGetParams) -> Result<CallToolResult, McpError> {
             let json = json!({
                 "error": format!("Failed to scan KSB: {e}"),
             });
-            return Ok(CallToolResult::success(vec![Content::text(json.to_string())]));
+            return Ok(CallToolResult::success(vec![Content::text(
+                json.to_string(),
+            )]));
         }
     };
 
@@ -40,17 +47,20 @@ pub fn get(params: KnowledgeGetParams) -> Result<CallToolResult, McpError> {
                 "domain": format!("{:?}", article.domain),
                 "title": article.title,
                 "content": article.content,
-                "proficiency": format!("{:?}", article.proficiency),
-                "tags": article.tags,
+                "proficiency_level": article.proficiency_level.as_ref().map(|p| format!("{p:?}")),
             });
-            Ok(CallToolResult::success(vec![Content::text(json.to_string())]))
+            Ok(CallToolResult::success(vec![Content::text(
+                json.to_string(),
+            )]))
         }
         None => {
             let json = json!({
                 "error": format!("Article not found: {}", params.article_id),
                 "hint": "Use knowledge_search to find articles",
             });
-            Ok(CallToolResult::success(vec![Content::text(json.to_string())]))
+            Ok(CallToolResult::success(vec![Content::text(
+                json.to_string(),
+            )]))
         }
     }
 }
@@ -63,7 +73,9 @@ pub fn search(params: KnowledgeSearchParams) -> Result<CallToolResult, McpError>
             let json = json!({
                 "error": "KSB path not found",
             });
-            return Ok(CallToolResult::success(vec![Content::text(json.to_string())]));
+            return Ok(CallToolResult::success(vec![Content::text(
+                json.to_string(),
+            )]));
         }
     };
 
@@ -73,22 +85,31 @@ pub fn search(params: KnowledgeSearchParams) -> Result<CallToolResult, McpError>
             let json = json!({
                 "error": format!("Failed to scan KSB: {e}"),
             });
-            return Ok(CallToolResult::success(vec![Content::text(json.to_string())]));
+            return Ok(CallToolResult::success(vec![Content::text(
+                json.to_string(),
+            )]));
         }
     };
 
     let limit = params.limit.unwrap_or(10);
-    let results = search_articles(&index, &params.query, params.domain.as_deref(), limit);
+    let domain_filter = params
+        .domain
+        .as_deref()
+        .and_then(nexcore_knowledge::KsbDomain::from_str);
+    let results = search_articles(&index, &params.query, domain_filter, limit);
 
-    let articles: Vec<_> = results.iter().map(|r| {
-        json!({
-            "id": r.article.id,
-            "domain": format!("{:?}", r.article.domain),
-            "title": r.article.title,
-            "score": r.score,
-            "snippet": r.article.content.chars().take(200).collect::<String>(),
+    let articles: Vec<_> = results
+        .iter()
+        .map(|r| {
+            json!({
+                "id": r.id,
+                "domain": r.domain,
+                "title": r.title,
+                "score": r.score,
+                "snippet": r.description,
+            })
         })
-    }).collect();
+        .collect();
 
     let json = json!({
         "query": params.query,
@@ -97,7 +118,9 @@ pub fn search(params: KnowledgeSearchParams) -> Result<CallToolResult, McpError>
         "count": articles.len(),
     });
 
-    Ok(CallToolResult::success(vec![Content::text(json.to_string())]))
+    Ok(CallToolResult::success(vec![Content::text(
+        json.to_string(),
+    )]))
 }
 
 /// Get KSB statistics
@@ -108,7 +131,9 @@ pub fn stats(_params: KnowledgeStatsParams) -> Result<CallToolResult, McpError> 
             let json = json!({
                 "error": "KSB path not found",
             });
-            return Ok(CallToolResult::success(vec![Content::text(json.to_string())]));
+            return Ok(CallToolResult::success(vec![Content::text(
+                json.to_string(),
+            )]));
         }
     };
 
@@ -118,17 +143,22 @@ pub fn stats(_params: KnowledgeStatsParams) -> Result<CallToolResult, McpError> 
             let json = json!({
                 "error": format!("Failed to scan KSB: {e}"),
             });
-            return Ok(CallToolResult::success(vec![Content::text(json.to_string())]));
+            return Ok(CallToolResult::success(vec![Content::text(
+                json.to_string(),
+            )]));
         }
     };
 
     let domain_counts = index.domain_counts();
-    let domains: Vec<_> = domain_counts.iter().map(|(domain, count)| {
-        json!({
-            "domain": format!("{:?}", domain),
-            "count": count,
+    let domains: Vec<_> = domain_counts
+        .iter()
+        .map(|(domain, count)| {
+            json!({
+                "domain": format!("{:?}", domain),
+                "count": count,
+            })
         })
-    }).collect();
+        .collect();
 
     let json = json!({
         "total_articles": index.len(),
@@ -137,5 +167,7 @@ pub fn stats(_params: KnowledgeStatsParams) -> Result<CallToolResult, McpError> 
         "path": ksb_path.display().to_string(),
     });
 
-    Ok(CallToolResult::success(vec![Content::text(json.to_string())]))
+    Ok(CallToolResult::success(vec![Content::text(
+        json.to_string(),
+    )]))
 }

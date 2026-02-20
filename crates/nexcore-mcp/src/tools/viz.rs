@@ -60,18 +60,9 @@ pub fn composition(params: VizCompositionParams) -> Result<CallToolResult, McpEr
 /// Generate science/chemistry/math loop SVG.
 pub fn method_loop(params: VizLoopParams) -> Result<CallToolResult, McpError> {
     let (steps, name) = match params.domain.to_lowercase().as_str() {
-        "science" => (
-            nexcore_viz::science_loop::science_loop(),
-            "SCIENCE",
-        ),
-        "chemistry" | "chem" => (
-            nexcore_viz::science_loop::chemistry_loop(),
-            "CHEMISTRY",
-        ),
-        "math" | "mathematics" => (
-            nexcore_viz::science_loop::math_loop(),
-            "MATHEMATICS",
-        ),
+        "science" => (nexcore_viz::science_loop::science_loop(), "SCIENCE"),
+        "chemistry" | "chem" => (nexcore_viz::science_loop::chemistry_loop(), "CHEMISTRY"),
+        "math" | "mathematics" => (nexcore_viz::science_loop::math_loop(), "MATHEMATICS"),
         other => {
             return Ok(CallToolResult::success(vec![rmcp::model::Content::text(
                 format!("Unknown domain: {other}. Use: science, chemistry, or math"),
@@ -92,12 +83,8 @@ pub fn confidence(params: VizConfidenceParams) -> Result<CallToolResult, McpErro
         .unwrap_or_else(|| "Confidence Propagation".to_string());
 
     // Parse claims JSON
-    let raw: Vec<serde_json::Value> = serde_json::from_str(&params.claims).map_err(|e| {
-        McpError::invalid_params(
-            format!("Invalid claims JSON: {e}"),
-            None,
-        )
-    })?;
+    let raw: Vec<serde_json::Value> = serde_json::from_str(&params.claims)
+        .map_err(|e| McpError::invalid_params(format!("Invalid claims JSON: {e}"), None))?;
 
     let claims: Vec<nexcore_viz::Claim> = raw
         .iter()
@@ -132,18 +119,11 @@ pub fn bounds(params: VizBoundsParams) -> Result<CallToolResult, McpError> {
 
 /// Generate DAG topology visualization SVG.
 pub fn dag(params: VizDagParams) -> Result<CallToolResult, McpError> {
-    let title = params
-        .title
-        .unwrap_or_else(|| "DAG Topology".to_string());
+    let title = params.title.unwrap_or_else(|| "DAG Topology".to_string());
 
     // Parse edges JSON
-    let raw_edges: Vec<Vec<String>> =
-        serde_json::from_str(&params.edges).map_err(|e| {
-            McpError::invalid_params(
-                format!("Invalid edges JSON: {e}"),
-                None,
-            )
-        })?;
+    let raw_edges: Vec<Vec<String>> = serde_json::from_str(&params.edges)
+        .map_err(|e| McpError::invalid_params(format!("Invalid edges JSON: {e}"), None))?;
 
     // Collect unique node IDs
     let mut node_ids = std::collections::HashSet::new();

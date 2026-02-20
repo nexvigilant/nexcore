@@ -85,7 +85,11 @@ pub struct SystemEvent {
 impl SystemEvent {
     /// Construct a new event timestamped to now.
     pub fn new(system: impl Into<String>, event_type: impl Into<String>) -> Self {
-        Self { system: system.into(), event_type: event_type.into(), timestamp: Instant::now() }
+        Self {
+            system: system.into(),
+            event_type: event_type.into(),
+            timestamp: Instant::now(),
+        }
     }
 }
 
@@ -109,7 +113,10 @@ struct SelfDamageResult {
 
 impl SelfDamageResult {
     fn none() -> Self {
-        Self { detected: false, sources: vec![] }
+        Self {
+            detected: false,
+            sources: vec![],
+        }
     }
 }
 
@@ -387,7 +394,13 @@ impl StormDetector {
             self.history.pop_front();
         }
 
-        self.history.push_back(Sample { threat, response, damage, proportionality, recorded_at: now });
+        self.history.push_back(Sample {
+            threat,
+            response,
+            damage,
+            proportionality,
+            recorded_at: now,
+        });
     }
 
     /// Collect the last `n` values of a named field into a Vec.
@@ -400,7 +413,11 @@ impl StormDetector {
             return vec![];
         }
         let start = if len > n { len - n } else { 0 };
-        self.history.iter().skip(start).map(|s| extractor(s)).collect()
+        self.history
+            .iter()
+            .skip(start)
+            .map(|s| extractor(s))
+            .collect()
     }
 
     fn calc_trend_proportionality(&self, window: usize) -> TrendLabel {
@@ -410,7 +427,11 @@ impl StormDetector {
         }
         let slope = linear_slope(&values);
         let y_mean = sample_mean(&values);
-        let threshold = if y_mean.abs() > f64::EPSILON { y_mean.abs() * 0.05 } else { 0.01 };
+        let threshold = if y_mean.abs() > f64::EPSILON {
+            y_mean.abs() * 0.05
+        } else {
+            0.01
+        };
 
         if slope > threshold {
             TrendLabel::Increasing
@@ -447,7 +468,11 @@ impl StormDetector {
         // Damage trend: increasing while response is high?
         let dmg_slope = linear_slope(&damages);
         let dmg_mean = sample_mean(&damages);
-        let threshold = if dmg_mean.abs() > f64::EPSILON { dmg_mean.abs() * 0.05 } else { 0.01 };
+        let threshold = if dmg_mean.abs() > f64::EPSILON {
+            dmg_mean.abs() * 0.05
+        } else {
+            0.01
+        };
 
         if dmg_slope > threshold && response_level > 50.0 {
             return SelfDamageResult {
@@ -571,7 +596,11 @@ fn linear_slope(values: &[f64]) -> f64 {
         .sum();
     let denominator: f64 = (0..n).map(|i| (i as f64 - x_mean).powi(2)).sum();
 
-    if denominator == 0.0 { 0.0 } else { numerator / denominator }
+    if denominator == 0.0 {
+        0.0
+    } else {
+        numerator / denominator
+    }
 }
 
 /// Pearson product-moment correlation coefficient.
@@ -585,7 +614,11 @@ pub(crate) fn pearson_correlation(x: &[f64], y: &[f64]) -> f64 {
     let num: f64 = (0..n).map(|i| (x[i] - mx) * (y[i] - my)).sum();
     let dx: f64 = (0..n).map(|i| (x[i] - mx).powi(2)).sum::<f64>().sqrt();
     let dy: f64 = (0..n).map(|i| (y[i] - my).powi(2)).sum::<f64>().sqrt();
-    if dx == 0.0 || dy == 0.0 { 0.0 } else { num / (dx * dy) }
+    if dx == 0.0 || dy == 0.0 {
+        0.0
+    } else {
+        num / (dx * dy)
+    }
 }
 
 // =============================================================================
@@ -617,7 +650,11 @@ mod tests {
         let mut d = StormDetector::default();
         // 50/2 = 25 — exceeds storm threshold (10)
         let sig = d.evaluate(2.0, 50.0, 0.0, None);
-        assert!(sig.risk_score >= 0.25, "expected >= 0.25, got {}", sig.risk_score);
+        assert!(
+            sig.risk_score >= 0.25,
+            "expected >= 0.25, got {}",
+            sig.risk_score
+        );
     }
 
     #[test]
@@ -627,7 +664,11 @@ mod tests {
             d.evaluate(1.0, 100.0, 30.0, None);
         }
         let sig = d.evaluate(1.0, 100.0, 30.0, None);
-        assert!(sig.risk_score <= 1.0, "risk exceeded 1.0: {}", sig.risk_score);
+        assert!(
+            sig.risk_score <= 1.0,
+            "risk exceeded 1.0: {}",
+            sig.risk_score
+        );
     }
 
     #[test]
@@ -638,7 +679,10 @@ mod tests {
         }
         let sig = d.evaluate(1.0, 100.0, 10.0, None);
         assert!(
-            matches!(sig.phase, StormPhase::Active | StormPhase::Peak | StormPhase::Imminent | StormPhase::Warning),
+            matches!(
+                sig.phase,
+                StormPhase::Active | StormPhase::Peak | StormPhase::Imminent | StormPhase::Warning
+            ),
             "expected elevated phase, got {:?}",
             sig.phase
         );
@@ -657,7 +701,10 @@ mod tests {
         ));
         let after = d.evaluate(10.0, 11.0, 0.0, None);
         assert!(
-            matches!(after.phase, StormPhase::Resolving | StormPhase::Clear | StormPhase::Watching),
+            matches!(
+                after.phase,
+                StormPhase::Resolving | StormPhase::Clear | StormPhase::Watching
+            ),
             "expected post-storm phase, got {:?}",
             after.phase
         );
@@ -695,9 +742,21 @@ mod tests {
         let mut d = StormDetector::default();
         let now = Instant::now();
         let events = vec![
-            SystemEvent { system: "db".into(), event_type: "failure".into(), timestamp: now },
-            SystemEvent { system: "api".into(), event_type: "error".into(), timestamp: now + Duration::from_secs(1) },
-            SystemEvent { system: "cache".into(), event_type: "timeout".into(), timestamp: now + Duration::from_secs(2) },
+            SystemEvent {
+                system: "db".into(),
+                event_type: "failure".into(),
+                timestamp: now,
+            },
+            SystemEvent {
+                system: "api".into(),
+                event_type: "error".into(),
+                timestamp: now + Duration::from_secs(1),
+            },
+            SystemEvent {
+                system: "cache".into(),
+                event_type: "timeout".into(),
+                timestamp: now + Duration::from_secs(2),
+            },
         ];
         let cascades = d.detect_cascade(&events);
         assert!(!cascades.is_empty(), "expected at least one cascade");
@@ -709,11 +768,22 @@ mod tests {
         let mut d = StormDetector::default();
         let now = Instant::now();
         let events = vec![
-            SystemEvent { system: "db".into(), event_type: "failure".into(), timestamp: now },
-            SystemEvent { system: "db".into(), event_type: "failure".into(), timestamp: now + Duration::from_secs(1) },
+            SystemEvent {
+                system: "db".into(),
+                event_type: "failure".into(),
+                timestamp: now,
+            },
+            SystemEvent {
+                system: "db".into(),
+                event_type: "failure".into(),
+                timestamp: now + Duration::from_secs(1),
+            },
         ];
         let cascades = d.detect_cascade(&events);
-        assert!(cascades.is_empty(), "same-system failures should not cascade");
+        assert!(
+            cascades.is_empty(),
+            "same-system failures should not cascade"
+        );
     }
 
     #[test]

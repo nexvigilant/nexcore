@@ -22,6 +22,8 @@ use nexcore_transcriptase as transcriptase;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
+pub mod grounding;
+
 /// Errors during self-synthesis operations.
 #[derive(Debug, Error)]
 pub enum SynthError {
@@ -70,21 +72,24 @@ impl SynthEngine {
     }
 
     /// Run the full evolution loop on a raw input sample.
-    pub fn evolve(&self, sample_text: &str, sample_data: &serde_json::Value) -> Result<SynthCandidate, SynthError> {
+    pub fn evolve(
+        &self,
+        sample_text: &str,
+        sample_data: &serde_json::Value,
+    ) -> Result<SynthCandidate, SynthError> {
         // 1. Analyze statistical fingerprint (ν)
         let analysis = pipeline::analyze(sample_text, &self.analysis_config);
-        
+
         // 2. Infer structural schema (μ)
         let schema = transcriptase::infer(sample_data);
-        
+
         // 3. Map features to T1 primitives (κ)
         let primitives = self.map_to_primitives(&analysis, &schema);
-        
+
         // 4. Reverse synthesize candidate (Σ)
-        let synth_result = self.rev_synth.synthesize(
-            primitives,
-            SynthesisOpts::default()
-        )?;
+        let synth_result = self
+            .rev_synth
+            .synthesize(primitives, SynthesisOpts::default())?;
 
         let id = nexcore_id::NexId::v4().to_string();
         let name = format!("Synth-{}", &id[..8]);
@@ -93,14 +98,29 @@ impl SynthEngine {
             id,
             name,
             tier: synth_result.tier,
-            composition: synth_result.composition.unique().iter().map(|p| p.name().to_string()).collect(),
-            dominant_primitive: synth_result.dominant.map(|p| p.name().to_string()).unwrap_or_else(|| "Unknown".to_string()),
+            composition: synth_result
+                .composition
+                .unique()
+                .iter()
+                .map(|p| p.name().to_string())
+                .collect(),
+            dominant_primitive: synth_result
+                .dominant
+                .map(|p| p.name().to_string())
+                .unwrap_or_else(|| "Unknown".to_string()),
             confidence: synth_result.coherence,
-            derivation_path: format!("{} → {} → {}", analysis.verdict, schema.observations, synth_result.tier),
+            derivation_path: format!(
+                "{} → {} → {}",
+                analysis.verdict, schema.observations, synth_result.tier
+            ),
         })
     }
 
-    fn map_to_primitives(&self, analysis: &pipeline::AnalysisResult, schema: &transcriptase::Schema) -> Vec<LexPrimitiva> {
+    fn map_to_primitives(
+        &self,
+        analysis: &pipeline::AnalysisResult,
+        schema: &transcriptase::Schema,
+    ) -> Vec<LexPrimitiva> {
         let mut prims = Vec::new();
 
         // Statistical mapping
@@ -115,13 +135,15 @@ impl SynthEngine {
         match schema.kind {
             transcriptase::SchemaKind::Record(_) => prims.push(LexPrimitiva::Mapping),
             transcriptase::SchemaKind::Array { .. } => prims.push(LexPrimitiva::Sequence),
-            transcriptase::SchemaKind::Int { .. } | transcriptase::SchemaKind::Float { .. } => prims.push(LexPrimitiva::Quantity),
+            transcriptase::SchemaKind::Int { .. } | transcriptase::SchemaKind::Float { .. } => {
+                prims.push(LexPrimitiva::Quantity)
+            }
             _ => prims.push(LexPrimitiva::Void),
         }
 
         // Mandatory grounding
         prims.push(LexPrimitiva::Existence);
-        
+
         prims
     }
 }

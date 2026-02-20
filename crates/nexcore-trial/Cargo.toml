@@ -16,3 +16,6 @@ chrono = { workspace = true }
 uuid = { workspace = true }
 nexcore-primitives = { workspace = true }
 nexcore-lex-primitiva = { workspace = true }
+
+[lints]
+workspace = true

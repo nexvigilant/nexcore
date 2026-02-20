@@ -34,7 +34,9 @@ pub fn check_safety_boundary(rule: &SafetyRule, observed_value: f64) -> SafetyCh
 ///
 /// Convenience helper: `events / subjects`.
 pub fn safety_event_rate(events: u32, subjects: u32) -> f64 {
-    if subjects == 0 { return 0.0; }
+    if subjects == 0 {
+        return 0.0;
+    }
     events as f64 / subjects as f64
 }
 
@@ -43,7 +45,11 @@ pub fn safety_event_rate(events: u32, subjects: u32) -> f64 {
 /// Output format aligns with `pv_signal_complete` input expectations so downstream
 /// pharmacovigilance tools can ingest safety signals from trial surveillance.
 pub fn format_pv_context(result: &SafetyCheckResult) -> String {
-    let status = if result.is_safe { "WITHIN_BOUNDARY" } else { "BOUNDARY_CROSSED" };
+    let status = if result.is_safe {
+        "WITHIN_BOUNDARY"
+    } else {
+        "BOUNDARY_CROSSED"
+    };
     format!(
         "metric={} observed={:.4} threshold={:.4} margin={:.4} status={}",
         result.metric, result.observed, result.threshold, result.margin, status
@@ -76,7 +82,10 @@ mod tests {
         let rule = make_rule(0.02);
         let result = check_safety_boundary(&rule, 0.03);
         assert!(!result.is_safe, "0.03 > 0.02 — boundary crossed");
-        assert!(result.margin < 0.0, "Margin should be negative when crossed");
+        assert!(
+            result.margin < 0.0,
+            "Margin should be negative when crossed"
+        );
     }
 
     #[test]
@@ -84,7 +93,10 @@ mod tests {
         let rule = make_rule(0.05);
         // Exactly at threshold: not crossed (strict <)
         let result = check_safety_boundary(&rule, 0.05);
-        assert!(!result.is_safe, "Exact threshold should be flagged (not strict <)");
+        assert!(
+            !result.is_safe,
+            "Exact threshold should be flagged (not strict <)"
+        );
         assert!((result.margin).abs() < 1e-10);
     }
 

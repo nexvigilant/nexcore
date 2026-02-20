@@ -58,7 +58,8 @@ impl ReproductionMetrics {
         }
         let base_fidelity = self.artifact_saves_success as f64 / self.artifact_saves_total as f64;
         // Adjust for integrity failures
-        let integrity_penalty = self.integrity_failures as f64 / self.artifact_saves_total.max(1) as f64;
+        let integrity_penalty =
+            self.integrity_failures as f64 / self.artifact_saves_total.max(1) as f64;
         (base_fidelity - integrity_penalty).max(0.0)
     }
 
@@ -89,9 +90,9 @@ impl ReproductionMetrics {
 
     /// Validates if metrics meet the targets.
     pub fn meets_targets(&self) -> bool {
-        self.artifact_save_fidelity() >= 0.999 &&
-        self.spawn_rate() >= 1.0 &&
-        self.rebirth_success_rate() >= 0.995
+        self.artifact_save_fidelity() >= 0.999
+            && self.spawn_rate() >= 1.0
+            && self.rebirth_success_rate() >= 0.995
     }
 }
 
@@ -141,13 +142,13 @@ mod tests {
         let mut metrics = ReproductionMetrics::new();
         metrics.artifact_saves_total = 1000;
         metrics.artifact_saves_success = 999;
-        
+
         metrics.spawns_total = 10;
         metrics.spawns_success = 10;
-        
+
         metrics.rebirths_total = 1000;
         metrics.rebirths_success = 995;
-        
+
         assert!(metrics.artifact_save_fidelity() >= 0.999);
         assert_eq!(metrics.spawn_rate(), 1.0);
         assert!(metrics.rebirth_success_rate() >= 0.995);

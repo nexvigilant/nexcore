@@ -12,8 +12,9 @@ use rmcp::model::CallToolResult;
 
 use crate::params::{
     EpiAttributableFractionParams, EpiAttributableRiskParams, EpiIncidenceRateParams,
-    EpiKaplanMeierParams, EpiNntNnhParams, EpiOddsRatioParams, EpiPopulationAFParams,
-    EpiPrevalenceParams, EpiPvMappingsParams, EpiRelativeRiskParams, EpiSmrParams,
+    EpiKaplanMeierParams, EpiMantelHaenszelParams, EpiNntNnhParams, EpiOddsRatioParams,
+    EpiPopulationAFParams, EpiPrevalenceParams, EpiPvMappingsParams, EpiRelativeRiskParams,
+    EpiSmrParams,
 };
 
 fn ok_json(value: serde_json::Value) -> Result<CallToolResult, McpError> {
@@ -483,6 +484,179 @@ pub fn smr(params: EpiSmrParams) -> Result<CallToolResult, McpError> {
             "confidence": 0.93,
             "rationale": "Both compare observed events to expected under null hypothesis"
         }
+    }))
+}
+
+/// Mantel-Haenszel stratified analysis — MH-adjusted OR/RR with Breslow-Day homogeneity test.
+///
+/// Formula: MH-OR = Σ(a_i*d_i/T_i) / Σ(b_i*c_i/T_i)
+/// Variance: Robins-Breslow-Greenland estimator for ln(MH-OR)
+/// Homogeneity: Breslow-Day chi-square (H0: common OR across strata)
+pub fn mantel_haenszel(params: EpiMantelHaenszelParams) -> Result<CallToolResult, McpError> {
+    if params.strata.is_empty() {
+        return err_text("Error: no strata provided");
+    }
+
+    let k = params.strata.len();
+
+    // MH numerator/denominator sums and RBG variance accumulation
+    let mut r_sum = 0.0_f64; // Σ a_i*d_i/T_i
+    let mut s_sum = 0.0_f64; // Σ b_i*c_i/T_i
+    let mut rbg_term1 = 0.0_f64; // Σ P_i*R_i
+    let mut rbg_term2 = 0.0_f64; // Σ (P_i*S_i + Q_i*R_i)
+    let mut rbg_term3 = 0.0_f64; // Σ Q_i*S_i
+
+    let mut per_stratum = Vec::new();
+
+    for (i, stratum) in params.strata.iter().enumerate() {
+        let (a, b, c, d) = (stratum.a, stratum.b, stratum.c, stratum.d);
+        let t = a + b + c + d;
+
+        if t <= 0.0 {
+            return err_text("Error: stratum has zero total count");
+        }
+
+        let r_i = a * d / t;
+        let s_i = b * c / t;
+        r_sum += r_i;
+        s_sum += s_i;
+
+        let p_i = (a + d) / t;
+        let q_i = (b + c) / t;
+        rbg_term1 += p_i * r_i;
+        rbg_term2 += p_i * s_i + q_i * r_i;
+        rbg_term3 += q_i * s_i;
+
+        // Per-stratum point estimate and CI
+        let stratum_est = if b * c > 0.0 {
+            (a * d) / (b * c)
+        } else {
+            f64::INFINITY
+        };
+        let ln_est = if stratum_est.is_finite() && stratum_est > 0.0 {
+            stratum_est.ln()
+        } else {
+            0.0
+        };
+        let var_ln = if a > 0.0 && b > 0.0 && c > 0.0 && d > 0.0 {
+            1.0 / a + 1.0 / b + 1.0 / c + 1.0 / d
+        } else {
+            f64::INFINITY
+        };
+        let (ci_lower, ci_upper) = if var_ln.is_finite() {
+            let se = var_ln.sqrt();
+            ((ln_est - 1.96 * se).exp(), (ln_est + 1.96 * se).exp())
+        } else {
+            (0.0, f64::INFINITY)
+        };
+
+        per_stratum.push(serde_json::json!({
+            "stratum": i + 1,
+            "label": stratum.label,
+            "a": a, "b": b, "c": c, "d": d,
+            "point_estimate": stratum_est,
+            "ci_95_lower": ci_lower,
+            "ci_95_upper": ci_upper,
+        }));
+    }
+
+    if s_sum <= 0.0 {
+        return err_text("Error: MH denominator is zero (all b×c = 0)");
+    }
+
+    let mh_estimate = r_sum / s_sum;
+    let ln_mh = if mh_estimate > 0.0 {
+        mh_estimate.ln()
+    } else {
+        return err_text("Error: MH estimate is non-positive");
+    };
+
+    // Robins-Breslow-Greenland variance of ln(MH-OR)
+    let var_ln_mh = rbg_term1 / (2.0 * r_sum * r_sum)
+        + rbg_term2 / (2.0 * r_sum * s_sum)
+        + rbg_term3 / (2.0 * s_sum * s_sum);
+    let se_ln_mh = var_ln_mh.sqrt();
+    let ci_lower = (ln_mh - 1.96 * se_ln_mh).exp();
+    let ci_upper = (ln_mh + 1.96 * se_ln_mh).exp();
+
+    // Breslow-Day homogeneity test — chi-square statistic
+    // H0: common OR/RR across all strata
+    let mut bd_chi_sq = 0.0_f64;
+    for stratum in &params.strata {
+        let (a, b, c, d) = (stratum.a, stratum.b, stratum.c, stratum.d);
+        let t = a + b + c + d;
+        let m1 = a + b; // exposed row total
+        let n1 = a + c; // case column total
+        let m0 = c + d; // unexposed row total
+
+        // Solve quadratic for expected a_hat under common MH estimate:
+        // (1 - mh) * x^2 + (m0 - n1 + mh*(n1+m1)) * x - mh*n1*m1 = 0
+        let qa = 1.0 - mh_estimate;
+        let qb = m0 - n1 + mh_estimate * (n1 + m1);
+        let qc = -mh_estimate * n1 * m1;
+
+        let a_hat = if qa.abs() < 1e-10 {
+            // Linear case
+            if qb.abs() > 1e-10 { -qc / qb } else { a }
+        } else {
+            let disc = qb * qb - 4.0 * qa * qc;
+            if disc < 0.0 {
+                a // fallback: no real root, skip this stratum
+            } else {
+                let sqrt_disc = disc.sqrt();
+                let r1 = (-qb + sqrt_disc) / (2.0 * qa);
+                let r2 = (-qb - sqrt_disc) / (2.0 * qa);
+                let lo = (n1 + m1 - t).max(0.0);
+                let hi = n1.min(m1);
+                if r1 >= lo && r1 <= hi {
+                    r1
+                } else {
+                    r2
+                }
+            }
+        };
+
+        let b_hat = m1 - a_hat;
+        let c_hat = n1 - a_hat;
+        let d_hat = t - m1 - n1 + a_hat;
+
+        // Variance of a under the hypergeometric distribution
+        let var_a = if a_hat > 0.0 && b_hat > 0.0 && c_hat > 0.0 && d_hat > 0.0 {
+            1.0 / (1.0 / a_hat + 1.0 / b_hat + 1.0 / c_hat + 1.0 / d_hat)
+        } else {
+            1.0
+        };
+
+        bd_chi_sq += (a - a_hat) * (a - a_hat) / var_a;
+    }
+
+    let bd_df = (k - 1) as u32;
+    let bd_p = stem_math::statistics::chi_square_p_value(bd_chi_sq, bd_df as usize).unwrap_or(1.0);
+    let heterogeneity_detected = bd_p < 0.05;
+
+    let interpretation = if ci_lower > 1.0 {
+        "Significant positive association after stratification"
+    } else if ci_upper < 1.0 {
+        "Significant negative association (protective) after stratification"
+    } else {
+        "Not statistically significant (CI includes 1.0)"
+    };
+
+    ok_json(serde_json::json!({
+        "measure": params.measure,
+        "adjusted_estimate": mh_estimate,
+        "ci_95_lower": ci_lower,
+        "ci_95_upper": ci_upper,
+        "ln_estimate": ln_mh,
+        "se_ln": se_ln_mh,
+        "interpretation": interpretation,
+        "homogeneity_chi_sq": bd_chi_sq,
+        "homogeneity_df": bd_df,
+        "homogeneity_p_value": bd_p,
+        "heterogeneity_detected": heterogeneity_detected,
+        "strata_count": k,
+        "per_stratum": per_stratum,
+        "method": "Mantel-Haenszel with Robins-Breslow-Greenland variance",
     }))
 }
 

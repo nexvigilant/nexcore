@@ -307,9 +307,7 @@ impl ForgeStrategy {
     /// Determine whether to fix lints at the current state.
     #[must_use]
     pub fn should_lint(&self, warning_count: u32, distance_to_work: u32) -> bool {
-        warning_count > 0
-            && distance_to_work <= self.lint_radius
-            && self.lint_strictness > 0.5
+        warning_count > 0 && distance_to_work <= self.lint_radius && self.lint_strictness > 0.5
     }
 
     /// Get the transfer confidence for a tier, modulated by boundary caution.

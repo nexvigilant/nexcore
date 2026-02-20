@@ -84,6 +84,8 @@ pub struct NexCoreOs<P: Platform> {
     audio: AudioManager,
     /// User manager (authentication, sessions, accounts).
     users: UserManager,
+    /// Guardian bridge (homeostasis file integration).
+    guardian: crate::guardian_bridge::GuardianBridge,
     /// OS lifecycle state.
     state: OsState,
     /// Event loop iteration counter.
@@ -91,6 +93,11 @@ pub struct NexCoreOs<P: Platform> {
 }
 
 impl<P: Platform> NexCoreOs<P> {
+    /// Boot the OS in actor mode (emulator fallback).
+    pub fn boot_with_actors(platform: P) -> Result<Self, OsError> {
+        Self::boot_with_policy(platform, BootPolicy::Permissive)
+    }
+
     /// Boot the OS on the given platform (default: Permissive boot policy).
     pub fn boot(platform: P) -> Result<Self, OsError> {
         Self::boot_with_policy(platform, BootPolicy::Permissive)
@@ -122,6 +129,7 @@ impl<P: Platform> NexCoreOs<P> {
             boot: BootSequence::new(),
             secure_boot: SecureBootChain::new(policy),
             users: UserManager::new(),
+            guardian: crate::guardian_bridge::GuardianBridge::new().unwrap_or_default(),
             state: OsState::Booting,
             tick_count: 0,
         };
@@ -760,6 +768,21 @@ impl<P: Platform> NexCoreOs<P> {
     /// Get the event loop tick count.
     pub fn tick_count(&self) -> u64 {
         self.tick_count
+    }
+
+    /// Get the Guardian bridge.
+    pub fn guardian(&self) -> &crate::guardian_bridge::GuardianBridge {
+        &self.guardian
+    }
+
+    /// Run one tick in actor mode (emulator compat).
+    pub fn tick_actors(&mut self) {
+        self.tick();
+    }
+
+    /// Shutdown the OS in actor mode (emulator compat).
+    pub fn shutdown_actors(&mut self) {
+        self.shutdown();
     }
 
     /// Get the form factor of the underlying platform.

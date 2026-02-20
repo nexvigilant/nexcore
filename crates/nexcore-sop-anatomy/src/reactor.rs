@@ -293,7 +293,11 @@ impl IronmanPhase {
             Self::Identify => &[ChemOp::Reduction, ChemOp::Fission],
             Self::React => &[ChemOp::ActivationEnergy, ChemOp::Precipitation],
             Self::Optimize => &[ChemOp::Catalysis, ChemOp::Resonance],
-            Self::Navigate => &[ChemOp::MembraneTransport, ChemOp::Entropy, ChemOp::Chirality],
+            Self::Navigate => &[
+                ChemOp::MembraneTransport,
+                ChemOp::Entropy,
+                ChemOp::Chirality,
+            ],
             Self::Manufacture => &[ChemOp::Fusion, ChemOp::Polymerization],
             Self::Assay => &[ChemOp::Titration, ChemOp::Oxidation],
             Self::Negotiate => &[ChemOp::HalfLife, ChemOp::Sublimation],
@@ -313,10 +317,7 @@ impl IronmanPhase {
                     input: input.to_string(),
                     result: format!(
                         "[{}] {}: Apply to '{}' — {}",
-                        desc.name,
-                        desc.primitive,
-                        input,
-                        desc.cognitive_instruction,
+                        desc.name, desc.primitive, input, desc.cognitive_instruction,
                     ),
                     primitive: desc.primitive,
                 }
@@ -342,7 +343,10 @@ impl IronmanPhase {
 
 /// Run the full I.R.O.N.M.A.N. pipeline on an input.
 pub fn run_full_pipeline(input: &str) -> Vec<PhaseOutput> {
-    IronmanPhase::ALL.iter().map(|phase| phase.apply(input)).collect()
+    IronmanPhase::ALL
+        .iter()
+        .map(|phase| phase.apply(input))
+        .collect()
 }
 
 #[cfg(test)]

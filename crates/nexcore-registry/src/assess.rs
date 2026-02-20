@@ -77,7 +77,12 @@ impl SmstComponents {
     /// Total SMST v2 score (0-100).
     #[must_use]
     pub fn total(&self) -> i32 {
-        self.input + self.output + self.logic + self.error_handling + self.examples + self.references
+        self.input
+            + self.output
+            + self.logic
+            + self.error_handling
+            + self.examples
+            + self.references
     }
 }
 
@@ -338,9 +343,8 @@ fn derive_tier(row: &SkillRow, smst_v2: i32) -> ComplianceTier {
 
     // Diamond requires: SMST v2 >= 85 + hooks + all Anthropic fields populated
     let has_hooks = row.hooks.is_some();
-    let all_anthropic = row.description.is_some()
-        && row.allowed_tools.is_some()
-        && row.model.is_some();
+    let all_anthropic =
+        row.description.is_some() && row.allowed_tools.is_some() && row.model.is_some();
     if smst_v2 < 85 || !has_hooks || !all_anthropic {
         return ComplianceTier::Platinum;
     }
@@ -539,7 +543,10 @@ mod tests {
     fn test_smst_components_sum() {
         let row = make_skill("components");
         let c = compute_smst(&row);
-        assert_eq!(c.total(), c.input + c.output + c.logic + c.error_handling + c.examples + c.references);
+        assert_eq!(
+            c.total(),
+            c.input + c.output + c.logic + c.error_handling + c.examples + c.references
+        );
     }
 
     #[test]

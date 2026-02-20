@@ -15,7 +15,7 @@
 //! - Godel at the self-referential loop closure
 //! - Shannon at CODIFY (irreducible information loss)
 
-use crate::svg::{self, palette, SvgDoc};
+use crate::svg::{self, SvgDoc, palette};
 use std::fmt::Write;
 
 /// A step in the science method loop.
@@ -241,15 +241,69 @@ pub fn science_loop() -> Vec<LoopStep> {
 #[must_use]
 pub fn chemistry_loop() -> Vec<LoopStep> {
     vec![
-        LoopStep { name: "Concentrate".into(), grounding: "MAPPING".into(), symbol: "\u{03bc}".into(), transform: "Substance -> Ratio".into(), limit: None },
-        LoopStep { name: "Harmonize".into(), grounding: "STATE".into(), symbol: "\u{03c2}".into(), transform: "System -> Equilibrium".into(), limit: None },
-        LoopStep { name: "Energize".into(), grounding: "MAPPING".into(), symbol: "\u{03bc}".into(), transform: "Energy -> Rate".into(), limit: None },
-        LoopStep { name: "Modulate".into(), grounding: "RECURSION".into(), symbol: "\u{03c1}".into(), transform: "Catalyst -> Rate Change".into(), limit: None },
-        LoopStep { name: "Interact".into(), grounding: "SEQUENCE".into(), symbol: "\u{03c3}".into(), transform: "Ligand -> Affinity".into(), limit: None },
-        LoopStep { name: "Saturate".into(), grounding: "STATE".into(), symbol: "\u{03c2}".into(), transform: "Capacity -> Fraction".into(), limit: None },
-        LoopStep { name: "Transform".into(), grounding: "MAPPING".into(), symbol: "\u{03bc}".into(), transform: "Reactants -> Products".into(), limit: None },
-        LoopStep { name: "Regulate".into(), grounding: "RECURSION".into(), symbol: "\u{03c1}".into(), transform: "Inhibitor -> Rate Decrease".into(), limit: None },
-        LoopStep { name: "Yield".into(), grounding: "MAPPING".into(), symbol: "\u{03bc}".into(), transform: "Actual / Theoretical".into(), limit: None },
+        LoopStep {
+            name: "Concentrate".into(),
+            grounding: "MAPPING".into(),
+            symbol: "\u{03bc}".into(),
+            transform: "Substance -> Ratio".into(),
+            limit: None,
+        },
+        LoopStep {
+            name: "Harmonize".into(),
+            grounding: "STATE".into(),
+            symbol: "\u{03c2}".into(),
+            transform: "System -> Equilibrium".into(),
+            limit: None,
+        },
+        LoopStep {
+            name: "Energize".into(),
+            grounding: "MAPPING".into(),
+            symbol: "\u{03bc}".into(),
+            transform: "Energy -> Rate".into(),
+            limit: None,
+        },
+        LoopStep {
+            name: "Modulate".into(),
+            grounding: "RECURSION".into(),
+            symbol: "\u{03c1}".into(),
+            transform: "Catalyst -> Rate Change".into(),
+            limit: None,
+        },
+        LoopStep {
+            name: "Interact".into(),
+            grounding: "SEQUENCE".into(),
+            symbol: "\u{03c3}".into(),
+            transform: "Ligand -> Affinity".into(),
+            limit: None,
+        },
+        LoopStep {
+            name: "Saturate".into(),
+            grounding: "STATE".into(),
+            symbol: "\u{03c2}".into(),
+            transform: "Capacity -> Fraction".into(),
+            limit: None,
+        },
+        LoopStep {
+            name: "Transform".into(),
+            grounding: "MAPPING".into(),
+            symbol: "\u{03bc}".into(),
+            transform: "Reactants -> Products".into(),
+            limit: None,
+        },
+        LoopStep {
+            name: "Regulate".into(),
+            grounding: "RECURSION".into(),
+            symbol: "\u{03c1}".into(),
+            transform: "Inhibitor -> Rate Decrease".into(),
+            limit: None,
+        },
+        LoopStep {
+            name: "Yield".into(),
+            grounding: "MAPPING".into(),
+            symbol: "\u{03bc}".into(),
+            transform: "Actual / Theoretical".into(),
+            limit: None,
+        },
     ]
 }
 
@@ -257,15 +311,69 @@ pub fn chemistry_loop() -> Vec<LoopStep> {
 #[must_use]
 pub fn math_loop() -> Vec<LoopStep> {
     vec![
-        LoopStep { name: "Membership".into(), grounding: "MAPPING".into(), symbol: "\u{03bc}".into(), transform: "Element in Set".into(), limit: None },
-        LoopStep { name: "Associate".into(), grounding: "RECURSION".into(), symbol: "\u{03c1}".into(), transform: "(a*b)*c = a*(b*c)".into(), limit: None },
-        LoopStep { name: "Transit".into(), grounding: "SEQUENCE".into(), symbol: "\u{03c3}".into(), transform: "a->b ^ b->c => a->c".into(), limit: None },
-        LoopStep { name: "Homeomorph".into(), grounding: "MAPPING".into(), symbol: "\u{03bc}".into(), transform: "Structure-preserving map".into(), limit: None },
-        LoopStep { name: "Symmetric".into(), grounding: "MAPPING".into(), symbol: "\u{03bc}".into(), transform: "a~b => b~a".into(), limit: None },
-        LoopStep { name: "Bound".into(), grounding: "BOUNDARY".into(), symbol: "\u{2202}".into(), transform: "Upper/lower limits".into(), limit: None },
-        LoopStep { name: "Prove".into(), grounding: "SEQUENCE".into(), symbol: "\u{03c3}".into(), transform: "Premises -> Conclusion".into(), limit: Some("\u{26a0} G\u{00f6}del".into()) },
-        LoopStep { name: "Commute".into(), grounding: "MAPPING".into(), symbol: "\u{03bc}".into(), transform: "a*b = b*a".into(), limit: None },
-        LoopStep { name: "Identify".into(), grounding: "STATE".into(), symbol: "\u{03c2}".into(), transform: "Neutral element".into(), limit: None },
+        LoopStep {
+            name: "Membership".into(),
+            grounding: "MAPPING".into(),
+            symbol: "\u{03bc}".into(),
+            transform: "Element in Set".into(),
+            limit: None,
+        },
+        LoopStep {
+            name: "Associate".into(),
+            grounding: "RECURSION".into(),
+            symbol: "\u{03c1}".into(),
+            transform: "(a*b)*c = a*(b*c)".into(),
+            limit: None,
+        },
+        LoopStep {
+            name: "Transit".into(),
+            grounding: "SEQUENCE".into(),
+            symbol: "\u{03c3}".into(),
+            transform: "a->b ^ b->c => a->c".into(),
+            limit: None,
+        },
+        LoopStep {
+            name: "Homeomorph".into(),
+            grounding: "MAPPING".into(),
+            symbol: "\u{03bc}".into(),
+            transform: "Structure-preserving map".into(),
+            limit: None,
+        },
+        LoopStep {
+            name: "Symmetric".into(),
+            grounding: "MAPPING".into(),
+            symbol: "\u{03bc}".into(),
+            transform: "a~b => b~a".into(),
+            limit: None,
+        },
+        LoopStep {
+            name: "Bound".into(),
+            grounding: "BOUNDARY".into(),
+            symbol: "\u{2202}".into(),
+            transform: "Upper/lower limits".into(),
+            limit: None,
+        },
+        LoopStep {
+            name: "Prove".into(),
+            grounding: "SEQUENCE".into(),
+            symbol: "\u{03c3}".into(),
+            transform: "Premises -> Conclusion".into(),
+            limit: Some("\u{26a0} G\u{00f6}del".into()),
+        },
+        LoopStep {
+            name: "Commute".into(),
+            grounding: "MAPPING".into(),
+            symbol: "\u{03bc}".into(),
+            transform: "a*b = b*a".into(),
+            limit: None,
+        },
+        LoopStep {
+            name: "Identify".into(),
+            grounding: "STATE".into(),
+            symbol: "\u{03c2}".into(),
+            transform: "Neutral element".into(),
+            limit: None,
+        },
     ]
 }
 

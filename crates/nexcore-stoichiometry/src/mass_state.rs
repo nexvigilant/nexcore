@@ -143,8 +143,7 @@ impl MassState {
         for &p in &ops {
             if self.inventory.count(p) > 0 {
                 // Map each primitive to its tier via spatial_bridge classification
-                let comp =
-                    nexcore_lex_primitiva::primitiva::PrimitiveComposition::new(vec![p]);
+                let comp = nexcore_lex_primitiva::primitiva::PrimitiveComposition::new(vec![p]);
                 let tier = Tier::classify(&comp);
                 tiers.insert(tier);
             }

@@ -343,16 +343,30 @@ impl fmt::Display for EvidenceType {
     }
 }
 
+fn default_evidence_id() -> String {
+    format!("ev-{}", Utc::now().timestamp_millis())
+}
+
+fn default_evidence_type() -> EvidenceType {
+    EvidenceType::Observation
+}
+
+fn default_recorded_at() -> DateTime<Utc> {
+    Utc::now()
+}
+
 /// Reference to evidence supporting or contradicting a belief.
 ///
 /// PROJECT GROUNDED integration: Evidence enables the
 /// hypothesis → test → belief integration loop.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EvidenceRef {
-    /// Unique evidence identifier
+    /// Unique evidence identifier (auto-generated if missing from legacy data)
+    #[serde(default = "default_evidence_id")]
     pub id: String,
 
-    /// Type of evidence
+    /// Type of evidence (defaults to Observation for legacy data)
+    #[serde(default = "default_evidence_type")]
     pub evidence_type: EvidenceType,
 
     /// Description of what this evidence shows
@@ -365,7 +379,8 @@ pub struct EvidenceRef {
     /// Source of the evidence (e.g., "session:abc123", "test:unit_foo", "user:explicit")
     pub source: String,
 
-    /// When this evidence was recorded
+    /// When this evidence was recorded (accepts legacy "observed_at" alias)
+    #[serde(default = "default_recorded_at", alias = "observed_at")]
     pub recorded_at: DateTime<Utc>,
 
     /// Optional link to artifact or external resource
@@ -1402,7 +1417,8 @@ impl ImplicitKnowledge {
     ) -> &Belief {
         let belief = Belief::from_hypothesis(id, proposition, category);
         self.beliefs.push(belief);
-        self.beliefs.last().expect("just pushed")
+        // SAFETY: just pushed — index is guaranteed valid
+        &self.beliefs[self.beliefs.len() - 1]
     }
 
     /// Delete a belief by ID
@@ -1425,13 +1441,9 @@ impl ImplicitKnowledge {
 
     /// Get or create trust accumulator for a domain
     pub fn get_or_create_trust(&mut self, domain: &str) -> &mut TrustAccumulator {
-        if !self.trust_accumulators.contains_key(domain) {
-            self.trust_accumulators
-                .insert(domain.to_string(), TrustAccumulator::new(domain));
-        }
         self.trust_accumulators
-            .get_mut(domain)
-            .expect("just inserted")
+            .entry(domain.to_string())
+            .or_insert_with(|| TrustAccumulator::new(domain))
     }
 
     /// Get trust accumulator for a domain (immutable)

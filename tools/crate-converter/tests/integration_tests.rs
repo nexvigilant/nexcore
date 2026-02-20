@@ -1,4 +1,4 @@
-use crate_converter::{convert_cargo_toml, InternalDepResolver};
+use crate_converter::{InternalDepResolver, convert_cargo_toml};
 use pretty_assertions::assert_eq;
 use std::collections::HashMap;
 
@@ -219,10 +219,7 @@ workspace = true
     );
     assert_eq!(doc["lints"]["rust"]["dead_code"].as_str(), Some("allow"));
     assert_eq!(doc["lints"]["clippy"]["all"].as_str(), Some("allow"));
-    assert_eq!(
-        doc["lints"]["clippy"]["pedantic"].as_str(),
-        Some("allow")
-    );
+    assert_eq!(doc["lints"]["clippy"]["pedantic"].as_str(), Some("allow"));
 }
 
 // ---------------------------------------------------------------------------

@@ -101,6 +101,77 @@ pub struct SignalBatchParams {
 // PvPipelineParams re-exported from regulatory for qualified path access
 pub use super::regulatory::PvPipelineParams;
 
+/// Parameters for cooperative signal analysis (sigmoid-weighted co-occurrence)
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct PvSignalCooperativeParams {
+    /// IC value for signal A
+    pub ic_a: f64,
+    /// IC value for signal B
+    pub ic_b: f64,
+    /// Patient overlap fraction (Jaccard index, 0.0–1.0)
+    pub patient_overlap: f64,
+}
+
+// ============================================================================
+// Decomposed PV Pipeline Parameters (ingest / detect / assess)
+// ============================================================================
+
+/// Parameters for FAERS data ingestion step of the PV pipeline.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct PvPipelineIngestParams {
+    /// Drug name (generic or brand)
+    pub drug_name: String,
+    /// Adverse event (MedDRA Preferred Term)
+    pub event_name: String,
+}
+
+/// Parameters for signal detection step of the PV pipeline.
+///
+/// Accepts a pre-built 2x2 contingency table (from pv_pipeline_ingest or manual entry).
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct PvPipelineDetectParams {
+    /// Drug + Event count (cell a)
+    pub a: u64,
+    /// Drug + No Event count (cell b)
+    pub b: u64,
+    /// No Drug + Event count (cell c)
+    pub c: u64,
+    /// No Drug + No Event count (cell d)
+    pub d: u64,
+    /// Signal detection threshold preset: "evans" (default), "strict", or "sensitive"
+    #[serde(default = "default_detect_preset")]
+    pub threshold_preset: String,
+}
+
+fn default_detect_preset() -> String {
+    "evans".to_string()
+}
+
+/// Parameters for causality/risk assessment step of the PV pipeline.
+///
+/// Accepts signal detection outputs to run Guardian risk scoring.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct PvPipelineAssessParams {
+    /// Drug name
+    pub drug: String,
+    /// Adverse event name
+    pub event: String,
+    /// PRR point estimate
+    pub prr: f64,
+    /// ROR lower 95% CI bound
+    pub ror_lower: f64,
+    /// IC lower 95% CI bound (IC025)
+    pub ic025: f64,
+    /// EBGM lower 95% CI bound (EB05)
+    pub eb05: f64,
+    /// Number of co-occurrence cases
+    pub n: u64,
+}
+
 /// Parameters for WHO-UMC causality assessment
 #[derive(Debug, Deserialize, JsonSchema)]
 #[serde(crate = "rmcp::serde")]

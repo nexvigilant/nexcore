@@ -1,6 +1,6 @@
+use crate::core_types::SignalAnalysisResult;
 use axum::routing::post;
 use axum::{Json, Router};
-use nexcore_core::SignalAnalysisResult;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 

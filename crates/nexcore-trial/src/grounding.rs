@@ -31,32 +31,28 @@ use LexPrimitiva::{
 /// Dominant: → (Causality) — every experiment tests a causal claim.
 #[must_use]
 pub fn target_composition() -> PrimitiveComposition {
-    PrimitiveComposition::new(vec![Causality, Existence, Quantity])
-        .with_dominant(Causality, 0.95)
+    PrimitiveComposition::new(vec![Causality, Existence, Quantity]).with_dominant(Causality, 0.95)
 }
 
 /// R — REGIMENT phase: randomization, blinding, arm assignment.
 /// Dominant: σ (Sequence) — randomization is ordered allocation.
 #[must_use]
 pub fn regiment_composition() -> PrimitiveComposition {
-    PrimitiveComposition::new(vec![Sequence, Boundary, Mapping])
-        .with_dominant(Sequence, 0.90)
+    PrimitiveComposition::new(vec![Sequence, Boundary, Mapping]).with_dominant(Sequence, 0.90)
 }
 
 /// I — INTERIM phase: interim analysis, safety monitoring, adaptation triggers.
 /// Dominant: ν (Frequency) — interim looks occur at pre-specified information fractions.
 #[must_use]
 pub fn interim_phase_composition() -> PrimitiveComposition {
-    PrimitiveComposition::new(vec![Frequency, Comparison, Boundary])
-        .with_dominant(Frequency, 0.90)
+    PrimitiveComposition::new(vec![Frequency, Comparison, Boundary]).with_dominant(Frequency, 0.90)
 }
 
 /// A — ASSAY phase: endpoint evaluation, multiplicity correction, effect sizes.
 /// Dominant: κ (Comparison) — the assay compares treatment vs control.
 #[must_use]
 pub fn assay_composition() -> PrimitiveComposition {
-    PrimitiveComposition::new(vec![Quantity, Comparison, Causality])
-        .with_dominant(Comparison, 0.95)
+    PrimitiveComposition::new(vec![Quantity, Comparison, Causality]).with_dominant(Comparison, 0.95)
 }
 
 /// L — LIFECYCLE phase: report generation, surveillance planning, decay analysis.
@@ -81,72 +77,63 @@ pub fn protocol_composition() -> PrimitiveComposition {
 /// T2-P: κ+N+∃ (Comparison of quantities against existence thresholds)
 #[must_use]
 pub fn endpoint_type_composition() -> PrimitiveComposition {
-    PrimitiveComposition::new(vec![Comparison, Quantity, Existence])
-        .with_dominant(Comparison, 0.90)
+    PrimitiveComposition::new(vec![Comparison, Quantity, Existence]).with_dominant(Comparison, 0.90)
 }
 
 /// Arm — a treatment or control group.
 /// T2-P: ∃+∂+μ (Exists as entity, bounded by eligibility, mapped to treatment)
 #[must_use]
 pub fn arm_composition() -> PrimitiveComposition {
-    PrimitiveComposition::new(vec![Existence, Boundary, Mapping])
-        .with_dominant(Existence, 0.85)
+    PrimitiveComposition::new(vec![Existence, Boundary, Mapping]).with_dominant(Existence, 0.85)
 }
 
 /// SafetyRule — hard stop boundary condition.
 /// T2-P: ∂+N (Boundary defined by quantitative threshold)
 #[must_use]
 pub fn safety_rule_composition() -> PrimitiveComposition {
-    PrimitiveComposition::new(vec![Boundary, Quantity])
-        .with_dominant(Boundary, 0.95)
+    PrimitiveComposition::new(vec![Boundary, Quantity]).with_dominant(Boundary, 0.95)
 }
 
 /// Adaptation — pre-specified mid-trial modification.
 /// T2-P: ς+→+∂ (State change triggered by causality, bounded by pre-specification)
 #[must_use]
 pub fn adaptation_type_composition() -> PrimitiveComposition {
-    PrimitiveComposition::new(vec![State, Causality, Boundary])
-        .with_dominant(State, 0.90)
+    PrimitiveComposition::new(vec![State, Causality, Boundary]).with_dominant(State, 0.90)
 }
 
 /// InterimData — snapshot of accumulating evidence.
 /// T2-P: N+ν+κ (Quantities at a frequency point for comparison)
 #[must_use]
 pub fn interim_data_composition() -> PrimitiveComposition {
-    PrimitiveComposition::new(vec![Quantity, Frequency, Comparison])
-        .with_dominant(Quantity, 0.85)
+    PrimitiveComposition::new(vec![Quantity, Frequency, Comparison]).with_dominant(Quantity, 0.85)
 }
 
 /// InterimDecision — the decision from an interim look.
 /// T2-P: ς+∂+→ (State transition at boundary, caused by evidence)
 #[must_use]
 pub fn interim_decision_composition() -> PrimitiveComposition {
-    PrimitiveComposition::new(vec![State, Boundary, Causality])
-        .with_dominant(State, 0.90)
+    PrimitiveComposition::new(vec![State, Boundary, Causality]).with_dominant(State, 0.90)
 }
 
 /// EndpointResult — outcome of statistical testing.
 /// T2-P: N+κ+→ (Quantitative comparison yielding causal inference)
 #[must_use]
 pub fn endpoint_result_composition() -> PrimitiveComposition {
-    PrimitiveComposition::new(vec![Quantity, Comparison, Causality])
-        .with_dominant(Comparison, 0.95)
+    PrimitiveComposition::new(vec![Quantity, Comparison, Causality]).with_dominant(Comparison, 0.95)
 }
 
 /// ArmAssignment — subject-to-arm randomization mapping.
 /// T2-P: μ+σ+∂ (Mapping in sequence with blinding boundary)
 #[must_use]
 pub fn arm_assignment_composition() -> PrimitiveComposition {
-    PrimitiveComposition::new(vec![Mapping, Sequence, Boundary])
-        .with_dominant(Mapping, 0.90)
+    PrimitiveComposition::new(vec![Mapping, Sequence, Boundary]).with_dominant(Mapping, 0.90)
 }
 
 /// AdjustedResult — multiplicity-corrected test result.
 /// T2-P: κ+N+∂ (Comparison of quantities with adjusted boundary)
 #[must_use]
 pub fn adjusted_result_composition() -> PrimitiveComposition {
-    PrimitiveComposition::new(vec![Comparison, Quantity, Boundary])
-        .with_dominant(Comparison, 0.90)
+    PrimitiveComposition::new(vec![Comparison, Quantity, Boundary]).with_dominant(Comparison, 0.90)
 }
 
 /// TrialVerdict — final determination: Positive / Negative / Inconclusive.
@@ -161,8 +148,7 @@ pub fn verdict_composition() -> PrimitiveComposition {
 /// T2-P: ∂+κ+N (Boundary integrity measured by quantitative comparison)
 #[must_use]
 pub fn blinding_report_composition() -> PrimitiveComposition {
-    PrimitiveComposition::new(vec![Boundary, Comparison, Quantity])
-        .with_dominant(Boundary, 0.90)
+    PrimitiveComposition::new(vec![Boundary, Comparison, Quantity]).with_dominant(Boundary, 0.90)
 }
 
 // ── Composite pipeline grounding ─────────────────────────────────────────

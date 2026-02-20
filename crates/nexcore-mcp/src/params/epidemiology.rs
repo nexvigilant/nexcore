@@ -183,6 +183,37 @@ pub struct EpiSmrParams {
     pub expected: f64,
 }
 
+/// A single stratum for Mantel-Haenszel stratified analysis (2×2 table)
+#[derive(Debug, Clone, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct EpiStratumParams {
+    /// Exposed + diseased (a)
+    pub a: f64,
+    /// Exposed + not diseased (b)
+    pub b: f64,
+    /// Unexposed + diseased (c)
+    pub c: f64,
+    /// Unexposed + not diseased (d)
+    pub d: f64,
+    /// Optional stratum label (e.g. "Male", "Age 18-40")
+    pub label: Option<String>,
+}
+
+/// Parameters for Mantel-Haenszel stratified analysis
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct EpiMantelHaenszelParams {
+    /// Stratified 2×2 tables — one entry per stratum
+    pub strata: Vec<EpiStratumParams>,
+    /// Measure to estimate: "OR" (Odds Ratio) or "RR" (Risk Ratio)
+    #[serde(default = "default_mh_measure")]
+    pub measure: String,
+}
+
+fn default_mh_measure() -> String {
+    "OR".to_string()
+}
+
 /// Empty params for epidemiology→PV mapping catalog
 #[derive(Debug, Deserialize, JsonSchema)]
 #[serde(crate = "rmcp::serde")]

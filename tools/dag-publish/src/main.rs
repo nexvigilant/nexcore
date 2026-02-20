@@ -67,10 +67,7 @@ fn show_phases(dag: &[(String, Vec<String>)]) -> Result<()> {
     }
 
     let total: usize = phases.iter().map(|p| p.len()).sum();
-    println!(
-        "Total: {total} crates in {} phases",
-        phases.len()
-    );
+    println!("Total: {total} crates in {} phases", phases.len());
 
     Ok(())
 }
@@ -92,16 +89,26 @@ fn validate_crate_name(name: &str) -> Result<()> {
     }
 
     if name.len() > 64 {
-        bail!("Crate name '{name}' exceeds 64 characters (length: {})", name.len());
+        bail!(
+            "Crate name '{name}' exceeds 64 characters (length: {})",
+            name.len()
+        );
     }
 
-    let first_char = name.chars().next().unwrap();
+    let Some(first_char) = name.chars().next() else {
+        bail!("Crate name is empty (unreachable after length check)");
+    };
     if !first_char.is_ascii_alphabetic() {
         bail!("Crate name '{name}' must start with an ASCII letter");
     }
 
-    if !name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-') {
-        bail!("Crate name '{name}' contains invalid characters (only alphanumeric, '_', and '-' allowed)");
+    if !name
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+    {
+        bail!(
+            "Crate name '{name}' contains invalid characters (only alphanumeric, '_', and '-' allowed)"
+        );
     }
 
     Ok(())

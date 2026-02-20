@@ -54,7 +54,9 @@
 pub mod app_clearance;
 pub mod audio;
 pub mod boot;
+pub mod brain_bridge;
 pub mod error;
+pub mod guardian_bridge;
 pub mod ipc;
 pub mod kernel;
 pub mod network;

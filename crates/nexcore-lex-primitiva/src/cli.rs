@@ -116,11 +116,7 @@ fn cmd_list(verbose: bool) -> Result<(), String> {
         print_primitive_line(p, verbose);
     }
     if verbose {
-        println!(
-            "\nRoots: {} (N), {} (→)",
-            N_QUANT,
-            ARROW_CAUSAL
-        );
+        println!("\nRoots: {} (N), {} (→)", N_QUANT, ARROW_CAUSAL);
         println!("Total: 16 primitives, 80 bedrock atoms, 10 constants");
     }
     Ok(())
@@ -371,7 +367,10 @@ mod tests {
 
     #[test]
     fn test_parse_primitive_by_symbol() {
-        assert_eq!(parse_primitive(SIGMA_SEQ).ok(), Some(LexPrimitiva::Sequence));
+        assert_eq!(
+            parse_primitive(SIGMA_SEQ).ok(),
+            Some(LexPrimitiva::Sequence)
+        );
         assert_eq!(parse_primitive(N_QUANT).ok(), Some(LexPrimitiva::Quantity));
     }
 
@@ -386,7 +385,9 @@ mod tests {
 
     #[test]
     fn test_parse_primitive_list() {
-        let result = parse_primitive_list(&format!("{}, {}, {}", SIGMA_SEQ, MU_MAP, VARSIGMA_STATE)).expect("Should parse list");
+        let result =
+            parse_primitive_list(&format!("{}, {}, {}", SIGMA_SEQ, MU_MAP, VARSIGMA_STATE))
+                .expect("Should parse list");
         assert_eq!(result.len(), 3);
     }
 

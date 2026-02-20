@@ -43,14 +43,14 @@ impl ElementClass {
     /// correspond to 8 distinct T1 primitives.
     pub fn dominant_primitive(&self) -> LexPrimitiva {
         match self {
-            Self::OrganSystem => LexPrimitiva::Location,        // λ — body locations
-            Self::Causality => LexPrimitiva::Causality,         // → — causal links
-            Self::Temporality => LexPrimitiva::Frequency,       // ν — time/frequency domain
-            Self::Severity => LexPrimitiva::Quantity,           // N — graded measurement
-            Self::ObservationType => LexPrimitiva::Existence,   // ∃ — what was observed to exist
-            Self::Modifier => LexPrimitiva::Comparison,         // κ — comparison against baseline
-            Self::Action => LexPrimitiva::Irreversibility,      // ∝ — interventions are one-way
-            Self::Outcome => LexPrimitiva::State,               // ς — state transitions
+            Self::OrganSystem => LexPrimitiva::Location, // λ — body locations
+            Self::Causality => LexPrimitiva::Causality,  // → — causal links
+            Self::Temporality => LexPrimitiva::Frequency, // ν — time/frequency domain
+            Self::Severity => LexPrimitiva::Quantity,    // N — graded measurement
+            Self::ObservationType => LexPrimitiva::Existence, // ∃ — what was observed to exist
+            Self::Modifier => LexPrimitiva::Comparison,  // κ — comparison against baseline
+            Self::Action => LexPrimitiva::Irreversibility, // ∝ — interventions are one-way
+            Self::Outcome => LexPrimitiva::State,        // ς — state transitions
         }
     }
 

@@ -98,7 +98,10 @@ async fn run_humanize_pipeline(output: &PathBuf) -> Result<PipelineStats> {
     let start = std::time::Instant::now();
     let mut stats = PipelineStats::default();
 
-    info!(stage = "state-assessment", "Ingesting text for humanization");
+    info!(
+        stage = "state-assessment",
+        "Ingesting text for humanization"
+    );
     let stdin = io::stdin();
     let lines: Vec<String> = stdin
         .lock()

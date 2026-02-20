@@ -78,9 +78,7 @@ pub fn verify_blinding(
 
     // Check 3: For double/triple blinding, no control arm should be identifiable
     // by having a systematically different block pattern visible in block_id metadata
-    if protocol.blinding == BlindingLevel::Double
-        || protocol.blinding == BlindingLevel::Triple
-    {
+    if protocol.blinding == BlindingLevel::Double || protocol.blinding == BlindingLevel::Triple {
         // If all subjects in block 0 are arm 0, this could indicate non-random assignment
         let block_0: Vec<usize> = assignments
             .iter()
@@ -129,8 +127,16 @@ mod tests {
             },
             secondary_endpoints: vec![],
             arms: vec![
-                Arm { name: "control".into(), description: "ctrl".into(), is_control: true },
-                Arm { name: "treatment".into(), description: "tx".into(), is_control: false },
+                Arm {
+                    name: "control".into(),
+                    description: "ctrl".into(),
+                    is_control: true,
+                },
+                Arm {
+                    name: "treatment".into(),
+                    description: "tx".into(),
+                    is_control: false,
+                },
             ],
             sample_size: 100,
             power: 0.80,
@@ -154,7 +160,11 @@ mod tests {
         let result = verify_blinding(&assignments, &protocol);
         assert!(result.is_ok());
         let report = result.unwrap();
-        assert!(report.violations.is_empty(), "Expected no violations: {:?}", report.violations);
+        assert!(
+            report.violations.is_empty(),
+            "Expected no violations: {:?}",
+            report.violations
+        );
         assert_eq!(report.integrity_score, 1.0);
     }
 
@@ -175,7 +185,10 @@ mod tests {
         // Corrupt one assignment to have arm_index = 99
         assignments[0].arm_index = 99;
         let report = verify_blinding(&assignments, &protocol).unwrap();
-        assert!(!report.violations.is_empty(), "Expected violation for invalid arm index");
+        assert!(
+            !report.violations.is_empty(),
+            "Expected violation for invalid arm index"
+        );
         assert!(report.integrity_score < 1.0);
     }
 
@@ -186,6 +199,9 @@ mod tests {
         // Embed arm name in stratum field — blinding breach
         assignments[0].stratum = Some("control_group".into());
         let report = verify_blinding(&assignments, &protocol).unwrap();
-        assert!(!report.violations.is_empty(), "Expected violation for arm name in stratum");
+        assert!(
+            !report.violations.is_empty(),
+            "Expected violation for arm name in stratum"
+        );
     }
 }

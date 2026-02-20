@@ -22,6 +22,7 @@
 
 pub mod amplification;
 pub mod baseline;
+pub mod cascade_order;
 pub mod data;
 pub mod enums;
 pub mod hill;
@@ -29,16 +30,15 @@ pub mod signals;
 pub mod state;
 
 // Convenience re-exports for the most commonly used types.
+pub use amplification::{
+    AmplificationViolation, Amplifier, Attenuator, PairedAmplificationSystem, create_standard_pair,
+};
+pub use baseline::{Baseline, BaselineConfig, BaselineMetric};
+pub use data::{ActionData, ActionResult, MetricSnapshot, SensorReading};
 pub use enums::{
     ActionType, BaselineMetricType, CircuitState, DecayFunction, HealthStatus, ResponsePhase,
     SensorType, SignalType, StormPhase, TrendDirection, sensor_to_signal_type,
 };
-pub use data::{ActionData, ActionResult, MetricSnapshot, SensorReading};
-pub use baseline::{Baseline, BaselineConfig, BaselineMetric};
 pub use hill::{HillCurve, ResponseCeiling, SaturatingResponse, create_biological_response_curve};
 pub use signals::{DecayingSignal, SignalManager};
 pub use state::{MetricHistory, StateTracker, SystemState};
-pub use amplification::{
-    AmplificationViolation, Amplifier, Attenuator, PairedAmplificationSystem,
-    create_standard_pair,
-};

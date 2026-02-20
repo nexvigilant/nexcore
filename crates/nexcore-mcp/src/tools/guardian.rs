@@ -19,7 +19,6 @@ use nexcore_vigilance::guardian::homeostasis::{
 };
 use nexcore_vigilance::guardian::response::ResponseCeiling;
 use nexcore_vigilance::guardian::response::{AlertActuator, AuditLogActuator, CytokineActuator};
-use std::sync::Arc;
 use nexcore_vigilance::guardian::sensing::biological::BiologicalVitalSignsSensor;
 use nexcore_vigilance::guardian::sensing::{
     ExternalSensor, InternalSensor, SignalSource, ThreatLevel, ThreatSignal,
@@ -30,6 +29,7 @@ use nexcore_vigilance::tov::HarmType;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 use serde_json::{Value, json};
+use std::sync::Arc;
 use std::sync::OnceLock;
 use tokio::sync::Mutex;
 
@@ -147,12 +147,110 @@ pub(crate) fn get_loop() -> &'static Mutex<HomeostasisLoop> {
     })
 }
 
+/// Threat level numeric weight for comparison (only-escalate logic)
+fn threat_level_weight(level: &str) -> u8 {
+    match level {
+        "Critical" => 4,
+        "High" => 3,
+        "Medium" => 2,
+        "Low" => 1,
+        _ => 0,
+    }
+}
+
+/// Persist tick result to guardian-state.json so hooks see fresh data.
+/// Best-effort: errors are silently ignored to not affect MCP response.
+fn persist_tick_to_state(result: &LoopIterationResult) {
+    let home = match std::env::var("HOME") {
+        Ok(h) => h,
+        Err(_) => return,
+    };
+    let state_path = format!("{home}/.claude/hooks/state/guardian-state.json");
+
+    // Read existing state (or start fresh)
+    let mut state: serde_json::Map<String, Value> = std::fs::read_to_string(&state_path)
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default();
+
+    // Increment iteration
+    let iteration = state.get("iteration").and_then(|v| v.as_u64()).unwrap_or(0) + 1;
+    state.insert("iteration".to_string(), json!(iteration));
+
+    // Accumulate signals and actions (session-wide totals)
+    let prev_signals = state
+        .get("signals_detected")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0);
+    state.insert(
+        "signals_detected".to_string(),
+        json!(prev_signals + result.signals_detected as u64),
+    );
+
+    let prev_actions = state
+        .get("actions_taken")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0);
+    state.insert(
+        "actions_taken".to_string(),
+        json!(prev_actions + result.actions_taken as u64),
+    );
+
+    // Tick threat level: homeostasis loop signals include routine sensor pings
+    // (audit log, cytokine, vital signs). Only high action counts indicate real threat.
+    // Threshold: >3 actions with results containing non-success = elevated
+    let failed_actions = result.results.iter().filter(|r| !r.success).count();
+    let tick_threat = if failed_actions > 3 {
+        "High"
+    } else if failed_actions > 0 {
+        "Medium"
+    } else {
+        "Low"
+    };
+
+    // Only escalate max_threat_level, never de-escalate within session
+    let current_max = state
+        .get("max_threat_level")
+        .and_then(|v| v.as_str())
+        .unwrap_or("Low")
+        .to_string();
+    if threat_level_weight(tick_threat) > threat_level_weight(&current_max) {
+        state.insert("max_threat_level".to_string(), json!(tick_threat));
+    }
+
+    // Write last_tick — the data guardian-gate checks for staleness
+    state.insert(
+        "last_tick".to_string(),
+        json!({
+            "iteration_id": result.iteration_id,
+            "timestamp": result.timestamp.to_rfc3339(),
+            "signals_detected": result.signals_detected,
+            "actions_taken": result.actions_taken,
+            "max_threat_level": tick_threat,
+            "results": result.results.iter().map(|r| json!({
+                "actuator": r.actuator,
+                "success": r.success,
+                "message": r.message,
+            })).collect::<Vec<Value>>(),
+            "duration_ms": result.duration_ms,
+        }),
+    );
+
+    // Best-effort write — state persistence is non-critical for MCP response
+    if let Ok(json_str) = serde_json::to_string_pretty(&state) {
+        std::fs::write(&state_path, json_str).ok();
+    }
+}
+
 /// Run one iteration of the homeostasis control loop
 pub async fn homeostasis_tick(_params: GuardianTickParams) -> Result<CallToolResult, McpError> {
     let mut control_loop = get_loop().lock().await;
     let result: LoopIterationResult = control_loop.tick().await;
 
     publish_event(GuardianEvent::LoopTick(result.clone()));
+
+    // Persist to guardian-state.json for hook consumption (best-effort)
+    persist_tick_to_state(&result);
 
     let json = json!({
         "iteration_id": result.iteration_id,

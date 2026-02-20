@@ -63,7 +63,10 @@ pub fn cone_asymmetry(widths: &[f64], singularity_idx: usize) -> anyhow::Result<
     );
     let upper: f64 = widths[..singularity_idx].iter().sum();
     let lower: f64 = widths[singularity_idx + 1..].iter().sum();
-    anyhow::ensure!(lower != 0.0, "lower-cone mass is zero — asymmetry undefined");
+    anyhow::ensure!(
+        lower != 0.0,
+        "lower-cone mass is zero — asymmetry undefined"
+    );
     Ok(upper / lower)
 }
 
@@ -153,7 +156,10 @@ pub fn spectral_overlap(a: &[f64], b: &[f64]) -> anyhow::Result<f64> {
     let dot: f64 = a.iter().zip(b.iter()).map(|(x, y)| x * y).sum();
     let norm_a: f64 = a.iter().map(|x| x * x).sum::<f64>().sqrt();
     let norm_b: f64 = b.iter().map(|x| x * x).sum::<f64>().sqrt();
-    anyhow::ensure!(norm_a != 0.0 && norm_b != 0.0, "zero-norm vector — overlap undefined");
+    anyhow::ensure!(
+        norm_a != 0.0 && norm_b != 0.0,
+        "zero-norm vector — overlap undefined"
+    );
     Ok(dot / (norm_a * norm_b))
 }
 

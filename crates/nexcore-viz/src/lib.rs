@@ -47,9 +47,9 @@ pub mod svg;
 pub mod taxonomy;
 
 // Re-export key types for convenience
-pub use bounds::{render_bounds, BoundedValue};
-pub use composition::{render_composition, PrimitiveNode, TypeComposition};
-pub use confidence::{render_confidence_chain, Claim};
-pub use dag::{render_dag, DagEdge, DagNode};
-pub use science_loop::{render_science_loop, LoopStep};
-pub use taxonomy::{render_taxonomy, TraitEntry};
+pub use bounds::{BoundedValue, render_bounds};
+pub use composition::{PrimitiveNode, TypeComposition, render_composition};
+pub use confidence::{Claim, render_confidence_chain};
+pub use dag::{DagEdge, DagNode, render_dag};
+pub use science_loop::{LoopStep, render_science_loop};
+pub use taxonomy::{TraitEntry, render_taxonomy};

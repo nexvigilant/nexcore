@@ -7,9 +7,9 @@
 //! ∝ (Irreversibility), Σ (Sum)
 
 use crate::params::{
-    LexPrimitivaCompositionParams, LexPrimitivaGetParams, LexPrimitivaListParams,
-    LexPrimitivaReverseComposeParams, LexPrimitivaReverseLookupParams, LexPrimitivaStateModeParams,
-    LexPrimitivaTierParams,
+    LexPrimitivaCompositionParams, LexPrimitivaDominantShiftParams, LexPrimitivaGetParams,
+    LexPrimitivaListParams, LexPrimitivaReverseComposeParams, LexPrimitivaReverseLookupParams,
+    LexPrimitivaStateModeParams, LexPrimitivaTierParams,
 };
 use nexcore_lex_primitiva::synthesizer::{RevSynthesizer, SynthesisOpts};
 use nexcore_vigilance::lex_primitiva::{
@@ -3434,6 +3434,102 @@ pub fn get_state_mode(params: LexPrimitivaStateModeParams) -> Result<CallToolRes
     Ok(CallToolResult::success(vec![Content::text(
         json.to_string(),
     )]))
+}
+
+/// Detect whether adding a primitive causes a dominant-shift (phase transition).
+///
+/// Given a base set of primitives and one new primitive to add, determines
+/// whether the dominant primitive changes — a "phase transition" in composition
+/// character.
+pub fn dominant_shift(params: LexPrimitivaDominantShiftParams) -> Result<CallToolResult, McpError> {
+    // Resolve base primitives
+    let mut base_resolved = Vec::new();
+    let mut unknown = Vec::new();
+    for name in &params.base_primitives {
+        match find_primitive(name) {
+            Some(p) => base_resolved.push(p),
+            None => unknown.push(name.clone()),
+        }
+    }
+
+    // Resolve the added primitive
+    let added = match find_primitive(&params.added_primitive) {
+        Some(p) => p,
+        None => {
+            unknown.push(params.added_primitive.clone());
+            let json = json!({
+                "error": "unknown_primitives",
+                "unknown": unknown,
+                "hint": "Use names like 'Sequence', 'Boundary' or symbols like 'σ', '∂'",
+            });
+            return Ok(CallToolResult::success(vec![Content::text(
+                json.to_string(),
+            )]));
+        }
+    };
+
+    if !unknown.is_empty() {
+        let json = json!({
+            "error": "unknown_primitives",
+            "unknown": unknown,
+            "hint": "Use names like 'Sequence', 'Boundary' or symbols like 'σ', '∂'",
+        });
+        return Ok(CallToolResult::success(vec![Content::text(
+            json.to_string(),
+        )]));
+    }
+
+    // Compute dominant before (most frequent primitive in base)
+    let old_dominant = mode_primitive(&base_resolved);
+
+    // Compute dominant after (base + added)
+    let mut combined = base_resolved.clone();
+    combined.push(added);
+    let new_dominant = mode_primitive(&combined);
+
+    let shifted = old_dominant != new_dominant;
+    let old_label = old_dominant.map(|p| format!("{:?}", p));
+    let new_label = new_dominant.map(|p| format!("{:?}", p));
+
+    let json = json!({
+        "base_count": base_resolved.len(),
+        "added": format!("{:?}", added),
+        "old_dominant": old_label,
+        "new_dominant": new_label,
+        "phase_transition": shifted,
+        "interpretation": if shifted {
+            format!(
+                "Phase transition detected: dominant shifted from {} to {}",
+                old_label.as_deref().unwrap_or("∅"),
+                new_label.as_deref().unwrap_or("∅")
+            )
+        } else {
+            format!(
+                "No phase transition: dominant remains {}",
+                new_label.as_deref().unwrap_or("∅")
+            )
+        },
+    });
+
+    Ok(CallToolResult::success(vec![Content::text(
+        json.to_string(),
+    )]))
+}
+
+/// Find the most frequent primitive in a slice (the "mode").
+/// Returns `None` for empty slices. Ties broken by enum order.
+fn mode_primitive(primitives: &[LexPrimitiva]) -> Option<LexPrimitiva> {
+    if primitives.is_empty() {
+        return None;
+    }
+    let mut counts = std::collections::HashMap::<LexPrimitiva, usize>::new();
+    for p in primitives {
+        *counts.entry(*p).or_insert(0) += 1;
+    }
+    counts
+        .into_iter()
+        .max_by_key(|&(_, count)| count)
+        .map(|(p, _)| p)
 }
 
 /// Audit all known GroundsTo implementations against core.true invariants.

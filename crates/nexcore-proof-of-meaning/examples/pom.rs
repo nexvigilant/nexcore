@@ -10,7 +10,8 @@ fn main() {
 
     match command {
         "distill" => {
-            let expr = args_or_default(&args, 2, "serious unexpected cardiac adverse drug reaction");
+            let expr =
+                args_or_default(&args, 2, "serious unexpected cardiac adverse drug reaction");
             run_distillation(&expr);
         }
         "chromatograph" => {
@@ -46,7 +47,9 @@ fn main() {
 }
 
 fn args_or_default(args: &[String], idx: usize, default: &str) -> String {
-    args.get(idx).cloned().unwrap_or_else(|| default.to_string())
+    args.get(idx)
+        .cloned()
+        .unwrap_or_else(|| default.to_string())
 }
 
 // =============================================================================
@@ -98,12 +101,15 @@ fn run_distillation(expression: &str) {
     println!();
 
     println!("  Fractions (most volatile first → most stable last):");
-    println!("  {:<4} {:<20} {:<12} {:<12} {:<8}",
-        "#", "Atom", "Volatility", "Sep. Temp.", "Purity");
+    println!(
+        "  {:<4} {:<20} {:<12} {:<12} {:<8}",
+        "#", "Atom", "Volatility", "Sep. Temp.", "Purity"
+    );
     println!("  {}", "-".repeat(56));
 
     for f in &result.fractions {
-        println!("  {:<4} {:<20} {:<12.2} {:<12.2} {:<8.2}",
+        println!(
+            "  {:<4} {:<20} {:<12.2} {:<12.2} {:<8.2}",
             f.fraction_number,
             f.atom.label,
             f.atom.volatility.into_inner(),
@@ -115,8 +121,14 @@ fn run_distillation(expression: &str) {
     println!();
     println!("  Mass Balance:");
     println!("    Input mass:     {:.1}", result.mass_balance.input_mass);
-    println!("    Recovered mass: {:.1}", result.mass_balance.recovered_mass);
-    println!("    Loss:           {:.1}%", result.mass_balance.loss_percent);
+    println!(
+        "    Recovered mass: {:.1}",
+        result.mass_balance.recovered_mass
+    );
+    println!(
+        "    Loss:           {:.1}%",
+        result.mass_balance.loss_percent
+    );
     println!("    Verdict:        {:?}", result.mass_balance.verdict);
 
     if !result.residue.is_empty() {
@@ -140,12 +152,15 @@ fn run_chromatography(expression: &str) {
     println!();
 
     println!("  Bands (hierarchy bindings):");
-    println!("  {:<20} {:<20} {:<12} {:<10}",
-        "Atom", "Bound Class", "Affinity", "Bandwidth");
+    println!(
+        "  {:<20} {:<20} {:<12} {:<10}",
+        "Atom", "Bound Class", "Affinity", "Bandwidth"
+    );
     println!("  {}", "-".repeat(62));
 
     for b in &result.bands {
-        println!("  {:<20} {:<20} {:<12.2} {:<10.2}",
+        println!(
+            "  {:<20} {:<20} {:<12.2} {:<10.2}",
             b.atom_label,
             format!("{:?}", b.bound_class),
             b.binding_affinity.into_inner(),
@@ -168,9 +183,13 @@ fn run_chromatography(expression: &str) {
         } else {
             "CO-ELUTING"
         };
-        println!("    {} vs {} — R={:.2} [{}]",
-            r.band_a, r.band_b,
-            r.resolution.into_inner(), status);
+        println!(
+            "    {} vs {} — R={:.2} [{}]",
+            r.band_a,
+            r.band_b,
+            r.resolution.into_inner(),
+            status
+        );
     }
 
     println!();
@@ -204,13 +223,20 @@ fn run_titration(expression: &str) {
 
     if !curve.points.is_empty() {
         println!("  Titration Curve:");
-        println!("  {:<4} {:<20} {:<10} {:<12} {:<8}",
-            "#", "Titrant", "Volume", "Residual", "Delta");
+        println!(
+            "  {:<4} {:<20} {:<10} {:<12} {:<8}",
+            "#", "Titrant", "Volume", "Residual", "Delta"
+        );
         println!("  {}", "-".repeat(54));
 
         for (i, p) in curve.points.iter().enumerate() {
-            let marker = if p.delta.into_inner() > 0.1 { " <-- EP" } else { "" };
-            println!("  {:<4} {:<20} {:<10.2} {:<12.2} {:<8.2}{}",
+            let marker = if p.delta.into_inner() > 0.1 {
+                " <-- EP"
+            } else {
+                ""
+            };
+            println!(
+                "  {:<4} {:<20} {:<10.2} {:<12.2} {:<8.2}{}",
                 i + 1,
                 p.titrant_label,
                 p.volume_added.into_inner(),
@@ -224,7 +250,8 @@ fn run_titration(expression: &str) {
     println!();
     println!("  Equivalence Points: {}", curve.equivalence_points.len());
     for ep in &curve.equivalence_points {
-        println!("    {} — coverage: {:.2}, sharpness: {:.2}",
+        println!(
+            "    {} — coverage: {:.2}, sharpness: {:.2}",
             ep.matched_label,
             ep.coverage.into_inner(),
             ep.sharpness.into_inner(),
@@ -232,7 +259,10 @@ fn run_titration(expression: &str) {
     }
 
     println!();
-    println!("  Final Residual: {:.1}% unmatched meaning", curve.residual * 100.0);
+    println!(
+        "  Final Residual: {:.1}% unmatched meaning",
+        curve.residual * 100.0
+    );
 }
 
 /// Program 4: Full 3-step pipeline with proof trail.
@@ -249,12 +279,15 @@ fn run_full_pipeline(expression: &str) {
 
     for step in &trail.steps {
         let status = match &step.verification {
-            nexcore_proof_of_meaning::pipeline::StepVerification::Verified { confidence } =>
-                format!("VERIFIED (conf: {:.2})", confidence),
-            nexcore_proof_of_meaning::pipeline::StepVerification::VerifiedWithWarnings { warnings } =>
-                format!("WARN ({})", warnings.join("; ")),
-            nexcore_proof_of_meaning::pipeline::StepVerification::Failed { reason } =>
-                format!("FAILED: {}", reason),
+            nexcore_proof_of_meaning::pipeline::StepVerification::Verified { confidence } => {
+                format!("VERIFIED (conf: {:.2})", confidence)
+            }
+            nexcore_proof_of_meaning::pipeline::StepVerification::VerifiedWithWarnings {
+                warnings,
+            } => format!("WARN ({})", warnings.join("; ")),
+            nexcore_proof_of_meaning::pipeline::StepVerification::Failed { reason } => {
+                format!("FAILED: {}", reason)
+            }
         };
 
         println!("  Step {}: {:?}", step.step_number, step.method);
@@ -286,15 +319,26 @@ fn run_equivalence_proof(expression_a: &str, expression_b: &str) {
     println!("  PROOF ID:     {}", proof.id);
     println!();
 
-    println!("  Trail A: {} steps, valid={}", proof.trail_a.steps.len(), proof.trail_a.trail_valid);
-    println!("  Trail B: {} steps, valid={}", proof.trail_b.steps.len(), proof.trail_b.trail_valid);
+    println!(
+        "  Trail A: {} steps, valid={}",
+        proof.trail_a.steps.len(),
+        proof.trail_a.trail_valid
+    );
+    println!(
+        "  Trail B: {} steps, valid={}",
+        proof.trail_b.steps.len(),
+        proof.trail_b.trail_valid
+    );
     println!();
 
     println!("  Equivalence Analysis:");
     println!("    Shared atoms:  {}", proof.equivalence.shared_atoms);
     println!("    Unique to A:   {}", proof.equivalence.unique_to_a);
     println!("    Unique to B:   {}", proof.equivalence.unique_to_b);
-    println!("    Score:         {:.2}", proof.equivalence.equivalence_score.into_inner());
+    println!(
+        "    Score:         {:.2}",
+        proof.equivalence.equivalence_score.into_inner()
+    );
     println!("    Verdict:       {:?}", proof.equivalence.verdict);
     println!();
 
@@ -309,13 +353,19 @@ fn run_rosetta_proof() {
 
     let cases = vec![
         // FDA vs EMA terminology
-        ("adverse event following immunization", "adverse reaction to vaccine"),
+        (
+            "adverse event following immunization",
+            "adverse reaction to vaccine",
+        ),
         // ICH vs regional variations
         ("serious adverse event", "serious adverse reaction"),
         // Different granularity
         ("cardiac adverse event", "heart-related adverse experience"),
         // Same concept, different modifiers
-        ("unexpected adverse drug reaction", "unlisted adverse reaction"),
+        (
+            "unexpected adverse drug reaction",
+            "unlisted adverse reaction",
+        ),
     ];
 
     println!("  THE ROSETTA PROOF");
@@ -328,12 +378,14 @@ fn run_rosetta_proof() {
         println!("  Case {}: ", i + 1);
         println!("    A: \"{}\"", a);
         println!("    B: \"{}\"", b);
-        println!("    Shared: {}  Unique(A): {}  Unique(B): {}",
+        println!(
+            "    Shared: {}  Unique(A): {}  Unique(B): {}",
             proof.equivalence.shared_atoms,
             proof.equivalence.unique_to_a,
             proof.equivalence.unique_to_b,
         );
-        println!("    Score: {:.2}  Verdict: {:?}",
+        println!(
+            "    Score: {:.2}  Verdict: {:?}",
             proof.equivalence.equivalence_score.into_inner(),
             proof.equivalence.verdict,
         );
@@ -403,14 +455,17 @@ fn run_registry_stats() {
 
     println!("  THE PERIODIC TABLE OF REGULATORY SEMANTICS");
     println!("  {}", "-".repeat(50));
-    println!("  {:<25} {:<10} {:<15}",
-        "Element Class", "Count", "Dominant T1");
+    println!(
+        "  {:<25} {:<10} {:<15}",
+        "Element Class", "Count", "Dominant T1"
+    );
     println!("  {}", "-".repeat(50));
 
     for class in ElementClass::all() {
         let count = registry.count_by_class(class);
         let prim = class.dominant_primitive();
-        println!("  {:<25} {:<10} {:<15}",
+        println!(
+            "  {:<25} {:<10} {:<15}",
             format!("{:?}", class),
             count,
             format!("{:?}", prim),

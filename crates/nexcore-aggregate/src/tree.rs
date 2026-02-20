@@ -216,11 +216,7 @@ fn enter_traversal<T: TreeNode>(
 }
 
 /// Exit a safe traversal: remove from visited set.
-fn exit_traversal<T: TreeNode>(
-    node: &T,
-    config: &TraversalConfig,
-    visited: &mut HashSet<String>,
-) {
+fn exit_traversal<T: TreeNode>(node: &T, config: &TraversalConfig, visited: &mut HashSet<String>) {
     if config.detect_cycles {
         visited.remove(node.id());
     }

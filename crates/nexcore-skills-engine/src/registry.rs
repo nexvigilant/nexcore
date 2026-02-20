@@ -26,6 +26,27 @@ pub struct SkillInfo {
     /// Nested sub-skills (relative paths)
     #[serde(default)]
     pub nested_skills: Vec<String>,
+    /// Related skills (see-also references)
+    #[serde(default)]
+    pub see_also: Vec<String>,
+    /// Upstream dependencies (skills that feed into this one)
+    #[serde(default)]
+    pub upstream: Vec<String>,
+    /// Downstream consumers (skills that consume this one's output)
+    #[serde(default)]
+    pub downstream: Vec<String>,
+    /// Position in a skill chain (head, middle, tail)
+    #[serde(default)]
+    pub chain_position: Option<String>,
+    /// Pipeline this skill belongs to
+    #[serde(default)]
+    pub pipeline: Option<String>,
+    /// Domain this skill operates in
+    #[serde(default)]
+    pub domain: Option<String>,
+    /// AI model preference (opus, sonnet, haiku)
+    #[serde(default)]
+    pub model: Option<String>,
 }
 
 /// Registry of discovered skills
@@ -115,6 +136,13 @@ impl SkillRegistry {
             smst_score: metadata.smst_score,
             tags: metadata.tags,
             nested_skills: metadata.nested_skills,
+            see_also: metadata.see_also,
+            upstream: metadata.upstream,
+            downstream: metadata.downstream,
+            chain_position: metadata.chain_position,
+            pipeline: metadata.pipeline,
+            domain: metadata.domain,
+            model: metadata.model,
         })
     }
 

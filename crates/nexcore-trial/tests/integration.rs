@@ -6,8 +6,7 @@
 
 use nexcore_trial::{
     block_randomize, check_safety_boundary, determine_verdict, evaluate_interim,
-    evaluate_two_proportions, generate_report, holm_adjust, register_protocol,
-    safety_event_rate,
+    evaluate_two_proportions, generate_report, holm_adjust, register_protocol, safety_event_rate,
     types::{
         Adaptation, Arm, BlindingLevel, Endpoint, EndpointDirection, InterimData, InterimDecision,
         ProtocolRequest, SafetyRule,
@@ -75,7 +74,11 @@ fn test_full_trial_pipeline_software_domain() {
         }],
         blinding: BlindingLevel::Open,
     });
-    assert!(protocol.is_ok(), "Protocol registration failed: {:?}", protocol.err());
+    assert!(
+        protocol.is_ok(),
+        "Protocol registration failed: {:?}",
+        protocol.err()
+    );
     let protocol = protocol.unwrap();
     assert!(!protocol.id.is_empty(), "Protocol ID should be non-empty");
     assert!(protocol.power >= 0.80, "Power below minimum");
@@ -85,14 +88,21 @@ fn test_full_trial_pipeline_software_domain() {
     // R — REGIMENT: Randomize subjects
     // ================================================================
     let assignments = block_randomize(400, 2, 4, Some(42));
-    assert!(assignments.is_ok(), "Randomization failed: {:?}", assignments.err());
+    assert!(
+        assignments.is_ok(),
+        "Randomization failed: {:?}",
+        assignments.err()
+    );
     let assignments = assignments.unwrap();
     assert_eq!(assignments.len(), 400, "All subjects should be assigned");
 
     // Verify balance
     let arm0_count = assignments.iter().filter(|a| a.arm_index == 0).count();
     let arm1_count = assignments.iter().filter(|a| a.arm_index == 1).count();
-    assert_eq!(arm0_count, 200, "Block randomization should be perfectly balanced");
+    assert_eq!(
+        arm0_count, 200,
+        "Block randomization should be perfectly balanced"
+    );
     assert_eq!(arm1_count, 200);
 
     // ================================================================
@@ -121,7 +131,11 @@ fn test_full_trial_pipeline_software_domain() {
 
     // Interim decision
     let interim_result = evaluate_interim(&interim_data, &protocol);
-    assert!(interim_result.is_ok(), "Interim analysis failed: {:?}", interim_result.err());
+    assert!(
+        interim_result.is_ok(),
+        "Interim analysis failed: {:?}",
+        interim_result.err()
+    );
     let interim = interim_result.unwrap();
     assert_eq!(
         interim.decision,
@@ -137,7 +151,10 @@ fn test_full_trial_pipeline_software_domain() {
     let primary_result = evaluate_two_proportions(120, 200, 95, 200, 0.05);
     assert!(primary_result.is_ok());
     let primary = primary_result.unwrap();
-    assert!(primary.significant, "Primary endpoint should be significant");
+    assert!(
+        primary.significant,
+        "Primary endpoint should be significant"
+    );
     assert!(primary.effect_size > 0.10, "Effect size should be > 10pp");
     assert!(primary.ci_lower > 0.0, "CI should exclude 0");
 
@@ -149,7 +166,10 @@ fn test_full_trial_pipeline_software_domain() {
     // Multiplicity: Holm adjustment for 2 endpoints
     let p_values = vec![primary.p_value, secondary.p_value];
     let adjusted = holm_adjust(&p_values, 0.05);
-    assert!(adjusted[0].significant, "Primary should survive Holm adjustment");
+    assert!(
+        adjusted[0].significant,
+        "Primary should survive Holm adjustment"
+    );
 
     // ================================================================
     // L — LIFECYCLE: Generate report
@@ -158,10 +178,22 @@ fn test_full_trial_pipeline_software_domain() {
     let report = generate_report(&protocol, &all_results);
 
     // Verify report structure
-    assert!(report.contains("Protocol Summary"), "Report missing Protocol Summary");
-    assert!(report.contains("CONSORT Flow"), "Report missing CONSORT Flow");
-    assert!(report.contains("Primary Endpoint"), "Report missing Primary Endpoint");
-    assert!(report.contains("Safety Summary"), "Report missing Safety Summary");
+    assert!(
+        report.contains("Protocol Summary"),
+        "Report missing Protocol Summary"
+    );
+    assert!(
+        report.contains("CONSORT Flow"),
+        "Report missing CONSORT Flow"
+    );
+    assert!(
+        report.contains("Primary Endpoint"),
+        "Report missing Primary Endpoint"
+    );
+    assert!(
+        report.contains("Safety Summary"),
+        "Report missing Safety Summary"
+    );
 
     // Verify verdict
     let verdict = determine_verdict(&[primary]);
@@ -204,7 +236,10 @@ fn test_negative_trial_pipeline() {
     let result = evaluate_two_proportions(52, 100, 48, 100, 0.05);
     assert!(result.is_ok());
     let r = result.unwrap();
-    assert!(!r.significant, "Borderline result should NOT be significant");
+    assert!(
+        !r.significant,
+        "Borderline result should NOT be significant"
+    );
 
     // Verdict: Negative
     let verdict = determine_verdict(&[r.clone()]);

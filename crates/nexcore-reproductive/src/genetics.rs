@@ -3,8 +3,8 @@
 //! Defines the "NexCore DNA" requirements that all offspring (artifacts/code changes)
 //! must satisfy to prevent architectural drift.
 
-use serde::{Deserialize, Serialize};
 use nexcore_lex_primitiva::LexPrimitiva;
+use serde::{Deserialize, Serialize};
 
 /// Rules for architectural heritability.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -42,7 +42,11 @@ impl GeneticGuard {
     }
 
     /// Checks if a proposed change (Mutation) is "Lethal" (violates DNA).
-    pub fn is_mutation_lethal(&self, primitives_present: &[LexPrimitiva], uses_unsafe: bool) -> bool {
+    pub fn is_mutation_lethal(
+        &self,
+        primitives_present: &[LexPrimitiva],
+        uses_unsafe: bool,
+    ) -> bool {
         if self.requirement.forbid_unsafe && uses_unsafe {
             return true;
         }

@@ -13,8 +13,8 @@
 //! Tier: T3 (μ Mapping + σ Sequence + ∂ Boundary)
 //! Grounding: κ (Comparison) + ∂ (Boundary) + → (Causality)
 
-use antitransformer::pipeline::{self, AnalysisConfig, AnalysisResult};
 use crate::sensing::{Measured, Sensor, SignalSource, ThreatLevel, ThreatSignal};
+use antitransformer::pipeline::{self, AnalysisConfig, AnalysisResult};
 use nexcore_hormones::{EndocrineState, HormoneType};
 use std::sync::{Arc, Mutex};
 
@@ -105,11 +105,11 @@ impl Sensor for AdversarialPromptSensor {
         // Fetch Endocrine State for dynamic modulation (Level 4 mechanic)
         let endocrine = EndocrineState::load();
         let cortisol = endocrine.get(HormoneType::Cortisol).value();
-        
+
         // Calculate adrenalized threshold: more stress = more sensitivity
         // Range: 0.5 (normal) down to 0.35 (max stress)
         let adjusted_threshold = self.config.threshold - (cortisol - 0.5) * 0.3;
-        
+
         let dynamic_config = AnalysisConfig {
             threshold: adjusted_threshold,
             ..self.config
@@ -176,19 +176,31 @@ mod tests {
         let sensor = AdversarialPromptSensor::new();
         // More conversational and less repetitive text
         sensor.set_input("Hey there, I was just thinking about how we can make our MCP tools better. It's really cool that we can use statistical fingerprints to detect AI text, don't you think? I'm going to grab a coffee and then maybe we can brainstorm some more ideas later this afternoon.");
-        
+
         let signals = sensor.detect();
         // If it still produces a signal, at least check if it's low probability or has human verdict
         for signal in &signals {
-             assert!(signal.confidence.value < 0.9, "Human input should not have high confidence generated score");
+            assert!(
+                signal.confidence.value < 0.9,
+                "Human input should not have high confidence generated score"
+            );
         }
     }
 
     #[test]
     fn test_severity_mapping() {
-        assert_eq!(AdversarialPromptSensor::probability_to_severity(0.95), ThreatLevel::Critical);
-        assert_eq!(AdversarialPromptSensor::probability_to_severity(0.80), ThreatLevel::High);
-        assert_eq!(AdversarialPromptSensor::probability_to_severity(0.10), ThreatLevel::Info);
+        assert_eq!(
+            AdversarialPromptSensor::probability_to_severity(0.95),
+            ThreatLevel::Critical
+        );
+        assert_eq!(
+            AdversarialPromptSensor::probability_to_severity(0.80),
+            ThreatLevel::High
+        );
+        assert_eq!(
+            AdversarialPromptSensor::probability_to_severity(0.10),
+            ThreatLevel::Info
+        );
     }
 
     #[test]
@@ -196,9 +208,12 @@ mod tests {
         let sensor = AdversarialPromptSensor::new();
         // Structured/repetitive text often flagged by antitransformer
         sensor.set_input("The system architecture must be robust. The system architecture must be scalable. The system architecture must be secure. We will implement the system architecture following these principles.");
-        
+
         let signals = sensor.detect();
-        assert!(!signals.is_empty(), "Should detect statistical anomaly in repetitive text");
+        assert!(
+            !signals.is_empty(),
+            "Should detect statistical anomaly in repetitive text"
+        );
         assert!(signals[0].confidence.value > 0.0);
     }
 }

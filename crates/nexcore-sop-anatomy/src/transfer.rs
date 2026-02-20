@@ -43,11 +43,7 @@ pub struct TransferStage {
 /// 2. CHIRALITY — verify each primitive maps correctly to target domain
 /// 3. FUSION — recombine adapted primitives for target context
 /// 4. TITRATION — calibrate for target domain scale
-pub fn transfer(
-    source: Domain,
-    concept: &str,
-    target: Domain,
-) -> TransferResult {
+pub fn transfer(source: Domain, concept: &str, target: Domain) -> TransferResult {
     let mut stages = Vec::with_capacity(4);
     let mut warnings = Vec::new();
 
@@ -122,7 +118,11 @@ pub fn transfer(
     });
 
     // Stage 4: TITRATION — calibrate confidence
-    let base_confidence = if matched_section.is_some() { 0.90 } else { 0.40 };
+    let base_confidence = if matched_section.is_some() {
+        0.90
+    } else {
+        0.40
+    };
     let chirality_penalty = warnings.len() as f64 * 0.05;
     let same_domain_bonus = if source == target { 0.05 } else { 0.0 };
     let confidence = (base_confidence - chirality_penalty + same_domain_bonus).clamp(0.0, 1.0);
@@ -151,23 +151,25 @@ pub fn transfer(
 fn find_section_for_concept(domain: Domain, concept: &str) -> Option<SopSection> {
     let lower = concept.to_lowercase();
 
-    SopSection::ALL.iter().find(|section| {
-        let m = section.mapping();
-        match domain {
-            Domain::Sop => {
-                m.name.to_lowercase().contains(&lower)
-                    || format!("s{}", m.number) == lower
+    SopSection::ALL
+        .iter()
+        .find(|section| {
+            let m = section.mapping();
+            match domain {
+                Domain::Sop => {
+                    m.name.to_lowercase().contains(&lower) || format!("s{}", m.number) == lower
+                }
+                Domain::Anatomy => {
+                    m.anatomy.name.to_lowercase().contains(&lower)
+                        || m.anatomy.function.to_lowercase().contains(&lower)
+                }
+                Domain::Code => {
+                    m.code.name.to_lowercase().contains(&lower)
+                        || m.code.pattern.to_lowercase().contains(&lower)
+                }
             }
-            Domain::Anatomy => {
-                m.anatomy.name.to_lowercase().contains(&lower)
-                    || m.anatomy.function.to_lowercase().contains(&lower)
-            }
-            Domain::Code => {
-                m.code.name.to_lowercase().contains(&lower)
-                    || m.code.pattern.to_lowercase().contains(&lower)
-            }
-        }
-    }).copied()
+        })
+        .copied()
 }
 
 /// Check if a primitive has chiral (mirror-image) behavior between two domains.

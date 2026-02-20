@@ -5,6 +5,39 @@
 //! It guarantees `response < Rmax` for any finite signal, preventing infinite
 //! amplification.
 
+use serde::{Deserialize, Serialize};
+
+/// Thom's catastrophe classification based on Hill coefficient steepness.
+///
+/// Maps the Hill coefficient `n` to the qualitative character of the
+/// dose-response discontinuity it implies.
+///
+/// ## T1 Grounding
+/// - κ (Comparison): threshold matching on `n`
+/// - ∂ (Boundary): each variant marks a qualitative boundary
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum CatastropheType {
+    /// `n ≤ 2.0`: Gradual dose-response, no discontinuity.
+    Smooth,
+    /// `2.0 < n ≤ 4.0`: Fold catastrophe — mild hysteresis possible.
+    Fold,
+    /// `4.0 < n ≤ 8.0`: Cusp catastrophe — bistable switch behaviour.
+    Cusp,
+    /// `n > 8.0`: Swallowtail catastrophe — near-digital (step-function) response.
+    Swallowtail,
+}
+
+impl std::fmt::Display for CatastropheType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Smooth => write!(f, "Smooth"),
+            Self::Fold => write!(f, "Fold"),
+            Self::Cusp => write!(f, "Cusp"),
+            Self::Swallowtail => write!(f, "Swallowtail"),
+        }
+    }
+}
+
 /// The Hill equation for saturating responses.
 ///
 /// ```
@@ -28,7 +61,11 @@ pub struct HillCurve {
 impl HillCurve {
     /// Create a new Hill curve.
     pub fn new(max_response: f64, k_half: f64, hill_coefficient: f64) -> Self {
-        Self { max_response, k_half, hill_coefficient }
+        Self {
+            max_response,
+            k_half,
+            hill_coefficient,
+        }
     }
 
     /// Calculate the response for a given signal strength.
@@ -102,6 +139,34 @@ impl HillCurve {
         let low = k * (0.1_f64 / 0.9).powf(1.0 / n);
         let high = k * (0.9_f64 / 0.1).powf(1.0 / n);
         (low, high)
+    }
+
+    /// Detect if this curve has near-step-function behaviour (ADME discontinuity).
+    ///
+    /// Expert threshold: `n > 3` indicates potential cusp catastrophe where
+    /// small dose changes produce discontinuous systemic effects.
+    pub fn has_discontinuity(&self, threshold_n: f64) -> bool {
+        self.hill_coefficient > threshold_n
+    }
+
+    /// Classify the catastrophe type based on Hill coefficient steepness.
+    ///
+    /// Uses Thom's catastrophe theory boundaries:
+    /// - `n ≤ 2.0` → [`CatastropheType::Smooth`]
+    /// - `2.0 < n ≤ 4.0` → [`CatastropheType::Fold`]
+    /// - `4.0 < n ≤ 8.0` → [`CatastropheType::Cusp`]
+    /// - `n > 8.0` → [`CatastropheType::Swallowtail`]
+    pub fn catastrophe_type(&self) -> CatastropheType {
+        let n = self.hill_coefficient;
+        if n <= 2.0 {
+            CatastropheType::Smooth
+        } else if n <= 4.0 {
+            CatastropheType::Fold
+        } else if n <= 8.0 {
+            CatastropheType::Cusp
+        } else {
+            CatastropheType::Swallowtail
+        }
     }
 }
 
@@ -218,7 +283,11 @@ pub struct ResponseCeiling {
 impl ResponseCeiling {
     /// Create a new ceiling enforcer.
     pub fn new(soft_limit: f64, hard_limit: f64, elastic_factor: f64) -> Self {
-        Self { soft_limit, hard_limit, elastic_factor }
+        Self {
+            soft_limit,
+            hard_limit,
+            elastic_factor,
+        }
     }
 
     /// Enforce the ceiling on `value`.
@@ -311,7 +380,10 @@ mod tests {
         let curve = HillCurve::new(100.0, 50.0, 2.0);
         let response = curve.calculate(75.0);
         let signal_back = curve.inverse(response);
-        assert!((signal_back - 75.0).abs() < 0.01, "inverse failed: got {signal_back}");
+        assert!(
+            (signal_back - 75.0).abs() < 0.01,
+            "inverse failed: got {signal_back}"
+        );
     }
 
     #[test]
@@ -379,5 +451,57 @@ mod tests {
         let high = create_biological_response_curve(100.0, "high");
         // High sensitivity should respond more strongly to the same weak signal
         assert!(high.calculate(10.0) > medium.calculate(10.0));
+    }
+
+    // ── CatastropheType tests ──────────────────────────────────────────────────
+
+    #[test]
+    fn catastrophe_type_smooth_at_n_1() {
+        let curve = HillCurve::new(100.0, 50.0, 1.0);
+        assert_eq!(curve.catastrophe_type(), CatastropheType::Smooth);
+    }
+
+    #[test]
+    fn catastrophe_type_smooth_at_n_2() {
+        let curve = HillCurve::new(100.0, 50.0, 2.0);
+        assert_eq!(curve.catastrophe_type(), CatastropheType::Smooth);
+    }
+
+    #[test]
+    fn catastrophe_type_fold_at_n_3() {
+        let curve = HillCurve::new(100.0, 50.0, 3.0);
+        assert_eq!(curve.catastrophe_type(), CatastropheType::Fold);
+    }
+
+    #[test]
+    fn catastrophe_type_cusp_at_n_6() {
+        let curve = HillCurve::new(100.0, 50.0, 6.0);
+        assert_eq!(curve.catastrophe_type(), CatastropheType::Cusp);
+    }
+
+    #[test]
+    fn catastrophe_type_swallowtail_at_n_10() {
+        let curve = HillCurve::new(100.0, 50.0, 10.0);
+        assert_eq!(curve.catastrophe_type(), CatastropheType::Swallowtail);
+    }
+
+    #[test]
+    fn has_discontinuity_above_threshold() {
+        let curve = HillCurve::new(100.0, 50.0, 5.0);
+        assert!(curve.has_discontinuity(3.0));
+    }
+
+    #[test]
+    fn has_discontinuity_below_threshold() {
+        let curve = HillCurve::new(100.0, 50.0, 2.0);
+        assert!(!curve.has_discontinuity(3.0));
+    }
+
+    #[test]
+    fn catastrophe_type_display() {
+        assert_eq!(CatastropheType::Smooth.to_string(), "Smooth");
+        assert_eq!(CatastropheType::Fold.to_string(), "Fold");
+        assert_eq!(CatastropheType::Cusp.to_string(), "Cusp");
+        assert_eq!(CatastropheType::Swallowtail.to_string(), "Swallowtail");
     }
 }

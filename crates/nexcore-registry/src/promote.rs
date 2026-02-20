@@ -127,7 +127,11 @@ pub fn promotion_plan(
     if target >= ComplianceTier::Silver && assessment.compliance < ComplianceTier::Silver {
         if row.tags.is_none() {
             let parts: Vec<&str> = name.split('/').next().unwrap_or(name).split('-').collect();
-            let tags = parts.iter().map(|p| format!("\"{p}\"")).collect::<Vec<_>>().join(", ");
+            let tags = parts
+                .iter()
+                .map(|p| format!("\"{p}\""))
+                .collect::<Vec<_>>()
+                .join(", ");
             actions.push(PromotionAction::AddFrontmatterField {
                 key: "tags".to_string(),
                 suggested_value: format!("[{tags}]"),

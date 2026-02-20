@@ -75,10 +75,8 @@ pub fn find_sisters(
         if similarity >= threshold {
             let term_set: HashSet<LexPrimitiva> = term_prims.iter().copied().collect();
 
-            let shared: Vec<LexPrimitiva> =
-                query_set.intersection(&term_set).copied().collect();
-            let unique_self: Vec<LexPrimitiva> =
-                query_set.difference(&term_set).copied().collect();
+            let shared: Vec<LexPrimitiva> = query_set.intersection(&term_set).copied().collect();
+            let unique_self: Vec<LexPrimitiva> = query_set.difference(&term_set).copied().collect();
             let unique_other: Vec<LexPrimitiva> =
                 term_set.difference(&query_set).copied().collect();
 
@@ -185,8 +183,16 @@ mod tests {
 
     #[test]
     fn test_jaccard_partial_overlap() {
-        let a = vec![LexPrimitiva::Causality, LexPrimitiva::Boundary, LexPrimitiva::State];
-        let b = vec![LexPrimitiva::Causality, LexPrimitiva::Boundary, LexPrimitiva::Void];
+        let a = vec![
+            LexPrimitiva::Causality,
+            LexPrimitiva::Boundary,
+            LexPrimitiva::State,
+        ];
+        let b = vec![
+            LexPrimitiva::Causality,
+            LexPrimitiva::Boundary,
+            LexPrimitiva::Void,
+        ];
         // intersection = {Causality, Boundary} = 2, union = {Causality, Boundary, State, Void} = 4
         let sim = jaccard_similarity(&a, &b);
         assert!((sim - 0.5).abs() < 0.001);
@@ -223,16 +229,22 @@ mod tests {
     #[test]
     fn test_isomer_detection() {
         // Same set {Causality, Boundary} but different dominant
-        let a = make_equation("A", &[
-            LexPrimitiva::Causality,
-            LexPrimitiva::Causality,
-            LexPrimitiva::Boundary,
-        ]);
-        let b = make_equation("B", &[
-            LexPrimitiva::Causality,
-            LexPrimitiva::Boundary,
-            LexPrimitiva::Boundary,
-        ]);
+        let a = make_equation(
+            "A",
+            &[
+                LexPrimitiva::Causality,
+                LexPrimitiva::Causality,
+                LexPrimitiva::Boundary,
+            ],
+        );
+        let b = make_equation(
+            "B",
+            &[
+                LexPrimitiva::Causality,
+                LexPrimitiva::Boundary,
+                LexPrimitiva::Boundary,
+            ],
+        );
         assert!(is_isomer(&a, &b));
     }
 

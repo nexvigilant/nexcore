@@ -101,7 +101,8 @@ impl PipelineState {
             completed: None,
         };
         self.runs.push(run);
-        self.runs.last().expect("just pushed")
+        // SAFETY: just pushed — index is guaranteed valid
+        &self.runs[self.runs.len() - 1]
     }
 
     /// Add checkpoint to current run

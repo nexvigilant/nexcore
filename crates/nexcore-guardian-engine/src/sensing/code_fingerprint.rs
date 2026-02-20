@@ -12,8 +12,8 @@
 //! Tier: T3 (μ Mapping + σ Sequence + ∂ Boundary)
 //! Grounding: κ (Comparison) + ∂ (Boundary) + ς (State)
 
-use antitransformer::pipeline::{self, AnalysisConfig, AnalysisResult};
 use crate::sensing::{Measured, Sensor, SignalSource, ThreatLevel, ThreatSignal};
+use antitransformer::pipeline::{self, AnalysisConfig, AnalysisResult};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -52,9 +52,9 @@ impl Sensor for CodeFingerprintSensor {
 
     fn detect(&self) -> Vec<ThreatSignal<Self::Pattern>> {
         // In a real implementation, this would scan recently modified files.
-        // For this PAMP/DAMP demonstration, we analyze a core file to detect 
+        // For this PAMP/DAMP demonstration, we analyze a core file to detect
         // if its statistical fingerprint has drifted into "AI boilerplate" territory.
-        
+
         let Ok(content) = std::fs::read_to_string(&self.target_path) else {
             return vec![];
         };
@@ -63,8 +63,10 @@ impl Sensor for CodeFingerprintSensor {
         let lines: Vec<&str> = content.lines().collect();
         let start = lines.len() / 4;
         let end = (lines.len() * 3) / 4;
-        let sample = lines[start..end].join("
-");
+        let sample = lines[start..end].join(
+            "
+",
+        );
 
         if sample.len() < 100 {
             return vec![];

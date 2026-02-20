@@ -422,28 +422,28 @@ pub fn create_monitoring_loop() -> homeostasis::HomeostasisLoop {
     control_loop.add_sensor(sensing::ribosome_damp::RibosomeDampSensor::new());
     control_loop.add_sensor(sensing::biological::BiologicalVitalSignsSensor::new());
     control_loop.add_sensor(sensing::adversarial::AdversarialPromptSensor::new());
-    
+
     // Monitor key subsystems for architectural drift via statistical fingerprints
     let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
     let root = std::path::Path::new(&home).join("nexcore/crates");
-    
+
     control_loop.add_sensor(sensing::code_fingerprint::CodeFingerprintSensor::new(
-        root.join("nexcore-guardian-engine/src/homeostasis.rs")
+        root.join("nexcore-guardian-engine/src/homeostasis.rs"),
     ));
     control_loop.add_sensor(sensing::code_fingerprint::CodeFingerprintSensor::new(
-        root.join("nexcore-vigilance/src/lib.rs")
+        root.join("nexcore-vigilance/src/lib.rs"),
     ));
     control_loop.add_sensor(sensing::code_fingerprint::CodeFingerprintSensor::new(
-        root.join("nexcore-brain/src/lib.rs")
+        root.join("nexcore-brain/src/lib.rs"),
     ));
     control_loop.add_sensor(sensing::code_fingerprint::CodeFingerprintSensor::new(
-        root.join("nexcore-vigil/src/lib.rs")
+        root.join("nexcore-vigil/src/lib.rs"),
     ));
     control_loop.add_sensor(sensing::code_fingerprint::CodeFingerprintSensor::new(
-        root.join("nexcore-sentinel/src/lib.rs")
+        root.join("nexcore-sentinel/src/lib.rs"),
     ));
     control_loop.add_sensor(sensing::engram_drift::EngramDriftSensor::new());
-    
+
     control_loop
 }
 

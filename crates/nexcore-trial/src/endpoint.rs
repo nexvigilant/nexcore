@@ -108,7 +108,11 @@ pub fn evaluate_two_means(
     let var2 = sd2 * sd2 / n2 as f64;
     let se = (var1 + var2).sqrt();
 
-    let t = if se < 1e-12 { 0.0 } else { (mean1 - mean2) / se };
+    let t = if se < 1e-12 {
+        0.0
+    } else {
+        (mean1 - mean2) / se
+    };
 
     // Welch-Satterthwaite degrees of freedom (approximate normal for large df)
     let df = if var1 < 1e-12 || var2 < 1e-12 {
@@ -116,7 +120,11 @@ pub fn evaluate_two_means(
     } else {
         let num = (var1 + var2).powi(2);
         let den = var1.powi(2) / (n1 as f64 - 1.0) + var2.powi(2) / (n2 as f64 - 1.0);
-        if den < 1e-12 { (n1 + n2 - 2) as f64 } else { num / den }
+        if den < 1e-12 {
+            (n1 + n2 - 2) as f64
+        } else {
+            num / den
+        }
     };
 
     // For df >= 30 normal approximation is accurate; for smaller df use t-approximation
@@ -185,9 +193,17 @@ mod tests {
         let result = evaluate_two_proportions(60, 100, 45, 100, 0.05);
         let r = result.unwrap();
         // Effect size: 0.60 - 0.45 = 0.15
-        assert!((r.effect_size - 0.15).abs() < 0.01, "Expected ~0.15, got {}", r.effect_size);
+        assert!(
+            (r.effect_size - 0.15).abs() < 0.01,
+            "Expected ~0.15, got {}",
+            r.effect_size
+        );
         // CI should exclude 0 (positive lower bound)
-        assert!(r.ci_lower > 0.0, "CI lower bound should exclude 0, got {}", r.ci_lower);
+        assert!(
+            r.ci_lower > 0.0,
+            "CI lower bound should exclude 0, got {}",
+            r.ci_lower
+        );
     }
 
     #[test]
@@ -213,7 +229,10 @@ mod tests {
         let result = evaluate_two_means(1.5, 1.0, 100, 1.0, 1.0, 100, 0.05);
         assert!(result.is_ok());
         let r = result.unwrap();
-        assert!(r.significant, "Should be significant for 0.5 SD difference in n=100");
+        assert!(
+            r.significant,
+            "Should be significant for 0.5 SD difference in n=100"
+        );
     }
 
     #[test]

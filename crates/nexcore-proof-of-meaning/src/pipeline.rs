@@ -197,9 +197,8 @@ impl ProofPipeline {
                 SeparationQuality::PoorResolution => {
                     all_valid = false;
                     StepVerification::Failed {
-                        reason:
-                            "Poor chromatographic resolution — hierarchy bindings ambiguous"
-                                .into(),
+                        reason: "Poor chromatographic resolution — hierarchy bindings ambiguous"
+                            .into(),
                     }
                 }
             },
@@ -258,8 +257,7 @@ impl ProofPipeline {
     ) -> SemanticEquivalenceProof {
         let trail_a = self.transform(expression_a);
         let trail_b = self.transform(expression_b);
-        let equivalence =
-            titration::prove_equivalence(&self.titrator, expression_a, expression_b);
+        let equivalence = titration::prove_equivalence(&self.titrator, expression_a, expression_b);
 
         let proof_valid = trail_a.trail_valid && trail_b.trail_valid;
 

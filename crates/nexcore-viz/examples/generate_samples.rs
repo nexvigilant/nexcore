@@ -32,12 +32,36 @@ fn main() {
         type_name: "Machine<I,O>".into(),
         tier: "T3".into(),
         primitives: vec![
-            nexcore_viz::PrimitiveNode { name: "Mapping".into(), symbol: "\u{03bc}".into(), role: "I -> O transformation".into() },
-            nexcore_viz::PrimitiveNode { name: "Sequence".into(), symbol: "\u{03c3}".into(), role: "ordered step chain".into() },
-            nexcore_viz::PrimitiveNode { name: "State".into(), symbol: "\u{03c2}".into(), role: "internal counter".into() },
-            nexcore_viz::PrimitiveNode { name: "Causality".into(), symbol: "\u{2192}".into(), role: "mechanism causal chain".into() },
-            nexcore_viz::PrimitiveNode { name: "Comparison".into(), symbol: "\u{03ba}".into(), role: "determinism".into() },
-            nexcore_viz::PrimitiveNode { name: "Quantity".into(), symbol: "N".into(), role: "confidence, counts".into() },
+            nexcore_viz::PrimitiveNode {
+                name: "Mapping".into(),
+                symbol: "\u{03bc}".into(),
+                role: "I -> O transformation".into(),
+            },
+            nexcore_viz::PrimitiveNode {
+                name: "Sequence".into(),
+                symbol: "\u{03c3}".into(),
+                role: "ordered step chain".into(),
+            },
+            nexcore_viz::PrimitiveNode {
+                name: "State".into(),
+                symbol: "\u{03c2}".into(),
+                role: "internal counter".into(),
+            },
+            nexcore_viz::PrimitiveNode {
+                name: "Causality".into(),
+                symbol: "\u{2192}".into(),
+                role: "mechanism causal chain".into(),
+            },
+            nexcore_viz::PrimitiveNode {
+                name: "Comparison".into(),
+                symbol: "\u{03ba}".into(),
+                role: "determinism".into(),
+            },
+            nexcore_viz::PrimitiveNode {
+                name: "Quantity".into(),
+                symbol: "N".into(),
+                role: "confidence, counts".into(),
+            },
         ],
         dominant: Some("Mapping".into()),
         confidence: 0.80,
@@ -49,11 +73,36 @@ fn main() {
 
     // 5. Confidence Propagation
     let claims = vec![
-        nexcore_viz::Claim { text: "D1: Use Leptos 0.7".into(), confidence: 0.95, proof_type: "analytical".into(), parent: None },
-        nexcore_viz::Claim { text: "D2: Firebase REST API".into(), confidence: 0.90, proof_type: "empirical".into(), parent: None },
-        nexcore_viz::Claim { text: "A1: schema.rs migration".into(), confidence: 0.99, proof_type: "computational".into(), parent: None },
-        nexcore_viz::Claim { text: "D3: Rate limiter design".into(), confidence: 0.85, proof_type: "derived".into(), parent: Some(0) },
-        nexcore_viz::Claim { text: "D4: Scarring threshold".into(), confidence: 0.80, proof_type: "empirical".into(), parent: Some(2) },
+        nexcore_viz::Claim {
+            text: "D1: Use Leptos 0.7".into(),
+            confidence: 0.95,
+            proof_type: "analytical".into(),
+            parent: None,
+        },
+        nexcore_viz::Claim {
+            text: "D2: Firebase REST API".into(),
+            confidence: 0.90,
+            proof_type: "empirical".into(),
+            parent: None,
+        },
+        nexcore_viz::Claim {
+            text: "A1: schema.rs migration".into(),
+            confidence: 0.99,
+            proof_type: "computational".into(),
+            parent: None,
+        },
+        nexcore_viz::Claim {
+            text: "D3: Rate limiter design".into(),
+            confidence: 0.85,
+            proof_type: "derived".into(),
+            parent: Some(0),
+        },
+        nexcore_viz::Claim {
+            text: "D4: Scarring threshold".into(),
+            confidence: 0.80,
+            proof_type: "empirical".into(),
+            parent: Some(2),
+        },
     ];
     let svg = nexcore_viz::render_confidence_chain(&claims, "Confidence Propagation");
     let path = format!("{out_dir}/confidence.svg");
@@ -86,20 +135,62 @@ fn main() {
 
     // 8. DAG
     let nodes = vec![
-        nexcore_viz::DagNode { id: "N".into(), label: "Quantity (N)".into(), color: None },
-        nexcore_viz::DagNode { id: "->".into(), label: "Causality (->)".into(), color: None },
-        nexcore_viz::DagNode { id: "sigma".into(), label: "Sequence (sigma)".into(), color: Some("#34d399".into()) },
-        nexcore_viz::DagNode { id: "mu".into(), label: "Mapping (mu)".into(), color: Some("#60a5fa".into()) },
-        nexcore_viz::DagNode { id: "kappa".into(), label: "Comparison (kappa)".into(), color: Some("#fbbf24".into()) },
-        nexcore_viz::DagNode { id: "rho".into(), label: "Recursion (rho)".into(), color: Some("#f472b6".into()) },
+        nexcore_viz::DagNode {
+            id: "N".into(),
+            label: "Quantity (N)".into(),
+            color: None,
+        },
+        nexcore_viz::DagNode {
+            id: "->".into(),
+            label: "Causality (->)".into(),
+            color: None,
+        },
+        nexcore_viz::DagNode {
+            id: "sigma".into(),
+            label: "Sequence (sigma)".into(),
+            color: Some("#34d399".into()),
+        },
+        nexcore_viz::DagNode {
+            id: "mu".into(),
+            label: "Mapping (mu)".into(),
+            color: Some("#60a5fa".into()),
+        },
+        nexcore_viz::DagNode {
+            id: "kappa".into(),
+            label: "Comparison (kappa)".into(),
+            color: Some("#fbbf24".into()),
+        },
+        nexcore_viz::DagNode {
+            id: "rho".into(),
+            label: "Recursion (rho)".into(),
+            color: Some("#f472b6".into()),
+        },
     ];
     let edges = vec![
-        nexcore_viz::DagEdge { from: "N".into(), to: "sigma".into() },
-        nexcore_viz::DagEdge { from: "N".into(), to: "mu".into() },
-        nexcore_viz::DagEdge { from: "->".into(), to: "sigma".into() },
-        nexcore_viz::DagEdge { from: "->".into(), to: "kappa".into() },
-        nexcore_viz::DagEdge { from: "sigma".into(), to: "rho".into() },
-        nexcore_viz::DagEdge { from: "mu".into(), to: "rho".into() },
+        nexcore_viz::DagEdge {
+            from: "N".into(),
+            to: "sigma".into(),
+        },
+        nexcore_viz::DagEdge {
+            from: "N".into(),
+            to: "mu".into(),
+        },
+        nexcore_viz::DagEdge {
+            from: "->".into(),
+            to: "sigma".into(),
+        },
+        nexcore_viz::DagEdge {
+            from: "->".into(),
+            to: "kappa".into(),
+        },
+        nexcore_viz::DagEdge {
+            from: "sigma".into(),
+            to: "rho".into(),
+        },
+        nexcore_viz::DagEdge {
+            from: "mu".into(),
+            to: "rho".into(),
+        },
     ];
     let svg = nexcore_viz::render_dag(&nodes, &edges, "Lex Primitiva DAG (partial)");
     let path = format!("{out_dir}/dag.svg");

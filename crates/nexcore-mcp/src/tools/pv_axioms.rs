@@ -36,11 +36,7 @@ fn query_to_json(
         .prepare(sql)
         .map_err(|e| McpError::internal_error(format!("SQL prepare error: {e}"), None))?;
 
-    let col_names: Vec<String> = stmt
-        .column_names()
-        .iter()
-        .map(|s| s.to_string())
-        .collect();
+    let col_names: Vec<String> = stmt.column_names().iter().map(|s| s.to_string()).collect();
 
     let rows = stmt
         .query_map(param_values, |row| {
@@ -65,9 +61,7 @@ fn query_to_json(
         if results.len() >= max_rows {
             break;
         }
-        results.push(
-            row.map_err(|e| McpError::internal_error(format!("Row error: {e}"), None))?,
-        );
+        results.push(row.map_err(|e| McpError::internal_error(format!("Row error: {e}"), None))?);
     }
     Ok(results)
 }
@@ -281,7 +275,9 @@ pub fn domain_dashboard(params: PvAxiomsDomainDashboardParams) -> Result<CallToo
 pub fn query(params: PvAxiomsQueryParams) -> Result<CallToolResult, McpError> {
     // Safety: reject write operations
     let upper = params.sql.to_uppercase();
-    let forbidden = ["INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "CREATE", "ATTACH", "DETACH"];
+    let forbidden = [
+        "INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "CREATE", "ATTACH", "DETACH",
+    ];
     for kw in &forbidden {
         if upper.contains(kw) {
             return Ok(CallToolResult::error(vec![Content::text(format!(

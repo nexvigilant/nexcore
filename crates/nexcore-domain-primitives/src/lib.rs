@@ -50,6 +50,7 @@ pub mod registry;
 pub mod taxonomy;
 pub mod transfer;
 pub mod transfer_matrix;
+pub mod validation;
 
 pub use analysis::{Bottleneck, bottlenecks, critical_paths, topological_sort};
 pub use compare::{TaxonomyComparison, compare};

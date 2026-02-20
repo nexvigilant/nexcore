@@ -57,9 +57,7 @@ pub trait Actuator: Send + Sync {
 /// ```
 pub struct CallbackSensor<F>
 where
-    F: Fn() -> Pin<Box<dyn Future<Output = Result<Option<SensorReading>>> + Send>>
-        + Send
-        + Sync,
+    F: Fn() -> Pin<Box<dyn Future<Output = Result<Option<SensorReading>>> + Send>> + Send + Sync,
 {
     name: String,
     sensor_type: SensorType,
@@ -68,9 +66,7 @@ where
 
 impl<F> CallbackSensor<F>
 where
-    F: Fn() -> Pin<Box<dyn Future<Output = Result<Option<SensorReading>>> + Send>>
-        + Send
-        + Sync,
+    F: Fn() -> Pin<Box<dyn Future<Output = Result<Option<SensorReading>>> + Send>> + Send + Sync,
 {
     /// Create a new `CallbackSensor`.
     pub fn new(name: impl Into<String>, sensor_type: SensorType, callback: F) -> Self {
@@ -84,9 +80,7 @@ where
 
 impl<F> Sensor for CallbackSensor<F>
 where
-    F: Fn() -> Pin<Box<dyn Future<Output = Result<Option<SensorReading>>> + Send>>
-        + Send
-        + Sync,
+    F: Fn() -> Pin<Box<dyn Future<Output = Result<Option<SensorReading>>> + Send>> + Send + Sync,
 {
     fn name(&self) -> &str {
         &self.name

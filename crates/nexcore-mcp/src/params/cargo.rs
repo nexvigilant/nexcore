@@ -43,6 +43,7 @@ pub struct CargoCheckParams {
     /// Path to crate directory or workspace root. Defaults to current directory.
     pub path: Option<String>,
     /// Specific package to check (for workspace builds). Maps to -p flag.
+    #[serde(alias = "crate_name")]
     pub package: Option<String>,
     /// Build in release mode
     #[serde(
@@ -63,6 +64,7 @@ pub struct CargoBuildParams {
     /// Path to crate directory or workspace root. Defaults to current directory.
     pub path: Option<String>,
     /// Specific package to build (for workspace builds). Maps to -p flag.
+    #[serde(alias = "crate_name")]
     pub package: Option<String>,
     /// Build in release mode
     #[serde(
@@ -83,6 +85,7 @@ pub struct CargoTestParams {
     /// Path to crate directory or workspace root. Defaults to current directory.
     pub path: Option<String>,
     /// Specific package to test (for workspace builds). Maps to -p flag.
+    #[serde(alias = "crate_name")]
     pub package: Option<String>,
     /// Run only lib tests (--lib)
     #[serde(
@@ -108,6 +111,7 @@ pub struct CargoClippyParams {
     /// Path to crate directory or workspace root. Defaults to current directory.
     pub path: Option<String>,
     /// Specific package to lint (for workspace builds). Maps to -p flag.
+    #[serde(alias = "crate_name")]
     pub package: Option<String>,
     /// Deny all warnings (adds -- -D warnings). Defaults to true.
     #[serde(
@@ -128,6 +132,7 @@ pub struct CargoFmtParams {
     /// Path to crate directory or workspace root. Defaults to current directory.
     pub path: Option<String>,
     /// Specific package to format (for workspace builds). Maps to -p flag.
+    #[serde(alias = "crate_name")]
     pub package: Option<String>,
     /// Check only, don't modify files (--check)
     #[serde(
@@ -145,6 +150,7 @@ pub struct CargoTreeParams {
     /// Path to crate directory or workspace root. Defaults to current directory.
     pub path: Option<String>,
     /// Specific package to show tree for. Maps to -p flag.
+    #[serde(alias = "crate_name")]
     pub package: Option<String>,
     /// Invert the tree to show what depends on a package (--invert SPEC)
     pub invert: Option<String>,

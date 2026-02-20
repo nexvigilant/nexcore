@@ -303,6 +303,71 @@ impl DecisionMaker for RuleBasedEngine {
     }
 }
 
+// ── Throughput Conservation Monitor ──────────────────────────────────────────
+
+/// Monitors pipeline throughput to detect signal accumulation (queue explosion).
+///
+/// When `signals_in_rate > signals_out_rate`, signals pile up and throughput
+/// is NOT conserved. Grounded in the conservation-of-flow invariant: a healthy
+/// pipeline must drain at least as fast as it fills.
+///
+/// ## T1 Grounding
+/// - `N` (Quantity) — tracks in/out rates and queue depth
+/// - `∂` (Boundary) — enforces the accumulation ceiling
+/// - `→` (Causality) — in-rate causally determines queue growth
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct ThroughputMonitor {
+    /// Signal ingestion rate (signals per tick window).
+    pub signals_in_rate: f64,
+    /// Signal processing / drain rate (signals per tick window).
+    pub signals_out_rate: f64,
+    /// Current queue depth (unprocessed signals).
+    pub queue_depth: f64,
+    /// Whether signals are accumulating (in_rate > out_rate).
+    pub is_accumulating: bool,
+    /// Ratio of in_rate to out_rate. Values > 1.0 indicate accumulation.
+    pub accumulation_ratio: f64,
+    /// Severity classification of the current accumulation state.
+    pub status: ThroughputStatus,
+}
+
+/// Severity classification for throughput accumulation.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ThroughputStatus {
+    /// Accumulation ratio <= 1.5 — pipeline draining normally.
+    #[default]
+    Normal,
+    /// Accumulation ratio 1.5–3.0 — monitor closely.
+    Concerning,
+    /// Accumulation ratio > 3.0 — pipeline critically overloaded.
+    Critical,
+}
+
+impl ThroughputMonitor {
+    /// Update monitor with current rate measurements.
+    ///
+    /// `signals_in` and `signals_out` are counts for the current tick window.
+    /// `queue` is the current depth of unprocessed signals.
+    pub fn update(&mut self, signals_in: f64, signals_out: f64, queue: f64) {
+        self.signals_in_rate = signals_in;
+        self.signals_out_rate = signals_out;
+        self.queue_depth = queue;
+        self.accumulation_ratio = if signals_out > 0.0 {
+            signals_in / signals_out
+        } else if signals_in > 0.0 {
+            f64::INFINITY
+        } else {
+            1.0
+        };
+        self.is_accumulating = self.accumulation_ratio > 1.0;
+        self.status = match self.accumulation_ratio {
+            r if r <= 1.5 => ThroughputStatus::Normal,
+            r if r <= 3.0 => ThroughputStatus::Concerning,
+            _ => ThroughputStatus::Critical,
+        };
+    }
+}
+
 /// Result of a homeostasis loop iteration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoopIterationResult {
@@ -318,6 +383,9 @@ pub struct LoopIterationResult {
     pub results: Vec<ActuatorResultSummary>,
     /// Duration in milliseconds
     pub duration_ms: u64,
+    /// Throughput conservation monitor snapshot for this iteration.
+    #[serde(default)]
+    pub throughput: ThroughputMonitor,
 }
 
 /// Summary of an actuator result
@@ -515,6 +583,7 @@ impl HomeostasisLoop {
                 actions_taken: 0,
                 results: Vec::new(),
                 duration_ms: 0,
+                throughput: ThroughputMonitor::default(),
             };
         }
 
@@ -700,6 +769,13 @@ impl HomeostasisLoop {
             );
         }
 
+        let mut throughput = ThroughputMonitor::default();
+        throughput.update(
+            all_signals.len() as f64,
+            actions.len() as f64,
+            self.injected_signals.len() as f64,
+        );
+
         LoopIterationResult {
             iteration_id: format!("iter-{}", self.iteration_count),
             timestamp: now,
@@ -707,6 +783,7 @@ impl HomeostasisLoop {
             actions_taken: actions.len(),
             results,
             duration_ms,
+            throughput,
         }
     }
 

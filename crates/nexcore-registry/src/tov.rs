@@ -42,12 +42,11 @@ pub struct HarmReport {
 ///
 /// Returns an error on query failure.
 pub fn safety_distance(conn: &Connection) -> Result<f64> {
-    let total: f64 = conn
-        .query_row(
-            "SELECT CAST(COUNT(*) AS REAL) FROM active_skills WHERE parent_skill IS NULL",
-            [],
-            |r| r.get(0),
-        )?;
+    let total: f64 = conn.query_row(
+        "SELECT CAST(COUNT(*) AS REAL) FROM active_skills WHERE parent_skill IS NULL",
+        [],
+        |r| r.get(0),
+    )?;
 
     if total < 1.0 {
         return Ok(0.0);
@@ -150,7 +149,7 @@ pub fn harm_indicators(conn: &Connection) -> Result<HarmReport> {
         + f64::from(harm_e as i32).mul_add(0.5, 0.0)          // E: weight 0.5
         + f64::from(harm_f as i32).mul_add(1.5, 0.0)          // F: weight 1.5
         + f64::from(harm_g as i32).mul_add(3.0, 0.0)          // G: weight 3.0
-        + f64::from(harm_h as i32);                             // H: weight 1.0
+        + f64::from(harm_h as i32); // H: weight 1.0
 
     Ok(HarmReport {
         harm_a_count: harm_a,

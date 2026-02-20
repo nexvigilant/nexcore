@@ -10,8 +10,7 @@ const FDA_GUIDANCE_DATA: &str = include_str!("../data/fda_guidance.json");
 
 /// Load all documents from the embedded index.
 pub fn load_all() -> Result<Vec<FdaGuidanceDoc>, FdaGuidanceError> {
-    serde_json::from_str(FDA_GUIDANCE_DATA)
-        .map_err(|e| FdaGuidanceError::ParseIndex(e.to_string()))
+    serde_json::from_str(FDA_GUIDANCE_DATA).map_err(|e| FdaGuidanceError::ParseIndex(e.to_string()))
 }
 
 /// Score a single document against a query.
@@ -187,13 +186,20 @@ mod tests {
     #[test]
     fn test_load_all_has_documents() {
         let docs = load_all().unwrap();
-        assert!(docs.len() >= 2700, "Expected 2700+ docs, got {}", docs.len());
+        assert!(
+            docs.len() >= 2700,
+            "Expected 2700+ docs, got {}",
+            docs.len()
+        );
     }
 
     #[test]
     fn test_search_pharmacovigilance() {
         let results = search("pharmacovigilance", None, None, None, 10).unwrap();
-        assert!(!results.is_empty(), "Should find pharmacovigilance-related docs");
+        assert!(
+            !results.is_empty(),
+            "Should find pharmacovigilance-related docs"
+        );
     }
 
     #[test]

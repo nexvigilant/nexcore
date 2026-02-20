@@ -176,9 +176,8 @@ pub fn scan_skills(conn: &Connection, skills_dir: &Path) -> Result<usize> {
 
         // --- Runtime feature detection (scanned from content body) ---
         let content_chars = i32::try_from(content.len()).unwrap_or(i32::MAX);
-        let uses_arguments = content.contains("$ARGUMENTS")
-            || content.contains("$0")
-            || content.contains("$1");
+        let uses_arguments =
+            content.contains("$ARGUMENTS") || content.contains("$0") || content.contains("$1");
         let uses_dynamic_context = content.contains("!`");
         let uses_session_id = content.contains("${CLAUDE_SESSION_ID}");
 

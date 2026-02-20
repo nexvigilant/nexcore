@@ -51,6 +51,30 @@ pub struct ForgeCompileParams {
     pub overwrite: bool,
 }
 
+/// Parameters for `forge_scaffold_from_guidance` — scaffold a pathway from FDA guidance metadata.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct ForgeGuidanceScaffoldParams {
+    /// FDA guidance document slug or partial title. Used to look up the guidance
+    /// document in the embedded index (2,794+ docs).
+    pub guidance_id: String,
+    /// Pathway ID (e.g., "fda-01"). Must match pattern `^[a-z]+-\d{2}(-\d{2})?(-[a-z-]+)?$`.
+    pub pathway_id: String,
+    /// Pathway title (e.g., "Safety Reporting Fundamentals").
+    pub title: String,
+    /// Domain name. Default: "pharmacovigilance".
+    #[serde(default = "default_domain")]
+    pub domain: String,
+    /// Optional section titles to structure stages around. If empty, stages
+    /// are auto-generated from the guidance document's topics.
+    #[serde(default)]
+    pub sections: Vec<String>,
+}
+
+fn default_domain() -> String {
+    "pharmacovigilance".to_string()
+}
+
 fn default_overwrite() -> bool {
     true
 }

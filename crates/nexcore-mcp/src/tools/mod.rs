@@ -19,6 +19,7 @@
 // Academy Forge (structured knowledge extraction + academy validation)
 pub mod academy_forge;
 
+pub mod api;
 pub mod benefit_risk;
 pub mod bonding;
 pub mod brain;

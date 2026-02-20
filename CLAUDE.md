@@ -1,6 +1,6 @@
 # CLAUDE.md — NexCore
 
-Rust monorepo: 174 crates across 4 layers, Edition 2024 (Rust 1.85+).
+Rust monorepo: 195 crates across 4 layers, Edition 2024 (Rust 1.85+).
 
 ## Build Commands
 
@@ -60,7 +60,7 @@ Workflow coordination.
 
 ### Service (5-76 internal deps)
 External interfaces. Only layer with binary targets.
-- `nexcore-mcp` (415+ MCP tools, **76 internal deps** — pulls from everywhere)
+- `nexcore-mcp` (458 MCP tools, **76 internal deps** — pulls from everywhere)
 - `nexcore-api` (84+ REST routes)
 - `nexcore-cli`, `nexcore-guardian-cli`
 

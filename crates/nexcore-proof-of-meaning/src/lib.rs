@@ -26,15 +26,15 @@
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+pub mod chromatography;
+pub mod distillation;
 pub mod element;
+pub mod grounding;
+pub mod pipeline;
 pub mod registry;
 pub mod spectrum;
-pub mod distillation;
-pub mod chromatography;
-pub mod titration;
-pub mod pipeline;
-pub mod grounding;
 pub mod synonyms;
+pub mod titration;
 
 #[cfg(test)]
 mod tests {
@@ -73,7 +73,10 @@ mod tests {
         };
         // Zero vectors: component mass = 0, compound mass = 0 -> conserved
         let result = compound.verify_conservation();
-        assert!(matches!(result, element::StoichiometryResult::Conserved { .. }));
+        assert!(matches!(
+            result,
+            element::StoichiometryResult::Conserved { .. }
+        ));
     }
 
     #[test]
@@ -111,9 +114,10 @@ mod tests {
     fn distillation_mass_balance_quantitative() {
         let distiller = distillation::Distiller::new();
         let result = distiller.distill("cardiac adverse event");
-        assert!(
-            matches!(result.mass_balance.verdict, distillation::MassBalanceVerdict::Quantitative)
-        );
+        assert!(matches!(
+            result.mass_balance.verdict,
+            distillation::MassBalanceVerdict::Quantitative
+        ));
         assert!(result.mass_balance.loss_percent < 2.0);
     }
 
@@ -123,7 +127,11 @@ mod tests {
         let result = distiller.distill("drug unexpected cardiac");
         // "unexpected" (v=0.80) should come first (lowest separation temp)
         // "drug" (v=0.05) should come last (highest separation temp)
-        let labels: Vec<&str> = result.fractions.iter().map(|f| f.atom.label.as_str()).collect();
+        let labels: Vec<&str> = result
+            .fractions
+            .iter()
+            .map(|f| f.atom.label.as_str())
+            .collect();
         assert_eq!(labels[0], "unexpected"); // most volatile
         assert_eq!(labels[2], "drug"); // least volatile
     }
@@ -144,7 +152,10 @@ mod tests {
         let column = chromatography::Column::pv_standard();
         let result = column.separate("cardiac");
         assert_eq!(result.bands.len(), 1);
-        assert_eq!(result.bands[0].bound_class, element::ElementClass::OrganSystem);
+        assert_eq!(
+            result.bands[0].bound_class,
+            element::ElementClass::OrganSystem
+        );
         assert!(result.bands[0].binding_affinity.into_inner() > 0.90);
     }
 
@@ -195,9 +206,11 @@ mod tests {
 
     #[test]
     fn titration_residual_for_unknown() {
-        let titrants = vec![
-            element::Atom::new("cardiac", element::ElementClass::OrganSystem, 0.15),
-        ];
+        let titrants = vec![element::Atom::new(
+            "cardiac",
+            element::ElementClass::OrganSystem,
+            0.15,
+        )];
         let titrator = titration::Titrator::new(titrants);
         let curve = titrator.titrate("completely novel gibberish");
         // Nothing should match
@@ -219,7 +232,10 @@ mod tests {
             "cardiac adverse event",
         );
         assert_eq!(proof.equivalence_score.into_inner(), 1.0);
-        assert!(matches!(proof.verdict, titration::EquivalenceVerdict::Equivalent));
+        assert!(matches!(
+            proof.verdict,
+            titration::EquivalenceVerdict::Equivalent
+        ));
     }
 
     #[test]
@@ -229,13 +245,12 @@ mod tests {
             element::Atom::new("hepatic", element::ElementClass::OrganSystem, 0.15),
         ];
         let titrator = titration::Titrator::new(titrants);
-        let proof = titration::prove_equivalence(
-            &titrator,
-            "cardiac disorder",
-            "hepatic disorder",
-        );
+        let proof = titration::prove_equivalence(&titrator, "cardiac disorder", "hepatic disorder");
         // Different organ systems — should be distinct
-        assert!(matches!(proof.verdict, titration::EquivalenceVerdict::Distinct));
+        assert!(matches!(
+            proof.verdict,
+            titration::EquivalenceVerdict::Distinct
+        ));
     }
 
     // =========================================================================
@@ -253,10 +268,7 @@ mod tests {
     #[test]
     fn pipeline_proves_similar_expressions() {
         let pipeline = pipeline::ProofPipeline::pv_standard();
-        let proof = pipeline.prove_equivalence(
-            "cardiac adverse event",
-            "cardiac adverse reaction",
-        );
+        let proof = pipeline.prove_equivalence("cardiac adverse event", "cardiac adverse reaction");
         // Both share "cardiac" atom (titration order means "event"/"reaction"
         // consume residual before "adverse" is reached — correct heuristic behavior,
         // Phase 2 with real vectors will improve this)
@@ -325,7 +337,10 @@ mod tests {
                 confidence: 0.9,
             },
         );
-        assert!(matches!(r1, registry::CrystallizationResult::Crystallized { .. }));
+        assert!(matches!(
+            r1,
+            registry::CrystallizationResult::Crystallized { .. }
+        ));
 
         let atom2 = element::Atom::new("test", element::ElementClass::Modifier, 0.5);
         let r2 = reg.crystallize(
@@ -335,7 +350,10 @@ mod tests {
                 confidence: 0.9,
             },
         );
-        assert!(matches!(r2, registry::CrystallizationResult::AlreadyExists { .. }));
+        assert!(matches!(
+            r2,
+            registry::CrystallizationResult::AlreadyExists { .. }
+        ));
     }
 
     #[test]
@@ -371,10 +389,7 @@ mod tests {
             recorded_at: chrono::Utc::now(),
         };
         let dist = s1.distance(&s2);
-        if let spectrum::SpectralDistance::Measured {
-            interpretation, ..
-        } = dist
-        {
+        if let spectrum::SpectralDistance::Measured { interpretation, .. } = dist {
             assert!(matches!(
                 interpretation,
                 spectrum::EquivalenceInterpretation::Equivalent
@@ -399,7 +414,10 @@ mod tests {
             recorded_at: chrono::Utc::now(),
         };
         let dist = s1.distance(&s2);
-        assert!(matches!(dist, spectrum::SpectralDistance::Incomparable { .. }));
+        assert!(matches!(
+            dist,
+            spectrum::SpectralDistance::Incomparable { .. }
+        ));
     }
 
     // =========================================================================
@@ -410,40 +428,28 @@ mod tests {
     fn grounding_atom_is_t2p() {
         use nexcore_lex_primitiva::grounding::GroundsTo;
         let tier = element::Atom::tier();
-        assert_eq!(
-            tier,
-            nexcore_lex_primitiva::tier::Tier::T2Primitive,
-        );
+        assert_eq!(tier, nexcore_lex_primitiva::tier::Tier::T2Primitive,);
     }
 
     #[test]
     fn grounding_compound_is_t3() {
         use nexcore_lex_primitiva::grounding::GroundsTo;
         let tier = element::Compound::tier();
-        assert_eq!(
-            tier,
-            nexcore_lex_primitiva::tier::Tier::T3DomainSpecific,
-        );
+        assert_eq!(tier, nexcore_lex_primitiva::tier::Tier::T3DomainSpecific,);
     }
 
     #[test]
     fn grounding_element_class_is_t1() {
         use nexcore_lex_primitiva::grounding::GroundsTo;
         let tier = element::ElementClass::tier();
-        assert_eq!(
-            tier,
-            nexcore_lex_primitiva::tier::Tier::T1Universal,
-        );
+        assert_eq!(tier, nexcore_lex_primitiva::tier::Tier::T1Universal,);
     }
 
     #[test]
     fn grounding_semantic_equivalence_proof_is_t3() {
         use nexcore_lex_primitiva::grounding::GroundsTo;
         let tier = pipeline::SemanticEquivalenceProof::tier();
-        assert_eq!(
-            tier,
-            nexcore_lex_primitiva::tier::Tier::T3DomainSpecific,
-        );
+        assert_eq!(tier, nexcore_lex_primitiva::tier::Tier::T3DomainSpecific,);
     }
 
     #[test]
@@ -506,7 +512,10 @@ mod tests {
     fn registry_seed_observation_types() {
         let mut reg = registry::AtomRegistry::new();
         reg.seed_observation_types();
-        assert_eq!(reg.count_by_class(&element::ElementClass::ObservationType), 12);
+        assert_eq!(
+            reg.count_by_class(&element::ElementClass::ObservationType),
+            12
+        );
         assert!(reg.lookup("adverse event").is_some());
         assert!(reg.lookup("adverse reaction").is_some());
         assert!(reg.lookup("adverse drug reaction").is_some());
@@ -604,10 +613,7 @@ mod tests {
     #[test]
     fn pipeline_severity_grading() {
         let pipeline = pipeline::ProofPipeline::pv_standard();
-        let proof = pipeline.prove_equivalence(
-            "severe adverse event",
-            "serious adverse reaction",
-        );
+        let proof = pipeline.prove_equivalence("severe adverse event", "serious adverse reaction");
         assert!(proof.proof_valid);
         // "adverse" shared, "severe" and "serious" are different severity atoms
     }
@@ -615,17 +621,11 @@ mod tests {
     #[test]
     fn pipeline_organ_system_specificity() {
         let pipeline = pipeline::ProofPipeline::pv_standard();
-        let proof_same = pipeline.prove_equivalence(
-            "cardiac adverse event",
-            "cardiac adverse reaction",
-        );
-        let proof_diff = pipeline.prove_equivalence(
-            "cardiac adverse event",
-            "hepatic adverse event",
-        );
+        let proof_same =
+            pipeline.prove_equivalence("cardiac adverse event", "cardiac adverse reaction");
+        let proof_diff =
+            pipeline.prove_equivalence("cardiac adverse event", "hepatic adverse event");
         // Same organ + same modifier should score higher than different organ
-        assert!(
-            proof_same.equivalence.shared_atoms >= proof_diff.equivalence.shared_atoms
-        );
+        assert!(proof_same.equivalence.shared_atoms >= proof_diff.equivalence.shared_atoms);
     }
 }

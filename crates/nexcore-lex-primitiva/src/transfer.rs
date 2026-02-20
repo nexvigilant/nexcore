@@ -189,6 +189,19 @@ pub struct TransferResult {
     pub shared_primitives: Vec<LexPrimitiva>,
     /// Limiting factors for transfer.
     pub limiting_factors: Vec<String>,
+    // ── Enhanced confidence calibration (C4) ──────────────────────────────
+    /// Compositional isomorphism: 1.0 − normalized tree edit distance
+    /// between composition trees. Uses structural (Jaccard) as proxy.
+    #[serde(default)]
+    pub compositional_isomorphism: f64,
+    /// Fraction of relationships preserved under translation (functor
+    /// faithfulness). Uses functional score as proxy.
+    #[serde(default)]
+    pub relational_preservation: f64,
+    /// All three enhanced metrics > 0.7 — suitable for clinical decision
+    /// support (high-confidence cross-domain transfer).
+    #[serde(default)]
+    pub is_clinical_grade: bool,
 }
 
 /// Calculator for cross-domain transfer confidence.
@@ -227,6 +240,12 @@ impl TransferCalculator {
             contextual,
         );
 
+        // C4: enhanced confidence calibration
+        let compositional_isomorphism = structural; // Jaccard proxy for tree edit distance
+        let relational_preservation = functional; // functional score as functor proxy
+        let is_clinical_grade =
+            structural > 0.7 && functional > 0.7 && contextual > 0.7;
+
         TransferResult {
             source: source.name.clone(),
             target: target.name.clone(),
@@ -238,6 +257,9 @@ impl TransferCalculator {
             final_confidence,
             shared_primitives: shared.into_iter().collect(),
             limiting_factors,
+            compositional_isomorphism,
+            relational_preservation,
+            is_clinical_grade,
         }
     }
 

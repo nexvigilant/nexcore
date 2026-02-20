@@ -423,7 +423,10 @@ mod tests {
     #[test]
     fn chem_ratio_is_t2p_quantity_dominant() {
         assert_eq!(Ratio::tier(), Tier::T2Primitive);
-        assert_eq!(Ratio::primitive_composition().dominant, Some(LexPrimitiva::Quantity));
+        assert_eq!(
+            Ratio::primitive_composition().dominant,
+            Some(LexPrimitiva::Quantity)
+        );
     }
 
     #[test]
@@ -435,7 +438,10 @@ mod tests {
     #[test]
     fn chem_balance_is_t2p_state_dominant() {
         assert_eq!(Balance::tier(), Tier::T2Primitive);
-        assert_eq!(Balance::primitive_composition().dominant, Some(LexPrimitiva::State));
+        assert_eq!(
+            Balance::primitive_composition().dominant,
+            Some(LexPrimitiva::State)
+        );
     }
 
     #[test]

@@ -7,7 +7,7 @@
 //!
 //! Uses Kahn's algorithm internally for layered layout.
 
-use crate::svg::{self, palette, SvgDoc};
+use crate::svg::{self, SvgDoc, palette};
 use std::collections::{HashMap, HashSet, VecDeque};
 
 /// A node in the DAG.
@@ -120,7 +120,14 @@ pub fn render_dag(nodes: &[DagNode], edges: &[DagEdge], title: &str) -> String {
         {
             let sx = x1 + node_w / 2.0;
             let ex = x2 - node_w / 2.0;
-            doc.add(svg::arrow(sx, y1, ex, y2, &format!("{}80", palette::TEXT_DIM), 1.5));
+            doc.add(svg::arrow(
+                sx,
+                y1,
+                ex,
+                y2,
+                &format!("{}80", palette::TEXT_DIM),
+                1.5,
+            ));
         }
     }
 
@@ -165,10 +172,7 @@ pub fn render_dag(nodes: &[DagNode], edges: &[DagEdge], title: &str) -> String {
     }
 
     // Parallel execution annotation
-    let par_text = format!(
-        "{} levels = {} parallel stages",
-        level_count, level_count
-    );
+    let par_text = format!("{} levels = {} parallel stages", level_count, level_count);
     doc.add(svg::text(
         width / 2.0,
         height - 12.0,
@@ -238,13 +242,31 @@ mod tests {
     #[test]
     fn linear_dag_has_n_levels() {
         let nodes = vec![
-            DagNode { id: "A".into(), label: "A".into(), color: None },
-            DagNode { id: "B".into(), label: "B".into(), color: None },
-            DagNode { id: "C".into(), label: "C".into(), color: None },
+            DagNode {
+                id: "A".into(),
+                label: "A".into(),
+                color: None,
+            },
+            DagNode {
+                id: "B".into(),
+                label: "B".into(),
+                color: None,
+            },
+            DagNode {
+                id: "C".into(),
+                label: "C".into(),
+                color: None,
+            },
         ];
         let edges = vec![
-            DagEdge { from: "A".into(), to: "B".into() },
-            DagEdge { from: "B".into(), to: "C".into() },
+            DagEdge {
+                from: "A".into(),
+                to: "B".into(),
+            },
+            DagEdge {
+                from: "B".into(),
+                to: "C".into(),
+            },
         ];
         let levels = compute_levels(&nodes, &edges);
         assert_eq!(levels.len(), 3);
@@ -253,16 +275,44 @@ mod tests {
     #[test]
     fn parallel_nodes_same_level() {
         let nodes = vec![
-            DagNode { id: "root".into(), label: "Root".into(), color: None },
-            DagNode { id: "a".into(), label: "A".into(), color: None },
-            DagNode { id: "b".into(), label: "B".into(), color: None },
-            DagNode { id: "sink".into(), label: "Sink".into(), color: None },
+            DagNode {
+                id: "root".into(),
+                label: "Root".into(),
+                color: None,
+            },
+            DagNode {
+                id: "a".into(),
+                label: "A".into(),
+                color: None,
+            },
+            DagNode {
+                id: "b".into(),
+                label: "B".into(),
+                color: None,
+            },
+            DagNode {
+                id: "sink".into(),
+                label: "Sink".into(),
+                color: None,
+            },
         ];
         let edges = vec![
-            DagEdge { from: "root".into(), to: "a".into() },
-            DagEdge { from: "root".into(), to: "b".into() },
-            DagEdge { from: "a".into(), to: "sink".into() },
-            DagEdge { from: "b".into(), to: "sink".into() },
+            DagEdge {
+                from: "root".into(),
+                to: "a".into(),
+            },
+            DagEdge {
+                from: "root".into(),
+                to: "b".into(),
+            },
+            DagEdge {
+                from: "a".into(),
+                to: "sink".into(),
+            },
+            DagEdge {
+                from: "b".into(),
+                to: "sink".into(),
+            },
         ];
         let levels = compute_levels(&nodes, &edges);
         assert_eq!(levels.len(), 3);
@@ -272,8 +322,16 @@ mod tests {
     #[test]
     fn render_produces_svg() {
         let nodes = vec![
-            DagNode { id: "N".into(), label: "Quantity".into(), color: None },
-            DagNode { id: "->".into(), label: "Causality".into(), color: None },
+            DagNode {
+                id: "N".into(),
+                label: "Quantity".into(),
+                color: None,
+            },
+            DagNode {
+                id: "->".into(),
+                label: "Causality".into(),
+                color: None,
+            },
         ];
         let edges = vec![];
         let svg = render_dag(&nodes, &edges, "DAG Test");

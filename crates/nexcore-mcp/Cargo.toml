@@ -124,6 +124,7 @@ nexcore-registry = { workspace = true }
 # MCP server framework
 rmcp = { version = "0.14", features = ["server", "transport-io"] }
 
+nexcore-api = { workspace = true }
 # Async runtime
 tokio = { workspace = true }
 
@@ -131,6 +132,7 @@ tokio = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }
+schemars = { version = "1.0" }
 
 # Error handling
 anyhow = { workspace = true }

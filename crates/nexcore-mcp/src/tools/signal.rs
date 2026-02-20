@@ -39,6 +39,24 @@ pub fn signal_detect(params: SignalDetectParams) -> Result<CallToolResult, McpEr
         || result.ic.is_signal
         || result.ebgm.is_signal;
 
+    // IC variance transparency — quantifies estimation reliability
+    let (a, b, c, d) = (
+        params.a as f64,
+        params.b as f64,
+        params.c as f64,
+        params.d as f64,
+    );
+    let n_observed = a;
+    let total = a + b + c + d;
+    let n_expected = if total > 0.0 {
+        (a + b) * (a + c) / total
+    } else {
+        0.5
+    };
+    let ic_variance = 1.0 / n_observed.max(0.5) + 1.0 / n_expected.max(0.5);
+    let ic_convergence_alpha = 1.0 - (ic_variance / ic_variance.max(1.0)).min(0.95);
+    let ic_is_converged = ic_variance < 0.06;
+
     let json = serde_json::json!({
         "drug": params.drug,
         "event": params.event,
@@ -49,6 +67,9 @@ pub fn signal_detect(params: SignalDetectParams) -> Result<CallToolResult, McpEr
         "chi_square": result.chi_square,
         "strength": strength,
         "signal": signal,
+        "ic_variance": ic_variance,
+        "ic_convergence_alpha": ic_convergence_alpha,
+        "ic_is_converged": ic_is_converged,
     });
 
     let confidence = match strength {

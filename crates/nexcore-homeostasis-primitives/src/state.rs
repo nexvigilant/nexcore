@@ -31,9 +31,77 @@
 use crate::baseline::Baseline;
 use crate::data::MetricSnapshot;
 use crate::enums::{HealthStatus, ResponsePhase, TrendDirection};
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::time::Duration;
 use tokio::time::Instant;
+
+// =============================================================================
+// DynamicsType
+// =============================================================================
+
+/// Annotation for the dominant dynamical regime of a signal lifecycle state.
+///
+/// Signal systems often mix two fundamentally different dynamics:
+///
+/// - **Discrete** jumps between macro states (e.g., `Normal → Elevated`).
+///   These are Markov chain transitions — instantaneous, memoryless.
+///
+/// - **Continuous** trajectories within a state — evidence accumulates
+///   smoothly over time (e.g., threat score drifting from 0.30 to 0.70
+///   while still in the `Elevated` state).
+///
+/// A system exhibiting both simultaneously is a **Piecewise-Deterministic
+/// Markov Process (PDMP)** — the `Hybrid` variant.
+///
+/// This enum allows the homeostasis engine to select the correct mathematical
+/// toolkit for each state: ODE solvers for `Continuous`, rate matrices for
+/// `Discrete`, and hybrid simulators for `Hybrid`.
+///
+/// ## T1 Grounding
+///
+/// | Variant | Primitives |
+/// |---------|------------|
+/// | `Discrete` | ς (State) + ∝ (Irreversibility) |
+/// | `Continuous` | ν (Frequency) + → (Causality) |
+/// | `Hybrid` | ς + ν + → (PDMP composition) |
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum DynamicsType {
+    /// Pure discrete macro-state transition dynamics.
+    ///
+    /// The system is at a state boundary — it will jump to a new regime.
+    /// Mathematical tooling: rate matrices, jump process simulation.
+    Discrete,
+
+    /// Pure continuous evidence-accumulation dynamics.
+    ///
+    /// The system is evolving smoothly within its current macro state.
+    /// Mathematical tooling: ODE/SDE solvers, drift-diffusion models.
+    Continuous,
+
+    /// Hybrid PDMP dynamics — both discrete jumps and continuous drift active.
+    ///
+    /// Most common during escalation phases where evidence is accumulating
+    /// *and* the system may jump to a new macro state at any moment.
+    /// Mathematical tooling: piecewise-deterministic Markov process simulators.
+    Hybrid,
+}
+
+impl Default for DynamicsType {
+    fn default() -> Self {
+        Self::Continuous
+    }
+}
+
+impl std::fmt::Display for DynamicsType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Discrete => write!(f, "Discrete"),
+            Self::Continuous => write!(f, "Continuous"),
+            Self::Hybrid => write!(f, "Hybrid"),
+        }
+    }
+}
 
 // =============================================================================
 // MetricHistory
@@ -84,7 +152,8 @@ impl MetricHistory {
 
     /// Record a new value, evicting stale samples.
     pub fn record(&mut self, value: f64) {
-        self.samples.push_back(MetricSnapshot::now(self.name.clone(), value));
+        self.samples
+            .push_back(MetricSnapshot::now(self.name.clone(), value));
         self.evict_old();
         // Hard cap on count.
         while self.samples.len() > self.max_samples {
@@ -104,7 +173,9 @@ impl MetricHistory {
 
     /// Samples recorded within the last `duration`.
     pub fn get_recent(&self, duration: Duration) -> Vec<&MetricSnapshot> {
-        let cutoff = Instant::now().checked_sub(duration).unwrap_or_else(Instant::now);
+        let cutoff = Instant::now()
+            .checked_sub(duration)
+            .unwrap_or_else(Instant::now);
         self.samples
             .iter()
             .filter(|s| s.timestamp >= cutoff)
@@ -195,7 +266,9 @@ impl MetricHistory {
     // ── private helpers ────────────────────────────────────────────────────────
 
     fn evict_old(&mut self) {
-        let cutoff = Instant::now().checked_sub(self.max_age).unwrap_or_else(Instant::now);
+        let cutoff = Instant::now()
+            .checked_sub(self.max_age)
+            .unwrap_or_else(Instant::now);
         while self.samples.front().is_some_and(|s| s.timestamp < cutoff) {
             self.samples.pop_front();
         }
@@ -251,6 +324,15 @@ pub struct SystemState {
     pub most_deviant_metric: Option<String>,
     /// Human-readable annotations added by the control loop.
     pub notes: Vec<String>,
+
+    /// Dominant dynamical regime annotating this state's signal lifecycle.
+    ///
+    /// - `Discrete` — the system is at a macro state boundary (transition imminent).
+    /// - `Continuous` — evidence is accumulating smoothly within the current macro state.
+    /// - `Hybrid` — both dynamics are active simultaneously (PDMP regime).
+    ///
+    /// Used by the guardian engine to select the appropriate mathematical solver.
+    pub dynamics: DynamicsType,
 }
 
 impl SystemState {
@@ -261,8 +343,7 @@ impl SystemState {
 
     /// Whether a cytokine-storm-style cascade is in progress.
     pub fn is_in_storm(&self) -> bool {
-        self.health_status == HealthStatus::Storm
-            || self.response_phase == ResponsePhase::Storm
+        self.health_status == HealthStatus::Storm || self.response_phase == ResponsePhase::Storm
     }
 
     /// Whether the system should reduce its response level.
@@ -416,7 +497,8 @@ impl StateTracker {
         };
 
         // Storm risk.
-        let storm_risk = self.calculate_storm_risk(proportionality, &trends, response_level, baseline);
+        let storm_risk =
+            self.calculate_storm_risk(proportionality, &trends, response_level, baseline);
 
         // Health status.
         let health_status = Self::determine_health_status(&metrics, baseline, storm_risk);
@@ -451,6 +533,20 @@ impl StateTracker {
             .get_most_deviant_metric(&metrics)
             .map(|(name, _, _)| name);
 
+        // Annotate dynamics type based on current phase and health.
+        let dynamics = match (&response_phase, &health_status) {
+            // Storm or emergency: both discrete jumps and continuous escalation.
+            (ResponsePhase::Storm, _) | (_, HealthStatus::Storm) | (_, HealthStatus::Emergency) => {
+                DynamicsType::Hybrid
+            }
+            // Active phase transitions: discrete macro-state jumps.
+            (ResponsePhase::Escalating, _) | (ResponsePhase::Resolving, _) => {
+                DynamicsType::Discrete
+            }
+            // Default: continuous evidence accumulation within the current state.
+            _ => DynamicsType::Continuous,
+        };
+
         let state = SystemState {
             timestamp: Instant::now(),
             metrics,
@@ -467,6 +563,7 @@ impl StateTracker {
             overall_deviation,
             most_deviant_metric,
             notes: Vec::new(),
+            dynamics,
         };
 
         // Store in ring.
@@ -486,7 +583,9 @@ impl StateTracker {
 
     /// Past states from the last `duration`.
     pub fn get_state_history(&self, duration: Duration) -> Vec<&SystemState> {
-        let cutoff = Instant::now().checked_sub(duration).unwrap_or_else(Instant::now);
+        let cutoff = Instant::now()
+            .checked_sub(duration)
+            .unwrap_or_else(Instant::now);
         self.state_history
             .iter()
             .filter(|s| s.timestamp >= cutoff)
@@ -668,7 +767,10 @@ mod tests {
         h.record(0.4);
         h.record(0.41);
         // Only 2 samples — not enough for trend analysis.
-        assert_eq!(h.get_trend(Duration::from_secs(3600)), TrendDirection::Stable);
+        assert_eq!(
+            h.get_trend(Duration::from_secs(3600)),
+            TrendDirection::Stable
+        );
     }
 
     #[tokio::test]
@@ -679,7 +781,10 @@ mod tests {
         }
         let trend = h.get_trend(Duration::from_secs(3600));
         assert!(
-            matches!(trend, TrendDirection::Degrading | TrendDirection::AcceleratingDegradation),
+            matches!(
+                trend,
+                TrendDirection::Degrading | TrendDirection::AcceleratingDegradation
+            ),
             "expected degrading trend, got {trend:?}"
         );
     }
@@ -690,7 +795,10 @@ mod tests {
         for v in [100.0, 80.0, 60.0, 40.0, 20.0, 5.0] {
             h.record(v);
         }
-        assert_eq!(h.get_trend(Duration::from_secs(3600)), TrendDirection::Improving);
+        assert_eq!(
+            h.get_trend(Duration::from_secs(3600)),
+            TrendDirection::Improving
+        );
     }
 
     #[tokio::test]
@@ -734,6 +842,7 @@ mod tests {
             overall_deviation: 1.0,
             most_deviant_metric: None,
             notes: Vec::new(),
+            dynamics: DynamicsType::Discrete,
         };
         assert!(state.needs_dampening());
         assert!(!state.needs_amplification());
@@ -757,6 +866,7 @@ mod tests {
             overall_deviation: 2.0,
             most_deviant_metric: None,
             notes: Vec::new(),
+            dynamics: DynamicsType::Continuous,
         };
         assert!(state.needs_amplification());
         assert!(!state.needs_dampening());
@@ -780,6 +890,7 @@ mod tests {
             overall_deviation: 8.0,
             most_deviant_metric: None,
             notes: Vec::new(),
+            dynamics: DynamicsType::Hybrid,
         };
         assert!(state.is_in_storm());
         assert!(state.needs_dampening());
@@ -789,11 +900,8 @@ mod tests {
 
     #[tokio::test]
     async fn state_tracker_healthy_at_baseline() {
-        let mut tracker = StateTracker::new(
-            vec!["error_rate".into()],
-            Duration::from_secs(3600),
-            100,
-        );
+        let mut tracker =
+            StateTracker::new(vec!["error_rate".into()], Duration::from_secs(3600), 100);
         let b = baseline();
         let metrics = [("error_rate".to_string(), 0.001)].into_iter().collect();
         let state = tracker.update_state(metrics, 0.0, 0.0, 0.0, &b);
@@ -803,18 +911,19 @@ mod tests {
 
     #[tokio::test]
     async fn state_tracker_critical_on_high_deviation() {
-        let mut tracker = StateTracker::new(
-            vec!["error_rate".into()],
-            Duration::from_secs(3600),
-            100,
-        );
+        let mut tracker =
+            StateTracker::new(vec!["error_rate".into()], Duration::from_secs(3600), 100);
         let b = baseline();
         // error_rate far above absolute_maximum → deviation >> 5 → Emergency.
         let metrics = [("error_rate".to_string(), 0.9)].into_iter().collect();
         let state = tracker.update_state(metrics, 90.0, 0.0, 0.0, &b);
         assert!(
-            matches!(state.health_status, HealthStatus::Critical | HealthStatus::Emergency),
-            "got {:?}", state.health_status
+            matches!(
+                state.health_status,
+                HealthStatus::Critical | HealthStatus::Emergency
+            ),
+            "got {:?}",
+            state.health_status
         );
     }
 
@@ -824,7 +933,11 @@ mod tests {
         let b = baseline();
         let state = tracker.update_state(HashMap::new(), 10.0, 0.0, 50.0, &b);
         // proportionality = 50 / 10 = 5.
-        assert!((state.proportionality - 5.0).abs() < 0.01, "{}", state.proportionality);
+        assert!(
+            (state.proportionality - 5.0).abs() < 0.01,
+            "{}",
+            state.proportionality
+        );
     }
 
     #[tokio::test]

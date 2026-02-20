@@ -246,11 +246,26 @@ mod tests {
 
     #[test]
     fn sensor_to_signal_mapping() {
-        assert_eq!(sensor_to_signal_type(SensorType::ExternalThreat), SignalType::Threat);
-        assert_eq!(sensor_to_signal_type(SensorType::InternalDamage), SignalType::Damage);
-        assert_eq!(sensor_to_signal_type(SensorType::SelfMeasurement), SignalType::Response);
-        assert_eq!(sensor_to_signal_type(SensorType::Environmental), SignalType::Custom);
-        assert_eq!(sensor_to_signal_type(SensorType::Custom), SignalType::Custom);
+        assert_eq!(
+            sensor_to_signal_type(SensorType::ExternalThreat),
+            SignalType::Threat
+        );
+        assert_eq!(
+            sensor_to_signal_type(SensorType::InternalDamage),
+            SignalType::Damage
+        );
+        assert_eq!(
+            sensor_to_signal_type(SensorType::SelfMeasurement),
+            SignalType::Response
+        );
+        assert_eq!(
+            sensor_to_signal_type(SensorType::Environmental),
+            SignalType::Custom
+        );
+        assert_eq!(
+            sensor_to_signal_type(SensorType::Custom),
+            SignalType::Custom
+        );
     }
 
     #[test]
@@ -263,11 +278,20 @@ mod tests {
     #[test]
     fn action_type_all_serialize() {
         for action in [
-            ActionType::Idle, ActionType::Amplify, ActionType::Maintain,
-            ActionType::Dampen, ActionType::EmergencyDampen, ActionType::EmergencyShutdown,
-            ActionType::ReturnToBaseline, ActionType::ScaleUp, ActionType::ScaleDown,
-            ActionType::CircuitOpen, ActionType::CircuitClose, ActionType::Alert,
-            ActionType::RateLimit, ActionType::Custom,
+            ActionType::Idle,
+            ActionType::Amplify,
+            ActionType::Maintain,
+            ActionType::Dampen,
+            ActionType::EmergencyDampen,
+            ActionType::EmergencyShutdown,
+            ActionType::ReturnToBaseline,
+            ActionType::ScaleUp,
+            ActionType::ScaleDown,
+            ActionType::CircuitOpen,
+            ActionType::CircuitClose,
+            ActionType::Alert,
+            ActionType::RateLimit,
+            ActionType::Custom,
         ] {
             let json = serde_json::to_string(&action).unwrap();
             let back: ActionType = serde_json::from_str(&json).unwrap();
@@ -284,7 +308,11 @@ mod tests {
 
     #[test]
     fn circuit_state_serialize_roundtrip() {
-        for state in [CircuitState::Closed, CircuitState::Open, CircuitState::HalfOpen] {
+        for state in [
+            CircuitState::Closed,
+            CircuitState::Open,
+            CircuitState::HalfOpen,
+        ] {
             let json = serde_json::to_string(&state).unwrap();
             let back: CircuitState = serde_json::from_str(&json).unwrap();
             assert_eq!(back, state);
@@ -294,8 +322,12 @@ mod tests {
     #[test]
     fn storm_phase_all_variants_serialize() {
         for phase in [
-            StormPhase::Clear, StormPhase::Watching, StormPhase::Warning,
-            StormPhase::Imminent, StormPhase::Active, StormPhase::Peak,
+            StormPhase::Clear,
+            StormPhase::Watching,
+            StormPhase::Warning,
+            StormPhase::Imminent,
+            StormPhase::Active,
+            StormPhase::Peak,
             StormPhase::Resolving,
         ] {
             let json = serde_json::to_string(&phase).unwrap();
@@ -307,8 +339,10 @@ mod tests {
     #[test]
     fn decay_function_serialize_roundtrip() {
         for func in [
-            DecayFunction::Exponential, DecayFunction::Linear,
-            DecayFunction::Step, DecayFunction::Sigmoid,
+            DecayFunction::Exponential,
+            DecayFunction::Linear,
+            DecayFunction::Step,
+            DecayFunction::Sigmoid,
         ] {
             let json = serde_json::to_string(&func).unwrap();
             let back: DecayFunction = serde_json::from_str(&json).unwrap();

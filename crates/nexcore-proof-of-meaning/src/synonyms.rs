@@ -40,7 +40,13 @@ pub struct SynonymRegistry {
 static ORGAN_SYSTEM_GROUPS: &[SynonymGroup] = &[
     SynonymGroup {
         canonical: "cardiac",
-        members: &["cardiac", "heart", "heart-related", "cardiovascular", "cardiological"],
+        members: &[
+            "cardiac",
+            "heart",
+            "heart-related",
+            "cardiovascular",
+            "cardiological",
+        ],
         class: ElementClass::OrganSystem,
         similarity: 0.90,
     },
@@ -58,7 +64,14 @@ static ORGAN_SYSTEM_GROUPS: &[SynonymGroup] = &[
     },
     SynonymGroup {
         canonical: "neurological",
-        members: &["neurological", "neural", "nervous", "cerebral", "brain", "cns"],
+        members: &[
+            "neurological",
+            "neural",
+            "nervous",
+            "cerebral",
+            "brain",
+            "cns",
+        ],
         class: ElementClass::OrganSystem,
         similarity: 0.85,
     },
@@ -70,13 +83,26 @@ static ORGAN_SYSTEM_GROUPS: &[SynonymGroup] = &[
     },
     SynonymGroup {
         canonical: "gastrointestinal",
-        members: &["gastrointestinal", "gi", "gastric", "intestinal", "digestive", "stomach"],
+        members: &[
+            "gastrointestinal",
+            "gi",
+            "gastric",
+            "intestinal",
+            "digestive",
+            "stomach",
+        ],
         class: ElementClass::OrganSystem,
         similarity: 0.85,
     },
     SynonymGroup {
         canonical: "dermatologic",
-        members: &["dermatologic", "dermal", "skin", "cutaneous", "subcutaneous"],
+        members: &[
+            "dermatologic",
+            "dermal",
+            "skin",
+            "cutaneous",
+            "subcutaneous",
+        ],
         class: ElementClass::OrganSystem,
         similarity: 0.85,
     },
@@ -88,7 +114,13 @@ static ORGAN_SYSTEM_GROUPS: &[SynonymGroup] = &[
     },
     SynonymGroup {
         canonical: "musculoskeletal",
-        members: &["musculoskeletal", "skeletal", "muscular", "orthopedic", "joint"],
+        members: &[
+            "musculoskeletal",
+            "skeletal",
+            "muscular",
+            "orthopedic",
+            "joint",
+        ],
         class: ElementClass::OrganSystem,
         similarity: 0.80,
     },
@@ -134,7 +166,16 @@ static OBSERVATION_TYPE_GROUPS: &[SynonymGroup] = &[
 /// makes the Rosetta Proof work.
 static OBSERVATION_NEAR_SYNONYMS: &SynonymGroup = &SynonymGroup {
     canonical: "event",
-    members: &["event", "reaction", "experience", "effect", "occurrence", "incident", "episode", "response"],
+    members: &[
+        "event",
+        "reaction",
+        "experience",
+        "effect",
+        "occurrence",
+        "incident",
+        "episode",
+        "response",
+    ],
     class: ElementClass::ObservationType,
     similarity: 0.80, // Near-synonym, not exact
 };
@@ -149,7 +190,13 @@ static ACTION_GROUPS: &[SynonymGroup] = &[
     },
     SynonymGroup {
         canonical: "withdrawn",
-        members: &["withdrawn", "discontinued", "stopped", "ceased", "terminated"],
+        members: &[
+            "withdrawn",
+            "discontinued",
+            "stopped",
+            "ceased",
+            "terminated",
+        ],
         class: ElementClass::Action,
         similarity: 0.90,
     },
@@ -215,13 +262,26 @@ static MODIFIER_GROUPS: &[SynonymGroup] = &[
     },
     SynonymGroup {
         canonical: "unexpected",
-        members: &["unexpected", "unlisted", "unanticipated", "unforeseen", "novel"],
+        members: &[
+            "unexpected",
+            "unlisted",
+            "unanticipated",
+            "unforeseen",
+            "novel",
+        ],
         class: ElementClass::Modifier,
         similarity: 0.85,
     },
     SynonymGroup {
         canonical: "drug",
-        members: &["drug", "medication", "medicine", "pharmaceutical", "medicinal product", "therapeutic"],
+        members: &[
+            "drug",
+            "medication",
+            "medicine",
+            "pharmaceutical",
+            "medicinal product",
+            "therapeutic",
+        ],
         class: ElementClass::Modifier,
         similarity: 0.85,
     },
@@ -299,7 +359,10 @@ impl SynonymRegistry {
         }
 
         // Register the cross-group observation near-synonyms
-        groups.insert(OBSERVATION_NEAR_SYNONYMS.canonical, OBSERVATION_NEAR_SYNONYMS);
+        groups.insert(
+            OBSERVATION_NEAR_SYNONYMS.canonical,
+            OBSERVATION_NEAR_SYNONYMS,
+        );
 
         Self { lookup, groups }
     }
@@ -307,9 +370,7 @@ impl SynonymRegistry {
     /// Look up a token's canonical form and class.
     /// Returns (canonical_label, element_class, similarity_to_canonical).
     pub fn resolve(&self, token: &str) -> Option<(&'static str, ElementClass, f64)> {
-        self.lookup
-            .get(&token.to_lowercase())
-            .cloned()
+        self.lookup.get(&token.to_lowercase()).cloned()
     }
 
     /// Check if two tokens are synonyms (same canonical form).
@@ -333,9 +394,7 @@ impl SynonymRegistry {
         }
 
         // Check cross-group observation near-synonyms
-        if a_info.1 == ElementClass::ObservationType
-            && b_info.1 == ElementClass::ObservationType
-        {
+        if a_info.1 == ElementClass::ObservationType && b_info.1 == ElementClass::ObservationType {
             let a_in_near = OBSERVATION_NEAR_SYNONYMS
                 .members
                 .iter()

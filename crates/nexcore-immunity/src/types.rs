@@ -222,6 +222,9 @@ pub struct Antibody {
     /// Number of false positives.
     #[serde(default)]
     pub false_positives: u32,
+    /// Number of false negatives (missed threats).
+    #[serde(default)]
+    pub false_negatives: u32,
     /// Source of this antibody.
     #[serde(default)]
     pub learned_from: Option<String>,
@@ -333,6 +336,10 @@ pub struct ScanMetrics {
     pub false_positives: u32,
 }
 
+fn default_sensitivity() -> f64 {
+    0.5
+}
+
 /// Antibody registry loaded from YAML.
 ///
 /// ## Tier: T2-C (σ + π + μ)
@@ -342,6 +349,13 @@ pub struct AntibodyRegistry {
     pub version: String,
     /// All registered antibodies.
     pub antibodies: Vec<Antibody>,
+    /// Sensitivity threshold for minimax tuning (0.3–0.95).
+    ///
+    /// Controls the trade-off between false positive rate and false negative
+    /// rate. Lower values increase sensitivity (catch more threats, more FP);
+    /// higher values increase specificity (fewer FP, may miss threats).
+    #[serde(default = "default_sensitivity")]
+    pub sensitivity_threshold: f64,
 }
 
 impl AntibodyRegistry {
@@ -351,6 +365,7 @@ impl AntibodyRegistry {
         Self {
             version: "1.0".to_string(),
             antibodies: Vec::new(),
+            sensitivity_threshold: default_sensitivity(),
         }
     }
 
@@ -388,6 +403,47 @@ impl AntibodyRegistry {
             .iter()
             .filter(|ab| ab.severity >= min_severity)
             .collect()
+    }
+
+    /// Minimax sensitivity tuning: minimize max(FPR, FNR) given threat level.
+    ///
+    /// During high threat, lower threshold (more sensitive, more FP).
+    /// During low threat, raise threshold (fewer FP, may miss).
+    ///
+    /// The threshold is nudged toward FPR==FNR equilibrium on each call,
+    /// then adjusted by the threat-level bias, and finally clamped to [0.3, 0.95].
+    pub fn tune_sensitivity(&mut self, threat_level: ThreatLevel) {
+        let (total_fp, total_fn, total_apps) = self.antibodies.iter().fold(
+            (0u32, 0u32, 0u32),
+            |(fp, fn_, apps), ab| {
+                (
+                    fp + ab.false_positives,
+                    fn_ + ab.false_negatives,
+                    apps + ab.applications,
+                )
+            },
+        );
+        let total = total_apps.max(1) as f64;
+        let fpr = total_fp as f64 / total;
+        let fnr = total_fn as f64 / total;
+
+        // Threat-level adjustment: higher threat → lower threshold (more sensitive).
+        let adjustment = match threat_level {
+            ThreatLevel::Critical => -0.1,
+            ThreatLevel::High => -0.05,
+            ThreatLevel::Medium => 0.0,
+            ThreatLevel::Low => 0.05,
+        };
+
+        // Minimax nudge: equalize FPR and FNR.
+        if fpr > fnr {
+            self.sensitivity_threshold += 0.02;
+        } else {
+            self.sensitivity_threshold -= 0.02;
+        }
+
+        self.sensitivity_threshold += adjustment;
+        self.sensitivity_threshold = self.sensitivity_threshold.clamp(0.3, 0.95);
     }
 }
 
@@ -485,6 +541,19 @@ impl Antibody {
             return 0.0;
         }
         self.false_positives as f64 / total as f64
+    }
+
+    /// Compute the false negative rate for this antibody.
+    ///
+    /// Rate = false_negatives / (applications + false_negatives).
+    /// Returns 0.0 if no activations have occurred.
+    #[must_use]
+    pub fn false_negative_rate(&self) -> f64 {
+        let total = self.applications + self.false_negatives;
+        if total == 0 {
+            return 0.0;
+        }
+        self.false_negatives as f64 / total as f64
     }
 
     /// Diagnose the autoimmune status of this antibody.
@@ -633,6 +702,7 @@ mod tests {
             confidence: 0.9,
             applications: 0,
             false_positives: 0,
+            false_negatives: 0,
             learned_from: None,
             reference: None,
             promoted_from: None,
@@ -664,6 +734,7 @@ mod tests {
             confidence: 0.9,
             applications: 0,
             false_positives: 0,
+            false_negatives: 0,
             learned_from: None,
             reference: None,
             promoted_from: None,
@@ -687,6 +758,7 @@ mod tests {
             confidence: 0.8,
             applications: 0,
             false_positives: 0,
+            false_negatives: 0,
             learned_from: None,
             reference: None,
             promoted_from: None,
@@ -729,6 +801,7 @@ mod tests {
                 confidence: 0.8,
                 applications: 0,
                 false_positives: 0,
+                false_negatives: 0,
                 learned_from: None,
                 reference: None,
                 promoted_from: None,
@@ -772,6 +845,7 @@ mod tests {
             confidence: 0.9,
             applications,
             false_positives,
+            false_negatives: 0,
             learned_from: None,
             reference: None,
             promoted_from: None,
@@ -891,5 +965,62 @@ mod tests {
         // Just under 5% should be Healthy
         let ab = make_antibody("EDGE-002", 96, 4); // 4%
         assert_eq!(ab.autoimmune_status(), AutoimmuneStatus::Healthy);
+    }
+
+    // ── false_negative_rate tests ──────────────────────────────────────
+
+    #[test]
+    fn test_false_negative_rate_no_activations() {
+        let ab = make_antibody("FNR-001", 0, 0);
+        assert!((ab.false_negative_rate() - 0.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_false_negative_rate_with_negatives() {
+        let mut ab = make_antibody("FNR-002", 80, 0);
+        ab.false_negatives = 20;
+        // FNR = 20 / (80 + 20) = 0.2
+        assert!((ab.false_negative_rate() - 0.2).abs() < f64::EPSILON);
+    }
+
+    // ── tune_sensitivity tests ─────────────────────────────────────────
+
+    #[test]
+    fn test_sensitivity_starts_at_default() {
+        let registry = AntibodyRegistry::new();
+        assert!((registry.sensitivity_threshold - 0.5).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_tune_sensitivity_critical_lowers_threshold() {
+        let mut registry = AntibodyRegistry::new();
+        let before = registry.sensitivity_threshold;
+        registry.tune_sensitivity(ThreatLevel::Critical);
+        // Critical applies -0.1 adjustment plus minimax nudge
+        assert!(registry.sensitivity_threshold < before);
+    }
+
+    #[test]
+    fn test_tune_sensitivity_low_raises_threshold() {
+        let mut registry = AntibodyRegistry::new();
+        let before = registry.sensitivity_threshold;
+        registry.tune_sensitivity(ThreatLevel::Low);
+        // Low applies +0.05 adjustment plus minimax nudge
+        assert!(registry.sensitivity_threshold > before);
+    }
+
+    #[test]
+    fn test_tune_sensitivity_clamps_to_bounds() {
+        let mut registry = AntibodyRegistry::new();
+        // Drive it to the floor
+        for _ in 0..20 {
+            registry.tune_sensitivity(ThreatLevel::Critical);
+        }
+        assert!(registry.sensitivity_threshold >= 0.3);
+        // Drive it to the ceiling
+        for _ in 0..20 {
+            registry.tune_sensitivity(ThreatLevel::Low);
+        }
+        assert!(registry.sensitivity_threshold <= 0.95);
     }
 }

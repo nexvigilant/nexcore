@@ -11,16 +11,18 @@ use crate::params::trial::{
 };
 use nexcore_trial::{
     adaptation::evaluate_adaptation,
-    block_randomize, bonferroni_adjust, check_safety_boundary, evaluate_interim,
-    evaluate_two_means, evaluate_two_proportions, generate_report, hochberg_adjust, holm_adjust,
-    benjamini_hochberg_adjust, lan_demets_alpha_spent, obrien_fleming_boundary,
-    posterior_probability_superiority, power::{sample_size_survival, sample_size_two_mean, sample_size_two_proportion},
-    randomize::stratified_randomize, register_protocol, safety_event_rate,
-    simple_randomize, verify_blinding,
+    benjamini_hochberg_adjust, block_randomize, bonferroni_adjust, check_safety_boundary,
+    evaluate_interim, evaluate_two_means, evaluate_two_proportions, generate_report,
+    hochberg_adjust, holm_adjust, lan_demets_alpha_spent, obrien_fleming_boundary,
+    posterior_probability_superiority,
+    power::{sample_size_survival, sample_size_two_mean, sample_size_two_proportion},
+    randomize::stratified_randomize,
+    register_protocol, safety_event_rate, simple_randomize,
     types::{
         Adaptation, Arm, BlindingLevel, Endpoint, EndpointDirection, EndpointResult, InterimData,
         Protocol, ProtocolRequest, SafetyRule, SpendingFunction, Stratum,
     },
+    verify_blinding,
 };
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
@@ -29,9 +31,8 @@ use rmcp::model::{CallToolResult, Content};
 
 /// Register a new trial protocol. Validates all fields and generates a UUID trial ID.
 pub fn protocol_register(params: TrialProtocolRegisterParams) -> Result<CallToolResult, McpError> {
-    let primary_endpoint: Endpoint =
-        serde_json::from_str(&params.primary_endpoint_json)
-            .map_err(|e| McpError::invalid_params(format!("primary_endpoint_json: {e}"), None))?;
+    let primary_endpoint: Endpoint = serde_json::from_str(&params.primary_endpoint_json)
+        .map_err(|e| McpError::invalid_params(format!("primary_endpoint_json: {e}"), None))?;
 
     let arms: Vec<Arm> = serde_json::from_str(&params.arms_json)
         .map_err(|e| McpError::invalid_params(format!("arms_json: {e}"), None))?;
@@ -85,30 +86,47 @@ pub fn protocol_register(params: TrialProtocolRegisterParams) -> Result<CallTool
 pub fn power_analysis(params: TrialPowerAnalysisParams) -> Result<CallToolResult, McpError> {
     let result = match params.test_type.as_str() {
         "two_proportion" => {
-            let p1 = params.p1.ok_or_else(|| McpError::invalid_params("p1 required for two_proportion", None))?;
-            let p2 = params.p2.ok_or_else(|| McpError::invalid_params("p2 required for two_proportion", None))?;
+            let p1 = params
+                .p1
+                .ok_or_else(|| McpError::invalid_params("p1 required for two_proportion", None))?;
+            let p2 = params
+                .p2
+                .ok_or_else(|| McpError::invalid_params("p2 required for two_proportion", None))?;
             sample_size_two_proportion(p1, p2, params.alpha, params.power)
         }
         "two_mean" => {
-            let d = params.effect_size.ok_or_else(|| McpError::invalid_params("effect_size required for two_mean", None))?;
+            let d = params.effect_size.ok_or_else(|| {
+                McpError::invalid_params("effect_size required for two_mean", None)
+            })?;
             sample_size_two_mean(d, params.alpha, params.power)
         }
         "survival" => {
-            let hr = params.hazard_ratio.ok_or_else(|| McpError::invalid_params("hazard_ratio required for survival", None))?;
-            let ep = params.event_prob.ok_or_else(|| McpError::invalid_params("event_prob required for survival", None))?;
+            let hr = params.hazard_ratio.ok_or_else(|| {
+                McpError::invalid_params("hazard_ratio required for survival", None)
+            })?;
+            let ep = params.event_prob.ok_or_else(|| {
+                McpError::invalid_params("event_prob required for survival", None)
+            })?;
             sample_size_survival(hr, params.alpha, params.power, ep)
         }
-        other => return Ok(CallToolResult::error(vec![Content::text(format!(
-            "Unknown test_type '{other}'. Use: two_proportion | two_mean | survival"
-        ))])),
+        other => {
+            return Ok(CallToolResult::error(vec![Content::text(format!(
+                "Unknown test_type '{other}'. Use: two_proportion | two_mean | survival"
+            ))]));
+        }
     };
 
     match result {
         Ok(n) => Ok(CallToolResult::success(vec![Content::text(format!(
             "Power Analysis ({}):\n  Per-arm sample size: **{n}**\n  α={:.3}, power={:.0}%\n  Total (2 arms): {}",
-            params.test_type, params.alpha, params.power * 100.0, n * 2
+            params.test_type,
+            params.alpha,
+            params.power * 100.0,
+            n * 2
         ))])),
-        Err(e) => Ok(CallToolResult::error(vec![Content::text(format!("Power analysis failed: {e}"))])),
+        Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+            "Power analysis failed: {e}"
+        ))])),
     }
 }
 
@@ -131,14 +149,16 @@ pub fn randomize(params: TrialRandomizeParams) -> Result<CallToolResult, McpErro
                 .unwrap_or_default();
             if strata.is_empty() {
                 return Ok(CallToolResult::error(vec![Content::text(
-                    "strata_json required for stratified randomization".into(),
+                    "strata_json required for stratified randomization".to_string(),
                 )]));
             }
             stratified_randomize(&strata, params.arms, block_size, params.seed)
         }
-        other => return Ok(CallToolResult::error(vec![Content::text(format!(
-            "Unknown method '{other}'. Use: simple | block | stratified"
-        ))])),
+        other => {
+            return Ok(CallToolResult::error(vec![Content::text(format!(
+                "Unknown method '{other}'. Use: simple | block | stratified"
+            ))]));
+        }
     };
 
     match result {
@@ -152,14 +172,16 @@ pub fn randomize(params: TrialRandomizeParams) -> Result<CallToolResult, McpErro
                 .map(|(i, c)| format!("arm_{i}: {c}"))
                 .collect::<Vec<_>>()
                 .join(", ");
-            let json = serde_json::to_string(&assignments)
-                .unwrap_or_else(|_| "[]".into());
+            let json = serde_json::to_string(&assignments).unwrap_or_else(|_| "[]".into());
             Ok(CallToolResult::success(vec![Content::text(format!(
                 "Randomization complete ({}, n={}):\n  Distribution: {counts_str}\n\nAssignments JSON:\n```json\n{json}\n```",
-                params.method, assignments.len()
+                params.method,
+                assignments.len()
             ))]))
         }
-        Err(e) => Ok(CallToolResult::error(vec![Content::text(format!("Randomization failed: {e}"))])),
+        Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+            "Randomization failed: {e}"
+        ))])),
     }
 }
 
@@ -192,7 +214,9 @@ pub fn blind_verify(params: TrialBlindVerifyParams) -> Result<CallToolResult, Mc
                 }
             ))]))
         }
-        Err(e) => Ok(CallToolResult::error(vec![Content::text(format!("Blinding verification failed: {e}"))])),
+        Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+            "Blinding verification failed: {e}"
+        ))])),
     }
 }
 
@@ -245,7 +269,9 @@ pub fn interim_analyze(params: TrialInterimAnalyzeParams) -> Result<CallToolResu
             posterior,
             result.rationale
         ))])),
-        Err(e) => Ok(CallToolResult::error(vec![Content::text(format!("Interim analysis failed: {e}"))])),
+        Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+            "Interim analysis failed: {e}"
+        ))])),
     }
 }
 
@@ -256,11 +282,17 @@ pub fn safety_check(params: TrialSafetyCheckParams) -> Result<CallToolResult, Mc
     let rule = SafetyRule {
         metric: params.metric,
         threshold: params.threshold,
-        description: params.description.unwrap_or_else(|| format!("Stop if > {}", params.threshold)),
+        description: params
+            .description
+            .unwrap_or_else(|| format!("Stop if > {}", params.threshold)),
     };
 
     let result = check_safety_boundary(&rule, params.observed_value);
-    let status = if result.is_safe { "SAFE — continue" } else { "STOP — boundary crossed" };
+    let status = if result.is_safe {
+        "SAFE — continue"
+    } else {
+        "STOP — boundary crossed"
+    };
 
     Ok(CallToolResult::success(vec![Content::text(format!(
         "Safety Check: **{status}**\n\
@@ -272,7 +304,11 @@ pub fn safety_check(params: TrialSafetyCheckParams) -> Result<CallToolResult, Mc
         result.observed,
         result.threshold,
         result.margin,
-        if result.margin >= 0.0 { "below threshold" } else { "EXCEEDED" }
+        if result.margin >= 0.0 {
+            "below threshold"
+        } else {
+            "EXCEEDED"
+        }
     ))]))
 }
 
@@ -282,36 +318,61 @@ pub fn safety_check(params: TrialSafetyCheckParams) -> Result<CallToolResult, Mc
 pub fn endpoint_evaluate(params: TrialEndpointEvaluateParams) -> Result<CallToolResult, McpError> {
     let mut result = match params.test_type.as_str() {
         "two_proportion" => {
-            let s1 = params.s1.ok_or_else(|| McpError::invalid_params("s1 required", None))?;
-            let n1 = params.n1.ok_or_else(|| McpError::invalid_params("n1 required", None))?;
-            let s2 = params.s2.ok_or_else(|| McpError::invalid_params("s2 required", None))?;
-            let n2 = params.n2.ok_or_else(|| McpError::invalid_params("n2 required", None))?;
+            let s1 = params
+                .s1
+                .ok_or_else(|| McpError::invalid_params("s1 required", None))?;
+            let n1 = params
+                .n1
+                .ok_or_else(|| McpError::invalid_params("n1 required", None))?;
+            let s2 = params
+                .s2
+                .ok_or_else(|| McpError::invalid_params("s2 required", None))?;
+            let n2 = params
+                .n2
+                .ok_or_else(|| McpError::invalid_params("n2 required", None))?;
             evaluate_two_proportions(s1, n1, s2, n2, params.alpha)
                 .map_err(|e| McpError::internal_error(e.to_string(), None))?
         }
         "two_mean" => {
-            let mean1 = params.mean1.ok_or_else(|| McpError::invalid_params("mean1 required", None))?;
-            let sd1 = params.sd1.ok_or_else(|| McpError::invalid_params("sd1 required", None))?;
-            let n1 = params.n1.ok_or_else(|| McpError::invalid_params("n1 required", None))?;
-            let mean2 = params.mean2.ok_or_else(|| McpError::invalid_params("mean2 required", None))?;
-            let sd2 = params.sd2.ok_or_else(|| McpError::invalid_params("sd2 required", None))?;
-            let n2 = params.n2.ok_or_else(|| McpError::invalid_params("n2 required", None))?;
+            let mean1 = params
+                .mean1
+                .ok_or_else(|| McpError::invalid_params("mean1 required", None))?;
+            let sd1 = params
+                .sd1
+                .ok_or_else(|| McpError::invalid_params("sd1 required", None))?;
+            let n1 = params
+                .n1
+                .ok_or_else(|| McpError::invalid_params("n1 required", None))?;
+            let mean2 = params
+                .mean2
+                .ok_or_else(|| McpError::invalid_params("mean2 required", None))?;
+            let sd2 = params
+                .sd2
+                .ok_or_else(|| McpError::invalid_params("sd2 required", None))?;
+            let n2 = params
+                .n2
+                .ok_or_else(|| McpError::invalid_params("n2 required", None))?;
             evaluate_two_means(mean1, sd1, n1, mean2, sd2, n2, params.alpha)
                 .map_err(|e| McpError::internal_error(e.to_string(), None))?
         }
-        other => return Ok(CallToolResult::error(vec![Content::text(format!(
-            "Unknown test_type '{other}'. Use: two_proportion | two_mean"
-        ))])),
+        other => {
+            return Ok(CallToolResult::error(vec![Content::text(format!(
+                "Unknown test_type '{other}'. Use: two_proportion | two_mean"
+            ))]));
+        }
     };
 
     if let Some(name) = params.endpoint_name {
         result.name = name;
     }
 
-    let sig_label = if result.significant { "SIGNIFICANT" } else { "not significant" };
+    let sig_label = if result.significant {
+        "SIGNIFICANT"
+    } else {
+        "not significant"
+    };
     let nnt_str = result.nnt.map_or("N/A".into(), |n| format!("{n:.1}"));
-    let json = serde_json::to_string_pretty(&result)
-        .unwrap_or_else(|_| "{}".into());
+    let json = serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".into());
 
     Ok(CallToolResult::success(vec![Content::text(format!(
         "Endpoint Evaluation: **{sig_label}**\n\
@@ -320,11 +381,7 @@ pub fn endpoint_evaluate(params: TrialEndpointEvaluateParams) -> Result<CallTool
          Effect size: {:.4}\n\
          95% CI: [{:.4}, {:.4}]\n\
          NNT: {nnt_str}\n\n```json\n{json}\n```",
-        result.test_statistic,
-        result.p_value,
-        result.effect_size,
-        result.ci_lower,
-        result.ci_upper,
+        result.test_statistic, result.p_value, result.effect_size, result.ci_lower, result.ci_upper,
     ))]))
 }
 
@@ -342,7 +399,9 @@ pub fn multiplicity_adjust(
         .map_err(|e| McpError::invalid_params(format!("p_values parse error: {e}"), None))?;
 
     if p_values.is_empty() {
-        return Ok(CallToolResult::error(vec![Content::text("p_values must not be empty".into())]));
+        return Ok(CallToolResult::error(vec![Content::text(String::from(
+            "p_values must not be empty",
+        ))]));
     }
 
     let results = match params.method.as_str() {
@@ -350,9 +409,11 @@ pub fn multiplicity_adjust(
         "holm" => holm_adjust(&p_values, params.alpha),
         "hochberg" => hochberg_adjust(&p_values, params.alpha),
         "bh" | "benjamini_hochberg" => benjamini_hochberg_adjust(&p_values, params.alpha),
-        other => return Ok(CallToolResult::error(vec![Content::text(format!(
-            "Unknown method '{other}'. Use: bonferroni | holm | hochberg | bh"
-        ))])),
+        other => {
+            return Ok(CallToolResult::error(vec![Content::text(format!(
+                "Unknown method '{other}'. Use: bonferroni | holm | hochberg | bh"
+            ))]));
+        }
     };
 
     let sig_count = results.iter().filter(|r| r.significant).count();
@@ -365,7 +426,11 @@ pub fn multiplicity_adjust(
                 i + 1,
                 r.original_p,
                 r.adjusted_threshold,
-                if r.significant { "SIGNIFICANT" } else { "not significant" }
+                if r.significant {
+                    "SIGNIFICANT"
+                } else {
+                    "not significant"
+                }
             )
         })
         .collect::<Vec<_>>()
@@ -373,7 +438,9 @@ pub fn multiplicity_adjust(
 
     Ok(CallToolResult::success(vec![Content::text(format!(
         "Multiplicity Adjustment ({}, α={:.3}):\n{rows}\n\n{sig_count}/{} hypotheses significant",
-        params.method, params.alpha, results.len()
+        params.method,
+        params.alpha,
+        results.len()
     ))]))
 }
 
@@ -389,7 +456,11 @@ pub fn adapt_decide(params: TrialAdaptDecideParams) -> Result<CallToolResult, Mc
 
     match evaluate_adaptation(&protocol, &params.adaptation_type, &interim_data) {
         Ok(decision) => {
-            let verdict = if decision.approved { "APPROVED" } else { "REJECTED" };
+            let verdict = if decision.approved {
+                "APPROVED"
+            } else {
+                "REJECTED"
+            };
             let params_str = decision
                 .new_parameters
                 .as_ref()

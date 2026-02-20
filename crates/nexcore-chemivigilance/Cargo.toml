@@ -1,0 +1,27 @@
+[package]
+name = "nexcore-chemivigilance"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "LicenseRef-Proprietary"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+description = "Chemivigilance pipeline orchestrator generating SafetyBrief with min-3 limitations"
+
+[dependencies]
+nexcore-molcore = { path = "../nexcore-molcore" }
+nexcore-structural-alerts = { path = "../nexcore-structural-alerts" }
+nexcore-qsar = { path = "../nexcore-qsar" }
+nexcore-metabolite = { path = "../nexcore-metabolite" }
+chrono = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[lints.rust]
+dead_code = "allow"
+unused_imports = "allow"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"

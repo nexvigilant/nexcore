@@ -1,0 +1,27 @@
+[package]
+name = "nexcore-molcore"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "LicenseRef-Proprietary"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+description = "Pure Rust molecular core: SMILES parser, molecular graph, descriptors, fingerprints"
+
+[dependencies]
+prima-chem = { path = "../prima-chem" }
+thiserror = { version = "1.0.61" }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = { version = "1.0.120" }
+
+[dev-dependencies]
+proptest = { version = "1.6.0" }
+
+[lints.rust]
+dead_code = "allow"
+unused_imports = "allow"
+unused_variables = "allow"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"

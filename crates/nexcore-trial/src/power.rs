@@ -66,8 +66,7 @@ pub fn sample_size_two_proportion(
     let p_bar = (p1 + p2) / 2.0;
     let delta = (p1 - p2).abs();
 
-    let numerator =
-        z_alpha * (2.0 * p_bar * (1.0 - p_bar)).sqrt()
+    let numerator = z_alpha * (2.0 * p_bar * (1.0 - p_bar)).sqrt()
         + z_beta * (p1 * (1.0 - p1) + p2 * (1.0 - p2)).sqrt();
     let n = (numerator / delta).powi(2);
 
@@ -85,11 +84,7 @@ pub fn sample_size_two_proportion(
 ///
 /// # Returns
 /// Per-arm sample size (round up).
-pub fn sample_size_two_mean(
-    effect_size: f64,
-    alpha: f64,
-    power: f64,
-) -> Result<u32, TrialError> {
+pub fn sample_size_two_mean(effect_size: f64, alpha: f64, power: f64) -> Result<u32, TrialError> {
     if effect_size <= 0.0 {
         return Err(TrialError::InvalidParameter(
             "effect_size must be positive".into(),
@@ -187,7 +182,10 @@ mod tests {
 
         // z for 1 - power = 0.20 should be ~0.842
         let z_beta = z_score_from_alpha(0.20);
-        assert!((z_beta - 0.842).abs() < 0.005, "Expected ~0.842, got {z_beta}");
+        assert!(
+            (z_beta - 0.842).abs() < 0.005,
+            "Expected ~0.842, got {z_beta}"
+        );
     }
 
     #[test]
@@ -196,10 +194,7 @@ mod tests {
         let n = sample_size_two_proportion(0.50, 0.60, 0.05, 0.80);
         assert!(n.is_ok(), "Expected Ok, got {n:?}");
         let n = n.unwrap();
-        assert!(
-            n > 300 && n < 500,
-            "Expected 300 < n < 500, got {n}"
-        );
+        assert!(n > 300 && n < 500, "Expected 300 < n < 500, got {n}");
     }
 
     #[test]
@@ -208,10 +203,7 @@ mod tests {
         let n = sample_size_two_mean(0.5, 0.05, 0.80);
         assert!(n.is_ok(), "Expected Ok, got {n:?}");
         let n = n.unwrap();
-        assert!(
-            n > 50 && n < 80,
-            "Expected 50 < n < 80, got {n}"
-        );
+        assert!(n > 50 && n < 80, "Expected 50 < n < 80, got {n}");
     }
 
     #[test]

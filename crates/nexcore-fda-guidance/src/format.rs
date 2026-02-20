@@ -125,7 +125,11 @@ pub fn format_status_list(docs: &[FdaGuidanceDoc], status: &str, open_only: bool
         return format!("No {qualifier} FDA guidance documents found.");
     }
 
-    let mut out = format!("# {} FDA Guidance Documents ({})\n\n", qualifier, docs.len());
+    let mut out = format!(
+        "# {} FDA Guidance Documents ({})\n\n",
+        qualifier,
+        docs.len()
+    );
 
     for doc in docs {
         out.push_str(&format!("- **{}**\n", doc.title));

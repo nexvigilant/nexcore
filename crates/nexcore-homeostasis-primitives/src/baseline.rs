@@ -11,6 +11,259 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 // =============================================================================
+// AllostasisTracker
+// =============================================================================
+
+/// Tracks path-dependent drift of the homeostatic set-point.
+///
+/// Recovery is 2–5× slower than adaptation (asymmetric hysteresis).
+/// Each exposure cycle leaves a permanent residue via `ratchet_factor`.
+///
+/// ## Biological analog
+///
+/// Analogous to allostatic load in the HPA axis: chronic stress shifts the
+/// cortisol set-point upward. Full recovery takes 3× longer than the original
+/// adaptation, and each stress cycle permanently raises the resting floor by
+/// `ratchet_factor`.
+///
+/// ## Usage
+///
+/// ```
+/// use nexcore_homeostasis_primitives::baseline::AllostasisTracker;
+///
+/// let mut tracker = AllostasisTracker::new(50.0, 300.0);
+/// let now_ms: i64 = 0;
+/// tracker.begin_exposure(now_ms);
+///
+/// // 300 s later — should have drifted toward stressed target.
+/// let sp = tracker.current_setpoint(now_ms + 300_000);
+/// assert!(sp > 50.0);
+/// ```
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AllostasisTracker {
+    /// Stored set-point snapshot at the moment of the last state transition.
+    ///
+    /// This is the *starting value* for the next exponential approach.
+    /// To read the *live* value at a given instant, call [`current_setpoint`](Self::current_setpoint).
+    pub setpoint: f64,
+
+    /// Original homeostatic baseline before any allostatic load.
+    pub original_baseline: f64,
+
+    /// Adaptation time constant in seconds — how fast the set-point drifts under load.
+    pub tau_on_secs: f64,
+
+    /// Recovery time constant in seconds — 2–5× `tau_on_secs`.
+    pub tau_off_secs: f64,
+
+    /// Ratio `tau_off / tau_on` — default 3.0.
+    pub asymmetry: f64,
+
+    /// Permanent upward ratchet applied to `original_baseline` after each cycle.
+    ///
+    /// Default 0.01 (1 % per cycle).
+    pub ratchet_factor: f64,
+
+    /// Number of completed exposure–recovery cycles.
+    pub cycle_count: u32,
+
+    /// `true` while the system is under load (adapting); `false` during recovery.
+    pub is_exposed: bool,
+
+    /// UTC milliseconds at the most recent state transition.
+    pub last_transition_ms: i64,
+}
+
+impl AllostasisTracker {
+    /// Create a tracker with default asymmetry (3.0) and ratchet factor (0.01).
+    ///
+    /// `tau_off_secs` is derived as `tau_on_secs × 3.0`.
+    ///
+    /// ```
+    /// use nexcore_homeostasis_primitives::baseline::AllostasisTracker;
+    ///
+    /// let tracker = AllostasisTracker::new(50.0, 300.0);
+    /// assert!((tracker.original_baseline - 50.0).abs() < f64::EPSILON);
+    /// assert!((tracker.tau_off_secs - 900.0).abs() < f64::EPSILON);
+    /// assert!((tracker.asymmetry - 3.0).abs() < f64::EPSILON);
+    /// ```
+    pub fn new(baseline: f64, tau_on_secs: f64) -> Self {
+        let asymmetry = 3.0_f64;
+        Self {
+            setpoint: baseline,
+            original_baseline: baseline,
+            tau_on_secs,
+            tau_off_secs: tau_on_secs * asymmetry,
+            asymmetry,
+            ratchet_factor: 0.01,
+            cycle_count: 0,
+            is_exposed: false,
+            last_transition_ms: 0,
+        }
+    }
+
+    /// Compute the dynamic set-point at `now_ms` (UTC milliseconds).
+    ///
+    /// - **Exposed**: set-point approaches the stressed target using `tau_on`.
+    ///   Stressed target = `original_baseline × (1.2 + ratchet × cycles)`.
+    /// - **Recovering**: set-point returns toward the ratcheted floor using `tau_off`.
+    ///   Ratcheted floor = `original_baseline × (1.0 + ratchet × cycles)`.
+    ///
+    /// ```
+    /// use nexcore_homeostasis_primitives::baseline::AllostasisTracker;
+    ///
+    /// let mut tracker = AllostasisTracker::new(100.0, 60.0);
+    /// let t0: i64 = 1_000_000;
+    /// tracker.begin_exposure(t0);
+    ///
+    /// // Right after start — close to baseline.
+    /// let sp0 = tracker.current_setpoint(t0);
+    /// assert!((sp0 - 100.0).abs() < 1.0);
+    ///
+    /// // After 5 × tau_on — nearly at stressed target (~95% converged).
+    /// let sp_late = tracker.current_setpoint(t0 + 300_000);
+    /// assert!(sp_late > 100.0);
+    /// ```
+    pub fn current_setpoint(&self, now_ms: i64) -> f64 {
+        let dt_secs = if self.last_transition_ms == 0 {
+            0.0_f64
+        } else {
+            (now_ms - self.last_transition_ms).max(0) as f64 / 1000.0
+        };
+
+        if self.is_exposed {
+            // Adapting upward: set-point converges to the stressed target.
+            let target = self.original_baseline
+                * (1.2 + self.ratchet_factor * f64::from(self.cycle_count));
+            target + (self.setpoint - target) * (-dt_secs / self.tau_on_secs).exp()
+        } else {
+            // Recovering: set-point converges back to the ratcheted floor.
+            let floor = self.original_baseline
+                * (1.0 + self.ratchet_factor * f64::from(self.cycle_count));
+            floor + (self.setpoint - floor) * (-dt_secs / self.tau_off_secs).exp()
+        }
+    }
+
+    /// Begin an exposure cycle at `now_ms`.
+    ///
+    /// Snapshots the current dynamic set-point as the new starting value, then
+    /// starts the adaptation clock. No-op when already exposed.
+    pub fn begin_exposure(&mut self, now_ms: i64) {
+        if !self.is_exposed {
+            self.setpoint = self.current_setpoint(now_ms);
+            self.is_exposed = true;
+            self.last_transition_ms = now_ms;
+        }
+    }
+
+    /// End an exposure cycle at `now_ms`.
+    ///
+    /// Snapshots the current dynamic set-point, increments the cycle count,
+    /// and applies the ratchet (permanently raises `original_baseline`).
+    /// No-op when not exposed.
+    pub fn end_exposure(&mut self, now_ms: i64) {
+        if self.is_exposed {
+            self.setpoint = self.current_setpoint(now_ms);
+            self.is_exposed = false;
+            self.last_transition_ms = now_ms;
+            self.cycle_count = self.cycle_count.saturating_add(1);
+            // Ratchet: permanently raise the baseline floor so the next recovery
+            // converges to a higher value than before.
+            self.original_baseline *= 1.0 + self.ratchet_factor;
+        }
+    }
+
+    /// Normalized drift fraction from the original baseline.
+    ///
+    /// - `0.0` → at or below original baseline (fully recovered).
+    /// - `1.0` → at the stressed target (fully adapted, 20% above original).
+    ///
+    /// Values are clamped to `[0.0, 1.0]`.  The reference maximum drift is
+    /// defined as 20% above `original_baseline`.
+    pub fn drift_fraction(&self, now_ms: i64) -> f64 {
+        let current = self.current_setpoint(now_ms);
+        let max_drift = self.original_baseline * 0.2;
+        if max_drift.abs() < f64::EPSILON {
+            return 0.0;
+        }
+        ((current - self.original_baseline) / max_drift).clamp(0.0, 1.0)
+    }
+}
+
+#[cfg(test)]
+mod allostasis_tests {
+    use super::AllostasisTracker;
+
+    #[test]
+    fn new_sets_correct_defaults() {
+        let t = AllostasisTracker::new(100.0, 60.0);
+        assert!((t.original_baseline - 100.0).abs() < f64::EPSILON);
+        assert!((t.tau_off_secs - 180.0).abs() < f64::EPSILON);
+        assert!((t.asymmetry - 3.0).abs() < f64::EPSILON);
+        assert!((t.ratchet_factor - 0.01).abs() < f64::EPSILON);
+        assert_eq!(t.cycle_count, 0);
+        assert!(!t.is_exposed);
+    }
+
+    #[test]
+    fn setpoint_at_time_zero_returns_baseline() {
+        let t = AllostasisTracker::new(100.0, 60.0);
+        // last_transition_ms = 0, dt = 0 → no decay
+        let sp = t.current_setpoint(0);
+        assert!((sp - 100.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn begin_exposure_starts_drift() {
+        let mut t = AllostasisTracker::new(100.0, 60.0);
+        let t0: i64 = 1_000_000;
+        t.begin_exposure(t0);
+        assert!(t.is_exposed);
+        // After 5 × tau_on (5 min), should be close to stressed target (120).
+        let sp = t.current_setpoint(t0 + 5 * 60_000);
+        assert!(sp > 100.0, "setpoint {sp} should be above baseline");
+        assert!(sp < 121.0, "setpoint {sp} should not exceed stressed target");
+    }
+
+    #[test]
+    fn end_exposure_applies_ratchet() {
+        let mut t = AllostasisTracker::new(100.0, 60.0);
+        let t0: i64 = 1_000_000;
+        t.begin_exposure(t0);
+        let original_floor = t.original_baseline;
+        t.end_exposure(t0 + 300_000); // 5 min later
+        // Ratchet raises original_baseline by 1%.
+        assert!(t.original_baseline > original_floor, "ratchet should raise baseline");
+        assert_eq!(t.cycle_count, 1);
+        assert!(!t.is_exposed);
+    }
+
+    #[test]
+    fn recovery_is_slower_than_adaptation() {
+        // With asymmetry=3 the recovery constant is 3x the adaptation constant.
+        let t = AllostasisTracker::new(100.0, 60.0);
+        assert!((t.tau_off_secs / t.tau_on_secs - 3.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn drift_fraction_clamps_to_zero_at_rest() {
+        let t = AllostasisTracker::new(100.0, 60.0);
+        let frac = t.drift_fraction(0);
+        assert!((frac - 0.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn drift_fraction_approaches_one_when_fully_adapted() {
+        let mut t = AllostasisTracker::new(100.0, 60.0);
+        let t0: i64 = 1_000_000;
+        t.begin_exposure(t0);
+        // After 20 × tau_on, very close to stressed target → drift ≈ 1.0.
+        let frac = t.drift_fraction(t0 + 20 * 60_000);
+        assert!(frac > 0.9, "drift_fraction {frac} should be near 1.0 after 20×tau_on");
+    }
+}
+
+// =============================================================================
 // BaselineMetric
 // =============================================================================
 
@@ -248,61 +501,76 @@ impl Baseline {
         let mtr = self.max_tolerable_response;
         let amr = self.absolute_max_response;
 
-        self.metrics.insert("error_rate".into(), BaselineMetric {
-            name: "error_rate".into(),
-            metric_type: BaselineMetricType::ErrorRate,
-            resting_value: er,
-            warning_threshold: er * 5.0,
-            critical_threshold: er * 20.0,
-            absolute_maximum: 0.5,
-            unit: "ratio".into(),
-            description: "HTTP/RPC error rate".into(),
-            higher_is_worse: true,
-        });
-        self.metrics.insert("latency_p99_ms".into(), BaselineMetric {
-            name: "latency_p99_ms".into(),
-            metric_type: BaselineMetricType::Latency,
-            resting_value: lat,
-            warning_threshold: lat * 2.0,
-            critical_threshold: lat * 5.0,
-            absolute_maximum: lat * 20.0,
-            unit: "milliseconds".into(),
-            description: "P99 request latency".into(),
-            higher_is_worse: true,
-        });
-        self.metrics.insert("resource_utilization".into(), BaselineMetric {
-            name: "resource_utilization".into(),
-            metric_type: BaselineMetricType::ResourceUtilization,
-            resting_value: ru,
-            warning_threshold: 0.7,
-            critical_threshold: 0.85,
-            absolute_maximum: 0.95,
-            unit: "ratio".into(),
-            description: "CPU/memory utilization".into(),
-            higher_is_worse: true,
-        });
-        self.metrics.insert("queue_depth".into(), BaselineMetric {
-            name: "queue_depth".into(),
-            metric_type: BaselineMetricType::QueueDepth,
-            resting_value: qd,
-            warning_threshold: 100.0,
-            critical_threshold: 500.0,
-            absolute_maximum: 2000.0,
-            unit: "items".into(),
-            description: "Pending queue depth".into(),
-            higher_is_worse: true,
-        });
-        self.metrics.insert("response_level".into(), BaselineMetric {
-            name: "response_level".into(),
-            metric_type: BaselineMetricType::ResponseLevel,
-            resting_value: rl,
-            warning_threshold: mtr * 0.5,
-            critical_threshold: mtr * 0.8,
-            absolute_maximum: amr,
-            unit: "units".into(),
-            description: "Self-measured response level".into(),
-            higher_is_worse: true,
-        });
+        self.metrics.insert(
+            "error_rate".into(),
+            BaselineMetric {
+                name: "error_rate".into(),
+                metric_type: BaselineMetricType::ErrorRate,
+                resting_value: er,
+                warning_threshold: er * 5.0,
+                critical_threshold: er * 20.0,
+                absolute_maximum: 0.5,
+                unit: "ratio".into(),
+                description: "HTTP/RPC error rate".into(),
+                higher_is_worse: true,
+            },
+        );
+        self.metrics.insert(
+            "latency_p99_ms".into(),
+            BaselineMetric {
+                name: "latency_p99_ms".into(),
+                metric_type: BaselineMetricType::Latency,
+                resting_value: lat,
+                warning_threshold: lat * 2.0,
+                critical_threshold: lat * 5.0,
+                absolute_maximum: lat * 20.0,
+                unit: "milliseconds".into(),
+                description: "P99 request latency".into(),
+                higher_is_worse: true,
+            },
+        );
+        self.metrics.insert(
+            "resource_utilization".into(),
+            BaselineMetric {
+                name: "resource_utilization".into(),
+                metric_type: BaselineMetricType::ResourceUtilization,
+                resting_value: ru,
+                warning_threshold: 0.7,
+                critical_threshold: 0.85,
+                absolute_maximum: 0.95,
+                unit: "ratio".into(),
+                description: "CPU/memory utilization".into(),
+                higher_is_worse: true,
+            },
+        );
+        self.metrics.insert(
+            "queue_depth".into(),
+            BaselineMetric {
+                name: "queue_depth".into(),
+                metric_type: BaselineMetricType::QueueDepth,
+                resting_value: qd,
+                warning_threshold: 100.0,
+                critical_threshold: 500.0,
+                absolute_maximum: 2000.0,
+                unit: "items".into(),
+                description: "Pending queue depth".into(),
+                higher_is_worse: true,
+            },
+        );
+        self.metrics.insert(
+            "response_level".into(),
+            BaselineMetric {
+                name: "response_level".into(),
+                metric_type: BaselineMetricType::ResponseLevel,
+                resting_value: rl,
+                warning_threshold: mtr * 0.5,
+                critical_threshold: mtr * 0.8,
+                absolute_maximum: amr,
+                unit: "units".into(),
+                description: "Self-measured response level".into(),
+                higher_is_worse: true,
+            },
+        );
     }
 
     /// Add a custom metric.
@@ -341,7 +609,11 @@ impl Baseline {
                 weight_sum += w;
             }
         }
-        if weight_sum > 0.0 { total / weight_sum } else { 0.0 }
+        if weight_sum > 0.0 {
+            total / weight_sum
+        } else {
+            0.0
+        }
     }
 
     /// Whether the system is effectively at baseline (within `tolerance`).
@@ -384,7 +656,7 @@ mod tests {
     fn deviation_at_baseline_is_zero() {
         let b = sample_baseline();
         let values: HashMap<String, f64> = [
-            ("error_rate".to_string(), 0.001),    // exactly at resting
+            ("error_rate".to_string(), 0.001), // exactly at resting
             ("latency_p99_ms".to_string(), 200.0),
         ]
         .into_iter()
@@ -416,9 +688,9 @@ mod tests {
         let metric = b.get_metric("error_rate").unwrap(); // higher_is_worse
         assert_eq!(metric.severity_level(0.001), "normal");
         assert_eq!(metric.severity_level(0.003), "elevated"); // between resting and warning
-        assert_eq!(metric.severity_level(0.01), "warning");   // between warning and critical
-        assert_eq!(metric.severity_level(0.1), "critical");   // between critical and abs_max
-        assert_eq!(metric.severity_level(0.6), "emergency");  // beyond abs_max
+        assert_eq!(metric.severity_level(0.01), "warning"); // between warning and critical
+        assert_eq!(metric.severity_level(0.1), "critical"); // between critical and abs_max
+        assert_eq!(metric.severity_level(0.6), "emergency"); // beyond abs_max
     }
 
     #[test]
@@ -437,8 +709,8 @@ mod tests {
     fn get_most_deviant_metric() {
         let b = sample_baseline();
         let values: HashMap<String, f64> = [
-            ("error_rate".to_string(), 0.001),       // at baseline
-            ("latency_p99_ms".to_string(), 1000.0),  // very elevated
+            ("error_rate".to_string(), 0.001),      // at baseline
+            ("latency_p99_ms".to_string(), 1000.0), // very elevated
         ]
         .into_iter()
         .collect();
@@ -454,7 +726,7 @@ mod tests {
             name: "custom_rps".into(),
             metric_type: BaselineMetricType::Custom,
             resting_value: 1000.0,
-            warning_threshold: 500.0,  // lower is worse
+            warning_threshold: 500.0, // lower is worse
             critical_threshold: 200.0,
             absolute_maximum: 50.0,
             unit: "rps".into(),

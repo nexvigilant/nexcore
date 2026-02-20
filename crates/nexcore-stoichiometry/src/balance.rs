@@ -137,7 +137,10 @@ mod tests {
     #[test]
     fn test_balanced_equation_passes() {
         let r1 = make_reactant("drug", &[LexPrimitiva::Existence, LexPrimitiva::State]);
-        let r2 = make_reactant("safety", &[LexPrimitiva::Boundary, LexPrimitiva::Comparison]);
+        let r2 = make_reactant(
+            "safety",
+            &[LexPrimitiva::Boundary, LexPrimitiva::Comparison],
+        );
         let all_prims = vec![
             LexPrimitiva::Existence,
             LexPrimitiva::State,
@@ -165,11 +168,14 @@ mod tests {
         let concept = ConceptFormula {
             name: "Wrong".to_string(),
             definition: "wrong".to_string(),
-            formula: make_formula("Wrong", &[
-                LexPrimitiva::Existence,
-                LexPrimitiva::State,
-                LexPrimitiva::Causality, // extra — not in reactants
-            ]),
+            formula: make_formula(
+                "Wrong",
+                &[
+                    LexPrimitiva::Existence,
+                    LexPrimitiva::State,
+                    LexPrimitiva::Causality, // extra — not in reactants
+                ],
+            ),
         };
         let balance = Balancer::prove(&[r1.clone()], &concept);
         let eq = BalancedEquation {
@@ -186,11 +192,14 @@ mod tests {
         let concept = ConceptFormula {
             name: "Extra".to_string(),
             definition: "extra".to_string(),
-            formula: make_formula("Extra", &[
-                LexPrimitiva::Existence,
-                LexPrimitiva::State,
-                LexPrimitiva::Causality,
-            ]),
+            formula: make_formula(
+                "Extra",
+                &[
+                    LexPrimitiva::Existence,
+                    LexPrimitiva::State,
+                    LexPrimitiva::Causality,
+                ],
+            ),
         };
         let balance = Balancer::prove(&[r1.clone()], &concept);
         let eq = BalancedEquation {
@@ -235,7 +244,10 @@ mod tests {
     #[test]
     fn test_auto_balance_creates_balanced_equation() -> Result<(), StoichiometryError> {
         let r1 = make_reactant("drug", &[LexPrimitiva::Existence, LexPrimitiva::State]);
-        let r2 = make_reactant("safety", &[LexPrimitiva::Boundary, LexPrimitiva::Comparison]);
+        let r2 = make_reactant(
+            "safety",
+            &[LexPrimitiva::Boundary, LexPrimitiva::Comparison],
+        );
         let eq = Balancer::auto_balance("DrugSafety", "drug safety", vec![r1, r2])?;
         assert!(eq.balance.is_balanced);
         assert!(Balancer::is_balanced(&eq));

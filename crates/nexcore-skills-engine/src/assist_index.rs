@@ -41,6 +41,10 @@ pub struct SkillKnowledgeEntry {
     pub pipeline: Option<String>,
     /// Full markdown body after frontmatter
     pub body: String,
+    /// Pre-lowercased body (first 2000 chars) for search scoring.
+    /// Computed once at index time to avoid per-query allocation.
+    #[serde(skip)]
+    pub body_lower: String,
     /// Extracted `## Section` headings
     pub sections: Vec<String>,
     /// File path
@@ -200,6 +204,9 @@ fn parse_single_entry(path: &Path) -> Option<SkillKnowledgeEntry> {
     }
     let body = extract_body(&content);
     let sections = extract_sections(&body);
+    // Pre-lowercase first 2000 chars at index time (Optimization 1+2)
+    let cap = body.floor_char_boundary(2000);
+    let body_lower = body[..cap].to_lowercase();
 
     Some(SkillKnowledgeEntry {
         name: meta.name,
@@ -213,6 +220,7 @@ fn parse_single_entry(path: &Path) -> Option<SkillKnowledgeEntry> {
         domain: meta.domain,
         pipeline: meta.pipeline,
         body,
+        body_lower,
         sections,
         path: path.to_string_lossy().to_string(),
     })
@@ -316,6 +324,10 @@ fn score_entry(
         if let Some(s) = field_score.best_section {
             best_section = Some(s);
         }
+        // Early exit: score already high enough, skip remaining terms (Optimization 3)
+        if score > 50 {
+            break;
+        }
     }
 
     // All-terms bonus
@@ -396,9 +408,8 @@ fn score_fields<'a>(
         }
     }
 
-    // Body content (2 per hit, max 10)
-    let body_lower = entry.body.to_lowercase();
-    let body_count = pattern.find_iter(&body_lower).count();
+    // Body content (2 per hit, max 10) — uses pre-lowercased body (Optimization 2)
+    let body_count = pattern.find_iter(&entry.body_lower).count();
     if body_count > 0 {
         total += (body_count.min(5) * 2) as u32;
         push_unique(&mut matches, term, "body");
@@ -431,16 +442,14 @@ fn resolve_section(
         }
     }
 
-    // Fallback: first section mentioning any term
-    entry.sections.iter().find_map(|s| {
-        let content = extract_section_content(&entry.body, s)?;
-        let lower = content.to_lowercase();
-        if terms.iter().any(|t| lower.contains(t)) {
-            Some(content)
-        } else {
-            None
-        }
-    })
+    // Fallback: check pre-lowercased body for any term, then return first matching section
+    if !terms.iter().any(|t| entry.body_lower.contains(t)) {
+        return None;
+    }
+    entry
+        .sections
+        .iter()
+        .find_map(|s| extract_section_content(&entry.body, s))
 }
 
 /// Collect related skills (see_also + upstream + downstream), deduplicated.
@@ -525,6 +534,7 @@ mod tests {
             domain: None,
             pipeline: None,
             body: String::new(),
+            body_lower: String::new(),
             sections: vec![],
             path: "/test".to_string(),
         }
@@ -650,6 +660,7 @@ mod tests {
         entry.tags = vec!["signal".to_string()];
         entry.triggers = vec!["signal detection".to_string()];
         entry.body = "## Signal\nSignal signal signal signal".to_string();
+        entry.body_lower = entry.body.to_lowercase();
         entry.sections = vec!["Signal".to_string()];
         index.insert(entry);
 
@@ -662,6 +673,7 @@ mod tests {
         let mut index = SkillKnowledgeIndex::new();
         let mut entry = make_test_entry("test-skill", "Test skill");
         entry.body = "## Setup\nGeneral.\n\n## Auth\nOAuth flow details.".to_string();
+        entry.body_lower = entry.body.to_lowercase();
         entry.sections = vec!["Setup".to_string(), "Auth".to_string()];
         index.insert(entry);
 

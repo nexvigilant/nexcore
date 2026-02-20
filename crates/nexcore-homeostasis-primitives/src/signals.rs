@@ -322,7 +322,8 @@ impl SignalManager {
         half_life: Option<Duration>,
     ) -> String {
         let hl = half_life.unwrap_or(self.default_half_life);
-        let signal = DecayingSignal::new(signal_type, source, value, hl, DecayFunction::Exponential);
+        let signal =
+            DecayingSignal::new(signal_type, source, value, hl, DecayFunction::Exponential);
         self.add_signal(signal)
     }
 
@@ -394,9 +395,11 @@ impl SignalManager {
 
     /// The signal with the highest current (decayed) value, if any.
     pub fn get_strongest_signal(&self) -> Option<&DecayingSignal> {
-        self.signals
-            .values()
-            .max_by(|a, b| a.current_value().partial_cmp(&b.current_value()).unwrap_or(std::cmp::Ordering::Equal))
+        self.signals.values().max_by(|a, b| {
+            a.current_value()
+                .partial_cmp(&b.current_value())
+                .unwrap_or(std::cmp::Ordering::Equal)
+        })
     }
 
     /// Sum of all `Threat` signal strengths.
@@ -455,9 +458,7 @@ impl SignalManager {
             strength_by_type,
             total_strength,
             net_inflammatory_state: self.get_net_inflammatory_state(),
-            strongest_signal_source: self
-                .get_strongest_signal()
-                .map(|s| s.source.clone()),
+            strongest_signal_source: self.get_strongest_signal().map(|s| s.source.clone()),
         }
     }
 
@@ -489,7 +490,11 @@ mod tests {
             DecayFunction::Exponential,
         );
         // At t=0 value should be at full strength.
-        assert!((sig.current_value() - 100.0).abs() < 0.01, "t=0: {}", sig.current_value());
+        assert!(
+            (sig.current_value() - 100.0).abs() < 0.01,
+            "t=0: {}",
+            sig.current_value()
+        );
 
         // After exactly one half-life the value should be ≈50.
         time::advance(Duration::from_secs(60)).await;
@@ -499,7 +504,10 @@ mod tests {
         // After two half-lives ≈25.
         time::advance(Duration::from_secs(60)).await;
         let v2 = sig.current_value();
-        assert!((v2 - 25.0).abs() < 0.5, "t=2×half_life: expected ~25, got {v2}");
+        assert!(
+            (v2 - 25.0).abs() < 0.5,
+            "t=2×half_life: expected ~25, got {v2}"
+        );
     }
 
     #[tokio::test]
@@ -514,7 +522,11 @@ mod tests {
         );
         // At 2× half_life (60 s) value should be 0.
         time::advance(Duration::from_secs(60)).await;
-        assert!(sig.current_value() < 0.001, "linear at 2× half_life: {}", sig.current_value());
+        assert!(
+            sig.current_value() < 0.001,
+            "linear at 2× half_life: {}",
+            sig.current_value()
+        );
     }
 
     #[tokio::test]
@@ -533,7 +545,11 @@ mod tests {
 
         // After half_life: zero.
         time::advance(Duration::from_secs(2)).await;
-        assert!(sig.current_value() < 0.001, "step after half_life: {}", sig.current_value());
+        assert!(
+            sig.current_value() < 0.001,
+            "step after half_life: {}",
+            sig.current_value()
+        );
     }
 
     #[tokio::test]
@@ -574,7 +590,10 @@ mod tests {
         sig.boost(30.0);
         let after_boost = sig.current_value();
         // Immediately after boost, age is ~0, so current_value ≈ new initial.
-        assert!((after_boost - 55.0).abs() < 1.0, "after boost: {after_boost}");
+        assert!(
+            (after_boost - 55.0).abs() < 1.0,
+            "after boost: {after_boost}"
+        );
     }
 
     #[tokio::test]
@@ -686,7 +705,11 @@ mod tests {
         // Advance past cleanup interval + signal expiry.
         time::advance(Duration::from_millis(50)).await;
         mgr.tick();
-        assert_eq!(mgr.signal_count(), 0, "expired signal should have been pruned");
+        assert_eq!(
+            mgr.signal_count(),
+            0,
+            "expired signal should have been pruned"
+        );
     }
 
     #[tokio::test]

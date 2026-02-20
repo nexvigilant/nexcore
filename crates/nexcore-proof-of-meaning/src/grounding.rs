@@ -11,7 +11,7 @@ use crate::distillation::{DistillationResult, Fraction, MassBalance};
 use crate::element::{Atom, Bond, Compound, ElementClass, Relation, StoichiometryResult};
 use crate::pipeline::{ProofStep, ProofTrail, SemanticEquivalenceProof, TransformationMethod};
 use crate::registry::{AtomStatus, RegisteredAtom};
-use crate::spectrum::{EquivalenceInterpretation, Probe, Spectrum, SpectralDistance, SpectralLine};
+use crate::spectrum::{EquivalenceInterpretation, Probe, SpectralDistance, SpectralLine, Spectrum};
 use crate::titration::{
     EquivalencePoint, EquivalenceProof, EquivalenceVerdict, TitrationCurve, TitrationPoint,
 };

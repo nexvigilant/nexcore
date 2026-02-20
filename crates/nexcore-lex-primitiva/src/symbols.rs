@@ -68,16 +68,37 @@ pub const CONST_EPSILON: &str = "ε";
 /// Returns all 16 Lex Primitiva symbols as an array.
 pub const fn all_symbols() -> [&'static str; 16] {
     [
-        SIGMA_SEQ, MU_MAP, VARSIGMA_STATE, RHO_REC, EMPTYSET_VOID, PARTIAL_BOUND,
-        NU_FREQ, EXISTS_INST, PI_PERSIST, ARROW_CAUSAL, KAPPA_COMP, N_QUANT,
-        LAMBDA_LOC, PROPTORTO_IRREV, SIGMA_SUM, CROSS_PROD,
+        SIGMA_SEQ,
+        MU_MAP,
+        VARSIGMA_STATE,
+        RHO_REC,
+        EMPTYSET_VOID,
+        PARTIAL_BOUND,
+        NU_FREQ,
+        EXISTS_INST,
+        PI_PERSIST,
+        ARROW_CAUSAL,
+        KAPPA_COMP,
+        N_QUANT,
+        LAMBDA_LOC,
+        PROPTORTO_IRREV,
+        SIGMA_SUM,
+        CROSS_PROD,
     ]
 }
 
 /// Returns all 10 math constants as an array.
 pub const fn all_constants() -> [&'static str; 10] {
     [
-        CONST_ZERO, CONST_ONE, CONST_PI, CONST_E, CONST_PHI,
-        CONST_INFINITY, CONST_OMEGA, CONST_LN2, CONST_KB, CONST_EPSILON,
+        CONST_ZERO,
+        CONST_ONE,
+        CONST_PI,
+        CONST_E,
+        CONST_PHI,
+        CONST_INFINITY,
+        CONST_OMEGA,
+        CONST_LN2,
+        CONST_KB,
+        CONST_EPSILON,
     ]
 }

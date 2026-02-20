@@ -7,6 +7,7 @@
 //! - `Cascade chain` → ρ (recursion) - signals trigger more signals
 
 use crate::{Cytokine, CytokineFamily, ReceptorFilter, Scope, ThreatLevel};
+use serde::{Deserialize, Serialize};
 
 /// Rule for triggering cascade reactions.
 ///
@@ -178,6 +179,98 @@ impl CascadeRule {
     }
 }
 
+// ── Loop Gain Monitor ─────────────────────────────────────────────────────────
+
+/// Monitors cumulative loop gain across cascade chain hops.
+///
+/// When the product of amplification factors exceeds the threshold, the cascade
+/// is self-sustaining (positive feedback loop) and must be broken.
+///
+/// ## T1 Grounding
+/// - `N` (Quantity) — tracks cumulative amplification product
+/// - `∂` (Boundary) — enforces the loop-gain ceiling
+/// - `→` (Causality) — breaks runaway causal chains
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LoopGainMonitor {
+    /// Per-hop amplification records: `(source_id, amplification_factor)`.
+    pub chain_amplifications: Vec<(String, f64)>,
+    /// Trip threshold — expert range 5–8, default midpoint 6.0.
+    pub loop_gain_threshold: f64,
+    /// Whether the breaker is currently tripped.
+    pub is_tripped: bool,
+}
+
+/// Emitted when loop gain exceeds the configured threshold.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LoopGainViolation {
+    /// Computed product of all per-hop amplification factors.
+    pub total_gain: f64,
+    /// The chain of `(source_id, amplification_factor)` hops that produced the violation.
+    pub chain: Vec<(String, f64)>,
+    /// The threshold that was exceeded.
+    pub threshold: f64,
+}
+
+impl LoopGainMonitor {
+    /// Create a new monitor with the given trip threshold.
+    #[must_use]
+    pub fn new(threshold: f64) -> Self {
+        Self {
+            chain_amplifications: Vec::new(),
+            loop_gain_threshold: threshold,
+            is_tripped: false,
+        }
+    }
+
+    /// Create a monitor with the default threshold of 6.0.
+    #[must_use]
+    pub fn default_threshold() -> Self {
+        Self::new(6.0)
+    }
+
+    /// Record one hop in the cascade chain.
+    pub fn record_hop(&mut self, source: &str, amplification: f64) {
+        self.chain_amplifications.push((source.to_owned(), amplification));
+    }
+
+    /// Check whether the cumulative loop gain exceeds the threshold.
+    ///
+    /// Returns `Some(LoopGainViolation)` when the cascade is self-sustaining,
+    /// or `None` when gain is within safe bounds.
+    #[must_use]
+    pub fn check_loop_gain(&self) -> Option<LoopGainViolation> {
+        let total_gain: f64 = self
+            .chain_amplifications
+            .iter()
+            .map(|(_, amp)| amp)
+            .product();
+        if total_gain > self.loop_gain_threshold {
+            Some(LoopGainViolation {
+                total_gain,
+                chain: self.chain_amplifications.clone(),
+                threshold: self.loop_gain_threshold,
+            })
+        } else {
+            None
+        }
+    }
+
+    /// Reset the monitor, clearing all recorded hops and the tripped flag.
+    pub fn reset(&mut self) {
+        self.chain_amplifications.clear();
+        self.is_tripped = false;
+    }
+
+    /// Compute the current cumulative loop gain (product of all hop amplifications).
+    #[must_use]
+    pub fn total_gain(&self) -> f64 {
+        self.chain_amplifications
+            .iter()
+            .map(|(_, amp)| amp)
+            .product()
+    }
+}
+
 /// Pre-defined cascade patterns based on biological immune responses
 pub mod patterns {
     use super::*;
@@ -304,5 +397,62 @@ mod tests {
         let families: Vec<_> = responses.iter().map(|s| s.family).collect();
         assert!(families.contains(&CytokineFamily::Il6));
         assert!(families.contains(&CytokineFamily::TnfAlpha));
+    }
+
+    // ── LoopGainMonitor tests ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_loop_gain_below_threshold_passes() {
+        let mut monitor = LoopGainMonitor::default_threshold(); // threshold = 6.0
+        monitor.record_hop("hop-a", 1.5);
+        monitor.record_hop("hop-b", 2.0);
+        // total gain = 3.0 — below 6.0
+        assert!((monitor.total_gain() - 3.0).abs() < f64::EPSILON);
+        assert!(monitor.check_loop_gain().is_none());
+    }
+
+    #[test]
+    fn test_loop_gain_above_threshold_trips() {
+        let mut monitor = LoopGainMonitor::default_threshold(); // threshold = 6.0
+        monitor.record_hop("hop-a", 2.0);
+        monitor.record_hop("hop-b", 2.0);
+        monitor.record_hop("hop-c", 2.0);
+        // total gain = 8.0 — exceeds 6.0
+        assert!((monitor.total_gain() - 8.0).abs() < f64::EPSILON);
+        let violation = monitor.check_loop_gain();
+        assert!(violation.is_some());
+        let v = violation.unwrap();
+        assert!((v.total_gain - 8.0).abs() < f64::EPSILON);
+        assert_eq!(v.chain.len(), 3);
+        assert!((v.threshold - 6.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_loop_gain_exact_threshold_does_not_trip() {
+        let mut monitor = LoopGainMonitor::new(4.0);
+        monitor.record_hop("hop-a", 2.0);
+        monitor.record_hop("hop-b", 2.0);
+        // total gain = 4.0 — NOT strictly greater than threshold
+        assert!(monitor.check_loop_gain().is_none());
+    }
+
+    #[test]
+    fn test_loop_gain_monitor_reset_clears_state() {
+        let mut monitor = LoopGainMonitor::default_threshold();
+        monitor.record_hop("hop-a", 3.0);
+        monitor.record_hop("hop-b", 3.0);
+        monitor.is_tripped = true;
+        monitor.reset();
+        assert!(monitor.chain_amplifications.is_empty());
+        assert!(!monitor.is_tripped);
+        assert!(monitor.check_loop_gain().is_none());
+    }
+
+    #[test]
+    fn test_loop_gain_empty_chain_returns_one() {
+        let monitor = LoopGainMonitor::default_threshold();
+        // Product of empty iterator is 1.0 (multiplicative identity)
+        assert!((monitor.total_gain() - 1.0).abs() < f64::EPSILON);
+        assert!(monitor.check_loop_gain().is_none());
     }
 }

@@ -105,7 +105,10 @@ impl Decomposer {
 
         // Reporting and documentation
         self.register("report", vec![Persistence, Sequence, Existence]);
-        self.register("reporting", vec![Persistence, Sequence, Existence, Frequency]);
+        self.register(
+            "reporting",
+            vec![Persistence, Sequence, Existence, Frequency],
+        );
         self.register("case", vec![Existence, Boundary, Persistence]);
         self.register("individual", vec![Existence, Boundary, Quantity]);
         self.register("submission", vec![Sequence, Persistence, Boundary]);
@@ -122,7 +125,10 @@ impl Decomposer {
         self.register("analysis", vec![Mapping, Quantity, Comparison]);
         self.register("detection", vec![Frequency, Comparison, Boundary]);
         self.register("identification", vec![Existence, Comparison, Boundary]);
-        self.register("surveillance", vec![Frequency, Persistence, Boundary, Comparison]);
+        self.register(
+            "surveillance",
+            vec![Frequency, Persistence, Boundary, Comparison],
+        );
         self.register("investigation", vec![Causality, Comparison, Sequence]);
         self.register("review", vec![Comparison, Sequence, Mapping]);
         self.register("determination", vec![Causality, Comparison, Boundary]);
@@ -283,7 +289,17 @@ impl Decomposer {
         self.register("profile", vec![Mapping, Persistence, Boundary]);
 
         // RMP specific
-        self.register("pharmacovigilance", vec![Frequency, Boundary, State, Comparison, Persistence, Causality]);
+        self.register(
+            "pharmacovigilance",
+            vec![
+                Frequency,
+                Boundary,
+                State,
+                Comparison,
+                Persistence,
+                Causality,
+            ],
+        );
         self.register("detailed", vec![Mapping, Quantity, Comparison]);
         self.register("description", vec![Mapping, Persistence, Existence]);
         self.register("characterize", vec![Mapping, Comparison, Boundary]);
@@ -349,7 +365,10 @@ mod tests {
     #[test]
     fn test_register_custom_word() -> Result<(), StoichiometryError> {
         let mut d = Decomposer::new();
-        d.register("myword", vec![LexPrimitiva::Causality, LexPrimitiva::Boundary]);
+        d.register(
+            "myword",
+            vec![LexPrimitiva::Causality, LexPrimitiva::Boundary],
+        );
         let formula = d.decompose("myword")?;
         assert_eq!(formula.primitives().len(), 2);
         Ok(())

@@ -8,7 +8,10 @@ use std::path::PathBuf;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 
-use crate::params::{ForgeCompileParams, ForgeExtractParams, ForgeScaffoldParams, ForgeValidateParams};
+use crate::params::{
+    ForgeCompileParams, ForgeExtractParams, ForgeGuidanceScaffoldParams, ForgeScaffoldParams,
+    ForgeValidateParams,
+};
 
 /// Extract a complete IR from a Rust crate.
 ///
@@ -283,6 +286,88 @@ pub fn forge_compile(params: ForgeCompileParams) -> Result<CallToolResult, McpEr
             "Compile failed: {e}"
         ))])),
     }
+}
+
+/// Scaffold a pathway from an FDA guidance document.
+///
+/// Looks up the guidance document by slug/partial title, extracts metadata
+/// (title, topics, centers, status), and generates a complete StaticPathway
+/// JSON scaffold with stages mapped to document sections.
+///
+/// ## Pipeline
+///
+/// ```text
+/// forge_scaffold_from_guidance(slug, pathway_id, title, sections?)
+///     → Look up guidance via nexcore-fda-guidance
+///     → Generate scaffold via academy-forge guidance module
+///     → Return StaticPathway JSON template
+/// ```
+pub fn forge_scaffold_from_guidance(
+    params: ForgeGuidanceScaffoldParams,
+) -> Result<CallToolResult, McpError> {
+    // Look up the guidance document in the embedded index
+    let results =
+        match nexcore_fda_guidance::index::search(&params.guidance_id, None, None, None, 1) {
+            Ok(docs) => docs,
+            Err(e) => {
+                return Ok(CallToolResult::error(vec![Content::text(format!(
+                    "FDA guidance search failed: {e}"
+                ))]));
+            }
+        };
+
+    let doc = match results.first() {
+        Some(d) => d,
+        None => {
+            return Ok(CallToolResult::error(vec![Content::text(format!(
+                "No FDA guidance document found for: '{}'. Try a different slug or search term.",
+                params.guidance_id
+            ))]));
+        }
+    };
+
+    // Convert FDA guidance doc to academy-forge GuidanceInput
+    let guidance_input = academy_forge::GuidanceInput {
+        slug: doc.slug.clone(),
+        title: doc.title.clone(),
+        topics: doc.topics.clone(),
+        centers: doc.centers.clone(),
+        status: doc.status.clone(),
+        document_type: doc.document_type.clone(),
+    };
+
+    // Build scaffold params
+    let scaffold_params = academy_forge::GuidanceScaffoldParams {
+        pathway_id: params.pathway_id,
+        title: params.title,
+        domain: params.domain,
+        sections: params.sections,
+    };
+
+    // Generate the scaffold
+    let scaffold = academy_forge::guidance_scaffold(&guidance_input, &scaffold_params);
+
+    let stages_count = scaffold
+        .get("stages")
+        .and_then(|s| s.as_array())
+        .map(|a| a.len())
+        .unwrap_or(0);
+
+    let json = serde_json::json!({
+        "success": true,
+        "guidance_slug": doc.slug,
+        "guidance_title": doc.title,
+        "guidance_status": doc.status,
+        "guidance_centers": doc.centers,
+        "pathway_id": scaffold.get("id"),
+        "stages": stages_count,
+        "component_count": scaffold.get("componentCount"),
+        "scaffold": scaffold,
+    });
+
+    Ok(CallToolResult::success(vec![Content::text(
+        json.to_string(),
+    )]))
 }
 
 #[cfg(test)]

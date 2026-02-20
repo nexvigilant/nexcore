@@ -1,0 +1,20 @@
+[package]
+name = "nexcore-qsar"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "LicenseRef-Proprietary"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+description = "Rule-based toxicity prediction models with applicability domain"
+
+[dependencies]
+nexcore-molcore = { path = "../nexcore-molcore" }
+prima-chem = { path = "../prima-chem" }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = { version = "1.0.120" }
+thiserror = { version = "1.0.61" }
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"

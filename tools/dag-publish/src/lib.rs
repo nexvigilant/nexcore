@@ -128,7 +128,10 @@ pub fn topological_sort(crates: &[(String, Vec<String>)]) -> Result<Vec<String>>
                 // Skip unknown deps (already published externally).
                 continue;
             }
-            dependents.entry(dep.as_str()).or_default().push(name.as_str());
+            dependents
+                .entry(dep.as_str())
+                .or_default()
+                .push(name.as_str());
             *in_degree.entry(name.as_str()).or_insert(0) += 1;
         }
     }
@@ -207,7 +210,10 @@ pub fn group_into_phases(crates: &[(String, Vec<String>)]) -> Result<Vec<Vec<Str
             if !known.contains(dep.as_str()) {
                 continue;
             }
-            dependents.entry(dep.as_str()).or_default().push(name.as_str());
+            dependents
+                .entry(dep.as_str())
+                .or_default()
+                .push(name.as_str());
             *in_degree.entry(name.as_str()).or_insert(0) += 1;
         }
     }
@@ -249,10 +255,7 @@ pub fn group_into_phases(crates: &[(String, Vec<String>)]) -> Result<Vec<Vec<Str
     }
 
     if remaining > 0 {
-        let in_cycle: Vec<String> = in_degree
-            .keys()
-            .map(|name| name.to_string())
-            .collect();
+        let in_cycle: Vec<String> = in_degree.keys().map(|name| name.to_string()).collect();
         let mut cycle_sorted = in_cycle;
         cycle_sorted.sort();
         bail!(
@@ -296,9 +299,7 @@ fn collect_crate_dirs(crates_dir: &Path) -> Result<Vec<String>> {
 ///
 /// If there is no `package` field, the key itself is the package name:
 /// `nexcore-id = { path = "crates/nexcore-id" }` yields `"nexcore-id" -> "nexcore-id"`.
-fn parse_workspace_internal_deps(
-    workspace_toml_path: &Path,
-) -> Result<HashMap<String, String>> {
+fn parse_workspace_internal_deps(workspace_toml_path: &Path) -> Result<HashMap<String, String>> {
     let contents = fs::read_to_string(workspace_toml_path)
         .with_context(|| format!("Failed to read {}", workspace_toml_path.display()))?;
     let doc: toml::Value = contents
@@ -328,10 +329,7 @@ fn parse_workspace_internal_deps(
         }
 
         // The actual package name is either the `package` field or the key itself.
-        let package_name = table
-            .get("package")
-            .and_then(|v| v.as_str())
-            .unwrap_or(key);
+        let package_name = table.get("package").and_then(|v| v.as_str()).unwrap_or(key);
 
         internal_deps.insert(key.clone(), package_name.to_string());
     }
@@ -436,10 +434,7 @@ fn resolve_internal_dep(
     if let Some(reg) = table.get("registry").and_then(|v| v.as_str()) {
         if reg == registry_name {
             // The package name is either the `package` field or the key.
-            let package_name = table
-                .get("package")
-                .and_then(|v| v.as_str())
-                .unwrap_or(key);
+            let package_name = table.get("package").and_then(|v| v.as_str()).unwrap_or(key);
             return Some(package_name.to_string());
         }
     }

@@ -42,7 +42,10 @@ pub fn initialize(conn: &Connection) -> Result<()> {
             apply_v1(conn)?;
             conn.execute(
                 "INSERT INTO schema_version (version, description) VALUES (?1, ?2)",
-                rusqlite::params![CURRENT_SCHEMA_VERSION, "Initial schema + Anthropic official fields"],
+                rusqlite::params![
+                    CURRENT_SCHEMA_VERSION,
+                    "Initial schema + Anthropic official fields"
+                ],
             )?;
         }
         Some(v) if v == CURRENT_SCHEMA_VERSION => {}

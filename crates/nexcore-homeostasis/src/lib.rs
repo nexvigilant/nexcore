@@ -17,6 +17,6 @@ pub mod machine;
 pub mod traits;
 
 // Re-export sub-crates for convenience.
+pub use nexcore_homeostasis_memory as memory;
 pub use nexcore_homeostasis_primitives as primitives;
 pub use nexcore_homeostasis_storm as storm;
-pub use nexcore_homeostasis_memory as memory;

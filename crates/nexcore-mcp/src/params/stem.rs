@@ -434,3 +434,85 @@ pub struct StemFinanceReturnParams {
     #[serde(default)]
     pub method: Option<String>,
 }
+
+// ============================================================================
+// Statistics Tools (stem-math statistical inference)
+// ============================================================================
+
+/// Parameters for z-test (one-sample)
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct StemStatsZTestParams {
+    /// Observed value (sample mean or statistic)
+    pub observed: f64,
+    /// Hypothesized null value (μ₀)
+    pub null_value: f64,
+    /// Standard error of the statistic
+    pub std_error: f64,
+    /// Tail direction: "two" (default), "left", or "right"
+    #[serde(default)]
+    pub tail: Option<String>,
+    /// Confidence level (default: 0.95)
+    #[serde(default)]
+    pub confidence_level: Option<f64>,
+}
+
+/// Parameters for confidence interval construction
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct StemStatsCiParams {
+    /// Point estimate (sample mean)
+    pub estimate: f64,
+    /// Standard error of the estimate
+    pub std_error: f64,
+    /// Confidence level (default: 0.95)
+    #[serde(default)]
+    pub confidence_level: Option<f64>,
+    /// CI type: "mean" (default), "proportion", "diff"
+    #[serde(default)]
+    pub ci_type: Option<String>,
+    /// Sample size n (required for proportion CI)
+    #[serde(default)]
+    pub n: Option<usize>,
+    /// Second mean (for difference CI)
+    #[serde(default)]
+    pub mean2: Option<f64>,
+    /// Second standard error (for difference CI)
+    #[serde(default)]
+    pub se2: Option<f64>,
+}
+
+/// Parameters for p-value calculation
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct StemStatsPValueParams {
+    /// Z-score (or provide observed + null_value + std_error to compute it)
+    #[serde(default)]
+    pub z_score: Option<f64>,
+    /// Observed value (alternative to z_score)
+    #[serde(default)]
+    pub observed: Option<f64>,
+    /// Null hypothesis value (used with observed)
+    #[serde(default)]
+    pub null_value: Option<f64>,
+    /// Standard error (used with observed)
+    #[serde(default)]
+    pub std_error: Option<f64>,
+    /// Tail direction: "two" (default), "left", or "right"
+    #[serde(default)]
+    pub tail: Option<String>,
+}
+
+/// Parameters for full sample analysis
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct StemStatsAnalyzeParams {
+    /// Sample data values
+    pub values: Vec<f64>,
+    /// Null hypothesis value to test against (default: 0.0)
+    #[serde(default)]
+    pub null_value: Option<f64>,
+    /// Confidence level (default: 0.95)
+    #[serde(default)]
+    pub confidence_level: Option<f64>,
+}

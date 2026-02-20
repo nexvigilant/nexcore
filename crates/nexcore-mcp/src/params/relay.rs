@@ -1,7 +1,7 @@
 //! Parameters for relay fidelity tools.
 
-use rmcp::serde::Deserialize;
 use rmcp::schemars::{self, JsonSchema};
+use rmcp::serde::Deserialize;
 
 /// Parameters for creating a relay chain and computing fidelity.
 #[derive(Debug, Deserialize, JsonSchema)]

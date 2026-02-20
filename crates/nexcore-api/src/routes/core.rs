@@ -2,8 +2,8 @@
 //!
 //! High-level PV operations unifying ingestion, analysis, and persistence.
 
+use crate::core_types::SignalAnalysisResult;
 use axum::{Json, Router, routing::post};
-use nexcore_core::SignalAnalysisResult;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 

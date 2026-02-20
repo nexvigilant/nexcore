@@ -90,8 +90,7 @@ impl Column {
                 let affinity = compute_affinity(token, phase);
                 if affinity > best_affinity {
                     if best_affinity > 0.1 {
-                        alternatives
-                            .push((best_class.clone(), OrderedFloat(best_affinity)));
+                        alternatives.push((best_class.clone(), OrderedFloat(best_affinity)));
                     }
                     best_class = phase.clone();
                     best_affinity = affinity;
@@ -125,8 +124,7 @@ impl Column {
             let (a, b) = (&window[0], &window[1]);
             let position_diff =
                 (a.binding_affinity.into_inner() - b.binding_affinity.into_inner()).abs();
-            let avg_bandwidth =
-                (a.bandwidth.into_inner() + b.bandwidth.into_inner()) / 2.0;
+            let avg_bandwidth = (a.bandwidth.into_inner() + b.bandwidth.into_inner()) / 2.0;
             let resolution = if avg_bandwidth > 0.0 {
                 position_diff / avg_bandwidth
             } else {
@@ -180,7 +178,11 @@ fn compute_affinity(token: &str, class: &ElementClass) -> f64 {
             // Direct class match via synonym resolution
             // Canonical tokens get 0.95, synonyms get scaled by group similarity
             let is_canonical = canonical == t;
-            return if is_canonical { 0.95 } else { 0.95 * similarity };
+            return if is_canonical {
+                0.95
+            } else {
+                0.95 * similarity
+            };
         }
     }
 
@@ -188,8 +190,8 @@ fn compute_affinity(token: &str, class: &ElementClass) -> f64 {
     // (preserves original behavior for edge cases)
     match class {
         ElementClass::OrganSystem => match t.as_str() {
-            "cardiac" | "hepatic" | "renal" | "pulmonary" | "neurological"
-            | "dermatologic" | "gastrointestinal" | "hematologic" => 0.95,
+            "cardiac" | "hepatic" | "renal" | "pulmonary" | "neurological" | "dermatologic"
+            | "gastrointestinal" | "hematologic" => 0.95,
             _ => 0.05,
         },
         ElementClass::Causality => match t.as_str() {

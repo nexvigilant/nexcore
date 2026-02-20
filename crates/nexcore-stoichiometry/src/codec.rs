@@ -66,9 +66,8 @@ impl StoichiometricCodec {
 
         // Try exact match first (by name)
         if let Some(entry) = self.dictionary.lookup(&equation.concept.name) {
-            let entry_inv = PrimitiveInventory::from_primitives(
-                entry.equation.concept.formula.primitives(),
-            );
+            let entry_inv =
+                PrimitiveInventory::from_primitives(entry.equation.concept.formula.primitives());
             if entry_inv.is_equal(&product_inv) {
                 return Some(JeopardyAnswer {
                     question: format!("What is {}?", entry.name),
@@ -214,10 +213,8 @@ mod tests {
             definition: "unknown".to_string(),
             formula,
         };
-        let inv = PrimitiveInventory::from_primitives(&[
-            LexPrimitiva::Void,
-            LexPrimitiva::Recursion,
-        ]);
+        let inv =
+            PrimitiveInventory::from_primitives(&[LexPrimitiva::Void, LexPrimitiva::Recursion]);
         let eq = crate::equation::BalancedEquation {
             concept,
             reactants: vec![],
@@ -269,10 +266,8 @@ mod tests {
 
     #[test]
     fn test_inventory_similarity_identical() {
-        let inv = PrimitiveInventory::from_primitives(&[
-            LexPrimitiva::Causality,
-            LexPrimitiva::Boundary,
-        ]);
+        let inv =
+            PrimitiveInventory::from_primitives(&[LexPrimitiva::Causality, LexPrimitiva::Boundary]);
         let sim = inventory_similarity(&inv, &inv);
         assert!((sim - 1.0).abs() < 0.001);
     }

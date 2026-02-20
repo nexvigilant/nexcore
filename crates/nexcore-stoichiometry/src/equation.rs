@@ -87,11 +87,14 @@ mod tests {
 
     #[test]
     fn test_reactant_formula_creation() {
-        let formula = make_formula("drug", &[
-            LexPrimitiva::Existence,
-            LexPrimitiva::State,
-            LexPrimitiva::Boundary,
-        ]);
+        let formula = make_formula(
+            "drug",
+            &[
+                LexPrimitiva::Existence,
+                LexPrimitiva::State,
+                LexPrimitiva::Boundary,
+            ],
+        );
         let rf = ReactantFormula {
             word: "drug".to_string(),
             formula,
@@ -102,10 +105,10 @@ mod tests {
 
     #[test]
     fn test_concept_formula_creation() {
-        let formula = make_formula("TestConcept", &[
-            LexPrimitiva::Existence,
-            LexPrimitiva::Causality,
-        ]);
+        let formula = make_formula(
+            "TestConcept",
+            &[LexPrimitiva::Existence, LexPrimitiva::Causality],
+        );
         let cf = ConceptFormula {
             name: "TestConcept".to_string(),
             definition: "a test concept".to_string(),
@@ -119,19 +122,25 @@ mod tests {
     fn test_balanced_equation_display() {
         let r1 = ReactantFormula {
             word: "drug".to_string(),
-            formula: make_formula("drug", &[
-                LexPrimitiva::Existence,
-                LexPrimitiva::State,
-                LexPrimitiva::Boundary,
-            ]),
+            formula: make_formula(
+                "drug",
+                &[
+                    LexPrimitiva::Existence,
+                    LexPrimitiva::State,
+                    LexPrimitiva::Boundary,
+                ],
+            ),
         };
         let r2 = ReactantFormula {
             word: "safety".to_string(),
-            formula: make_formula("safety", &[
-                LexPrimitiva::Boundary,
-                LexPrimitiva::Comparison,
-                LexPrimitiva::Irreversibility,
-            ]),
+            formula: make_formula(
+                "safety",
+                &[
+                    LexPrimitiva::Boundary,
+                    LexPrimitiva::Comparison,
+                    LexPrimitiva::Irreversibility,
+                ],
+            ),
         };
 
         let all_prims = vec![

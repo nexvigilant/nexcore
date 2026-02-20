@@ -69,8 +69,7 @@ fn test_all_seed_terms_balance() {
         assert!(
             term.equation.balance.is_balanced,
             "term '{}' equation is NOT balanced (delta={:.4})",
-            term.name,
-            term.equation.balance.delta
+            term.name, term.equation.balance.delta
         );
         assert!(
             Balancer::verify(&term.equation.balance),
@@ -116,10 +115,7 @@ fn test_encode_custom_term() {
         !eq.reactants.is_empty(),
         "custom term must have at least one reactant"
     );
-    assert_eq!(
-        eq.concept.name, "Drug Safety",
-        "concept name must match"
-    );
+    assert_eq!(eq.concept.name, "Drug Safety", "concept name must match");
 
     // Decode the custom term back
     let answer = codec.decode(&eq);
@@ -269,10 +265,9 @@ fn test_serde_roundtrip_all_public_types() {
         .expect("Adverse Event must exist");
 
     // BalancedEquation round-trip
-    let eq_json = serde_json::to_string(&term.equation)
-        .expect("BalancedEquation must serialize");
-    let eq_back: BalancedEquation = serde_json::from_str(&eq_json)
-        .expect("BalancedEquation must deserialize");
+    let eq_json = serde_json::to_string(&term.equation).expect("BalancedEquation must serialize");
+    let eq_back: BalancedEquation =
+        serde_json::from_str(&eq_json).expect("BalancedEquation must deserialize");
     assert_eq!(eq_back.concept.name, term.equation.concept.name);
     assert_eq!(
         eq_back.balance.is_balanced,
@@ -280,26 +275,23 @@ fn test_serde_roundtrip_all_public_types() {
     );
 
     // TermEntry round-trip
-    let te_json = serde_json::to_string(term)
-        .expect("TermEntry must serialize");
-    let te_back: TermEntry = serde_json::from_str(&te_json)
-        .expect("TermEntry must deserialize");
+    let te_json = serde_json::to_string(term).expect("TermEntry must serialize");
+    let te_back: TermEntry = serde_json::from_str(&te_json).expect("TermEntry must deserialize");
     assert_eq!(te_back.name, term.name);
     assert_eq!(te_back.definition, term.definition);
 
     // PrimitiveInventory round-trip
     let inv = &term.equation.balance.reactant_inventory;
-    let inv_json = serde_json::to_string(inv)
-        .expect("PrimitiveInventory must serialize");
-    let inv_back: PrimitiveInventory = serde_json::from_str(&inv_json)
-        .expect("PrimitiveInventory must deserialize");
+    let inv_json = serde_json::to_string(inv).expect("PrimitiveInventory must serialize");
+    let inv_back: PrimitiveInventory =
+        serde_json::from_str(&inv_json).expect("PrimitiveInventory must deserialize");
     assert!(inv.is_equal(&inv_back));
 
     // BalanceProof round-trip
-    let bp_json = serde_json::to_string(&term.equation.balance)
-        .expect("BalanceProof must serialize");
-    let bp_back: BalanceProof = serde_json::from_str(&bp_json)
-        .expect("BalanceProof must deserialize");
+    let bp_json =
+        serde_json::to_string(&term.equation.balance).expect("BalanceProof must serialize");
+    let bp_back: BalanceProof =
+        serde_json::from_str(&bp_json).expect("BalanceProof must deserialize");
     assert_eq!(bp_back.is_balanced, term.equation.balance.is_balanced);
 
     // JeopardyAnswer round-trip
@@ -309,10 +301,9 @@ fn test_serde_roundtrip_all_public_types() {
         confidence: 1.0,
         equation_display: "test".to_string(),
     };
-    let ja_json = serde_json::to_string(&answer)
-        .expect("JeopardyAnswer must serialize");
-    let ja_back: JeopardyAnswer = serde_json::from_str(&ja_json)
-        .expect("JeopardyAnswer must deserialize");
+    let ja_json = serde_json::to_string(&answer).expect("JeopardyAnswer must serialize");
+    let ja_back: JeopardyAnswer =
+        serde_json::from_str(&ja_json).expect("JeopardyAnswer must deserialize");
     assert_eq!(ja_back.concept, "Adverse Event");
 
     // SisterMatch round-trip
@@ -324,19 +315,16 @@ fn test_serde_roundtrip_all_public_types() {
         unique_to_other: vec![LexPrimitiva::Irreversibility],
         is_isomer: false,
     };
-    let sm_json = serde_json::to_string(&sister)
-        .expect("SisterMatch must serialize");
-    let sm_back: SisterMatch = serde_json::from_str(&sm_json)
-        .expect("SisterMatch must deserialize");
+    let sm_json = serde_json::to_string(&sister).expect("SisterMatch must serialize");
+    let sm_back: SisterMatch =
+        serde_json::from_str(&sm_json).expect("SisterMatch must deserialize");
     assert_eq!(sm_back.name, "SAE");
     assert!((sm_back.similarity - 0.75).abs() < f64::EPSILON);
 
     // MassState round-trip
     let ms = MassState::from_equation(&term.equation);
-    let ms_json = serde_json::to_string(&ms)
-        .expect("MassState must serialize");
-    let ms_back: MassState = serde_json::from_str(&ms_json)
-        .expect("MassState must deserialize");
+    let ms_json = serde_json::to_string(&ms).expect("MassState must serialize");
+    let ms_back: MassState = serde_json::from_str(&ms_json).expect("MassState must deserialize");
     assert!(
         (ms_back.total_mass() - ms.total_mass()).abs() < 0.001,
         "MassState mass mismatch after serde round-trip"
@@ -345,10 +333,9 @@ fn test_serde_roundtrip_all_public_types() {
     // StoichiometryError — not Serialize, skip (thiserror enum)
     // DefinitionSource round-trip
     let ds = DefinitionSource::IchGuideline("ICH E2A".to_string());
-    let ds_json = serde_json::to_string(&ds)
-        .expect("DefinitionSource must serialize");
-    let ds_back: DefinitionSource = serde_json::from_str(&ds_json)
-        .expect("DefinitionSource must deserialize");
+    let ds_json = serde_json::to_string(&ds).expect("DefinitionSource must serialize");
+    let ds_back: DefinitionSource =
+        serde_json::from_str(&ds_json).expect("DefinitionSource must deserialize");
     let ds_display = format!("{ds_back}");
     assert!(ds_display.contains("ICH"));
 }

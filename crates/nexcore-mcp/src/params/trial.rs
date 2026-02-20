@@ -41,9 +41,15 @@ pub struct TrialProtocolRegisterParams {
     pub blinding: String,
 }
 
-fn default_alpha() -> f64 { 0.05 }
-fn default_duration() -> u32 { 90 }
-fn default_blinding() -> String { "Double".into() }
+fn default_alpha() -> f64 {
+    0.05
+}
+fn default_duration() -> u32 {
+    90
+}
+fn default_blinding() -> String {
+    "Double".into()
+}
 
 // ── trial_power_analysis ──────────────────────────────────────────────────────
 
@@ -76,7 +82,9 @@ pub struct TrialPowerAnalysisParams {
     pub power: f64,
 }
 
-fn default_power() -> f64 { 0.80 }
+fn default_power() -> f64 {
+    0.80
+}
 
 // ── trial_randomize ───────────────────────────────────────────────────────────
 
@@ -102,7 +110,9 @@ pub struct TrialRandomizeParams {
     pub strata_json: Option<String>,
 }
 
-fn default_method() -> String { "block".into() }
+fn default_method() -> String {
+    "block".into()
+}
 
 // ── trial_blind_verify ────────────────────────────────────────────────────────
 
@@ -142,7 +152,9 @@ pub struct TrialInterimAnalyzeParams {
     pub method: String,
 }
 
-fn default_interim_method() -> String { "obf".into() }
+fn default_interim_method() -> String {
+    "obf".into()
+}
 
 // ── trial_safety_check ────────────────────────────────────────────────────────
 
@@ -217,7 +229,9 @@ pub struct TrialMultiplicityAdjustParams {
     pub method: String,
 }
 
-fn default_multiplicity_method() -> String { "holm".into() }
+fn default_multiplicity_method() -> String {
+    "holm".into()
+}
 
 // ── trial_adapt_decide ────────────────────────────────────────────────────────
 

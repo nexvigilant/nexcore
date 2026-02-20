@@ -27,8 +27,8 @@ pub fn search(params: FdaGuidanceSearchParams) -> Result<CallToolResult, McpErro
 
 /// Get a specific FDA guidance document by slug or partial title.
 pub fn get(params: FdaGuidanceGetParams) -> Result<CallToolResult, McpError> {
-    let found = index::get(&params.id)
-        .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+    let found =
+        index::get(&params.id).map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
     match found {
         Some(doc) => {
@@ -44,8 +44,7 @@ pub fn get(params: FdaGuidanceGetParams) -> Result<CallToolResult, McpError> {
 
 /// List all FDA guidance categories with document counts.
 pub fn categories() -> Result<CallToolResult, McpError> {
-    let docs = index::load_all()
-        .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+    let docs = index::load_all().map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
     let by_center = index::categories_by_center(&docs);
     let by_product = index::categories_by_product(&docs);
@@ -58,8 +57,8 @@ pub fn categories() -> Result<CallToolResult, McpError> {
 
 /// Get the PDF download URL for an FDA guidance document.
 pub fn url(params: FdaGuidanceUrlParams) -> Result<CallToolResult, McpError> {
-    let found = index::get(&params.id)
-        .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+    let found =
+        index::get(&params.id).map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
     match found {
         Some(doc) => {

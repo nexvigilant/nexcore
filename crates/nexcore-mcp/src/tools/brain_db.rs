@@ -360,6 +360,78 @@ pub fn efficiency() -> Result<CallToolResult, McpError> {
     )]))
 }
 
+/// `brain_db_query` — Execute a read-only SQL SELECT against brain.db.
+///
+/// Runs an arbitrary SELECT query and returns rows as JSON objects.
+/// Only SELECT statements are permitted (read-only access enforced).
+pub fn query(params: params::BrainDbQueryParams) -> Result<CallToolResult, McpError> {
+    let sql_trimmed = params.sql.trim().to_ascii_lowercase();
+    if !sql_trimmed.starts_with("select") {
+        return Ok(CallToolResult::error(vec![rmcp::model::Content::text(
+            "Only SELECT queries are permitted (read-only access)".to_string(),
+        )]));
+    }
+
+    let max_rows = params.limit.unwrap_or(100).min(500) as usize;
+    let pool = pool_or_err()?;
+
+    let result = pool
+        .with_conn(|conn| {
+            let mut stmt = conn.prepare(&params.sql)?;
+            let col_names: Vec<String> = stmt
+                .column_names()
+                .into_iter()
+                .map(str::to_string)
+                .collect();
+
+            let rows: Vec<serde_json::Value> = stmt
+                .query_map([], |row| {
+                    let mut obj = serde_json::Map::new();
+                    for (i, name) in col_names.iter().enumerate() {
+                        // Try integer, then float, then string, else null
+                        let json_val = row
+                            .get::<_, Option<i64>>(i)
+                            .ok()
+                            .flatten()
+                            .map(|n| serde_json::json!(n))
+                            .or_else(|| {
+                                row.get::<_, Option<f64>>(i)
+                                    .ok()
+                                    .flatten()
+                                    .map(|f| serde_json::json!(f))
+                            })
+                            .or_else(|| {
+                                row.get::<_, Option<String>>(i)
+                                    .ok()
+                                    .flatten()
+                                    .map(|s| serde_json::json!(s))
+                            })
+                            .unwrap_or(serde_json::Value::Null);
+                        obj.insert(name.clone(), json_val);
+                    }
+                    Ok(serde_json::Value::Object(obj))
+                })?
+                .filter_map(|r| r.ok())
+                .take(max_rows)
+                .collect();
+
+            let data = serde_json::json!({
+                "sql": params.sql,
+                "columns": col_names,
+                "row_count": rows.len(),
+                "rows": rows,
+                "limit": max_rows,
+            });
+
+            Ok(serde_json::to_string_pretty(&data).unwrap_or_else(|_| "{}".to_string()))
+        })
+        .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+
+    Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+        result,
+    )]))
+}
+
 /// `brain_db_sync` — Re-ingest V2 data from dotfile sources into SQLite.
 ///
 /// Runs the V2 migration pipeline to refresh decisions, tool usage, token efficiency,
@@ -376,13 +448,20 @@ pub fn sync() -> Result<CallToolResult, McpError> {
 
     let output = format!(
         "V2 sync complete:\n  Decisions: {}\n  Tool usage: {}\n  Token efficiency: {}\n  \
-         Tasks: {}\n  Handoffs: {}\n  Antibodies: {}\n  Errors: {}",
+         Tasks: {}\n  Handoffs: {}\n  Antibodies: {}\n  \
+         Beliefs: {}\n  Preferences: {}\n  Patterns: {}\n  Corrections: {}\n  \
+         Trust: {}\n  Errors: {}",
         result.decisions,
         result.tool_usage,
         result.token_efficiency,
         result.tasks,
         result.handoffs,
         result.antibodies,
+        result.beliefs,
+        result.preferences,
+        result.patterns,
+        result.corrections,
+        result.trust_accumulators,
         result.errors.len(),
     );
 

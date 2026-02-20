@@ -4,7 +4,7 @@
 //! Renders a node-link diagram: the type at center, T1 primitives radiating out,
 //! with the dominant primitive highlighted and tier classification shown.
 
-use crate::svg::{self, palette, SvgDoc};
+use crate::svg::{self, SvgDoc, palette};
 use std::fmt::Write;
 
 /// A type's primitive composition for visualization.
@@ -202,10 +202,7 @@ pub fn render_composition(comp: &TypeComposition) -> String {
     ));
 
     // Primitive count subtitle
-    let count_text = format!(
-        "{} primitives = {}",
-        n, comp.tier
-    );
+    let count_text = format!("{} primitives = {}", n, comp.tier);
     doc.add(svg::text(
         cx,
         42.0,
@@ -228,12 +225,36 @@ mod tests {
             type_name: "Machine<I,O>".into(),
             tier: "T3".into(),
             primitives: vec![
-                PrimitiveNode { name: "Mapping".into(), symbol: "\u{03bc}".into(), role: "I -> O transformation".into() },
-                PrimitiveNode { name: "Sequence".into(), symbol: "\u{03c3}".into(), role: "ordered step chain".into() },
-                PrimitiveNode { name: "State".into(), symbol: "\u{03c2}".into(), role: "internal counter".into() },
-                PrimitiveNode { name: "Causality".into(), symbol: "\u{2192}".into(), role: "mechanism causal chain".into() },
-                PrimitiveNode { name: "Comparison".into(), symbol: "\u{03ba}".into(), role: "determinism".into() },
-                PrimitiveNode { name: "Quantity".into(), symbol: "N".into(), role: "confidence, counts".into() },
+                PrimitiveNode {
+                    name: "Mapping".into(),
+                    symbol: "\u{03bc}".into(),
+                    role: "I -> O transformation".into(),
+                },
+                PrimitiveNode {
+                    name: "Sequence".into(),
+                    symbol: "\u{03c3}".into(),
+                    role: "ordered step chain".into(),
+                },
+                PrimitiveNode {
+                    name: "State".into(),
+                    symbol: "\u{03c2}".into(),
+                    role: "internal counter".into(),
+                },
+                PrimitiveNode {
+                    name: "Causality".into(),
+                    symbol: "\u{2192}".into(),
+                    role: "mechanism causal chain".into(),
+                },
+                PrimitiveNode {
+                    name: "Comparison".into(),
+                    symbol: "\u{03ba}".into(),
+                    role: "determinism".into(),
+                },
+                PrimitiveNode {
+                    name: "Quantity".into(),
+                    symbol: "N".into(),
+                    role: "confidence, counts".into(),
+                },
             ],
             dominant: Some("Mapping".into()),
             confidence: 0.80,

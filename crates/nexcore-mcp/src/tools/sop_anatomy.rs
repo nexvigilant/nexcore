@@ -34,7 +34,8 @@ pub fn sop_anatomy_map(params: SopAnatomyMapParams) -> Result<CallToolResult, Mc
         },
         None => {
             let all: Vec<_> = SopSection::ALL.iter().map(|s| s.mapping()).collect();
-            serde_json::to_string_pretty(&all).map_err(|e| McpError::internal_error(e.to_string(), None))?
+            serde_json::to_string_pretty(&all)
+                .map_err(|e| McpError::internal_error(e.to_string(), None))?
         }
     };
 
@@ -67,8 +68,8 @@ pub fn sop_anatomy_bridge(params: SopAnatomyBridgeParams) -> Result<CallToolResu
     };
 
     let result = transfer::transfer(source, &params.concept, target);
-    let json =
-        serde_json::to_string_pretty(&result).map_err(|e| McpError::internal_error(e.to_string(), None))?;
+    let json = serde_json::to_string_pretty(&result)
+        .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
     Ok(CallToolResult::success(vec![Content::text(json)]))
 }
@@ -86,8 +87,8 @@ pub fn sop_anatomy_audit(params: SopAnatomyAuditParams) -> Result<CallToolResult
     }
 
     let report = audit::audit_path(path);
-    let json =
-        serde_json::to_string_pretty(&report).map_err(|e| McpError::internal_error(e.to_string(), None))?;
+    let json = serde_json::to_string_pretty(&report)
+        .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
     Ok(CallToolResult::success(vec![Content::text(json)]))
 }
@@ -95,12 +96,10 @@ pub fn sop_anatomy_audit(params: SopAnatomyAuditParams) -> Result<CallToolResult
 // ─── sop_anatomy_coverage ──────────────────────────────────────────────────
 
 /// Full 18-section coverage report with bio-crate wiring status.
-pub fn sop_anatomy_coverage(
-    _params: SopAnatomyCoverageParams,
-) -> Result<CallToolResult, McpError> {
+pub fn sop_anatomy_coverage(_params: SopAnatomyCoverageParams) -> Result<CallToolResult, McpError> {
     let report = CoverageReport::generate();
-    let json =
-        serde_json::to_string_pretty(&report).map_err(|e| McpError::internal_error(e.to_string(), None))?;
+    let json = serde_json::to_string_pretty(&report)
+        .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
     Ok(CallToolResult::success(vec![Content::text(json)]))
 }

@@ -104,12 +104,13 @@ impl BrainBridge {
 
         match self.session.list_artifacts() {
             Ok(artifacts) => {
-                let _ = writeln!(out, "Artifacts:  {}", artifacts.len());
+                let count: usize = artifacts.len();
+                let _ = writeln!(out, "Artifacts:  {count}");
                 for name in &artifacts {
                     let versions = self
                         .session
                         .list_versions(name)
-                        .map(|v| v.len())
+                        .map(|v: Vec<u32>| v.len())
                         .unwrap_or(0);
                     let _ = writeln!(out, "  {name} ({versions} versions)");
                 }

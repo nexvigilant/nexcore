@@ -281,9 +281,7 @@ pub fn curved_arrow(
     sw: f64,
 ) -> String {
     let d = format!("M {x1:.1} {y1:.1} Q {cx:.1} {cy:.1} {x2:.1} {y2:.1}");
-    format!(
-        r#"<path d="{d}" fill="none" stroke="{stroke}" stroke-width="{sw:.1}"/>"#
-    )
+    format!(r#"<path d="{d}" fill="none" stroke="{stroke}" stroke-width="{sw:.1}"/>"#)
 }
 
 /// Escape XML special characters.

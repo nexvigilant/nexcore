@@ -47,7 +47,10 @@ impl SomaticSpecialization {
             },
             TissuePhenotype::Germ => Self {
                 phenotype,
-                tool_allowlist: vec!["lex_primitiva_list".to_string(), "validation_run".to_string()],
+                tool_allowlist: vec![
+                    "lex_primitiva_list".to_string(),
+                    "validation_run".to_string(),
+                ],
                 target_vsat: 1.0,
             },
         }

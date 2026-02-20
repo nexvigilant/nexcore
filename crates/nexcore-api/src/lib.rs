@@ -4,6 +4,7 @@
 
 pub mod audit;
 pub mod auth;
+pub mod core_types;
 pub mod persistence;
 pub mod routes;
 

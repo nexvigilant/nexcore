@@ -4,9 +4,9 @@
 //! via MCP for real-time pipeline health monitoring.
 
 use nexcore_primitives::relay::{Fidelity, RelayChain, RelayHop};
-use signal::relay as pipeline_relay;
-use rmcp::model::{CallToolResult, Content};
 use rmcp::ErrorData as McpError;
+use rmcp::model::{CallToolResult, Content};
+use signal::relay as pipeline_relay;
 
 use crate::params::relay::{RelayChainComputeParams, RelayFidelityComposeParams};
 

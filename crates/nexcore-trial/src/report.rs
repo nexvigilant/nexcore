@@ -49,7 +49,10 @@ pub fn generate_report(protocol: &Protocol, results: &[EndpointResult]) -> Strin
         protocol.power * 100.0,
         protocol.alpha,
     ));
-    report.push_str(&format!("**Duration:** {} days\n\n", protocol.duration_days));
+    report.push_str(&format!(
+        "**Duration:** {} days\n\n",
+        protocol.duration_days
+    ));
     report.push_str(&format!("**Blinding:** {:?}\n\n", protocol.blinding));
 
     // Arms table
@@ -57,21 +60,34 @@ pub fn generate_report(protocol: &Protocol, results: &[EndpointResult]) -> Strin
     report.push_str("| Arm | Description | Role |\n");
     report.push_str("|-----|-------------|------|\n");
     for arm in &protocol.arms {
-        let role = if arm.is_control { "Control" } else { "Treatment" };
-        report.push_str(&format!("| {} | {} | {} |\n", arm.name, arm.description, role));
+        let role = if arm.is_control {
+            "Control"
+        } else {
+            "Treatment"
+        };
+        report.push_str(&format!(
+            "| {} | {} | {} |\n",
+            arm.name, arm.description, role
+        ));
     }
     report.push('\n');
 
     // ── CONSORT Flow ──────────────────────────────────────────────────────────
     report.push_str("---\n\n## CONSORT Flow\n\n");
     report.push_str("```\n");
-    report.push_str(&format!("Enrolled:     {} subjects\n", protocol.sample_size));
+    report.push_str(&format!(
+        "Enrolled:     {} subjects\n",
+        protocol.sample_size
+    ));
     report.push_str(&format!(
         "Randomized:   {} subjects ({} arms)\n",
         protocol.sample_size,
         protocol.arms.len()
     ));
-    report.push_str(&format!("Analyzed:     {} subjects (primary analysis)\n", protocol.sample_size));
+    report.push_str(&format!(
+        "Analyzed:     {} subjects (primary analysis)\n",
+        protocol.sample_size
+    ));
     report.push_str("```\n\n");
 
     // ── Primary Endpoint Results ──────────────────────────────────────────────
@@ -173,7 +189,10 @@ fn format_endpoint_section(result: &EndpointResult, alpha: f64) -> String {
     }
     s.push_str("| Metric | Value |\n");
     s.push_str("|--------|-------|\n");
-    s.push_str(&format!("| Test Statistic | {:.4} |\n", result.test_statistic));
+    s.push_str(&format!(
+        "| Test Statistic | {:.4} |\n",
+        result.test_statistic
+    ));
     s.push_str(&format!("| p-value | {:.4} |\n", result.p_value));
     s.push_str(&format!("| Significant (α={alpha:.3}) | {sig_str} |\n"));
     s.push_str(&format!("| Effect Size | {:.4} |\n", result.effect_size));
@@ -191,9 +210,7 @@ fn format_endpoint_section(result: &EndpointResult, alpha: f64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{
-        Arm, BlindingLevel, Endpoint, EndpointDirection, SafetyRule,
-    };
+    use crate::types::{Arm, BlindingLevel, Endpoint, EndpointDirection, SafetyRule};
 
     fn make_protocol() -> Protocol {
         Protocol {
@@ -208,8 +225,16 @@ mod tests {
             },
             secondary_endpoints: vec![],
             arms: vec![
-                Arm { name: "control".into(), description: "Standard".into(), is_control: true },
-                Arm { name: "treatment".into(), description: "New flow".into(), is_control: false },
+                Arm {
+                    name: "control".into(),
+                    description: "Standard".into(),
+                    is_control: true,
+                },
+                Arm {
+                    name: "treatment".into(),
+                    description: "New flow".into(),
+                    is_control: false,
+                },
             ],
             sample_size: 400,
             power: 0.80,
@@ -257,9 +282,18 @@ mod tests {
         let protocol = make_protocol();
         let results = vec![significant_result()];
         let report = generate_report(&protocol, &results);
-        assert!(report.contains("CONSORT Flow"), "Missing CONSORT Flow section");
-        assert!(report.contains("Primary Endpoint"), "Missing Primary Endpoint section");
-        assert!(report.contains("Safety Summary"), "Missing Safety Summary section");
+        assert!(
+            report.contains("CONSORT Flow"),
+            "Missing CONSORT Flow section"
+        );
+        assert!(
+            report.contains("Primary Endpoint"),
+            "Missing Primary Endpoint section"
+        );
+        assert!(
+            report.contains("Safety Summary"),
+            "Missing Safety Summary section"
+        );
     }
 
     #[test]
@@ -280,19 +314,28 @@ mod tests {
     fn test_inconclusive_verdict_no_results() {
         let protocol = make_protocol();
         let report = generate_report(&protocol, &[]);
-        assert!(report.contains("INCONCLUSIVE"), "Expected INCONCLUSIVE with no results");
+        assert!(
+            report.contains("INCONCLUSIVE"),
+            "Expected INCONCLUSIVE with no results"
+        );
     }
 
     #[test]
     fn test_report_contains_protocol_id() {
         let protocol = make_protocol();
         let report = generate_report(&protocol, &[significant_result()]);
-        assert!(report.contains("trial-001"), "Report should contain protocol ID");
+        assert!(
+            report.contains("trial-001"),
+            "Report should contain protocol ID"
+        );
     }
 
     #[test]
     fn test_determine_verdict_positive() {
-        assert_eq!(determine_verdict(&[significant_result()]), TrialVerdict::Positive);
+        assert_eq!(
+            determine_verdict(&[significant_result()]),
+            TrialVerdict::Positive
+        );
     }
 
     #[test]

@@ -37,9 +37,7 @@ pub fn simple_randomize(
         ));
     }
     if n == 0 {
-        return Err(TrialError::InvalidParameter(
-            "n must be > 0".into(),
-        ));
+        return Err(TrialError::InvalidParameter("n must be > 0".into()));
     }
 
     let mut rng = make_rng(seed);
@@ -77,9 +75,7 @@ pub fn block_randomize(
     seed: Option<u64>,
 ) -> Result<Vec<ArmAssignment>, TrialError> {
     if n_arms < 2 {
-        return Err(TrialError::InvalidProtocol(
-            "n_arms must be >= 2".into(),
-        ));
+        return Err(TrialError::InvalidProtocol("n_arms must be >= 2".into()));
     }
     if block_size == 0 || block_size % n_arms != 0 {
         return Err(TrialError::InvalidParameter(format!(
@@ -140,7 +136,9 @@ pub fn stratified_randomize(
     seed: Option<u64>,
 ) -> Result<Vec<ArmAssignment>, TrialError> {
     if strata.is_empty() {
-        return Err(TrialError::InvalidParameter("strata must not be empty".into()));
+        return Err(TrialError::InvalidParameter(
+            "strata must not be empty".into(),
+        ));
     }
 
     let base_seed = seed.unwrap_or(12_345);
@@ -171,7 +169,10 @@ pub fn randomization_hash(assignments: &[ArmAssignment]) -> u64 {
     let mut acc: u64 = 0xcafe_babe_dead_beef;
     for a in assignments {
         let pair = (u64::from(a.subject_id) << 32) | (a.arm_index as u64);
-        acc = acc.rotate_left(13).wrapping_add(pair).wrapping_mul(6_364_136_223_846_793_005);
+        acc = acc
+            .rotate_left(13)
+            .wrapping_add(pair)
+            .wrapping_mul(6_364_136_223_846_793_005);
     }
     acc
 }
@@ -211,10 +212,13 @@ mod tests {
 
         // Each block of 4 should have exactly 2 of each arm
         let blocks: std::collections::BTreeMap<u32, Vec<usize>> =
-            a.iter().fold(std::collections::BTreeMap::new(), |mut acc, x| {
-                acc.entry(x.block_id.unwrap_or(0)).or_default().push(x.arm_index);
-                acc
-            });
+            a.iter()
+                .fold(std::collections::BTreeMap::new(), |mut acc, x| {
+                    acc.entry(x.block_id.unwrap_or(0))
+                        .or_default()
+                        .push(x.arm_index);
+                    acc
+                });
 
         // All complete blocks (4 subjects) must have exactly 2 per arm
         for (_bid, arms) in blocks.iter().filter(|(_, v)| v.len() == 4) {
@@ -239,8 +243,14 @@ mod tests {
     #[test]
     fn test_stratified_randomization_balanced_per_stratum() {
         let strata = vec![
-            Stratum { id: "age_under_50".into(), n: 60 },
-            Stratum { id: "age_over_50".into(), n: 40 },
+            Stratum {
+                id: "age_under_50".into(),
+                n: 60,
+            },
+            Stratum {
+                id: "age_over_50".into(),
+                n: 40,
+            },
         ];
         let assignments = stratified_randomize(&strata, 2, 4, Some(99));
         assert!(assignments.is_ok());
@@ -248,8 +258,14 @@ mod tests {
         assert_eq!(a.len(), 100);
 
         // Each stratum should appear the right number of times
-        let s1 = a.iter().filter(|x| x.stratum.as_deref() == Some("age_under_50")).count();
-        let s2 = a.iter().filter(|x| x.stratum.as_deref() == Some("age_over_50")).count();
+        let s1 = a
+            .iter()
+            .filter(|x| x.stratum.as_deref() == Some("age_under_50"))
+            .count();
+        let s2 = a
+            .iter()
+            .filter(|x| x.stratum.as_deref() == Some("age_over_50"))
+            .count();
         assert_eq!(s1, 60);
         assert_eq!(s2, 40);
     }
@@ -260,7 +276,10 @@ mod tests {
         let a2 = block_randomize(50, 2, 4, Some(1234)).unwrap();
         let indices1: Vec<usize> = a1.iter().map(|x| x.arm_index).collect();
         let indices2: Vec<usize> = a2.iter().map(|x| x.arm_index).collect();
-        assert_eq!(indices1, indices2, "Same seed must produce same assignments");
+        assert_eq!(
+            indices1, indices2,
+            "Same seed must produce same assignments"
+        );
     }
 
     #[test]
@@ -269,7 +288,10 @@ mod tests {
         let a2 = block_randomize(100, 2, 4, Some(2)).unwrap();
         let indices1: Vec<usize> = a1.iter().map(|x| x.arm_index).collect();
         let indices2: Vec<usize> = a2.iter().map(|x| x.arm_index).collect();
-        assert_ne!(indices1, indices2, "Different seeds should produce different sequences");
+        assert_ne!(
+            indices1, indices2,
+            "Different seeds should produce different sequences"
+        );
     }
 
     #[test]

@@ -17,6 +17,7 @@ use crate::params::stoichiometry::{
     StoichiometryDecodeParams, StoichiometryDictionaryParams, StoichiometryEncodeParams,
     StoichiometryMassStateParams, StoichiometrySistersParams,
 };
+use nexcore_lex_primitiva::primitiva::LexPrimitiva;
 use nexcore_stoichiometry::prelude::*;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
@@ -67,13 +68,8 @@ pub fn encode(params: StoichiometryEncodeParams) -> Result<CallToolResult, McpEr
 ///
 /// Accepts a JSON-serialized `BalancedEquation` and returns the decoded concept.
 pub fn decode(params: StoichiometryDecodeParams) -> Result<CallToolResult, McpError> {
-    let equation: BalancedEquation =
-        serde_json::from_str(&params.equation_json).map_err(|e| {
-            McpError::invalid_params(
-                format!("Invalid equation JSON: {e}"),
-                None,
-            )
-        })?;
+    let equation: BalancedEquation = serde_json::from_str(&params.equation_json)
+        .map_err(|e| McpError::invalid_params(format!("Invalid equation JSON: {e}"), None))?;
 
     let codec = StoichiometricCodec::builtin();
 
@@ -126,7 +122,8 @@ pub fn sisters(params: StoichiometrySistersParams) -> Result<CallToolResult, Mcp
     let sisters_json: Vec<serde_json::Value> = sisters
         .iter()
         .map(|s| {
-            serde_json::to_value(s).unwrap_or_else(|_| json!({"name": s.name, "similarity": s.similarity}))
+            serde_json::to_value(s)
+                .unwrap_or_else(|_| json!({"name": s.name, "similarity": s.similarity}))
         })
         .collect();
 
@@ -243,13 +240,7 @@ pub fn dictionary(params: StoichiometryDictionaryParams) -> Result<CallToolResul
             let terms: Vec<serde_json::Value> = dict
                 .all_terms()
                 .iter()
-                .filter(|t| {
-                    t.equation
-                        .concept
-                        .formula
-                        .primitives()
-                        .contains(&target)
-                })
+                .filter(|t| t.equation.concept.formula.primitives().contains(&target))
                 .map(|t| {
                     json!({
                         "name": t.name,

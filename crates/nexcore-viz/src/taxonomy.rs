@@ -9,7 +9,7 @@
 //! MAPPING dominates (14 traits), showing that transformation is
 //! the most universal cross-domain primitive.
 
-use crate::svg::{self, palette, SvgDoc};
+use crate::svg::{self, SvgDoc, palette};
 use std::fmt::Write;
 
 /// A trait entry for visualization.
@@ -47,10 +47,7 @@ pub fn render_taxonomy(traits: &[TraitEntry], title: &str) -> String {
     ));
 
     // Subtitle: trait count and distribution
-    let subtitle = format!(
-        "{} traits across 4 domains",
-        traits.len()
-    );
+    let subtitle = format!("{} traits across 4 domains", traits.len());
     doc.add(svg::text(
         cx,
         52.0,
@@ -263,41 +260,201 @@ fn grounding_symbol(grounding: &str) -> &'static str {
 pub fn standard_taxonomy() -> Vec<TraitEntry> {
     vec![
         // Science (7 traits)
-        TraitEntry { name: "Sense".into(), domain: "Science".into(), grounding: "MAPPING".into(), transfer: "Environment -> Signal".into() },
-        TraitEntry { name: "Classify".into(), domain: "Science".into(), grounding: "MAPPING".into(), transfer: "Signal -> Category".into() },
-        TraitEntry { name: "Infer".into(), domain: "Science".into(), grounding: "RECURSION".into(), transfer: "Pattern x Data -> Prediction".into() },
-        TraitEntry { name: "Experiment".into(), domain: "Science".into(), grounding: "SEQUENCE".into(), transfer: "Action -> Outcome".into() },
-        TraitEntry { name: "Normalize".into(), domain: "Science".into(), grounding: "STATE".into(), transfer: "Prior x Evidence -> Posterior".into() },
-        TraitEntry { name: "Codify".into(), domain: "Science".into(), grounding: "MAPPING".into(), transfer: "Belief -> Representation".into() },
-        TraitEntry { name: "Extend".into(), domain: "Science".into(), grounding: "MAPPING".into(), transfer: "Source -> Target domain".into() },
+        TraitEntry {
+            name: "Sense".into(),
+            domain: "Science".into(),
+            grounding: "MAPPING".into(),
+            transfer: "Environment -> Signal".into(),
+        },
+        TraitEntry {
+            name: "Classify".into(),
+            domain: "Science".into(),
+            grounding: "MAPPING".into(),
+            transfer: "Signal -> Category".into(),
+        },
+        TraitEntry {
+            name: "Infer".into(),
+            domain: "Science".into(),
+            grounding: "RECURSION".into(),
+            transfer: "Pattern x Data -> Prediction".into(),
+        },
+        TraitEntry {
+            name: "Experiment".into(),
+            domain: "Science".into(),
+            grounding: "SEQUENCE".into(),
+            transfer: "Action -> Outcome".into(),
+        },
+        TraitEntry {
+            name: "Normalize".into(),
+            domain: "Science".into(),
+            grounding: "STATE".into(),
+            transfer: "Prior x Evidence -> Posterior".into(),
+        },
+        TraitEntry {
+            name: "Codify".into(),
+            domain: "Science".into(),
+            grounding: "MAPPING".into(),
+            transfer: "Belief -> Representation".into(),
+        },
+        TraitEntry {
+            name: "Extend".into(),
+            domain: "Science".into(),
+            grounding: "MAPPING".into(),
+            transfer: "Source -> Target domain".into(),
+        },
         // Chemistry (9 traits)
-        TraitEntry { name: "Concentrate".into(), domain: "Chemistry".into(), grounding: "MAPPING".into(), transfer: "Substance -> Ratio".into() },
-        TraitEntry { name: "Harmonize".into(), domain: "Chemistry".into(), grounding: "STATE".into(), transfer: "System -> Equilibrium".into() },
-        TraitEntry { name: "Energize".into(), domain: "Chemistry".into(), grounding: "MAPPING".into(), transfer: "Energy -> Rate".into() },
-        TraitEntry { name: "Modulate".into(), domain: "Chemistry".into(), grounding: "RECURSION".into(), transfer: "Catalyst -> Rate change".into() },
-        TraitEntry { name: "Interact".into(), domain: "Chemistry".into(), grounding: "SEQUENCE".into(), transfer: "Ligand -> Affinity binding".into() },
-        TraitEntry { name: "Saturate".into(), domain: "Chemistry".into(), grounding: "STATE".into(), transfer: "Capacity -> Fraction".into() },
-        TraitEntry { name: "Transform".into(), domain: "Chemistry".into(), grounding: "MAPPING".into(), transfer: "Reactants -> Products".into() },
-        TraitEntry { name: "Regulate".into(), domain: "Chemistry".into(), grounding: "RECURSION".into(), transfer: "Inhibitor -> Rate decrease".into() },
-        TraitEntry { name: "Yield".into(), domain: "Chemistry".into(), grounding: "MAPPING".into(), transfer: "Actual / Theoretical".into() },
+        TraitEntry {
+            name: "Concentrate".into(),
+            domain: "Chemistry".into(),
+            grounding: "MAPPING".into(),
+            transfer: "Substance -> Ratio".into(),
+        },
+        TraitEntry {
+            name: "Harmonize".into(),
+            domain: "Chemistry".into(),
+            grounding: "STATE".into(),
+            transfer: "System -> Equilibrium".into(),
+        },
+        TraitEntry {
+            name: "Energize".into(),
+            domain: "Chemistry".into(),
+            grounding: "MAPPING".into(),
+            transfer: "Energy -> Rate".into(),
+        },
+        TraitEntry {
+            name: "Modulate".into(),
+            domain: "Chemistry".into(),
+            grounding: "RECURSION".into(),
+            transfer: "Catalyst -> Rate change".into(),
+        },
+        TraitEntry {
+            name: "Interact".into(),
+            domain: "Chemistry".into(),
+            grounding: "SEQUENCE".into(),
+            transfer: "Ligand -> Affinity binding".into(),
+        },
+        TraitEntry {
+            name: "Saturate".into(),
+            domain: "Chemistry".into(),
+            grounding: "STATE".into(),
+            transfer: "Capacity -> Fraction".into(),
+        },
+        TraitEntry {
+            name: "Transform".into(),
+            domain: "Chemistry".into(),
+            grounding: "MAPPING".into(),
+            transfer: "Reactants -> Products".into(),
+        },
+        TraitEntry {
+            name: "Regulate".into(),
+            domain: "Chemistry".into(),
+            grounding: "RECURSION".into(),
+            transfer: "Inhibitor -> Rate decrease".into(),
+        },
+        TraitEntry {
+            name: "Yield".into(),
+            domain: "Chemistry".into(),
+            grounding: "MAPPING".into(),
+            transfer: "Actual / Theoretical".into(),
+        },
         // Physics (7 traits)
-        TraitEntry { name: "Preserve".into(), domain: "Physics".into(), grounding: "PERSISTENCE".into(), transfer: "Quantity unchanged across transform".into() },
-        TraitEntry { name: "Harmonics".into(), domain: "Physics".into(), grounding: "RECURSION".into(), transfer: "Oscillation around center".into() },
-        TraitEntry { name: "YieldForce".into(), domain: "Physics".into(), grounding: "MAPPING".into(), transfer: "Force -> Acceleration".into() },
-        TraitEntry { name: "Superpose".into(), domain: "Physics".into(), grounding: "SUM".into(), transfer: "Sum of parts = whole".into() },
-        TraitEntry { name: "Inertia".into(), domain: "Physics".into(), grounding: "PERSISTENCE".into(), transfer: "Resistance to change".into() },
-        TraitEntry { name: "Couple".into(), domain: "Physics".into(), grounding: "SEQUENCE".into(), transfer: "Action -> Reaction".into() },
-        TraitEntry { name: "Scale".into(), domain: "Physics".into(), grounding: "MAPPING".into(), transfer: "Proportional transform".into() },
+        TraitEntry {
+            name: "Preserve".into(),
+            domain: "Physics".into(),
+            grounding: "PERSISTENCE".into(),
+            transfer: "Quantity unchanged across transform".into(),
+        },
+        TraitEntry {
+            name: "Harmonics".into(),
+            domain: "Physics".into(),
+            grounding: "RECURSION".into(),
+            transfer: "Oscillation around center".into(),
+        },
+        TraitEntry {
+            name: "YieldForce".into(),
+            domain: "Physics".into(),
+            grounding: "MAPPING".into(),
+            transfer: "Force -> Acceleration".into(),
+        },
+        TraitEntry {
+            name: "Superpose".into(),
+            domain: "Physics".into(),
+            grounding: "SUM".into(),
+            transfer: "Sum of parts = whole".into(),
+        },
+        TraitEntry {
+            name: "Inertia".into(),
+            domain: "Physics".into(),
+            grounding: "PERSISTENCE".into(),
+            transfer: "Resistance to change".into(),
+        },
+        TraitEntry {
+            name: "Couple".into(),
+            domain: "Physics".into(),
+            grounding: "SEQUENCE".into(),
+            transfer: "Action -> Reaction".into(),
+        },
+        TraitEntry {
+            name: "Scale".into(),
+            domain: "Physics".into(),
+            grounding: "MAPPING".into(),
+            transfer: "Proportional transform".into(),
+        },
         // Mathematics (9 traits)
-        TraitEntry { name: "Membership".into(), domain: "Mathematics".into(), grounding: "MAPPING".into(), transfer: "Element in Set".into() },
-        TraitEntry { name: "Associate".into(), domain: "Mathematics".into(), grounding: "RECURSION".into(), transfer: "(a*b)*c = a*(b*c)".into() },
-        TraitEntry { name: "Transit".into(), domain: "Mathematics".into(), grounding: "SEQUENCE".into(), transfer: "a->b ^ b->c => a->c".into() },
-        TraitEntry { name: "Homeomorph".into(), domain: "Mathematics".into(), grounding: "MAPPING".into(), transfer: "Structure-preserving map".into() },
-        TraitEntry { name: "Symmetric".into(), domain: "Mathematics".into(), grounding: "MAPPING".into(), transfer: "a~b => b~a".into() },
-        TraitEntry { name: "Bound".into(), domain: "Mathematics".into(), grounding: "BOUNDARY".into(), transfer: "Upper/lower limits".into() },
-        TraitEntry { name: "Prove".into(), domain: "Mathematics".into(), grounding: "SEQUENCE".into(), transfer: "Premises -> Conclusion".into() },
-        TraitEntry { name: "Commute".into(), domain: "Mathematics".into(), grounding: "MAPPING".into(), transfer: "a*b = b*a".into() },
-        TraitEntry { name: "Identify".into(), domain: "Mathematics".into(), grounding: "STATE".into(), transfer: "Neutral element".into() },
+        TraitEntry {
+            name: "Membership".into(),
+            domain: "Mathematics".into(),
+            grounding: "MAPPING".into(),
+            transfer: "Element in Set".into(),
+        },
+        TraitEntry {
+            name: "Associate".into(),
+            domain: "Mathematics".into(),
+            grounding: "RECURSION".into(),
+            transfer: "(a*b)*c = a*(b*c)".into(),
+        },
+        TraitEntry {
+            name: "Transit".into(),
+            domain: "Mathematics".into(),
+            grounding: "SEQUENCE".into(),
+            transfer: "a->b ^ b->c => a->c".into(),
+        },
+        TraitEntry {
+            name: "Homeomorph".into(),
+            domain: "Mathematics".into(),
+            grounding: "MAPPING".into(),
+            transfer: "Structure-preserving map".into(),
+        },
+        TraitEntry {
+            name: "Symmetric".into(),
+            domain: "Mathematics".into(),
+            grounding: "MAPPING".into(),
+            transfer: "a~b => b~a".into(),
+        },
+        TraitEntry {
+            name: "Bound".into(),
+            domain: "Mathematics".into(),
+            grounding: "BOUNDARY".into(),
+            transfer: "Upper/lower limits".into(),
+        },
+        TraitEntry {
+            name: "Prove".into(),
+            domain: "Mathematics".into(),
+            grounding: "SEQUENCE".into(),
+            transfer: "Premises -> Conclusion".into(),
+        },
+        TraitEntry {
+            name: "Commute".into(),
+            domain: "Mathematics".into(),
+            grounding: "MAPPING".into(),
+            transfer: "a*b = b*a".into(),
+        },
+        TraitEntry {
+            name: "Identify".into(),
+            domain: "Mathematics".into(),
+            grounding: "STATE".into(),
+            transfer: "Neutral element".into(),
+        },
     ]
 }
 

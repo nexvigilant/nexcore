@@ -508,6 +508,7 @@ impl AgenticLoop {
                 actions_taken: action_summaries.len(),
                 results: Vec::new(),
                 duration_ms: start.elapsed().as_millis() as u64,
+                throughput: Default::default(),
             };
             guardian_bridge
                 .forward_iteration(&iteration_result, Some(cycle_id.clone()))

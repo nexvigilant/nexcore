@@ -6,7 +6,7 @@
 //!
 //! Cross-domain: confidence intervals, price limits, range types.
 
-use crate::svg::{self, palette, SvgDoc};
+use crate::svg::{self, SvgDoc, palette};
 
 /// A bounded value for visualization.
 #[derive(Debug, Clone)]
@@ -96,7 +96,14 @@ pub fn render_bounds(bounded: &BoundedValue) -> String {
     // Lower bound marker
     if let Some(lower) = bounded.lower {
         let x = val_to_x(lower);
-        doc.add(svg::line(x, line_y - 25.0, x, line_y + 25.0, "#34d399", 2.0));
+        doc.add(svg::line(
+            x,
+            line_y - 25.0,
+            x,
+            line_y + 25.0,
+            "#34d399",
+            2.0,
+        ));
         let label = format!("lower: {lower:.1}");
         doc.add(svg::text(
             x,
@@ -111,7 +118,14 @@ pub fn render_bounds(bounded: &BoundedValue) -> String {
     // Upper bound marker
     if let Some(upper) = bounded.upper {
         let x = val_to_x(upper);
-        doc.add(svg::line(x, line_y - 25.0, x, line_y + 25.0, "#34d399", 2.0));
+        doc.add(svg::line(
+            x,
+            line_y - 25.0,
+            x,
+            line_y + 25.0,
+            "#34d399",
+            2.0,
+        ));
         let label = format!("upper: {upper:.1}");
         doc.add(svg::text(
             x,
@@ -124,9 +138,7 @@ pub fn render_bounds(bounded: &BoundedValue) -> String {
     }
 
     // Check in-bounds
-    let in_bounds = bounded
-        .lower
-        .map_or(true, |l| bounded.value >= l)
+    let in_bounds = bounded.lower.map_or(true, |l| bounded.value >= l)
         && bounded.upper.map_or(true, |u| bounded.value <= u);
 
     // Value marker
@@ -151,21 +163,10 @@ pub fn render_bounds(bounded: &BoundedValue) -> String {
         );
         let cx_pos = val_to_x(clamped);
         doc.add(svg::circle_stroke(
-            cx_pos,
-            line_y,
-            8.0,
-            "none",
-            "#fbbf24",
-            2.0,
+            cx_pos, line_y, 8.0, "none", "#fbbf24", 2.0,
         ));
         doc.add(svg::line_dashed(
-            vx,
-            line_y,
-            cx_pos,
-            line_y,
-            "#fbbf24",
-            1.0,
-            "4,2",
+            vx, line_y, cx_pos, line_y, "#fbbf24", 1.0, "4,2",
         ));
         let clamp_label = format!("clamped: {clamped:.1}");
         doc.add(svg::text(

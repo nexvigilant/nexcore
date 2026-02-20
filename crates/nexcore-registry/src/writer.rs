@@ -75,9 +75,8 @@ pub fn set_frontmatter_field(path: &Path, key: &str, value: &str) -> Result<()> 
 ///
 /// Returns an error on database or filesystem failure.
 pub fn backfill_tags(conn: &Connection, skills_dir: &Path) -> Result<usize> {
-    let mut stmt = conn.prepare(
-        "SELECT name, path FROM active_skills WHERE tags IS NULL ORDER BY name",
-    )?;
+    let mut stmt =
+        conn.prepare("SELECT name, path FROM active_skills WHERE tags IS NULL ORDER BY name")?;
 
     let rows: Vec<(String, String)> = stmt
         .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
@@ -112,9 +111,8 @@ pub fn backfill_tags(conn: &Connection, skills_dir: &Path) -> Result<usize> {
 ///
 /// Returns an error on database or filesystem failure.
 pub fn backfill_versions(conn: &Connection, _skills_dir: &Path) -> Result<usize> {
-    let mut stmt = conn.prepare(
-        "SELECT name, path FROM active_skills WHERE version IS NULL ORDER BY name",
-    )?;
+    let mut stmt =
+        conn.prepare("SELECT name, path FROM active_skills WHERE version IS NULL ORDER BY name")?;
 
     let rows: Vec<(String, String)> = stmt
         .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
@@ -222,7 +220,10 @@ mod tests {
     #[test]
     fn test_derive_tags() {
         assert_eq!(derive_tags_from_name("rust-dev"), "[\"rust\", \"dev\"]");
-        assert_eq!(derive_tags_from_name("brain-reconcile"), "[\"brain\", \"reconcile\"]");
+        assert_eq!(
+            derive_tags_from_name("brain-reconcile"),
+            "[\"brain\", \"reconcile\"]"
+        );
         assert_eq!(
             derive_tags_from_name("rust-dev/cargo"),
             "[\"rust\", \"dev\"]"

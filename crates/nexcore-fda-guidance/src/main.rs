@@ -11,7 +11,10 @@ use std::path::PathBuf;
 
 #[cfg(feature = "cli")]
 #[derive(Parser)]
-#[command(name = "fda-guidance", about = "Search and manage FDA guidance documents")]
+#[command(
+    name = "fda-guidance",
+    about = "Search and manage FDA guidance documents"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,

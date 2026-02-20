@@ -288,8 +288,7 @@ mod tests {
 
     #[test]
     fn test_extract_time() {
-        let html =
-            r#"<time datetime="2024-10-01T07:00:53-04:00">2024-10-01 07:00</time>"#;
+        let html = r#"<time datetime="2024-10-01T07:00:53-04:00">2024-10-01 07:00</time>"#;
         assert_eq!(
             extract_time(html),
             Some("2024-10-01T07:00:53-04:00".to_string())
@@ -299,10 +298,7 @@ mod tests {
     #[test]
     fn test_parse_us_date_valid() {
         assert_eq!(parse_us_date("07/01/2001"), Some("2001-07-01".to_string()));
-        assert_eq!(
-            parse_us_date("12/31/2025"),
-            Some("2025-12-31".to_string())
-        );
+        assert_eq!(parse_us_date("12/31/2025"), Some("2025-12-31".to_string()));
     }
 
     #[test]
@@ -339,18 +335,9 @@ mod tests {
             abbreviate_center("Center for Food Safety and Applied Nutrition"),
             "CFSAN"
         );
-        assert_eq!(
-            abbreviate_center("Center for Veterinary Medicine"),
-            "CVM"
-        );
-        assert_eq!(
-            abbreviate_center("Center for Tobacco Products"),
-            "CTP"
-        );
-        assert_eq!(
-            abbreviate_center("Office of Regulatory Affairs"),
-            "ORA"
-        );
+        assert_eq!(abbreviate_center("Center for Veterinary Medicine"), "CVM");
+        assert_eq!(abbreviate_center("Center for Tobacco Products"), "CTP");
+        assert_eq!(abbreviate_center("Office of Regulatory Affairs"), "ORA");
         assert_eq!(abbreviate_center("Unknown Office"), "Unknown Office");
     }
 

@@ -610,4 +610,230 @@ mod tests {
         let result = first_law_open(params);
         assert!(result.is_ok());
     }
+
+    #[test]
+    fn test_dependency_rate() {
+        let params = ChemistryDependencyRateParams {
+            k: 0.5,
+            reactants: vec![(2.0, 1.0), (3.0, 2.0)],
+        };
+        let result = dependency_rate(params);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_buffer_capacity() {
+        let params = ChemistryBufferCapacityParams {
+            total_conc: 0.1,
+            ratio: 1.0,
+        };
+        let result = buffer_cap(params);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_signal_absorbance() {
+        let params = ChemistrySignalAbsorbanceParams {
+            absorptivity: 1000.0,
+            path_length: 1.0,
+            concentration: 0.01,
+        };
+        let result = signal_absorbance(params);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_equilibrium() {
+        let params = ChemistryEquilibriumParams { k_eq: 2.0 };
+        let result = equilibrium(params);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_hill_response() {
+        let params = ChemistryHillResponseParams {
+            input: 75.0,
+            k_half: 50.0,
+            n_hill: 2.0,
+        };
+        let result = hill_cooperative(params);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_nernst_potential() {
+        let params = ChemistryNernstParams {
+            e_standard: 0.0,
+            temperature_k: 310.0,
+            n_electrons: 1.0,
+            q: 145.0 / 12.0,
+        };
+        let result = nernst_dynamic(params);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_inhibition_rate() {
+        let params = ChemistryInhibitionParams {
+            substrate: 75.0,
+            v_max: 100.0,
+            k_m: 50.0,
+            inhibitor: 25.0,
+            k_i: 10.0,
+        };
+        let result = inhibition_rate(params);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_eyring_rate() {
+        let params = ChemistryEyringRateParams {
+            delta_g: 50000.0,
+            temperature_k: 310.0,
+            kappa: 1.0,
+        };
+        let result = eyring_transition(params);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_langmuir_coverage() {
+        let params = ChemistryLangmuirParams {
+            concentration: 5.0,
+            k_eq: 0.1,
+        };
+        let result = langmuir_binding(params);
+        assert!(result.is_ok());
+    }
+
+    /// Comprehensive exercise: runs all 15 core tools, extracts JSON, prints output
+    #[test]
+    fn exercise_all_15_chemistry_tools() {
+        use rmcp::model::RawContent;
+
+        fn extract_text(result: Result<CallToolResult, McpError>) -> String {
+            let ctr = result.expect("tool returned Err");
+            ctr.content
+                .iter()
+                .filter_map(|c| match &c.raw {
+                    RawContent::Text(t) => Some(t.text.clone()),
+                    _ => None,
+                })
+                .collect::<Vec<_>>()
+                .join("")
+        }
+
+        // 1. threshold_rate
+        let out1 = extract_text(threshold_rate(ChemistryThresholdRateParams {
+            pre_exponential: 1e13,
+            activation_energy_kj: 50.0,
+            temperature_k: 298.15,
+        }));
+        println!("=== 1. chemistry_threshold_rate ===\n{out1}\n");
+
+        // 2. threshold_exceeded
+        let out2 = extract_text(check_threshold_exceeded(ChemistryThresholdExceededParams {
+            signal: 120.0,
+            threshold: 100.0,
+        }));
+        println!("=== 2. chemistry_threshold_exceeded ===\n{out2}\n");
+
+        // 3. decay_remaining
+        let out3 = extract_text(decay_remaining(ChemistryDecayRemainingParams {
+            initial: 1000.0,
+            half_life: 5.0,
+            time: 15.0,
+        }));
+        println!("=== 3. chemistry_decay_remaining ===\n{out3}\n");
+
+        // 4. saturation_rate
+        let out4 = extract_text(saturation_rate(ChemistrySaturationRateParams {
+            substrate: 75.0,
+            v_max: 100.0,
+            k_m: 50.0,
+        }));
+        println!("=== 4. chemistry_saturation_rate ===\n{out4}\n");
+
+        // 5. pv_mappings
+        let out5 = extract_text(get_pv_mappings(ChemistryPvMappingsParams {}));
+        println!("=== 5. chemistry_pv_mappings ===\n{out5}\n");
+
+        // 6. feasibility
+        let out6 = extract_text(feasibility(ChemistryFeasibilityParams {
+            delta_h: -20.0,
+            delta_s: -50.0,
+            temperature_k: 310.0,
+        }));
+        println!("=== 6. chemistry_feasibility ===\n{out6}\n");
+
+        // 7. dependency_rate
+        let out7 = extract_text(dependency_rate(ChemistryDependencyRateParams {
+            k: 0.5,
+            reactants: vec![(2.0, 1.0), (3.0, 2.0)],
+        }));
+        println!("=== 7. chemistry_dependency_rate ===\n{out7}\n");
+
+        // 8. buffer_capacity
+        let out8 = extract_text(buffer_cap(ChemistryBufferCapacityParams {
+            total_conc: 0.1,
+            ratio: 1.0,
+        }));
+        println!("=== 8. chemistry_buffer_capacity ===\n{out8}\n");
+
+        // 9. signal_absorbance
+        let out9 = extract_text(signal_absorbance(ChemistrySignalAbsorbanceParams {
+            absorptivity: 1000.0,
+            concentration: 0.01,
+            path_length: 1.0,
+        }));
+        println!("=== 9. chemistry_signal_absorbance ===\n{out9}\n");
+
+        // 10. equilibrium
+        let out10 = extract_text(equilibrium(ChemistryEquilibriumParams { k_eq: 2.0 }));
+        println!("=== 10. chemistry_equilibrium ===\n{out10}\n");
+
+        // 11. hill_response
+        let out11 = extract_text(hill_cooperative(ChemistryHillResponseParams {
+            input: 75.0,
+            k_half: 50.0,
+            n_hill: 2.0,
+        }));
+        println!("=== 11. chemistry_hill_response ===\n{out11}\n");
+
+        // 12. nernst_potential
+        let out12 = extract_text(nernst_dynamic(ChemistryNernstParams {
+            e_standard: 0.0,
+            temperature_k: 310.0,
+            n_electrons: 1.0,
+            q: 145.0 / 12.0,
+        }));
+        println!("=== 12. chemistry_nernst_potential ===\n{out12}\n");
+
+        // 13. inhibition_rate
+        let out13 = extract_text(inhibition_rate(ChemistryInhibitionParams {
+            substrate: 75.0,
+            v_max: 100.0,
+            k_m: 50.0,
+            inhibitor: 25.0,
+            k_i: 10.0,
+        }));
+        println!("=== 13. chemistry_inhibition_rate ===\n{out13}\n");
+
+        // 14. eyring_rate
+        let out14 = extract_text(eyring_transition(ChemistryEyringRateParams {
+            delta_g: 50000.0,
+            temperature_k: 310.0,
+            kappa: 1.0,
+        }));
+        println!("=== 14. chemistry_eyring_rate ===\n{out14}\n");
+
+        // 15. langmuir_coverage
+        let out15 = extract_text(langmuir_binding(ChemistryLangmuirParams {
+            concentration: 5.0,
+            k_eq: 0.1,
+        }));
+        println!("=== 15. chemistry_langmuir_coverage ===\n{out15}\n");
+
+        println!("ALL 15 CHEMISTRY TOOLS EXERCISED SUCCESSFULLY");
+    }
 }

@@ -16,7 +16,7 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
 
-use crate::error::Result;
+use crate::error::{BrainError, Result};
 use crate::{ArtifactType, BrainSession, brain_dir, implicit_dir, tracker_dir};
 
 // ============================================================================
@@ -230,8 +230,12 @@ impl GrowthRate {
         }
 
         // Calculate deltas between first and last snapshot in period
-        let first = relevant.first().expect("checked len >= 2");
-        let last = relevant.last().expect("checked len >= 2");
+        let first = relevant
+            .first()
+            .ok_or_else(|| BrainError::Other("No snapshots in period".into()))?;
+        let last = relevant
+            .last()
+            .ok_or_else(|| BrainError::Other("No snapshots in period".into()))?;
 
         let artifact_delta = last.artifacts.total.saturating_sub(first.artifacts.total);
         let session_delta = last.sessions.total.saturating_sub(first.sessions.total);

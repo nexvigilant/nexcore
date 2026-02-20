@@ -32,8 +32,8 @@
 //! assert!(amplified <= 100.0);
 //! ```
 
-use thiserror::Error;
 use std::collections::HashMap;
+use thiserror::Error;
 
 // =============================================================================
 // Error type
@@ -250,7 +250,11 @@ impl Attenuator {
 
     /// Dampening factor (`1 / gain`).
     pub fn dampening_factor(&self) -> f64 {
-        if self.gain > 0.0 { 1.0 / self.gain } else { 1.0 }
+        if self.gain > 0.0 {
+            1.0 / self.gain
+        } else {
+            1.0
+        }
     }
 
     /// Attenuate `input_value`.
@@ -450,11 +454,7 @@ impl PairedAmplificationSystem {
     ///
     /// Returns [`AmplificationViolation::NotFound`] if no amplifier with that
     /// name is registered.
-    pub fn amplify(
-        &mut self,
-        amp_name: &str,
-        value: f64,
-    ) -> Result<f64, AmplificationViolation> {
+    pub fn amplify(&mut self, amp_name: &str, value: f64) -> Result<f64, AmplificationViolation> {
         let pair = self
             .pairs
             .values_mut()
@@ -473,11 +473,7 @@ impl PairedAmplificationSystem {
     ///
     /// Returns [`AmplificationViolation::NotFound`] if no attenuator with that
     /// name is registered.
-    pub fn attenuate(
-        &mut self,
-        att_name: &str,
-        value: f64,
-    ) -> Result<f64, AmplificationViolation> {
+    pub fn attenuate(&mut self, att_name: &str, value: f64) -> Result<f64, AmplificationViolation> {
         let pair = self
             .pairs
             .values_mut()
@@ -526,7 +522,11 @@ impl PairedAmplificationSystem {
             }
         } else if proportionality < 1.0 {
             // Under-responding — amplify.
-            let input = if current_response > 0.0 { current_response } else { threat_level };
+            let input = if current_response > 0.0 {
+                current_response
+            } else {
+                threat_level
+            };
             if let Some((amp, _)) = self.pairs.values_mut().next() {
                 // Amplify returns Ok always when paired; fall back gracefully.
                 return amp.amplify(input).unwrap_or(current_response);
@@ -659,7 +659,10 @@ mod tests {
     fn amplifier_unpaired_returns_error() {
         let mut amp = Amplifier::new("solo", 2.0, 100.0);
         let result = amp.amplify(10.0);
-        assert!(matches!(result, Err(AmplificationViolation::NoPairedAttenuator { .. })));
+        assert!(matches!(
+            result,
+            Err(AmplificationViolation::NoPairedAttenuator { .. })
+        ));
     }
 
     #[test]
@@ -743,7 +746,10 @@ mod tests {
         let weak_att = Attenuator::new("att", 2.0); // 2.0 < 3.0
         let mut sys = PairedAmplificationSystem::new();
         let result = sys.register_pair(amp, weak_att);
-        assert!(matches!(result, Err(AmplificationViolation::AttenuatorTooWeak { .. })));
+        assert!(matches!(
+            result,
+            Err(AmplificationViolation::AttenuatorTooWeak { .. })
+        ));
     }
 
     #[test]
@@ -759,7 +765,10 @@ mod tests {
         let mut sys = paired_system(2.0, 2.5);
         // response=100, threat=10 → proportionality=10 > threshold=3.
         let new_response = sys.process_response(100.0, 10.0, 3.0);
-        assert!(new_response < 100.0, "should have attenuated: {new_response}");
+        assert!(
+            new_response < 100.0,
+            "should have attenuated: {new_response}"
+        );
     }
 
     #[test]
@@ -767,7 +776,10 @@ mod tests {
         let mut sys = paired_system(2.0, 2.5);
         // response=1, threat=100 → proportionality=0.01 < 1.0.
         let new_response = sys.process_response(1.0, 100.0, 3.0);
-        assert!(new_response >= 1.0, "should have amplified or maintained: {new_response}");
+        assert!(
+            new_response >= 1.0,
+            "should have amplified or maintained: {new_response}"
+        );
     }
 
     #[test]
@@ -809,7 +821,12 @@ mod tests {
     fn create_standard_pair_adjusts_weak_attenuation() {
         // Pass att_gain < amp_gain → should be auto-corrected.
         let (amp, att) = create_standard_pair("x", 3.0, 1.0, 100.0);
-        assert!(att.gain >= amp.gain, "att.gain={} amp.gain={}", att.gain, amp.gain);
+        assert!(
+            att.gain >= amp.gain,
+            "att.gain={} amp.gain={}",
+            att.gain,
+            amp.gain
+        );
     }
 
     #[test]

@@ -362,8 +362,14 @@ mod tests {
 
     #[test]
     fn test_symbol_parsing() {
-        assert_eq!(LexPrimitiva::from_symbol(SIGMA_SEQ), Some(LexPrimitiva::Sequence));
-        assert_eq!(LexPrimitiva::from_symbol(N_QUANT), Some(LexPrimitiva::Quantity));
+        assert_eq!(
+            LexPrimitiva::from_symbol(SIGMA_SEQ),
+            Some(LexPrimitiva::Sequence)
+        );
+        assert_eq!(
+            LexPrimitiva::from_symbol(N_QUANT),
+            Some(LexPrimitiva::Quantity)
+        );
         assert_eq!(
             LexPrimitiva::from_symbol("->"),
             Some(LexPrimitiva::Causality)
@@ -380,7 +386,10 @@ mod tests {
         ]);
         assert_eq!(comp.unique().len(), 3);
         assert!(!comp.is_pure());
-        assert_eq!(format!("{comp}"), format!("[{} + {} + {}]", SIGMA_SEQ, MU_MAP, VARSIGMA_STATE));
+        assert_eq!(
+            format!("{comp}"),
+            format!("[{} + {} + {}]", SIGMA_SEQ, MU_MAP, VARSIGMA_STATE)
+        );
     }
 
     #[test]

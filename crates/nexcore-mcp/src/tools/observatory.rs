@@ -256,9 +256,7 @@ pub fn personalize_set(params: PersonalizeSetParams) -> Result<CallToolResult, M
 // ---------------------------------------------------------------------------
 
 /// Cross-validate an Observatory config against explorer capability constraints.
-pub fn personalize_validate(
-    params: PersonalizeValidateParams,
-) -> Result<CallToolResult, McpError> {
+pub fn personalize_validate(params: PersonalizeValidateParams) -> Result<CallToolResult, McpError> {
     let mut errors: Vec<String> = Vec::new();
     let mut warnings: Vec<String> = Vec::new();
     let mut suggestions: Vec<String> = Vec::new();

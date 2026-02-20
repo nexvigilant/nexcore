@@ -149,6 +149,12 @@ async fn dispatch_inner(
         }),
 
         // ====================================================================
+        // API Tools (2)
+        // ====================================================================
+        "api_health" => typed_async(params, tools::api::health).await,
+        "api_list_routes" => typed_async(params, tools::api::list_routes).await,
+
+        // ====================================================================
         // Foundation Tools (9)
         // ====================================================================
         "foundation_levenshtein" => typed(params, tools::foundation::calc_levenshtein),
@@ -181,6 +187,7 @@ async fn dispatch_inner(
         "pv_signal_ic" => typed(params, tools::pv::signal_ic),
         "pv_signal_ebgm" => typed(params, tools::pv::signal_ebgm),
         "pv_chi_square" => typed(params, tools::pv::chi_square),
+        "pv_signal_cooperative" => typed(params, tools::pv::signal_cooperative),
         "pv_naranjo_quick" => typed(params, tools::pv::naranjo_quick),
         "pv_who_umc_quick" => typed(params, tools::pv::who_umc_quick),
 
@@ -240,7 +247,7 @@ async fn dispatch_inner(
         "guardian_evaluate_pv" => typed(params, tools::guardian::evaluate_pv),
         "guardian_status" => typed_async(params, tools::guardian::status).await,
         "guardian_reset" => tools::guardian::reset().await,
-        "guardian_inject_signal" => typed_async(params, tools::guardian::inject_signal).await,
+        "guardian_inject_signal" => typed(params, tools::guardian::inject_signal),
         "guardian_sensors_list" => typed_async(params, tools::guardian::sensors_list).await,
         "guardian_actuators_list" => typed_async(params, tools::guardian::actuators_list).await,
         "guardian_history" => typed(params, tools::guardian::history),
@@ -305,6 +312,19 @@ async fn dispatch_inner(
         // Documentation Generation Tools (1)
         // ====================================================================
         "docs_generate_claude_md" => typed(params, tools::docs::docs_generate_claude_md),
+
+        // ====================================================================
+        // Crate X-Ray (3)
+        // ====================================================================
+        "crate_xray" => typed(params, tools::crate_xray::xray),
+        "crate_xray_trial" => typed(params, tools::crate_xray::trial),
+        "crate_xray_goals" => typed(params, tools::crate_xray::goals),
+
+        // ====================================================================
+        // Crate Development Framework (2)
+        // ====================================================================
+        "crate_dev_scaffold" => typed(params, tools::crate_dev::scaffold_crate),
+        "crate_dev_audit" => typed(params, tools::crate_dev::audit_crate),
 
         // ====================================================================
         // Vigil Orchestrator Tools (13)
@@ -1005,6 +1025,25 @@ async fn dispatch_inner(
         "antitransformer_batch" => typed(params, tools::antitransformer::antitransformer_batch),
 
         // ====================================================================
+        // Epidemiology Tools (11)
+        // ====================================================================
+        "epidemiology_relative_risk" => typed(params, tools::epidemiology::relative_risk),
+        "epidemiology_odds_ratio" => typed(params, tools::epidemiology::odds_ratio),
+        "epidemiology_attributable_risk" => typed(params, tools::epidemiology::attributable_risk),
+        "epidemiology_nnt_nnh" => typed(params, tools::epidemiology::nnt_nnh),
+        "epidemiology_attributable_fraction" => {
+            typed(params, tools::epidemiology::attributable_fraction)
+        }
+        "epidemiology_population_attributable_fraction" => {
+            typed(params, tools::epidemiology::population_attributable_fraction)
+        }
+        "epidemiology_incidence_rate" => typed(params, tools::epidemiology::incidence_rate),
+        "epidemiology_prevalence" => typed(params, tools::epidemiology::prevalence),
+        "epidemiology_kaplan_meier" => typed(params, tools::epidemiology::kaplan_meier),
+        "epidemiology_smr" => typed(params, tools::epidemiology::smr),
+        "epidemiology_mappings" => typed(params, tools::epidemiology::epi_pv_mappings),
+
+        // ====================================================================
         // Token-as-Energy Tools (2) — ATP/ADP Biochemistry for Token Budgets
         // T1 Grounding: N (quantity) + κ (comparison) + ∝ (proportionality)
         // ====================================================================
@@ -1222,11 +1261,26 @@ async fn dispatch_inner(
         "ksb_stats" => typed(params, tools::knowledge::stats),
 
         // ====================================================================
-        // ToV Direct Tools (3) — signal strength, stability shells, epistemic trust
+        // Theory of Vigilance (ToV direct — signal strength, stability, epistemic trust)
         // ====================================================================
         "tov_signal_strength" => typed(params, tools::tov::signal_strength),
         "tov_stability_shell" => typed(params, tools::tov::stability_shell),
         "tov_epistemic_trust" => typed(params, tools::tov::epistemic_trust),
+
+        // ====================================================================
+        // Knowledge Engine Tools (3)
+        // ====================================================================
+        "knowledge_engine_compress" => typed(params, tools::knowledge_engine::compress),
+        "knowledge_engine_compile" => typed(params, tools::knowledge_engine::compile),
+        "knowledge_engine_query" => typed(params, tools::knowledge_engine::query),
+
+        // ====================================================================
+        // Relay Fidelity Tools (4)
+        // ====================================================================
+        "relay_chain_verify" => typed(params, tools::relay::relay_chain_verify),
+        "relay_pv_pipeline" => tools::relay::relay_pv_pipeline(),
+        "relay_core_detection" => tools::relay::relay_core_detection(),
+        "relay_fidelity_compose" => typed(params, tools::relay::relay_fidelity_compose),
 
         // ====================================================================
         // PV Core Tools (3) — IVF axioms, severity classification
@@ -1395,6 +1449,16 @@ async fn dispatch_inner(
         "anatomy_blast_radius" => typed(params, tools::anatomy::anatomy_blast_radius_tool),
         "anatomy_chomsky" => typed(params, tools::anatomy::anatomy_chomsky_tool),
         "anatomy_violations" => tools::anatomy::anatomy_violations_tool(),
+
+        // ====================================================================
+        // Cargo — Structured build/check/test/lint/fmt/tree (6)
+        // ====================================================================
+        "cargo_check" => typed(params, tools::cargo::cargo_check),
+        "cargo_build" => typed(params, tools::cargo::cargo_build),
+        "cargo_test" => typed(params, tools::cargo::cargo_test),
+        "cargo_clippy" => typed(params, tools::cargo::cargo_clippy),
+        "cargo_fmt" => typed(params, tools::cargo::cargo_fmt),
+        "cargo_tree" => typed(params, tools::cargo::cargo_tree),
 
         // ====================================================================
         // SQI — Skill Quality Index (2)
@@ -2084,6 +2148,27 @@ async fn dispatch_inner(
         "trial_report_generate" => typed(params, tools::trial::report_generate),
 
         // ====================================================================
+        // Cognition Tools (8) — Transformer Algorithm as Strict Rust
+        // ====================================================================
+        "cognition_process" => typed(params, tools::cognition::cognition_process),
+        "cognition_analyze" => typed(params, tools::cognition::cognition_analyze),
+        "cognition_forward" => typed(params, tools::cognition::cognition_forward),
+        "cognition_entropy" => typed(params, tools::cognition::cognition_entropy),
+        "cognition_perplexity" => typed(params, tools::cognition::cognition_perplexity),
+        "cognition_embed" => typed(params, tools::cognition::cognition_embed),
+        "cognition_sample" => typed(params, tools::cognition::cognition_sample),
+        "cognition_confidence" => typed(params, tools::cognition::cognition_confidence),
+
+        // ====================================================================
+        // Foundry Tools (5)
+        // ====================================================================
+        "foundry_validate_artifact" => typed(params, tools::foundry::foundry_validate_artifact),
+        "foundry_cascade_validate" => typed(params, tools::foundry::foundry_cascade_validate),
+        "foundry_render_intelligence" => typed(params, tools::foundry::foundry_render_intelligence),
+        "foundry_vdag_order" => typed(params, tools::foundry::foundry_vdag_order),
+        "foundry_infer" => typed(params, tools::foundry::foundry_infer),
+
+        // ====================================================================
         // Unknown command
         // ====================================================================
         _ => Err(McpError::invalid_params(
@@ -2264,7 +2349,7 @@ fn help_catalog_json() -> serde_json::Value {
         "categories": {
             "system": ["nexcore_health", "config_validate", "mcp_servers_list", "mcp_server_get"],
             "foundation": ["foundation_levenshtein", "foundation_levenshtein_bounded", "foundation_fuzzy_search", "foundation_sha256", "foundation_yaml_parse", "foundation_graph_topsort", "foundation_graph_levels", "foundation_fsrs_review", "foundation_concept_grep", "foundation_domain_distance", "foundation_flywheel_velocity", "foundation_token_ratio", "foundation_spectral_overlap"],
-            "pv": ["pv_signal_complete", "pv_signal_prr", "pv_signal_ror", "pv_signal_ic", "pv_signal_ebgm", "pv_chi_square", "pv_naranjo_quick", "pv_who_umc_quick", "pv_signal_strength"],
+            "pv": ["pv_signal_complete", "pv_signal_prr", "pv_signal_ror", "pv_signal_ic", "pv_signal_ebgm", "pv_chi_square", "pv_signal_cooperative", "pv_naranjo_quick", "pv_who_umc_quick", "pv_signal_strength"],
             "benefit_risk": ["pv_qbri_compute", "pv_qbri_derive", "pv_qbri_equation"],
             "signal": ["signal_detect", "signal_batch", "signal_thresholds"],
             "vigilance": ["vigilance_safety_margin", "vigilance_risk_score", "vigilance_harm_types", "vigilance_map_to_tov"],
@@ -2315,7 +2400,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "forge": ["forge_init", "forge_reference", "forge_mine", "forge_prompt", "forge_suggest", "forge_summary", "forge_system_prompt", "forge_tier"],
             "academy_forge": ["forge_extract", "forge_validate", "forge_scaffold", "forge_schema", "forge_compile"],
             "foundation": ["foundation_levenshtein", "foundation_levenshtein_bounded", "foundation_fuzzy_search", "foundation_sha256", "foundation_yaml_parse", "foundation_graph_topsort", "foundation_graph_levels", "foundation_fsrs_review", "foundation_concept_grep", "foundation_domain_distance", "foundation_flywheel_velocity", "foundation_token_ratio", "foundation_spectral_overlap"],
-            "pv": ["pv_signal_complete", "pv_signal_prr", "pv_signal_ror", "pv_signal_ic", "pv_signal_ebgm", "pv_chi_square", "pv_naranjo_quick", "pv_who_umc_quick", "pv_signal_strength"],
+            "pv": ["pv_signal_complete", "pv_signal_prr", "pv_signal_ror", "pv_signal_ic", "pv_signal_ebgm", "pv_chi_square", "pv_signal_cooperative", "pv_naranjo_quick", "pv_who_umc_quick", "pv_signal_strength"],
             "benefit_risk": ["pv_qbri_compute", "pv_qbri_derive", "pv_qbri_equation"],
             "signal": ["signal_detect", "signal_batch", "signal_thresholds"],
             "pvdsl": ["pvdsl_compile", "pvdsl_execute", "pvdsl_eval", "pvdsl_functions"],
@@ -2453,6 +2538,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "registry": ["registry_assess_skill", "registry_assess_all", "registry_gap_report", "registry_promotable", "registry_promotion_plan", "registry_tov_safety", "registry_tov_harm", "registry_tov_is_safe"],
             "stoichiometry": ["stoichiometry_encode", "stoichiometry_decode", "stoichiometry_sisters", "stoichiometry_mass_state", "stoichiometry_dictionary"],
             "trial": ["trial_protocol_register", "trial_power_analysis", "trial_randomize", "trial_blind_verify", "trial_interim_analyze", "trial_safety_check", "trial_endpoint_evaluate", "trial_multiplicity_adjust", "trial_adapt_decide", "trial_report_generate"],
+            "cognition": ["cognition_process", "cognition_analyze", "cognition_forward", "cognition_entropy", "cognition_perplexity", "cognition_embed", "cognition_sample", "cognition_confidence"],
         }
     });
 

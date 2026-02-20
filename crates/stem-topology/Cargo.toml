@@ -1,0 +1,15 @@
+[package]
+name = "stem-topology"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Topological Data Analysis (TDA) for pharmacovigilance signal detection"
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

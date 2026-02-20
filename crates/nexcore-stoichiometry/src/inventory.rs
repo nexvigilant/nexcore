@@ -215,7 +215,12 @@ mod tests {
         let inv = PrimitiveInventory::from_primitives(&[LexPrimitiva::Quantity]);
         let expected = AtomicMass::of(LexPrimitiva::Quantity).bits();
         let diff = (inv.total_mass() - expected).abs();
-        assert!(diff < 0.001, "mass mismatch: got {} expected {}", inv.total_mass(), expected);
+        assert!(
+            diff < 0.001,
+            "mass mismatch: got {} expected {}",
+            inv.total_mass(),
+            expected
+        );
     }
 
     #[test]
@@ -225,10 +230,8 @@ mod tests {
             LexPrimitiva::Causality,
             LexPrimitiva::Boundary,
         ]);
-        let b = PrimitiveInventory::from_primitives(&[
-            LexPrimitiva::Causality,
-            LexPrimitiva::Quantity,
-        ]);
+        let b =
+            PrimitiveInventory::from_primitives(&[LexPrimitiva::Causality, LexPrimitiva::Quantity]);
         let deficit = a.deficit(&b);
         // Causality: 2-1 = 1
         assert_eq!(deficit[9], 1);
@@ -240,14 +243,10 @@ mod tests {
 
     #[test]
     fn test_is_equal() {
-        let a = PrimitiveInventory::from_primitives(&[
-            LexPrimitiva::Existence,
-            LexPrimitiva::Boundary,
-        ]);
-        let b = PrimitiveInventory::from_primitives(&[
-            LexPrimitiva::Existence,
-            LexPrimitiva::Boundary,
-        ]);
+        let a =
+            PrimitiveInventory::from_primitives(&[LexPrimitiva::Existence, LexPrimitiva::Boundary]);
+        let b =
+            PrimitiveInventory::from_primitives(&[LexPrimitiva::Existence, LexPrimitiva::Boundary]);
         assert!(a.is_equal(&b));
     }
 

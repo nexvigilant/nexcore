@@ -311,6 +311,7 @@ fn harm_types_stage(
 }
 
 /// Generate a stage for aggregated concepts (conservation laws, theorems).
+#[allow(clippy::too_many_arguments)]
 fn aggregated_stage(
     pathway_id: &str,
     num: u32,

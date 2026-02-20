@@ -36,6 +36,8 @@
 pub mod grounding;
 pub mod spatial;
 pub mod spatial_grounding;
+pub mod statistics;
+pub mod statistics_grounding;
 
 use serde::{Deserialize, Serialize};
 use stem_core::Confidence;

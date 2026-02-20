@@ -6,7 +6,9 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum StoichiometryError {
     /// Equation does not balance — mass is not conserved.
-    #[error("imbalance: reactant mass {reactant_mass:.2} Da != product mass {product_mass:.2} Da (delta={delta:.2})")]
+    #[error(
+        "imbalance: reactant mass {reactant_mass:.2} Da != product mass {product_mass:.2} Da (delta={delta:.2})"
+    )]
     Imbalance {
         reactant_mass: f64,
         product_mass: f64,

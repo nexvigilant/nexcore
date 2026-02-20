@@ -131,11 +131,12 @@ impl Dictionary {
 
         self.entries.insert(key.clone(), entry);
         // Safe: we just inserted it
-        Ok(self.entries.get(&key).ok_or_else(|| {
-            StoichiometryError::TermNotFound {
+        Ok(self
+            .entries
+            .get(&key)
+            .ok_or_else(|| StoichiometryError::TermNotFound {
                 name: name.to_string(),
-            }
-        })?)
+            })?)
     }
 
     /// Look up a term by name (case-insensitive).

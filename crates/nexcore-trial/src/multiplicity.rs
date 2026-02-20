@@ -42,7 +42,12 @@ pub fn bonferroni_adjust(p_values: &[f64], alpha: f64) -> Vec<AdjustedResult> {
 pub fn holm_adjust(p_values: &[f64], alpha: f64) -> Vec<AdjustedResult> {
     let m = p_values.len();
     // Create sorted index pairs (value, original_index)
-    let mut indexed: Vec<(f64, usize)> = p_values.iter().copied().enumerate().map(|(i, p)| (p, i)).collect();
+    let mut indexed: Vec<(f64, usize)> = p_values
+        .iter()
+        .copied()
+        .enumerate()
+        .map(|(i, p)| (p, i))
+        .collect();
     indexed.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
 
     let mut results = vec![
@@ -84,7 +89,12 @@ pub fn holm_adjust(p_values: &[f64], alpha: f64) -> Vec<AdjustedResult> {
 /// - `alpha`: Family-wise error rate
 pub fn hochberg_adjust(p_values: &[f64], alpha: f64) -> Vec<AdjustedResult> {
     let m = p_values.len();
-    let mut indexed: Vec<(f64, usize)> = p_values.iter().copied().enumerate().map(|(i, p)| (p, i)).collect();
+    let mut indexed: Vec<(f64, usize)> = p_values
+        .iter()
+        .copied()
+        .enumerate()
+        .map(|(i, p)| (p, i))
+        .collect();
     indexed.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal)); // descending
 
     let mut results = vec![
@@ -127,7 +137,12 @@ pub fn hochberg_adjust(p_values: &[f64], alpha: f64) -> Vec<AdjustedResult> {
 /// - `alpha`: Desired false discovery rate
 pub fn benjamini_hochberg_adjust(p_values: &[f64], alpha: f64) -> Vec<AdjustedResult> {
     let m = p_values.len();
-    let mut indexed: Vec<(f64, usize)> = p_values.iter().copied().enumerate().map(|(i, p)| (p, i)).collect();
+    let mut indexed: Vec<(f64, usize)> = p_values
+        .iter()
+        .copied()
+        .enumerate()
+        .map(|(i, p)| (p, i))
+        .collect();
     indexed.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
 
     // Find the largest k such that p_(k) ≤ k * alpha / m
@@ -170,9 +185,18 @@ mod tests {
     fn test_bonferroni() {
         // With 3 tests at alpha=0.05, threshold = 0.0167
         let adjusted = bonferroni_adjust(&[0.01, 0.03, 0.04], 0.05);
-        assert!(adjusted[0].significant, "0.01 < 0.0167 — should be significant");
-        assert!(!adjusted[1].significant, "0.03 > 0.0167 — should not be significant");
-        assert!(!adjusted[2].significant, "0.04 > 0.0167 — should not be significant");
+        assert!(
+            adjusted[0].significant,
+            "0.01 < 0.0167 — should be significant"
+        );
+        assert!(
+            !adjusted[1].significant,
+            "0.03 > 0.0167 — should not be significant"
+        );
+        assert!(
+            !adjusted[2].significant,
+            "0.04 > 0.0167 — should not be significant"
+        );
     }
 
     #[test]
@@ -190,8 +214,14 @@ mod tests {
         // p=[0.01, 0.02, 0.04]: Holm finds all 3 significant; Bonferroni finds only 1.
         // Holm thresholds for m=3: rank1→0.05/3=0.0167, rank2→0.05/2=0.025, rank3→0.05/1=0.05
         let adjusted = holm_adjust(&[0.01, 0.02, 0.04], 0.05);
-        assert!(adjusted[0].significant, "0.01 < 0.0167 should be significant by Holm");
-        assert!(adjusted[1].significant, "0.02 < 0.025 should be significant by Holm");
+        assert!(
+            adjusted[0].significant,
+            "0.01 < 0.0167 should be significant by Holm"
+        );
+        assert!(
+            adjusted[1].significant,
+            "0.02 < 0.025 should be significant by Holm"
+        );
     }
 
     #[test]
@@ -228,7 +258,10 @@ mod tests {
         let bh = benjamini_hochberg_adjust(&p_values, 0.05);
         let sig_bonf: usize = bonferroni.iter().filter(|r| r.significant).count();
         let sig_bh: usize = bh.iter().filter(|r| r.significant).count();
-        assert!(sig_bh >= sig_bonf, "BH should have >= significant results vs Bonferroni");
+        assert!(
+            sig_bh >= sig_bonf,
+            "BH should have >= significant results vs Bonferroni"
+        );
     }
 
     #[test]

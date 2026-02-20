@@ -33,12 +33,10 @@ struct Cli {
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    let workspace_root = cli.workspace.canonicalize().with_context(|| {
-        format!(
-            "Workspace path does not exist: {}",
-            cli.workspace.display()
-        )
-    })?;
+    let workspace_root = cli
+        .workspace
+        .canonicalize()
+        .with_context(|| format!("Workspace path does not exist: {}", cli.workspace.display()))?;
 
     // Verify workspace Cargo.toml is readable (error will provide context if missing)
     std::fs::read_to_string(workspace_root.join("Cargo.toml")).with_context(|| {
@@ -65,14 +63,13 @@ fn convert_single_crate(
     registry_name: &str,
     dry_run: bool,
 ) -> Result<()> {
-    let crate_path = crate_path.canonicalize().with_context(|| {
-        format!("Crate path does not exist: {}", crate_path.display())
-    })?;
+    let crate_path = crate_path
+        .canonicalize()
+        .with_context(|| format!("Crate path does not exist: {}", crate_path.display()))?;
 
     let cargo_path = crate_path.join("Cargo.toml");
-    let original = std::fs::read_to_string(&cargo_path).with_context(|| {
-        format!("No Cargo.toml found at {}", cargo_path.display())
-    })?;
+    let original = std::fs::read_to_string(&cargo_path)
+        .with_context(|| format!("No Cargo.toml found at {}", cargo_path.display()))?;
     let converted =
         crate_converter::convert_crate_file(&cargo_path, workspace_root, registry_name)?;
 
@@ -106,18 +103,14 @@ fn convert_all_crates(
     dry_run: bool,
 ) -> Result<()> {
     let crates_dir = workspace_root.join("crates");
-    std::fs::read_dir(&crates_dir).with_context(|| {
-        format!("No crates/ directory found at {}", crates_dir.display())
-    })?;
+    std::fs::read_dir(&crates_dir)
+        .with_context(|| format!("No crates/ directory found at {}", crates_dir.display()))?;
 
     let mut count_converted = 0;
     let mut count_skipped = 0;
     let mut count_errors = 0;
 
-    for entry in walkdir::WalkDir::new(&crates_dir)
-        .min_depth(1)
-        .max_depth(2)
-    {
+    for entry in walkdir::WalkDir::new(&crates_dir).min_depth(1).max_depth(2) {
         let entry = entry?;
         if entry.file_name() != "Cargo.toml" {
             continue;
@@ -125,7 +118,10 @@ fn convert_all_crates(
 
         let cargo_path = entry.path();
         let crate_dir = cargo_path.parent().ok_or_else(|| {
-            anyhow::anyhow!("Cannot determine parent directory of {}", cargo_path.display())
+            anyhow::anyhow!(
+                "Cannot determine parent directory of {}",
+                cargo_path.display()
+            )
         })?;
 
         match crate_converter::convert_crate_file(cargo_path, workspace_root, registry_name) {

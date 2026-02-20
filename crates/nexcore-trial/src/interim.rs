@@ -10,9 +10,7 @@
 
 use crate::error::TrialError;
 use crate::power::z_score_from_alpha;
-use crate::types::{
-    InterimData, InterimDecision, InterimResult, Protocol, SpendingFunction,
-};
+use crate::types::{InterimData, InterimDecision, InterimResult, Protocol, SpendingFunction};
 
 // ── OBF Boundary ──────────────────────────────────────────────────────────────
 
@@ -30,10 +28,10 @@ use crate::types::{
 /// # Returns
 /// Critical Z-value; reject H₀ if |observed_Z| > returned value.
 pub fn obrien_fleming_boundary(info_fraction: f64, alpha: f64) -> f64 {
-    let z_half = z_score_from_alpha(alpha / 2.0);   // ≈1.96 for α=0.05
+    let z_half = z_score_from_alpha(alpha / 2.0); // ≈1.96 for α=0.05
     let z_quarter = z_score_from_alpha(alpha / 4.0); // ≈2.24 for α=0.05
     // OBF constant — geometric mean of the two-sided and four-sided critical values
-    let z_c = (z_half * z_quarter).sqrt();             // ≈2.096 for α=0.05
+    let z_c = (z_half * z_quarter).sqrt(); // ≈2.096 for α=0.05
     z_c / info_fraction.sqrt()
 }
 
@@ -48,11 +46,7 @@ pub fn obrien_fleming_boundary(info_fraction: f64, alpha: f64) -> f64 {
 /// - `info_fraction`: Information fraction (0 < t ≤ 1)
 /// - `alpha`: Total type I error budget
 /// - `function`: Which spending function to use
-pub fn lan_demets_alpha_spent(
-    info_fraction: f64,
-    alpha: f64,
-    function: SpendingFunction,
-) -> f64 {
+pub fn lan_demets_alpha_spent(info_fraction: f64, alpha: f64, function: SpendingFunction) -> f64 {
     match function {
         SpendingFunction::OBrienFleming => {
             let z_half = z_score_from_alpha(alpha / 2.0);
@@ -140,8 +134,7 @@ pub fn evaluate_interim(
     }
 
     // Safety check first (highest priority)
-    let safety_rate = data.safety_events as f64
-        / (data.treatment_n + data.control_n) as f64;
+    let safety_rate = data.safety_events as f64 / (data.treatment_n + data.control_n) as f64;
 
     if safety_rate > protocol.safety_boundary.threshold {
         let z_stat = compute_z_stat(data);
@@ -188,12 +181,12 @@ pub fn evaluate_interim(
         InterimDecision::Continue => format!(
             "Z={z_stat:.3} < boundary {boundary:.3}; posterior={posterior:.3}. Continue as planned."
         ),
-        InterimDecision::StopEfficacy => format!(
-            "Z={z_stat:.3} exceeds OBF boundary {boundary:.3}. Stop for efficacy."
-        ),
-        InterimDecision::StopFutility => format!(
-            "Posterior P(superiority)={posterior:.3} < 0.20. Stop for futility."
-        ),
+        InterimDecision::StopEfficacy => {
+            format!("Z={z_stat:.3} exceeds OBF boundary {boundary:.3}. Stop for efficacy.")
+        }
+        InterimDecision::StopFutility => {
+            format!("Posterior P(superiority)={posterior:.3} < 0.20. Stop for futility.")
+        }
         InterimDecision::AdaptSampleSize => format!(
             "At 50% information, Z={z_stat:.3} borderline. Sample size re-estimation recommended."
         ),
@@ -224,16 +217,19 @@ fn compute_z_stat(data: &InterimData) -> f64 {
 
 /// Standard normal CDF via rational approximation (Abramowitz & Stegun 26.2.17).
 pub(crate) fn normal_cdf(x: f64) -> f64 {
-    if x > 8.0 { return 1.0; }
-    if x < -8.0 { return 0.0; }
+    if x > 8.0 {
+        return 1.0;
+    }
+    if x < -8.0 {
+        return 0.0;
+    }
     // Use the error function relationship: Φ(x) = (1 + erf(x/√2)) / 2
     // Approximate erf via polynomial
     let t = 1.0 / (1.0 + 0.2316419 * x.abs());
-    let poly = t * (0.319_381_530
-        + t * (-0.356_563_782
-        + t * (1.781_477_937
-        + t * (-1.821_255_978
-        + t * 1.330_274_429))));
+    let poly = t
+        * (0.319_381_530
+            + t * (-0.356_563_782
+                + t * (1.781_477_937 + t * (-1.821_255_978 + t * 1.330_274_429))));
     let pdf = (-x * x / 2.0).exp() / (2.0 * std::f64::consts::PI).sqrt();
     let p = 1.0 - pdf * poly;
     if x >= 0.0 { p } else { 1.0 - p }
@@ -258,8 +254,16 @@ mod tests {
             },
             secondary_endpoints: vec![],
             arms: vec![
-                Arm { name: "ctrl".into(), description: "c".into(), is_control: true },
-                Arm { name: "tx".into(), description: "t".into(), is_control: false },
+                Arm {
+                    name: "ctrl".into(),
+                    description: "c".into(),
+                    is_control: true,
+                },
+                Arm {
+                    name: "tx".into(),
+                    description: "t".into(),
+                    is_control: false,
+                },
             ],
             sample_size: 200,
             power: 0.80,
@@ -280,21 +284,30 @@ mod tests {
     fn test_obrien_fleming_boundary() {
         // At 50% information fraction, OBF boundary should be ~2.963
         let boundary = obrien_fleming_boundary(0.50, 0.05);
-        assert!((boundary - 2.963).abs() < 0.01, "Expected ~2.963, got {boundary}");
+        assert!(
+            (boundary - 2.963).abs() < 0.01,
+            "Expected ~2.963, got {boundary}"
+        );
     }
 
     #[test]
     fn test_obf_boundary_at_full_information() {
         // At t=1.0, OBF boundary should be close to z_c ≈ 2.096
         let boundary = obrien_fleming_boundary(1.0, 0.05);
-        assert!(boundary > 1.9 && boundary < 2.2, "Expected ~2.096, got {boundary}");
+        assert!(
+            boundary > 1.9 && boundary < 2.2,
+            "Expected ~2.096, got {boundary}"
+        );
     }
 
     #[test]
     fn test_lan_demets_spending() {
         // Alpha spending at fraction 0.5 with OBF-like function should be very conservative
         let spent = lan_demets_alpha_spent(0.50, 0.05, SpendingFunction::OBrienFleming);
-        assert!(spent < 0.005, "OBF should spend < 0.005 at t=0.5, got {spent}");
+        assert!(
+            spent < 0.005,
+            "OBF should spend < 0.005 at t=0.5, got {spent}"
+        );
     }
 
     #[test]
@@ -302,7 +315,10 @@ mod tests {
         // Pocock spends more aggressively than OBF at early looks
         let spent_obf = lan_demets_alpha_spent(0.50, 0.05, SpendingFunction::OBrienFleming);
         let spent_poc = lan_demets_alpha_spent(0.50, 0.05, SpendingFunction::Pocock);
-        assert!(spent_poc > spent_obf, "Pocock should spend more than OBF at t=0.5");
+        assert!(
+            spent_poc > spent_obf,
+            "Pocock should spend more than OBF at t=0.5"
+        );
     }
 
     #[test]
@@ -333,7 +349,11 @@ mod tests {
         let result = evaluate_interim(&data, &protocol);
         assert!(result.is_ok());
         let r = result.unwrap();
-        assert_eq!(r.decision, InterimDecision::Continue, "Expected Continue at interim");
+        assert_eq!(
+            r.decision,
+            InterimDecision::Continue,
+            "Expected Continue at interim"
+        );
     }
 
     #[test]

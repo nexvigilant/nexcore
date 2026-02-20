@@ -193,8 +193,16 @@ mod tests {
             },
             secondary_endpoints: vec![],
             arms: vec![
-                Arm { name: "ctrl".into(), description: "c".into(), is_control: true },
-                Arm { name: "tx".into(), description: "t".into(), is_control: false },
+                Arm {
+                    name: "ctrl".into(),
+                    description: "c".into(),
+                    is_control: true,
+                },
+                Arm {
+                    name: "tx".into(),
+                    description: "t".into(),
+                    is_control: false,
+                },
             ],
             sample_size: 200,
             power: 0.80,
@@ -228,7 +236,10 @@ mod tests {
         let result = evaluate_adaptation(&protocol, SAMPLE_REESTIMATE, &interim_at_half());
         assert!(result.is_ok(), "Expected Ok, got {result:?}");
         let decision = result.unwrap();
-        assert!(decision.approved, "Sample re-estimate at t=0.5 should be approved");
+        assert!(
+            decision.approved,
+            "Sample re-estimate at t=0.5 should be approved"
+        );
     }
 
     #[test]
@@ -251,7 +262,10 @@ mod tests {
         let result = evaluate_adaptation(&protocol, SAMPLE_REESTIMATE, &early_data);
         assert!(result.is_ok());
         let decision = result.unwrap();
-        assert!(!decision.approved, "Re-estimation at t=0.20 should not be approved");
+        assert!(
+            !decision.approved,
+            "Re-estimation at t=0.20 should not be approved"
+        );
     }
 
     #[test]

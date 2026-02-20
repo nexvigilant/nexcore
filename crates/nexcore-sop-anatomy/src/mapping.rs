@@ -507,7 +507,12 @@ impl SopSection {
                 code: CodeStructure {
                     name: "CI/CD pipeline",
                     pattern: "cargo clippy && cargo test on every push, scheduled security scans",
-                    detection: &[".github/workflows/", "Justfile", ".gitlab-ci.yml", "Makefile"],
+                    detection: &[
+                        ".github/workflows/",
+                        "Justfile",
+                        ".gitlab-ci.yml",
+                        "Makefile",
+                    ],
                 },
                 bio_wiring: Some(BioCrateWiring {
                     crate_name: "nexcore-guardian",

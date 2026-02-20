@@ -139,6 +139,7 @@ pub fn run_v2(conn: &Connection, claude_dir: &Path) -> Result<MigrationStats> {
     migrate_tasks(conn, claude_dir, &mut stats);
     migrate_handoffs(conn, claude_dir, &mut stats);
     migrate_antibodies(conn, claude_dir, &mut stats);
+    migrate_implicit(conn, &claude_dir.join("implicit"), &mut stats);
 
     conn.execute_batch("COMMIT;")?;
 
@@ -355,7 +356,7 @@ fn migrate_implicit(conn: &Connection, implicit_dir: &Path, stats: &mut Migratio
                 updated_at: p.updated_at,
                 confidence: p.confidence,
                 occurrence_count: p.occurrence_count,
-                t1_grounding: p.t1_grounding.map(|g| format!("{g:?}").to_lowercase()),
+                t1_grounding: p.t1_grounding.as_ref().map(json_value_to_grounding),
             };
             if let Err(e) = implicit::upsert_pattern(conn, &row) {
                 stats.errors.push(format!("Pattern {}: {e}", row.id));
@@ -395,7 +396,7 @@ fn migrate_implicit(conn: &Connection, implicit_dir: &Path, stats: &mut Migratio
                 category: b.category,
                 confidence: b.confidence,
                 evidence: serde_json::to_string(&b.evidence).unwrap_or_else(|_| "[]".into()),
-                t1_grounding: b.t1_grounding.map(|g| format!("{g:?}").to_lowercase()),
+                t1_grounding: b.t1_grounding.as_ref().map(json_value_to_grounding),
                 formed_at: b.formed_at,
                 updated_at: b.updated_at,
                 validation_count: b.validation_count,
@@ -419,7 +420,7 @@ fn migrate_implicit(conn: &Connection, implicit_dir: &Path, stats: &mut Migratio
                 failures: t.failures,
                 created_at: t.created_at,
                 updated_at: t.updated_at,
-                t1_grounding: t.t1_grounding.map(|g| format!("{g:?}").to_lowercase()),
+                t1_grounding: t.t1_grounding.as_ref().map(json_value_to_grounding),
             };
             if let Err(e) = implicit::upsert_trust(conn, &row) {
                 stats.errors.push(format!("Trust {}: {e}", row.domain));
@@ -844,6 +845,16 @@ fn parse_handoff_markdown(project: &str, number: i32, content: &str) -> knowledg
     }
 }
 
+/// Extract a T1 grounding string from a `serde_json::Value`.
+///
+/// Handles both `Value::String("causality")` and enum-style values.
+fn json_value_to_grounding(v: &serde_json::Value) -> String {
+    match v {
+        serde_json::Value::String(s) => s.to_lowercase(),
+        other => other.to_string().to_lowercase(),
+    }
+}
+
 /// Extract the value column from a markdown table row like `| Key | Value |`.
 fn extract_table_value(line: &str) -> Option<String> {
     let parts: Vec<&str> = line.split('|').collect();
@@ -904,7 +915,11 @@ fn migrate_antibodies(conn: &Connection, claude_dir: &Path, stats: &mut Migratio
             in_detection = false;
             in_response = false;
 
-            let id = trimmed.trim_start_matches("- id:").trim().to_string();
+            let id = trimmed
+                .trim_start_matches("- id:")
+                .trim()
+                .trim_matches('"')
+                .to_string();
             current_ab = Some(AntibodyBuilder {
                 id,
                 ..Default::default()
@@ -914,7 +929,11 @@ fn migrate_antibodies(conn: &Connection, claude_dir: &Path, stats: &mut Migratio
 
         if let Some(ref mut ab) = current_ab {
             if trimmed.starts_with("name:") {
-                ab.name = trimmed.trim_start_matches("name:").trim().to_string();
+                ab.name = trimmed
+                    .trim_start_matches("name:")
+                    .trim()
+                    .trim_matches('"')
+                    .to_string();
                 in_description = false;
                 in_detection = false;
                 in_response = false;
@@ -964,6 +983,18 @@ fn migrate_antibodies(conn: &Connection, claude_dir: &Path, stats: &mut Migratio
                     .trim()
                     .trim_matches('"')
                     .to_string();
+                in_description = false;
+                in_detection = false;
+                in_response = false;
+            } else if trimmed.starts_with("t1_grounding:") {
+                let val = trimmed
+                    .trim_start_matches("t1_grounding:")
+                    .trim()
+                    .trim_matches('"')
+                    .to_string();
+                if !val.is_empty() {
+                    ab.t1_grounding = Some(val);
+                }
                 in_description = false;
                 in_detection = false;
                 in_response = false;
@@ -1021,6 +1052,7 @@ struct AntibodyBuilder {
     applications: i32,
     false_positives: i32,
     learned_from: String,
+    t1_grounding: Option<String>,
 }
 
 fn flush_antibody(
@@ -1042,19 +1074,20 @@ fn flush_antibody(
     let detection = detection_lines.join("\n");
     let response = response_lines.join("\n");
 
-    // Extract T1 grounding from description
-    let t1_grounding = if description.contains("Violates →") || description.contains("Causality")
-    {
-        Some("causality".to_string())
-    } else if description.contains("Violates ∂") || description.contains("Boundary") {
-        Some("boundary".to_string())
-    } else if description.contains("Violates π") || description.contains("Persistence") {
-        Some("persistence".to_string())
-    } else if description.contains("Violates ς") || description.contains("State") {
-        Some("state".to_string())
-    } else {
-        None
-    };
+    // Use explicit T1 grounding from YAML, fall back to description heuristic
+    let t1_grounding = ab.t1_grounding.or_else(|| {
+        if description.contains("Violates →") || description.contains("Causality") {
+            Some("causality".to_string())
+        } else if description.contains("Violates ∂") || description.contains("Boundary") {
+            Some("boundary".to_string())
+        } else if description.contains("Violates π") || description.contains("Persistence") {
+            Some("persistence".to_string())
+        } else if description.contains("Violates ς") || description.contains("State") {
+            Some("state".to_string())
+        } else {
+            None
+        }
+    });
 
     let row = knowledge::AntibodyRow {
         id: ab.id.clone(),

@@ -14,6 +14,7 @@ use std::collections::HashMap;
 
 use crate::params::{
     MonitoringAlertsParams, MonitoringHookHealthParams, MonitoringSignalDigestParams,
+    Phase4SurveillanceTickParams,
 };
 
 // ============================================================================
@@ -627,5 +628,94 @@ pub fn signal_digest(params: MonitoringSignalDigestParams) -> Result<CallToolRes
 
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
         serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".to_string()),
+    )]))
+}
+
+/// `phase4_surveillance_tick` — one SENSE-ANALYZE-DECIDE-RESPOND cycle.
+///
+/// Aggregates hook health, code health, and signal alerts into a unified
+/// Phase IV post-marketing surveillance verdict with auto-escalation.
+pub fn phase4_surveillance_tick(
+    params: Phase4SurveillanceTickParams,
+) -> Result<CallToolResult, McpError> {
+    let window_minutes = params.window_minutes.unwrap_or(60);
+
+    let hook_records = load_hook_records(100);
+    let signal_records = load_signal_records(1000);
+
+    let mut all_alerts: Vec<Alert> = Vec::new();
+    all_alerts.extend(compute_hook_alerts(&hook_records));
+    all_alerts.extend(compute_code_health_alerts());
+    all_alerts.extend(compute_signal_alerts(&signal_records));
+
+    // Filter signals to the requested window
+    let now_ms = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis())
+        .unwrap_or(0);
+    let cutoff_ms = now_ms.saturating_sub(u128::from(window_minutes) * 60_000);
+    let windowed_count = signal_records
+        .iter()
+        .filter(|r| r.timestamp_ms >= cutoff_ms)
+        .count();
+
+    let critical_count = all_alerts
+        .iter()
+        .filter(|a| a.severity == "CRITICAL")
+        .count();
+    let high_count = all_alerts.iter().filter(|a| a.severity == "HIGH").count();
+    let warn_count = all_alerts.iter().filter(|a| a.severity == "WARN").count();
+
+    let verdict = if critical_count > 0 {
+        "ESCALATE"
+    } else if high_count > 0 {
+        "INVESTIGATE"
+    } else if warn_count > 0 {
+        "MONITOR"
+    } else {
+        "NOMINAL"
+    };
+
+    let respond_msg = if critical_count > 0 {
+        "Auto-escalation triggered — immediate review required"
+    } else if high_count > 0 {
+        "Investigation recommended — review top alerts"
+    } else {
+        "No action required — continue monitoring"
+    };
+
+    let top_alerts: Vec<&Alert> = all_alerts.iter().take(5).collect();
+
+    let surveillance = serde_json::json!({
+        "tick": "phase4_surveillance",
+        "window_minutes": window_minutes,
+        "verdict": verdict,
+        "auto_escalate": critical_count > 0,
+        "capability_id": params.capability_id,
+        "car_observation": params.car_observation,
+        "alert_summary": {
+            "critical": critical_count,
+            "high": high_count,
+            "warn": warn_count,
+            "total": all_alerts.len(),
+        },
+        "signal_metrics": {
+            "total_in_window": windowed_count,
+            "total_on_file": signal_records.len(),
+        },
+        "hook_records_analyzed": hook_records.len(),
+        "top_alerts": top_alerts,
+        "cycle": {
+            "sense": format!("{} hook records, {} signals in {}m window",
+                hook_records.len(), windowed_count, window_minutes),
+            "analyze": format!("{} alerts ({} critical, {} high, {} warn)",
+                all_alerts.len(), critical_count, high_count, warn_count),
+            "decide": verdict,
+            "respond": respond_msg,
+        },
+    });
+
+    Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+        serde_json::to_string_pretty(&surveillance).unwrap_or_else(|_| "{}".to_string()),
     )]))
 }

@@ -20,9 +20,9 @@ impl FileSystemResolver {
     /// Given a path like "crates/nexcore-tov", read the Cargo.toml and extract the version.
     fn read_crate_version(&self, crate_path: &str) -> Result<String> {
         let joined = self.workspace_root.join(crate_path);
-        let canonical = joined.canonicalize().with_context(|| {
-            format!("Failed to resolve crate path: {}", joined.display())
-        })?;
+        let canonical = joined
+            .canonicalize()
+            .with_context(|| format!("Failed to resolve crate path: {}", joined.display()))?;
         let canonical_root = self.workspace_root.canonicalize().with_context(|| {
             format!(
                 "Failed to resolve workspace root: {}",
@@ -65,12 +65,7 @@ impl FileSystemResolver {
         version_item
             .as_str()
             .map(|s| s.to_string())
-            .ok_or_else(|| {
-                anyhow::anyhow!(
-                    "No version string found in {}",
-                    cargo_path.display()
-                )
-            })
+            .ok_or_else(|| anyhow::anyhow!("No version string found in {}", cargo_path.display()))
     }
 
     fn read_workspace_version(&self) -> Result<String> {
@@ -107,7 +102,9 @@ struct WorkspaceDep {
 }
 
 /// Parse workspace.dependencies to build a lookup table.
-fn parse_workspace_deps(workspace_doc: &DocumentMut) -> Result<std::collections::HashMap<String, WorkspaceDep>> {
+fn parse_workspace_deps(
+    workspace_doc: &DocumentMut,
+) -> Result<std::collections::HashMap<String, WorkspaceDep>> {
     let mut deps = std::collections::HashMap::new();
 
     let ws_deps = match workspace_doc
@@ -136,9 +133,18 @@ fn parse_workspace_deps(workspace_doc: &DocumentMut) -> Result<std::collections:
                 }
             }
             Item::Value(Value::InlineTable(t)) => {
-                let path = t.get("path").and_then(|v| v.as_str()).map(|s| s.to_string());
-                let package = t.get("package").and_then(|v| v.as_str()).map(|s| s.to_string());
-                let version = t.get("version").and_then(|v| v.as_str()).map(|s| s.to_string());
+                let path = t
+                    .get("path")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string());
+                let package = t
+                    .get("package")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string());
+                let version = t
+                    .get("version")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string());
                 let features = t
                     .get("features")
                     .and_then(|v| v.as_array())
@@ -180,9 +186,7 @@ fn parse_workspace_package(workspace_doc: &DocumentMut) -> Result<Table> {
 
 /// Parse workspace.lints sections.
 fn parse_workspace_lints(workspace_doc: &DocumentMut) -> Option<&Item> {
-    workspace_doc
-        .get("workspace")
-        .and_then(|w| w.get("lints"))
+    workspace_doc.get("workspace").and_then(|w| w.get("lints"))
 }
 
 /// Check if a crate Cargo.toml has any workspace references.
@@ -506,8 +510,15 @@ fn convert_workspace_dep_in_target(
         .get(dep_name)
         .with_context(|| format!("{dep_name} not found in workspace.dependencies"))?;
 
-    let new_item =
-        build_resolved_dep_for_target(doc, target_name, section, dep_name, ws_dep, registry_name, resolver)?;
+    let new_item = build_resolved_dep_for_target(
+        doc,
+        target_name,
+        section,
+        dep_name,
+        ws_dep,
+        registry_name,
+        resolver,
+    )?;
     doc["target"][target_name][section][dep_name] = new_item;
 
     Ok(())
@@ -732,10 +743,7 @@ fn extract_string_field(item: &Item, field: &str) -> Option<String> {
         Item::Value(Value::InlineTable(t)) => {
             t.get(field).and_then(|v| v.as_str()).map(|s| s.to_string())
         }
-        Item::Table(t) => t
-            .get(field)
-            .and_then(|i| i.as_str())
-            .map(|s| s.to_string()),
+        Item::Table(t) => t.get(field).and_then(|i| i.as_str()).map(|s| s.to_string()),
         _ => None,
     }
 }
@@ -812,7 +820,12 @@ pub fn convert_crate_file(
     // Build a resolver that maps crate names to their versions using the filesystem
     let mapping_resolver = MappingResolver::new(&ws_deps, &fs_resolver)?;
 
-    convert_cargo_toml(&crate_toml, &workspace_toml, registry_name, &mapping_resolver)
+    convert_cargo_toml(
+        &crate_toml,
+        &workspace_toml,
+        registry_name,
+        &mapping_resolver,
+    )
 }
 
 /// A resolver that pre-builds a name->version mapping using the filesystem resolver.

@@ -29,14 +29,14 @@
 //! }
 //! ```
 
-pub mod biological;
 pub mod adversarial;
-pub mod code_fingerprint;
-pub mod engram_drift;
+pub mod biological;
 #[cfg(feature = "browser")]
 pub mod browser;
+pub mod code_fingerprint;
 pub mod code_health;
 pub mod cytokine;
+pub mod engram_drift;
 pub mod hook_telemetry;
 pub mod hud;
 pub mod ribosome_damp;

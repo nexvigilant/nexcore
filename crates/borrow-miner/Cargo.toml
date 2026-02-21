@@ -1,0 +1,15 @@
+[package]
+name = "borrow-miner"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license = "LicenseRef-NexVigilant-Proprietary"
+description = "Borrow Miner — PV signal detection educational game logic"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

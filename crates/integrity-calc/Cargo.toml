@@ -1,0 +1,15 @@
+[package]
+name = "integrity-calc"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license = "LicenseRef-NexVigilant-Proprietary"
+description = "Text integrity detection pipeline — entropy, perplexity, burstiness, Zipf's law, Bloom threshold classification"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

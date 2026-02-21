@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="64" fill="#020617"/>
+  <circle cx="256" cy="256" r="120" fill="none" stroke="#06b6d4" stroke-width="16"/>
+  <circle cx="256" cy="256" r="40" fill="#06b6d4"/>
+  <path d="M256 136 L256 96 M256 416 L256 376 M136 256 L96 256 M416 256 L376 256" stroke="#06b6d4" stroke-width="8" stroke-linecap="round"/>
+  <text x="256" y="490" text-anchor="middle" font-family="system-ui" font-size="48" font-weight="bold" fill="#e2e8f0">NUCLEUS</text>
+</svg>

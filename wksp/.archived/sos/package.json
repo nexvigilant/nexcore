@@ -1,0 +1,23 @@
+{
+  "name": "sos",
+  "version": "0.1.0",
+  "description": "SOS - The Vigilance Machine (Mobile)",
+  "private": true,
+  "scripts": {
+    "build": "trunk build --release",
+    "dev": "trunk serve --open",
+    "cap:sync": "npx cap sync",
+    "cap:ios": "npx cap open ios",
+    "cap:android": "npx cap open android",
+    "deploy": "trunk build --release && npx cap sync"
+  },
+  "dependencies": {
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/preferences": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/ios": "^7.0.0",
+    "@capacitor/android": "^7.0.0"
+  }
+}

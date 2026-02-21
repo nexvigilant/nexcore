@@ -1,0 +1,69 @@
+[package]
+name = "borrow-miner"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+leptos = { workspace = true }
+leptos_router = { workspace = true }
+leptos_meta = { workspace = true }
+leptos_axum = { workspace = true , optional = true }
+
+axum = { workspace = true , optional = true }
+tokio = { workspace = true , optional = true }
+tower = { workspace = true , optional = true }
+tower-http = { workspace = true , optional = true }
+
+serde = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+reqwest = { workspace = true , optional = true }
+
+# Hydration support
+wasm-bindgen = { workspace = true , optional = true }
+js-sys = { workspace = true , optional = true }
+web-sys = { workspace = true , optional = true }
+console_error_panic_hook = { workspace = true , optional = true }
+
+[features]
+default = []
+ssr = [
+    "leptos/ssr",
+    "leptos_router/ssr",
+    "leptos_meta/ssr",
+    "dep:leptos_axum",
+    "dep:axum",
+    "dep:tokio",
+    "dep:tower",
+    "dep:tower-http",
+    "dep:reqwest",
+]
+hydrate = [
+    "leptos/hydrate",
+    "dep:wasm-bindgen",
+    "dep:js-sys",
+    "dep:web-sys",
+    "dep:console_error_panic_hook",
+]
+
+# Leptos settings for cargo-leptos
+[package.metadata.leptos]
+# Output name
+output-name = "borrow-miner"
+# Name of the binary target used for the server
+bin-target = "borrow-miner"
+# Features for server binary (SSR)
+bin-features = ["ssr"]
+# Features for client lib (WASM hydration)
+lib-features = ["hydrate"]
+# Site root (where static files are served from)
+site-root = "target/site"
+# Site package directory (where WASM is output)
+site-pkg-dir = "pkg"
+# Site address
+site-addr = "127.0.0.1:3333"
+# Reload port for hot-reload
+reload-port = 3334

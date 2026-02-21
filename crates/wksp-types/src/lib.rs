@@ -12,3 +12,5 @@ pub mod pv;
 pub mod common;
 pub mod onboarding;
 pub mod admin;
+pub mod gvp_data;
+pub mod intelligence_data;

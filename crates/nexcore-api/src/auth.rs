@@ -11,8 +11,6 @@
 //!
 //! Tier: T2-C (∂ Boundary + ς State)
 
-#![allow(clippy::expect_used)] // Only in lazy_static init, not request path
-
 use axum::{
     body::Body,
     extract::Request,
@@ -88,13 +86,54 @@ pub async fn require_api_key(req: Request<Body>, next: Next) -> Response {
 }
 
 async fn validate_key(provided: &str, expected: &str) -> bool {
+    // 1. Global API key — backward compat for internal/MCP tools
     if constant_time_eq(provided.as_bytes(), expected.as_bytes()) {
         return true;
     }
+
+    // 2. Guardian per-user API key (grd_ prefix) — production auth
+    if provided.starts_with("grd_") {
+        return validate_guardian_key(provided).await;
+    }
+
+    // 3. JWT token (Firebase ID token) — portal auth
     if provided.starts_with("eyJ") {
         return verify_id_token(provided).await;
     }
+
     false
+}
+
+/// Validate a Guardian API key against the subscription store.
+/// Checks: key exists, not revoked, subscription active, rate limit not exceeded.
+async fn validate_guardian_key(key: &str) -> bool {
+    let store = crate::subscription_store::get_store();
+    let store = store.lock().await;
+
+    match store.validate_api_key(key) {
+        Ok(Some(user_id)) => {
+            // Key valid — check rate limit
+            match store.check_rate_limit(&user_id) {
+                Ok(true) => true,
+                Ok(false) => {
+                    tracing::warn!(user_id = user_id.as_str(), "Guardian API rate limit exceeded");
+                    false
+                }
+                Err(e) => {
+                    tracing::error!("Rate limit check error: {e}");
+                    false
+                }
+            }
+        }
+        Ok(None) => {
+            tracing::debug!("Guardian API key not found or revoked");
+            false
+        }
+        Err(e) => {
+            tracing::error!("API key validation error: {e}");
+            false
+        }
+    }
 }
 
 async fn verify_id_token(token: &str) -> bool {

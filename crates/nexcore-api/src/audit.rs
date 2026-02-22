@@ -11,9 +11,11 @@
 
 use axum::{extract::Request, middleware::Next, response::Response};
 use chrono::{DateTime, Utc};
+use hmac::{Hmac, Mac};
 use serde::Serialize;
+use sha2::Sha256;
 use std::path::PathBuf;
-use std::sync::OnceLock;
+use std::sync::{Mutex, OnceLock};
 use std::time::Instant;
 use tokio::fs::{self, OpenOptions};
 use tokio::io::AsyncWriteExt;
@@ -35,6 +37,12 @@ pub struct ApiAuditRecord {
     pub status: u16,
     /// Request duration in milliseconds
     pub duration_ms: u64,
+    /// HMAC-SHA256 signature of this record (hex-encoded)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hmac_sig: Option<String>,
+    /// Hash of the previous record for chain integrity
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub prev_hash: Option<String>,
 }
 
 /// Global sender for API audit records.
@@ -86,7 +94,62 @@ async fn api_audit_writer_task(mut rx: mpsc::UnboundedReceiver<ApiAuditRecord>) 
 /// Record an API audit event (non-blocking, fire-and-forget).
 fn record_api_audit(record: ApiAuditRecord) {
     if let Some(tx) = API_AUDIT_SENDER.get() {
-        let _ = tx.send(record);
+        // send returns Err only if receiver is dropped — benign
+        #[allow(unused_results)]
+        { tx.send(record); }
+    }
+}
+
+/// Last record hash for chain integrity
+static LAST_HASH: OnceLock<Mutex<String>> = OnceLock::new();
+
+fn get_last_hash() -> &'static Mutex<String> {
+    LAST_HASH.get_or_init(|| Mutex::new("genesis".to_string()))
+}
+
+/// Sign an audit record with HMAC-SHA256 and chain to previous record
+fn sign_audit_record(record: &mut ApiAuditRecord) {
+    // Get previous hash for chaining
+    let prev = {
+        let lock = get_last_hash();
+        match lock.lock() {
+            Ok(guard) => guard.clone(),
+            Err(_) => "error".to_string(),
+        }
+    };
+    record.prev_hash = Some(prev);
+
+    // Build payload to sign: ts|method|uri|status|duration|prev_hash
+    let payload = format!(
+        "{}|{}|{}|{}|{}|{}",
+        record.ts.to_rfc3339(),
+        record.method,
+        record.uri,
+        record.status,
+        record.duration_ms,
+        record.prev_hash.as_deref().unwrap_or(""),
+    );
+
+    let secret = std::env::var("AUDIT_SECRET")
+        .unwrap_or_else(|_| "audit-dev-secret-change-in-prod".to_string());
+
+    let sig = match Hmac::<Sha256>::new_from_slice(secret.as_bytes()) {
+        Ok(mut mac) => {
+            mac.update(payload.as_bytes());
+            hex::encode(mac.finalize().into_bytes())
+        }
+        Err(_) => {
+            use sha2::Digest;
+            hex::encode(Sha256::digest(payload.as_bytes()))
+        }
+    };
+
+    record.hmac_sig = Some(sig.clone());
+
+    // Update chain hash
+    let lock = get_last_hash();
+    if let Ok(mut guard) = lock.lock() {
+        *guard = sig;
     }
 }
 
@@ -104,13 +167,16 @@ pub async fn audit_layer(req: Request, next: Next) -> Response {
 
     let response = next.run(req).await;
 
-    let record = ApiAuditRecord {
+    let mut record = ApiAuditRecord {
         ts: Utc::now(),
         method,
         uri,
         status: response.status().as_u16(),
         duration_ms: start.elapsed().as_millis() as u64,
+        hmac_sig: None,
+        prev_hash: None,
     };
+    sign_audit_record(&mut record);
     record_api_audit(record);
 
     response
@@ -128,6 +194,8 @@ mod tests {
             uri: "/api/v1/pv/signal/prr".to_string(),
             status: 200,
             duration_ms: 3,
+            hmac_sig: None,
+            prev_hash: None,
         };
 
         let json = serde_json::to_string(&record);

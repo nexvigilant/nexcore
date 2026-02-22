@@ -8,6 +8,7 @@ pub mod core_types;
 pub mod openapi_compat;
 pub mod persistence;
 pub mod routes;
+pub mod subscription_store;
 
 use axum::{
     Router,
@@ -123,11 +124,14 @@ fn setup_api_routes(state: ApiState) -> Router<ApiState> {
         .nest("/benefit-risk", routes::benefit_risk::router())
         .nest("/sos", routes::sos::router())
         .nest("/mesh", routes::mesh::router())
+        .nest("/guardian-product", routes::guardian_product::router())
         .route(
             "/guardian/ws/bridge",
             get(routes::guardian_ws::ws_bridge_handler),
         )
         .layer(middleware::from_fn(auth::require_api_key))
+        // Billing routes outside auth — checkout is pre-auth, webhook uses Stripe signature
+        .nest("/billing", routes::billing::router())
         .with_state(state)
 }
 

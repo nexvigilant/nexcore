@@ -3916,7 +3916,7 @@ impl NexCoreMcpServer {
     }
 
     // ========================================================================
-    // Visualization Tools (6) - SVG diagrams for STEM concepts
+    // Visualization Tools (31) - STEM visualization, molecular, graph, physics
     // ========================================================================
 
     #[tool(
@@ -3977,6 +3977,264 @@ impl NexCoreMcpServer {
         Parameters(params): Parameters<params::viz::VizDagParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::viz::dag(params)
+    }
+
+    // --- Foundation Extension (6) - molecular, surface, graph analysis ---
+
+    #[tool(
+        description = "Analyze molecular structure: element composition, molecular formula, total mass, bond count, and per-atom connectivity from molecule JSON (elements + positions + bonds)."
+    )]
+    async fn viz_molecular_info(
+        &self,
+        Parameters(params): Parameters<params::viz_foundation::VizMolecularInfoParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_foundation::molecular_info(params)
+    }
+
+    #[tool(
+        description = "Generate surface mesh from vertices and triangles. Computes vertex normals, surface area per triangle, total area, bounding box, and mesh quality metrics."
+    )]
+    async fn viz_surface_mesh(
+        &self,
+        Parameters(params): Parameters<params::viz_foundation::VizSurfaceMeshParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_foundation::surface_mesh(params)
+    }
+
+    #[tool(
+        description = "Graph spectral analysis: Laplacian eigenvalues/eigenvectors, algebraic connectivity (Fiedler value), spectral gap, and graph partitioning from adjacency structure."
+    )]
+    async fn viz_spectral_analysis(
+        &self,
+        Parameters(params): Parameters<params::viz_foundation::VizSpectralAnalysisParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_foundation::spectral_analysis(params)
+    }
+
+    #[tool(
+        description = "Detect communities in a graph using modularity-based algorithms. Returns community assignments, modularity score, and inter/intra-community edge counts."
+    )]
+    async fn viz_community_detect(
+        &self,
+        Parameters(params): Parameters<params::viz_foundation::VizCommunityDetectParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_foundation::community_detect(params)
+    }
+
+    #[tool(
+        description = "Compute graph centrality metrics: degree, betweenness, closeness, and eigenvector centrality for each node. Returns ranked node list with all four scores."
+    )]
+    async fn viz_centrality(
+        &self,
+        Parameters(params): Parameters<params::viz_foundation::VizCentralityParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_foundation::centrality(params)
+    }
+
+    #[tool(
+        description = "Generate VDAG primitive overlay: map Lex Primitiva annotations onto a directed acyclic graph showing T1/T2/T3 primitives active at each node."
+    )]
+    async fn viz_vdag_overlay(
+        &self,
+        Parameters(params): Parameters<params::viz_foundation::VizVdagOverlayParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_foundation::vdag_overlay(params)
+    }
+
+    // --- Biologics (5) - antibody, protein, interaction, topology ---
+
+    #[tool(
+        description = "Analyze antibody structure: identify Fab/Fc regions, CDR loops, disulfide bonds, and light/heavy chain composition from molecular structure JSON."
+    )]
+    async fn viz_antibody_structure(
+        &self,
+        Parameters(params): Parameters<params::viz_biologics::VizAntibodyStructureParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_biologics::antibody_structure(params)
+    }
+
+    #[tool(
+        description = "Map molecular interactions: hydrogen bonds, hydrophobic contacts, electrostatic pairs, and van der Waals contacts between residues or atoms."
+    )]
+    async fn viz_interaction_map(
+        &self,
+        Parameters(params): Parameters<params::viz_biologics::VizInteractionMapParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_biologics::interaction_map(params)
+    }
+
+    #[tool(
+        description = "Project 3D molecular coordinates to 2D using configurable projection matrices. Supports perspective, orthographic, and custom projection with depth cuing."
+    )]
+    async fn viz_projection(
+        &self,
+        Parameters(params): Parameters<params::viz_biologics::VizProjectionParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_biologics::projection(params)
+    }
+
+    #[tool(
+        description = "Analyze protein structure: backbone atoms (N/CA/C/O), phi/psi dihedral angles, Ramachandran classification, hydrogen bonds, and secondary structure assignment."
+    )]
+    async fn viz_protein_structure(
+        &self,
+        Parameters(params): Parameters<params::viz_biologics::VizProteinStructureParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_biologics::protein_structure(params)
+    }
+
+    #[tool(
+        description = "Analyze surface topology from triangulated mesh: genus, Euler characteristic, Gaussian/mean curvature per vertex, and topological invariants."
+    )]
+    async fn viz_topology_analysis(
+        &self,
+        Parameters(params): Parameters<params::viz_biologics::VizTopologyAnalysisParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_biologics::topology_analysis(params)
+    }
+
+    // --- Advanced (4) - manifolds, strings, rendering, orbitals ---
+
+    #[tool(
+        description = "Sample points on mathematical manifolds: sphere, torus, Klein bottle, Calabi-Yau. Returns 3D coordinates with parameterization data for visualization."
+    )]
+    async fn viz_manifold_sample(
+        &self,
+        Parameters(params): Parameters<params::viz_advanced::VizManifoldSampleParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_advanced::manifold_sample(params)
+    }
+
+    #[tool(
+        description = "Compute string theory vibrational modes: fundamental frequencies, harmonics, node positions, and mode shapes for open/closed string configurations."
+    )]
+    async fn viz_string_modes(
+        &self,
+        Parameters(params): Parameters<params::viz_advanced::VizStringModesParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_advanced::string_modes(params)
+    }
+
+    #[tool(
+        description = "Configure GPU render pipeline: stages, quality metrics, adaptive resolution, shader status, subsurface scattering. Actions: pipeline, quality, adaptive, shaders, sss_profile."
+    )]
+    async fn viz_render_pipeline(
+        &self,
+        Parameters(params): Parameters<params::viz_advanced::VizRenderPipelineParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_advanced::render_pipeline(params)
+    }
+
+    #[tool(
+        description = "Compute atomic/molecular orbital electron density on a 3D grid. Hydrogen-like orbitals (n,l,m quantum numbers) with density values and isosurface thresholds."
+    )]
+    async fn viz_orbital_density(
+        &self,
+        Parameters(params): Parameters<params::viz_advanced::VizOrbitalDensityParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_advanced::orbital_density(params)
+    }
+
+    // --- Physics (10) - dynamics, force fields, layout, particles ---
+
+    #[tool(
+        description = "Execute molecular dynamics time step: velocity Verlet integration with configurable timestep, temperature coupling, and force field. Returns updated positions/velocities."
+    )]
+    async fn viz_dynamics_step(
+        &self,
+        Parameters(params): Parameters<params::viz_physics::VizDynamicsStepParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_physics::dynamics_step(params)
+    }
+
+    #[tool(
+        description = "Compute force field energy: bonded terms (bonds, angles, dihedrals) and non-bonded terms (Lennard-Jones, Coulomb). Returns per-term and total energies."
+    )]
+    async fn viz_force_field_energy(
+        &self,
+        Parameters(params): Parameters<params::viz_physics::VizForceFieldEnergyParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_physics::force_field_energy(params)
+    }
+
+    #[tool(
+        description = "GPU-accelerated force-directed graph layout: iterative spring-electrical model with Barnes-Hut approximation. Returns optimized 2D/3D node positions."
+    )]
+    async fn viz_gpu_layout(
+        &self,
+        Parameters(params): Parameters<params::viz_physics::VizGpuLayoutParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_physics::gpu_layout(params)
+    }
+
+    #[tool(
+        description = "Visualize and analyze hypergraphs: edges connecting 2+ nodes simultaneously. Hyperedge statistics, node memberships, and dual graph representation."
+    )]
+    async fn viz_hypergraph(
+        &self,
+        Parameters(params): Parameters<params::viz_physics::VizHypergraphParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_physics::hypergraph(params)
+    }
+
+    #[tool(
+        description = "Select level-of-detail for progressive rendering: appropriate mesh resolution based on camera distance, screen coverage, and performance budget."
+    )]
+    async fn viz_lod_select(
+        &self,
+        Parameters(params): Parameters<params::viz_physics::VizLodSelectParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_physics::lod_select(params)
+    }
+
+    #[tool(
+        description = "Minimize molecular energy via gradient descent or conjugate gradient. Adjusts atomic positions to find local energy minimum. Returns optimized coordinates and convergence data."
+    )]
+    async fn viz_minimize_energy(
+        &self,
+        Parameters(params): Parameters<params::viz_physics::VizMinimizeEnergyParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_physics::minimize_energy(params)
+    }
+
+    #[tool(
+        description = "Generate particle system presets for molecular visualization: fire, smoke, water, sparkle, nebula. Returns particle parameters (count, lifetime, velocity, color gradient)."
+    )]
+    async fn viz_particle_preset(
+        &self,
+        Parameters(params): Parameters<params::viz_physics::VizParticlePresetParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_physics::particle_preset(params)
+    }
+
+    #[tool(
+        description = "Generate adverse event overlay on molecular structures: highlight atoms/bonds by AE association, color-code by severity, annotate with MedDRA terms and signal scores."
+    )]
+    async fn viz_ae_overlay(
+        &self,
+        Parameters(params): Parameters<params::viz_physics::VizAeOverlayParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_physics::ae_overlay(params)
+    }
+
+    #[tool(
+        description = "Generate 3D coordinates from molecular graph (SMILES or connectivity). Distance geometry with bounds smoothing and optimization. Returns atom positions for rendering."
+    )]
+    async fn viz_coord_gen(
+        &self,
+        Parameters(params): Parameters<params::viz_physics::VizCoordGenParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_physics::coord_gen(params)
+    }
+
+    #[tool(
+        description = "Compute bipartite graph layout: partition nodes into two sets, arrange in parallel columns with edge crossing minimization for clean visualization."
+    )]
+    async fn viz_bipartite_layout(
+        &self,
+        Parameters(params): Parameters<params::viz_physics::VizBipartiteLayoutParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::viz_physics::bipartite_layout(params)
     }
 
     // ========================================================================

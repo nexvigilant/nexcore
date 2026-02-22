@@ -56,6 +56,9 @@ reqwest = { workspace = true }
 # Async
 futures = { workspace = true }
 
+# Database
+rusqlite = { workspace = true }
+
 # Utilities
 chrono = { workspace = true }
 dirs = { workspace = true }

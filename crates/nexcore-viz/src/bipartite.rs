@@ -307,7 +307,7 @@ pub fn from_vdag(
             } else {
                 n.signals
                     .iter()
-                    .map(|s| s.case_count.map_or(1.0, |c| f64::from(c)))
+                    .map(|s| s.case_count.map_or(1.0, f64::from))
                     .sum()
             };
             BipartiteNode {
@@ -555,8 +555,8 @@ pub fn minimize_crossings(
 /// ```
 #[must_use]
 pub fn layout_bipartite(
-    left: &mut Vec<BipartiteNode>,
-    right: &mut Vec<BipartiteNode>,
+    left: &mut [BipartiteNode],
+    right: &mut [BipartiteNode],
     edges: &[BipartiteEdge],
     config: &BipartiteConfig,
 ) -> BipartiteLayout {
@@ -593,8 +593,8 @@ pub fn layout_bipartite(
         .collect();
 
     BipartiteLayout {
-        left_nodes: left.clone(),
-        right_nodes: right.clone(),
+        left_nodes: left.to_vec(),
+        right_nodes: right.to_vec(),
         edges: updated_edges,
         crossing_count,
         width,

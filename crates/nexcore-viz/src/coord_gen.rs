@@ -132,8 +132,8 @@ impl DistanceBounds {
         let lower = vec![vec![0.0_f64; n]; n];
         // Off-diagonal: generous 100 Å upper bound. Diagonal: 0 (self-distance).
         let mut upper = vec![vec![100.0_f64; n]; n];
-        for i in 0..n {
-            upper[i][i] = 0.0;
+        for (i, row) in upper.iter_mut().enumerate() {
+            row[i] = 0.0;
         }
         Self { lower, upper, n }
     }
@@ -291,15 +291,15 @@ fn build_distance_bounds_with_config(
     // BFS from each atom to find shortest-path distances.
     // distance_map[i][j] = bond-path length (1 = directly bonded, 0 = self).
     let mut distance_map: Vec<Vec<usize>> = vec![vec![usize::MAX; n]; n];
-    for start in 0..n {
-        distance_map[start][start] = 0;
+    for (start, dm_row) in distance_map.iter_mut().enumerate() {
+        dm_row[start] = 0;
         let mut queue: VecDeque<usize> = VecDeque::new();
         queue.push_back(start);
         while let Some(cur) = queue.pop_front() {
-            let cur_dist = distance_map[start][cur];
+            let cur_dist = dm_row[cur];
             for &nb in &adj[cur] {
-                if distance_map[start][nb] == usize::MAX {
-                    distance_map[start][nb] = cur_dist + 1;
+                if dm_row[nb] == usize::MAX {
+                    dm_row[nb] = cur_dist + 1;
                     queue.push_back(nb);
                 }
             }
@@ -453,14 +453,19 @@ pub fn sample_distances(bounds: &DistanceBounds, seed: u64) -> Vec<Vec<f64>> {
     let mut dist = vec![vec![0.0_f64; n]; n];
     let mut state: u64 = if seed == 0 { 1 } else { seed };
 
-    for i in 0..n {
-        for j in (i + 1)..n {
+    for (i, dist_i) in dist.iter_mut().enumerate() {
+        for (j, dist_ij) in dist_i.iter_mut().enumerate().skip(i + 1) {
             let lo = bounds.lower[i][j];
             let hi = bounds.upper[i][j];
             let span = (hi - lo).max(0.0);
-            let d = lo + random_f64(&mut state) * span;
-            dist[i][j] = d;
-            dist[j][i] = d;
+            *dist_ij = lo + random_f64(&mut state) * span;
+        }
+    }
+    // Mirror upper triangle to lower for symmetry.
+    for i in 1..n {
+        let (left, right) = dist.split_at_mut(i);
+        for (j, left_row) in left.iter().enumerate() {
+            right[0][j] = left_row[i];
         }
     }
 
@@ -563,14 +568,14 @@ pub fn embed_3d(distances: &[Vec<f64>]) -> Result<Vec<[f64; 3]>, CoordGenError> 
         }
 
         let scale = eigenvalue.sqrt();
-        for i in 0..n {
-            coords[i][dim] = scale * v[i];
+        for (coord, &vi) in coords.iter_mut().zip(v.iter()) {
+            coord[dim] = scale * vi;
         }
 
         // Deflate: residual -= eigenvalue * v * v^T
-        for i in 0..n {
-            for j in 0..n {
-                residual[i][j] -= eigenvalue * v[i] * v[j];
+        for (res_row, &vi) in residual.iter_mut().zip(v.iter()) {
+            for (res_ij, &vj) in res_row.iter_mut().zip(v.iter()) {
+                *res_ij -= eigenvalue * vi * vj;
             }
         }
     }
@@ -596,7 +601,7 @@ pub fn embed_3d(distances: &[Vec<f64>]) -> Result<Vec<[f64; 3]>, CoordGenError> 
 /// Returns a [`CoordGenResult`] summarising the outcome.  The function always
 /// returns (never errors), so callers can decide whether to act on `converged`.
 pub fn refine_coordinates(
-    coords: &mut Vec<[f64; 3]>,
+    coords: &mut [[f64; 3]],
     bounds: &DistanceBounds,
     config: &CoordGenConfig,
 ) -> CoordGenResult {
@@ -677,7 +682,7 @@ pub fn refine_coordinates(
 
         if prev_stress < config.stress_tolerance {
             return CoordGenResult {
-                coordinates: coords.clone(),
+                coordinates: coords.to_vec(),
                 stress: prev_stress,
                 iterations: iters,
                 converged: true,
@@ -686,7 +691,7 @@ pub fn refine_coordinates(
     }
 
     CoordGenResult {
-        coordinates: coords.clone(),
+        coordinates: coords.to_vec(),
         stress: prev_stress,
         iterations: iters,
         converged: prev_stress < config.stress_tolerance,
@@ -825,7 +830,7 @@ fn dot(a: &[f64], b: &[f64]) -> f64 {
 }
 
 /// Normalise a vector in-place to unit length.  No-op if near-zero.
-fn normalize_vec(v: &mut Vec<f64>) {
+fn normalize_vec(v: &mut [f64]) {
     let norm = dot(v, v).sqrt();
     if norm > 1e-14 {
         for x in v.iter_mut() {

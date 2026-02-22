@@ -890,7 +890,7 @@ pub fn connected_components(hg: &Hypergraph) -> Vec<Vec<usize>> {
     }
 
     // Sort: largest component first.
-    components.sort_by(|a, b| b.len().cmp(&a.len()));
+    components.sort_by_key(|c| std::cmp::Reverse(c.len()));
     components
 }
 

@@ -441,11 +441,11 @@ pub fn velocity_verlet_step(
     state.forces = new_forces.clone();
 
     // Step 3: finish velocity kick
-    for i in 0..n {
+    for (i, nf) in new_forces.iter().enumerate() {
         let m = masses.get(i).copied().unwrap_or(12.0).max(1e-30);
-        let ax = new_forces[i][0] / m * KCAL_TO_AKMA;
-        let ay = new_forces[i][1] / m * KCAL_TO_AKMA;
-        let az = new_forces[i][2] / m * KCAL_TO_AKMA;
+        let ax = nf[0] / m * KCAL_TO_AKMA;
+        let ay = nf[1] / m * KCAL_TO_AKMA;
+        let az = nf[2] / m * KCAL_TO_AKMA;
 
         state.velocities[i][0] += 0.5 * ax * dt;
         state.velocities[i][1] += 0.5 * ay * dt;

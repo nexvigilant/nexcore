@@ -180,10 +180,10 @@ impl SignalScore {
     /// ```
     #[must_use]
     pub fn is_signal(&self) -> bool {
-        let prr_ok = self.prr.map_or(true, |v| v >= 2.0);
-        let ror_ok = self.ror.map_or(true, |v| v > 1.0);
-        let ic_ok = self.ic025.map_or(true, |v| v > 0.0);
-        let eb_ok = self.ebgm.map_or(true, |v| v >= 2.0);
+        let prr_ok = self.prr.is_none_or(|v| v >= 2.0);
+        let ror_ok = self.ror.is_none_or(|v| v > 1.0);
+        let ic_ok = self.ic025.is_none_or(|v| v > 0.0);
+        let eb_ok = self.ebgm.is_none_or(|v| v >= 2.0);
         prr_ok && ror_ok && ic_ok && eb_ok
     }
 }

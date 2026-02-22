@@ -461,8 +461,8 @@ impl Molecule {
         let n = self.atoms.len() as f64;
         let mut center = [0.0; 3];
         for atom in &self.atoms {
-            for i in 0..3 {
-                center[i] += atom.position[i];
+            for (c, &p) in center.iter_mut().zip(&atom.position) {
+                *c += p;
             }
         }
         for c in &mut center {
@@ -475,8 +475,8 @@ impl Molecule {
     pub fn center_at_origin(&mut self) {
         let center = self.center_of_geometry();
         for atom in &mut self.atoms {
-            for i in 0..3 {
-                atom.position[i] -= center[i];
+            for (p, &c) in atom.position.iter_mut().zip(&center) {
+                *p -= c;
             }
         }
     }

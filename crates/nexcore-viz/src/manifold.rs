@@ -41,7 +41,7 @@
 //! ```
 
 use std::fmt;
-use std::f64::consts::{FRAC_PI_2, PI, TAU};
+use std::f64::consts::{FRAC_PI_2, TAU};
 use serde::{Deserialize, Serialize};
 
 // ─────────────────────────────────────────────────────────────────
@@ -213,11 +213,11 @@ impl Complex {
     /// ```rust
     /// use nexcore_viz::manifold::Complex;
     ///
-    /// let z = Complex::new(1.0, 2.0).add(Complex::new(3.0, 4.0));
+    /// let z = Complex::new(1.0, 2.0).add_vector(Complex::new(3.0, 4.0));
     /// assert_eq!(z, Complex::new(4.0, 6.0));
     /// ```
     #[must_use]
-    pub fn add(self, rhs: Self) -> Self {
+    pub fn add_vector(self, rhs: Self) -> Self {
         Self {
             re: self.re + rhs.re,
             im: self.im + rhs.im,
@@ -231,12 +231,12 @@ impl Complex {
     /// ```rust
     /// use nexcore_viz::manifold::Complex;
     ///
-    /// let z = Complex::new(1.0, 2.0).mul(Complex::new(3.0, 4.0));
+    /// let z = Complex::new(1.0, 2.0).scale_by(Complex::new(3.0, 4.0));
     /// // (1+2i)(3+4i) = 3+4i+6i-8 = -5+10i
     /// assert_eq!(z, Complex::new(-5.0, 10.0));
     /// ```
     #[must_use]
-    pub fn mul(self, rhs: Self) -> Self {
+    pub fn scale_by(self, rhs: Self) -> Self {
         Self {
             re: self.re * rhs.re - self.im * rhs.im,
             im: self.re * rhs.im + self.im * rhs.re,
@@ -262,7 +262,7 @@ impl Complex {
     pub fn pow_n(self, n: u32) -> Self {
         let mut acc = Self::new(1.0, 0.0);
         for _ in 0..n {
-            acc = acc.mul(self);
+            acc = acc.scale_by(self);
         }
         acc
     }
@@ -422,12 +422,12 @@ fn surface_coords(theta: f64, phi1: f64, phi2: f64, config: &CalabiYauConfig) ->
     // z₁ = phase_rot₁ · mag1 · exp(i·φ₁·α)
     let rot1 = Complex::from_polar(1.0, phase1);
     let inner1 = Complex::from_polar(mag1, phi1 * config.alpha);
-    let z1 = rot1.mul(inner1);
+    let z1 = rot1.scale_by(inner1);
 
     // z₂ = phase_rot₂ · mag2 · exp(i·φ₂·α)
     let rot2 = Complex::from_polar(1.0, phase2);
     let inner2 = Complex::from_polar(mag2, phi2 * config.alpha);
-    let z2 = rot2.mul(inner2);
+    let z2 = rot2.scale_by(inner2);
 
     (z1, z2)
 }
@@ -886,7 +886,7 @@ mod tests {
     fn test_complex_add() {
         let a = Complex::new(1.0, 2.0);
         let b = Complex::new(3.0, -1.0);
-        let c = a.add(b);
+        let c = a.add_vector(b);
         assert!((c.re - 4.0).abs() < 1e-12);
         assert!((c.im - 1.0).abs() < 1e-12);
     }
@@ -896,7 +896,7 @@ mod tests {
         // (1+2i)(3+4i) = 3+4i+6i-8 = -5+10i
         let a = Complex::new(1.0, 2.0);
         let b = Complex::new(3.0, 4.0);
-        let c = a.mul(b);
+        let c = a.scale_by(b);
         assert!((c.re - (-5.0)).abs() < 1e-12);
         assert!((c.im - 10.0).abs() < 1e-12);
     }
@@ -924,7 +924,7 @@ mod tests {
     fn test_complex_conj_product_is_real() {
         // z * conj(z) should be purely real and equal to |z|²
         let z = Complex::new(3.0, 4.0);
-        let p = z.mul(z.conj());
+        let p = z.scale_by(z.conj());
         assert!(p.im.abs() < 1e-12);
         assert!((p.re - 25.0).abs() < 1e-12);
     }
@@ -1036,7 +1036,7 @@ mod tests {
         let phi1 = 0.0;
         let phi2 = 0.0;
         let (z1, z2) = surface_coords(theta, phi1, phi2, &config);
-        let sum = complex_power(z1, n).add(complex_power(z2, n));
+        let sum = complex_power(z1, n).add_vector(complex_power(z2, n));
         // Should be approximately 1 + 0i
         assert!((sum.re - 1.0).abs() < 1e-10, "Re(z1^n + z2^n) = {}", sum.re);
         assert!(sum.im.abs() < 1e-10, "Im(z1^n + z2^n) = {}", sum.im);

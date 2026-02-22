@@ -833,6 +833,7 @@ fn triangle_area(a: &[f64; 3], b: &[f64; 3], c: &[f64; 3]) -> f64 {
 
 /// Return a unit vector in the direction of `v`.  Returns zero vector when
 /// `v` has near-zero magnitude.
+#[allow(dead_code)]
 fn normalize(v: &[f64; 3]) -> [f64; 3] {
     let len = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt();
     if len < 1e-14 {

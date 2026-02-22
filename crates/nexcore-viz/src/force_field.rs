@@ -493,8 +493,8 @@ pub fn compute_forces(
     // Mutable clone to perturb positions
     let mut mol_scratch = mol.clone();
 
-    for atom_idx in 0..n {
-        for dim in 0..3 {
+    for (atom_idx, force_row) in forces.iter_mut().enumerate() {
+        for (dim, force_val) in force_row.iter_mut().enumerate() {
             // Forward displacement
             mol_scratch.atoms[atom_idx].position[dim] += h;
             let e_fwd = compute_energy(&mol_scratch, config)?.total;
@@ -507,7 +507,7 @@ pub fn compute_forces(
             mol_scratch.atoms[atom_idx].position[dim] += h;
 
             // Central difference: force = -dE/dr
-            forces[atom_idx][dim] = -(e_fwd - e_bwd) / (2.0 * h);
+            *force_val = -(e_fwd - e_bwd) / (2.0 * h);
         }
     }
 

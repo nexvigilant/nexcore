@@ -228,8 +228,8 @@ pub fn power_iteration(
         // w = A * v
         let mut w = vec![0.0_f64; n];
         for i in 0..n {
-            for j in 0..n {
-                w[i] += matrix[i].get(j).copied().unwrap_or(0.0) * v[j];
+            for (j, &vj) in v.iter().enumerate() {
+                w[i] += matrix[i].get(j).copied().unwrap_or(0.0) * vj;
             }
         }
 
@@ -377,7 +377,7 @@ pub fn algebraic_connectivity(graph: &GraphSpec) -> f64 {
 // ─── Internal Helpers ─────────────────────────────────────────────────────────
 
 /// Subtracts the projection of `v` onto the all-ones unit vector (1/√n · 1).
-fn orthogonalise_ones(v: &mut Vec<f64>, inv_sqrt_n: f64) {
+fn orthogonalise_ones(v: &mut [f64], inv_sqrt_n: f64) {
     let dot: f64 = v.iter().map(|x| x * inv_sqrt_n).sum::<f64>();
     for x in v.iter_mut() {
         *x -= dot * inv_sqrt_n;
@@ -385,7 +385,7 @@ fn orthogonalise_ones(v: &mut Vec<f64>, inv_sqrt_n: f64) {
 }
 
 /// Normalises `v` in-place to unit Euclidean norm.  No-op if the norm is zero.
-fn normalise_vec(v: &mut Vec<f64>) {
+fn normalise_vec(v: &mut [f64]) {
     let norm: f64 = v.iter().map(|x| x * x).sum::<f64>().sqrt();
     if norm > f64::EPSILON {
         for x in v.iter_mut() {

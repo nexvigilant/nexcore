@@ -327,8 +327,8 @@ fn ring_center(atoms: &[Atom], indices: &[usize]) -> [f64; 3] {
     let mut count = 0usize;
     for &idx in indices {
         if let Some(atom) = atoms.get(idx) {
-            for i in 0..3 {
-                center[i] += atom.position[i];
+            for (c, &p) in center.iter_mut().zip(atom.position.iter()) {
+                *c += p;
             }
             count += 1;
         }
@@ -399,8 +399,8 @@ pub fn detect_rings(mol: &Molecule) -> Vec<RingInfo> {
     // Track which canonical ring atom-sets we have already emitted.
     let mut seen: std::collections::HashSet<Vec<usize>> = std::collections::HashSet::new();
 
-    for start in 0..n {
-        if !has_aromatic_bond[start] {
+    for (start, has_aromatic) in has_aromatic_bond.iter().enumerate() {
+        if !has_aromatic {
             continue;
         }
         // DFS: path = current path, depth limit = 6.
@@ -501,7 +501,7 @@ pub fn detect_hydrogen_bonds(mol: &Molecule, cutoffs: &InteractionCutoffs) -> Ve
         }
     }
 
-    for i in 0..n {
+    for (i, h_neigh) in h_neighbors.iter().enumerate() {
         let donor = match atoms.get(i) {
             Some(a) => a,
             None => continue,
@@ -528,7 +528,7 @@ pub fn detect_hydrogen_bonds(mol: &Molecule, cutoffs: &InteractionCutoffs) -> Ve
             }
 
             // Try to measure D-H···A angle using bridging hydrogens.
-            let h_atoms = &h_neighbors[i];
+            let h_atoms = h_neigh;
             let (angle_deg, angle_ok) = if h_atoms.is_empty() {
                 // No explicit H: assume geometry is acceptable.
                 (None, true)
@@ -742,7 +742,7 @@ pub fn detect_hydrophobic_contacts(
 /// Two rings interact when their centres are within `cutoffs.pi_stack_distance`
 /// and the inter-plane angle is either < `pi_stack_angle_max` (parallel) or
 /// > `90° − pi_stack_angle_max` (T-shaped, edge-to-face). Energies are
-/// -2.5 kcal/mol (parallel) and -1.5 kcal/mol (T-shaped).
+/// > -2.5 kcal/mol (parallel) and -1.5 kcal/mol (T-shaped).
 #[must_use]
 pub fn detect_pi_stacking(mol: &Molecule, cutoffs: &InteractionCutoffs) -> Vec<Interaction> {
     let mut result = Vec::new();

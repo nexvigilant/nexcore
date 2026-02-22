@@ -639,7 +639,7 @@ pub fn compute_heatmap(
     let cells: Vec<HeatmapCell> = raw_entries
         .iter()
         .zip(normalised.iter())
-        .map(|((drug_id, ae_name, raw_score, is_signal, case_count), &norm)| {
+        .map(|((drug_id, ae_name, raw_score, is_signal, _case_count), &norm)| {
             // Clamp to [0,1] for color/opacity (ZScore can exceed this range)
             let display_norm = norm.clamp(0.0, 1.0);
             let color = interpolate_color(&config.color_scale, display_norm);
@@ -672,7 +672,7 @@ fn signal_exceeds_threshold(
     field: ScoreField,
     threshold: f64,
 ) -> bool {
-    extract_score(signal, field).map_or(false, |v| v >= threshold)
+    extract_score(signal, field).is_some_and(|v| v >= threshold)
 }
 
 // ============================================================================

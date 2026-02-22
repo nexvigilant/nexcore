@@ -212,7 +212,7 @@ pub fn triangle_count(mesh: &SurfaceMesh) -> usize {
 /// Flat 3D scalar field indexed as `[ix * ny * nz + iy * nz + iz]`.
 struct Field {
     data: Vec<f64>,
-    nx: usize,
+    _nx: usize,
     ny: usize,
     nz: usize,
 }
@@ -221,7 +221,7 @@ impl Field {
     fn new(nx: usize, ny: usize, nz: usize) -> Self {
         Self {
             data: vec![f64::MAX; nx * ny * nz],
-            nx,
+            _nx: nx,
             ny,
             nz,
         }

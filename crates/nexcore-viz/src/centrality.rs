@@ -299,9 +299,9 @@ pub fn eigenvector_centrality(graph: &GraphSpec, max_iter: usize) -> HashMap<Str
 
     for _ in 0..max_iter {
         let mut new_scores = vec![0.0_f64; n];
-        for v in 0..n {
+        for (v, score) in new_scores.iter_mut().enumerate() {
             for &u in neighbours.get(v).map(Vec::as_slice).unwrap_or(&[]) {
-                new_scores[v] += scores.get(u).copied().unwrap_or(0.0);
+                *score += scores.get(u).copied().unwrap_or(0.0);
             }
         }
 

@@ -244,9 +244,9 @@ impl Rotation4D {
     #[must_use]
     pub fn apply(&self, point: &[f64; 4]) -> [f64; 4] {
         let mut out = [0.0_f64; 4];
-        for i in 0..4 {
-            for j in 0..4 {
-                out[i] += self.matrix[i][j] * point[j];
+        for (i, out_i) in out.iter_mut().enumerate() {
+            for (j, &pj) in point.iter().enumerate() {
+                *out_i += self.matrix[i][j] * pj;
             }
         }
         out
@@ -270,10 +270,10 @@ impl Rotation4D {
     #[must_use]
     pub fn compose(&self, other: &Rotation4D) -> Rotation4D {
         let mut m = [[0.0_f64; 4]; 4];
-        for i in 0..4 {
-            for j in 0..4 {
+        for (i, m_row) in m.iter_mut().enumerate() {
+            for (j, m_ij) in m_row.iter_mut().enumerate() {
                 for k in 0..4 {
-                    m[i][j] += self.matrix[i][k] * other.matrix[k][j];
+                    *m_ij += self.matrix[i][k] * other.matrix[k][j];
                 }
             }
         }
@@ -395,7 +395,7 @@ pub fn project_stereographic(
     }
 
     // current.len() == 3 here.
-    let x = current.get(0).copied().unwrap_or(0.0);
+    let x = current.first().copied().unwrap_or(0.0);
     let y = current.get(1).copied().unwrap_or(0.0);
     let z = current.get(2).copied().unwrap_or(0.0);
 
@@ -455,7 +455,7 @@ pub fn project_perspective(
     let denom = focal + depth;
     let scale = if denom.abs() < 1e-12 { 1.0 } else { focal / denom };
 
-    let x = point.get(0).copied().unwrap_or(0.0) * scale;
+    let x = point.first().copied().unwrap_or(0.0) * scale;
     let y = point.get(1).copied().unwrap_or(0.0) * scale;
     let z = point.get(2).copied().unwrap_or(0.0) * scale;
 

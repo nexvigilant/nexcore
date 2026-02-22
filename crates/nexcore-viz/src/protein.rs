@@ -605,10 +605,8 @@ pub fn assign_secondary_structure(
     let mut atom_to_res: std::collections::HashMap<usize, usize> =
         std::collections::HashMap::new();
     for (res_idx, bb) in backbone.iter().enumerate() {
-        for atom_opt in [bb.n, bb.ca, bb.c, bb.o] {
-            if let Some(atom_idx) = atom_opt {
-                atom_to_res.insert(atom_idx, res_idx);
-            }
+        for atom_idx in [bb.n, bb.ca, bb.c, bb.o].into_iter().flatten() {
+            atom_to_res.insert(atom_idx, res_idx);
         }
     }
 
@@ -627,19 +625,16 @@ pub fn assign_secondary_structure(
     let mut sheet_flag = vec![false; n_res];
 
     for &(donor, acceptor) in &hbond_pairs {
-        let diff = if acceptor > donor {
-            acceptor - donor
-        } else {
-            donor - acceptor
-        };
+        let diff = acceptor.abs_diff(donor);
 
         if diff == 4 || diff == 3 {
             // Helix i->i+4 (alpha) or i->i+3 (3_10)
             let lo = donor.min(acceptor);
             let hi = donor.max(acceptor);
-            for idx in lo..=hi {
-                if idx < n_res {
-                    helix_score[idx] = helix_score[idx].saturating_add(1);
+            let end = (hi + 1).min(n_res);
+            if lo < end {
+                for score in &mut helix_score[lo..end] {
+                    *score = score.saturating_add(1);
                 }
             }
         } else if diff > 4 {

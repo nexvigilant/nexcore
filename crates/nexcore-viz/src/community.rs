@@ -211,7 +211,7 @@ pub fn detect_communities(graph: &GraphSpec) -> Vec<Vec<String>> {
 fn phase1(
     graph: &GraphSpec,
     adj: &HashMap<(usize, usize), f64>,
-    partition: &mut Vec<usize>,
+    partition: &mut [usize],
 ) -> bool {
     let n = graph.n();
     let m = edge_count(graph);
@@ -245,8 +245,7 @@ fn phase1(
 
             // Σ_tot for each candidate community (sum of degrees of nodes in comm).
             let mut sigma_tot: HashMap<usize, f64> = HashMap::new();
-            for j in 0..n {
-                let cj = partition[j];
+            for (j, &cj) in partition.iter().enumerate() {
                 let kj = degrees.get(j).copied().unwrap_or(0.0);
                 *sigma_tot.entry(cj).or_insert(0.0) += kj;
             }

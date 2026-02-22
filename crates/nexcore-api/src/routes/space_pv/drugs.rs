@@ -28,7 +28,8 @@ pub fn router() -> Router {
 async fn list_drugs(
     Query(query): Query<ListDrugsQuery>,
 ) -> Result<Json<Vec<Drug>>, (StatusCode, Json<Value>)> {
-    // TODO: Implement database integration using query filters
+    // Stub: returns empty until persistence layer wired (requires DB migration).
+    // query.limit/offset ready for passthrough once drug_registry table exists.
     let _limit = query.limit.unwrap_or(100);
     let _offset = query.offset.unwrap_or(0);
     Ok(Json(vec![]))

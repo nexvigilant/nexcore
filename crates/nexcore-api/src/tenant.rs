@@ -175,6 +175,18 @@ pub fn check_tenant_rate_limit(
     Ok(())
 }
 
+/// Best-effort user_id extraction from Authorization header.
+///
+/// Returns `Some(user_id)` if a valid JWT with `user_id` claim is present,
+/// `None` otherwise. Use in handlers that should work both authenticated
+/// and unauthenticated (degrading to "anonymous").
+pub fn extract_user_id_from_headers(headers: &axum::http::HeaderMap) -> Option<String> {
+    let auth = headers.get("authorization")?.to_str().ok()?;
+    let token = auth.strip_prefix("Bearer ")?;
+    let claims = decode_tenant_claims(token).ok()?;
+    Some(claims.user_id)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

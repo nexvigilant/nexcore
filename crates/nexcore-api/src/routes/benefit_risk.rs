@@ -185,10 +185,12 @@ pub async fn qbri_compute(
         (status = 200, description = "Thresholds derived successfully", body = QbriDeriveResponse)
     )
 )]
-pub async fn qbri_derive(Json(_req): Json<QbriDeriveRequest>) -> ApiResult<QbriDeriveResponse> {
+pub async fn qbri_derive(Json(req): Json<QbriDeriveRequest>) -> ApiResult<QbriDeriveResponse> {
     use nexcore_vigilance::pv::benefit_risk::{derive_thresholds, generate_synthetic_data};
 
-    // TODO: Use _req.use_synthetic to select data source when historical data available
+    // Historical data source not yet available — synthetic is the only provider.
+    // When historical FAERS/VAERS pipelines land, gate on req.use_synthetic here.
+    let _use_synthetic = req.use_synthetic;
     let data = generate_synthetic_data();
     let result = derive_thresholds(&data);
     let t = &result.thresholds;

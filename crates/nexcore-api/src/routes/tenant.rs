@@ -169,8 +169,8 @@ pub async fn provision_tenant(
         );
     };
 
-    // TODO: Persist to database, create schema, set up RLS policies
-    // For now, return a synthetic provision result.
+    // Stub: returns synthetic provision until Supabase tenant schema lands.
+    // Real flow: INSERT tenant row → CREATE schema → SET RLS policies → activate.
 
     (
         axum::http::StatusCode::CREATED,

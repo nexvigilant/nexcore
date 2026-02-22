@@ -9,6 +9,7 @@ pub mod openapi_compat;
 pub mod persistence;
 pub mod routes;
 pub mod subscription_store;
+pub mod tenant;
 
 use axum::{
     Router,

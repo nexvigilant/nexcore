@@ -3,6 +3,7 @@
 use crate::ApiState;
 use crate::persistence::MessageRecord;
 use axum::extract::{Json, Path, State};
+use axum::http::HeaderMap;
 use axum::routing::{get, post};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -37,10 +38,11 @@ pub struct SendMessageRequest {
     tag = "community"
 )]
 pub async fn list_messages(
+    headers: HeaderMap,
     State(state): State<ApiState>,
 ) -> Result<Json<Vec<Message>>, crate::routes::common::ApiError> {
-    // TODO: Get user_id from auth
-    let user_id = "anonymous".to_string();
+    let user_id = crate::tenant::extract_user_id_from_headers(&headers)
+        .unwrap_or_else(|| "anonymous".to_string());
     let records = state
         .persistence
         .list_messages(&user_id)

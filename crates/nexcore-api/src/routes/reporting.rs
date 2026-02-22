@@ -3,6 +3,7 @@
 use crate::ApiState;
 use crate::persistence::ReportRecord;
 use axum::extract::{Json, State};
+use axum::http::HeaderMap;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
@@ -51,6 +52,7 @@ pub struct ReportResponse {
     tag = "reporting"
 )]
 pub async fn generate_report(
+    headers: HeaderMap,
     State(state): State<ApiState>,
     Json(req): Json<ReportRequest>,
 ) -> Result<Json<ReportResponse>, crate::routes::common::ApiError> {
@@ -77,7 +79,7 @@ pub async fn generate_report(
         generated_at,
         content: content.clone(),
         status: "completed".to_string(),
-        user_id: None, // TODO: Extract from auth
+        user_id: crate::tenant::extract_user_id_from_headers(&headers),
     };
 
     state

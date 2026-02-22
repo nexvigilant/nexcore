@@ -22,20 +22,20 @@ crates/nexcore-skill-verify/
 *.sqlite
 *.parquet
 
-# Exclude non-Rust directories (not needed for API build)
-archive/
-studio/
-data/
-dna/
-ksb/
-kellnr/
-kellnr-archive/
-docs/
-notebooks/
-prototypes/
-scripts/
-.build-orchestrator/
-tools/
+# Exclude non-Rust top-level directories (anchored with / to avoid matching crate subdirs)
+/archive/
+/studio/
+/data/
+/dna/
+/ksb/
+/kellnr/
+/kellnr-archive/
+/docs/
+/notebooks/
+/prototypes/
+/scripts/
+/.build-orchestrator/
+/tools/
 
 # Exclude Claude state files (large)
 .claude/brain/

@@ -2311,7 +2311,13 @@ where
 }
 
 /// Deserialize `Value` → `T` with standard error.
+/// Converts `null` to `{}` so tools with all-optional params work without explicit `{}`.
 fn deser<T: serde::de::DeserializeOwned>(params: Value) -> Result<T, McpError> {
+    let params = if params.is_null() {
+        Value::Object(serde_json::Map::new())
+    } else {
+        params
+    };
     serde_json::from_value(params)
         .map_err(|e| McpError::invalid_params(format!("Bad params: {e}"), None))
 }

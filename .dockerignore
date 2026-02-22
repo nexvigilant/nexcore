@@ -10,9 +10,8 @@ target/
 .vscode/
 *.swp
 
-# Large/unnecessary crates
+# Large/unnecessary crates (nexcore-vigil needed by nexcore-api)
 crates/nexcore-hooks/
-crates/nexcore-vigil/
 crates/nexcore-control-center/
 crates/nexcore-tov-proofs/
 crates/nexcore-skill-verify/

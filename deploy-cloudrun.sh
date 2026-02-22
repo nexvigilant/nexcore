@@ -53,7 +53,7 @@ gcloud builds submit \
     --project "$PROJECT_ID" \
     --config cloudbuild-api.yaml \
     --substitutions "_TAG=$TAG" \
-    --timeout 1800s
+    --timeout 2400s
 
 # Step 2: Deploy to Cloud Run
 echo "Step 2/2: Deploying to Cloud Run..."
@@ -69,7 +69,7 @@ gcloud run deploy "$SERVICE_NAME" \
     --max-instances 10 \
     --timeout 60s \
     --concurrency 80 \
-    --set-env-vars "RUST_LOG=nexcore_api=info"
+    --set-env-vars "RUST_LOG=nexcore_api=info,BIND_ADDR=0.0.0.0,FIREBASE_PROJECT_ID=nexvigilant-digital-clubhouse"
 
 # Get the service URL
 SERVICE_URL=$(gcloud run services describe "$SERVICE_NAME" \

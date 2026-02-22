@@ -8,21 +8,42 @@ WORKDIR /app
 # Stage 2: Recipe Planner
 FROM chef AS planner
 COPY . .
-# Exclude crates with absolute path deps (prima) that don't exist in cloud
+# Strip local-only build config (mold linker, sccache) but keep registry
+RUN mkdir -p .cargo && printf '[registries.nexcore]\nindex = "sparse+http://localhost:8000/api/v1/crates/"\n' > .cargo/config.toml
+# Remove workspace members excluded by .gcloudignore, then add crates to exclude list
+RUN mkdir -p crates/claude-knowledge-mcp
+RUN sed -i '/"tools\/\*"/d' Cargo.toml
 RUN sed -i '/^exclude = \[/,/^\]/ s/^\]/    "crates\/nexcore-mcp",\n    "crates\/nexcore-renderer",\n]/' Cargo.toml
 RUN cargo chef prepare --recipe-path recipe.json
 
 # Stage 3: Dependency Cacher
 FROM chef AS cacher
+# Disable sccache + upgrade Rust (deps need 1.88+, image ships 1.85)
+ENV RUSTC_WRAPPER=""
+RUN rustup update stable && rustup default stable
+# System deps for cpal (ALSA) — needed during dep compilation
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libasound2-dev pkg-config clang \
+    && rm -rf /var/lib/apt/lists/*
 COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 
 # Stage 4: Builder
 FROM chef AS builder
+ENV RUSTC_WRAPPER=""
+RUN rustup update stable && rustup default stable
+# System deps for nexcore-vigil (cpal needs ALSA headers)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libasound2-dev pkg-config clang \
+    && rm -rf /var/lib/apt/lists/*
 COPY . .
+# Strip local-only build config (mold linker, sccache) but keep registry
+RUN mkdir -p .cargo && printf '[registries.nexcore]\nindex = "sparse+http://localhost:8000/api/v1/crates/"\n' > .cargo/config.toml
+RUN mkdir -p crates/claude-knowledge-mcp
 COPY --from=cacher /app/target target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
-# Exclude nexcore-mcp + nexcore-renderer (have prima path deps not available in cloud)
+# Remove tools/* member (excluded by .gcloudignore) + add crate exclusions
+RUN sed -i '/"tools\/\*"/d' Cargo.toml
 RUN sed -i '/^exclude = \[/,/^\]/ s/^\]/    "crates\/nexcore-mcp",\n    "crates\/nexcore-renderer",\n]/' Cargo.toml
 RUN cargo build --release --bin nexcore-api
 
@@ -33,6 +54,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     libssl3 \
+    libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Non-root user

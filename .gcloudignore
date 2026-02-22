@@ -2,9 +2,8 @@
 target/
 **/target/
 
-# Exclude large crates with embedded targets
+# Exclude large crates not needed for API build
 crates/nexcore-hooks/
-crates/nexcore-vigil/
 crates/nexcore-control-center/
 crates/nexcore-tov-proofs/
 crates/nexcore-skill-verify/
@@ -17,13 +16,26 @@ crates/nexcore-skill-verify/
 .vscode/
 *.swp
 
+
 # Exclude large data files
 *.db
 *.sqlite
 *.parquet
 
-# Exclude archive
+# Exclude non-Rust directories (not needed for API build)
 archive/
+studio/
+data/
+dna/
+ksb/
+kellnr/
+kellnr-archive/
+docs/
+notebooks/
+prototypes/
+scripts/
+.build-orchestrator/
+tools/
 
 # Exclude Claude state files (large)
 .claude/brain/

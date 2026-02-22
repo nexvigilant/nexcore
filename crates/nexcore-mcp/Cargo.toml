@@ -16,7 +16,7 @@ path = "src/main.rs"
 academy-forge = { workspace = true }
 
 # NexCore unified crate (all modules consolidated)
-nexcore-vigilance = { workspace = true }
+nexcore-vigilance = { workspace = true, features = ["viz"] }
 nexcore-vigil = { workspace = true }
 nexcore-forge-strategy = { workspace = true }
 nexcore-brain = { workspace = true }

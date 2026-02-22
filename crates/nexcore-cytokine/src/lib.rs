@@ -48,6 +48,7 @@
 
 pub mod grounding;
 pub mod neurotransmitter;
+pub mod pv_bridge;
 
 mod apoptosis;
 mod bus;
@@ -58,6 +59,7 @@ mod emitter;
 mod endocytosis;
 mod exocytosis;
 mod mitosis;
+mod nmd;
 mod phagocytosis;
 mod quorum;
 mod receptor;

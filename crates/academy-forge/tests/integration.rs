@@ -3,7 +3,10 @@
 
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
-use academy_forge::{CrateAnalysis, DomainAnalysis, ValidationReport};
+use academy_forge::{
+    AloType, AtomizedPathway, CrateAnalysis, DomainAnalysis, ValidationReport,
+};
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 fn workspace_root() -> PathBuf {
@@ -473,4 +476,432 @@ fn compile_tov_01_generates_typescript_files() {
         result.stages_compiled,
         result.files_written.len()
     );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// forge_atomize + forge_graph — all 9 pathways + cross-pathway graph
+// ═══════════════════════════════════════════════════════════════════════════
+
+#[test]
+fn test_all_pathways_atomize_and_graph() {
+    let content_dir = workspace_root().join("content/pathways");
+
+    // All pathway files (no schema)
+    let pathway_files = [
+        "tov-01.json",
+        "pv-ed-01.json",
+        "pv-ed-02.json",
+        "pv-ed-03.json",
+        "pv-ed-04.json",
+        "pv-ed-05.json",
+        "pv-ed-06.json",
+        "pv-ed-07.json",
+        "pv-ed-08.json",
+    ];
+
+    // ── Step 1: Atomize all pathways ──────────────────────────────────────
+    let mut atomized_pathways: Vec<academy_forge::AtomizedPathway> = Vec::new();
+    let mut summary_rows: Vec<(String, usize, usize, String)> = Vec::new(); // id, alos, edges, status
+
+    eprintln!("\n{}", "═".repeat(78));
+    eprintln!("  ALL-PATHWAYS ATOMIZATION & GRAPH REPORT");
+    eprintln!("{}\n", "═".repeat(78));
+
+    for filename in &pathway_files {
+        let path = content_dir.join(filename);
+        if !path.exists() {
+            eprintln!("  SKIP: {} not found", filename);
+            summary_rows.push((filename.to_string(), 0, 0, "SKIP".to_string()));
+            continue;
+        }
+
+        let raw = std::fs::read_to_string(&path)
+            .unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
+        let pathway_json: serde_json::Value =
+            serde_json::from_str(&raw).unwrap_or_else(|e| panic!("{filename} is not valid JSON: {e}"));
+
+        let start = std::time::Instant::now();
+        let atomized = academy_forge::atomize(&pathway_json)
+            .unwrap_or_else(|e| panic!("atomize failed for {filename}: {e}"));
+        let elapsed_ms = start.elapsed().as_millis();
+
+        let alo_count = atomized.alos.len();
+        let edge_count = atomized.edges.len();
+        let duration_str = format!("{}ms", elapsed_ms);
+
+        // ── R28-R36 validation per pathway ──
+        let alo_report = academy_forge::validate::alo::validate_alo_report(&atomized);
+        let status = if alo_report.passed {
+            format!("OK E={} W={}", alo_report.error_count, alo_report.warning_count)
+        } else {
+            format!("FAIL E={}", alo_report.error_count)
+        };
+
+        summary_rows.push((atomized.id.clone(), alo_count, edge_count, status));
+        atomized_pathways.push(atomized);
+
+        eprintln!(
+            "  [{:>8}] {} → {} ALOs, {} edges, {}",
+            duration_str, filename, alo_count, edge_count, alo_report.passed
+        );
+
+        // Print any findings
+        for f in &alo_report.findings {
+            eprintln!("    [{:?}] {} — {}", f.severity, f.rule, f.message);
+        }
+    }
+
+    // ── Step 2: Print summary table ───────────────────────────────────────
+    eprintln!();
+    eprintln!("  PATHWAY SUMMARY TABLE:");
+    eprintln!("  {:-<74}", "");
+    eprintln!(
+        "  {:<18} | {:>6} | {:>6} | {}",
+        "Pathway ID", "ALOs", "Edges", "Validation"
+    );
+    eprintln!("  {:-<74}", "");
+    let mut total_alos = 0usize;
+    let mut total_edges = 0usize;
+    for (id, alos, edges, status) in &summary_rows {
+        eprintln!("  {:<18} | {:>6} | {:>6} | {}", id, alos, edges, status);
+        total_alos += alos;
+        total_edges += edges;
+    }
+    eprintln!("  {:-<74}", "");
+    eprintln!(
+        "  {:<18} | {:>6} | {:>6} |",
+        "TOTAL", total_alos, total_edges
+    );
+    eprintln!();
+
+    // ── Step 3: Build cross-pathway graph ─────────────────────────────────
+    let graph_start = std::time::Instant::now();
+    let graph = academy_forge::build_graph(&atomized_pathways, true, 0.5)
+        .expect("build_graph failed");
+    let graph_ms = graph_start.elapsed().as_millis();
+
+    let m = &graph.metadata;
+    eprintln!("  CROSS-PATHWAY LEARNING GRAPH:");
+    eprintln!("  Built in {}ms", graph_ms);
+    eprintln!("  {:-<50}", "");
+    eprintln!("  Total nodes (ALOs):       {:>6}", m.node_count);
+    eprintln!("  Total edges:              {:>6}", m.edge_count);
+    eprintln!("  Connected components:     {:>6}", m.connected_components);
+    eprintln!("  Graph diameter:           {:>6}", m.diameter);
+    eprintln!("  Overlap clusters:         {:>6}", graph.overlap_clusters.len());
+    eprintln!("  Overlap ratio:            {:>5.1}%", m.overlap_ratio * 100.0);
+    eprintln!("  Avg ALO duration:         {:>5.1} min", m.avg_duration_min);
+    eprintln!("  Total learning time:      {:>5} min ({:.1}h)", m.total_duration_min, m.total_duration_min as f32 / 60.0);
+    eprintln!("  Pathways included:        {:?}", graph.pathways);
+    eprintln!();
+
+    if !graph.overlap_clusters.is_empty() {
+        eprintln!("  OVERLAP CLUSTERS (top 10):");
+        for cluster in graph.overlap_clusters.iter().take(10) {
+            eprintln!(
+                "    concept={} alo_count={} pathways={:?} canonical={}",
+                cluster.concept,
+                cluster.alo_ids.len(),
+                cluster.pathways,
+                cluster.canonical_alo_id
+            );
+        }
+        eprintln!();
+    }
+
+    // ── Step 4: Assertions ────────────────────────────────────────────────
+
+    // All available pathways were atomized
+    let atomized_count = atomized_pathways.len();
+    assert!(
+        atomized_count >= 9,
+        "Expected all 9 pathways atomized, got {atomized_count}"
+    );
+
+    // Each pathway has ALOs and a Hook in every stage
+    for ap in &atomized_pathways {
+        assert!(
+            !ap.alos.is_empty(),
+            "Pathway {} has no ALOs",
+            ap.id
+        );
+        let has_hooks = ap.alos.iter().any(|a| a.alo_type == academy_forge::AloType::Hook);
+        assert!(has_hooks, "Pathway {} has no Hook ALOs", ap.id);
+        assert!(!ap.edges.is_empty(), "Pathway {} has no edges", ap.id);
+    }
+
+    // All R28-R36 validations pass (no errors)
+    for ap in &atomized_pathways {
+        let report = academy_forge::validate::alo::validate_alo_report(ap);
+        assert!(
+            report.passed,
+            "Pathway {} failed R28-R36 validation with {} errors: {:?}",
+            ap.id,
+            report.error_count,
+            report
+                .findings
+                .iter()
+                .filter(|f| matches!(f.severity, academy_forge::validate::Severity::Error))
+                .collect::<Vec<_>>()
+        );
+    }
+
+    // Graph has all ALOs from all pathways
+    assert_eq!(
+        graph.metadata.node_count, total_alos,
+        "Graph node count mismatch"
+    );
+
+    // Graph is acyclic (build_graph validates this internally)
+    // Graph has at least 1 connected component per pathway
+    assert!(
+        m.connected_components >= 1,
+        "Graph should have at least 1 connected component"
+    );
+
+    // Diameter should be positive (pathways have depth)
+    assert!(m.diameter > 0, "Graph diameter should be > 0");
+
+    eprintln!("  RESULT: All {} pathways atomized and validated. Cross-pathway graph built.", atomized_count);
+    eprintln!("  Total: {} ALOs, {} graph edges, {} overlap clusters.", m.node_count, m.edge_count, graph.overlap_clusters.len());
+    eprintln!();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// forge_atomize — real pathway decomposition into ALOs
+// ═══════════════════════════════════════════════════════════════════════════
+
+#[test]
+fn atomize_tov_01_experiential_report() {
+    let content_path = workspace_root().join("content/pathways/tov-01.json");
+    if !content_path.exists() {
+        eprintln!("SKIP: tov-01.json not found");
+        return;
+    }
+
+    let raw = std::fs::read_to_string(&content_path)
+        .unwrap_or_else(|e| panic!("cannot read {}: {e}", content_path.display()));
+    let pathway_json: serde_json::Value =
+        serde_json::from_str(&raw).expect("tov-01.json is not valid JSON");
+
+    // ── Run atomizer ──
+    let atomized: AtomizedPathway =
+        academy_forge::atomize(&pathway_json).expect("atomize failed");
+
+    // ── Report: Overview ──
+    eprintln!("\n{}", "=".repeat(70));
+    eprintln!("  ATOMIZER EXPERIENTIAL REPORT: {}", atomized.title);
+    eprintln!("  Pathway ID: {}", atomized.id);
+    eprintln!("{}\n", "=".repeat(70));
+
+    let total_alos = atomized.alos.len();
+    let total_edges = atomized.edges.len();
+
+    // Count by type
+    let mut by_type: HashMap<String, Vec<&academy_forge::AtomicLearningObject>> = HashMap::new();
+    for alo in &atomized.alos {
+        by_type
+            .entry(format!("{:?}", alo.alo_type))
+            .or_default()
+            .push(alo);
+    }
+
+    eprintln!("  SUMMARY");
+    eprintln!("  -------");
+    eprintln!("  Total ALOs:   {total_alos}");
+    eprintln!("  Total Edges:  {total_edges}");
+    eprintln!();
+
+    eprintln!("  ALO BREAKDOWN BY TYPE:");
+    for alo_type_name in &["Hook", "Concept", "Activity", "Reflection"] {
+        let count = by_type.get(*alo_type_name).map_or(0, |v| v.len());
+        let total_dur: u16 = by_type
+            .get(*alo_type_name)
+            .map_or(0, |v| v.iter().map(|a| a.estimated_duration).sum());
+        eprintln!("    {alo_type_name:<12} {count:>3} ALOs  ({total_dur:>4} min total)");
+    }
+    eprintln!();
+
+    // Edge breakdown
+    let mut edge_counts: HashMap<String, usize> = HashMap::new();
+    for edge in &atomized.edges {
+        *edge_counts
+            .entry(format!("{:?}", edge.edge_type))
+            .or_insert(0) += 1;
+    }
+    eprintln!("  EDGE BREAKDOWN:");
+    for (etype, count) in &edge_counts {
+        eprintln!("    {etype:<14} {count:>4}");
+    }
+    eprintln!();
+
+    // Per-stage decomposition
+    eprintln!("  PER-STAGE DECOMPOSITION:");
+    eprintln!("  {:-<66}", "");
+    eprintln!(
+        "  {:>5} | {:<30} | {:>5} | {:>5} | {:>5} | {:>5}",
+        "Stage", "Title (from Hook)", "Hook", "Conc", "Act", "Refl"
+    );
+    eprintln!("  {:-<66}", "");
+
+    // Group ALOs by source_stage_id
+    let mut stage_order: Vec<String> = Vec::new();
+    let mut by_stage: HashMap<String, Vec<&academy_forge::AtomicLearningObject>> = HashMap::new();
+    for alo in &atomized.alos {
+        if !by_stage.contains_key(&alo.source_stage_id) {
+            stage_order.push(alo.source_stage_id.clone());
+        }
+        by_stage
+            .entry(alo.source_stage_id.clone())
+            .or_default()
+            .push(alo);
+    }
+
+    for (idx, stage_id) in stage_order.iter().enumerate() {
+        let stage_alos = by_stage.get(stage_id).map(|v| v.as_slice()).unwrap_or(&[]);
+        let hooks = stage_alos
+            .iter()
+            .filter(|a| a.alo_type == AloType::Hook)
+            .count();
+        let concepts = stage_alos
+            .iter()
+            .filter(|a| a.alo_type == AloType::Concept)
+            .count();
+        let activities = stage_alos
+            .iter()
+            .filter(|a| a.alo_type == AloType::Activity)
+            .count();
+        let reflections = stage_alos
+            .iter()
+            .filter(|a| a.alo_type == AloType::Reflection)
+            .count();
+        let hook_title = stage_alos
+            .iter()
+            .find(|a| a.alo_type == AloType::Hook)
+            .map(|a| a.title.as_str())
+            .unwrap_or("(no hook)");
+
+        eprintln!(
+            "  {:>5} | {:<30} | {:>5} | {:>5} | {:>5} | {:>5}",
+            idx + 1,
+            &hook_title[..hook_title.len().min(30)],
+            hooks,
+            concepts,
+            activities,
+            reflections,
+        );
+    }
+    eprintln!("  {:-<66}", "");
+    eprintln!();
+
+    // Duration analysis
+    let total_duration: u16 = atomized.alos.iter().map(|a| a.estimated_duration).sum();
+    let avg_duration = if total_alos > 0 {
+        total_duration as f32 / total_alos as f32
+    } else {
+        0.0
+    };
+    let min_dur = atomized
+        .alos
+        .iter()
+        .map(|a| a.estimated_duration)
+        .min()
+        .unwrap_or(0);
+    let max_dur = atomized
+        .alos
+        .iter()
+        .map(|a| a.estimated_duration)
+        .max()
+        .unwrap_or(0);
+
+    eprintln!("  DURATION ANALYSIS:");
+    eprintln!("    Total:   {total_duration} min ({:.1} hours)", total_duration as f32 / 60.0);
+    eprintln!("    Average: {avg_duration:.1} min/ALO");
+    eprintln!("    Range:   {min_dur}-{max_dur} min");
+    eprintln!();
+
+    // Bloom level distribution
+    let mut bloom_counts: HashMap<String, usize> = HashMap::new();
+    for alo in &atomized.alos {
+        *bloom_counts
+            .entry(format!("{:?}", alo.bloom_level))
+            .or_insert(0) += 1;
+    }
+    eprintln!("  BLOOM LEVEL DISTRIBUTION:");
+    for level in &[
+        "Remember",
+        "Understand",
+        "Apply",
+        "Analyze",
+        "Evaluate",
+        "Create",
+    ] {
+        let count = bloom_counts.get(*level).copied().unwrap_or(0);
+        let bar: String = "#".repeat(count);
+        eprintln!("    {level:<12} {count:>3} {bar}");
+    }
+    eprintln!();
+
+    // Full ALO listing
+    eprintln!("  FULL ALO LISTING:");
+    eprintln!("  {:-<80}", "");
+    for alo in &atomized.alos {
+        eprintln!(
+            "    [{:?}] {} ({} min, {:?})",
+            alo.alo_type, alo.id, alo.estimated_duration, alo.bloom_level
+        );
+        eprintln!("      Title: {}", alo.title);
+        eprintln!("      Objective: {}", alo.learning_objective);
+        if let Some(ref assess) = alo.assessment {
+            eprintln!(
+                "      Assessment: {} questions, {}% passing",
+                assess.questions.len(),
+                assess.passing_score
+            );
+        }
+    }
+    eprintln!("  {:-<80}", "");
+    eprintln!();
+
+    // ── Validation: R28-R36 ──
+    let alo_report =
+        academy_forge::validate::alo::validate_alo_report(&atomized);
+    eprintln!("  ALO VALIDATION (R28-R36):");
+    eprintln!("    Passed:    {}", alo_report.passed);
+    eprintln!("    Errors:    {}", alo_report.error_count);
+    eprintln!("    Warnings:  {}", alo_report.warning_count);
+    eprintln!("    Advisories: {}", alo_report.advisory_count);
+    if !alo_report.findings.is_empty() {
+        eprintln!("    Findings:");
+        for f in &alo_report.findings {
+            eprintln!(
+                "      [{:?}] {} — {}",
+                f.severity, f.rule, f.message
+            );
+        }
+    }
+    eprintln!();
+
+    // ── Assertions ──
+    assert!(total_alos >= 20, "Expected 20+ ALOs from 8 stages, got {total_alos}");
+    assert!(total_edges > 0, "Expected edges, got 0");
+    assert!(
+        by_type.contains_key("Hook"),
+        "Should have Hook ALOs"
+    );
+    assert!(
+        by_type.contains_key("Reflection"),
+        "Should have Reflection ALOs"
+    );
+
+    // Every stage should have at least a Hook
+    for stage_id in &stage_order {
+        let stage_alos = by_stage.get(stage_id).map(|v| v.as_slice()).unwrap_or(&[]);
+        let has_hook = stage_alos.iter().any(|a| a.alo_type == AloType::Hook);
+        assert!(has_hook, "Stage {stage_id} missing Hook ALO");
+    }
+
+    eprintln!("  RESULT: Atomizer produced {total_alos} ALOs, {total_edges} edges from 8 stages.");
+    eprintln!("  Pipeline position: forge_extract → forge_scaffold → forge_validate → forge_atomize ✓");
+    eprintln!();
 }

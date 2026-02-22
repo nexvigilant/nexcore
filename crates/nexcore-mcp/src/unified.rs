@@ -214,12 +214,13 @@ async fn dispatch_inner(
         "pvdsl_functions" => tools::pvdsl::pvdsl_functions(),
 
         // ====================================================================
-        // Vigilance Tools (4)
+        // Vigilance Tools (5)
         // ====================================================================
         "vigilance_safety_margin" => typed(params, tools::vigilance::safety_margin),
         "vigilance_risk_score" => typed(params, tools::vigilance::risk_score),
         "vigilance_harm_types" => tools::vigilance::harm_types(),
         "vigilance_map_to_tov" => typed(params, tools::vigilance::map_to_tov),
+        "pv_signal_chart" => typed(params, tools::vigilance::pv_signal_chart),
 
         // ====================================================================
         // Compliance Tools (5)
@@ -804,6 +805,14 @@ async fn dispatch_inner(
         "immunity_propose" => typed(params, tools::immunity::immunity_propose),
         "immunity_status" => tools::immunity::immunity_status(),
 
+        // NMD Surveillance (anti-hallucination pipeline)
+        "nmd_check" => typed(params, tools::nmd::nmd_check),
+        "nmd_upf_evaluate" => typed(params, tools::nmd::nmd_upf_evaluate),
+        "nmd_smg_process" => typed(params, tools::nmd::nmd_smg_process),
+        "nmd_adaptive_stats" => typed(params, tools::nmd::nmd_adaptive_stats),
+        "nmd_thymic_status" => typed(params, tools::nmd::nmd_thymic_status),
+        "nmd_status" => tools::nmd::nmd_status(),
+
         // ====================================================================
         // Regulatory Primitives Tools (4)
         // ====================================================================
@@ -843,13 +852,16 @@ async fn dispatch_inner(
         }),
 
         // ====================================================================
-        // Academy Forge Tools (5)
+        // Academy Forge Tools (8)
         // ====================================================================
         "forge_extract" => typed(params, tools::academy_forge::forge_extract),
         "forge_validate" => typed(params, tools::academy_forge::forge_validate),
         "forge_scaffold" => typed(params, tools::academy_forge::forge_scaffold),
         "forge_schema" => tools::academy_forge::forge_schema(),
         "forge_compile" => typed(params, tools::academy_forge::forge_compile),
+        "forge_atomize" => typed(params, tools::academy_forge::forge_atomize),
+        "forge_graph" => typed(params, tools::academy_forge::forge_graph),
+        "forge_shortest_path" => typed(params, tools::academy_forge::forge_shortest_path),
 
         // ====================================================================
         // Primitive Validation Tools (4)
@@ -881,6 +893,7 @@ async fn dispatch_inner(
         "chemistry_langmuir_coverage" => typed(params, tools::chemistry::langmuir_binding),
         "chemistry_first_law_closed" => typed(params, tools::chemistry::first_law_closed),
         "chemistry_first_law_open" => typed(params, tools::chemistry::first_law_open),
+        "chemistry_gaussian_overlap" => typed(params, tools::chemistry::gaussian_overlap),
 
         // ====================================================================
         // Molecular Biology Tools (4) — Central Dogma, ADME, Codon Translation
@@ -1291,7 +1304,7 @@ async fn dispatch_inner(
         "pv_core_severity_assess" => typed(params, tools::pv_core::severity_assess),
 
         // ====================================================================
-        // Visualization Tools (6)
+        // Visualization Tools (31)
         // ====================================================================
         "viz_stem_taxonomy" => typed(params, tools::viz::taxonomy),
         "viz_type_composition" => typed(params, tools::viz::composition),
@@ -1299,6 +1312,35 @@ async fn dispatch_inner(
         "viz_confidence_chain" => typed(params, tools::viz::confidence),
         "viz_bounds" => typed(params, tools::viz::bounds),
         "viz_dag" => typed(params, tools::viz::dag),
+        // Foundation (pre-phase)
+        "viz_molecular_info" => typed(params, tools::viz_foundation::molecular_info),
+        "viz_surface_mesh" => typed(params, tools::viz_foundation::surface_mesh),
+        "viz_spectral_analysis" => typed(params, tools::viz_foundation::spectral_analysis),
+        "viz_community_detect" => typed(params, tools::viz_foundation::community_detect),
+        "viz_centrality" => typed(params, tools::viz_foundation::centrality),
+        "viz_vdag_overlay" => typed(params, tools::viz_foundation::vdag_overlay),
+        // Biologics (phase 2)
+        "viz_antibody_structure" => typed(params, tools::viz_biologics::antibody_structure),
+        "viz_interaction_map" => typed(params, tools::viz_biologics::interaction_map),
+        "viz_projection" => typed(params, tools::viz_biologics::projection),
+        "viz_protein_structure" => typed(params, tools::viz_biologics::protein_structure),
+        "viz_topology_analysis" => typed(params, tools::viz_biologics::topology_analysis),
+        // Physics (phase 3+4)
+        "viz_dynamics_step" => typed(params, tools::viz_physics::dynamics_step),
+        "viz_force_field_energy" => typed(params, tools::viz_physics::force_field_energy),
+        "viz_gpu_layout" => typed(params, tools::viz_physics::gpu_layout),
+        "viz_hypergraph" => typed(params, tools::viz_physics::hypergraph),
+        "viz_lod_select" => typed(params, tools::viz_physics::lod_select),
+        "viz_minimize_energy" => typed(params, tools::viz_physics::minimize_energy),
+        "viz_particle_preset" => typed(params, tools::viz_physics::particle_preset),
+        "viz_ae_overlay" => typed(params, tools::viz_physics::ae_overlay),
+        "viz_coord_gen" => typed(params, tools::viz_physics::coord_gen),
+        "viz_bipartite_layout" => typed(params, tools::viz_physics::bipartite_layout),
+        // Advanced (phase 5)
+        "viz_manifold_sample" => typed(params, tools::viz_advanced::manifold_sample),
+        "viz_string_modes" => typed(params, tools::viz_advanced::string_modes),
+        "viz_render_pipeline" => typed(params, tools::viz_advanced::render_pipeline),
+        "viz_orbital_density" => typed(params, tools::viz_advanced::orbital_density),
 
         // ====================================================================
         // Watchtower Tools (9)
@@ -2189,6 +2231,51 @@ async fn dispatch_inner(
         "chem_molecular_formula" => typed(params, tools::chemivigilance::chem_molecular_formula),
 
         // ====================================================================
+        // QSAR Granular Predictions (4) — per-endpoint toxicity + domain
+        // ====================================================================
+        "chem_predict_mutagenicity" => typed(params, tools::qsar::chem_predict_mutagenicity),
+        "chem_predict_hepatotoxicity" => typed(params, tools::qsar::chem_predict_hepatotoxicity),
+        "chem_predict_cardiotoxicity" => typed(params, tools::qsar::chem_predict_cardiotoxicity),
+        "chem_assess_applicability_domain" => typed(params, tools::qsar::chem_assess_applicability_domain),
+
+        // ====================================================================
+        // PV Pharmacokinetics (6) — AUC, clearance, half-life, steady-state, ionization, Michaelis-Menten
+        // ====================================================================
+        "pk_auc" => typed(params, tools::pk::pk_auc),
+        "pk_clearance" => typed(params, tools::pk::pk_clearance),
+        "pk_half_life" => typed(params, tools::pk::pk_half_life),
+        "pk_steady_state" => typed(params, tools::pk::pk_steady_state),
+        "pk_ionization" => typed(params, tools::pk::pk_ionization),
+        "pk_michaelis_menten" => typed(params, tools::pk::pk_michaelis_menten),
+
+        // ====================================================================
+        // PV Causality Assessment (2) — RUCAM hepatotoxicity, UCAS universal
+        // ====================================================================
+        "causality_rucam" => typed(params, tools::causality::causality_rucam),
+        "causality_ucas" => typed(params, tools::causality::causality_ucas),
+
+        // ====================================================================
+        // PV Temporal Analysis (3) — TTO, challenge, plausibility
+        // ====================================================================
+        "temporal_tto" => typed(params, tools::temporal::temporal_tto),
+        "temporal_challenge" => typed(params, tools::temporal::temporal_challenge),
+        "temporal_plausibility" => typed(params, tools::temporal::temporal_plausibility_tool),
+
+        // ====================================================================
+        // Knowledge Engine Extended (3) — scoring, primitives, concepts
+        // ====================================================================
+        "knowledge_engine_score" => typed(params, tools::knowledge_engine::score_compendious),
+        "knowledge_engine_extract_primitives" => typed(params, tools::knowledge_engine::extract_primitives),
+        "knowledge_engine_extract_concepts" => typed(params, tools::knowledge_engine::extract_concepts),
+
+        // ====================================================================
+        // Stoichiometry Extended (3) — balance check, proof, isomer
+        // ====================================================================
+        "stoichiometry_is_balanced" => typed(params, tools::stoichiometry::is_balanced),
+        "stoichiometry_prove" => typed(params, tools::stoichiometry::prove),
+        "stoichiometry_is_isomer" => typed(params, tools::stoichiometry::is_isomer),
+
+        // ====================================================================
         // Unknown command
         // ====================================================================
         _ => Err(McpError::invalid_params(
@@ -2372,7 +2459,7 @@ fn help_catalog_json() -> serde_json::Value {
             "pv": ["pv_signal_complete", "pv_signal_prr", "pv_signal_ror", "pv_signal_ic", "pv_signal_ebgm", "pv_chi_square", "pv_signal_cooperative", "pv_naranjo_quick", "pv_who_umc_quick", "pv_signal_strength"],
             "benefit_risk": ["pv_qbri_compute", "pv_qbri_derive", "pv_qbri_equation"],
             "signal": ["signal_detect", "signal_batch", "signal_thresholds"],
-            "vigilance": ["vigilance_safety_margin", "vigilance_risk_score", "vigilance_harm_types", "vigilance_map_to_tov"],
+            "vigilance": ["vigilance_safety_margin", "vigilance_risk_score", "vigilance_harm_types", "vigilance_map_to_tov", "pv_signal_chart"],
             "guardian": ["guardian_homeostasis_tick", "guardian_evaluate_pv", "guardian_status", "guardian_reset", "guardian_inject_signal", "guardian_sensors_list", "guardian_actuators_list", "guardian_history", "guardian_originator_classify", "guardian_ceiling_for_originator", "guardian_space3d_compute"],
             "vigil": ["vigil_status", "vigil_health", "vigil_emit_event", "vigil_memory_search", "vigil_memory_stats", "vigil_llm_stats", "vigil_source_control", "vigil_executor_control", "vigil_authority_config", "vigil_context_assemble", "vigil_authority_verify", "vigil_webhook_test", "vigil_source_config"],
             "skills": ["skill_scan", "skill_list", "skill_get", "skill_validate", "skill_search_by_tag", "skill_list_nested", "skill_taxonomy_query", "skill_taxonomy_list", "skill_categories_compute_intensive", "skill_orchestration_analyze", "skill_execute", "skill_schema", "skill_compile", "skill_compile_check", "vocab_skill_lookup", "primitive_skill_lookup", "skill_chain_lookup", "skill_route", "vocab_list", "nexcore_assist"],
@@ -2387,7 +2474,7 @@ fn help_catalog_json() -> serde_json::Value {
             "brain": ["brain_session_create", "brain_session_load", "brain_sessions_list", "brain_artifact_save", "brain_artifact_resolve", "brain_artifact_get", "brain_artifact_diff", "code_tracker_track", "code_tracker_changed", "code_tracker_original", "implicit_get", "implicit_set", "implicit_stats", "implicit_find_corrections", "implicit_patterns_by_grounding", "implicit_patterns_by_relevance", "brain_recovery_check", "brain_recovery_repair", "brain_recovery_rebuild_index", "brain_recovery_auto", "brain_coordination_acquire", "brain_coordination_release", "brain_coordination_status"],
             "hooks": ["hooks_stats", "hooks_for_event", "hooks_for_tier", "hook_list_nested"],
             "regulatory": ["regulatory_primitives_extract", "regulatory_primitives_audit", "regulatory_primitives_compare"],
-            "chemistry": ["chemistry_threshold_rate", "chemistry_decay_remaining", "chemistry_saturation_rate", "chemistry_feasibility", "chemistry_dependency_rate", "chemistry_buffer_capacity", "chemistry_signal_absorbance", "chemistry_equilibrium", "chemistry_pv_mappings", "chemistry_threshold_exceeded", "chemistry_hill_response", "chemistry_nernst_potential", "chemistry_inhibition_rate", "chemistry_eyring_rate", "chemistry_langmuir_coverage"],
+            "chemistry": ["chemistry_threshold_rate", "chemistry_decay_remaining", "chemistry_saturation_rate", "chemistry_feasibility", "chemistry_dependency_rate", "chemistry_buffer_capacity", "chemistry_signal_absorbance", "chemistry_equilibrium", "chemistry_pv_mappings", "chemistry_threshold_exceeded", "chemistry_hill_response", "chemistry_nernst_potential", "chemistry_inhibition_rate", "chemistry_eyring_rate", "chemistry_langmuir_coverage", "chemistry_gaussian_overlap"],
             "stem": ["stem_version", "stem_taxonomy", "stem_confidence_combine", "stem_tier_info", "stem_chem_balance", "stem_chem_fraction", "stem_chem_ratio", "stem_chem_rate", "stem_chem_affinity", "stem_phys_fma", "stem_phys_conservation", "stem_phys_period", "stem_phys_amplitude", "stem_phys_scale", "stem_phys_inertia", "stem_math_bounds_check", "stem_math_relation_invert", "stem_math_proof", "stem_math_identity", "stem_spatial_distance", "stem_spatial_triangle", "stem_spatial_neighborhood", "stem_spatial_dimension", "stem_spatial_orientation"],
             "algovigilance": ["algovigil_dedup_pair", "algovigil_dedup_batch", "algovigil_triage_decay", "algovigil_triage_reinforce", "algovigil_triage_queue", "algovigil_status"],
             "edit_distance": ["edit_distance_compute", "edit_distance_similarity", "edit_distance_traceback", "edit_distance_transfer", "edit_distance_batch"],
@@ -2402,31 +2489,41 @@ fn help_catalog_json() -> serde_json::Value {
             "brand_semantics": ["brand_decomposition_nexvigilant", "brand_decomposition_get", "brand_primitive_test", "brand_semantic_tiers"],
             "mesh": ["mesh_lookup", "mesh_search", "mesh_tree", "mesh_crossref", "mesh_enrich_pubmed", "mesh_consistency"],
             "hormone": ["hormone_status", "hormone_get", "hormone_stimulus", "hormone_modifiers"],
+            "cytokine": ["cytokine_emit", "cytokine_status", "cytokine_families", "cytokine_recent", "chemotaxis_gradient", "endocytosis_internalize"],
+            "synapse": ["synapse_get_or_create", "synapse_get", "synapse_observe", "synapse_list", "synapse_stats", "synapse_prune"],
+            "energy": ["energy_charge", "energy_decide"],
+            "transcriptase": ["transcriptase_process", "transcriptase_infer", "transcriptase_violations", "transcriptase_generate"],
+            "ribosome": ["ribosome_store", "ribosome_list", "ribosome_validate", "ribosome_generate", "ribosome_drift"],
+            "phenotype": ["phenotype_mutate", "phenotype_verify"],
             "pvdsl": ["pvdsl_compile", "pvdsl_execute", "pvdsl_eval", "pvdsl_functions"],
             "dtree": ["dtree_train", "dtree_predict", "dtree_importance", "dtree_prune", "dtree_export", "dtree_info"],
             "game_theory": ["game_theory_nash_2x2", "forge_payoff_matrix", "forge_nash_solve", "forge_quality_score", "forge_code_generate"],
             "epi": ["epi_relative_risk", "epi_odds_ratio", "epi_attributable_risk", "epi_nnt_nnh", "epi_attributable_fraction", "epi_population_af", "epi_incidence_rate", "epi_prevalence", "epi_kaplan_meier", "epi_smr", "epi_pv_mappings"],
-            "chemivigilance": ["chem_parse_smiles", "chem_descriptors", "chem_fingerprint", "chem_similarity", "chem_structural_alerts", "chem_predict_toxicity", "chem_predict_metabolites", "chem_predict_degradants", "chem_safety_brief", "chem_substructure", "chem_watchlist", "chem_alert_library", "chem_ring_scan", "chem_aromaticity", "chem_molecular_formula"]
+            "chemivigilance": ["chem_parse_smiles", "chem_descriptors", "chem_fingerprint", "chem_similarity", "chem_structural_alerts", "chem_predict_toxicity", "chem_predict_metabolites", "chem_predict_degradants", "chem_safety_brief", "chem_substructure", "chem_watchlist", "chem_alert_library", "chem_ring_scan", "chem_aromaticity", "chem_molecular_formula", "chem_predict_mutagenicity", "chem_predict_hepatotoxicity", "chem_predict_cardiotoxicity", "chem_assess_applicability_domain"],
+            "pk": ["pk_auc", "pk_clearance", "pk_half_life", "pk_steady_state", "pk_ionization", "pk_michaelis_menten"],
+            "causality": ["causality_rucam", "causality_ucas"],
+            "temporal": ["temporal_tto", "temporal_challenge", "temporal_plausibility"],
+            "knowledge_engine": ["knowledge_engine_compress", "knowledge_engine_compile", "knowledge_engine_query", "knowledge_engine_score", "knowledge_engine_extract_primitives", "knowledge_engine_extract_concepts"]
         }
     })
 }
 
 fn help_catalog() -> Result<CallToolResult, McpError> {
     let catalog = serde_json::json!({
-        "total": 458,
+        "total": 479,
         "usage": "nexcore(command=\"CMD\", params={...})",
         "categories": {
             "system": ["nexcore_health", "config_validate", "mcp_servers_list", "mcp_server_get"],
             "bonding": ["bonding_analyze", "bonding_evolve"],
             "forge": ["forge_init", "forge_reference", "forge_mine", "forge_prompt", "forge_suggest", "forge_summary", "forge_system_prompt", "forge_tier"],
-            "academy_forge": ["forge_extract", "forge_validate", "forge_scaffold", "forge_schema", "forge_compile"],
+            "academy_forge": ["forge_extract", "forge_validate", "forge_scaffold", "forge_schema", "forge_compile", "forge_atomize", "forge_graph", "forge_shortest_path"],
             "foundation": ["foundation_levenshtein", "foundation_levenshtein_bounded", "foundation_fuzzy_search", "foundation_sha256", "foundation_yaml_parse", "foundation_graph_topsort", "foundation_graph_levels", "foundation_fsrs_review", "foundation_concept_grep", "foundation_domain_distance", "foundation_flywheel_velocity", "foundation_token_ratio", "foundation_spectral_overlap"],
             "pv": ["pv_signal_complete", "pv_signal_prr", "pv_signal_ror", "pv_signal_ic", "pv_signal_ebgm", "pv_chi_square", "pv_signal_cooperative", "pv_naranjo_quick", "pv_who_umc_quick", "pv_signal_strength"],
             "benefit_risk": ["pv_qbri_compute", "pv_qbri_derive", "pv_qbri_equation"],
             "signal": ["signal_detect", "signal_batch", "signal_thresholds"],
             "pvdsl": ["pvdsl_compile", "pvdsl_execute", "pvdsl_eval", "pvdsl_functions"],
             "mcp_lock": ["mcp_lock", "mcp_unlock", "mcp_lock_status"],
-            "vigilance": ["vigilance_safety_margin", "vigilance_risk_score", "vigilance_harm_types", "vigilance_map_to_tov"],
+            "vigilance": ["vigilance_safety_margin", "vigilance_risk_score", "vigilance_harm_types", "vigilance_map_to_tov", "pv_signal_chart"],
             "compliance": ["compliance_check_exclusion", "compliance_assess", "compliance_catalog_ich", "compliance_sec_filings", "compliance_sec_pharma"],
             "hormone": ["hormone_status", "hormone_get", "hormone_stimulus", "hormone_modifiers"],
             "guardian": ["guardian_homeostasis_tick", "guardian_evaluate_pv", "guardian_status", "guardian_reset", "guardian_inject_signal", "guardian_sensors_list", "guardian_actuators_list", "guardian_history", "guardian_subscribe", "guardian_originator_classify", "guardian_ceiling_for_originator", "guardian_space3d_compute", "guardian_adversarial_input", "adversarial_decision_probe", "pv_control_loop_tick", "fda_bridge_evaluate", "fda_bridge_batch"],
@@ -2462,6 +2559,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "synapse": ["synapse_get_or_create", "synapse_get", "synapse_observe", "synapse_list", "synapse_stats", "synapse_prune"],
             "hooks": ["hooks_stats", "hooks_for_event", "hooks_for_tier", "hook_list_nested"],
             "immunity": ["immunity_scan", "immunity_scan_errors", "immunity_list", "immunity_get", "immunity_propose", "immunity_status"],
+            "nmd": ["nmd_check", "nmd_upf_evaluate", "nmd_smg_process", "nmd_adaptive_stats", "nmd_thymic_status", "nmd_status"],
             "regulatory": ["regulatory_primitives_extract", "regulatory_primitives_audit", "regulatory_primitives_compare", "regulatory_effectiveness_assess"],
             "brand_semantics": ["brand_decomposition_nexvigilant", "brand_decomposition_get", "brand_primitive_test", "brand_semantic_tiers"],
             "primitive_validation": ["primitive_validate", "primitive_cite", "primitive_validate_batch", "primitive_validation_tiers"],
@@ -2483,10 +2581,11 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "energy": ["energy_charge", "energy_decide"],
             "transcriptase": ["transcriptase_process", "transcriptase_infer", "transcriptase_violations", "transcriptase_generate"],
             "ribosome": ["ribosome_store", "ribosome_list", "ribosome_validate", "ribosome_generate", "ribosome_drift"],
+            "phenotype": ["phenotype_mutate", "phenotype_verify"],
             "domain_primitives": ["domain_primitives_list", "domain_primitives_transfer", "domain_primitives_decompose", "domain_primitives_bottlenecks", "domain_primitives_compare", "domain_primitives_topo_sort", "domain_primitives_critical_paths", "domain_primitives_registry", "domain_primitives_save", "domain_primitives_load", "domain_primitives_transfer_matrix"],
             "fda_credibility": ["fda_define_cou", "fda_assess_risk", "fda_create_plan", "fda_validate_evidence", "fda_decide_adequacy", "fda_calculate_score", "fda_metrics_summary", "fda_evidence_distribution", "fda_risk_distribution", "fda_drift_trend", "fda_rating_thresholds"],
             "stem": ["stem_version", "stem_taxonomy", "stem_confidence_combine", "stem_tier_info", "stem_chem_balance", "stem_chem_fraction", "stem_chem_ratio", "stem_chem_rate", "stem_chem_affinity", "stem_phys_fma", "stem_phys_conservation", "stem_phys_period", "stem_phys_amplitude", "stem_phys_scale", "stem_phys_inertia", "stem_math_bounds_check", "stem_math_relation_invert", "stem_math_proof", "stem_math_identity", "stem_spatial_distance", "stem_spatial_triangle", "stem_spatial_neighborhood", "stem_spatial_dimension", "stem_spatial_orientation"],
-            "viz": ["viz_stem_taxonomy", "viz_type_composition", "viz_method_loop", "viz_confidence_chain", "viz_bounds", "viz_dag"],
+            "viz": ["viz_stem_taxonomy", "viz_type_composition", "viz_method_loop", "viz_confidence_chain", "viz_bounds", "viz_dag", "viz_molecular_info", "viz_surface_mesh", "viz_spectral_analysis", "viz_community_detect", "viz_centrality", "viz_vdag_overlay", "viz_antibody_structure", "viz_interaction_map", "viz_projection", "viz_protein_structure", "viz_topology_analysis", "viz_dynamics_step", "viz_force_field_energy", "viz_gpu_layout", "viz_hypergraph", "viz_lod_select", "viz_minimize_energy", "viz_particle_preset", "viz_ae_overlay", "viz_coord_gen", "viz_bipartite_layout", "viz_manifold_sample", "viz_string_modes", "viz_render_pipeline", "viz_orbital_density"],
             "watchtower": ["watchtower_sessions_list", "watchtower_active_sessions", "watchtower_analyze", "watchtower_telemetry_stats", "watchtower_recent", "watchtower_symbol_audit", "watchtower_gemini_stats", "watchtower_gemini_recent", "watchtower_unified"],
             "node_hunter": ["node_hunt_scan", "node_hunt_isolate"],
             "telemetry_intel": ["telemetry_sources_list", "telemetry_source_analyze", "telemetry_governance_crossref", "telemetry_snapshot_evolution", "telemetry_intel_report", "telemetry_recent"],
@@ -2557,7 +2656,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "kellnr_signal": ["kellnr_compute_signal_sprt", "kellnr_compute_signal_cusum", "kellnr_compute_signal_weibull_tto"],
             "kellnr_registry": ["kellnr_search_crates", "kellnr_get_crate_metadata", "kellnr_list_crate_versions", "kellnr_get_version_details", "kellnr_list_owners", "kellnr_add_owner", "kellnr_remove_owner", "kellnr_yank_version", "kellnr_unyank_version", "kellnr_list_all_crates", "kellnr_get_dependencies", "kellnr_get_dependents", "kellnr_health_check", "kellnr_download_crate", "kellnr_registry_stats"],
             "registry": ["registry_assess_skill", "registry_assess_all", "registry_gap_report", "registry_promotable", "registry_promotion_plan", "registry_tov_safety", "registry_tov_harm", "registry_tov_is_safe"],
-            "stoichiometry": ["stoichiometry_encode", "stoichiometry_decode", "stoichiometry_sisters", "stoichiometry_mass_state", "stoichiometry_dictionary"],
+            "stoichiometry": ["stoichiometry_encode", "stoichiometry_decode", "stoichiometry_sisters", "stoichiometry_mass_state", "stoichiometry_dictionary", "stoichiometry_is_balanced", "stoichiometry_prove", "stoichiometry_is_isomer"],
             "trial": ["trial_protocol_register", "trial_power_analysis", "trial_randomize", "trial_blind_verify", "trial_interim_analyze", "trial_safety_check", "trial_endpoint_evaluate", "trial_multiplicity_adjust", "trial_adapt_decide", "trial_report_generate"],
             "cognition": ["cognition_process", "cognition_analyze", "cognition_forward", "cognition_entropy", "cognition_perplexity", "cognition_embed", "cognition_sample", "cognition_confidence"],
         }

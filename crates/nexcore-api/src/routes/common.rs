@@ -44,6 +44,9 @@ impl IntoResponse for ApiError {
             "NOT_FOUND" => StatusCode::NOT_FOUND,
             "VALIDATION_ERROR" => StatusCode::BAD_REQUEST,
             "UNAUTHORIZED" => StatusCode::UNAUTHORIZED,
+            "FORBIDDEN" => StatusCode::FORBIDDEN,
+            "CONFLICT" => StatusCode::CONFLICT,
+            "RATE_LIMIT_EXCEEDED" => StatusCode::TOO_MANY_REQUESTS,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
         (status, Json(self)).into_response()

@@ -273,3 +273,253 @@ impl Default for SignalThresholds {
         }
     }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ATOMIC LEARNING OBJECTS (Micro-Learning)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Atomic Learning Object — the fundamental micro-learning unit.
+///
+/// Each ALO covers exactly one concept in 2-15 minutes. ALOs connect
+/// via typed dependency edges to form a computable learning DAG.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AtomicLearningObject {
+    /// Unique ALO identifier.
+    /// Format: `{pathway}-{stage_seq}-{type_prefix}{seq}`
+    /// Example: `tov-01-01-h01`, `tov-01-01-c01`
+    pub id: String,
+
+    /// Human-readable title (5-80 chars).
+    pub title: String,
+
+    /// ALO type: Hook, Concept, Activity, or Reflection.
+    pub alo_type: AloType,
+
+    /// Single, measurable learning objective.
+    /// Must start with a Bloom-level verb.
+    pub learning_objective: String,
+
+    /// Estimated completion time in minutes (2-15 inclusive).
+    pub estimated_duration: u16,
+
+    /// Bloom's taxonomy level for this ALO.
+    pub bloom_level: BloomLevel,
+
+    /// Markdown content body.
+    pub content: String,
+
+    /// KSB identifiers this ALO addresses (0-5).
+    #[serde(default)]
+    pub ksb_refs: Vec<String>,
+
+    /// Stage ID this ALO was decomposed from.
+    pub source_stage_id: String,
+
+    /// Source activity ID within the original stage.
+    #[serde(default)]
+    pub source_activity_id: Option<String>,
+
+    /// Assessment data (Reflection ALOs only).
+    #[serde(default)]
+    pub assessment: Option<AloAssessment>,
+}
+
+/// ALO type classification.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum AloType {
+    /// Curiosity trigger, 2-3 min, no prereqs.
+    Hook,
+    /// Core knowledge delivery, 5-10 min, single concept.
+    Concept,
+    /// Hands-on application, 5-15 min.
+    Activity,
+    /// Metacognitive synthesis, 3-5 min.
+    Reflection,
+}
+
+impl AloType {
+    /// ID prefix character for this type.
+    pub fn prefix(&self) -> char {
+        match self {
+            Self::Hook => 'h',
+            Self::Concept => 'c',
+            Self::Activity => 'a',
+            Self::Reflection => 'r',
+        }
+    }
+
+    /// Minimum duration in minutes.
+    pub fn min_duration(&self) -> u16 {
+        match self {
+            Self::Hook => 2,
+            Self::Concept => 5,
+            Self::Activity => 5,
+            Self::Reflection => 3,
+        }
+    }
+
+    /// Maximum duration in minutes.
+    pub fn max_duration(&self) -> u16 {
+        match self {
+            Self::Hook => 3,
+            Self::Concept => 10,
+            Self::Activity => 15,
+            Self::Reflection => 5,
+        }
+    }
+}
+
+/// Bloom's taxonomy levels.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub enum BloomLevel {
+    /// Recall facts and basic concepts.
+    Remember,
+    /// Explain ideas or concepts.
+    Understand,
+    /// Use information in new situations.
+    Apply,
+    /// Draw connections among ideas.
+    Analyze,
+    /// Justify a stand or decision.
+    Evaluate,
+    /// Produce new or original work.
+    Create,
+}
+
+impl BloomLevel {
+    /// Parse from string (case-insensitive).
+    pub fn from_str_loose(s: &str) -> Option<Self> {
+        match s.to_lowercase().as_str() {
+            "remember" => Some(Self::Remember),
+            "understand" => Some(Self::Understand),
+            "apply" => Some(Self::Apply),
+            "analyze" => Some(Self::Analyze),
+            "evaluate" => Some(Self::Evaluate),
+            "create" => Some(Self::Create),
+            _ => None,
+        }
+    }
+
+    /// Numeric rank (0-5) for spatial X-axis mapping.
+    pub fn rank(&self) -> u8 {
+        match self {
+            Self::Remember => 0,
+            Self::Understand => 1,
+            Self::Apply => 2,
+            Self::Analyze => 3,
+            Self::Evaluate => 4,
+            Self::Create => 5,
+        }
+    }
+}
+
+/// Assessment embedded in a Reflection ALO.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AloAssessment {
+    /// Minimum passing percentage (0-100).
+    pub passing_score: u8,
+    /// Assessment questions (1-4 per ALO).
+    pub questions: Vec<serde_json::Value>,
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DEPENDENCY EDGES
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// A typed dependency edge between two ALOs.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AloEdge {
+    /// Source ALO ID (the prerequisite / reinforcing ALO).
+    pub from: String,
+    /// Target ALO ID (the dependent ALO).
+    pub to: String,
+    /// Edge classification.
+    pub edge_type: AloEdgeType,
+    /// Connection strength: 0.0 (weak) to 1.0 (hard gate).
+    pub strength: f32,
+}
+
+/// Edge type between ALOs.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum AloEdgeType {
+    /// Hard prerequisite — must complete source before target.
+    Prereq,
+    /// Soft co-requisite — best taken in proximity.
+    Coreq,
+    /// Reinforcement — source strengthens understanding of target.
+    Strengthens,
+    /// Assessment — source evaluates knowledge from target.
+    Assesses,
+    /// Extension — source deepens/broadens target concept.
+    Extends,
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ATOMIZED PATHWAY
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// A pathway decomposed into ALOs with intra-pathway dependency edges.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AtomizedPathway {
+    /// Pathway identifier (same as source).
+    pub id: String,
+    /// Pathway title.
+    pub title: String,
+    /// Original StaticPathway ID.
+    pub source_pathway_id: String,
+    /// All ALOs in this pathway.
+    pub alos: Vec<AtomicLearningObject>,
+    /// Intra-pathway dependency edges.
+    pub edges: Vec<AloEdge>,
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LEARNING GRAPH (Cross-Pathway)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// A complete learning graph across one or more pathways.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LearningGraph {
+    /// All ALOs across included pathways.
+    pub nodes: Vec<AtomicLearningObject>,
+    /// All dependency edges (intra- and cross-pathway).
+    pub edges: Vec<AloEdge>,
+    /// Pathway IDs included in this graph.
+    pub pathways: Vec<String>,
+    /// Detected overlap clusters.
+    pub overlap_clusters: Vec<OverlapCluster>,
+    /// Graph metadata.
+    pub metadata: GraphMetadata,
+}
+
+/// A cluster of ALOs covering the same concept across pathways.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OverlapCluster {
+    /// Shared concept identifier (KSB ID or concept name).
+    pub concept: String,
+    /// ALO IDs that cover this concept.
+    pub alo_ids: Vec<String>,
+    /// Pathway IDs containing these ALOs.
+    pub pathways: Vec<String>,
+    /// The canonical ALO (highest Bloom, most complete).
+    pub canonical_alo_id: String,
+}
+
+/// Graph-level metrics.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GraphMetadata {
+    /// Total ALO count.
+    pub node_count: usize,
+    /// Total edge count.
+    pub edge_count: usize,
+    /// Number of connected components.
+    pub connected_components: usize,
+    /// Longest shortest-path (graph diameter).
+    pub diameter: usize,
+    /// Average ALO duration in minutes.
+    pub avg_duration_min: f32,
+    /// Total learning time in minutes.
+    pub total_duration_min: u32,
+    /// Overlap ratio: ALOs with cross-pathway overlap / total.
+    pub overlap_ratio: f32,
+}

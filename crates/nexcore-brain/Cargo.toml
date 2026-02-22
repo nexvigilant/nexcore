@@ -48,6 +48,9 @@ nexcore-synapse = { version = "1.0.0", path = "../nexcore-synapse", registry = "
 # Lex Primitiva grounding
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 
+# NMD surveillance bridge (learning events → implicit knowledge)
+nexcore-immunity = { version = "0.1.0", path = "../nexcore-immunity", registry = "nexcore" }
+
 # Insight trait adapter
 nexcore-insight = { version = "0.1.0", path = "../nexcore-insight", registry = "nexcore", optional = true }
 

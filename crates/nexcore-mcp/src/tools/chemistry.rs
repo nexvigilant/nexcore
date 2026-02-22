@@ -19,10 +19,11 @@ use nexcore_vigilance::pv::thermodynamic::{
 use crate::params::{
     ChemistryBufferCapacityParams, ChemistryDecayRemainingParams, ChemistryDependencyRateParams,
     ChemistryEquilibriumParams, ChemistryEyringRateParams, ChemistryFeasibilityParams,
-    ChemistryFirstLawClosedParams, ChemistryFirstLawOpenParams, ChemistryHillResponseParams,
-    ChemistryInhibitionParams, ChemistryLangmuirParams, ChemistryNernstParams,
-    ChemistryPvMappingsParams, ChemistrySaturationRateParams, ChemistrySignalAbsorbanceParams,
-    ChemistryThresholdExceededParams, ChemistryThresholdRateParams,
+    ChemistryFirstLawClosedParams, ChemistryFirstLawOpenParams, ChemistryGaussianOverlapParams,
+    ChemistryHillResponseParams, ChemistryInhibitionParams, ChemistryLangmuirParams,
+    ChemistryNernstParams, ChemistryPvMappingsParams, ChemistrySaturationRateParams,
+    ChemistrySignalAbsorbanceParams, ChemistryThresholdExceededParams,
+    ChemistryThresholdRateParams,
 };
 
 /// Calculate Arrhenius rate (threshold gating). PV confidence: 0.92
@@ -521,6 +522,93 @@ fn build_open_result(
     serde_json::to_string_pretty(&json).unwrap_or_default()
 }
 
+/// Compute Gaussian primitive overlap integral with proper normalization.
+///
+/// The key insight: STO-nG basis sets (Hehre-Stewart-Pople 1969) tabulate
+/// coefficients for *normalized* Gaussian primitives. Each primitive requires
+/// normalization factor N = (2α/π)^(3/4) before computing the overlap.
+///
+/// Without normalization, self-overlap of H 1s yields ~7.0 instead of ~1.0.
+/// This tool encodes that lesson as a reusable computation.
+///
+/// PV confidence: 0.78 (wavefunction overlap → signal co-occurrence)
+pub fn gaussian_overlap(params: ChemistryGaussianOverlapParams) -> Result<CallToolResult, McpError> {
+    use std::f64::consts::PI;
+
+    // Validate equal lengths
+    if params.exponents_a.len() != params.coefficients_a.len() {
+        return Ok(CallToolResult::error(vec![rmcp::model::Content::text(
+            "Error: exponents_a and coefficients_a must have equal length",
+        )]));
+    }
+    if params.exponents_b.len() != params.coefficients_b.len() {
+        return Ok(CallToolResult::error(vec![rmcp::model::Content::text(
+            "Error: exponents_b and coefficients_b must have equal length",
+        )]));
+    }
+
+    // Squared distance between centers
+    let rab2 = {
+        let d0 = params.center_a[0] - params.center_b[0];
+        let d1 = params.center_a[1] - params.center_b[1];
+        let d2 = params.center_a[2] - params.center_b[2];
+        d0 * d0 + d1 * d1 + d2 * d2
+    };
+
+    let mut total = 0.0;
+    let mut primitive_contributions = Vec::new();
+
+    for (i, (alpha, ca)) in params
+        .exponents_a
+        .iter()
+        .zip(&params.coefficients_a)
+        .enumerate()
+    {
+        for (j, (beta, cb)) in params
+            .exponents_b
+            .iter()
+            .zip(&params.coefficients_b)
+            .enumerate()
+        {
+            let gamma = alpha + beta;
+            // Normalization: N = (2α/π)^(3/4) for s-type Gaussians
+            let na = (2.0 * alpha / PI).powf(0.75);
+            let nb = (2.0 * beta / PI).powf(0.75);
+            let k = (-alpha * beta / gamma * rab2).exp();
+            let prefactor = (PI / gamma).powi(3).sqrt();
+            let contrib = ca * cb * na * nb * k * prefactor;
+            total += contrib;
+            primitive_contributions.push(serde_json::json!({
+                "pair": format!("({i},{j})"),
+                "alpha": alpha,
+                "beta": beta,
+                "norm_a": na,
+                "norm_b": nb,
+                "contribution": contrib,
+            }));
+        }
+    }
+
+    let result = serde_json::json!({
+        "overlap_integral": total,
+        "center_distance": rab2.sqrt(),
+        "primitives_a": params.exponents_a.len(),
+        "primitives_b": params.exponents_b.len(),
+        "primitive_contributions": primitive_contributions,
+        "normalization_formula": "N = (2α/π)^(3/4) for s-type Gaussians",
+        "reference": "Hehre, Stewart, Pople (1969) — STO-nG basis sets",
+        "pv_mapping": {
+            "chemistry_term": "wavefunction_overlap",
+            "pv_equivalent": "signal_co_occurrence",
+            "confidence": 0.78,
+            "rationale": "Overlap integral measures spatial co-occurrence of probability densities, analogous to temporal co-occurrence of adverse event signals"
+        }
+    });
+    Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+        serde_json::to_string_pretty(&result).unwrap_or_default(),
+    )]))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -704,6 +792,38 @@ mod tests {
         };
         let result = langmuir_binding(params);
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_gaussian_overlap_h1s_self() {
+        // STO-3G hydrogen 1s: self-overlap should be ~1.0
+        let params = ChemistryGaussianOverlapParams {
+            exponents_a: vec![3.425250914, 0.623913730, 0.168855404],
+            coefficients_a: vec![0.154328967, 0.535328142, 0.444634542],
+            center_a: [0.0, 0.0, 0.0],
+            exponents_b: vec![3.425250914, 0.623913730, 0.168855404],
+            coefficients_b: vec![0.154328967, 0.535328142, 0.444634542],
+            center_b: [0.0, 0.0, 0.0],
+        };
+        let result = gaussian_overlap(params);
+        assert!(result.is_ok());
+        // Extract the overlap value from the JSON result
+        let ctr = result.expect("tool returned Err");
+        let text: String = ctr
+            .content
+            .iter()
+            .filter_map(|c| match &c.raw {
+                rmcp::model::RawContent::Text(t) => Some(t.text.clone()),
+                _ => None,
+            })
+            .collect();
+        let json: serde_json::Value =
+            serde_json::from_str(&text).expect("valid JSON");
+        let overlap = json["overlap_integral"].as_f64().expect("overlap field");
+        assert!(
+            (overlap - 1.0).abs() < 0.02,
+            "H 1s self-overlap should be ~1.0, got {overlap}"
+        );
     }
 
     /// Comprehensive exercise: runs all 15 core tools, extracts JSON, prints output

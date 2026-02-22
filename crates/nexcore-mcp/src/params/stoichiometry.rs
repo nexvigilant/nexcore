@@ -45,3 +45,26 @@ pub struct StoichiometryDictionaryParams {
     /// (e.g. "Causality", "Boundary", "Existence")
     pub filter_primitive: Option<String>,
 }
+
+/// Check if a balanced equation satisfies primitive conservation.
+#[derive(Debug, Deserialize)]
+pub struct StoichiometryIsBalancedParams {
+    /// JSON-serialized BalancedEquation (as returned by stoichiometry_encode).
+    pub equation_json: String,
+}
+
+/// Generate a balance proof for an equation.
+#[derive(Debug, Deserialize)]
+pub struct StoichiometryProveParams {
+    /// JSON-serialized BalancedEquation (as returned by stoichiometry_encode).
+    pub equation_json: String,
+}
+
+/// Check if two equations are isomers (same primitive set, different dominant).
+#[derive(Debug, Deserialize)]
+pub struct StoichiometryIsIsomerParams {
+    /// JSON-serialized first BalancedEquation.
+    pub equation_a_json: String,
+    /// JSON-serialized second BalancedEquation.
+    pub equation_b_json: String,
+}

@@ -62,6 +62,41 @@ impl Preference {
         };
         self.updated_at = Utc::now();
     }
+
+    /// Half-life in days for confidence decay.
+    ///
+    /// After 30 days without reinforcement, effective confidence drops to 50%.
+    const HALF_LIFE_DAYS: f64 = 30.0;
+
+    /// Compute effective confidence with time-based decay.
+    ///
+    /// Uses exponential decay: `confidence * 0.5^(days_since_update / half_life)`.
+    /// Reinforcing resets `updated_at`, restarting the decay clock.
+    #[must_use]
+    pub fn effective_confidence(&self) -> f64 {
+        self.effective_confidence_at(Utc::now())
+    }
+
+    /// Compute effective confidence at a specific point in time.
+    ///
+    /// Useful for testing and historical analysis.
+    #[must_use]
+    pub fn effective_confidence_at(&self, now: DateTime<Utc>) -> f64 {
+        let elapsed = now.signed_duration_since(self.updated_at);
+        let days = elapsed.num_seconds() as f64 / 86_400.0;
+        if days <= 0.0 {
+            return self.confidence;
+        }
+        let decay = 0.5_f64.powf(days / Self::HALF_LIFE_DAYS);
+        self.confidence * decay
+    }
+
+    /// Check if this preference is still above a minimum confidence threshold
+    /// after accounting for time decay.
+    #[must_use]
+    pub fn is_active(&self) -> bool {
+        self.effective_confidence() > 0.05
+    }
 }
 
 #[cfg(test)]
@@ -185,6 +220,71 @@ mod tests {
     fn test_preference_null_json_value() {
         let pref = Preference::new("optional_setting", serde_json::Value::Null);
         assert!(pref.value.is_null());
+    }
+
+    // ========== Decay-on-read tests ==========
+
+    #[test]
+    fn test_effective_confidence_no_decay_at_creation() {
+        let pref = Preference::new("test", serde_json::json!("value"));
+        // At creation, effective == base confidence
+        let eff = pref.effective_confidence_at(pref.updated_at);
+        assert!((eff - 0.5).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_effective_confidence_half_life_30_days() {
+        let mut pref = Preference::new("test", serde_json::json!("value"));
+        pref.confidence = 1.0;
+        let thirty_days_later = pref.updated_at + chrono::Duration::days(30);
+        let eff = pref.effective_confidence_at(thirty_days_later);
+        // After 30 days, should be ~0.5
+        assert!((eff - 0.5).abs() < 0.01, "expected ~0.5, got {eff}");
+    }
+
+    #[test]
+    fn test_effective_confidence_60_days() {
+        let mut pref = Preference::new("test", serde_json::json!("value"));
+        pref.confidence = 1.0;
+        let sixty_days_later = pref.updated_at + chrono::Duration::days(60);
+        let eff = pref.effective_confidence_at(sixty_days_later);
+        // After 60 days (2 half-lives), should be ~0.25
+        assert!((eff - 0.25).abs() < 0.01, "expected ~0.25, got {eff}");
+    }
+
+    #[test]
+    fn test_effective_confidence_reinforce_resets_decay() {
+        let mut pref = Preference::new("test", serde_json::json!("value"));
+        // Simulate 30 days passing
+        pref.updated_at = Utc::now() - chrono::Duration::days(30);
+        let before_reinforce = pref.effective_confidence();
+        // Reinforce resets updated_at to now
+        pref.reinforce();
+        let after_reinforce = pref.effective_confidence();
+        assert!(after_reinforce > before_reinforce);
+    }
+
+    #[test]
+    fn test_is_active_fresh_preference() {
+        let pref = Preference::new("test", serde_json::json!("value"));
+        assert!(pref.is_active());
+    }
+
+    #[test]
+    fn test_is_active_very_old_preference() {
+        let mut pref = Preference::new("test", serde_json::json!("value"));
+        pref.confidence = 0.5;
+        // 365 days without reinforcement: 0.5 * 0.5^(365/30) ≈ 0.00024
+        pref.updated_at = Utc::now() - chrono::Duration::days(365);
+        assert!(!pref.is_active());
+    }
+
+    #[test]
+    fn test_zero_confidence_stays_zero_after_decay() {
+        let mut pref = Preference::new("test", serde_json::json!("value"));
+        pref.confidence = 0.0;
+        let later = pref.updated_at + chrono::Duration::days(30);
+        assert_eq!(pref.effective_confidence_at(later), 0.0);
     }
 
     #[test]

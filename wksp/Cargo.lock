@@ -4018,33 +4018,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "308d96db8debc727c3fd9744aac51751243420e46edf401010908da7f8d5e57c"
 
 [[package]]
-name = "ncos"
-version = "0.1.0"
-dependencies = [
- "axum",
- "gloo-net",
- "gloo-storage",
- "leptos",
- "leptos_axum",
- "leptos_meta",
- "leptos_router",
- "reqwest",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "tokio",
- "tower 0.4.13",
- "tower-http 0.5.2",
- "tracing",
- "tracing-subscriber",
- "wasm-bindgen",
- "web-sys",
- "wksp-api-client",
- "wksp-components",
- "wksp-core",
-]
-
-[[package]]
 name = "ndk"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

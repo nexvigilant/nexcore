@@ -7,6 +7,7 @@
 //! Cross-domain: confidence intervals, price limits, range types.
 
 use crate::svg::{self, SvgDoc, palette};
+use crate::theme::Theme;
 
 /// A bounded value for visualization.
 #[derive(Debug, Clone)]
@@ -23,7 +24,7 @@ pub struct BoundedValue {
 
 /// Render a bounded value on a number line.
 #[must_use]
-pub fn render_bounds(bounded: &BoundedValue) -> String {
+pub fn render_bounds(bounded: &BoundedValue, theme: &Theme) -> String {
     let width = 600.0;
     let height = 200.0;
     let mut doc = SvgDoc::new(width, height);
@@ -55,7 +56,7 @@ pub fn render_bounds(bounded: &BoundedValue) -> String {
         24.0,
         &format!("Bounds: {}", bounded.label),
         14.0,
-        palette::TEXT,
+        theme.text,
         "middle",
     ));
 
@@ -65,7 +66,7 @@ pub fn render_bounds(bounded: &BoundedValue) -> String {
         line_y,
         line_right,
         line_y,
-        palette::TEXT_DIM,
+        theme.text_dim,
         1.5,
     ));
 
@@ -78,19 +79,17 @@ pub fn render_bounds(bounded: &BoundedValue) -> String {
             line_y - 20.0,
             ux - lx,
             40.0,
-            "#34d39920",
+            &palette::with_alpha(theme.success, "20"),
             4.0,
         ));
-        doc.add(svg::rect_stroke(
-            lx,
-            line_y - 20.0,
-            ux - lx,
-            40.0,
-            "none",
-            "#34d399",
-            1.0,
-            4.0,
-        ));
+        doc.add(
+            svg::StrokeRect::new(lx, line_y - 20.0, ux - lx, 40.0)
+                .fill("none")
+                .stroke(theme.success)
+                .stroke_width(1.0)
+                .rx(4.0)
+                .to_string(),
+        );
     }
 
     // Lower bound marker
@@ -101,7 +100,7 @@ pub fn render_bounds(bounded: &BoundedValue) -> String {
             line_y - 25.0,
             x,
             line_y + 25.0,
-            "#34d399",
+            theme.success,
             2.0,
         ));
         let label = format!("lower: {lower:.1}");
@@ -110,7 +109,7 @@ pub fn render_bounds(bounded: &BoundedValue) -> String {
             line_y + 40.0,
             &label,
             10.0,
-            "#34d399",
+            theme.success,
             "middle",
         ));
     }
@@ -123,7 +122,7 @@ pub fn render_bounds(bounded: &BoundedValue) -> String {
             line_y - 25.0,
             x,
             line_y + 25.0,
-            "#34d399",
+            theme.success,
             2.0,
         ));
         let label = format!("upper: {upper:.1}");
@@ -132,18 +131,22 @@ pub fn render_bounds(bounded: &BoundedValue) -> String {
             line_y + 40.0,
             &label,
             10.0,
-            "#34d399",
+            theme.success,
             "middle",
         ));
     }
 
     // Check in-bounds
-    let in_bounds = bounded.lower.map_or(true, |l| bounded.value >= l)
-        && bounded.upper.map_or(true, |u| bounded.value <= u);
+    let in_bounds = bounded.lower.is_none_or(|l| bounded.value >= l)
+        && bounded.upper.is_none_or(|u| bounded.value <= u);
 
     // Value marker
     let vx = val_to_x(bounded.value);
-    let value_color = if in_bounds { "#22d3ee" } else { "#ef4444" };
+    let value_color = if in_bounds {
+        palette::CYAN_LIGHT
+    } else {
+        theme.danger
+    };
     doc.add(svg::circle(vx, line_y, 8.0, value_color, 1.0));
     let vlabel = format!("{:.1}", bounded.value);
     doc.add(svg::text_bold(
@@ -163,18 +166,27 @@ pub fn render_bounds(bounded: &BoundedValue) -> String {
         );
         let cx_pos = val_to_x(clamped);
         doc.add(svg::circle_stroke(
-            cx_pos, line_y, 8.0, "none", "#fbbf24", 2.0,
+            cx_pos,
+            line_y,
+            8.0,
+            "none",
+            theme.warning,
+            2.0,
         ));
-        doc.add(svg::line_dashed(
-            vx, line_y, cx_pos, line_y, "#fbbf24", 1.0, "4,2",
-        ));
+        doc.add(
+            svg::DashedLine::new(vx, line_y, cx_pos, line_y)
+                .color(theme.warning)
+                .stroke_width(1.0)
+                .dash("4,2")
+                .to_string(),
+        );
         let clamp_label = format!("clamped: {clamped:.1}");
         doc.add(svg::text(
             cx_pos,
             line_y - 30.0,
             &clamp_label,
             10.0,
-            "#fbbf24",
+            theme.warning,
             "middle",
         ));
     }
@@ -200,7 +212,7 @@ pub fn render_bounds(bounded: &BoundedValue) -> String {
         50.0,
         "Grounded: \u{2202} Boundary + \u{03c2} State",
         10.0,
-        palette::TEXT_DIM,
+        theme.text_dim,
         "middle",
     ));
 
@@ -219,7 +231,7 @@ mod tests {
             upper: Some(10.0),
             label: "confidence".into(),
         };
-        let svg = render_bounds(&b);
+        let svg = render_bounds(&b, &Theme::default());
         assert!(svg.contains("IN BOUNDS"));
     }
 
@@ -231,7 +243,7 @@ mod tests {
             upper: Some(10.0),
             label: "error rate".into(),
         };
-        let svg = render_bounds(&b);
+        let svg = render_bounds(&b, &Theme::default());
         assert!(svg.contains("OUT OF BOUNDS"));
         assert!(svg.contains("clamped"));
     }
@@ -244,7 +256,7 @@ mod tests {
             upper: None,
             label: "unbounded".into(),
         };
-        let svg = render_bounds(&b);
+        let svg = render_bounds(&b, &Theme::default());
         assert!(svg.contains("IN BOUNDS"));
     }
 }

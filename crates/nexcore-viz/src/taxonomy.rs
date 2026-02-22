@@ -10,6 +10,7 @@
 //! the most universal cross-domain primitive.
 
 use crate::svg::{self, SvgDoc, palette};
+use crate::theme::Theme;
 use std::fmt::Write;
 
 /// A trait entry for visualization.
@@ -30,21 +31,14 @@ pub struct TraitEntry {
 /// Returns a self-contained SVG string showing all 32 traits
 /// organized by domain and colored by T1 grounding.
 #[must_use]
-pub fn render_taxonomy(traits: &[TraitEntry], title: &str) -> String {
+pub fn render_taxonomy(traits: &[TraitEntry], title: &str, theme: &Theme) -> String {
     let size = 800.0;
     let cx = size / 2.0;
     let cy = size / 2.0;
     let mut doc = SvgDoc::new(size, size);
 
     // Title
-    doc.add(svg::text_bold(
-        cx,
-        30.0,
-        title,
-        18.0,
-        palette::TEXT,
-        "middle",
-    ));
+    doc.add(svg::text_bold(cx, 30.0, title, 18.0, theme.text, "middle"));
 
     // Subtitle: trait count and distribution
     let subtitle = format!("{} traits across 4 domains", traits.len());
@@ -53,7 +47,7 @@ pub fn render_taxonomy(traits: &[TraitEntry], title: &str) -> String {
         52.0,
         &subtitle,
         12.0,
-        palette::TEXT_DIM,
+        theme.text_dim,
         "middle",
     ));
 
@@ -71,8 +65,6 @@ pub fn render_taxonomy(traits: &[TraitEntry], title: &str) -> String {
     let inner_r = 80.0;
     let mid_r = 180.0;
     let outer_r = 260.0;
-    let label_r = 310.0;
-
     // Draw rings from inside out
     let mut angle_offset = -90.0; // Start at top
 
@@ -94,14 +86,7 @@ pub fn render_taxonomy(traits: &[TraitEntry], title: &str) -> String {
 
         // Domain label (inside the inner ring)
         let (lx, ly) = svg::polar_to_cart(cx, cy, inner_r - 50.0, domain_mid);
-        doc.add(svg::text_bold(
-            lx,
-            ly,
-            domain,
-            10.0,
-            palette::TEXT,
-            "middle",
-        ));
+        doc.add(svg::text_bold(lx, ly, domain, 10.0, theme.text, "middle"));
 
         // Middle ring: individual traits
         let trait_span = domain_span / entries.len() as f64;
@@ -124,7 +109,8 @@ pub fn render_taxonomy(traits: &[TraitEntry], title: &str) -> String {
 
             // Trait name label
             let (tx, ty) = svg::polar_to_cart(cx, cy, (inner_r + mid_r) / 2.0, t_mid);
-            let rotation = if t_mid > 90.0 && t_mid < 270.0 {
+            let norm = ((t_mid % 360.0) + 360.0) % 360.0;
+            let rotation = if norm > 90.0 && norm < 270.0 {
                 t_mid + 180.0
             } else {
                 t_mid
@@ -133,7 +119,7 @@ pub fn render_taxonomy(traits: &[TraitEntry], title: &str) -> String {
             let _ = write!(
                 label,
                 r#"<text x="{tx:.1}" y="{ty:.1}" font-size="9" fill="{}" text-anchor="middle" dominant-baseline="middle" transform="rotate({rotation:.1},{tx:.1},{ty:.1})">{}</text>"#,
-                palette::BG,
+                theme.background,
                 svg::escape_xml(&entry.name)
             );
             doc.add(label);
@@ -146,7 +132,7 @@ pub fn render_taxonomy(traits: &[TraitEntry], title: &str) -> String {
                 outer_r,
                 t_start + 0.3,
                 t_end - 0.3,
-                &format!("{grounding_color}40"),
+                &palette::with_alpha(grounding_color, "40"),
             ));
 
             // Grounding symbol in outer ring
@@ -159,13 +145,13 @@ pub fn render_taxonomy(traits: &[TraitEntry], title: &str) -> String {
     }
 
     // Center label
-    doc.add(svg::circle(cx, cy, inner_r - 34.0, palette::BG_CARD, 1.0));
+    doc.add(svg::circle(cx, cy, inner_r - 34.0, theme.card_bg, 1.0));
     doc.add(svg::circle_stroke(
         cx,
         cy,
         inner_r - 34.0,
         "none",
-        palette::BORDER,
+        theme.border,
         1.5,
     ));
     doc.add(svg::text_bold(
@@ -173,7 +159,7 @@ pub fn render_taxonomy(traits: &[TraitEntry], title: &str) -> String {
         cy - 8.0,
         "STEM",
         20.0,
-        palette::TEXT,
+        theme.text,
         "middle",
     ));
     doc.add(svg::text(
@@ -181,18 +167,18 @@ pub fn render_taxonomy(traits: &[TraitEntry], title: &str) -> String {
         cy + 12.0,
         "Primitives",
         12.0,
-        palette::TEXT_DIM,
+        theme.text_dim,
         "middle",
     ));
 
     // Legend
-    render_legend(&mut doc, size);
+    render_legend(&mut doc, size, theme);
 
     doc.render()
 }
 
 /// Render the grounding color legend.
-fn render_legend(doc: &mut SvgDoc, size: f64) {
+fn render_legend(doc: &mut SvgDoc, size: f64, theme: &Theme) {
     let groundings = [
         ("MAPPING", "mu", palette::MAPPING),
         ("SEQUENCE", "sigma", palette::SEQUENCE),
@@ -211,7 +197,7 @@ fn render_legend(doc: &mut SvgDoc, size: f64) {
         legend_y - 16.0,
         170.0,
         groundings.len() as f64 * 18.0 + 28.0,
-        palette::BG_CARD,
+        theme.card_bg,
         6.0,
     ));
     doc.add(svg::text_bold(
@@ -219,7 +205,7 @@ fn render_legend(doc: &mut SvgDoc, size: f64) {
         legend_y,
         "T1 Groundings",
         10.0,
-        palette::TEXT,
+        theme.text,
         "start",
     ));
 
@@ -232,7 +218,7 @@ fn render_legend(doc: &mut SvgDoc, size: f64) {
             y,
             &label,
             10.0,
-            palette::TEXT_DIM,
+            theme.text_dim,
             "start",
         ));
     }
@@ -471,7 +457,7 @@ mod tests {
     #[test]
     fn render_produces_valid_svg() {
         let t = standard_taxonomy();
-        let svg = render_taxonomy(&t, "STEM Taxonomy");
+        let svg = render_taxonomy(&t, "STEM Taxonomy", &Theme::default());
         assert!(svg.starts_with("<svg"));
         assert!(svg.ends_with("</svg>"));
         assert!(svg.contains("STEM"));

@@ -1,0 +1,44 @@
+[Unit]
+Description=Guardian API — NexVigilant Core REST API
+Documentation=https://guardian.nexvigilant.com/scalar
+After=network-online.target
+Wants=network-online.target
+# Restart after 5s if the service crashes
+
+[Service]
+Type=simple
+User=guardian
+Group=guardian
+WorkingDirectory=/var/lib/guardian
+
+# Binary
+ExecStart=/usr/local/bin/nexcore-api
+
+# Environment — secrets injected from file (chmod 640, owned root:guardian)
+EnvironmentFile=/etc/guardian/guardian.env
+
+# Runtime environment
+Environment=RUST_LOG=info
+Environment=PORT=3030
+Environment=BIND_ADDR=127.0.0.1
+
+# Restart policy
+Restart=on-failure
+RestartSec=5s
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/guardian /var/log/guardian
+
+# Logging — journal captures stdout/stderr
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=guardian-api
+
+[Install]
+WantedBy=multi-user.target

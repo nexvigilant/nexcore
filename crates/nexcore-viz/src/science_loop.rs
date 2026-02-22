@@ -16,7 +16,7 @@
 //! - Shannon at CODIFY (irreducible information loss)
 
 use crate::svg::{self, SvgDoc, palette};
-use std::fmt::Write;
+use crate::theme::Theme;
 
 /// A step in the science method loop.
 #[derive(Debug, Clone)]
@@ -35,7 +35,7 @@ pub struct LoopStep {
 
 /// Render the science method loop as SVG.
 #[must_use]
-pub fn render_science_loop(steps: &[LoopStep], composite_name: &str) -> String {
+pub fn render_science_loop(steps: &[LoopStep], composite_name: &str, theme: &Theme) -> String {
     let size = 700.0;
     let cx = size / 2.0;
     let cy = size / 2.0;
@@ -47,7 +47,7 @@ pub fn render_science_loop(steps: &[LoopStep], composite_name: &str) -> String {
         28.0,
         &format!("The {composite_name} Loop"),
         18.0,
-        palette::TEXT,
+        theme.text,
         "middle",
     ));
 
@@ -78,7 +78,14 @@ pub fn render_science_loop(steps: &[LoopStep], composite_name: &str) -> String {
         let ey = y2 - uy * (node_r + 8.0);
 
         let color = palette::grounding_color(&steps[i].grounding);
-        doc.add(svg::arrow(sx, sy, ex, ey, &format!("{color}80"), 2.0));
+        doc.add(svg::arrow(
+            sx,
+            sy,
+            ex,
+            ey,
+            &palette::with_alpha(color, "80"),
+            2.0,
+        ));
     }
 
     // Draw step nodes
@@ -87,7 +94,7 @@ pub fn render_science_loop(steps: &[LoopStep], composite_name: &str) -> String {
         let color = palette::grounding_color(&step.grounding);
 
         // Node circle
-        doc.add(svg::circle(*x, *y, node_r, palette::BG_CARD, 1.0));
+        doc.add(svg::circle(*x, *y, node_r, theme.card_bg, 1.0));
         doc.add(svg::circle_stroke(*x, *y, node_r, "none", color, 2.5));
 
         // Step letter (first letter, large)
@@ -112,7 +119,7 @@ pub fn render_science_loop(steps: &[LoopStep], composite_name: &str) -> String {
             *y + 8.0,
             &step.symbol,
             14.0,
-            palette::TEXT_DIM,
+            theme.text_dim,
             "middle",
         ));
 
@@ -122,7 +129,7 @@ pub fn render_science_loop(steps: &[LoopStep], composite_name: &str) -> String {
             *y + node_r + 14.0,
             &step.name,
             11.0,
-            palette::TEXT,
+            theme.text,
             "middle",
         ));
 
@@ -132,7 +139,7 @@ pub fn render_science_loop(steps: &[LoopStep], composite_name: &str) -> String {
             *y + node_r + 28.0,
             &step.transform,
             8.0,
-            palette::TEXT_DIM,
+            theme.text_dim,
             "middle",
         ));
 
@@ -140,26 +147,19 @@ pub fn render_science_loop(steps: &[LoopStep], composite_name: &str) -> String {
         if let Some(ref limit) = step.limit {
             let lx = *x;
             let ly = *y - node_r - 12.0;
-            doc.add(svg::text(lx, ly, limit, 8.0, "#ef4444", "middle"));
+            doc.add(svg::text(lx, ly, limit, 8.0, theme.danger, "middle"));
         }
     }
 
     // Center info
-    doc.add(svg::circle(cx, cy, 50.0, palette::BG_CARD, 1.0));
-    doc.add(svg::circle_stroke(
-        cx,
-        cy,
-        50.0,
-        "none",
-        palette::BORDER,
-        1.5,
-    ));
+    doc.add(svg::circle(cx, cy, 50.0, theme.card_bg, 1.0));
+    doc.add(svg::circle_stroke(cx, cy, 50.0, "none", theme.border, 1.5));
     doc.add(svg::text_bold(
         cx,
         cy - 8.0,
         composite_name,
         14.0,
-        palette::TEXT,
+        theme.text,
         "middle",
     ));
     doc.add(svg::text(
@@ -167,7 +167,7 @@ pub fn render_science_loop(steps: &[LoopStep], composite_name: &str) -> String {
         cy + 10.0,
         "T2-C Loop",
         10.0,
-        palette::TEXT_DIM,
+        theme.text_dim,
         "middle",
     ));
 
@@ -399,7 +399,7 @@ mod tests {
     #[test]
     fn render_science_produces_svg() {
         let steps = science_loop();
-        let svg = render_science_loop(&steps, "SCIENCE");
+        let svg = render_science_loop(&steps, "SCIENCE", &Theme::default());
         assert!(svg.starts_with("<svg"));
         assert!(svg.contains("Sense"));
         assert!(svg.contains("Heisenberg"));

@@ -94,6 +94,10 @@ pub mod validation;
 pub mod vigil;
 pub mod vigilance;
 pub mod viz;
+pub mod viz_advanced;
+pub mod viz_biologics;
+pub mod viz_foundation;
+pub mod viz_physics;
 pub mod watchtower;
 pub mod wolfram;
 
@@ -221,6 +225,10 @@ pub use validation::*;
 pub use vigil::*;
 pub use vigilance::*;
 pub use viz::*;
+pub use viz_advanced::*;
+pub use viz_biologics::*;
+pub use viz_foundation::*;
+pub use viz_physics::*;
 pub use watchtower::*;
 pub use wolfram::*;
 
@@ -375,3 +383,23 @@ pub use foundry::*;
 // Chemivigilance (SMILES parsing, descriptors, QSAR, metabolites, SafetyBrief — 15 tools)
 pub mod chemivigilance;
 pub use chemivigilance::*;
+
+// NMD Surveillance (anti-hallucination pipeline)
+pub mod nmd;
+pub use nmd::*;
+
+// PV Pharmacokinetics (AUC, clearance, half-life, steady-state, ionization, Michaelis-Menten)
+pub mod pk;
+pub use pk::*;
+
+// PV Causality Assessment (RUCAM hepatotoxicity, UCAS unified)
+pub mod causality;
+pub use causality::*;
+
+// PV Temporal Analysis (time-to-onset, challenge assessment, plausibility)
+pub mod temporal;
+pub use temporal::*;
+
+// QSAR Granular Predictions (mutagenicity, hepatotoxicity, cardiotoxicity, domain assessment)
+pub mod qsar;
+pub use qsar::*;

@@ -50,6 +50,27 @@ pub enum ForgeError {
     /// Unknown domain plugin.
     #[error("Unknown domain plugin: {0}")]
     UnknownDomain(String),
+
+    /// Atomization error.
+    #[error("Atomization error: {message}")]
+    AtomizeError {
+        /// Human-readable description.
+        message: String,
+    },
+
+    /// Cycle detected in dependency graph.
+    #[error("Cycle detected in ALO dependency graph: {cycle}")]
+    CycleDetected {
+        /// Cycle description (node IDs).
+        cycle: String,
+    },
+
+    /// JSON deserialization error.
+    #[error("JSON error: {message}")]
+    JsonError {
+        /// Error message.
+        message: String,
+    },
 }
 
 /// Result alias for forge operations.

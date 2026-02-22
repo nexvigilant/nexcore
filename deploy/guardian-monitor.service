@@ -1,0 +1,8 @@
+[Unit]
+Description=Guardian API monitor (single run)
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/guardian-monitor.sh
+User=root

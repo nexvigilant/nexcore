@@ -24,6 +24,16 @@ pub enum ArtifactType {
     Research,
     /// Decision log
     Decision,
+    /// Standard operating procedure
+    Sop,
+    /// System specification or component spec
+    Specification,
+    /// Architecture schematic or wiring diagram
+    Schematic,
+    /// Audit or inspection report
+    Audit,
+    /// Reference document, guide, or knowledge pack
+    Reference,
     /// Custom artifact type
     Custom,
 }
@@ -37,6 +47,11 @@ impl fmt::Display for ArtifactType {
             ArtifactType::Review => write!(f, "review"),
             ArtifactType::Research => write!(f, "research"),
             ArtifactType::Decision => write!(f, "decision"),
+            ArtifactType::Sop => write!(f, "sop"),
+            ArtifactType::Specification => write!(f, "specification"),
+            ArtifactType::Schematic => write!(f, "schematic"),
+            ArtifactType::Audit => write!(f, "audit"),
+            ArtifactType::Reference => write!(f, "reference"),
             ArtifactType::Custom => write!(f, "custom"),
         }
     }
@@ -53,6 +68,11 @@ impl FromStr for ArtifactType {
             "review" => Ok(ArtifactType::Review),
             "research" => Ok(ArtifactType::Research),
             "decision" => Ok(ArtifactType::Decision),
+            "sop" | "procedure" => Ok(ArtifactType::Sop),
+            "specification" | "spec" => Ok(ArtifactType::Specification),
+            "schematic" | "diagram" | "wiring" => Ok(ArtifactType::Schematic),
+            "audit" | "inspection" => Ok(ArtifactType::Audit),
+            "reference" | "guide" => Ok(ArtifactType::Reference),
             "custom" => Ok(ArtifactType::Custom),
             _ => Err(crate::error::BrainError::InvalidArtifactType(s.to_string())),
         }
@@ -76,6 +96,16 @@ impl ArtifactType {
             ArtifactType::Research
         } else if lower.contains("decision") {
             ArtifactType::Decision
+        } else if lower.contains("sop") || lower.contains("procedure") {
+            ArtifactType::Sop
+        } else if lower.contains("audit") || lower.contains("inspection") {
+            ArtifactType::Audit
+        } else if lower.contains("spec") {
+            ArtifactType::Specification
+        } else if lower.contains("schematic") || lower.contains("wiring") || lower.contains("diagram") {
+            ArtifactType::Schematic
+        } else if lower.contains("reference") || lower.contains("guide") {
+            ArtifactType::Reference
         } else {
             ArtifactType::Custom
         }
@@ -245,6 +275,42 @@ mod tests {
             ArtifactType::Walkthrough
         );
         assert_eq!(
+            ArtifactType::from_filename("SOP-DEV-004.md"),
+            ArtifactType::Sop
+        );
+        assert_eq!(
+            ArtifactType::from_filename("procedure_manual.md"),
+            ArtifactType::Sop
+        );
+        assert_eq!(
+            ArtifactType::from_filename("api_spec.md"),
+            ArtifactType::Specification
+        );
+        assert_eq!(
+            ArtifactType::from_filename("wiring_diagram.md"),
+            ArtifactType::Schematic
+        );
+        assert_eq!(
+            ArtifactType::from_filename("circuit_schematic.md"),
+            ArtifactType::Schematic
+        );
+        assert_eq!(
+            ArtifactType::from_filename("security_audit.md"),
+            ArtifactType::Audit
+        );
+        assert_eq!(
+            ArtifactType::from_filename("inspection_report.md"),
+            ArtifactType::Audit
+        );
+        assert_eq!(
+            ArtifactType::from_filename("quick_reference.md"),
+            ArtifactType::Reference
+        );
+        assert_eq!(
+            ArtifactType::from_filename("user_guide.md"),
+            ArtifactType::Reference
+        );
+        assert_eq!(
             ArtifactType::from_filename("random_file.txt"),
             ArtifactType::Custom
         );
@@ -260,6 +326,47 @@ mod tests {
         assert_eq!(
             "implementation_plan".parse::<ArtifactType>().unwrap(),
             ArtifactType::ImplementationPlan
+        );
+        assert_eq!("sop".parse::<ArtifactType>().unwrap(), ArtifactType::Sop);
+        assert_eq!(
+            "procedure".parse::<ArtifactType>().unwrap(),
+            ArtifactType::Sop
+        );
+        assert_eq!(
+            "specification".parse::<ArtifactType>().unwrap(),
+            ArtifactType::Specification
+        );
+        assert_eq!(
+            "spec".parse::<ArtifactType>().unwrap(),
+            ArtifactType::Specification
+        );
+        assert_eq!(
+            "schematic".parse::<ArtifactType>().unwrap(),
+            ArtifactType::Schematic
+        );
+        assert_eq!(
+            "diagram".parse::<ArtifactType>().unwrap(),
+            ArtifactType::Schematic
+        );
+        assert_eq!(
+            "wiring".parse::<ArtifactType>().unwrap(),
+            ArtifactType::Schematic
+        );
+        assert_eq!(
+            "audit".parse::<ArtifactType>().unwrap(),
+            ArtifactType::Audit
+        );
+        assert_eq!(
+            "inspection".parse::<ArtifactType>().unwrap(),
+            ArtifactType::Audit
+        );
+        assert_eq!(
+            "reference".parse::<ArtifactType>().unwrap(),
+            ArtifactType::Reference
+        );
+        assert_eq!(
+            "guide".parse::<ArtifactType>().unwrap(),
+            ArtifactType::Reference
         );
     }
 
@@ -417,6 +524,11 @@ mod tests {
         assert_eq!(format!("{}", ArtifactType::Review), "review");
         assert_eq!(format!("{}", ArtifactType::Research), "research");
         assert_eq!(format!("{}", ArtifactType::Decision), "decision");
+        assert_eq!(format!("{}", ArtifactType::Sop), "sop");
+        assert_eq!(format!("{}", ArtifactType::Specification), "specification");
+        assert_eq!(format!("{}", ArtifactType::Schematic), "schematic");
+        assert_eq!(format!("{}", ArtifactType::Audit), "audit");
+        assert_eq!(format!("{}", ArtifactType::Reference), "reference");
         assert_eq!(format!("{}", ArtifactType::Custom), "custom");
     }
 

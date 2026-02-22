@@ -172,6 +172,84 @@ pub struct PvPipelineAssessParams {
     pub n: u64,
 }
 
+// ============================================================================
+// Signal Visualization Parameters (nexcore-vigilance viz feature)
+// ============================================================================
+
+/// A single drug-event data point for chart rendering.
+///
+/// Maps to one entry in a PRR/ROR timeline or comparison chart.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct SignalChartEntry {
+    /// Human-readable label for this drug-event pair (e.g. "DrugA-EventX")
+    pub label: String,
+    /// Drug + Event count (cell a)
+    pub a: u64,
+    /// Drug + No Event count (cell b)
+    pub b: u64,
+    /// No Drug + Event count (cell c)
+    pub c: u64,
+    /// No Drug + No Event count (cell d)
+    pub d: u64,
+}
+
+/// Parameters for `pv_signal_chart` — PRR timeline SVG.
+///
+/// Renders a line chart of PRR values across multiple drug-event pairs
+/// with the Evans 2.0 signal threshold line overlaid.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct PvSignalChartParams {
+    /// Chart title
+    #[serde(default = "default_chart_title")]
+    pub title: String,
+    /// Drug-event pairs to include in the chart (at least one required)
+    pub entries: Vec<SignalChartEntry>,
+    /// Chart width in pixels (default: 800)
+    #[serde(default = "default_chart_width")]
+    pub width: u32,
+    /// Chart height in pixels (default: 400)
+    #[serde(default = "default_chart_height")]
+    pub height: u32,
+}
+
+fn default_chart_title() -> String {
+    "PRR Timeline".to_string()
+}
+
+fn default_chart_width() -> u32 {
+    800
+}
+
+fn default_chart_height() -> u32 {
+    400
+}
+
+/// Parameters for `pv_signal_comparison` — PRR vs ROR comparison SVG.
+///
+/// Renders PRR and ROR side-by-side on a single chart so reviewers
+/// can verify algorithm agreement across a set of drug-event pairs.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct PvSignalComparisonParams {
+    /// Chart title
+    #[serde(default = "default_comparison_title")]
+    pub title: String,
+    /// Drug-event pairs to include in the chart (at least one required)
+    pub entries: Vec<SignalChartEntry>,
+    /// Chart width in pixels (default: 800)
+    #[serde(default = "default_chart_width")]
+    pub width: u32,
+    /// Chart height in pixels (default: 400)
+    #[serde(default = "default_chart_height")]
+    pub height: u32,
+}
+
+fn default_comparison_title() -> String {
+    "PRR vs ROR Signal Comparison".to_string()
+}
+
 /// Parameters for WHO-UMC causality assessment
 #[derive(Debug, Deserialize, JsonSchema)]
 #[serde(crate = "rmcp::serde")]

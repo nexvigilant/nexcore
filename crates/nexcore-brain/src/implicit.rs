@@ -182,6 +182,32 @@ impl Preference {
         };
         self.updated_at = Utc::now();
     }
+
+    /// Effective confidence after time-based decay.
+    ///
+    /// Uses exponential decay: `confidence * 0.5^(days_since_update / half_life)`.
+    /// Reinforcing resets `updated_at`, restarting the decay clock.
+    #[must_use]
+    pub fn effective_confidence(&self) -> f64 {
+        self.effective_confidence_at(Utc::now())
+    }
+
+    /// Effective confidence at a specific point in time (for testing/analysis).
+    #[must_use]
+    pub fn effective_confidence_at(&self, now: DateTime<Utc>) -> f64 {
+        let days_elapsed = now.signed_duration_since(self.updated_at).num_hours() as f64 / 24.0;
+        if days_elapsed <= 0.0 {
+            return self.confidence;
+        }
+        let decay_factor = (0.5_f64).powf(days_elapsed / DECAY_HALF_LIFE_DAYS);
+        self.confidence * decay_factor
+    }
+
+    /// Check if this preference is still active after time decay.
+    #[must_use]
+    pub fn is_active(&self) -> bool {
+        self.effective_confidence() > 0.05
+    }
 }
 
 /// A detected pattern in user behavior or codebase
@@ -269,6 +295,10 @@ impl Pattern {
     }
 }
 
+/// Correction confidence decay half-life in days.
+/// Corrections decay slower (60 days) because explicit feedback is more durable.
+const CORRECTION_HALF_LIFE_DAYS: f64 = 60.0;
+
 /// A learned correction from user feedback
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Correction {
@@ -286,24 +316,65 @@ pub struct Correction {
 
     /// Number of times this correction was applied
     pub application_count: u32,
+
+    /// Confidence level (0.0 to 1.0). Defaults to 0.8.
+    #[serde(default = "default_correction_confidence")]
+    pub confidence: f64,
+
+    /// When this correction was last reinforced (applied or confirmed).
+    #[serde(default = "Utc::now")]
+    pub updated_at: DateTime<Utc>,
+}
+
+fn default_correction_confidence() -> f64 {
+    0.8
 }
 
 impl Correction {
     /// Create a new correction
     #[must_use]
     pub fn new(mistake: impl Into<String>, correction: impl Into<String>) -> Self {
+        let now = Utc::now();
         Self {
             mistake: mistake.into(),
             correction: correction.into(),
             context: None,
-            learned_at: Utc::now(),
+            learned_at: now,
             application_count: 0,
+            confidence: 0.8,
+            updated_at: now,
         }
     }
 
-    /// Record that this correction was applied
+    /// Record that this correction was applied (resets decay clock)
     pub fn mark_applied(&mut self) {
         self.application_count += 1;
+        self.confidence =
+            1.0 - (0.2 / (self.application_count as f64 + 1.0));
+        self.updated_at = Utc::now();
+    }
+
+    /// Effective confidence after time-based decay.
+    #[must_use]
+    pub fn effective_confidence(&self) -> f64 {
+        self.effective_confidence_at(Utc::now())
+    }
+
+    /// Effective confidence at a specific point in time.
+    #[must_use]
+    pub fn effective_confidence_at(&self, now: DateTime<Utc>) -> f64 {
+        let days_elapsed = now.signed_duration_since(self.updated_at).num_hours() as f64 / 24.0;
+        if days_elapsed <= 0.0 {
+            return self.confidence;
+        }
+        let decay_factor = (0.5_f64).powf(days_elapsed / CORRECTION_HALF_LIFE_DAYS);
+        self.confidence * decay_factor
+    }
+
+    /// Check if this correction is still active after time decay.
+    #[must_use]
+    pub fn is_active(&self) -> bool {
+        self.effective_confidence() > 0.05
     }
 }
 
@@ -944,6 +1015,20 @@ pub struct ImplicitKnowledge {
 }
 
 impl ImplicitKnowledge {
+    /// Create an empty in-memory store for unit testing (no disk I/O).
+    #[cfg(test)]
+    fn empty_for_test() -> Self {
+        Self {
+            preferences: HashMap::new(),
+            patterns: Vec::new(),
+            corrections: Vec::new(),
+            beliefs: Vec::new(),
+            trust_accumulators: HashMap::new(),
+            belief_graph: BeliefGraph::new(),
+            implicit_path: PathBuf::from("/tmp/implicit-test"),
+        }
+    }
+
     /// Create or load implicit knowledge store
     ///
     /// # Errors
@@ -1563,6 +1648,96 @@ impl ImplicitKnowledge {
         pattern.confidence = (occurrence_count as f64 / (occurrence_count as f64 + 2.0)).min(0.95);
         self.patterns.push(pattern);
         true
+    }
+
+    // ========== Crystallization (Correction → Belief promotion) ==========
+
+    /// Crystallize high-confidence, frequently-applied corrections into beliefs.
+    ///
+    /// A correction is eligible for crystallization when:
+    /// - `effective_confidence() >= min_confidence` (default 0.6)
+    /// - `application_count >= min_applications` (default 3)
+    ///
+    /// Crystallized beliefs inherit:
+    /// - The correction text as the belief proposition
+    /// - An `Observation` evidence ref citing the correction source
+    /// - Category `"correction"` for traceability
+    ///
+    /// Corrections that crystallize are **not** removed — they remain in the
+    /// correction store as source-of-truth. The belief is additive.
+    ///
+    /// Returns the list of newly created belief IDs.
+    pub fn crystallize_corrections(
+        &mut self,
+        min_confidence: f64,
+        min_applications: u32,
+    ) -> Vec<String> {
+        let mut new_ids = Vec::new();
+
+        // Collect candidates first to avoid borrow conflict
+        let candidates: Vec<(String, String, String, u32, f64)> = self
+            .corrections
+            .iter()
+            .filter(|c| c.effective_confidence() >= min_confidence && c.application_count >= min_applications)
+            .map(|c| {
+                let id = format!(
+                    "crystallized:{}",
+                    c.mistake.chars().take(40).collect::<String>().replace(' ', "_").to_lowercase()
+                );
+                (
+                    id,
+                    c.correction.clone(),
+                    c.mistake.clone(),
+                    c.application_count,
+                    c.effective_confidence(),
+                )
+            })
+            .collect();
+
+        for (id, correction_text, mistake_text, app_count, eff_conf) in candidates {
+            // Skip if belief with this ID already exists
+            if self.beliefs.iter().any(|b| b.id == id) {
+                // Reinforce existing belief instead
+                if let Some(existing) = self.beliefs.iter_mut().find(|b| b.id == id) {
+                    let evidence = EvidenceRef {
+                        id: default_evidence_id(),
+                        evidence_type: EvidenceType::Observation,
+                        description: format!("Re-crystallized: {app_count} applications, confidence {eff_conf:.2}"),
+                        weight: 0.3,
+                        source: format!("crystallization:correction:{}", mistake_text.chars().take(30).collect::<String>()),
+                        recorded_at: Utc::now(),
+                        artifact_ref: None,
+                        execution_id: None,
+                        hypothesis_id: None,
+                    };
+                    existing.add_evidence(evidence);
+                }
+                continue;
+            }
+
+            let evidence = EvidenceRef {
+                id: default_evidence_id(),
+                evidence_type: EvidenceType::Observation,
+                description: format!(
+                    "Crystallized from correction: \"{}\". Applied {app_count} times, confidence {eff_conf:.2}.",
+                    mistake_text.chars().take(60).collect::<String>()
+                ),
+                weight: eff_conf.min(1.0),
+                source: format!("crystallization:correction:{}", mistake_text.chars().take(30).collect::<String>()),
+                recorded_at: Utc::now(),
+                artifact_ref: None,
+                execution_id: None,
+                hypothesis_id: None,
+            };
+
+            let mut belief = Belief::new(&id, correction_text, "correction");
+            belief.add_evidence(evidence);
+
+            new_ids.push(id);
+            self.beliefs.push(belief);
+        }
+
+        new_ids
     }
 
     /// Compute belief-specific statistics
@@ -2208,5 +2383,92 @@ mod tests {
         let evidence =
             EvidenceRef::weighted("test", EvidenceType::Observation, "desc", -5.0, "src");
         assert!((evidence.weight - (-1.0)).abs() < f64::EPSILON); // Clamped to -1.0
+    }
+
+    // ========== Crystallization Tests ==========
+
+    fn make_applied_correction(mistake: &str, correction: &str, applications: u32) -> Correction {
+        let mut c = Correction::new(mistake, correction);
+        c.confidence = 0.8;
+        c.application_count = applications;
+        c
+    }
+
+    #[test]
+    fn test_crystallize_creates_belief_from_high_confidence_correction() {
+        let mut store = ImplicitKnowledge::empty_for_test();
+
+        let c = make_applied_correction("used unwrap", "use proper error handling", 5);
+        store.add_correction(c);
+
+        let ids = store.crystallize_corrections(0.6, 3);
+        assert_eq!(ids.len(), 1);
+        assert!(ids[0].starts_with("crystallized:"));
+
+        let belief = store.get_belief(&ids[0]);
+        assert!(belief.is_some());
+        let belief = belief.unwrap();
+        assert_eq!(belief.category, "correction");
+        assert_eq!(belief.proposition, "use proper error handling");
+        assert!(!belief.evidence.is_empty());
+    }
+
+    #[test]
+    fn test_crystallize_skips_low_confidence() {
+        let mut store = ImplicitKnowledge::empty_for_test();
+
+        let mut c = Correction::new("some mistake", "some fix");
+        c.confidence = 0.3; // Below threshold
+        c.application_count = 10;
+        store.add_correction(c);
+
+        let ids = store.crystallize_corrections(0.6, 3);
+        assert!(ids.is_empty());
+    }
+
+    #[test]
+    fn test_crystallize_skips_low_application_count() {
+        let mut store = ImplicitKnowledge::empty_for_test();
+
+        let mut c = Correction::new("some mistake", "some fix");
+        c.confidence = 0.9;
+        c.application_count = 1; // Below threshold
+        store.add_correction(c);
+
+        let ids = store.crystallize_corrections(0.6, 3);
+        assert!(ids.is_empty());
+    }
+
+    #[test]
+    fn test_crystallize_reinforces_existing_belief() {
+        let mut store = ImplicitKnowledge::empty_for_test();
+
+        let c = make_applied_correction("used unwrap", "use proper error handling", 5);
+        store.add_correction(c);
+
+        // First crystallization
+        let ids1 = store.crystallize_corrections(0.6, 3);
+        assert_eq!(ids1.len(), 1);
+
+        let ev_count_before = store.get_belief(&ids1[0]).unwrap().evidence.len();
+
+        // Second crystallization — should reinforce, not duplicate
+        let ids2 = store.crystallize_corrections(0.6, 3);
+        assert!(ids2.is_empty()); // No NEW beliefs
+
+        let ev_count_after = store.get_belief(&ids1[0]).unwrap().evidence.len();
+        assert_eq!(ev_count_after, ev_count_before + 1); // Evidence added
+    }
+
+    #[test]
+    fn test_crystallize_multiple_corrections() {
+        let mut store = ImplicitKnowledge::empty_for_test();
+
+        store.add_correction(make_applied_correction("mistake A", "fix A", 4));
+        store.add_correction(make_applied_correction("mistake B", "fix B", 3));
+        store.add_correction(make_applied_correction("mistake C", "fix C", 1)); // Below threshold
+
+        let ids = store.crystallize_corrections(0.6, 3);
+        assert_eq!(ids.len(), 2); // A and B, not C
     }
 }

@@ -69,6 +69,7 @@ pub mod error;
 pub mod grounding;
 pub mod implicit;
 pub mod metrics;
+pub mod nmd_bridge;
 pub mod pipeline;
 pub mod recovery;
 pub mod session;
@@ -96,7 +97,7 @@ pub use recovery::{
     RecoveryResult, attempt_recovery, check_brain_availability, check_index_health,
     detect_partial_writes, rebuild_index_from_sessions, repair_partial_writes,
 };
-pub use session::BrainSession;
+pub use session::{BrainSession, SessionEvent, SessionEventKind};
 pub use synapse::{
     PersistentSynapseBank, SynapseBankStats, SynapseInfo, pattern_amplitude, reinforce_pattern,
 };

@@ -33,6 +33,7 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 pub mod grounding;
+pub mod harm_synthesis;
 
 use std::collections::BTreeMap;
 use std::fmt;

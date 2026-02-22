@@ -107,13 +107,22 @@ nexcore-labs = { version = "1.0.0", path = "../nexcore-labs", registry = "nexcor
 tempfile = "3.10.1"
 tokio = { version = "1.38.0", features = ["rt-multi-thread", "macros"] }
 criterion = { version = "0.5", features = ["html_reports"] }
+pprof = { version = "0.14", features = ["flamegraph", "criterion"] }
 proptest = "1.6.0"
+
+[dependencies.plotters]
+version = "0.3"
+default-features = false
+features = ["svg_backend", "line_series", "area_series"]
+optional = true
 
 [features]
 default = []
 # CTVP Phase 1: Chaos engineering tests for fault injection
 # Run with: cargo test --features chaos-tests -p nexcore-vigilance
 chaos-tests = []
+# Signal visualization: cargo build -p nexcore-vigilance --features viz
+viz = ["plotters"]
 
 [[bench]]
 name = "signal_benchmarks"

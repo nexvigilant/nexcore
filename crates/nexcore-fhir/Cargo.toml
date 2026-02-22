@@ -1,0 +1,14 @@
+[package]
+name = "nexcore-fhir"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Focused FHIR R4 types for pharmacovigilance — AdverseEvent, Patient, Medication, and PV-relevant resources"
+
+[dependencies]
+chrono = { workspace = true, features = ["serde"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }

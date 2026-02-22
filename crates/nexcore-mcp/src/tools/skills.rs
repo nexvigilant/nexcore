@@ -7,8 +7,8 @@ use std::path::Path;
 use std::sync::Arc;
 
 use crate::params::{
-    SkillExecuteParams, SkillGetParams, SkillScanParams, SkillSchemaParams, SkillSearchByTagParams,
-    SkillValidateParams, TaxonomyListParams, TaxonomyQueryParams,
+    SkillExecuteParams, SkillGetParams, SkillRouteParams, SkillScanParams, SkillSchemaParams,
+    SkillSearchByTagParams, SkillValidateParams, TaxonomyListParams, TaxonomyQueryParams,
 };
 use crate::tooling::{ScanLimitNotice, ScanLimits, read_limited_file};
 use nexcore_vigilance::skills::{
@@ -118,7 +118,7 @@ pub fn get(
 
     match reg.get(&params.name) {
         Some(skill) => {
-            let json = json!({
+            let mut json = json!({
                 "name": skill.name,
                 "path": skill.path.to_string_lossy(),
                 "intent": skill.intent,
@@ -126,6 +126,28 @@ pub fn get(
                 "smst_score": skill.smst_score,
                 "tags": skill.tags,
             });
+            // Include routing metadata when present
+            if !skill.see_also.is_empty() {
+                json["see_also"] = json!(skill.see_also);
+            }
+            if !skill.upstream.is_empty() {
+                json["upstream"] = json!(skill.upstream);
+            }
+            if !skill.downstream.is_empty() {
+                json["downstream"] = json!(skill.downstream);
+            }
+            if let Some(ref pos) = skill.chain_position {
+                json["chain_position"] = json!(pos);
+            }
+            if let Some(ref pipe) = skill.pipeline {
+                json["pipeline"] = json!(pipe);
+            }
+            if let Some(ref dom) = skill.domain {
+                json["domain"] = json!(dom);
+            }
+            if let Some(ref m) = skill.model {
+                json["model"] = json!(m);
+            }
             Ok(CallToolResult::success(vec![Content::text(
                 json.to_string(),
             )]))
@@ -739,6 +761,191 @@ pub fn vocab_list() -> Result<CallToolResult, McpError> {
     Ok(CallToolResult::success(vec![Content::text(
         json.to_string(),
     )]))
+}
+
+// ============================================================================
+// Skill VDAG Route Resolution
+// ============================================================================
+
+/// Resolve a skill by name or intent, returning the full VDAG chain
+/// (upstream prerequisites → matched skill → downstream consumers).
+///
+/// Uses the registry's routing metadata (upstream, downstream, see_also,
+/// chain_position, pipeline) to build a traversal path.
+pub fn route(
+    registry: &Arc<RwLock<SkillRegistry>>,
+    params: SkillRouteParams,
+) -> Result<CallToolResult, McpError> {
+    // Ensure registry is populated
+    if registry.read().len() == 0 {
+        let mut reg = registry.write();
+        if reg.len() == 0 {
+            if let Some(cache_path) = default_skills_cache_path() {
+                let _ = reg.load_cache(&cache_path);
+            }
+        }
+        if reg.len() == 0 {
+            if let Some(path) = default_skills_path() {
+                let _ = reg.scan(&path);
+            }
+        }
+    }
+
+    let reg = registry.read();
+    let query_lower = params.query.to_lowercase();
+
+    // Phase 1: Find the primary skill (exact name match first, then fuzzy)
+    let primary = reg.get(&params.query).or_else(|| {
+        // Try case-insensitive exact match
+        reg.list()
+            .into_iter()
+            .find(|s| s.name.to_lowercase() == query_lower)
+    });
+
+    let primary = match primary {
+        Some(p) => p,
+        None => {
+            // Fuzzy search by intent/description
+            let best_match = reg
+                .list()
+                .into_iter()
+                .filter_map(|s| {
+                    let intent_lower = s.intent.as_deref().unwrap_or("").to_lowercase();
+                    let name_lower = s.name.to_lowercase();
+                    let tag_match = s.tags.iter().any(|t| t.to_lowercase().contains(&query_lower));
+                    let intent_match = intent_lower.contains(&query_lower);
+                    let name_match = name_lower.contains(&query_lower);
+                    if intent_match || name_match || tag_match {
+                        // Score: name > tag > intent
+                        let score = if name_match { 3 } else if tag_match { 2 } else { 1 };
+                        Some((s, score))
+                    } else {
+                        None
+                    }
+                })
+                .max_by_key(|(_, score)| *score)
+                .map(|(s, _)| s);
+
+            match best_match {
+                Some(s) => s,
+                None => {
+                    let json = json!({
+                        "error": format!("No skill matches query: {}", params.query),
+                        "hint": "Try a more specific skill name or trigger phrase.",
+                    });
+                    return Ok(CallToolResult::success(vec![Content::text(
+                        json.to_string(),
+                    )]));
+                }
+            }
+        }
+    };
+
+    // Phase 2: Resolve upstream chain (recursive up to depth)
+    let upstream_chain = resolve_chain(&reg, &primary.upstream, params.depth, true);
+
+    // Phase 3: Resolve downstream chain (recursive up to depth)
+    let downstream_chain = resolve_chain(&reg, &primary.downstream, params.depth, false);
+
+    // Phase 4: Resolve see_also (non-recursive, just one level)
+    let related: Vec<_> = primary
+        .see_also
+        .iter()
+        .filter_map(|name| {
+            reg.get(name).map(|s| {
+                json!({
+                    "name": s.name,
+                    "intent": s.intent,
+                })
+            })
+        })
+        .collect();
+
+    // Phase 5: Find pipeline siblings (same pipeline, different skill)
+    let pipeline_siblings: Vec<_> = if let Some(ref pipe) = primary.pipeline {
+        reg.list()
+            .into_iter()
+            .filter(|s| {
+                s.pipeline.as_deref() == Some(pipe.as_str()) && s.name != primary.name
+            })
+            .map(|s| {
+                json!({
+                    "name": s.name,
+                    "chain_position": s.chain_position,
+                    "intent": s.intent,
+                })
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
+
+    let json = json!({
+        "matched_skill": {
+            "name": primary.name,
+            "path": primary.path.to_string_lossy(),
+            "intent": primary.intent,
+            "chain_position": primary.chain_position,
+            "pipeline": primary.pipeline,
+            "domain": primary.domain,
+            "model": primary.model,
+            "tags": primary.tags,
+        },
+        "upstream_chain": upstream_chain,
+        "downstream_chain": downstream_chain,
+        "related_skills": related,
+        "pipeline_siblings": pipeline_siblings,
+        "chain_depth": params.depth,
+    });
+
+    Ok(CallToolResult::success(vec![Content::text(
+        json.to_string(),
+    )]))
+}
+
+/// Recursively resolve a chain of skill names up to a given depth.
+fn resolve_chain(
+    reg: &SkillRegistry,
+    start_names: &[String],
+    max_depth: usize,
+    go_upstream: bool,
+) -> Vec<serde_json::Value> {
+    let mut chain = Vec::new();
+    let mut visited = std::collections::HashSet::new();
+    let mut frontier: Vec<(String, usize)> = start_names
+        .iter()
+        .map(|n| (n.clone(), 1))
+        .collect();
+
+    while let Some((name, depth)) = frontier.pop() {
+        if depth > max_depth || visited.contains(&name) {
+            continue;
+        }
+        visited.insert(name.clone());
+
+        if let Some(skill) = reg.get(&name) {
+            chain.push(json!({
+                "name": skill.name,
+                "intent": skill.intent,
+                "chain_position": skill.chain_position,
+                "depth": depth,
+            }));
+
+            // Continue traversal in the chosen direction
+            let next = if go_upstream {
+                &skill.upstream
+            } else {
+                &skill.downstream
+            };
+            for n in next {
+                if !visited.contains(n) {
+                    frontier.push((n.clone(), depth + 1));
+                }
+            }
+        }
+    }
+
+    chain
 }
 
 // ============================================================================

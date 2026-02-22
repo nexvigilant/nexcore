@@ -30,6 +30,8 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 pub mod grounding;
+pub mod pv_contracts;
+pub mod stall_monitor;
 
 use std::collections::HashMap;
 use std::fmt;

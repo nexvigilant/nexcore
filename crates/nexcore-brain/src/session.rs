@@ -14,6 +14,75 @@ use crate::error::{BrainError, Result};
 use crate::{brain_dir, initialize_directories};
 use nexcore_constants::bathroom_lock::BathroomLock;
 
+// ========== Episodic Event Log ==========
+
+/// Event types for the episodic session log.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum SessionEventKind {
+    /// Artifact was saved or updated
+    ArtifactSaved,
+    /// Artifact was resolved (snapshotted)
+    ArtifactResolved,
+    /// A preference was learned or reinforced
+    PreferenceLearned,
+    /// A correction was recorded
+    CorrectionRecorded,
+    /// A belief was crystallized from corrections
+    BeliefCrystallized,
+    /// Session was created
+    SessionCreated,
+    /// Session was closed
+    SessionClosed,
+    /// Custom user-defined event
+    Custom,
+}
+
+/// A single event in the episodic session log.
+///
+/// Events are append-only (JSONL) — one per line in `events.jsonl`.
+/// This provides a causal timeline of everything that happened in a session.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionEvent {
+    /// When this event occurred
+    pub timestamp: DateTime<Utc>,
+    /// Event classification
+    pub kind: SessionEventKind,
+    /// Human-readable description
+    pub description: String,
+    /// Optional structured metadata
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<serde_json::Value>,
+}
+
+impl SessionEvent {
+    /// Create a new session event.
+    #[must_use]
+    pub fn new(kind: SessionEventKind, description: impl Into<String>) -> Self {
+        Self {
+            timestamp: Utc::now(),
+            kind,
+            description: description.into(),
+            metadata: None,
+        }
+    }
+
+    /// Create a new event with metadata.
+    #[must_use]
+    pub fn with_metadata(
+        kind: SessionEventKind,
+        description: impl Into<String>,
+        metadata: serde_json::Value,
+    ) -> Self {
+        Self {
+            timestamp: Utc::now(),
+            kind,
+            description: description.into(),
+            metadata: Some(metadata),
+        }
+    }
+}
+
 /// Session registry entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionEntry {
@@ -471,6 +540,86 @@ impl BrainSession {
         Ok(generate_simple_diff(name, v1, v2, &a1.content, &a2.content))
     }
 
+    // ========== Episodic Event Log ==========
+
+    /// Append an event to this session's episodic log.
+    ///
+    /// Events are written as JSONL (one JSON object per line) to `events.jsonl`
+    /// in the session directory. Append-only — events are never modified or deleted.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the event cannot be serialized or written.
+    pub fn append_event(&self, event: &SessionEvent) -> Result<()> {
+        let events_path = self.session_dir.join("events.jsonl");
+        let line = serde_json::to_string(event)?;
+
+        let mut file = fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&events_path)?;
+
+        use std::io::Write;
+        writeln!(file, "{line}")?;
+
+        tracing::trace!(
+            "Session {} event: {:?} — {}",
+            self.id,
+            event.kind,
+            event.description
+        );
+
+        Ok(())
+    }
+
+    /// Read all events from this session's episodic log.
+    ///
+    /// Returns events in chronological order (append order).
+    /// Skips malformed lines with a warning rather than failing.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the events file cannot be read.
+    pub fn read_events(&self) -> Result<Vec<SessionEvent>> {
+        let events_path = self.session_dir.join("events.jsonl");
+
+        if !events_path.exists() {
+            return Ok(Vec::new());
+        }
+
+        let content = fs::read_to_string(&events_path)?;
+        let events: Vec<SessionEvent> = content
+            .lines()
+            .filter(|line| !line.trim().is_empty())
+            .filter_map(|line| {
+                serde_json::from_str(line)
+                    .map_err(|e| {
+                        tracing::warn!("Skipping malformed event line: {e}");
+                        e
+                    })
+                    .ok()
+            })
+            .collect();
+
+        Ok(events)
+    }
+
+    /// Count events in this session's log without loading them all.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the events file cannot be read.
+    pub fn event_count(&self) -> Result<usize> {
+        let events_path = self.session_dir.join("events.jsonl");
+
+        if !events_path.exists() {
+            return Ok(0);
+        }
+
+        let content = fs::read_to_string(&events_path)?;
+        Ok(content.lines().filter(|l| !l.trim().is_empty()).count())
+    }
+
     // Private helper methods
 
     fn register_in_index(&self, description: Option<String>) -> Result<()> {
@@ -812,5 +961,152 @@ mod tests {
         let cloned = entry.clone();
         assert_eq!(entry.id, cloned.id);
         assert_eq!(entry.project, cloned.project);
+    }
+
+    // ========== Episodic Event Log Tests ==========
+
+    fn make_test_session(dir: &Path) -> BrainSession {
+        fs::create_dir_all(dir).unwrap();
+        BrainSession {
+            id: NexId::v4().to_string(),
+            created_at: Utc::now(),
+            project: None,
+            git_commit: None,
+            session_dir: dir.to_path_buf(),
+        }
+    }
+
+    #[test]
+    fn test_session_event_new() {
+        let event = SessionEvent::new(SessionEventKind::SessionCreated, "session started");
+        assert_eq!(event.kind, SessionEventKind::SessionCreated);
+        assert_eq!(event.description, "session started");
+        assert!(event.metadata.is_none());
+    }
+
+    #[test]
+    fn test_session_event_with_metadata() {
+        let meta = serde_json::json!({"artifact": "task.md", "version": 3});
+        let event = SessionEvent::with_metadata(
+            SessionEventKind::ArtifactResolved,
+            "resolved task.md",
+            meta.clone(),
+        );
+        assert_eq!(event.kind, SessionEventKind::ArtifactResolved);
+        assert_eq!(event.metadata, Some(meta));
+    }
+
+    #[test]
+    fn test_session_event_serialization_roundtrip() {
+        let event = SessionEvent::new(SessionEventKind::CorrectionRecorded, "learned correction");
+        let json = serde_json::to_string(&event).unwrap();
+        let parsed: SessionEvent = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.kind, event.kind);
+        assert_eq!(parsed.description, event.description);
+    }
+
+    #[test]
+    fn test_event_kind_serde_rename() {
+        let event = SessionEvent::new(SessionEventKind::BeliefCrystallized, "test");
+        let json = serde_json::to_string(&event).unwrap();
+        assert!(json.contains("\"belief_crystallized\""));
+    }
+
+    #[test]
+    fn test_append_and_read_events() {
+        let temp = TempDir::new().unwrap();
+        let session = make_test_session(&temp.path().join("sess1"));
+
+        let e1 = SessionEvent::new(SessionEventKind::SessionCreated, "started");
+        let e2 = SessionEvent::new(SessionEventKind::ArtifactSaved, "saved task.md");
+        let e3 = SessionEvent::with_metadata(
+            SessionEventKind::PreferenceLearned,
+            "rust > python",
+            serde_json::json!({"key": "lang"}),
+        );
+
+        session.append_event(&e1).unwrap();
+        session.append_event(&e2).unwrap();
+        session.append_event(&e3).unwrap();
+
+        let events = session.read_events().unwrap();
+        assert_eq!(events.len(), 3);
+        assert_eq!(events[0].kind, SessionEventKind::SessionCreated);
+        assert_eq!(events[1].kind, SessionEventKind::ArtifactSaved);
+        assert_eq!(events[2].description, "rust > python");
+        assert!(events[2].metadata.is_some());
+    }
+
+    #[test]
+    fn test_read_events_empty_session() {
+        let temp = TempDir::new().unwrap();
+        let session = make_test_session(&temp.path().join("sess_empty"));
+
+        let events = session.read_events().unwrap();
+        assert!(events.is_empty());
+    }
+
+    #[test]
+    fn test_event_count() {
+        let temp = TempDir::new().unwrap();
+        let session = make_test_session(&temp.path().join("sess_count"));
+
+        assert_eq!(session.event_count().unwrap(), 0);
+
+        for i in 0..5 {
+            let e = SessionEvent::new(SessionEventKind::Custom, format!("event {i}"));
+            session.append_event(&e).unwrap();
+        }
+
+        assert_eq!(session.event_count().unwrap(), 5);
+    }
+
+    #[test]
+    fn test_read_events_skips_malformed_lines() {
+        let temp = TempDir::new().unwrap();
+        let sess_dir = temp.path().join("sess_malformed");
+        let session = make_test_session(&sess_dir);
+
+        // Write a valid event, a malformed line, and another valid event
+        let e1 = SessionEvent::new(SessionEventKind::SessionCreated, "good");
+        session.append_event(&e1).unwrap();
+
+        // Inject a malformed line directly
+        let events_path = sess_dir.join("events.jsonl");
+        let mut file = fs::OpenOptions::new().append(true).open(&events_path).unwrap();
+        use std::io::Write;
+        writeln!(file, "{{not valid json}}").unwrap();
+
+        let e2 = SessionEvent::new(SessionEventKind::SessionClosed, "also good");
+        session.append_event(&e2).unwrap();
+
+        let events = session.read_events().unwrap();
+        // Malformed line is skipped
+        assert_eq!(events.len(), 2);
+        assert_eq!(events[0].kind, SessionEventKind::SessionCreated);
+        assert_eq!(events[1].kind, SessionEventKind::SessionClosed);
+    }
+
+    #[test]
+    fn test_event_count_with_blank_lines() {
+        let temp = TempDir::new().unwrap();
+        let sess_dir = temp.path().join("sess_blanks");
+        let session = make_test_session(&sess_dir);
+
+        let e = SessionEvent::new(SessionEventKind::Custom, "one");
+        session.append_event(&e).unwrap();
+
+        // Inject blank lines
+        let events_path = sess_dir.join("events.jsonl");
+        let mut file = fs::OpenOptions::new().append(true).open(&events_path).unwrap();
+        use std::io::Write;
+        writeln!(file).unwrap();
+        writeln!(file, "   ").unwrap();
+
+        let e2 = SessionEvent::new(SessionEventKind::Custom, "two");
+        session.append_event(&e2).unwrap();
+
+        // Blank lines should not be counted
+        assert_eq!(session.event_count().unwrap(), 2);
     }
 }

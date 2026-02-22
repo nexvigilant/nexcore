@@ -428,6 +428,7 @@ mod tests {
         use nexcore_primitives::measurement::Measured;
         use nexcore_vigilance::guardian::homeostasis::{
             ActuatorResultSummary as DomainActuatorSummary, LoopIterationResult,
+            ThroughputMonitor,
         };
         use nexcore_vigilance::guardian::response::{ActuatorResult, ResponseAction};
         use nexcore_vigilance::guardian::sensing::{SignalSource, ThreatLevel, ThreatSignal};
@@ -445,6 +446,7 @@ mod tests {
                     message: "ok".to_string(),
                 }],
                 duration_ms: 5,
+                throughput: ThroughputMonitor::default(),
             }),
             GuardianEvent::SignalDetected(ThreatSignal {
                 id: "sig-1".to_string(),

@@ -4,10 +4,13 @@
 //! Highway Class: II (<100ms) for ingest/compress/query/stats, III (<500ms) for compile.
 
 use crate::params::knowledge_engine::{
-    KnowledgeCompileParams, KnowledgeCompressParams, KnowledgeIngestParams, KnowledgeQueryParams,
-    KnowledgeStatsParams,
+    KnowledgeCompileParams, KnowledgeCompressParams, KnowledgeExtractConceptsParams,
+    KnowledgeExtractPrimitivesParams, KnowledgeIngestParams, KnowledgeQueryParams,
+    KnowledgeScoreCompendiousParams, KnowledgeStatsParams,
 };
 use chrono::Utc;
+use nexcore_knowledge_engine::extraction::ConceptExtractor;
+use nexcore_knowledge_engine::scoring::CompendiousScorer;
 use nexcore_knowledge_engine::{
     CompileOptions, KnowledgeCompiler, KnowledgeSource, KnowledgeStore, QueryEngine, QueryMode,
     RawKnowledge,
@@ -238,5 +241,86 @@ pub fn stats(params: KnowledgeStatsParams) -> Result<CallToolResult, McpError> {
 
     Ok(CallToolResult::success(vec![Content::text(
         result.to_string(),
+    )]))
+}
+
+/// Score text for information density using the Compendious Score (Cs = I/E × C × R).
+///
+/// Returns the score breakdown: density, completeness, readability, interpretation,
+/// and the limiting factor dragging the score down.
+pub fn score_compendious(
+    params: KnowledgeScoreCompendiousParams,
+) -> Result<CallToolResult, McpError> {
+    let result = CompendiousScorer::score(&params.text, &params.required_terms);
+
+    Ok(CallToolResult::success(vec![Content::text(
+        json!({
+            "compendious_score": format!("{:.3}", result.compendious_score),
+            "information_content": format!("{:.1}", result.information_content),
+            "expression_cost": result.expression_cost,
+            "completeness": format!("{:.3}", result.completeness),
+            "readability": format!("{:.3}", result.readability),
+            "interpretation": result.interpretation,
+            "limiting_factor": result.limiting_factor,
+        })
+        .to_string(),
+    )]))
+}
+
+/// Extract T1/T2/T3 primitives from text using keyword heuristics.
+///
+/// Scans for primitive indicators (cause, transform, boundary, etc.) and
+/// returns classified primitives with tier and description.
+pub fn extract_primitives(
+    params: KnowledgeExtractPrimitivesParams,
+) -> Result<CallToolResult, McpError> {
+    let prims = ConceptExtractor::extract_primitives(&params.text);
+
+    let prims_json: Vec<serde_json::Value> = prims
+        .iter()
+        .map(|p| {
+            json!({
+                "name": p.name,
+                "tier": p.tier.to_string(),
+                "description": p.description,
+            })
+        })
+        .collect();
+
+    Ok(CallToolResult::success(vec![Content::text(
+        json!({
+            "primitive_count": prims.len(),
+            "primitives": prims_json,
+        })
+        .to_string(),
+    )]))
+}
+
+/// Extract significant concepts from text with domain classification.
+///
+/// Returns terms sorted by frequency, each optionally classified into a domain
+/// (pv, rust, claude-code, chemistry, physics, regulatory).
+pub fn extract_concepts(
+    params: KnowledgeExtractConceptsParams,
+) -> Result<CallToolResult, McpError> {
+    let concepts = ConceptExtractor::extract_concepts(&params.text);
+
+    let concepts_json: Vec<serde_json::Value> = concepts
+        .iter()
+        .map(|c| {
+            json!({
+                "term": c.term,
+                "domain": c.domain,
+                "frequency": c.frequency,
+            })
+        })
+        .collect();
+
+    Ok(CallToolResult::success(vec![Content::text(
+        json!({
+            "concept_count": concepts.len(),
+            "concepts": concepts_json,
+        })
+        .to_string(),
     )]))
 }

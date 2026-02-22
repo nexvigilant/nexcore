@@ -187,6 +187,21 @@ fn default_include_recommendations() -> bool {
     true
 }
 
+/// Parameters for skill VDAG route resolution
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct SkillRouteParams {
+    /// Skill name or natural-language intent to route
+    pub query: String,
+    /// Maximum chain depth to resolve (default: 3)
+    #[serde(default = "default_chain_depth")]
+    pub depth: usize,
+}
+
+fn default_chain_depth() -> usize {
+    3
+}
+
 // Re-export skill-related types from knowledge module for qualified access
 pub use super::knowledge::{
     PrimitiveSkillLookupParams, SkillChainLookupParams, VocabSkillLookupParams,

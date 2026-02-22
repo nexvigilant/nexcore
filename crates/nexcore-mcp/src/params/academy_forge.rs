@@ -71,10 +71,56 @@ pub struct ForgeGuidanceScaffoldParams {
     pub sections: Vec<String>,
 }
 
+/// Parameters for `forge_atomize` — decompose a pathway into Atomic Learning Objects.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct ForgeAtomizeParams {
+    /// Path to pathway JSON file (e.g., "content/pathways/tov-01.json").
+    /// Resolved relative to ~/nexcore/ if not absolute.
+    pub pathway_json: String,
+}
+
+/// Parameters for `forge_graph` — build a cross-pathway Learning Graph.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct ForgeGraphParams {
+    /// List of pathway JSON file paths to include in the graph.
+    /// Resolved relative to ~/nexcore/ if not absolute.
+    pub pathway_files: Vec<String>,
+    /// Enable fuzzy overlap detection via Jaccard word-level similarity.
+    /// Default: false (only exact KSB overlap).
+    #[serde(default)]
+    pub include_fuzzy: bool,
+    /// Similarity threshold for fuzzy overlap (0.0–1.0). Default: 0.6.
+    #[serde(default = "default_similarity_threshold")]
+    pub similarity_threshold: f32,
+}
+
+/// Parameters for `forge_shortest_path` — find shortest path to a target ALO or KSB.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct ForgeShortestPathParams {
+    /// List of pathway JSON file paths to build the graph from.
+    pub pathway_files: Vec<String>,
+    /// Target ALO ID (e.g., "tov-01-04-c01"). Mutually exclusive with `target_ksb`.
+    #[serde(default)]
+    pub target_alo_id: Option<String>,
+    /// Target KSB reference (e.g., "K1"). Mutually exclusive with `target_alo_id`.
+    #[serde(default)]
+    pub target_ksb: Option<String>,
+    /// Set of already-completed ALO IDs to skip in path computation.
+    #[serde(default)]
+    pub completed: Vec<String>,
+}
+
 fn default_domain() -> String {
     "pharmacovigilance".to_string()
 }
 
 fn default_overwrite() -> bool {
     true
+}
+
+fn default_similarity_threshold() -> f32 {
+    0.6
 }

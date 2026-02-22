@@ -1,0 +1,16 @@
+[package]
+name = "nexcore-spliceosome"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+description = "Pre-translation structural expectation generator for NMD pipeline surveillance"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+chrono = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+[dev-dependencies]

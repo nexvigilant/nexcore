@@ -8,6 +8,7 @@
 //! Uses Kahn's algorithm internally for layered layout.
 
 use crate::svg::{self, SvgDoc, palette};
+use crate::theme::Theme;
 use std::collections::{HashMap, HashSet, VecDeque};
 
 /// A node in the DAG.
@@ -35,7 +36,7 @@ pub struct DagEdge {
 /// Nodes are arranged in parallel execution levels (left to right).
 /// Each level contains nodes that can execute concurrently.
 #[must_use]
-pub fn render_dag(nodes: &[DagNode], edges: &[DagEdge], title: &str) -> String {
+pub fn render_dag(nodes: &[DagNode], edges: &[DagEdge], title: &str, theme: &Theme) -> String {
     // Compute levels via Kahn's algorithm
     let levels = compute_levels(nodes, edges);
 
@@ -47,7 +48,7 @@ pub fn render_dag(nodes: &[DagNode], edges: &[DagEdge], title: &str) -> String {
             50.0,
             "Empty graph",
             14.0,
-            palette::TEXT_DIM,
+            theme.text_dim,
             "middle",
         ));
         return doc.render();
@@ -73,7 +74,7 @@ pub fn render_dag(nodes: &[DagNode], edges: &[DagEdge], title: &str) -> String {
         28.0,
         title,
         16.0,
-        palette::TEXT,
+        theme.text,
         "middle",
     ));
 
@@ -91,7 +92,7 @@ pub fn render_dag(nodes: &[DagNode], edges: &[DagEdge], title: &str) -> String {
             y_offset - 10.0,
             node_w + 20.0,
             level_height + 20.0,
-            &format!("{}10", palette::BORDER),
+            &palette::with_alpha(theme.border, "10"),
             8.0,
         ));
 
@@ -102,7 +103,7 @@ pub fn render_dag(nodes: &[DagNode], edges: &[DagEdge], title: &str) -> String {
             y_offset - 18.0,
             &level_label,
             9.0,
-            palette::TEXT_DIM,
+            theme.text_dim,
             "middle",
         ));
 
@@ -125,7 +126,7 @@ pub fn render_dag(nodes: &[DagNode], edges: &[DagEdge], title: &str) -> String {
                 y1,
                 ex,
                 y2,
-                &format!("{}80", palette::TEXT_DIM),
+                &palette::with_alpha(theme.text_dim, "80"),
                 1.5,
             ));
         }
@@ -155,7 +156,7 @@ pub fn render_dag(nodes: &[DagNode], edges: &[DagEdge], title: &str) -> String {
                 y,
                 node_w,
                 node_h,
-                palette::BG_CARD,
+                theme.card_bg,
                 color,
                 2.0,
                 6.0,
@@ -165,7 +166,7 @@ pub fn render_dag(nodes: &[DagNode], edges: &[DagEdge], title: &str) -> String {
                 y + node_h / 2.0,
                 label,
                 10.0,
-                palette::TEXT,
+                theme.text,
                 "middle",
             ));
         }
@@ -178,7 +179,7 @@ pub fn render_dag(nodes: &[DagNode], edges: &[DagEdge], title: &str) -> String {
         height - 12.0,
         &par_text,
         10.0,
-        palette::TEXT_DIM,
+        theme.text_dim,
         "middle",
     ));
 
@@ -334,7 +335,7 @@ mod tests {
             },
         ];
         let edges = vec![];
-        let svg = render_dag(&nodes, &edges, "DAG Test");
+        let svg = render_dag(&nodes, &edges, "DAG Test", &Theme::default());
         assert!(svg.starts_with("<svg"));
     }
 }

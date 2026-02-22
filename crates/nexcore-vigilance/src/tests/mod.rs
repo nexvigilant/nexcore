@@ -6,6 +6,6 @@
 //! graceful degradation under adverse conditions.
 //!
 //! Enable with: `cargo test --features chaos-tests -p nexcore-vigilance`
-
+//!
 #[cfg(all(test, feature = "chaos-tests"))]
 pub mod chaos;

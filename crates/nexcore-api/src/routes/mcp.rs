@@ -246,6 +246,29 @@ const ALLOWED_TOOLS: &[&str] = &[
     "stoichiometry_sisters",
     "stoichiometry_mass_state",
     "stoichiometry_dictionary",
+    // Chemivigilance (7-crate platform: molcore, structural-alerts, qsar, metabolite, chemivigilance)
+    "chem_parse_smiles",
+    "chem_descriptors",
+    "chem_fingerprint",
+    "chem_similarity",
+    "chem_structural_alerts",
+    "chem_predict_toxicity",
+    "chem_predict_metabolites",
+    "chem_predict_degradants",
+    "chem_safety_brief",
+    "chem_substructure",
+    "chem_watchlist",
+    "chem_alert_library",
+    "chem_ring_scan",
+    "chem_aromaticity",
+    "chem_molecular_formula",
+    // NMD Surveillance (anti-hallucination pipeline, read-only)
+    "nmd_check",
+    "nmd_upf_evaluate",
+    "nmd_smg_process",
+    "nmd_adaptive_stats",
+    "nmd_thymic_status",
+    "nmd_status",
 ];
 
 // ── Telemetry ─────────────────────────────────

@@ -10,6 +10,7 @@
 //! - The system confidence (min of all) is shown at the bottom
 
 use crate::svg::{self, SvgDoc, palette};
+use crate::theme::Theme;
 
 /// A claim in a confidence chain.
 #[derive(Debug, Clone)]
@@ -26,7 +27,7 @@ pub struct Claim {
 
 /// Render a confidence propagation waterfall chart.
 #[must_use]
-pub fn render_confidence_chain(claims: &[Claim], title: &str) -> String {
+pub fn render_confidence_chain(claims: &[Claim], title: &str, theme: &Theme) -> String {
     let bar_h = 36.0;
     let gap = 12.0;
     let left_margin = 200.0;
@@ -44,7 +45,7 @@ pub fn render_confidence_chain(claims: &[Claim], title: &str) -> String {
         28.0,
         title,
         16.0,
-        palette::TEXT,
+        theme.text,
         "middle",
     ));
 
@@ -54,7 +55,7 @@ pub fn render_confidence_chain(claims: &[Claim], title: &str) -> String {
         48.0,
         "conf(child) \u{2264} min(conf(parents))",
         11.0,
-        palette::TEXT_DIM,
+        theme.text_dim,
         "middle",
     ));
 
@@ -66,7 +67,7 @@ pub fn render_confidence_chain(claims: &[Claim], title: &str) -> String {
             top - 10.0,
             x,
             height - 40.0,
-            palette::BORDER,
+            theme.border,
             0.5,
             "4,4",
         ));
@@ -76,7 +77,7 @@ pub fn render_confidence_chain(claims: &[Claim], title: &str) -> String {
             top - 16.0,
             &label,
             9.0,
-            palette::TEXT_DIM,
+            theme.text_dim,
             "middle",
         ));
     }
@@ -87,7 +88,7 @@ pub fn render_confidence_chain(claims: &[Claim], title: &str) -> String {
     for (i, claim) in claims.iter().enumerate() {
         let y = top + i as f64 * (bar_h + gap);
         let bar_w = bar_width * claim.confidence.clamp(0.0, 1.0);
-        let color = proof_type_color(&claim.proof_type);
+        let color = palette::proof_type_color(&claim.proof_type);
 
         if claim.confidence < min_conf {
             min_conf = claim.confidence;
@@ -106,7 +107,7 @@ pub fn render_confidence_chain(claims: &[Claim], title: &str) -> String {
                     (parent_y + child_y) / 2.0,
                     arrow_x,
                     child_y,
-                    &format!("{color}80"),
+                    &palette::with_alpha(color, "80"),
                     1.5,
                 ));
             }
@@ -118,7 +119,7 @@ pub fn render_confidence_chain(claims: &[Claim], title: &str) -> String {
             y,
             bar_w,
             bar_h,
-            &format!("{color}cc"),
+            &palette::with_alpha(color, "cc"),
             4.0,
         ));
 
@@ -128,7 +129,7 @@ pub fn render_confidence_chain(claims: &[Claim], title: &str) -> String {
             y + bar_h / 2.0,
             &claim.text,
             10.0,
-            palette::TEXT,
+            theme.text,
             "end",
         ));
 
@@ -149,7 +150,7 @@ pub fn render_confidence_chain(claims: &[Claim], title: &str) -> String {
             y + bar_h / 2.0 + 10.0,
             &claim.proof_type,
             8.0,
-            palette::TEXT_DIM,
+            theme.text_dim,
             "start",
         ));
     }
@@ -162,7 +163,7 @@ pub fn render_confidence_chain(claims: &[Claim], title: &str) -> String {
         top - 10.0,
         sys_x,
         sys_y,
-        "#ef4444",
+        theme.danger,
         1.5,
         "6,3",
     ));
@@ -173,25 +174,11 @@ pub fn render_confidence_chain(claims: &[Claim], title: &str) -> String {
         sys_y + 14.0,
         &sys_label,
         11.0,
-        "#ef4444",
+        theme.danger,
         "middle",
     ));
 
     doc.render()
-}
-
-/// Get color for proof type.
-fn proof_type_color(proof_type: &str) -> &'static str {
-    match proof_type.to_lowercase().as_str() {
-        "asserted" => "#22d3ee",
-        "computational" => "#34d399",
-        "analytical" => "#a78bfa",
-        "mapping" => "#60a5fa",
-        "adversarial" => "#f472b6",
-        "empirical" => "#fbbf24",
-        "derived" => "#fb923c",
-        _ => palette::TEXT_DIM,
-    }
 }
 
 #[cfg(test)]
@@ -220,7 +207,7 @@ mod tests {
                 parent: Some(0),
             },
         ];
-        let svg = render_confidence_chain(&claims, "Confidence Propagation");
+        let svg = render_confidence_chain(&claims, "Confidence Propagation", &Theme::default());
         assert!(svg.starts_with("<svg"));
         assert!(svg.contains("system_conf"));
         assert!(svg.contains("0.85")); // min confidence
@@ -248,7 +235,7 @@ mod tests {
                 parent: None,
             },
         ];
-        let svg = render_confidence_chain(&claims, "Test");
+        let svg = render_confidence_chain(&claims, "Test", &Theme::default());
         assert!(svg.contains("0.70")); // system_conf should be min
     }
 }

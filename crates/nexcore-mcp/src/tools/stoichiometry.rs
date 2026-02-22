@@ -15,9 +15,11 @@
 
 use crate::params::stoichiometry::{
     StoichiometryDecodeParams, StoichiometryDictionaryParams, StoichiometryEncodeParams,
-    StoichiometryMassStateParams, StoichiometrySistersParams,
+    StoichiometryIsBalancedParams, StoichiometryIsIsomerParams, StoichiometryMassStateParams,
+    StoichiometryProveParams, StoichiometrySistersParams,
 };
 use nexcore_lex_primitiva::primitiva::LexPrimitiva;
+use nexcore_stoichiometry::balance::Balancer;
 use nexcore_stoichiometry::prelude::*;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
@@ -317,4 +319,84 @@ fn parse_primitive(name: &str) -> Option<LexPrimitiva> {
         "product" | "×" => Some(LexPrimitiva::Product),
         _ => None,
     }
+}
+
+// ============================================================================
+// Balance & Isomer tools
+// ============================================================================
+
+/// Check if a balanced equation satisfies primitive conservation.
+///
+/// Deserializes the equation JSON, runs `Balancer::is_balanced`, and returns
+/// the boolean result plus the per-primitive deficit array.
+pub fn is_balanced(params: StoichiometryIsBalancedParams) -> Result<CallToolResult, McpError> {
+    let equation: BalancedEquation = serde_json::from_str(&params.equation_json)
+        .map_err(|e| McpError::invalid_params(format!("Invalid equation JSON: {e}"), None))?;
+
+    let balanced = Balancer::is_balanced(&equation);
+    let deficit = Balancer::deficit(&equation);
+
+    Ok(CallToolResult::success(vec![Content::text(
+        json!({
+            "success": true,
+            "is_balanced": balanced,
+            "deficit": deficit,
+            "concept": equation.concept.name,
+        })
+        .to_string(),
+    )]))
+}
+
+/// Generate a balance proof for an equation showing reactant/product mass conservation.
+///
+/// Returns the full `BalanceProof` including reactant mass, product mass, delta,
+/// and per-primitive inventories.
+pub fn prove(params: StoichiometryProveParams) -> Result<CallToolResult, McpError> {
+    let equation: BalancedEquation = serde_json::from_str(&params.equation_json)
+        .map_err(|e| McpError::invalid_params(format!("Invalid equation JSON: {e}"), None))?;
+
+    let proof = Balancer::prove(&equation.reactants, &equation.concept);
+    let proof_json = serde_json::to_value(&proof).map_err(|e| {
+        McpError::internal_error(format!("Serialization failed: {e}"), None)
+    })?;
+
+    Ok(CallToolResult::success(vec![Content::text(
+        json!({
+            "success": true,
+            "concept": equation.concept.name,
+            "proof": proof_json,
+            "is_balanced": proof.is_balanced,
+            "delta": proof.delta,
+            "reactant_mass": proof.reactant_mass,
+            "product_mass": proof.product_mass,
+        })
+        .to_string(),
+    )]))
+}
+
+/// Check if two equations are isomers (same primitive set, different dominant).
+///
+/// Also returns the Jaccard similarity between the two primitive compositions.
+pub fn is_isomer(params: StoichiometryIsIsomerParams) -> Result<CallToolResult, McpError> {
+    let eq_a: BalancedEquation = serde_json::from_str(&params.equation_a_json)
+        .map_err(|e| McpError::invalid_params(format!("Invalid equation A JSON: {e}"), None))?;
+    let eq_b: BalancedEquation = serde_json::from_str(&params.equation_b_json)
+        .map_err(|e| McpError::invalid_params(format!("Invalid equation B JSON: {e}"), None))?;
+
+    let isomer = nexcore_stoichiometry::sister::is_isomer(&eq_a, &eq_b);
+    let similarity = nexcore_stoichiometry::sister::jaccard_similarity(
+        eq_a.concept.formula.primitives(),
+        eq_b.concept.formula.primitives(),
+    );
+
+    Ok(CallToolResult::success(vec![Content::text(
+        json!({
+            "success": true,
+            "is_isomer": isomer,
+            "concept_a": eq_a.concept.name,
+            "concept_b": eq_b.concept.name,
+            "jaccard_similarity": format!("{:.3}", similarity),
+        })
+        .to_string(),
+    )]))
 }

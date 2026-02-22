@@ -207,3 +207,25 @@ pub struct ChemistryFirstLawOpenParams {
     /// Outlet specific enthalpies (J/kg)
     pub outflow_enthalpies: Vec<f64>,
 }
+
+/// Parameters for Gaussian primitive overlap integral calculation.
+///
+/// Computes the overlap integral between two s-type Gaussian primitives
+/// with proper normalization factors N = (2α/π)^(3/4). Essential for
+/// STO-nG basis set calculations in quantum chemistry visualization.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct ChemistryGaussianOverlapParams {
+    /// Exponents of Gaussian primitives on center A
+    pub exponents_a: Vec<f64>,
+    /// Contraction coefficients for center A
+    pub coefficients_a: Vec<f64>,
+    /// Position of center A as [x, y, z]
+    pub center_a: [f64; 3],
+    /// Exponents of Gaussian primitives on center B
+    pub exponents_b: Vec<f64>,
+    /// Contraction coefficients for center B
+    pub coefficients_b: Vec<f64>,
+    /// Position of center B as [x, y, z]
+    pub center_b: [f64; 3],
+}

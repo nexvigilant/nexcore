@@ -117,6 +117,10 @@ pub mod stem;
 
 // Visualization (SVG diagrams for STEM taxonomy, type composition, DAGs)
 pub mod viz;
+pub mod viz_advanced;
+pub mod viz_biologics;
+pub mod viz_foundation;
+pub mod viz_physics;
 
 // Algorithmic Vigilance (ICSR deduplication, signal triage)
 pub mod algovigilance;
@@ -422,3 +426,18 @@ pub mod foundry;
 
 // Chemivigilance (SMILES, descriptors, QSAR, metabolites, SafetyBrief — 15 tools)
 pub mod chemivigilance;
+
+// NMD Surveillance (Nonsense-Mediated mRNA Decay — anti-hallucination pipeline)
+pub mod nmd;
+
+// PV Pharmacokinetics (AUC, clearance, half-life, steady-state, ionization, Michaelis-Menten)
+pub mod pk;
+
+// PV Causality Assessment (RUCAM hepatotoxicity, UCAS unified)
+pub mod causality;
+
+// PV Temporal Analysis (time-to-onset, challenge assessment, plausibility)
+pub mod temporal;
+
+// QSAR Granular Predictions (mutagenicity, hepatotoxicity, cardiotoxicity, domain assessment)
+pub mod qsar;

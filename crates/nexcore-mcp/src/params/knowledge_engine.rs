@@ -70,3 +70,30 @@ pub struct KnowledgeStatsParams {
     /// Specific pack name (all packs if omitted).
     pub pack_name: Option<String>,
 }
+
+/// Parameters for knowledge_score_compendious.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct KnowledgeScoreCompendiousParams {
+    /// Text to score for information density (Cs = I/E × C × R).
+    pub text: String,
+    /// Required terms that should appear in the text (affects completeness factor).
+    #[serde(default)]
+    pub required_terms: Vec<String>,
+}
+
+/// Parameters for knowledge_extract_primitives.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct KnowledgeExtractPrimitivesParams {
+    /// Text to extract T1/T2/T3 primitives from via keyword heuristics.
+    pub text: String,
+}
+
+/// Parameters for knowledge_extract_concepts.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct KnowledgeExtractConceptsParams {
+    /// Text to extract significant concepts from with domain classification.
+    pub text: String,
+}

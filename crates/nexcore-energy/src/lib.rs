@@ -39,7 +39,9 @@
 #![deny(clippy::panic)]
 #![warn(missing_docs)]
 
+pub mod adaptive_thresholds;
 pub mod grounding;
+pub mod pv_gate;
 
 use serde::{Deserialize, Serialize};
 use std::fmt;

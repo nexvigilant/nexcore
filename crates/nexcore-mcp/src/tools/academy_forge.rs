@@ -370,6 +370,276 @@ pub fn forge_scaffold_from_guidance(
     )]))
 }
 
+/// Atomize a pathway JSON into Atomic Learning Objects (ALOs).
+///
+/// Decomposes each stage into Hook + Concept + Activity + Reflection ALOs
+/// with intra-pathway dependency edges. Returns the full `AtomizedPathway`
+/// structure with per-type counts, duration analysis, and edge breakdown.
+pub fn forge_atomize(params: crate::params::ForgeAtomizeParams) -> Result<CallToolResult, McpError> {
+    let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/home/matthew"));
+    let nexcore = home.join("nexcore");
+
+    let input_path = if params.pathway_json.starts_with('/') {
+        PathBuf::from(&params.pathway_json)
+    } else {
+        nexcore.join(&params.pathway_json)
+    };
+
+    if !input_path.exists() {
+        return Ok(CallToolResult::error(vec![Content::text(format!(
+            "Pathway JSON not found: {}",
+            input_path.display()
+        ))]));
+    }
+
+    let raw = match std::fs::read_to_string(&input_path) {
+        Ok(r) => r,
+        Err(e) => {
+            return Ok(CallToolResult::error(vec![Content::text(format!(
+                "Failed to read {}: {e}",
+                input_path.display()
+            ))]));
+        }
+    };
+
+    let pathway_json: serde_json::Value = match serde_json::from_str(&raw) {
+        Ok(v) => v,
+        Err(e) => {
+            return Ok(CallToolResult::error(vec![Content::text(format!(
+                "Invalid JSON in {}: {e}",
+                input_path.display()
+            ))]));
+        }
+    };
+
+    match academy_forge::atomize(&pathway_json) {
+        Ok(atomized) => {
+            let alo_count = atomized.alos.len();
+            let edge_count = atomized.edges.len();
+
+            // Type breakdown
+            let hooks = atomized.alos.iter().filter(|a| a.alo_type == academy_forge::ir::AloType::Hook).count();
+            let concepts = atomized.alos.iter().filter(|a| a.alo_type == academy_forge::ir::AloType::Concept).count();
+            let activities = atomized.alos.iter().filter(|a| a.alo_type == academy_forge::ir::AloType::Activity).count();
+            let reflections = atomized.alos.iter().filter(|a| a.alo_type == academy_forge::ir::AloType::Reflection).count();
+            let total_duration: u16 = atomized.alos.iter().map(|a| a.estimated_duration).sum();
+
+            // Validation
+            let report = academy_forge::validate::alo::validate_alo_report(&atomized);
+
+            let json = serde_json::json!({
+                "success": true,
+                "pathway_id": atomized.id,
+                "title": atomized.title,
+                "alo_count": alo_count,
+                "edge_count": edge_count,
+                "total_duration_min": total_duration,
+                "avg_duration_min": if alo_count > 0 { total_duration as f32 / alo_count as f32 } else { 0.0 },
+                "type_breakdown": {
+                    "hooks": hooks,
+                    "concepts": concepts,
+                    "activities": activities,
+                    "reflections": reflections,
+                },
+                "validation": {
+                    "passed": report.passed,
+                    "errors": report.error_count,
+                    "warnings": report.warning_count,
+                    "findings": report.findings,
+                },
+                "atomized_pathway": atomized,
+            });
+
+            if report.passed {
+                Ok(CallToolResult::success(vec![Content::text(json.to_string())]))
+            } else {
+                Ok(CallToolResult::error(vec![Content::text(json.to_string())]))
+            }
+        }
+        Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+            "Atomize failed: {e}"
+        ))])),
+    }
+}
+
+/// Build a cross-pathway Learning Graph from multiple atomized pathways.
+///
+/// Merges ALOs and edges, detects cross-pathway overlaps, and builds a DAG.
+/// Returns graph metadata (node count, edge count, components, diameter),
+/// overlap clusters, and the full graph structure.
+pub fn forge_graph(params: crate::params::ForgeGraphParams) -> Result<CallToolResult, McpError> {
+    let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/home/matthew"));
+    let nexcore = home.join("nexcore");
+
+    let mut pathways = Vec::new();
+
+    for file_path in &params.pathway_files {
+        let input_path = if file_path.starts_with('/') {
+            PathBuf::from(file_path)
+        } else {
+            nexcore.join(file_path)
+        };
+
+        if !input_path.exists() {
+            return Ok(CallToolResult::error(vec![Content::text(format!(
+                "Pathway JSON not found: {}",
+                input_path.display()
+            ))]));
+        }
+
+        let raw = match std::fs::read_to_string(&input_path) {
+            Ok(r) => r,
+            Err(e) => {
+                return Ok(CallToolResult::error(vec![Content::text(format!(
+                    "Failed to read {}: {e}",
+                    input_path.display()
+                ))]));
+            }
+        };
+
+        let pathway_json: serde_json::Value = match serde_json::from_str(&raw) {
+            Ok(v) => v,
+            Err(e) => {
+                return Ok(CallToolResult::error(vec![Content::text(format!(
+                    "Invalid JSON in {}: {e}",
+                    input_path.display()
+                ))]));
+            }
+        };
+
+        match academy_forge::atomize(&pathway_json) {
+            Ok(atomized) => pathways.push(atomized),
+            Err(e) => {
+                return Ok(CallToolResult::error(vec![Content::text(format!(
+                    "Atomize failed for {}: {e}",
+                    input_path.display()
+                ))]));
+            }
+        }
+    }
+
+    match academy_forge::build_graph(&pathways, params.include_fuzzy, params.similarity_threshold) {
+        Ok(graph) => {
+            let json = serde_json::json!({
+                "success": true,
+                "metadata": graph.metadata,
+                "pathways": graph.pathways,
+                "overlap_clusters": graph.overlap_clusters,
+                "graph": graph,
+            });
+
+            Ok(CallToolResult::success(vec![Content::text(json.to_string())]))
+        }
+        Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+            "Graph build failed: {e}"
+        ))])),
+    }
+}
+
+/// Find the shortest learning path to a target ALO or KSB.
+///
+/// Given a set of completed ALO IDs, computes the minimum remaining path
+/// to reach a specific ALO or any ALO tagged with a specific KSB reference.
+pub fn forge_shortest_path(
+    params: crate::params::ForgeShortestPathParams,
+) -> Result<CallToolResult, McpError> {
+    let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/home/matthew"));
+    let nexcore = home.join("nexcore");
+
+    // Build graph from pathway files
+    let mut pathways = Vec::new();
+    for file_path in &params.pathway_files {
+        let input_path = if file_path.starts_with('/') {
+            PathBuf::from(file_path)
+        } else {
+            nexcore.join(file_path)
+        };
+
+        let raw = match std::fs::read_to_string(&input_path) {
+            Ok(r) => r,
+            Err(e) => {
+                return Ok(CallToolResult::error(vec![Content::text(format!(
+                    "Failed to read {}: {e}",
+                    input_path.display()
+                ))]));
+            }
+        };
+
+        let pathway_json: serde_json::Value = match serde_json::from_str(&raw) {
+            Ok(v) => v,
+            Err(e) => {
+                return Ok(CallToolResult::error(vec![Content::text(format!(
+                    "Invalid JSON: {e}"
+                ))]));
+            }
+        };
+
+        match academy_forge::atomize(&pathway_json) {
+            Ok(atomized) => pathways.push(atomized),
+            Err(e) => {
+                return Ok(CallToolResult::error(vec![Content::text(format!(
+                    "Atomize failed: {e}"
+                ))]));
+            }
+        }
+    }
+
+    let graph = match academy_forge::build_graph(&pathways, false, 0.6) {
+        Ok(g) => g,
+        Err(e) => {
+            return Ok(CallToolResult::error(vec![Content::text(format!(
+                "Graph build failed: {e}"
+            ))]));
+        }
+    };
+
+    let completed: std::collections::HashSet<String> = params.completed.into_iter().collect();
+
+    // Dispatch to appropriate query
+    if let Some(target_alo_id) = &params.target_alo_id {
+        match academy_forge::graph::queries::shortest_path_to_alo(&graph, target_alo_id, &completed)
+        {
+            Some(result) => {
+                let json = serde_json::json!({
+                    "success": true,
+                    "query": "shortest_path_to_alo",
+                    "target": target_alo_id,
+                    "result": result,
+                });
+                Ok(CallToolResult::success(vec![Content::text(json.to_string())]))
+            }
+            None => Ok(CallToolResult::error(vec![Content::text(format!(
+                "No path found to ALO '{target_alo_id}'. It may not exist or may already be completed."
+            ))])),
+        }
+    } else if let Some(target_ksb) = &params.target_ksb {
+        match academy_forge::graph::queries::shortest_path_to_ksb(&graph, target_ksb, &completed) {
+            Some(result) => {
+                let json = serde_json::json!({
+                    "success": true,
+                    "query": "shortest_path_to_ksb",
+                    "target": target_ksb,
+                    "result": result,
+                });
+                Ok(CallToolResult::success(vec![Content::text(json.to_string())]))
+            }
+            None => Ok(CallToolResult::error(vec![Content::text(format!(
+                "No path found to KSB '{target_ksb}'. No ALOs reference this KSB or all are completed."
+            ))])),
+        }
+    } else {
+        // Neither target specified — return capability surface
+        let surface = academy_forge::graph::queries::capability_surface(&graph, &completed);
+        let json = serde_json::json!({
+            "success": true,
+            "query": "capability_surface",
+            "completed_count": completed.len(),
+            "result": surface,
+        });
+        Ok(CallToolResult::success(vec![Content::text(json.to_string())]))
+    }
+}
+
 #[cfg(test)]
 #[allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 mod tests {

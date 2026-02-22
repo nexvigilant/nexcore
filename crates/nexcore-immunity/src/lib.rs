@@ -68,16 +68,28 @@
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, missing_docs)]
 
+pub mod adaptive;
+pub mod co_translational;
 pub mod error;
 pub mod grounding;
 pub mod loader;
 pub mod scanner;
+pub mod smg;
+pub mod thymic;
 pub mod types;
 
 // Re-exports for convenience
 pub use error::{ImmunityError, ImmunityResult};
 pub use loader::{DEFAULT_REGISTRY_PATH, load_default_registry, load_from_str, load_registry};
 pub use scanner::ImmunityScanner;
+pub use co_translational::{
+    CheckpointObservation, UpfAnomaly, UpfChannel, UpfComplex, UpfConfig, UpfVerdict,
+};
+// Re-export spliceosome types used in NMD pipeline
+pub use nexcore_spliceosome::{EjcMarker, TaskCategory};
+pub use adaptive::{NmdAdaptiveEngine, NmdLearningEvent, ThresholdAdjustment};
+pub use smg::{SmgAction, SmgComplex, SmgConfig};
+pub use thymic::{CategoryObservation, ThymicConfig, ThymicGate};
 pub use types::{
     Antibody, AntibodyRegistry, AutoimmuneDiagnosis, AutoimmuneReport, AutoimmuneStatus,
     CodePattern, Detection, Response, ResponseStrategy, ScanMetrics, ScanResult, ThreatLevel,

@@ -23,6 +23,9 @@ pub struct PipelineRun {
     pub checkpoints: Vec<Checkpoint>,
     /// When the run completed (if finished)
     pub completed: Option<DateTime<Utc>>,
+    /// EJC markers from spliceosome for NMD surveillance
+    #[serde(default)]
+    pub ejc_markers: Vec<serde_json::Value>,
 }
 
 /// Run status
@@ -37,6 +40,8 @@ pub enum RunStatus {
     Failed,
     /// Run was cancelled by user
     Cancelled,
+    /// Run was aborted by NMD surveillance
+    Aborted,
 }
 
 /// A checkpoint within a run
@@ -99,6 +104,7 @@ impl PipelineState {
             status: RunStatus::Running,
             checkpoints: Vec::new(),
             completed: None,
+            ejc_markers: Vec::new(),
         };
         self.runs.push(run);
         // SAFETY: just pushed — index is guaranteed valid
@@ -125,6 +131,28 @@ impl PipelineState {
     pub fn complete_run(&mut self, status: RunStatus) -> Result<()> {
         if let Some(run) = self.runs.last_mut() {
             run.status = status;
+            run.completed = Some(Utc::now());
+            Ok(())
+        } else {
+            Err(BrainError::ArtifactNotFound("No active run".into()))
+        }
+    }
+
+    /// Attach EJC markers from spliceosome to current run.
+    pub fn attach_ejc_markers(&mut self, markers: Vec<serde_json::Value>) -> Result<()> {
+        if let Some(run) = self.runs.last_mut() {
+            run.ejc_markers = markers;
+            Ok(())
+        } else {
+            Err(BrainError::ArtifactNotFound("No active run".into()))
+        }
+    }
+
+    /// Abort current run (NMD degradation pathway).
+    pub fn abort_run(&mut self, reason: &str) -> Result<()> {
+        self.checkpoint("nmd_abort", serde_json::json!({"reason": reason}))?;
+        if let Some(run) = self.runs.last_mut() {
+            run.status = RunStatus::Aborted;
             run.completed = Some(Utc::now());
             Ok(())
         } else {
@@ -163,6 +191,7 @@ impl PipelineRun {
             RunStatus::Completed => "completed",
             RunStatus::Failed => "failed",
             RunStatus::Cancelled => "cancelled",
+            RunStatus::Aborted => "aborted",
         }
     }
 }
@@ -232,5 +261,81 @@ mod tests {
 
         let decoded: RunStatus = serde_json::from_str(&json).unwrap();
         assert_eq!(decoded, RunStatus::Running);
+    }
+
+    #[test]
+    fn test_aborted_status() {
+        let mut state = PipelineState::new("nmd-test");
+        state.start_run(Some("run-abort".into()));
+        state.abort_run("phase order violation").unwrap();
+
+        assert_eq!(state.runs[0].status, RunStatus::Aborted);
+        assert!(state.runs[0].completed.is_some());
+        // Abort records a checkpoint
+        assert!(state.runs[0]
+            .checkpoints
+            .iter()
+            .any(|c| c.name == "nmd_abort"));
+    }
+
+    #[test]
+    fn test_aborted_serialization() {
+        let status = RunStatus::Aborted;
+        let json = serde_json::to_string(&status).unwrap();
+        assert_eq!(json, "\"aborted\"");
+    }
+
+    #[test]
+    fn test_ejc_markers() {
+        let mut state = PipelineState::new("nmd-markers");
+        state.start_run(Some("run-ejc".into()));
+        let markers = vec![
+            serde_json::json!({"phase_id": "investigate", "grounding": 0.5}),
+            serde_json::json!({"phase_id": "implement", "grounding": 0.3}),
+        ];
+        state.attach_ejc_markers(markers).unwrap();
+
+        let run = state.current_run().unwrap();
+        assert_eq!(run.ejc_markers.len(), 2);
+    }
+
+    #[test]
+    fn test_ejc_markers_default_empty() {
+        let mut state = PipelineState::new("test");
+        state.start_run(None);
+        let run = state.current_run().unwrap();
+        assert!(run.ejc_markers.is_empty());
+    }
+
+    #[test]
+    fn test_abort_without_run() {
+        let mut state = PipelineState::new("test");
+        let result = state.abort_run("no run");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_attach_markers_without_run() {
+        let mut state = PipelineState::new("test");
+        let result = state.attach_ejc_markers(vec![]);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_backward_compat_deserialize() {
+        // Existing pipeline JSON without ejc_markers should deserialize fine
+        let json = r#"{
+            "name": "legacy",
+            "runs": [{
+                "id": "r1",
+                "started": "2026-01-01T00:00:00Z",
+                "status": "completed",
+                "checkpoints": [],
+                "completed": "2026-01-01T00:01:00Z"
+            }],
+            "last_checkpoint": null
+        }"#;
+        let state: PipelineState = serde_json::from_str(json).unwrap();
+        assert_eq!(state.runs[0].ejc_markers.len(), 0);
     }
 }

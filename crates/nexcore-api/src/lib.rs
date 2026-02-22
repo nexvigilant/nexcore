@@ -5,18 +5,20 @@
 pub mod audit;
 pub mod auth;
 pub mod core_types;
+pub mod openapi_compat;
 pub mod persistence;
 pub mod routes;
 
 use axum::{
     Router,
     body::Body,
-    extract::{FromRef, Request},
+    extract::{FromRef, Query, Request},
     http::{Method, StatusCode, header},
     middleware::{self, Next},
     response::{IntoResponse, Response},
     routing::get,
 };
+use serde::Deserialize;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -66,10 +68,7 @@ pub fn build_app(state: ApiState) -> Router {
     eprintln!("[DEBUG] Merging Scalar/OpenAPI...");
     let app = Router::new()
         .merge(Scalar::with_url("/docs", ApiDoc::openapi()))
-        .route(
-            "/openapi.json",
-            get(|| async { axum::Json(ApiDoc::openapi()) }),
-        )
+        .route("/openapi.json", get(openapi_json_handler))
         .nest("/health", routes::health::router())
         .nest("/api/v1", api_routes)
         .with_state(state)
@@ -186,6 +185,47 @@ async fn rate_limit_middleware(
         )
             .into_response()
     }
+}
+
+// ── OpenAPI spec endpoint ──────────────────
+
+/// Query parameters accepted by [`openapi_json_handler`].
+#[derive(Debug, Deserialize)]
+struct OpenApiQuery {
+    /// Request a downconverted OpenAPI 3.0.3 spec by passing `?version=3.0`.
+    /// Any other value (or omitting the parameter entirely) returns the native
+    /// OpenAPI 3.1.0 spec emitted by utoipa.
+    version: Option<String>,
+}
+
+/// Serve the OpenAPI specification.
+///
+/// - `GET /openapi.json` — returns the native OpenAPI 3.1.0 spec.
+/// - `GET /openapi.json?version=3.0` — returns a downconverted OpenAPI 3.0.3
+///   spec compatible with progenitor and other 3.0-only client generators.
+async fn openapi_json_handler(
+    Query(params): Query<OpenApiQuery>,
+) -> Response {
+    let native = match serde_json::to_value(ApiDoc::openapi()) {
+        Ok(v) => v,
+        Err(e) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                axum::Json(serde_json::json!({
+                    "code": "SPEC_SERIALIZATION_ERROR",
+                    "message": e.to_string()
+                })),
+            )
+                .into_response();
+        }
+    };
+
+    let spec = match params.version.as_deref() {
+        Some("3.0") => openapi_compat::downconvert_31_to_30(native),
+        _ => native,
+    };
+
+    axum::Json(spec).into_response()
 }
 
 /// API documentation

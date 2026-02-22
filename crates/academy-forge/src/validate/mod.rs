@@ -8,6 +8,7 @@
 //! - Experiential rules (R24-R27): learning theory compliance
 
 pub mod accuracy;
+pub mod alo;
 pub mod conventions;
 pub mod experiential;
 pub mod progression;

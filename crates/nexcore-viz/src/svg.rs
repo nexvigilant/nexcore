@@ -5,6 +5,7 @@
 
 #![allow(dead_code)]
 
+use crate::theme::Theme;
 use std::fmt::Write as FmtWrite;
 
 /// An SVG document builder.
@@ -13,10 +14,11 @@ pub struct SvgDoc {
     height: f64,
     elements: Vec<String>,
     defs: Vec<String>,
+    theme: Theme,
 }
 
 impl SvgDoc {
-    /// Create a new SVG document.
+    /// Create a new SVG document with the default dark theme.
     #[must_use]
     pub fn new(width: f64, height: f64) -> Self {
         Self {
@@ -24,7 +26,26 @@ impl SvgDoc {
             height,
             elements: Vec::new(),
             defs: Vec::new(),
+            theme: Theme::dark(),
         }
+    }
+
+    /// Create a new SVG document with a specific theme.
+    #[must_use]
+    pub fn new_with_theme(width: f64, height: f64, theme: Theme) -> Self {
+        Self {
+            width,
+            height,
+            elements: Vec::new(),
+            defs: Vec::new(),
+            theme,
+        }
+    }
+
+    /// Get a reference to this document's theme.
+    #[must_use]
+    pub fn theme(&self) -> &Theme {
+        &self.theme
     }
 
     /// Add a raw SVG element string.
@@ -37,13 +58,19 @@ impl SvgDoc {
         self.defs.push(def);
     }
 
+    /// Add an arrowhead marker definition.
+    pub fn add_arrowhead(&mut self, id: &str, color: &str, size: f64) {
+        self.add_def(arrowhead_marker(id, color, size));
+    }
+
     /// Render to complete SVG string.
     #[must_use]
     pub fn render(&self) -> String {
         let mut svg = String::with_capacity(4096);
+        let style = self.theme.svg_style();
         let _ = write!(
             svg,
-            r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {} {}" width="{}" height="{}" style="font-family:'Segoe UI',system-ui,sans-serif;background:#0d1117">"#,
+            r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {} {}" width="{}" height="{}" style="{style}">"#,
             self.width, self.height, self.width, self.height
         );
 
@@ -103,9 +130,11 @@ pub fn line_dashed(
     sw: f64,
     dash: &str,
 ) -> String {
-    format!(
-        r#"<line x1="{x1:.1}" y1="{y1:.1}" x2="{x2:.1}" y2="{y2:.1}" stroke="{stroke}" stroke-width="{sw:.1}" stroke-dasharray="{dash}"/>"#
-    )
+    DashedLine::new(x1, y1, x2, y2)
+        .color(stroke)
+        .stroke_width(sw)
+        .dash(dash)
+        .to_string()
 }
 
 /// Generate a rectangle.
@@ -118,6 +147,7 @@ pub fn rect(x: f64, y: f64, w: f64, h: f64, fill: &str, rx: f64) -> String {
 
 /// Generate a rectangle with stroke.
 #[must_use]
+#[allow(clippy::too_many_arguments)]
 pub fn rect_stroke(
     x: f64,
     y: f64,
@@ -128,9 +158,12 @@ pub fn rect_stroke(
     sw: f64,
     rx: f64,
 ) -> String {
-    format!(
-        r#"<rect x="{x:.1}" y="{y:.1}" width="{w:.1}" height="{h:.1}" fill="{fill}" stroke="{stroke}" stroke-width="{sw:.1}" rx="{rx:.1}"/>"#
-    )
+    StrokeRect::new(x, y, w, h)
+        .fill(fill)
+        .stroke(stroke)
+        .stroke_width(sw)
+        .rx(rx)
+        .to_string()
 }
 
 /// Generate text at a position.
@@ -159,6 +192,7 @@ pub fn path(d: &str, fill: &str, stroke: &str, sw: f64) -> String {
 
 /// Generate an arc path segment (for pie/donut slices).
 #[must_use]
+#[allow(clippy::too_many_arguments)]
 pub fn arc_path(
     cx: f64,
     cy: f64,
@@ -169,24 +203,11 @@ pub fn arc_path(
     stroke: &str,
     sw: f64,
 ) -> String {
-    let start_rad = start_angle.to_radians();
-    let end_rad = end_angle.to_radians();
-
-    let x1 = cx + r * start_rad.cos();
-    let y1 = cy + r * start_rad.sin();
-    let x2 = cx + r * end_rad.cos();
-    let y2 = cy + r * end_rad.sin();
-
-    let large_arc = if (end_angle - start_angle).abs() > 180.0 {
-        1
-    } else {
-        0
-    };
-
-    let d = format!(
-        "M {cx:.1} {cy:.1} L {x1:.1} {y1:.1} A {r:.1} {r:.1} 0 {large_arc} 1 {x2:.1} {y2:.1} Z"
-    );
-    path(&d, fill, stroke, sw)
+    ArcPath::new(cx, cy, r, start_angle, end_angle)
+        .fill(fill)
+        .stroke(stroke)
+        .stroke_width(sw)
+        .to_string()
 }
 
 /// Generate an annular (ring) arc segment.
@@ -200,29 +221,9 @@ pub fn annular_arc(
     end_angle: f64,
     fill: &str,
 ) -> String {
-    let s = start_angle.to_radians();
-    let e = end_angle.to_radians();
-
-    let ox1 = cx + outer_r * s.cos();
-    let oy1 = cy + outer_r * s.sin();
-    let ox2 = cx + outer_r * e.cos();
-    let oy2 = cy + outer_r * e.sin();
-    let ix1 = cx + inner_r * e.cos();
-    let iy1 = cy + inner_r * e.sin();
-    let ix2 = cx + inner_r * s.cos();
-    let iy2 = cy + inner_r * s.sin();
-
-    let large = if (end_angle - start_angle).abs() > 180.0 {
-        1
-    } else {
-        0
-    };
-
-    let d = format!(
-        "M {ox1:.1} {oy1:.1} A {outer_r:.1} {outer_r:.1} 0 {large} 1 {ox2:.1} {oy2:.1} \
-         L {ix1:.1} {iy1:.1} A {inner_r:.1} {inner_r:.1} 0 {large} 0 {ix2:.1} {iy2:.1} Z"
-    );
-    format!(r#"<path d="{d}" fill="{fill}"/>"#)
+    AnnularArcBuilder::new(cx, cy, inner_r, outer_r, start_angle, end_angle)
+        .fill(fill)
+        .to_string()
 }
 
 /// Generate a group with transform.
@@ -270,6 +271,7 @@ pub fn arrow(x1: f64, y1: f64, x2: f64, y2: f64, stroke: &str, sw: f64) -> Strin
 
 /// Generate a curved arrow (quadratic bezier).
 #[must_use]
+#[allow(clippy::too_many_arguments)]
 pub fn curved_arrow(
     x1: f64,
     y1: f64,
@@ -280,8 +282,34 @@ pub fn curved_arrow(
     stroke: &str,
     sw: f64,
 ) -> String {
-    let d = format!("M {x1:.1} {y1:.1} Q {cx:.1} {cy:.1} {x2:.1} {y2:.1}");
-    format!(r#"<path d="{d}" fill="none" stroke="{stroke}" stroke-width="{sw:.1}"/>"#)
+    CurvedArrowBuilder::new(x1, y1, cx, cy, x2, y2)
+        .color(stroke)
+        .stroke_width(sw)
+        .to_string()
+}
+
+/// Generate an SVG `<marker>` definition for arrowheads.
+#[must_use]
+pub fn arrowhead_marker(id: &str, color: &str, size: f64) -> String {
+    format!(
+        r#"<marker id="{id}" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="{size:.1}" markerHeight="{size:.1}" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="{color}"/></marker>"#
+    )
+}
+
+/// Generate a line referencing a marker-end arrowhead.
+#[must_use]
+pub fn arrow_with_marker(
+    x1: f64,
+    y1: f64,
+    x2: f64,
+    y2: f64,
+    stroke: &str,
+    sw: f64,
+    marker_id: &str,
+) -> String {
+    format!(
+        r#"<line x1="{x1:.1}" y1="{y1:.1}" x2="{x2:.1}" y2="{y2:.1}" stroke="{stroke}" stroke-width="{sw:.1}" marker-end="url(#{marker_id})"/>"#
+    )
 }
 
 /// Escape XML special characters.
@@ -291,6 +319,400 @@ pub fn escape_xml(s: &str) -> String {
         .replace('<', "&lt;")
         .replace('>', "&gt;")
         .replace('"', "&quot;")
+}
+
+// ============================================================================
+// Builder patterns for high-parameter functions
+// ============================================================================
+
+/// Builder for dashed line elements.
+pub struct DashedLine {
+    x1: f64,
+    y1: f64,
+    x2: f64,
+    y2: f64,
+    color_val: String,
+    stroke_width_val: f64,
+    dash_val: String,
+}
+
+impl Default for DashedLine {
+    fn default() -> Self {
+        Self {
+            x1: 0.0,
+            y1: 0.0,
+            x2: 0.0,
+            y2: 0.0,
+            color_val: palette::SLATE.to_string(),
+            stroke_width_val: 2.0,
+            dash_val: "4,4".to_string(),
+        }
+    }
+}
+
+impl DashedLine {
+    #[must_use]
+    pub fn new(x1: f64, y1: f64, x2: f64, y2: f64) -> Self {
+        Self {
+            x1,
+            y1,
+            x2,
+            y2,
+            ..Default::default()
+        }
+    }
+
+    #[must_use]
+    pub fn color(mut self, c: &str) -> Self {
+        self.color_val = c.to_string();
+        self
+    }
+
+    #[must_use]
+    pub fn stroke_width(mut self, sw: f64) -> Self {
+        self.stroke_width_val = sw;
+        self
+    }
+
+    #[must_use]
+    pub fn dash(mut self, d: &str) -> Self {
+        self.dash_val = d.to_string();
+        self
+    }
+}
+
+impl std::fmt::Display for DashedLine {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            r#"<line x1="{:.1}" y1="{:.1}" x2="{:.1}" y2="{:.1}" stroke="{}" stroke-width="{:.1}" stroke-dasharray="{}"/>"#,
+            self.x1,
+            self.y1,
+            self.x2,
+            self.y2,
+            self.color_val,
+            self.stroke_width_val,
+            self.dash_val
+        )
+    }
+}
+
+/// Builder for stroked rectangle elements.
+pub struct StrokeRect {
+    x: f64,
+    y: f64,
+    w: f64,
+    h: f64,
+    fill_val: String,
+    stroke_val: String,
+    stroke_width_val: f64,
+    rx_val: f64,
+}
+
+impl Default for StrokeRect {
+    fn default() -> Self {
+        Self {
+            x: 0.0,
+            y: 0.0,
+            w: 0.0,
+            h: 0.0,
+            fill_val: palette::BG_CARD.to_string(),
+            stroke_val: palette::SLATE.to_string(),
+            stroke_width_val: 2.0,
+            rx_val: 0.0,
+        }
+    }
+}
+
+impl StrokeRect {
+    #[must_use]
+    pub fn new(x: f64, y: f64, w: f64, h: f64) -> Self {
+        Self {
+            x,
+            y,
+            w,
+            h,
+            ..Default::default()
+        }
+    }
+
+    #[must_use]
+    pub fn fill(mut self, f: &str) -> Self {
+        self.fill_val = f.to_string();
+        self
+    }
+
+    #[must_use]
+    pub fn stroke(mut self, s: &str) -> Self {
+        self.stroke_val = s.to_string();
+        self
+    }
+
+    #[must_use]
+    pub fn stroke_width(mut self, sw: f64) -> Self {
+        self.stroke_width_val = sw;
+        self
+    }
+
+    #[must_use]
+    pub fn rx(mut self, rx: f64) -> Self {
+        self.rx_val = rx;
+        self
+    }
+}
+
+impl std::fmt::Display for StrokeRect {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            r#"<rect x="{:.1}" y="{:.1}" width="{:.1}" height="{:.1}" fill="{}" stroke="{}" stroke-width="{:.1}" rx="{:.1}"/>"#,
+            self.x,
+            self.y,
+            self.w,
+            self.h,
+            self.fill_val,
+            self.stroke_val,
+            self.stroke_width_val,
+            self.rx_val
+        )
+    }
+}
+
+/// Builder for arc path segments (pie/donut slices).
+pub struct ArcPath {
+    cx: f64,
+    cy: f64,
+    r: f64,
+    start_angle: f64,
+    end_angle: f64,
+    fill_val: String,
+    stroke_val: String,
+    stroke_width_val: f64,
+}
+
+impl Default for ArcPath {
+    fn default() -> Self {
+        Self {
+            cx: 0.0,
+            cy: 0.0,
+            r: 0.0,
+            start_angle: 0.0,
+            end_angle: 0.0,
+            fill_val: palette::SLATE.to_string(),
+            stroke_val: "none".to_string(),
+            stroke_width_val: 2.0,
+        }
+    }
+}
+
+impl ArcPath {
+    #[must_use]
+    pub fn new(cx: f64, cy: f64, r: f64, start_angle: f64, end_angle: f64) -> Self {
+        Self {
+            cx,
+            cy,
+            r,
+            start_angle,
+            end_angle,
+            ..Default::default()
+        }
+    }
+
+    #[must_use]
+    pub fn fill(mut self, f: &str) -> Self {
+        self.fill_val = f.to_string();
+        self
+    }
+
+    #[must_use]
+    pub fn stroke(mut self, s: &str) -> Self {
+        self.stroke_val = s.to_string();
+        self
+    }
+
+    #[must_use]
+    pub fn stroke_width(mut self, sw: f64) -> Self {
+        self.stroke_width_val = sw;
+        self
+    }
+}
+
+impl std::fmt::Display for ArcPath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let start_rad = self.start_angle.to_radians();
+        let end_rad = self.end_angle.to_radians();
+
+        let x1 = self.cx + self.r * start_rad.cos();
+        let y1 = self.cy + self.r * start_rad.sin();
+        let x2 = self.cx + self.r * end_rad.cos();
+        let y2 = self.cy + self.r * end_rad.sin();
+
+        let large_arc = if (self.end_angle - self.start_angle).abs() > 180.0 {
+            1
+        } else {
+            0
+        };
+
+        let d = format!(
+            "M {:.1} {:.1} L {x1:.1} {y1:.1} A {:.1} {:.1} 0 {large_arc} 1 {x2:.1} {y2:.1} Z",
+            self.cx, self.cy, self.r, self.r
+        );
+        write!(
+            f,
+            r#"<path d="{d}" fill="{}" stroke="{}" stroke-width="{:.1}"/>"#,
+            self.fill_val, self.stroke_val, self.stroke_width_val
+        )
+    }
+}
+
+/// Builder for annular (ring) arc segments.
+pub struct AnnularArcBuilder {
+    cx: f64,
+    cy: f64,
+    inner_r: f64,
+    outer_r: f64,
+    start_angle: f64,
+    end_angle: f64,
+    fill_val: String,
+}
+
+impl Default for AnnularArcBuilder {
+    fn default() -> Self {
+        Self {
+            cx: 0.0,
+            cy: 0.0,
+            inner_r: 0.0,
+            outer_r: 0.0,
+            start_angle: 0.0,
+            end_angle: 0.0,
+            fill_val: palette::SLATE.to_string(),
+        }
+    }
+}
+
+impl AnnularArcBuilder {
+    #[must_use]
+    pub fn new(
+        cx: f64,
+        cy: f64,
+        inner_r: f64,
+        outer_r: f64,
+        start_angle: f64,
+        end_angle: f64,
+    ) -> Self {
+        Self {
+            cx,
+            cy,
+            inner_r,
+            outer_r,
+            start_angle,
+            end_angle,
+            ..Default::default()
+        }
+    }
+
+    #[must_use]
+    pub fn fill(mut self, f: &str) -> Self {
+        self.fill_val = f.to_string();
+        self
+    }
+}
+
+impl std::fmt::Display for AnnularArcBuilder {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = self.start_angle.to_radians();
+        let e = self.end_angle.to_radians();
+
+        let ox1 = self.cx + self.outer_r * s.cos();
+        let oy1 = self.cy + self.outer_r * s.sin();
+        let ox2 = self.cx + self.outer_r * e.cos();
+        let oy2 = self.cy + self.outer_r * e.sin();
+        let ix1 = self.cx + self.inner_r * e.cos();
+        let iy1 = self.cy + self.inner_r * e.sin();
+        let ix2 = self.cx + self.inner_r * s.cos();
+        let iy2 = self.cy + self.inner_r * s.sin();
+
+        let large = if (self.end_angle - self.start_angle).abs() > 180.0 {
+            1
+        } else {
+            0
+        };
+
+        let d = format!(
+            "M {ox1:.1} {oy1:.1} A {:.1} {:.1} 0 {large} 1 {ox2:.1} {oy2:.1} \
+             L {ix1:.1} {iy1:.1} A {:.1} {:.1} 0 {large} 0 {ix2:.1} {iy2:.1} Z",
+            self.outer_r, self.outer_r, self.inner_r, self.inner_r
+        );
+        write!(f, r#"<path d="{d}" fill="{}"/>"#, self.fill_val)
+    }
+}
+
+/// Builder for curved arrow (quadratic bezier) elements.
+pub struct CurvedArrowBuilder {
+    x1: f64,
+    y1: f64,
+    cx: f64,
+    cy: f64,
+    x2: f64,
+    y2: f64,
+    color_val: String,
+    stroke_width_val: f64,
+}
+
+impl Default for CurvedArrowBuilder {
+    fn default() -> Self {
+        Self {
+            x1: 0.0,
+            y1: 0.0,
+            cx: 0.0,
+            cy: 0.0,
+            x2: 0.0,
+            y2: 0.0,
+            color_val: palette::SLATE.to_string(),
+            stroke_width_val: 2.0,
+        }
+    }
+}
+
+impl CurvedArrowBuilder {
+    #[must_use]
+    pub fn new(x1: f64, y1: f64, cx: f64, cy: f64, x2: f64, y2: f64) -> Self {
+        Self {
+            x1,
+            y1,
+            cx,
+            cy,
+            x2,
+            y2,
+            ..Default::default()
+        }
+    }
+
+    #[must_use]
+    pub fn color(mut self, c: &str) -> Self {
+        self.color_val = c.to_string();
+        self
+    }
+
+    #[must_use]
+    pub fn stroke_width(mut self, sw: f64) -> Self {
+        self.stroke_width_val = sw;
+        self
+    }
+}
+
+impl std::fmt::Display for CurvedArrowBuilder {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let d = format!(
+            "M {:.1} {:.1} Q {:.1} {:.1} {:.1} {:.1}",
+            self.x1, self.y1, self.cx, self.cy, self.x2, self.y2
+        );
+        write!(
+            f,
+            r#"<path d="{d}" fill="none" stroke="{}" stroke-width="{:.1}"/>"#,
+            self.color_val, self.stroke_width_val
+        )
+    }
 }
 
 // ============================================================================
@@ -330,6 +752,23 @@ pub mod palette {
     pub const TEXT_DIM: &str = "#8b949e";
     pub const BORDER: &str = "#30363d";
 
+    /// Semantic: safe/pass indicator — emerald green
+    pub const EMERALD: &str = "#34d399";
+    /// Semantic: warning/clamped — amber
+    pub const AMBER: &str = "#fbbf24";
+    /// Semantic: info/value highlight — light cyan
+    pub const CYAN_LIGHT: &str = "#22d3ee";
+    /// Semantic: error/danger — red
+    pub const RED: &str = "#ef4444";
+    /// Semantic: neutral default stroke — slate
+    pub const SLATE: &str = "#64748b";
+
+    /// Append a hex alpha suffix to a hex color.
+    #[must_use]
+    pub fn with_alpha(hex: &str, alpha_hex: &str) -> String {
+        format!("{hex}{alpha_hex}")
+    }
+
     /// Get domain color by name.
     #[must_use]
     pub fn domain_color(domain: &str) -> &'static str {
@@ -365,6 +804,21 @@ pub mod palette {
             "T2-P" => TIER_T2P,
             "T2-C" => TIER_T2C,
             "T3" => TIER_T3,
+            _ => TEXT_DIM,
+        }
+    }
+
+    /// Get color for proof/evidence type.
+    #[must_use]
+    pub fn proof_type_color(kind: &str) -> &'static str {
+        match kind.to_lowercase().as_str() {
+            "asserted" => CYAN_LIGHT,
+            "computational" => EMERALD,
+            "analytical" => PHYSICS,
+            "mapping" => MAPPING,
+            "adversarial" => RECURSION,
+            "empirical" => AMBER,
+            "derived" => "#fb923c",
             _ => TEXT_DIM,
         }
     }

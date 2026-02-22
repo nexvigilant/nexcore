@@ -134,6 +134,9 @@ pub mod stark;
 pub mod tov;
 pub mod validated_bounds;
 
+// OHDSI OMOP CDM v5.4 — core clinical + vocabulary + FAERS→OMOP mapping types
+pub mod omop;
+
 // Grounded Theory of Vigilance primitives
 pub use nexcore_tov::grounded;
 
@@ -160,6 +163,10 @@ pub mod control;
 
 // Telemetry (LLM usage monitoring)
 pub mod telemetry;
+
+// Signal visualization (plotters-based SVG chart generation)
+#[cfg(feature = "viz")]
+pub mod viz;
 
 // §1 Preliminary Definitions
 pub use definitions::{
@@ -451,3 +458,7 @@ pub fn version() -> &'static str {
 // Feature-gated to avoid running in normal test suite
 #[cfg(all(test, feature = "chaos-tests"))]
 mod tests;
+
+// Property-based fuzz tests — always available in test mode (no feature flag)
+#[cfg(test)]
+mod pv_property_tests;

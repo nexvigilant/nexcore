@@ -5,12 +5,13 @@
 //! with the dominant primitive highlighted and tier classification shown.
 
 use crate::svg::{self, SvgDoc, palette};
+use crate::theme::Theme;
 use std::fmt::Write;
 
 /// A type's primitive composition for visualization.
 #[derive(Debug, Clone)]
 pub struct TypeComposition {
-    /// Type name (e.g., "Machine<I,O>", "Integrity<T>")
+    /// Type name (e.g., "Machine<I,O>", "`Integrity<T>`")
     pub type_name: String,
     /// Tier classification (T1, T2-P, T2-C, T3)
     pub tier: String,
@@ -39,7 +40,7 @@ pub struct PrimitiveNode {
 /// The dominant primitive gets a thicker connection and glow effect.
 /// Tier is shown as a colored ring around the center.
 #[must_use]
-pub fn render_composition(comp: &TypeComposition) -> String {
+pub fn render_composition(comp: &TypeComposition, theme: &Theme) -> String {
     let size = 600.0;
     let cx = size / 2.0;
     let cy = size / 2.0 - 20.0;
@@ -52,7 +53,7 @@ pub fn render_composition(comp: &TypeComposition) -> String {
             cy,
             "No primitives",
             16.0,
-            palette::TEXT_DIM,
+            theme.text_dim,
             "middle",
         ));
         return doc.render();
@@ -93,7 +94,7 @@ pub fn render_composition(comp: &TypeComposition) -> String {
             pos.0,
             pos.1,
             node_size,
-            palette::BG_CARD,
+            theme.card_bg,
             color,
             2.0,
         ));
@@ -114,7 +115,7 @@ pub fn render_composition(comp: &TypeComposition) -> String {
             pos.1 + 12.0,
             &prim.name,
             9.0,
-            palette::TEXT_DIM,
+            theme.text_dim,
             "middle",
         ));
 
@@ -125,7 +126,7 @@ pub fn render_composition(comp: &TypeComposition) -> String {
                 pos.1 + node_size + 14.0,
                 &prim.role,
                 8.0,
-                palette::TEXT_DIM,
+                theme.text_dim,
                 "middle",
             ));
         }
@@ -145,7 +146,7 @@ pub fn render_composition(comp: &TypeComposition) -> String {
 
     // Center node: the type itself
     let tier_color = palette::tier_color(&comp.tier);
-    doc.add(svg::circle(cx, cy, 60.0, palette::BG_CARD, 1.0));
+    doc.add(svg::circle(cx, cy, 60.0, theme.card_bg, 1.0));
     doc.add(svg::circle_stroke(cx, cy, 60.0, "none", tier_color, 3.0));
 
     // Type name (split if long)
@@ -156,7 +157,7 @@ pub fn render_composition(comp: &TypeComposition) -> String {
             cy - 10.0,
             name,
             12.0,
-            palette::TEXT,
+            theme.text,
             "middle",
         ));
     } else {
@@ -165,7 +166,7 @@ pub fn render_composition(comp: &TypeComposition) -> String {
             cy - 6.0,
             name,
             14.0,
-            palette::TEXT,
+            theme.text,
             "middle",
         ));
     }
@@ -187,7 +188,7 @@ pub fn render_composition(comp: &TypeComposition) -> String {
         cy + 28.0,
         &conf_text,
         10.0,
-        palette::TEXT_DIM,
+        theme.text_dim,
         "middle",
     ));
 
@@ -197,7 +198,7 @@ pub fn render_composition(comp: &TypeComposition) -> String {
         24.0,
         "Type Composition",
         16.0,
-        palette::TEXT,
+        theme.text,
         "middle",
     ));
 
@@ -208,7 +209,7 @@ pub fn render_composition(comp: &TypeComposition) -> String {
         42.0,
         &count_text,
         11.0,
-        palette::TEXT_DIM,
+        theme.text_dim,
         "middle",
     ));
 
@@ -259,7 +260,7 @@ mod tests {
             dominant: Some("Mapping".into()),
             confidence: 0.80,
         };
-        let svg = render_composition(&comp);
+        let svg = render_composition(&comp, &Theme::default());
         assert!(svg.contains("Machine"));
         assert!(svg.contains("T3"));
         assert!(svg.contains("DOMINANT"));
@@ -278,7 +279,7 @@ mod tests {
             dominant: Some("Causality".into()),
             confidence: 0.95,
         };
-        let svg = render_composition(&comp);
+        let svg = render_composition(&comp, &Theme::default());
         assert!(svg.contains("Force"));
         assert!(svg.contains("T1"));
     }
@@ -292,7 +293,7 @@ mod tests {
             dominant: None,
             confidence: 0.0,
         };
-        let svg = render_composition(&comp);
+        let svg = render_composition(&comp, &Theme::default());
         assert!(svg.contains("No primitives"));
     }
 }

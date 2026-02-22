@@ -3,26 +3,27 @@
 //! Run with: cargo run --example generate_samples -p nexcore-viz
 
 fn main() {
+    let theme = nexcore_viz::Theme::default();
     let out_dir = std::env::var("OUT_DIR").unwrap_or_else(|_| "/tmp/viz-samples".to_string());
     let _ = std::fs::create_dir_all(&out_dir);
 
     // 1. STEM Taxonomy Sunburst
     let taxonomy = nexcore_viz::taxonomy::standard_taxonomy();
-    let svg = nexcore_viz::render_taxonomy(&taxonomy, "STEM Taxonomy — 32 Traits");
+    let svg = nexcore_viz::render_taxonomy(&taxonomy, "STEM Taxonomy — 32 Traits", &theme);
     let path = format!("{out_dir}/taxonomy.svg");
     std::fs::write(&path, &svg).ok();
     println!("Wrote {path} ({} bytes)", svg.len());
 
     // 2. Science Loop
     let steps = nexcore_viz::science_loop::science_loop();
-    let svg = nexcore_viz::render_science_loop(&steps, "SCIENCE");
+    let svg = nexcore_viz::render_science_loop(&steps, "SCIENCE", &theme);
     let path = format!("{out_dir}/science_loop.svg");
     std::fs::write(&path, &svg).ok();
     println!("Wrote {path} ({} bytes)", svg.len());
 
     // 3. Chemistry Loop
     let steps = nexcore_viz::science_loop::chemistry_loop();
-    let svg = nexcore_viz::render_science_loop(&steps, "CHEMISTRY");
+    let svg = nexcore_viz::render_science_loop(&steps, "CHEMISTRY", &theme);
     let path = format!("{out_dir}/chemistry_loop.svg");
     std::fs::write(&path, &svg).ok();
     println!("Wrote {path} ({} bytes)", svg.len());
@@ -66,7 +67,7 @@ fn main() {
         dominant: Some("Mapping".into()),
         confidence: 0.80,
     };
-    let svg = nexcore_viz::render_composition(&comp);
+    let svg = nexcore_viz::render_composition(&comp, &theme);
     let path = format!("{out_dir}/composition_machine.svg");
     std::fs::write(&path, &svg).ok();
     println!("Wrote {path} ({} bytes)", svg.len());
@@ -104,7 +105,7 @@ fn main() {
             parent: Some(2),
         },
     ];
-    let svg = nexcore_viz::render_confidence_chain(&claims, "Confidence Propagation");
+    let svg = nexcore_viz::render_confidence_chain(&claims, "Confidence Propagation", &theme);
     let path = format!("{out_dir}/confidence.svg");
     std::fs::write(&path, &svg).ok();
     println!("Wrote {path} ({} bytes)", svg.len());
@@ -116,7 +117,7 @@ fn main() {
         upper: Some(1.0),
         label: "Confidence [0, 1]".into(),
     };
-    let svg = nexcore_viz::render_bounds(&bounded);
+    let svg = nexcore_viz::render_bounds(&bounded, &theme);
     let path = format!("{out_dir}/bounds_in.svg");
     std::fs::write(&path, &svg).ok();
     println!("Wrote {path} ({} bytes)", svg.len());
@@ -128,7 +129,7 @@ fn main() {
         upper: Some(10.0),
         label: "Error Rate [0, 10]".into(),
     };
-    let svg = nexcore_viz::render_bounds(&bounded);
+    let svg = nexcore_viz::render_bounds(&bounded, &theme);
     let path = format!("{out_dir}/bounds_out.svg");
     std::fs::write(&path, &svg).ok();
     println!("Wrote {path} ({} bytes)", svg.len());
@@ -192,7 +193,7 @@ fn main() {
             to: "rho".into(),
         },
     ];
-    let svg = nexcore_viz::render_dag(&nodes, &edges, "Lex Primitiva DAG (partial)");
+    let svg = nexcore_viz::render_dag(&nodes, &edges, "Lex Primitiva DAG (partial)", &theme);
     let path = format!("{out_dir}/dag.svg");
     std::fs::write(&path, &svg).ok();
     println!("Wrote {path} ({} bytes)", svg.len());

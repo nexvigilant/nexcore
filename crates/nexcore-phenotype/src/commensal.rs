@@ -430,7 +430,7 @@ impl CalibrationReport {
                 // Recommend reducing sensitivity proportionally to false-alarm rate.
                 // If over_sensitivity_rate = 0.20, reduce by 15% (floor at 0.50).
                 let reduction = r.over_sensitivity_rate * 0.75;
-                let recommended = (r.over_sensitivity_rate - reduction).max(0.50).min(0.95);
+                let recommended = (r.over_sensitivity_rate - reduction).clamp(0.50, 0.95);
                 ThresholdAdjustment {
                     hook_name: r.hook_name.clone(),
                     current_sensitivity: r.over_sensitivity_rate,
@@ -510,6 +510,7 @@ fn ts_discard_binding() -> String {
 /// assert!(patterns.iter().all(|p| !p.code.is_empty()));
 /// ```
 #[must_use]
+#[allow(clippy::too_many_lines)]
 pub fn generate_rust_commensals() -> Vec<CommensalPattern> {
     vec![
         // ── EdgeCaseNaming ──────────────────────────────────────────────────
@@ -776,6 +777,7 @@ pub fn generate_rust_commensals() -> Vec<CommensalPattern> {
 /// assert!(patterns.len() >= 15);
 /// ```
 #[must_use]
+#[allow(clippy::too_many_lines)]
 pub fn generate_typescript_commensals() -> Vec<CommensalPattern> {
     vec![
         // ── EdgeCaseNaming ──────────────────────────────────────────────────
@@ -944,6 +946,7 @@ pub fn generate_typescript_commensals() -> Vec<CommensalPattern> {
 /// assert!(patterns.len() >= 15);
 /// ```
 #[must_use]
+#[allow(clippy::too_many_lines)]
 pub fn generate_shell_commensals() -> Vec<CommensalPattern> {
     vec![
         // ── EdgeCaseNaming ──────────────────────────────────────────────────
@@ -975,14 +978,18 @@ pub fn generate_shell_commensals() -> Vec<CommensalPattern> {
                 .to_string(),
         },
         // ── UnusualFormatting ───────────────────────────────────────────────
-        CommensalPattern {
-            code: "if [[ -n \"${VAR:-}\" ]]\nthen\n\techo \"set\"\nfi".to_string(),
-            language: Language::Shell,
-            mutation_type: CommensalMutation::UnusualFormatting,
-            weirdness_score: 0.20,
-            why_valid: "then on its own line (instead of after the condition) is valid \
-                        POSIX shell syntax. Less common than then on the same line."
-                .to_string(),
+        {
+            #[allow(clippy::literal_string_with_formatting_args)]
+            let shell_if_code = "if [[ -n \"${VAR:-}\" ]]\nthen\n\techo \"set\"\nfi".to_string();
+            CommensalPattern {
+                code: shell_if_code,
+                language: Language::Shell,
+                mutation_type: CommensalMutation::UnusualFormatting,
+                weirdness_score: 0.20,
+                why_valid: "then on its own line (instead of after the condition) is valid \
+                            POSIX shell syntax. Less common than then on the same line."
+                    .to_string(),
+            }
         },
         CommensalPattern {
             code: "val=$((\n\t1 + 2 + 3\n))".to_string(),

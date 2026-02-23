@@ -95,7 +95,7 @@ pub fn block_randomize(
     while subject_id < n {
         // Build one block: per_arm copies of each arm index
         let mut block: Vec<usize> = (0..n_arms)
-            .flat_map(|arm| std::iter::repeat(arm).take(per_arm))
+            .flat_map(|arm| std::iter::repeat_n(arm, per_arm))
             .collect();
         block.shuffle(&mut rng);
 

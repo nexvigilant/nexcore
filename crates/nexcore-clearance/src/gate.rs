@@ -126,16 +126,16 @@ impl ClearanceGate {
 
         let result = match mode {
             AccessMode::Unrestricted => GateResult::Allowed,
-            AccessMode::Aware => GateResult::Logged(format!("access to {} [{}]", target, level)),
+            AccessMode::Aware => GateResult::Logged(format!("access to {target} [{level}]")),
             AccessMode::Guarded => {
                 if level.is_restricted() {
-                    GateResult::Warned(format!("accessing restricted {} [{}]", target, level))
+                    GateResult::Warned(format!("accessing restricted {target} [{level}]"))
                 } else {
-                    GateResult::Logged(format!("access to {} [{}]", target, level))
+                    GateResult::Logged(format!("access to {target} [{level}]"))
                 }
             }
             AccessMode::Enforced | AccessMode::Lockdown => {
-                GateResult::Logged(format!("enforced access to {} [{}]", target, level))
+                GateResult::Logged(format!("enforced access to {target} [{level}]"))
             }
         };
 
@@ -165,28 +165,26 @@ impl ClearanceGate {
 
         let result = match mode {
             AccessMode::Unrestricted => GateResult::Allowed,
-            AccessMode::Aware => GateResult::Logged(format!("write to {} [{}]", target, level)),
+            AccessMode::Aware => GateResult::Logged(format!("write to {target} [{level}]")),
             AccessMode::Guarded => {
                 if policy.warn_on_write {
-                    GateResult::Warned(format!("writing to classified {} [{}]", target, level))
+                    GateResult::Warned(format!("writing to classified {target} [{level}]"))
                 } else {
-                    GateResult::Logged(format!("write to {} [{}]", target, level))
+                    GateResult::Logged(format!("write to {target} [{level}]"))
                 }
             }
             AccessMode::Enforced => {
                 if policy.require_dual_auth {
                     GateResult::DualAuthRequired(format!(
-                        "write to {} [{}] requires dual auth",
-                        target, level
+                        "write to {target} [{level}] requires dual auth"
                     ))
                 } else {
-                    GateResult::Warned(format!("enforced write to {} [{}]", target, level))
+                    GateResult::Warned(format!("enforced write to {target} [{level}]"))
                 }
             }
-            AccessMode::Lockdown => GateResult::Denied(format!(
-                "write to {} [{}] blocked in lockdown",
-                target, level
-            )),
+            AccessMode::Lockdown => {
+                GateResult::Denied(format!("write to {target} [{level}] blocked in lockdown"))
+            }
         };
 
         // Record in audit trail
@@ -220,13 +218,11 @@ impl ClearanceGate {
 
         let result = if policy.block_external_tools {
             GateResult::Denied(format!(
-                "external tool '{}' blocked for {} [{}]",
-                tool_name, target, level
+                "external tool '{tool_name}' blocked for {target} [{level}]"
             ))
         } else if policy.block_external {
             GateResult::Warned(format!(
-                "external tool '{}' on classified {} [{}]",
-                tool_name, target, level
+                "external tool '{tool_name}' on classified {target} [{level}]"
             ))
         } else {
             GateResult::Allowed
@@ -243,7 +239,7 @@ impl ClearanceGate {
                 action,
                 level,
                 actor,
-                format!("tool={}: {}", tool_name, result),
+                format!("tool={tool_name}: {result}"),
             ));
         }
 

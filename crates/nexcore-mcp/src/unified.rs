@@ -2347,6 +2347,21 @@ async fn dispatch_inner(
         "cloud_anomaly_detect" => typed(params, tools::cloud::anomaly_detect),
         "cloud_transfer_matrix" => typed(params, tools::cloud::transfer_matrix),
 
+        // Zeta — Riemann zeta function telescope pipeline (13)
+        "zeta_compute" => typed(params, tools::zeta::zeta_compute),
+        "zeta_find_zeros" => typed(params, tools::zeta::zeta_find_zeros),
+        "zeta_verify_rh" => typed(params, tools::zeta::zeta_verify_rh),
+        "zeta_embedded_zeros" => typed(params, tools::zeta::zeta_embedded_zeros),
+        "zeta_lmfdb_parse" => typed(params, tools::zeta::zeta_lmfdb_parse),
+        "zeta_telescope_run" => typed(params, tools::zeta::zeta_telescope_run),
+        "zeta_batch_run" => typed(params, tools::zeta::zeta_batch_run),
+        "zeta_scaling_fit" => typed(params, tools::zeta::zeta_scaling_fit),
+        "zeta_scaling_predict" => typed(params, tools::zeta::zeta_scaling_predict),
+        "zeta_cayley" => typed(params, tools::zeta::zeta_cayley),
+        "zeta_operator_hunt" => typed(params, tools::zeta::zeta_operator_hunt),
+        "zeta_operator_candidate" => typed(params, tools::zeta::zeta_operator_candidate),
+        "zeta_gue_compare" => typed(params, tools::zeta::zeta_gue_compare),
+
         // ====================================================================
         // Unknown command
         // ====================================================================
@@ -2766,6 +2781,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "cognition": ["cognition_process", "cognition_analyze", "cognition_forward", "cognition_entropy", "cognition_perplexity", "cognition_embed", "cognition_sample", "cognition_confidence"],
             "notebooklm": ["nlm_add_notebook", "nlm_list_notebooks", "nlm_get_notebook", "nlm_select_notebook", "nlm_update_notebook", "nlm_remove_notebook", "nlm_search_notebooks", "nlm_get_library_stats", "nlm_list_sessions", "nlm_close_session", "nlm_reset_session", "nlm_get_health", "nlm_setup_auth", "nlm_re_auth", "nlm_ask_question", "nlm_cleanup_data"],
             "cloud": ["cloud_primitive_composition", "cloud_transfer_confidence", "cloud_tier_classify", "cloud_compare_types", "cloud_reverse_synthesize", "cloud_list_types", "cloud_molecular_weight", "cloud_dominant_shift", "cloud_infra_status", "cloud_infra_map", "cloud_capacity_project", "cloud_supervisor_health", "cloud_reverse_transfer", "cloud_transfer_chain", "cloud_architecture_advisor", "cloud_anomaly_detect", "cloud_transfer_matrix"],
+            "zeta": ["zeta_compute", "zeta_find_zeros", "zeta_verify_rh", "zeta_embedded_zeros", "zeta_lmfdb_parse", "zeta_telescope_run", "zeta_batch_run", "zeta_scaling_fit", "zeta_scaling_predict", "zeta_cayley", "zeta_operator_hunt", "zeta_operator_candidate", "zeta_gue_compare"],
         }
     });
 

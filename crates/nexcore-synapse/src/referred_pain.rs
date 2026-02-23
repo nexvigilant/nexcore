@@ -357,6 +357,7 @@ impl DermatomeMap {
     ///
     /// Covers the four canonical layers and key subsystems.
     #[must_use]
+    #[allow(clippy::too_many_lines)]
     pub fn default_map() -> Self {
         let mut map = Self::new();
 
@@ -571,6 +572,7 @@ impl PainMap {
     /// - `panic!` / `todo!` stubs → legacy debt
     /// - Config path mismatches → configuration drift
     #[must_use]
+    #[allow(clippy::too_many_lines)]
     pub fn default_pain_map() -> Self {
         let mut map = Self::new();
 
@@ -739,11 +741,10 @@ impl ReferralEngine {
     #[must_use]
     pub fn diagnose(&self, symptom: &SurfaceSymptom) -> DiagnosticClue {
         // Resolve dermatome from file path
-        let dermatome = self
-            .dermatome_map
-            .lookup(&symptom.file_path)
-            .map(|(layer, subsystem)| format!("{layer}/{subsystem}"))
-            .unwrap_or_else(|| "unknown/unregistered".to_string());
+        let dermatome = self.dermatome_map.lookup(&symptom.file_path).map_or_else(
+            || "unknown/unregistered".to_string(),
+            |(layer, subsystem)| format!("{layer}/{subsystem}"),
+        );
 
         // Retrieve ranked causes from the pain map
         let causes = self.pain_map.lookup(symptom);

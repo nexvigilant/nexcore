@@ -96,8 +96,10 @@ impl AggregateStats {
     /// Compute from summaries.
     #[must_use]
     pub fn from_summaries(summaries: &[MachineSummary]) -> Self {
-        let mut stats = Self::default();
-        stats.total_machines = summaries.len();
+        let mut stats = Self {
+            total_machines: summaries.len(),
+            ..Self::default()
+        };
 
         for summary in summaries {
             stats.total_transitions = stats
@@ -117,6 +119,7 @@ impl AggregateStats {
 
     /// Percentage of healthy machines.
     #[must_use]
+    #[allow(clippy::cast_precision_loss)]
     pub fn health_percentage(&self) -> f64 {
         if self.total_machines == 0 {
             return 100.0;

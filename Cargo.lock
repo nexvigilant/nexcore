@@ -1329,7 +1329,6 @@ dependencies = [
 name = "borrow-miner"
 version = "1.0.0"
 dependencies = [
- "nexcore-lex-primitiva",
  "serde",
  "serde_json",
 ]
@@ -6392,10 +6391,8 @@ dependencies = [
 name = "integrity-calc"
 version = "1.0.0"
 dependencies = [
- "nexcore-lex-primitiva",
  "serde",
  "serde_json",
- "stem-number-theory",
 ]
 
 [[package]]
@@ -7933,11 +7930,7 @@ dependencies = [
  "tracing-subscriber",
  "utoipa",
  "utoipa-scalar",
- "vr-billing",
- "vr-compliance",
  "vr-core",
- "vr-marketplace",
- "vr-platform-ml",
  "vr-tenant",
 ]
 
@@ -7954,7 +7947,6 @@ name = "nexcore-bicone"
 version = "0.1.0"
 dependencies = [
  "nexcore-error",
- "nexcore-lex-primitiva",
  "serde",
  "serde_json",
 ]
@@ -8121,10 +8113,8 @@ dependencies = [
 name = "nexcore-combinatorics"
 version = "0.1.0"
 dependencies = [
- "nexcore-lex-primitiva",
  "serde",
  "serde_json",
- "stem-number-theory",
 ]
 
 [[package]]
@@ -8446,7 +8436,6 @@ name = "nexcore-fhir"
 version = "1.0.0"
 dependencies = [
  "chrono",
- "nexcore-lex-primitiva",
  "serde",
  "serde_json",
 ]
@@ -8455,7 +8444,6 @@ dependencies = [
 name = "nexcore-firebase"
 version = "1.0.0"
 dependencies = [
- "nexcore-lex-primitiva",
  "reqwest 0.12.28",
  "serde",
  "serde_json",
@@ -8801,14 +8789,12 @@ version = "1.0.0"
 dependencies = [
  "academy-forge",
  "antitransformer",
- "borrow-miner",
  "chrono",
  "core-true",
  "counter-awareness",
  "disney-loop",
  "flate2",
  "grounded",
- "integrity-calc",
  "jsonwebtoken",
  "moka",
  "nexcloud",
@@ -8818,10 +8804,8 @@ dependencies = [
  "nexcore-antibodies",
  "nexcore-api",
  "nexcore-audio",
- "nexcore-bicone",
  "nexcore-brain",
  "nexcore-browser",
- "nexcore-build-orchestrator",
  "nexcore-caesura",
  "nexcore-cardiovascular",
  "nexcore-ccp",
@@ -8851,7 +8835,6 @@ dependencies = [
  "nexcore-error",
  "nexcore-faers-etl",
  "nexcore-fda-guidance",
- "nexcore-fhir",
  "nexcore-forge-strategy",
  "nexcore-foundry",
  "nexcore-fs",
@@ -8880,7 +8863,6 @@ dependencies = [
  "nexcore-muscular",
  "nexcore-nervous",
  "nexcore-notebooklm",
- "nexcore-openfda",
  "nexcore-oracle",
  "nexcore-orchestration",
  "nexcore-organize",
@@ -8911,7 +8893,6 @@ dependencies = [
  "nexcore-skeletal",
  "nexcore-skill-compiler",
  "nexcore-skill-exec",
- "nexcore-skills-engine",
  "nexcore-social",
  "nexcore-softrender",
  "nexcore-sop-anatomy",
@@ -8937,6 +8918,7 @@ dependencies = [
  "nexcore-vigilance",
  "nexcore-viz",
  "nexcore-word",
+ "nexcore-zeta",
  "parking_lot",
  "prima",
  "prima-academy",
@@ -8957,6 +8939,7 @@ dependencies = [
  "serde_yaml",
  "skills",
  "stem",
+ "stem-complex",
  "stem-math",
  "stem-topology",
  "tar",
@@ -9117,7 +9100,6 @@ version = "1.0.0"
 dependencies = [
  "chrono",
  "nexcore-error",
- "nexcore-lex-primitiva",
  "reqwest 0.12.28",
  "serde",
  "serde_json",
@@ -9371,9 +9353,7 @@ dependencies = [
  "chrono",
  "nexcore-constants",
  "nexcore-error",
- "nexcore-fhir",
  "nexcore-lex-primitiva",
- "nexcore-openfda",
  "nexcore-preemptive-pv",
  "nexcore-signal-types",
  "nexcore-tov",
@@ -9933,6 +9913,8 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -10274,9 +10256,6 @@ dependencies = [
 [[package]]
 name = "nucli"
 version = "1.0.0"
-dependencies = [
- "nexcore-lex-primitiva",
-]
 
 [[package]]
 name = "num"
@@ -12083,8 +12062,10 @@ name = "prima-chem"
 version = "0.1.0"
 dependencies = [
  "nexcore-error",
+ "nexcore-lex-primitiva",
  "proptest",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -12117,12 +12098,14 @@ name = "prima-mcp-server"
 version = "0.1.0"
 dependencies = [
  "nexcore-error",
+ "nexcore-lex-primitiva",
  "prima",
  "prima-codegen",
  "prima-mcp",
  "proptest",
  "serde",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]
@@ -12136,6 +12119,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
+ "tokio",
  "tracing",
  "tracing-subscriber",
 ]
@@ -14719,14 +14703,7 @@ dependencies = [
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
- "stem-bio",
- "stem-complex",
- "stem-core",
  "stem-derive",
- "stem-math",
- "stem-number-theory",
- "stem-phys",
- "stem-topology",
  "tokio",
  "tracing",
 ]
@@ -14810,7 +14787,6 @@ dependencies = [
  "nexcore-error",
  "nexcore-lex-primitiva",
  "serde",
- "stem-complex",
  "stem-core",
 ]
 
@@ -14818,12 +14794,8 @@ dependencies = [
 name = "stem-topology"
 version = "1.0.0"
 dependencies = [
- "nexcore-error",
- "nexcore-lex-primitiva",
  "serde",
  "serde_json",
- "stem-complex",
- "stem-core",
 ]
 
 [[package]]
@@ -16003,7 +15975,6 @@ version = "1.0.0"
 dependencies = [
  "clap",
  "nexcore-error",
- "nexcore-lex-primitiva",
  "polars",
  "proptest",
  "serde",

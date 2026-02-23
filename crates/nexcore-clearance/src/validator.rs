@@ -79,12 +79,10 @@ impl CrossBoundaryValidator {
     /// Determine the direction of a level change.
     #[must_use]
     pub fn direction(from: ClassificationLevel, to: ClassificationLevel) -> ChangeDirection {
-        if to > from {
-            ChangeDirection::Upgrade
-        } else if to < from {
-            ChangeDirection::Downgrade
-        } else {
-            ChangeDirection::Neutral
+        match to.cmp(&from) {
+            std::cmp::Ordering::Greater => ChangeDirection::Upgrade,
+            std::cmp::Ordering::Less => ChangeDirection::Downgrade,
+            std::cmp::Ordering::Equal => ChangeDirection::Neutral,
         }
     }
 
@@ -103,7 +101,7 @@ impl CrossBoundaryValidator {
             ChangeDirection::Upgrade => {
                 // Upgrades are always safer — but may need audit
                 if mode.requires_access_log() {
-                    ValidationResult::AllowedWithAudit(format!("upgrade from {} to {}", from, to))
+                    ValidationResult::AllowedWithAudit(format!("upgrade from {from} to {to}"))
                 } else {
                     ValidationResult::Allowed
                 }
@@ -125,8 +123,7 @@ impl CrossBoundaryValidator {
         // In Lockdown mode, no downgrades allowed
         if mode == AccessMode::Lockdown {
             return ValidationResult::Denied(format!(
-                "downgrade from {} to {} blocked in Lockdown mode",
-                from, to
+                "downgrade from {from} to {to} blocked in Lockdown mode"
             ));
         }
 
@@ -134,24 +131,22 @@ impl CrossBoundaryValidator {
         if mode == AccessMode::Enforced {
             if !downgrade_permitted {
                 return ValidationResult::RequiresDualAuth(format!(
-                    "downgrade from {} to {} requires dual authorization",
-                    from, to
+                    "downgrade from {from} to {to} requires dual authorization"
                 ));
             }
             return ValidationResult::AllowedWithAudit(format!(
-                "permitted downgrade from {} to {}",
-                from, to
+                "permitted downgrade from {from} to {to}"
             ));
         }
 
         // In Guarded mode, warn on downgrade
         if mode == AccessMode::Guarded {
-            return ValidationResult::Warned(format!("downgrading from {} to {}", from, to));
+            return ValidationResult::Warned(format!("downgrading from {from} to {to}"));
         }
 
         // Aware or Unrestricted — allow with audit if aware
         if mode.requires_access_log() {
-            ValidationResult::AllowedWithAudit(format!("downgrade from {} to {}", from, to))
+            ValidationResult::AllowedWithAudit(format!("downgrade from {from} to {to}"))
         } else {
             ValidationResult::Allowed
         }
@@ -182,8 +177,7 @@ impl CrossBoundaryValidator {
         if actor_level >= target_level {
             if mode.requires_access_log() {
                 return ValidationResult::AllowedWithAudit(format!(
-                    "cross-level access: {} accessing {}",
-                    actor_level, target_level
+                    "cross-level access: {actor_level} accessing {target_level}"
                 ));
             }
             return ValidationResult::Allowed;
@@ -192,18 +186,15 @@ impl CrossBoundaryValidator {
         // Actor level < target level — accessing above clearance
         if mode.is_enforcement_active() {
             ValidationResult::Denied(format!(
-                "insufficient clearance: {} cannot access {} data",
-                actor_level, target_level
+                "insufficient clearance: {actor_level} cannot access {target_level} data"
             ))
         } else if mode == AccessMode::Guarded {
             ValidationResult::Warned(format!(
-                "accessing above clearance: {} -> {}",
-                actor_level, target_level
+                "accessing above clearance: {actor_level} -> {target_level}"
             ))
         } else if mode.requires_access_log() {
             ValidationResult::AllowedWithAudit(format!(
-                "above-clearance access: {} -> {}",
-                actor_level, target_level
+                "above-clearance access: {actor_level} -> {target_level}"
             ))
         } else {
             ValidationResult::Allowed

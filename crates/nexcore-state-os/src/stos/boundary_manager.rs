@@ -58,7 +58,7 @@ pub struct BoundaryCrossing {
 #[derive(Debug, Clone)]
 pub struct BoundaryManager {
     /// Machine ID.
-    machine_id: MachineId,
+    _machine_id: MachineId,
     /// Initial states (entry boundary).
     initial_states: BTreeSet<StateId>,
     /// Terminal states (exit boundary).
@@ -76,7 +76,7 @@ impl BoundaryManager {
     #[must_use]
     pub fn new(machine_id: MachineId) -> Self {
         Self {
-            machine_id,
+            _machine_id: machine_id,
             initial_states: BTreeSet::new(),
             terminal_states: BTreeSet::new(),
             error_states: BTreeSet::new(),
@@ -142,7 +142,7 @@ impl BoundaryManager {
     ///
     /// Returns error message if invalid, None if valid.
     #[must_use]
-    pub fn validate_transition(&self, from: StateId, to: StateId) -> Option<String> {
+    pub fn validate_transition(&self, from: StateId, _to: StateId) -> Option<String> {
         // Cannot transition out of terminal state
         if self.is_terminal(from) {
             return Some(alloc::format!(

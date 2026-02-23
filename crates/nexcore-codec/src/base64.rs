@@ -150,30 +150,34 @@ fn decode_with_alphabet(input: &[u8], url_safe: bool) -> Result<Vec<u8>, DecodeE
     let remainder = chunks.remainder();
 
     for chunk in chunks {
-        let a = decode_char(chunk[0], 0, url_safe)?;
-        let b = decode_char(chunk[1], 1, url_safe)?;
-        let c = decode_char(chunk[2], 2, url_safe)?;
-        let d = decode_char(chunk[3], 3, url_safe)?;
-        let n = (u32::from(a) << 18) | (u32::from(b) << 12) | (u32::from(c) << 6) | u32::from(d);
-        out.push((n >> 16) as u8);
-        out.push((n >> 8) as u8);
-        out.push(n as u8);
+        let bits0 = decode_char(chunk[0], 0, url_safe)?;
+        let bits1 = decode_char(chunk[1], 1, url_safe)?;
+        let bits2 = decode_char(chunk[2], 2, url_safe)?;
+        let bits3 = decode_char(chunk[3], 3, url_safe)?;
+        let word = (u32::from(bits0) << 18)
+            | (u32::from(bits1) << 12)
+            | (u32::from(bits2) << 6)
+            | u32::from(bits3);
+        out.push((word >> 16) as u8);
+        out.push((word >> 8) as u8);
+        out.push(word as u8);
     }
 
     match remainder.len() {
         2 => {
-            let a = decode_char(remainder[0], 0, url_safe)?;
-            let b = decode_char(remainder[1], 1, url_safe)?;
-            let n = (u32::from(a) << 18) | (u32::from(b) << 12);
-            out.push((n >> 16) as u8);
+            let bits0 = decode_char(remainder[0], 0, url_safe)?;
+            let bits1 = decode_char(remainder[1], 1, url_safe)?;
+            let word = (u32::from(bits0) << 18) | (u32::from(bits1) << 12);
+            out.push((word >> 16) as u8);
         }
         3 => {
-            let a = decode_char(remainder[0], 0, url_safe)?;
-            let b = decode_char(remainder[1], 1, url_safe)?;
-            let c = decode_char(remainder[2], 2, url_safe)?;
-            let n = (u32::from(a) << 18) | (u32::from(b) << 12) | (u32::from(c) << 6);
-            out.push((n >> 16) as u8);
-            out.push((n >> 8) as u8);
+            let bits0 = decode_char(remainder[0], 0, url_safe)?;
+            let bits1 = decode_char(remainder[1], 1, url_safe)?;
+            let bits2 = decode_char(remainder[2], 2, url_safe)?;
+            let word =
+                (u32::from(bits0) << 18) | (u32::from(bits1) << 12) | (u32::from(bits2) << 6);
+            out.push((word >> 16) as u8);
+            out.push((word >> 8) as u8);
         }
         _ => {}
     }

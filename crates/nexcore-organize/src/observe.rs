@@ -135,7 +135,7 @@ fn entry_meta_from_direntry(
     let path = entry.path().to_path_buf();
     let is_dir = entry.file_type().is_dir();
 
-    let fs_meta = entry.metadata().map_err(|e| OrganizeError::Io {
+    let fs_meta = std::fs::metadata(&path).map_err(|e| OrganizeError::Io {
         path: path.clone(),
         source: e.into(),
     })?;

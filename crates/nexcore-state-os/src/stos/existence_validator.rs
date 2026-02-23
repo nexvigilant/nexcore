@@ -90,7 +90,7 @@ pub enum ValidationErrorKind {
 #[derive(Debug, Clone)]
 pub struct ExistenceValidator {
     /// Machine ID.
-    machine_id: MachineId,
+    _machine_id: MachineId,
     /// Known states.
     known_states: BTreeSet<StateId>,
     /// Known transitions.
@@ -108,7 +108,7 @@ impl ExistenceValidator {
     #[must_use]
     pub fn new(machine_id: MachineId) -> Self {
         Self {
-            machine_id,
+            _machine_id: machine_id,
             known_states: BTreeSet::new(),
             known_transitions: BTreeSet::new(),
             deleted_states: BTreeSet::new(),

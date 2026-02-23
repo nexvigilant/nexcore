@@ -137,7 +137,9 @@ fn find_duplicates(root: &Path) -> OrganizeResult<Vec<DuplicateGroup>> {
         let entry = entry?;
         if entry.file_type().is_file() {
             let path = entry.path();
-            let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
+            let size = std::fs::metadata(entry.path())
+                .map(|m| m.len())
+                .unwrap_or_default();
 
             // Skip very large files (>100MB) and empty files for performance
             if size == 0 || size > 100_000_000 {

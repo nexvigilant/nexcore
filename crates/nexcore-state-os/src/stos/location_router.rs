@@ -80,6 +80,7 @@ impl Location {
 
     /// Load percentage.
     #[must_use]
+    #[allow(clippy::cast_precision_loss)]
     pub fn load_percentage(&self) -> f64 {
         if self.capacity == 0 || self.capacity == usize::MAX {
             return 0.0;
@@ -244,7 +245,7 @@ impl LocationRouter {
         let available: Vec<LocationId> = rule
             .locations
             .iter()
-            .filter(|&&id| self.locations.get(&id).is_some_and(|l| l.can_accept()))
+            .filter(|&&id| self.locations.get(&id).is_some_and(Location::can_accept))
             .copied()
             .collect();
 

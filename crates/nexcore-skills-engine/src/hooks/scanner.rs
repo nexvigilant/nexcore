@@ -68,7 +68,8 @@ pub fn scan_directory(path: &Path, max_depth: usize, policy: &PolicyFile) -> Sca
         .max_depth(max_depth)
         .follow_links(false)
         .into_iter()
-        .filter_entry(|e| {
+        .filter_map(|e| e.ok())
+        .filter(|e| {
             // Skip hidden directories and known skip dirs (but not the root path)
             if e.file_type().is_dir() && e.depth() > 0 {
                 if let Some(name) = e.file_name().to_str() {
@@ -83,7 +84,7 @@ pub fn scan_directory(path: &Path, max_depth: usize, policy: &PolicyFile) -> Sca
             true
         });
 
-    for entry in walker.filter_map(|e| e.ok()) {
+    for entry in walker {
         let entry_path = entry.path();
 
         if entry_path.is_file() {
@@ -187,7 +188,8 @@ pub fn scan_with_options(path: &Path, options: &ScanOptions, policy: &PolicyFile
         .max_depth(options.max_depth)
         .follow_links(false)
         .into_iter()
-        .filter_entry(|e| {
+        .filter_map(|e| e.ok())
+        .filter(|e| {
             if e.file_type().is_dir() {
                 if let Some(name) = e.file_name().to_str() {
                     if name.starts_with('.') && name != "." {
@@ -201,7 +203,7 @@ pub fn scan_with_options(path: &Path, options: &ScanOptions, policy: &PolicyFile
             true
         });
 
-    for entry in walker.filter_map(|e| e.ok()) {
+    for entry in walker {
         let entry_path = entry.path();
 
         if entry_path.is_file() {

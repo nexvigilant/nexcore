@@ -193,7 +193,7 @@ impl fmt::Display for TransitionError {
 #[derive(Debug, Clone)]
 pub struct TransitionEngine {
     /// Machine this engine belongs to.
-    machine_id: MachineId,
+    _machine_id: MachineId,
     /// Transitions by ID.
     transitions: BTreeMap<TransitionId, TransitionSpec>,
     /// Name to ID mapping.
@@ -215,7 +215,7 @@ impl TransitionEngine {
     #[must_use]
     pub fn new(machine_id: MachineId) -> Self {
         Self {
-            machine_id,
+            _machine_id: machine_id,
             transitions: BTreeMap::new(),
             name_index: BTreeMap::new(),
             outgoing: BTreeMap::new(),

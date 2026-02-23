@@ -598,7 +598,7 @@ impl InferenceEngine {
             .iter()
             .map(|id| {
                 // path.iter() yields &&NodeId; deref once to pass &NodeId.
-                self.node_by_id(*id)
+                self.node_by_id(id)
                     .map_or_else(|| id.as_str().to_string(), |n| n.label.clone())
             })
             .collect();

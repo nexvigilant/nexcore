@@ -415,3 +415,7 @@ pub use rust_dev::*;
 // Topology (TDA + graph analysis)
 pub mod topology;
 pub use topology::*;
+
+// Zeta function telescope pipeline (LMFDB, batch, scaling, Cayley, operator hunt)
+pub mod zeta;
+pub use zeta::*;

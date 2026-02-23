@@ -181,6 +181,7 @@ impl IntoIterator for WalkDir {
             follow_links: self.follow_links,
             contents_first: self.contents_first,
             deferred_dirs: Vec::new(),
+            filter: None,
         }
     }
 }
@@ -193,9 +194,28 @@ pub struct WalkDirIter {
     follow_links: bool,
     contents_first: bool,
     deferred_dirs: Vec<DirEntry>,
+    filter: Option<Box<dyn FnMut(&DirEntry) -> bool>>,
 }
 
 impl WalkDirIter {
+    /// Skip entries for which the predicate returns false.
+    ///
+    /// If an entry is a directory and the predicate returns false,
+    /// its contents will not be yielded or traversed.
+    pub fn filter_entry<F>(mut self, mut predicate: F) -> Self
+    where
+        F: FnMut(&DirEntry) -> bool + 'static,
+    {
+        // Apply filter to the already queued root if necessary
+        if let Some(Ok(entry)) = self.queue.front() {
+            if !predicate(entry) {
+                self.queue.pop_front();
+            }
+        }
+        self.filter = Some(Box::new(predicate));
+        self
+    }
+
     fn expand_dir(&mut self, entry: &DirEntry) {
         if entry.depth >= self.max_depth {
             return;
@@ -262,6 +282,11 @@ impl Iterator for WalkDirIter {
             match item {
                 Err(e) => return Some(Err(e)),
                 Ok(entry) => {
+                    if let Some(ref mut filter) = self.filter {
+                        if !filter(&entry) {
+                            continue;
+                        }
+                    }
                     let is_dir = entry.file_type.is_dir();
                     if is_dir {
                         self.expand_dir(&entry);

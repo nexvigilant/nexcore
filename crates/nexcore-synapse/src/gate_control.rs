@@ -203,10 +203,11 @@ impl Default for CascadeProtocol {
 /// How two hooks relate to each other's signals.
 ///
 /// Tier: T2-C (grounded to μ: Mapping + →: Causality)
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type")]
 pub enum HookInteraction {
     /// Hooks are unrelated; both signals pass independently.
+    #[default]
     Independent,
 
     /// Hooks reinforce each other; combined severity is amplified.
@@ -249,12 +250,6 @@ impl HookInteraction {
     #[must_use]
     pub fn antagonistic(priority: Priority) -> Self {
         Self::Antagonistic { priority }
-    }
-}
-
-impl Default for HookInteraction {
-    fn default() -> Self {
-        Self::Independent
     }
 }
 
@@ -573,14 +568,14 @@ impl GateController {
     pub fn evaluate(&self, signals: &[HookSignal]) -> GateVerdict {
         match signals.len() {
             0 => GateVerdict::Allow,
-            1 => self.evaluate_single(&signals[0]),
+            1 => Self::evaluate_single(&signals[0]),
             2 => self.modulate_pair(&signals[0], &signals[1]),
             _ => self.evaluate_multi(signals),
         }
     }
 
     /// Evaluate a single signal directly.
-    fn evaluate_single(&self, signal: &HookSignal) -> GateVerdict {
+    fn evaluate_single(signal: &HookSignal) -> GateVerdict {
         match signal.signal_type {
             SignalType::Block => GateVerdict::Suppress {
                 reason: signal.hook_name.clone(),
@@ -602,8 +597,8 @@ impl GateController {
         match interaction {
             HookInteraction::Independent => {
                 // Both pass; take the one with higher effective severity
-                let (dominant, _) = self.dominant_signal(a, b);
-                self.evaluate_single(dominant)
+                let (dominant, _) = Self::dominant_signal(a, b);
+                Self::evaluate_single(dominant)
             }
 
             HookInteraction::Synergistic {
@@ -611,11 +606,10 @@ impl GateController {
                 cascade,
             } => {
                 let combined = (a.effective_severity() + b.effective_severity()) * amplification;
-                let adjusted = if let Some(protocol) = cascade {
-                    protocol.apply(combined, 2)
-                } else {
-                    combined.clamp(0.0, 1.0)
-                };
+                let adjusted = cascade.map_or_else(
+                    || combined.clamp(0.0, 1.0),
+                    |protocol| protocol.apply(combined, 2),
+                );
 
                 if adjusted >= self.escalation_threshold {
                     GateVerdict::Escalate {
@@ -629,8 +623,8 @@ impl GateController {
             }
 
             HookInteraction::Antagonistic { priority } => {
-                let winner = self.resolve_antagonism(a, b, priority);
-                self.evaluate_single(winner)
+                let winner = Self::resolve_antagonism(a, b, priority);
+                Self::evaluate_single(winner)
             }
         }
     }
@@ -703,7 +697,6 @@ impl GateController {
 
     /// Return the dominant signal from two, based on effective severity.
     fn dominant_signal<'a>(
-        &self,
         a: &'a HookSignal,
         b: &'a HookSignal,
     ) -> (&'a HookSignal, &'a HookSignal) {
@@ -716,7 +709,6 @@ impl GateController {
 
     /// Resolve antagonism between two signals under the given priority rule.
     fn resolve_antagonism<'a>(
-        &self,
         a: &'a HookSignal,
         b: &'a HookSignal,
         priority: Priority,

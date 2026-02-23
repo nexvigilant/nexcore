@@ -15,7 +15,6 @@ use alloc::collections::BTreeSet;
 use alloc::vec::Vec;
 
 use super::state_registry::StateId;
-use super::transition_engine::TransitionId;
 use crate::MachineId;
 
 /// An unreachable state.
@@ -46,7 +45,7 @@ pub enum UnreachableReason {
 #[derive(Debug, Clone)]
 pub struct VoidCleaner {
     /// Machine ID.
-    machine_id: MachineId,
+    _machine_id: MachineId,
     /// All states.
     all_states: BTreeSet<StateId>,
     /// Initial states.
@@ -64,7 +63,7 @@ impl VoidCleaner {
     #[must_use]
     pub fn new(machine_id: MachineId) -> Self {
         Self {
-            machine_id,
+            _machine_id: machine_id,
             all_states: BTreeSet::new(),
             initial_states: BTreeSet::new(),
             terminal_states: BTreeSet::new(),

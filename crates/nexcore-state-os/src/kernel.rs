@@ -281,12 +281,12 @@ impl StateKernel {
 
         // Register all transitions
         for transition_spec in &spec.transitions {
-            let from = spec.state_id(&transition_spec.from).ok_or_else(|| {
+            let _from = spec.state_id(&transition_spec.from).ok_or({
                 KernelError::StateNotFound(0) // State name not found
             })?;
-            let to = spec
+            let _to = spec
                 .state_id(&transition_spec.to)
-                .ok_or_else(|| KernelError::StateNotFound(0))?;
+                .ok_or(KernelError::StateNotFound(0))?;
 
             // Map spec state IDs to kernel-registered state IDs
             // The kernel registers states sequentially, so spec ID N maps to
@@ -366,7 +366,7 @@ impl StateKernel {
         let state_id = runtime
             .states
             .register(name, kind)
-            .map_err(|e| KernelError::RegistryError(alloc::format!("{:?}", e)))?;
+            .map_err(|e| KernelError::RegistryError(alloc::format!("{e:?}")))?;
 
         // Layer 10 (∃): Existence validation
         runtime.existence.register_state(state_id);
@@ -490,9 +490,9 @@ impl StateKernel {
                     let result = runtime.guards.evaluate_by_name(&guard_name, context);
                     match result {
                         Some(guard_result) if !guard_result.passed => {
-                            let reason = guard_result.reason.unwrap_or_else(|| {
-                                alloc::format!("Guard '{}' rejected", guard_name)
-                            });
+                            let reason = guard_result
+                                .reason
+                                .unwrap_or_else(|| alloc::format!("Guard '{guard_name}' rejected"));
                             return Err(KernelError::GuardRejected(reason));
                         }
                         None => {
@@ -508,7 +508,7 @@ impl StateKernel {
         let result = runtime
             .transitions
             .execute(transition_id, runtime.current_state)
-            .map_err(|e| KernelError::TransitionFailed(alloc::format!("{:?}", e)))?;
+            .map_err(|e| KernelError::TransitionFailed(alloc::format!("{e:?}")))?;
 
         let from_state = runtime.current_state;
         let to_state = result.to_state;
@@ -917,9 +917,7 @@ impl StateKernel {
             .event_transition(machine_id, event, current)
             .ok_or_else(|| {
                 KernelError::NoAvailableTransition(alloc::format!(
-                    "No mapping for event '{}' from state {}",
-                    event,
-                    current
+                    "No mapping for event '{event}' from state {current}"
                 ))
             })?;
 
@@ -944,10 +942,7 @@ impl StateKernel {
             })
             .ok_or_else(|| {
                 KernelError::NoAvailableTransition(alloc::format!(
-                    "No transition for event '{}' from state {} to {}",
-                    event,
-                    current,
-                    target_state
+                    "No transition for event '{event}' from state {current} to {target_state}"
                 ))
             })?;
 
@@ -985,9 +980,7 @@ impl StateKernel {
             .map(|t| t.id)
             .ok_or_else(|| {
                 KernelError::NoAvailableTransition(alloc::format!(
-                    "No transition '{}' from state {}",
-                    action,
-                    from_state
+                    "No transition '{action}' from state {from_state}"
                 ))
             })
     }
@@ -1001,7 +994,7 @@ impl StateKernel {
         runtime
             .states
             .id_of(name)
-            .ok_or_else(|| KernelError::StateNotFound(0))
+            .ok_or(KernelError::StateNotFound(0))
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -1029,7 +1022,7 @@ impl StateKernel {
             .machines
             .get_mut(&machine_id)
             .ok_or(KernelError::MachineNotFound(machine_id))?;
-        Ok(runtime.recursion.detect_cycles().to_vec())
+        Ok(runtime.recursion.detect_cycles())
     }
 
     /// Get boundary crossings for a machine.

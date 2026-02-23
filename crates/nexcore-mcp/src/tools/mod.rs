@@ -451,3 +451,6 @@ pub mod cloud;
 
 // Rust Development (error types, derive advisor, match gen, borrow explain)
 pub mod rust_dev;
+
+// Zeta function telescope pipeline (LMFDB, batch, scaling, Cayley, operator hunt)
+pub mod zeta;

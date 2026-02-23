@@ -51,7 +51,7 @@ impl CycleInfo {
 #[derive(Debug, Clone)]
 pub struct RecursionDetector {
     /// Machine ID.
-    machine_id: MachineId,
+    _machine_id: MachineId,
     /// Adjacency list (state → successors).
     adjacency: BTreeMap<StateId, BTreeSet<StateId>>,
     /// Detected cycles.
@@ -69,7 +69,7 @@ impl RecursionDetector {
     #[must_use]
     pub fn new(machine_id: MachineId) -> Self {
         Self {
-            machine_id,
+            _machine_id: machine_id,
             adjacency: BTreeMap::new(),
             cycles: Vec::new(),
             visit_path: Vec::new(),

@@ -212,15 +212,15 @@ impl MachineInstance {
     /// Get available events from current state.
     #[must_use]
     pub fn available_events(&self) -> Vec<&str> {
-        if let Some(state) = self.spec.state(self.current_state) {
-            self.spec
-                .transitions_from(&state.name)
-                .iter()
-                .map(|t| t.event.as_str())
-                .collect()
-        } else {
-            Vec::new()
-        }
+        self.spec
+            .state(self.current_state)
+            .map_or_else(Vec::new, |state| {
+                self.spec
+                    .transitions_from(&state.name)
+                    .iter()
+                    .map(|t| t.event.as_str())
+                    .collect()
+            })
     }
 
     /// Check if an event is available.
@@ -248,9 +248,8 @@ impl MachineInstance {
             .find(|t| t.from == current_name && t.event == event);
 
         if let Some(t) = transition {
-            let to_id = match self.spec.state_id(&t.to) {
-                Some(id) => id,
-                None => return false,
+            let Some(to_id) = self.spec.state_id(&t.to) else {
+                return false;
             };
 
             let from_id = self.current_state;

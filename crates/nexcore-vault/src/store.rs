@@ -32,7 +32,7 @@ impl Vault {
     /// Returns `VaultError::AlreadyExists` if the vault file already exists.
     pub fn create(config: VaultConfig, password: &str) -> Result<Self> {
         if config.vault_path.exists() {
-            return Err(VaultError::AlreadyExists(config.vault_path.clone()));
+            return Err(VaultError::AlreadyExists(config.vault_path));
         }
 
         let salt = kdf::generate_salt()?;

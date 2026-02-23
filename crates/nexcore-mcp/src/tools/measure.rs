@@ -265,12 +265,12 @@ pub fn quality_gradient_tool(params: QualityGradientParams) -> Result<CallToolRe
 
     // Coupling: dependency count normalized by sqrt(LOC)
     let coupling_a = if m_a.loc > 0 {
-        (m_a.dep_count as f64) / (m_a.loc as f64).sqrt()
+        (m_a.fan_out as f64) / (m_a.loc as f64).sqrt()
     } else {
         0.0
     };
     let coupling_b = if m_b.loc > 0 {
-        (m_b.dep_count as f64) / (m_b.loc as f64).sqrt()
+        (m_b.fan_out as f64) / (m_b.loc as f64).sqrt()
     } else {
         0.0
     };

@@ -105,7 +105,7 @@ impl TransitionMatrix {
             }
         }
         let mut sorted: Vec<&str> = all.into_iter().collect();
-        sorted.sort();
+        sorted.sort_unstable();
         sorted
     }
 

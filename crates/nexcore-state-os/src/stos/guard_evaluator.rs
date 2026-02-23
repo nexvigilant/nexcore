@@ -107,7 +107,7 @@ pub struct GuardContext {
 }
 
 /// A value in guard context.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GuardValue {
     /// Boolean value.
     Bool(bool),
@@ -235,11 +235,8 @@ impl GuardEvaluator {
     pub fn evaluate(&mut self, guard_id: GuardId, context: &GuardContext) -> GuardResult {
         self.eval_counter = self.eval_counter.saturating_add(1);
 
-        let spec = match self.guards.get(&guard_id) {
-            Some(s) => s,
-            None => {
-                return GuardResult::fail(guard_id, self.eval_counter, "Guard not found");
-            }
+        let Some(spec) = self.guards.get(&guard_id) else {
+            return GuardResult::fail(guard_id, self.eval_counter, "Guard not found");
         };
 
         if !spec.enabled {
@@ -247,7 +244,7 @@ impl GuardEvaluator {
             return GuardResult::pass(guard_id, self.eval_counter);
         }
 
-        let passed = self.evaluate_expression(&spec.expression, context);
+        let passed = evaluate_expression(&spec.expression, context);
         let result = if passed {
             GuardResult::pass(guard_id, self.eval_counter)
         } else {
@@ -260,39 +257,6 @@ impl GuardEvaluator {
 
         self.history.push(result.clone());
         result
-    }
-
-    /// Simple expression evaluator.
-    fn evaluate_expression(&self, expr: &str, context: &GuardContext) -> bool {
-        let expr = expr.trim();
-
-        // Literals
-        if expr == "true" {
-            return true;
-        }
-        if expr == "false" {
-            return false;
-        }
-
-        // Negation
-        if let Some(inner) = expr.strip_prefix('!') {
-            return !self.evaluate_expression(inner, context);
-        }
-
-        // Conjunction (simple, no precedence)
-        if let Some((left, right)) = expr.split_once("&&") {
-            return self.evaluate_expression(left, context)
-                && self.evaluate_expression(right, context);
-        }
-
-        // Disjunction
-        if let Some((left, right)) = expr.split_once("||") {
-            return self.evaluate_expression(left, context)
-                || self.evaluate_expression(right, context);
-        }
-
-        // Variable lookup
-        context.get_bool(expr).unwrap_or(false)
     }
 
     /// Evaluate guard by name.
@@ -331,6 +295,48 @@ impl Clone for GuardEvaluator {
             history: self.history.clone(),
         }
     }
+}
+
+// ═══════════════════════════════════════════════════════════
+// EXPRESSION EVALUATOR (free function — no self state required)
+// ═══════════════════════════════════════════════════════════
+
+/// Simple expression evaluator.
+///
+/// Supports:
+/// - `true`, `false` literals
+/// - Variable names (looked up in context as bools)
+/// - `!expr` negation
+/// - `expr && expr` conjunction
+/// - `expr || expr` disjunction
+fn evaluate_expression(expr: &str, context: &GuardContext) -> bool {
+    let expr = expr.trim();
+
+    // Literals
+    if expr == "true" {
+        return true;
+    }
+    if expr == "false" {
+        return false;
+    }
+
+    // Negation
+    if let Some(inner) = expr.strip_prefix('!') {
+        return !evaluate_expression(inner, context);
+    }
+
+    // Conjunction (simple, no precedence)
+    if let Some((left, right)) = expr.split_once("&&") {
+        return evaluate_expression(left, context) && evaluate_expression(right, context);
+    }
+
+    // Disjunction
+    if let Some((left, right)) = expr.split_once("||") {
+        return evaluate_expression(left, context) || evaluate_expression(right, context);
+    }
+
+    // Variable lookup
+    context.get_bool(expr).unwrap_or(false)
 }
 
 // ═══════════════════════════════════════════════════════════

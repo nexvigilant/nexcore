@@ -115,7 +115,7 @@ impl TransitionSequence {
 #[derive(Debug, Clone)]
 pub struct SequenceController {
     /// Machine ID.
-    machine_id: MachineId,
+    _machine_id: MachineId,
     /// Pending transitions queue.
     queue: VecDeque<QueuedTransition>,
     /// Execution order strategy.
@@ -133,7 +133,7 @@ impl SequenceController {
     #[must_use]
     pub fn new(machine_id: MachineId) -> Self {
         Self {
-            machine_id,
+            _machine_id: machine_id,
             queue: VecDeque::new(),
             order: ExecutionOrder::Fifo,
             counter: 0,

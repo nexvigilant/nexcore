@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// ## Tier: T2-P
 /// ## Dominant: ς State
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ClearancePolicy {
     /// The Claude behavioral mode for this level.

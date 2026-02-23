@@ -73,13 +73,13 @@ fn main() {
 }
 
 fn load_config(cli: &Cli) -> Result<VaultConfig> {
-    match &cli.config {
-        Some(path) => VaultConfig::load(std::path::Path::new(path)),
-        None => {
+    cli.config.as_ref().map_or_else(
+        || {
             let default_path = VaultConfig::default_config_path();
             VaultConfig::load(&default_path)
-        }
-    }
+        },
+        |path| VaultConfig::load(std::path::Path::new(path)),
+    )
 }
 
 fn run_command(command: Commands, config: VaultConfig) -> Result<()> {

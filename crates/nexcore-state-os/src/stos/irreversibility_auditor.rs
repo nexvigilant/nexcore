@@ -102,9 +102,9 @@ impl AuditEntry {
         let mut hash = 0u64;
         hash = hash.wrapping_add(id.wrapping_mul(31));
         hash = hash.wrapping_add(machine_id.wrapping_mul(37));
-        hash = hash.wrapping_add((transition_id as u64).wrapping_mul(41));
-        hash = hash.wrapping_add((from_state as u64).wrapping_mul(43));
-        hash = hash.wrapping_add((to_state as u64).wrapping_mul(47));
+        hash = hash.wrapping_add(u64::from(transition_id).wrapping_mul(41));
+        hash = hash.wrapping_add(u64::from(from_state).wrapping_mul(43));
+        hash = hash.wrapping_add(u64::from(to_state).wrapping_mul(47));
         hash = hash.wrapping_add(timestamp.wrapping_mul(53));
         hash
     }

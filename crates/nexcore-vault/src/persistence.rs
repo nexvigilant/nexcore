@@ -57,8 +57,8 @@ fn atomic_write(path: &Path, data: &str, file_mode: u32) -> Result<()> {
 
     #[cfg(unix)]
     {
-        let _mode = file_mode;
-        let perms = std::fs::Permissions::from_mode(_mode);
+        let mode = file_mode;
+        let perms = std::fs::Permissions::from_mode(mode);
         let _ = std::fs::set_permissions(&temp_path, perms);
     }
     let _ = file_mode; // suppress unused warning on non-unix

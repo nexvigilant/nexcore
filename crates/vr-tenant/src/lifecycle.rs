@@ -16,6 +16,7 @@ pub struct LifecycleTransition {
 }
 
 /// Valid state transitions for tenant lifecycle.
+///
 /// Trial → Active (subscription started)
 /// Trial → Offboarding (trial expired, no conversion)
 /// Active → PastDue (payment failed)

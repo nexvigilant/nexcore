@@ -72,6 +72,7 @@ impl MachineMetrics {
 
     /// Average visits per state.
     #[must_use]
+    #[allow(clippy::cast_precision_loss)]
     pub fn average_visits(&self) -> f64 {
         if self.state_count == 0 {
             return 0.0;
@@ -99,7 +100,7 @@ impl MachineMetrics {
 #[derive(Debug, Clone)]
 pub struct CountMetrics {
     /// Machine ID.
-    machine_id: MachineId,
+    _machine_id: MachineId,
     /// Machine metrics.
     metrics: MachineMetrics,
     /// Monotonic counter.
@@ -115,7 +116,7 @@ impl CountMetrics {
     #[must_use]
     pub fn new(machine_id: MachineId) -> Self {
         Self {
-            machine_id,
+            _machine_id: machine_id,
             metrics: MachineMetrics::new(),
             counter: 0,
             max_states: 1024,
@@ -127,7 +128,7 @@ impl CountMetrics {
     #[must_use]
     pub fn with_limits(machine_id: MachineId, max_states: usize, max_transitions: usize) -> Self {
         Self {
-            machine_id,
+            _machine_id: machine_id,
             metrics: MachineMetrics::new(),
             counter: 0,
             max_states,

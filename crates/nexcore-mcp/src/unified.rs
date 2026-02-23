@@ -2575,6 +2575,31 @@ async fn dispatch_inner(
         ),
         "compilation_distance" => typed(params, tools::compilation_space::compilation_distance),
 
+        // ── Pharmacovigilance Taxonomy (WHO-grounded PV concept encoder) ────
+        "pv_taxonomy_summary" => typed(params, tools::pharmacovigilance::pv_taxonomy_summary),
+        "pv_taxonomy_primitive" => typed(params, tools::pharmacovigilance::pv_taxonomy_primitive),
+        "pv_taxonomy_composite" => typed(params, tools::pharmacovigilance::pv_taxonomy_composite),
+        "pv_taxonomy_concept" => typed(params, tools::pharmacovigilance::pv_taxonomy_concept),
+        "pv_taxonomy_chomsky" => typed(params, tools::pharmacovigilance::pv_taxonomy_chomsky),
+        "pv_taxonomy_who_pillars" => {
+            typed(params, tools::pharmacovigilance::pv_taxonomy_who_pillars)
+        }
+        "pv_taxonomy_transfer" => typed(params, tools::pharmacovigilance::pv_taxonomy_transfer),
+        "pv_taxonomy_transfer_matrix" => typed(
+            params,
+            tools::pharmacovigilance::pv_taxonomy_transfer_matrix,
+        ),
+        "pv_taxonomy_lex_symbols" => {
+            typed(params, tools::pharmacovigilance::pv_taxonomy_lex_symbols)
+        }
+
+        // ── Vault (AES-256-GCM + PBKDF2 crypto primitives) ────────────────
+        "vault_derive_key" => typed(params, tools::vault::vault_derive_key),
+        "vault_encrypt" => typed(params, tools::vault::vault_encrypt),
+        "vault_decrypt" => typed(params, tools::vault::vault_decrypt),
+        "vault_generate_salt" => typed(params, tools::vault::vault_generate_salt),
+        "vault_config_sample" => typed(params, tools::vault::vault_config_sample),
+
         // ====================================================================
         _ => Err(McpError::invalid_params(
             format!("Unknown command: {command}. Use command='help' for catalog."),
@@ -3012,6 +3037,8 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "jeopardy": ["jeopardy_clue_values", "jeopardy_categories", "jeopardy_score_board", "jeopardy_should_buzz", "jeopardy_optimal_dd_wager", "jeopardy_optimal_final_wager", "jeopardy_board_control_value", "jeopardy_compound_velocity"],
             "audio": ["audio_spec_compute", "audio_spec_presets", "audio_format_info", "audio_rate_info", "audio_convert_sample", "audio_resample", "audio_codec_catalog", "audio_device_capabilities", "audio_mixer_pan", "audio_stream_transitions"],
             "compilation_space": ["compilation_point_compare", "compilation_point_summary", "compilation_point_presets", "compilation_catalog_lookup", "compilation_chain_validate", "compilation_chain_presets", "compilation_axes_catalog", "compilation_abstraction_levels", "compilation_distance"],
+            "pharmacovigilance": ["pv_taxonomy_summary", "pv_taxonomy_primitive", "pv_taxonomy_composite", "pv_taxonomy_concept", "pv_taxonomy_chomsky", "pv_taxonomy_who_pillars", "pv_taxonomy_transfer", "pv_taxonomy_transfer_matrix", "pv_taxonomy_lex_symbols"],
+            "vault": ["vault_derive_key", "vault_encrypt", "vault_decrypt", "vault_generate_salt", "vault_config_sample"],
         }
     });
 

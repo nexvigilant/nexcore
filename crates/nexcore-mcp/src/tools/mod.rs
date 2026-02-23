@@ -511,3 +511,9 @@ pub mod audio;
 
 // Compilation Space: 7D transform algebra (points, transforms, chains, catalog)
 pub mod compilation_space;
+
+// Pharmacovigilance Taxonomy (4-tier WHO-grounded PV concept encoder)
+pub mod pharmacovigilance;
+
+// Vault (AES-256-GCM encryption, PBKDF2 key derivation, salt generation)
+pub mod vault;

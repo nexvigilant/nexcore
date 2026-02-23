@@ -151,7 +151,9 @@ pub mod manifold;
 pub mod string_modes;
 
 // Phase 5: Eyes — WebGPU rendering pipeline (pipeline state, WGSL codegen, TAA, GTAO, SSS)
+pub mod clustered_lighting;
 pub mod renderer;
+pub mod volumetrics;
 
 // Phase 5: Eyes — molecular orbital computation (STO-3G basis, electron density grids)
 pub mod orbital;

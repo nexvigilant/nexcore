@@ -7933,7 +7933,11 @@ dependencies = [
  "tracing-subscriber",
  "utoipa",
  "utoipa-scalar",
+ "vr-billing",
+ "vr-compliance",
  "vr-core",
+ "vr-marketplace",
+ "vr-platform-ml",
  "vr-tenant",
 ]
 
@@ -9800,6 +9804,7 @@ dependencies = [
  "nexcore-lex-primitiva",
  "proptest",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -10112,7 +10117,9 @@ version = "0.1.0"
 dependencies = [
  "nexcore-error",
  "nexcore-lex-primitiva",
+ "rayon",
  "serde",
+ "serde_json",
  "stem-complex",
  "stem-number-theory",
 ]

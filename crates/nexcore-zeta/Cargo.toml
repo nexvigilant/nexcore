@@ -16,6 +16,8 @@ stem-complex = { workspace = true }
 stem-number-theory = { workspace = true }
 nexcore-lex-primitiva = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
+rayon = { workspace = true }
 
 [lints]
 workspace = true

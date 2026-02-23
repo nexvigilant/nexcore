@@ -37,6 +37,8 @@
 
 pub mod adversarial;
 pub mod anomaly;
+pub mod batch;
+pub mod cayley;
 pub mod cmv;
 pub mod convergence;
 pub mod error;
@@ -46,9 +48,12 @@ pub mod grounding;
 pub mod inverse;
 pub mod killip_nenciu;
 pub mod l_functions;
+pub mod lmfdb;
+pub mod operator;
 pub mod pipeline;
 pub mod prediction;
 pub mod riemann_siegel;
+pub mod scaling;
 pub mod special;
 pub mod statistics;
 pub mod subseries;
@@ -62,6 +67,13 @@ pub use adversarial::{
 pub use anomaly::{
     AnomalyDetail, AnomalyReport, PhaseModel, SpikeFeature, VerblunskyBaseline, build_baseline,
     detect_anomaly, inject_off_cl_zero,
+};
+pub use batch::{
+    BatchConfig, BatchEntry, BatchReport, BatchStatistics, run_telescope_batch,
+    run_telescope_batch_raw,
+};
+pub use cayley::{
+    CayleyAnomalyReport, CayleyDeviation, CayleyTransform, cayley_anomaly_detect, cayley_transform,
 };
 pub use cmv::{CmvReconstruction, CmvStructure, reconstruct_cmv};
 pub use convergence::{
@@ -81,10 +93,22 @@ pub use fingerprint::{
 pub use inverse::{JacobiReconstruction, OperatorStructure, reconstruct_jacobi};
 pub use killip_nenciu::{DualGueVerdict, KillipNenciuTest, compare_gue_tests, killip_nenciu_test};
 pub use l_functions::DirichletCharacter;
+pub use lmfdb::{
+    LmfdbCatalog, LmfdbLfunction, LmfdbZeroSet, embedded_riemann_zeros, embedded_riemann_zeros_n,
+    parse_lmfdb_api_response, parse_lmfdb_catalog, parse_lmfdb_labeled, parse_lmfdb_zeros,
+};
+pub use operator::{
+    OperatorFit, OperatorHuntReport, berry_keating_xp, cmv_truncated_operator, hunt_operators,
+    xp_plus_potential,
+};
 pub use pipeline::{TelescopeConfig, TelescopeReport, run_telescope};
 pub use prediction::{
     PredictionAccuracy, VerblunskyModel, estimate_t_for_nth_zero, fit_verblunsky_model,
     predict_next_zeros, validate_prediction,
+};
+pub use scaling::{
+    ScalingArm, ScalingComparison, ScalingLaw, ScalingPoint, compare_scaling_laws, fit_scaling_law,
+    predict_confidence,
 };
 pub use statistics::{GueComparison, compare_to_gue};
 pub use subseries::{

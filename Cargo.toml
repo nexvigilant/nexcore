@@ -46,6 +46,7 @@ proc-macro2 = "1.0.86"
 proptest = "1.6.0"
 quote = "1.0.36"
 rand = "0.9.0"
+rayon = "1.10"
 regex = "1.10.5"
 reqwest = { version = "0.12.5", features = ["json"] }
 rusqlite = { version = "0.32", features = ["bundled", "serde_json"] }
@@ -223,6 +224,10 @@ signal = { path = "crates/nexcore-signal-pipeline", package = "nexcore-signal-pi
 skills = { path = "crates/skills" }
 vr-core = { path = "crates/vr-core" }
 vr-tenant = { path = "crates/vr-tenant" }
+vr-billing = { path = "crates/vr-billing" }
+vr-compliance = { path = "crates/vr-compliance" }
+vr-marketplace = { path = "crates/vr-marketplace" }
+vr-platform-ml = { path = "crates/vr-platform-ml" }
 
 # Internal Workspace Dependencies (Stem)
 stem = { path = "crates/stem" }

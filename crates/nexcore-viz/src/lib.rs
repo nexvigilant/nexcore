@@ -128,11 +128,14 @@ pub mod topology;
 pub mod dynamics;
 pub mod force_field;
 pub mod gpu_layout;
+pub mod hzb;
 pub mod hypergraph;
 pub mod instancing;
 pub mod lod;
 pub mod minimizer;
 pub mod particle;
+pub mod picking;
+pub mod sdf_text;
 pub mod transfer_lut;
 
 // Phase 4: Nervous system — distance geometry coordinate generation

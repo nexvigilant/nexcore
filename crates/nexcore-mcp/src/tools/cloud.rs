@@ -249,11 +249,11 @@ fn cloud_state_mode(type_name: &str) -> Option<&'static str> {
     }
 }
 
-/// cloud_transfer_confidence — Type + domain → analog + confidence.
-pub fn cloud_transfer_confidence(
+/// transfer_confidence — Type + domain → analog + confidence.
+pub fn transfer_confidence(
     p: params::CloudTransferConfidenceParams,
 ) -> Result<CallToolResult, McpError> {
-    let conf = transfer_confidence(&p.cloud_type, &p.domain);
+    let conf = nexcore_cloud::transfer::transfer_confidence(&p.cloud_type, &p.domain);
     let mappings = transfers_for_type(&p.cloud_type);
     let mapping = mappings
         .iter()
@@ -1285,7 +1285,7 @@ mod tests {
 
     #[test]
     fn test_transfer_confidence_found() {
-        let result = cloud_transfer_confidence(params::CloudTransferConfidenceParams {
+        let result = transfer_confidence(params::CloudTransferConfidenceParams {
             cloud_type: "Identity".to_string(),
             domain: "PV".to_string(),
         });
@@ -1294,7 +1294,7 @@ mod tests {
 
     #[test]
     fn test_transfer_confidence_missing() {
-        let result = cloud_transfer_confidence(params::CloudTransferConfidenceParams {
+        let result = transfer_confidence(params::CloudTransferConfidenceParams {
             cloud_type: "VirtualMachine".to_string(),
             domain: "PV".to_string(),
         });

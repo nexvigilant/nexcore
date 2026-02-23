@@ -2287,7 +2287,7 @@ async fn dispatch_inner(
         // T1 Grounding: μ (mapping) + → (causality) + ∂ (boundary) + N (quantity)
         // ====================================================================
         "cloud_primitive_composition" => typed(params, tools::cloud::primitive_composition),
-        "cloud_transfer_confidence" => typed(params, tools::cloud::cloud_transfer_confidence),
+        "cloud_transfer_confidence" => typed(params, tools::cloud::transfer_confidence),
         "cloud_tier_classify" => typed(params, tools::cloud::tier_classify),
         "cloud_compare_types" => typed(params, tools::cloud::compare_types),
         "cloud_reverse_synthesize" => typed(params, tools::cloud::reverse_synthesize),

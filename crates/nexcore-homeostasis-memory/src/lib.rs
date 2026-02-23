@@ -34,6 +34,7 @@
 //! - → (Causality) — incidents record cause-effect chains
 
 pub mod incident;
+pub mod memory;
 pub mod playbook;
 pub mod store;
 
@@ -45,5 +46,6 @@ pub mod transfer;
 
 // Convenience re-exports.
 pub use incident::{Incident, IncidentSeverity, IncidentSignature};
+pub use memory::IncidentMemory;
 pub use playbook::{Playbook, PlaybookMatch, PlaybookStep};
 pub use store::{MemoryConfig, MemoryError, MemoryStats, MemoryStore, SimilarIncident};

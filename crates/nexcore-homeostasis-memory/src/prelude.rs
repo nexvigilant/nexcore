@@ -5,6 +5,7 @@
 //! Provides all public types from the crate in a single import.
 
 pub use crate::incident::{Incident, IncidentSeverity, IncidentSignature};
+pub use crate::memory::IncidentMemory;
 pub use crate::playbook::{Playbook, PlaybookMatch, PlaybookStep};
 pub use crate::store::{MemoryConfig, MemoryError, MemoryStats, MemoryStore, SimilarIncident};
 

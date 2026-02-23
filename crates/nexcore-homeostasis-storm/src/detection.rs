@@ -245,13 +245,41 @@ impl StormDetector {
             Duration::ZERO
         };
 
-        let risk_score = self.calc_risk_score(
+        let base_risk = self.calc_risk_score(
             proportionality,
             proportionality_trend,
             response_acceleration,
             duration_elevated,
             dmg.detected,
         );
+
+        // Sustained storm bonus: a steady-state massive over-response is itself
+        // dangerous even when the signal is constant (no trend / no acceleration).
+        // If many recent samples are at storm-level proportionality, the
+        // persistence of over-response contributes additional risk.
+        let sustained_bonus = {
+            let recent = self.last_n_values(15, |s| s.proportionality);
+            let at_storm = recent
+                .iter()
+                .filter(|p| **p >= self.proportionality_storm)
+                .count();
+            let raw = if at_storm >= 10 {
+                0.15
+            } else if at_storm >= 5 {
+                0.08
+            } else {
+                0.0
+            };
+            // Dampen when current proportionality shows resolution —
+            // the storm memory fades as the system returns to normal.
+            if proportionality < self.proportionality_warning {
+                raw * 0.3
+            } else {
+                raw
+            }
+        };
+        let risk_score = (base_risk + sustained_bonus).min(1.0);
+
         let phase = self.determine_phase(risk_score);
 
         // Storm timing.
@@ -412,7 +440,7 @@ impl StormDetector {
         if len == 0 {
             return vec![];
         }
-        let start = if len > n { len - n } else { 0 };
+        let start = len.saturating_sub(n);
         self.history
             .iter()
             .skip(start)

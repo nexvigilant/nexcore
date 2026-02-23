@@ -175,6 +175,12 @@ impl MemoryStore {
         self.incidents.iter().filter(|i| i.is_active()).collect()
     }
 
+    /// Get all incidents (active and resolved).
+    #[must_use]
+    pub fn all_incidents(&self) -> &[Incident] {
+        &self.incidents
+    }
+
     /// Find past incidents similar to the given signature.
     ///
     /// Returns up to `max_similar_results` incidents sorted by descending similarity,

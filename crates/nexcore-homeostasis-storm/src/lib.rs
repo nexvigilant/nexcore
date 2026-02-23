@@ -1,15 +1,23 @@
 //! # Homeostasis Machine — Storm Detection and Prevention
 //!
-//! Storm detection (cytokine-storm-style cascade detection) and prevention
-//! (circuit breakers, rate limiters, storm-breaker protocol) for the
+//! Cytokine-storm-style cascade detection and coordinated prevention for the
 //! Homeostasis Machine.
 //!
-//! This crate is a work-in-progress stub. Modules will be completed once
-//! the orchestrator scaffolding is in place.
+//! ## Modules
+//!
+//! | Module | Purpose |
+//! |--------|---------|
+//! | [`detection`] | [`StormDetector`] — evaluates risk score and storm phase per tick |
+//! | [`prevention`] | [`CircuitBreaker`] + [`RateLimiter`] — per-component dampeners |
+//! | [`breaker`] | [`StormBreaker`] — coordinates all dampeners under one protocol |
 
-// Silence dead-code warnings while modules are stubs.
-#![allow(dead_code)]
+#![forbid(unsafe_code)]
+#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 pub mod breaker;
 pub mod detection;
 pub mod prevention;
+
+pub use breaker::StormBreaker;
+pub use detection::{CascadePattern, StormDetector, StormSignature, SystemEvent, TrendLabel};
+pub use prevention::{CircuitBreaker, RateLimiter};

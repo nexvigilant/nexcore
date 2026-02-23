@@ -21,7 +21,6 @@ pub mod academy_forge;
 
 pub mod api;
 pub mod benefit_risk;
-pub mod bonding;
 pub mod brain;
 
 // CLI wrapper tools (git, gh, systemctl, npm, filesystem)
@@ -61,7 +60,6 @@ pub mod grammar;
 pub mod guardian;
 pub mod guidelines;
 pub mod hitl;
-pub mod hooks;
 pub mod hud;
 pub mod ich_glossary;
 pub mod perplexity;
@@ -441,3 +439,9 @@ pub mod temporal;
 
 // QSAR Granular Predictions (mutagenicity, hepatotoxicity, cardiotoxicity, domain assessment)
 pub mod qsar;
+
+// NotebookLM (library CRUD, session management, browser-automated queries)
+pub mod notebooklm;
+
+// Cloud Intelligence (35-type taxonomy → 17 MCP tools)
+pub mod cloud;

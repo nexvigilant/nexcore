@@ -785,15 +785,6 @@ async fn dispatch_inner(
         "oracle_reset" => typed(params, tools::oracle::oracle_reset),
         "oracle_top_predictions" => typed(params, tools::oracle::oracle_top_predictions),
 
-        // ====================================================================
-        // Hooks Tools (6)
-        // ====================================================================
-        "hooks_stats" => tools::hooks::stats(),
-        "hooks_for_event" => typed(params, tools::hooks::for_event),
-        "hooks_for_tier" => typed(params, tools::hooks::for_tier),
-        "hook_list_nested" => typed(params, tools::hooks::list_nested),
-        "hooks_metrics_summary" => typed(params, tools::hooks::metrics_summary),
-        "hooks_metrics_by_event" => typed(params, tools::hooks::metrics_by_event),
 
         // ====================================================================
         // Immunity Tools (6)
@@ -831,11 +822,6 @@ async fn dispatch_inner(
         "brand_primitive_test" => typed(params, tools::brand_semantics::brand_primitive_test),
         "brand_semantic_tiers" => tools::brand_semantics::brand_semantic_tiers(),
 
-        // ====================================================================
-        // Hook-Skill Molecular Bonding Tools (2)
-        // ====================================================================
-        "bonding_analyze" => typed(params, tools::bonding::analyze_molecule),
-        "bonding_evolve" => typed(params, tools::bonding::evolve_molecule),
 
         // ====================================================================
         // Forge Tools (6) — Primitive-first technology construction
@@ -2276,6 +2262,51 @@ async fn dispatch_inner(
         "stoichiometry_is_isomer" => typed(params, tools::stoichiometry::is_isomer),
 
         // ====================================================================
+        // NotebookLM Tools (16) — Library, Sessions, Auth, Query
+        // T1 Grounding: μ (mapping) + π (persistence) + ∂ (boundary)
+        // ====================================================================
+        "nlm_add_notebook" => typed(params, tools::notebooklm::add_notebook),
+        "nlm_list_notebooks" => typed(params, tools::notebooklm::list_notebooks),
+        "nlm_get_notebook" => typed(params, tools::notebooklm::get_notebook),
+        "nlm_select_notebook" => typed(params, tools::notebooklm::select_notebook),
+        "nlm_update_notebook" => typed(params, tools::notebooklm::update_notebook),
+        "nlm_remove_notebook" => typed(params, tools::notebooklm::remove_notebook),
+        "nlm_search_notebooks" => typed(params, tools::notebooklm::search_notebooks),
+        "nlm_get_library_stats" => typed(params, tools::notebooklm::get_library_stats),
+        "nlm_list_sessions" => typed(params, tools::notebooklm::list_sessions),
+        "nlm_close_session" => typed(params, tools::notebooklm::close_session),
+        "nlm_reset_session" => typed(params, tools::notebooklm::reset_session),
+        "nlm_get_health" => typed(params, tools::notebooklm::get_health),
+        "nlm_setup_auth" => typed_async(params, tools::notebooklm::setup_auth).await,
+        "nlm_re_auth" => typed_async(params, tools::notebooklm::re_auth).await,
+        "nlm_ask_question" => typed_async(params, tools::notebooklm::ask_question).await,
+        "nlm_cleanup_data" => typed_async(params, tools::notebooklm::cleanup_data).await,
+
+        // ====================================================================
+        // Cloud Intelligence (17) — 35-type taxonomy activation
+        // T1 Grounding: μ (mapping) + → (causality) + ∂ (boundary) + N (quantity)
+        // ====================================================================
+        "cloud_primitive_composition" => typed(params, tools::cloud::primitive_composition),
+        "cloud_transfer_confidence" => typed(params, tools::cloud::cloud_transfer_confidence),
+        "cloud_tier_classify" => typed(params, tools::cloud::tier_classify),
+        "cloud_compare_types" => typed(params, tools::cloud::compare_types),
+        "cloud_reverse_synthesize" => typed(params, tools::cloud::reverse_synthesize),
+        "cloud_list_types" => typed(params, tools::cloud::list_types),
+        "cloud_molecular_weight" => typed(params, tools::cloud::molecular_weight),
+        "cloud_dominant_shift" => typed(params, tools::cloud::dominant_shift),
+        // Infrastructure Awareness (4)
+        "cloud_infra_status" => typed_async(params, tools::cloud::infra_status).await,
+        "cloud_infra_map" => typed_async(params, tools::cloud::infra_map).await,
+        "cloud_capacity_project" => typed(params, tools::cloud::capacity_project),
+        "cloud_supervisor_health" => typed(params, tools::cloud::supervisor_health),
+        // Cross-Domain Reasoning (5)
+        "cloud_reverse_transfer" => typed(params, tools::cloud::reverse_transfer),
+        "cloud_transfer_chain" => typed(params, tools::cloud::transfer_chain),
+        "cloud_architecture_advisor" => typed(params, tools::cloud::architecture_advisor),
+        "cloud_anomaly_detect" => typed(params, tools::cloud::anomaly_detect),
+        "cloud_transfer_matrix" => typed(params, tools::cloud::transfer_matrix),
+
+        // ====================================================================
         // Unknown command
         // ====================================================================
         _ => Err(McpError::invalid_params(
@@ -2478,7 +2509,6 @@ fn help_catalog_json() -> serde_json::Value {
             "wolfram": ["wolfram_query", "wolfram_short_answer", "wolfram_spoken_answer", "wolfram_calculate", "wolfram_step_by_step", "wolfram_plot", "wolfram_convert", "wolfram_chemistry", "wolfram_physics", "wolfram_astronomy", "wolfram_statistics", "wolfram_data_lookup", "wolfram_datetime", "wolfram_nutrition", "wolfram_finance", "wolfram_linguistics"],
             "principles": ["principles_list", "principles_get", "principles_search"],
             "brain": ["brain_session_create", "brain_session_load", "brain_sessions_list", "brain_artifact_save", "brain_artifact_resolve", "brain_artifact_get", "brain_artifact_diff", "code_tracker_track", "code_tracker_changed", "code_tracker_original", "implicit_get", "implicit_set", "implicit_stats", "implicit_find_corrections", "implicit_patterns_by_grounding", "implicit_patterns_by_relevance", "brain_recovery_check", "brain_recovery_repair", "brain_recovery_rebuild_index", "brain_recovery_auto", "brain_coordination_acquire", "brain_coordination_release", "brain_coordination_status"],
-            "hooks": ["hooks_stats", "hooks_for_event", "hooks_for_tier", "hook_list_nested"],
             "regulatory": ["regulatory_primitives_extract", "regulatory_primitives_audit", "regulatory_primitives_compare"],
             "chemistry": ["chemistry_threshold_rate", "chemistry_decay_remaining", "chemistry_saturation_rate", "chemistry_feasibility", "chemistry_dependency_rate", "chemistry_buffer_capacity", "chemistry_signal_absorbance", "chemistry_equilibrium", "chemistry_pv_mappings", "chemistry_threshold_exceeded", "chemistry_hill_response", "chemistry_nernst_potential", "chemistry_inhibition_rate", "chemistry_eyring_rate", "chemistry_langmuir_coverage", "chemistry_gaussian_overlap"],
             "stem": ["stem_version", "stem_taxonomy", "stem_confidence_combine", "stem_tier_info", "stem_chem_balance", "stem_chem_fraction", "stem_chem_ratio", "stem_chem_rate", "stem_chem_affinity", "stem_phys_fma", "stem_phys_conservation", "stem_phys_period", "stem_phys_amplitude", "stem_phys_scale", "stem_phys_inertia", "stem_math_bounds_check", "stem_math_relation_invert", "stem_math_proof", "stem_math_identity", "stem_spatial_distance", "stem_spatial_triangle", "stem_spatial_neighborhood", "stem_spatial_dimension", "stem_spatial_orientation"],
@@ -2509,18 +2539,19 @@ fn help_catalog_json() -> serde_json::Value {
             "pk": ["pk_auc", "pk_clearance", "pk_half_life", "pk_steady_state", "pk_ionization", "pk_michaelis_menten"],
             "causality": ["causality_rucam", "causality_ucas"],
             "temporal": ["temporal_tto", "temporal_challenge", "temporal_plausibility"],
-            "knowledge_engine": ["knowledge_engine_compress", "knowledge_engine_compile", "knowledge_engine_query", "knowledge_engine_score", "knowledge_engine_extract_primitives", "knowledge_engine_extract_concepts"]
+            "knowledge_engine": ["knowledge_engine_compress", "knowledge_engine_compile", "knowledge_engine_query", "knowledge_engine_score", "knowledge_engine_extract_primitives", "knowledge_engine_extract_concepts"],
+            "notebooklm": ["nlm_add_notebook", "nlm_list_notebooks", "nlm_get_notebook", "nlm_select_notebook", "nlm_update_notebook", "nlm_remove_notebook", "nlm_search_notebooks", "nlm_get_library_stats", "nlm_list_sessions", "nlm_close_session", "nlm_reset_session", "nlm_get_health", "nlm_setup_auth", "nlm_re_auth", "nlm_ask_question", "nlm_cleanup_data"],
+            "cloud": ["cloud_primitive_composition", "cloud_transfer_confidence", "cloud_tier_classify", "cloud_compare_types", "cloud_reverse_synthesize", "cloud_list_types", "cloud_molecular_weight", "cloud_dominant_shift", "cloud_infra_status", "cloud_infra_map", "cloud_capacity_project", "cloud_supervisor_health", "cloud_reverse_transfer", "cloud_transfer_chain", "cloud_architecture_advisor", "cloud_anomaly_detect", "cloud_transfer_matrix"]
         }
     })
 }
 
 fn help_catalog() -> Result<CallToolResult, McpError> {
     let catalog = serde_json::json!({
-        "total": 479,
+        "total": 496,
         "usage": "nexcore(command=\"CMD\", params={...})",
         "categories": {
             "system": ["nexcore_health", "config_validate", "mcp_servers_list", "mcp_server_get"],
-            "bonding": ["bonding_analyze", "bonding_evolve"],
             "forge": ["forge_init", "forge_reference", "forge_mine", "forge_prompt", "forge_suggest", "forge_summary", "forge_system_prompt", "forge_tier"],
             "academy_forge": ["forge_extract", "forge_validate", "forge_scaffold", "forge_schema", "forge_compile", "forge_atomize", "forge_graph", "forge_shortest_path"],
             "foundation": ["foundation_levenshtein", "foundation_levenshtein_bounded", "foundation_fuzzy_search", "foundation_sha256", "foundation_yaml_parse", "foundation_graph_topsort", "foundation_graph_levels", "foundation_fsrs_review", "foundation_concept_grep", "foundation_domain_distance", "foundation_flywheel_velocity", "foundation_token_ratio", "foundation_spectral_overlap"],
@@ -2563,7 +2594,6 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "learning": ["learning_daemon_status", "learning_daemon_trends", "learning_daemon_beliefs", "learning_daemon_corrections", "learning_daemon_velocity", "learn_landscape", "learn_extract", "learn_assimilate", "learn_recall", "learn_normalize", "learn_pipeline"],
             "oracle": ["oracle_ingest", "oracle_predict", "oracle_observe", "oracle_report", "oracle_status", "oracle_reset", "oracle_top_predictions"],
             "synapse": ["synapse_get_or_create", "synapse_get", "synapse_observe", "synapse_list", "synapse_stats", "synapse_prune"],
-            "hooks": ["hooks_stats", "hooks_for_event", "hooks_for_tier", "hook_list_nested"],
             "immunity": ["immunity_scan", "immunity_scan_errors", "immunity_list", "immunity_get", "immunity_propose", "immunity_status"],
             "nmd": ["nmd_check", "nmd_upf_evaluate", "nmd_smg_process", "nmd_adaptive_stats", "nmd_thymic_status", "nmd_status"],
             "regulatory": ["regulatory_primitives_extract", "regulatory_primitives_audit", "regulatory_primitives_compare", "regulatory_effectiveness_assess"],
@@ -2665,6 +2695,8 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "stoichiometry": ["stoichiometry_encode", "stoichiometry_decode", "stoichiometry_sisters", "stoichiometry_mass_state", "stoichiometry_dictionary", "stoichiometry_is_balanced", "stoichiometry_prove", "stoichiometry_is_isomer"],
             "trial": ["trial_protocol_register", "trial_power_analysis", "trial_randomize", "trial_blind_verify", "trial_interim_analyze", "trial_safety_check", "trial_endpoint_evaluate", "trial_multiplicity_adjust", "trial_adapt_decide", "trial_report_generate"],
             "cognition": ["cognition_process", "cognition_analyze", "cognition_forward", "cognition_entropy", "cognition_perplexity", "cognition_embed", "cognition_sample", "cognition_confidence"],
+            "notebooklm": ["nlm_add_notebook", "nlm_list_notebooks", "nlm_get_notebook", "nlm_select_notebook", "nlm_update_notebook", "nlm_remove_notebook", "nlm_search_notebooks", "nlm_get_library_stats", "nlm_list_sessions", "nlm_close_session", "nlm_reset_session", "nlm_get_health", "nlm_setup_auth", "nlm_re_auth", "nlm_ask_question", "nlm_cleanup_data"],
+            "cloud": ["cloud_primitive_composition", "cloud_transfer_confidence", "cloud_tier_classify", "cloud_compare_types", "cloud_reverse_synthesize", "cloud_list_types", "cloud_molecular_weight", "cloud_dominant_shift", "cloud_infra_status", "cloud_infra_map", "cloud_capacity_project", "cloud_supervisor_health", "cloud_reverse_transfer", "cloud_transfer_chain", "cloud_architecture_advisor", "cloud_anomaly_detect", "cloud_transfer_matrix"],
         }
     });
 

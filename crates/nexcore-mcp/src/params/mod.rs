@@ -18,7 +18,6 @@ pub mod anatomy_db;
 pub mod antitransformer;
 pub mod axioms;
 pub mod biology;
-pub mod bonding;
 pub mod brain;
 pub mod brain_db;
 pub mod brand;
@@ -121,7 +120,6 @@ pub mod faers_analytics;
 pub mod faers_etl;
 pub mod fda;
 pub mod game_theory;
-pub mod hooks;
 pub mod ich;
 pub mod molecular_weight;
 pub mod organize;
@@ -148,7 +146,6 @@ pub use anatomy::*;
 pub use antitransformer::*;
 pub use axioms::*;
 pub use biology::*;
-pub use bonding::*;
 pub use brain::*;
 pub use brain_db::*;
 pub use brand::*;
@@ -184,7 +181,6 @@ pub use gcloud::*;
 pub use gsheets::*;
 pub use guardian::*;
 pub use hitl::*;
-pub use hooks::*;
 pub use hud::*;
 pub use immunity::*;
 pub use insight::*;
@@ -403,3 +399,11 @@ pub use temporal::*;
 // QSAR Granular Predictions (mutagenicity, hepatotoxicity, cardiotoxicity, domain assessment)
 pub mod qsar;
 pub use qsar::*;
+
+// NotebookLM (library, sessions, browser-automated research queries)
+pub mod notebooklm;
+pub use notebooklm::*;
+
+// Cloud Intelligence (17 tools — query, infrastructure, reasoning)
+pub mod cloud;
+pub use cloud::*;

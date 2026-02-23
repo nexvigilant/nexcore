@@ -887,6 +887,46 @@ pub(crate) const KNOWN_TYPES: &[&str] = &[
     "ScalingEvent",
     "KnowledgeTransfer",
     "ReproductiveSystemHealth",
+    // Cloud Computing Taxonomy (35 types — nexcore-cloud)
+    // T1 (prefixed to avoid collisions with vigilance types)
+    "CloudIdentity",
+    "CloudThreshold",
+    "CloudFeedbackLoop",
+    "CloudIdempotency",
+    "CloudImmutability",
+    "CloudConvergence",
+    // T2-P (unique names, no prefix needed)
+    "Compute",
+    "Storage",
+    "NetworkLink",
+    "IsolationBoundary",
+    "CloudPermission",
+    "ResourcePool",
+    "Metering",
+    "Replication",
+    "CloudRouting",
+    "CloudLease",
+    "CloudEncryption",
+    "CloudQueue",
+    "CloudHealthCheck",
+    "Elasticity",
+    // T2-C Composites
+    "VirtualMachine",
+    "LoadBalancer",
+    "AutoScaling",
+    "CloudIam",
+    "EventualConsistency",
+    "Tenancy",
+    "PayPerUse",
+    "ReservedCapacity",
+    "SpotPricing",
+    "SecretsManagement",
+    // T3 Domain-Specific
+    "Container",
+    "Iaas",
+    "Paas",
+    "Saas",
+    "Serverless",
 ];
 
 fn lookup_grounded_type<F>(type_name: &str, f: F) -> serde_json::Value
@@ -1992,6 +2032,46 @@ where
         "ScalingEvent" => ScalingEvent,
         "KnowledgeTransfer" => KnowledgeTransfer,
         "ReproductiveSystemHealth" => ReproductiveSystemHealth,
+        // Cloud Computing Taxonomy (35 types — nexcore-cloud)
+        // T1 (Cloud-prefixed to avoid collision with vigilance types)
+        "CloudIdentity" => nexcore_cloud::primitives::Identity,
+        "CloudThreshold" => nexcore_cloud::primitives::Threshold,
+        "CloudFeedbackLoop" => nexcore_cloud::primitives::FeedbackLoop,
+        "CloudIdempotency" => nexcore_cloud::primitives::Idempotency,
+        "CloudImmutability" => nexcore_cloud::primitives::Immutability,
+        "CloudConvergence" => nexcore_cloud::primitives::Convergence,
+        // T2-P
+        "Compute" => nexcore_cloud::primitives::Compute,
+        "Storage" => nexcore_cloud::primitives::Storage,
+        "NetworkLink" => nexcore_cloud::primitives::NetworkLink,
+        "IsolationBoundary" => nexcore_cloud::primitives::IsolationBoundary,
+        "CloudPermission" => nexcore_cloud::primitives::Permission,
+        "ResourcePool" => nexcore_cloud::primitives::ResourcePool,
+        "Metering" => nexcore_cloud::primitives::Metering,
+        "Replication" => nexcore_cloud::primitives::Replication,
+        "CloudRouting" => nexcore_cloud::primitives::Routing,
+        "CloudLease" => nexcore_cloud::primitives::Lease,
+        "CloudEncryption" => nexcore_cloud::primitives::Encryption,
+        "CloudQueue" => nexcore_cloud::primitives::Queue,
+        "CloudHealthCheck" => nexcore_cloud::primitives::HealthCheck,
+        "Elasticity" => nexcore_cloud::primitives::Elasticity,
+        // T2-C Composites
+        "VirtualMachine" => nexcore_cloud::composites::VirtualMachine,
+        "LoadBalancer" => nexcore_cloud::composites::LoadBalancer,
+        "AutoScaling" => nexcore_cloud::composites::AutoScaling,
+        "CloudIam" => nexcore_cloud::composites::Iam,
+        "EventualConsistency" => nexcore_cloud::composites::EventualConsistency,
+        "Tenancy" => nexcore_cloud::composites::Tenancy,
+        "PayPerUse" => nexcore_cloud::composites::PayPerUse,
+        "ReservedCapacity" => nexcore_cloud::composites::ReservedCapacity,
+        "SpotPricing" => nexcore_cloud::composites::SpotPricing,
+        "SecretsManagement" => nexcore_cloud::composites::SecretsManagement,
+        // T3 Domain-Specific
+        "Container" => nexcore_cloud::service_models::Container,
+        "Iaas" => nexcore_cloud::service_models::Iaas,
+        "Paas" => nexcore_cloud::service_models::Paas,
+        "Saas" => nexcore_cloud::service_models::Saas,
+        "Serverless" => nexcore_cloud::service_models::Serverless,
     }
 
     unknown_type_json(type_name)

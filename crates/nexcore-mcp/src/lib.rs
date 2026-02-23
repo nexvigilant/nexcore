@@ -1,4 +1,4 @@
-#![recursion_limit = "512"]
+#![recursion_limit = "1024"]
 //! # NexVigilant Core MCP Server
 //!
 //! MCP server exposing NexVigilant Core's high-performance Rust APIs to Claude Code.

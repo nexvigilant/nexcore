@@ -2427,6 +2427,16 @@ async fn dispatch_inner(
         "retro_extract_features" => typed(params, tools::retrocasting::retro_extract_features),
         "retro_dataset_stats" => typed(params, tools::retrocasting::retro_dataset_stats),
 
+        // ── Engram Knowledge Store ───────────────────────────────────────
+        "engram_search" => typed(params, tools::engram::engram_search),
+        "engram_search_decay" => typed(params, tools::engram::engram_search_decay),
+        "engram_peek" => typed(params, tools::engram::engram_peek),
+        "engram_stats" => typed(params, tools::engram::engram_stats),
+        "engram_find_duplicates" => typed(params, tools::engram::engram_find_duplicates),
+        "engram_decay_score" => typed(params, tools::engram::engram_decay_score),
+        "engram_ingest" => typed(params, tools::engram::engram_ingest),
+        "engram_by_source" => typed(params, tools::engram::engram_by_source),
+
         // ====================================================================
         // Unknown command
         // ====================================================================
@@ -2853,6 +2863,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "compound_registry": ["compound_resolve", "compound_resolve_batch", "compound_cache_search", "compound_cache_get", "compound_cache_count"],
             "fhir": ["fhir_adverse_event_to_signal", "fhir_batch_to_signals", "fhir_parse_bundle", "fhir_validate_resource"],
             "retrocasting": ["retro_structural_similarity", "retro_signal_significance", "retro_cluster_signals", "retro_correlate_alerts", "retro_extract_features", "retro_dataset_stats"],
+            "engram": ["engram_search", "engram_search_decay", "engram_peek", "engram_stats", "engram_find_duplicates", "engram_decay_score", "engram_ingest", "engram_by_source"],
         }
     });
 

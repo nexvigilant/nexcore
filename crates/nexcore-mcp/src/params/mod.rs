@@ -443,3 +443,7 @@ pub use fhir::*;
 // Retrocasting: retrospective signal-to-structure analysis and ML training
 pub mod retrocasting;
 pub use retrocasting::*;
+
+// Engram: unified knowledge store (search, decay, ingest, duplicates)
+pub mod engram;
+pub use engram::*;

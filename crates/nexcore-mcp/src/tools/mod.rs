@@ -472,3 +472,6 @@ pub mod fhir;
 
 // Retrocasting: signal-to-structure linking, clustering, alert correlation, ML features
 pub mod retrocasting;
+
+// Engram: unified knowledge daemon (TF-IDF search, temporal decay, multi-source ingest)
+pub mod engram;

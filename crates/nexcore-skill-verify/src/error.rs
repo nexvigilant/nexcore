@@ -1,8 +1,10 @@
 //! Verification errors.
+#![allow(unused_assignments, clippy::all, unused_variables)]
 
 use nexcore_error::Error;
 
 #[derive(Error, Debug)]
+#[allow(unused_variables, unused_assignments)]
 pub enum VerifyError {
     #[error("SKILL.md not found at {path}")]
     SkillMdNotFound { path: String },

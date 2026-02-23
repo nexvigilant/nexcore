@@ -419,3 +419,11 @@ pub use topology::*;
 // Zeta function telescope pipeline (LMFDB, batch, scaling, Cayley, operator hunt)
 pub mod zeta;
 pub use zeta::*;
+
+// Signal detection pipeline (PRR/ROR/IC/EBGM, Evans thresholds, relay)
+pub mod signal_pipeline;
+pub use signal_pipeline::*;
+
+// Preemptive PV: 3-tier signal detection (Reactive → Predictive → Preemptive)
+pub mod preemptive_pv;
+pub use preemptive_pv::*;

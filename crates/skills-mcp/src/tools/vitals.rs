@@ -305,12 +305,12 @@ pub fn synapse() -> Result<CallToolResult, McpError> {
 
 /// Full VITALS pipeline.
 pub fn pipeline() -> Result<CallToolResult, McpError> {
-    let v = vigor()?;
-    let i = immunity()?;
-    let t = telemetry()?;
-    let a = antibodies()?;
-    let l = lifespan()?;
-    let s = synapse()?;
+    let vig = vigor()?;
+    let imm = immunity()?;
+    let tel = telemetry()?;
+    let anti = antibodies()?;
+    let life = lifespan()?;
+    let syn = synapse()?;
 
     // Extract the text content from each result
     fn extract_json(r: &CallToolResult) -> serde_json::Value {
@@ -326,12 +326,12 @@ pub fn pipeline() -> Result<CallToolResult, McpError> {
     Ok(json_result(&json!({
         "program": "VITALS",
         "phases": {
-            "V_vigor": extract_json(&v),
-            "I_immunity": extract_json(&i),
-            "T_telemetry": extract_json(&t),
-            "A_antibodies": extract_json(&a),
-            "L_lifespan": extract_json(&l),
-            "S_synapse": extract_json(&s),
+            "V_vigor": extract_json(&vig),
+            "I_immunity": extract_json(&imm),
+            "T_telemetry": extract_json(&tel),
+            "A_antibodies": extract_json(&anti),
+            "L_lifespan": extract_json(&life),
+            "S_synapse": extract_json(&syn),
         }
     })))
 }

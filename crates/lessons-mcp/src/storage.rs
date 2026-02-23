@@ -6,10 +6,15 @@ use std::fs;
 use std::path::PathBuf;
 
 pub fn data_path() -> PathBuf {
-    let proj = directories::ProjectDirs::from("dev", "nexvigilant", "lessons-mcp")
-        .expect("Could not determine project directories");
-    let data_dir = proj.data_dir();
-    fs::create_dir_all(data_dir).ok();
+    let data_dir =
+        if let Some(proj) = directories::ProjectDirs::from("dev", "nexvigilant", "lessons-mcp") {
+            proj.data_dir().to_path_buf()
+        } else {
+            std::env::current_dir()
+                .unwrap_or_default()
+                .join(".lessons-data")
+        };
+    fs::create_dir_all(&data_dir).ok();
     data_dir.join("lessons.json")
 }
 

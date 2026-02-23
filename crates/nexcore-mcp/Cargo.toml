@@ -19,6 +19,8 @@ academy-forge = { workspace = true }
 nexcore-vigilance = { workspace = true, features = ["viz"] }
 nexcore-vigil = { workspace = true }
 nexcore-zeta = { workspace = true }
+nexcore-preemptive-pv = { workspace = true }
+signal = { workspace = true }
 stem-complex = { workspace = true }
 nexcore-forge-strategy = { workspace = true }
 nexcore-brain = { workspace = true }
@@ -42,7 +44,6 @@ nexcore-fda-guidance = { path = "../nexcore-fda-guidance" }
 nexcore-pharos = { workspace = true }
 nexcore-edit-distance = { workspace = true }
 nexcore-integrity = { workspace = true }
-signal = { workspace = true }
 nexcore-hormones = { workspace = true }
 nexcore-immunity = { workspace = true }
 nexcore-insight = { workspace = true }

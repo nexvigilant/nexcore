@@ -61,8 +61,8 @@
 //! assert!(divergence.abs() < 1e-10);
 //! ```
 
-use serde::{Deserialize, Serialize};
 use nexcore_error::Error;
+use serde::{Deserialize, Serialize};
 
 // ============================================================================
 // Error Type
@@ -564,7 +564,11 @@ mod tests {
     #[test]
     fn test_uniform_2_outcomes() {
         let result = shannon_entropy(&[0.5, 0.5]).unwrap();
-        assert!((result.bits - 1.0).abs() < 1e-10, "H({:?}) should be 1.0", result.bits);
+        assert!(
+            (result.bits - 1.0).abs() < 1e-10,
+            "H({:?}) should be 1.0",
+            result.bits
+        );
         assert_eq!(result.sample_count, 2);
     }
 
@@ -620,7 +624,11 @@ mod tests {
         // H(0.9, 0.1) ≈ 0.4690 bits
         let result = shannon_entropy(&[0.9, 0.1]).unwrap();
         let expected = -(0.9_f64 * 0.9_f64.log2() + 0.1_f64 * 0.1_f64.log2());
-        assert!((result.bits - expected).abs() < 1e-10, "H = {}", result.bits);
+        assert!(
+            (result.bits - expected).abs() < 1e-10,
+            "H = {}",
+            result.bits
+        );
     }
 
     // --- shannon_entropy: normalized entropy ---
@@ -778,10 +786,7 @@ mod tests {
 
     #[test]
     fn test_joint_entropy_2x2_uniform() {
-        let joint = vec![
-            vec![0.25, 0.25],
-            vec![0.25, 0.25],
-        ];
+        let joint = vec![vec![0.25, 0.25], vec![0.25, 0.25]];
         let h = joint_entropy(&joint).unwrap();
         assert!((h - 2.0).abs() < 1e-10, "H(X,Y) = {h}");
     }
@@ -790,10 +795,7 @@ mod tests {
     fn test_joint_entropy_independent_variables() {
         // X: Bernoulli(0.5), Y: Bernoulli(0.5), independent
         // H(X,Y) = H(X) + H(Y) = 2.0
-        let joint = vec![
-            vec![0.25, 0.25],
-            vec![0.25, 0.25],
-        ];
+        let joint = vec![vec![0.25, 0.25], vec![0.25, 0.25]];
         let h = joint_entropy(&joint).unwrap();
         assert!((h - 2.0).abs() < 1e-10);
     }
@@ -813,10 +815,7 @@ mod tests {
 
     #[test]
     fn test_joint_entropy_invalid_sum() {
-        let joint = vec![
-            vec![0.5, 0.5],
-            vec![0.5, 0.5],
-        ];
+        let joint = vec![vec![0.5, 0.5], vec![0.5, 0.5]];
         let err = joint_entropy(&joint).unwrap_err();
         // Sum is 2.0, not 1.0
         assert!(matches!(err, EntropyError::InvalidDistribution(_)));
@@ -826,10 +825,7 @@ mod tests {
 
     #[test]
     fn test_mutual_information_independent_is_zero() {
-        let joint = vec![
-            vec![0.25, 0.25],
-            vec![0.25, 0.25],
-        ];
+        let joint = vec![vec![0.25, 0.25], vec![0.25, 0.25]];
         let mi = mutual_information(&joint).unwrap();
         assert!(mi.abs() < 1e-10, "MI for independent vars = {mi}");
     }
@@ -838,20 +834,14 @@ mod tests {
     fn test_mutual_information_perfectly_correlated() {
         // X determines Y: p(0,0) = 0.5, p(1,1) = 0.5, others = 0
         // I(X;Y) = H(X) = H(Y) = 1.0 bit
-        let joint = vec![
-            vec![0.5, 0.0],
-            vec![0.0, 0.5],
-        ];
+        let joint = vec![vec![0.5, 0.0], vec![0.0, 0.5]];
         let mi = mutual_information(&joint).unwrap();
         assert!((mi - 1.0).abs() < 1e-10, "MI for correlated vars = {mi}");
     }
 
     #[test]
     fn test_mutual_information_non_negative() {
-        let joint = vec![
-            vec![0.4, 0.1],
-            vec![0.1, 0.4],
-        ];
+        let joint = vec![vec![0.4, 0.1], vec![0.1, 0.4]];
         let mi = mutual_information(&joint).unwrap();
         assert!(mi >= 0.0);
     }
@@ -932,10 +922,7 @@ mod tests {
     #[test]
     fn test_mutual_information_partial_correlation() {
         // Asymmetric joint: slightly more correlated than independent
-        let joint = vec![
-            vec![0.4, 0.1],
-            vec![0.1, 0.4],
-        ];
+        let joint = vec![vec![0.4, 0.1], vec![0.1, 0.4]];
         let mi = mutual_information(&joint).unwrap();
         // MI should be positive (correlation present) and less than H(X) = 1 bit
         assert!(mi > 0.0);

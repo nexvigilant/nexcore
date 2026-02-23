@@ -28,6 +28,6 @@ pub struct PrimitiveDecomposeParams {
 #[serde(crate = "rmcp::serde")]
 pub struct PrimitiveComposeParams {
     /// List of T1 primitive names to compose together.
-    /// Examples: ["Sequence", "Mapping", "Boundary"] or ["σ", "μ", "∂"]
+    /// Examples: `["Sequence", "Mapping", "Boundary"]` or `["σ", "μ", "∂"]`
     pub primitives: Vec<String>,
 }

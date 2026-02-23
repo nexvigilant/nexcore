@@ -2362,6 +2362,31 @@ async fn dispatch_inner(
         "zeta_operator_candidate" => typed(params, tools::zeta::zeta_operator_candidate),
         "zeta_gue_compare" => typed(params, tools::zeta::zeta_gue_compare),
 
+        // ── Signal Detection Pipeline ──────────────────────────────────
+        "pipeline_compute_all" => typed(params, tools::signal_pipeline::pipeline_compute_all),
+        "pipeline_batch_compute" => typed(params, tools::signal_pipeline::pipeline_batch_compute),
+        "pipeline_detect" => typed(params, tools::signal_pipeline::pipeline_detect),
+        "pipeline_validate" => typed(params, tools::signal_pipeline::pipeline_validate),
+        "pipeline_thresholds" => typed(params, tools::signal_pipeline::pipeline_thresholds),
+        "pipeline_report" => typed(params, tools::signal_pipeline::pipeline_report),
+        "pipeline_relay_chain" => typed(params, tools::signal_pipeline::pipeline_relay_chain),
+        "pipeline_transfer" => typed(params, tools::signal_pipeline::pipeline_transfer),
+        "pipeline_primitives" => typed(params, tools::signal_pipeline::pipeline_primitives),
+
+        // ── Preemptive Pharmacovigilance ───────────────────────────────
+        "preemptive_reactive" => typed(params, tools::preemptive_pv::preemptive_reactive),
+        "preemptive_gibbs" => typed(params, tools::preemptive_pv::preemptive_gibbs),
+        "preemptive_trajectory" => typed(params, tools::preemptive_pv::preemptive_trajectory),
+        "preemptive_severity" => typed(params, tools::preemptive_pv::preemptive_severity),
+        "preemptive_noise" => typed(params, tools::preemptive_pv::preemptive_noise),
+        "preemptive_predictive" => typed(params, tools::preemptive_pv::preemptive_predictive),
+        "preemptive_evaluate" => typed(params, tools::preemptive_pv::preemptive_evaluate),
+        "preemptive_intervention" => typed(params, tools::preemptive_pv::preemptive_intervention),
+        "preemptive_required_strength" => {
+            typed(params, tools::preemptive_pv::preemptive_required_strength)
+        }
+        "preemptive_omega_table" => typed(params, tools::preemptive_pv::preemptive_omega_table),
+
         // ====================================================================
         // Unknown command
         // ====================================================================
@@ -2782,6 +2807,8 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "notebooklm": ["nlm_add_notebook", "nlm_list_notebooks", "nlm_get_notebook", "nlm_select_notebook", "nlm_update_notebook", "nlm_remove_notebook", "nlm_search_notebooks", "nlm_get_library_stats", "nlm_list_sessions", "nlm_close_session", "nlm_reset_session", "nlm_get_health", "nlm_setup_auth", "nlm_re_auth", "nlm_ask_question", "nlm_cleanup_data"],
             "cloud": ["cloud_primitive_composition", "cloud_transfer_confidence", "cloud_tier_classify", "cloud_compare_types", "cloud_reverse_synthesize", "cloud_list_types", "cloud_molecular_weight", "cloud_dominant_shift", "cloud_infra_status", "cloud_infra_map", "cloud_capacity_project", "cloud_supervisor_health", "cloud_reverse_transfer", "cloud_transfer_chain", "cloud_architecture_advisor", "cloud_anomaly_detect", "cloud_transfer_matrix"],
             "zeta": ["zeta_compute", "zeta_find_zeros", "zeta_verify_rh", "zeta_embedded_zeros", "zeta_lmfdb_parse", "zeta_telescope_run", "zeta_batch_run", "zeta_scaling_fit", "zeta_scaling_predict", "zeta_cayley", "zeta_operator_hunt", "zeta_operator_candidate", "zeta_gue_compare"],
+            "signal_pipeline": ["pipeline_compute_all", "pipeline_batch_compute", "pipeline_detect", "pipeline_validate", "pipeline_thresholds", "pipeline_report", "pipeline_relay_chain", "pipeline_transfer", "pipeline_primitives"],
+            "preemptive_pv": ["preemptive_reactive", "preemptive_gibbs", "preemptive_trajectory", "preemptive_severity", "preemptive_noise", "preemptive_predictive", "preemptive_evaluate", "preemptive_intervention", "preemptive_required_strength", "preemptive_omega_table"],
         }
     });
 

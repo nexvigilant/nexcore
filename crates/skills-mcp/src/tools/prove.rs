@@ -391,12 +391,10 @@ pub fn evaluate() -> Result<CallToolResult, McpError> {
             .sum::<i64>()
             / total_runs as i64;
 
-        let direction = if last_rate > first_rate {
-            "IMPROVING"
-        } else if last_rate < first_rate {
-            "REGRESSING"
-        } else {
-            "STABLE"
+        let direction = match last_rate.cmp(&first_rate) {
+            std::cmp::Ordering::Greater => "IMPROVING",
+            std::cmp::Ordering::Less => "REGRESSING",
+            std::cmp::Ordering::Equal => "STABLE",
         };
 
         json!({

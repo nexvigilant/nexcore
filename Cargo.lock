@@ -8872,6 +8872,7 @@ dependencies = [
  "nexcore-pharmacovigilance",
  "nexcore-pharos",
  "nexcore-phenotype",
+ "nexcore-preemptive-pv",
  "nexcore-primitive-scanner",
  "nexcore-primitives",
  "nexcore-proof-of-meaning",

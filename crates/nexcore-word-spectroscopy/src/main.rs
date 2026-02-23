@@ -415,7 +415,7 @@ fn run_primitives_reference(json: bool) {
     println!(" LEX PRIMITIVA — 16 T1 IRREDUCIBLE PRIMITIVES");
     println!("{:=<70}\n", "");
 
-    println!("  {:<4} {:<18} {}", "Sym", "Name", "Description");
+    println!("  {:<4} {:<18} Description", "Sym", "Name");
     println!("  {:-<4} {:-<18} {:-<44}", "", "", "");
 
     for p in &all_prims {

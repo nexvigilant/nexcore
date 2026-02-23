@@ -454,3 +454,9 @@ pub mod rust_dev;
 
 // Zeta function telescope pipeline (LMFDB, batch, scaling, Cayley, operator hunt)
 pub mod zeta;
+
+// Signal detection pipeline (PRR/ROR/IC/EBGM, contingency tables, Evans thresholds, relay)
+pub mod signal_pipeline;
+
+// Preemptive PV: 3-tier signal detection (Reactive → Predictive → Preemptive)
+pub mod preemptive_pv;

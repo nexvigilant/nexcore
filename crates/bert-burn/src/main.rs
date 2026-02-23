@@ -1,3 +1,10 @@
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    clippy::branches_sharing_code
+)]
+
 mod checkpoint;
 mod config;
 mod data;

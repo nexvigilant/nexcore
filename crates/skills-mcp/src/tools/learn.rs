@@ -519,11 +519,11 @@ pub fn normalize() -> Result<CallToolResult, McpError> {
 
 /// Full LEARN pipeline.
 pub fn pipeline() -> Result<CallToolResult, McpError> {
-    let l = landscape()?;
-    let e = extract()?;
-    let a = assimilate()?;
-    let r = recall()?;
-    let n = normalize()?;
+    let land = landscape()?;
+    let ext = extract()?;
+    let assim = assimilate()?;
+    let rec = recall()?;
+    let norm = normalize()?;
 
     fn extract_json(r: &CallToolResult) -> serde_json::Value {
         r.content
@@ -538,11 +538,11 @@ pub fn pipeline() -> Result<CallToolResult, McpError> {
     Ok(json_result(&json!({
         "program": "LEARN",
         "phases": {
-            "L_landscape": extract_json(&l),
-            "E_extract": extract_json(&e),
-            "A_assimilate": extract_json(&a),
-            "R_recall": extract_json(&r),
-            "N_normalize": extract_json(&n),
+            "L_landscape": extract_json(&land),
+            "E_extract": extract_json(&ext),
+            "A_assimilate": extract_json(&assim),
+            "R_recall": extract_json(&rec),
+            "N_normalize": extract_json(&norm),
         }
     })))
 }

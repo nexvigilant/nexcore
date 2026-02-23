@@ -16,7 +16,11 @@ pub type Sha256Digest = [u8; 32];
 /// assert_eq!(hex(&hash), "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9");
 ///
 /// fn hex(bytes: &[u8]) -> String {
-///     bytes.iter().map(|b| format!("{b:02x}")).collect()
+///     use std::fmt::Write;
+///     bytes.iter().fold(String::with_capacity(bytes.len() * 2), |mut acc, b| {
+///         let _ = write!(acc, "{b:02x}");
+///         acc
+///     })
 /// }
 /// ```
 pub struct Sha256 {
@@ -44,32 +48,32 @@ const K: [u32; 64] = [
 ];
 
 // SHA-256 logical functions (FIPS 180-4 §4.1.2)
-#[inline(always)]
+#[inline]
 const fn ch(x: u32, y: u32, z: u32) -> u32 {
     (x & y) ^ (!x & z)
 }
 
-#[inline(always)]
+#[inline]
 const fn maj(x: u32, y: u32, z: u32) -> u32 {
     (x & y) ^ (x & z) ^ (y & z)
 }
 
-#[inline(always)]
+#[inline]
 const fn big_sigma0(x: u32) -> u32 {
     x.rotate_right(2) ^ x.rotate_right(13) ^ x.rotate_right(22)
 }
 
-#[inline(always)]
+#[inline]
 const fn big_sigma1(x: u32) -> u32 {
     x.rotate_right(6) ^ x.rotate_right(11) ^ x.rotate_right(25)
 }
 
-#[inline(always)]
+#[inline]
 const fn small_sigma0(x: u32) -> u32 {
     x.rotate_right(7) ^ x.rotate_right(18) ^ (x >> 3)
 }
 
-#[inline(always)]
+#[inline]
 const fn small_sigma1(x: u32) -> u32 {
     x.rotate_right(17) ^ x.rotate_right(19) ^ (x >> 10)
 }
@@ -152,6 +156,7 @@ impl Sha256 {
     }
 
     /// Compress a single 512-bit block (FIPS 180-4 §6.2.2).
+    #[allow(clippy::many_single_char_names)]
     fn compress(&mut self, block: &[u8; 64]) {
         // Prepare message schedule W
         let mut w = [0u32; 64];
@@ -211,7 +216,11 @@ impl Default for Sha256 {
 
 /// Format a digest as lowercase hex string.
 pub fn hex_digest(digest: &Sha256Digest) -> String {
-    digest.iter().map(|b| format!("{b:02x}")).collect()
+    use std::fmt::Write;
+    digest.iter().fold(String::with_capacity(64), |mut acc, b| {
+        let _ = write!(acc, "{b:02x}");
+        acc
+    })
 }
 
 #[cfg(test)]
@@ -219,7 +228,13 @@ mod tests {
     use super::*;
 
     fn hex(bytes: &[u8]) -> String {
-        bytes.iter().map(|b| format!("{b:02x}")).collect()
+        use std::fmt::Write;
+        bytes
+            .iter()
+            .fold(String::with_capacity(bytes.len() * 2), |mut acc, b| {
+                let _ = write!(acc, "{b:02x}");
+                acc
+            })
     }
 
     // NIST CAVP test vectors (FIPS 180-4 examples)

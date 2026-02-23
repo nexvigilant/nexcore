@@ -452,20 +452,14 @@ mod tests {
 
     #[test]
     fn from_counts_proportions_are_correct() {
-        let dist =
-            VariantDistribution::from_counts(&[("X", 75), ("Y", 25)]).unwrap();
+        let dist = VariantDistribution::from_counts(&[("X", 75), ("Y", 25)]).unwrap();
         assert!(approx_eq(dist.frequencies[0].proportion, 0.75, 1e-9));
         assert!(approx_eq(dist.frequencies[1].proportion, 0.25, 1e-9));
     }
 
     #[test]
     fn from_counts_proportions_sum_to_one() {
-        let dist = VariantDistribution::from_counts(&[
-            ("A", 10),
-            ("B", 30),
-            ("C", 60),
-        ])
-        .unwrap();
+        let dist = VariantDistribution::from_counts(&[("A", 10), ("B", 30), ("C", 60)]).unwrap();
         let sum: f64 = dist.frequencies.iter().map(|vf| vf.proportion).sum();
         assert!(approx_eq(sum, 1.0, 1e-9));
     }
@@ -502,8 +496,7 @@ mod tests {
 
     #[test]
     fn entropy_two_equal_variants_is_one_bit() {
-        let dist =
-            VariantDistribution::from_counts(&[("A", 50), ("B", 50)]).unwrap();
+        let dist = VariantDistribution::from_counts(&[("A", 50), ("B", 50)]).unwrap();
         let h = variant_entropy(&dist).unwrap();
         assert!(approx_eq(h, 1.0, 1e-9));
     }
@@ -511,8 +504,7 @@ mod tests {
     #[test]
     fn entropy_two_unequal_variants_less_than_one() {
         // 75/25 split — H < 1 bit
-        let dist =
-            VariantDistribution::from_counts(&[("A", 75), ("B", 25)]).unwrap();
+        let dist = VariantDistribution::from_counts(&[("A", 75), ("B", 25)]).unwrap();
         let h = variant_entropy(&dist).unwrap();
         // Hand-calculated: -(0.75*log2(0.75) + 0.25*log2(0.25))
         // = -(0.75*-0.41504 + 0.25*-2.0) = 0.81128 bits
@@ -524,13 +516,8 @@ mod tests {
     #[test]
     fn entropy_four_uniform_variants_is_two_bits() {
         // log2(4) = 2
-        let dist = VariantDistribution::from_counts(&[
-            ("A", 25),
-            ("B", 25),
-            ("C", 25),
-            ("D", 25),
-        ])
-        .unwrap();
+        let dist = VariantDistribution::from_counts(&[("A", 25), ("B", 25), ("C", 25), ("D", 25)])
+            .unwrap();
         let h = variant_entropy(&dist).unwrap();
         assert!(approx_eq(h, 2.0, 1e-9));
     }
@@ -539,10 +526,10 @@ mod tests {
     fn entropy_heavily_skewed_distribution() {
         // 97 in one bucket, 1 each in three others → near-zero entropy
         let dist = VariantDistribution::from_counts(&[
-            ("Major",  97),
-            ("Minor1",  1),
-            ("Minor2",  1),
-            ("Minor3",  1),
+            ("Major", 97),
+            ("Minor1", 1),
+            ("Minor2", 1),
+            ("Minor3", 1),
         ])
         .unwrap();
         let h = variant_entropy(&dist).unwrap();
@@ -574,29 +561,22 @@ mod tests {
 
     #[test]
     fn uniformity_two_equal_variants_is_one() {
-        let dist =
-            VariantDistribution::from_counts(&[("A", 1), ("B", 1)]).unwrap();
+        let dist = VariantDistribution::from_counts(&[("A", 1), ("B", 1)]).unwrap();
         let u = variant_uniformity(&dist).unwrap();
         assert!(approx_eq(u, 1.0, 1e-9));
     }
 
     #[test]
     fn uniformity_four_equal_variants_is_one() {
-        let dist = VariantDistribution::from_counts(&[
-            ("A", 25),
-            ("B", 25),
-            ("C", 25),
-            ("D", 25),
-        ])
-        .unwrap();
+        let dist = VariantDistribution::from_counts(&[("A", 25), ("B", 25), ("C", 25), ("D", 25)])
+            .unwrap();
         let u = variant_uniformity(&dist).unwrap();
         assert!(approx_eq(u, 1.0, 1e-9));
     }
 
     #[test]
     fn uniformity_skewed_distribution_is_less_than_one() {
-        let dist =
-            VariantDistribution::from_counts(&[("A", 75), ("B", 25)]).unwrap();
+        let dist = VariantDistribution::from_counts(&[("A", 75), ("B", 25)]).unwrap();
         let u = variant_uniformity(&dist).unwrap();
         assert!(u < 1.0);
         assert!(u > 0.0);
@@ -605,10 +585,10 @@ mod tests {
     #[test]
     fn uniformity_heavily_skewed_is_near_zero() {
         let dist = VariantDistribution::from_counts(&[
-            ("Dom",    990),
-            ("Minor1",   4),
-            ("Minor2",   4),
-            ("Minor3",   2),
+            ("Dom", 990),
+            ("Minor1", 4),
+            ("Minor2", 4),
+            ("Minor3", 2),
         ])
         .unwrap();
         let u = variant_uniformity(&dist).unwrap();
@@ -623,11 +603,7 @@ mod tests {
 
     #[test]
     fn dominant_variant_returns_highest_count() {
-        let dist = VariantDistribution::from_counts(&[
-            ("Minor", 10),
-            ("Major", 90),
-        ])
-        .unwrap();
+        let dist = VariantDistribution::from_counts(&[("Minor", 10), ("Major", 90)]).unwrap();
         let dom = dominant_variant(&dist).unwrap();
         assert_eq!(dom.name, "Major");
     }
@@ -644,8 +620,7 @@ mod tests {
     #[test]
     fn dominant_variant_tie_returns_first() {
         // Both have count 50 — insertion-order first should win.
-        let dist =
-            VariantDistribution::from_counts(&[("First", 50), ("Second", 50)]).unwrap();
+        let dist = VariantDistribution::from_counts(&[("First", 50), ("Second", 50)]).unwrap();
         let dom = dominant_variant(&dist).unwrap();
         assert_eq!(dom.name, "First");
     }
@@ -663,12 +638,8 @@ mod tests {
 
     #[test]
     fn dispatch_table_entries_sorted_descending() {
-        let dist = VariantDistribution::from_counts(&[
-            ("Rare",   5),
-            ("Common", 80),
-            ("Mid",    15),
-        ])
-        .unwrap();
+        let dist =
+            VariantDistribution::from_counts(&[("Rare", 5), ("Common", 80), ("Mid", 15)]).unwrap();
         let table = dispatch_table(&dist).unwrap();
         assert_eq!(table.entries[0].name, "Common");
         assert_eq!(table.entries[1].name, "Mid");
@@ -677,12 +648,7 @@ mod tests {
 
     #[test]
     fn dispatch_table_cumulative_reaches_one() {
-        let dist = VariantDistribution::from_counts(&[
-            ("A", 10),
-            ("B", 40),
-            ("C", 50),
-        ])
-        .unwrap();
+        let dist = VariantDistribution::from_counts(&[("A", 10), ("B", 40), ("C", 50)]).unwrap();
         let table = dispatch_table(&dist).unwrap();
         let last = table.entries.last().unwrap();
         assert!(approx_eq(last.cumulative, 1.0, 1e-9));
@@ -690,12 +656,7 @@ mod tests {
 
     #[test]
     fn dispatch_table_cumulative_is_monotone() {
-        let dist = VariantDistribution::from_counts(&[
-            ("A", 10),
-            ("B", 40),
-            ("C", 50),
-        ])
-        .unwrap();
+        let dist = VariantDistribution::from_counts(&[("A", 10), ("B", 40), ("C", 50)]).unwrap();
         let table = dispatch_table(&dist).unwrap();
         for window in table.entries.windows(2) {
             assert!(window[1].cumulative >= window[0].cumulative);
@@ -725,13 +686,8 @@ mod tests {
 
     #[test]
     fn chi_square_perfectly_uniform_is_zero() {
-        let dist = VariantDistribution::from_counts(&[
-            ("A", 25),
-            ("B", 25),
-            ("C", 25),
-            ("D", 25),
-        ])
-        .unwrap();
+        let dist = VariantDistribution::from_counts(&[("A", 25), ("B", 25), ("C", 25), ("D", 25)])
+            .unwrap();
         let chi2 = chi_square_uniformity(&dist).unwrap();
         assert!(chi2 < 1e-9);
     }
@@ -740,7 +696,7 @@ mod tests {
     fn chi_square_skewed_distribution_gives_large_value() {
         // Heavy skew → large chi-square
         let dist = VariantDistribution::from_counts(&[
-            ("Dom",   970),
+            ("Dom", 970),
             ("Minor1", 10),
             ("Minor2", 10),
             ("Minor3", 10),
@@ -754,8 +710,7 @@ mod tests {
     #[test]
     fn chi_square_two_variants_symmetric() {
         // 75/25 → χ² = (75-50)²/50 + (25-50)²/50 = 25 + 25 = 25 (total=100, expected=50)
-        let dist =
-            VariantDistribution::from_counts(&[("A", 75), ("B", 25)]).unwrap();
+        let dist = VariantDistribution::from_counts(&[("A", 75), ("B", 25)]).unwrap();
         let chi2 = chi_square_uniformity(&dist).unwrap();
         assert!(approx_eq(chi2, 25.0, 1e-6));
     }
@@ -783,16 +738,10 @@ mod tests {
         //   = -(0.5*(-1) + 0.3*(-1.73697) + 0.2*(-2.32193))
         //   = -(−0.5 − 0.52109 − 0.46439)
         //   = 1.48548 bits
-        let dist = VariantDistribution::from_counts(&[
-            ("A", 50),
-            ("B", 30),
-            ("C", 20),
-        ])
-        .unwrap();
+        let dist = VariantDistribution::from_counts(&[("A", 50), ("B", 30), ("C", 20)]).unwrap();
         let h = variant_entropy(&dist).unwrap();
-        let expected = -(0.5_f64 * 0.5_f64.log2()
-            + 0.3_f64 * 0.3_f64.log2()
-            + 0.2_f64 * 0.2_f64.log2());
+        let expected =
+            -(0.5_f64 * 0.5_f64.log2() + 0.3_f64 * 0.3_f64.log2() + 0.2_f64 * 0.2_f64.log2());
         assert!(approx_eq(h, expected, 1e-12));
     }
 
@@ -802,10 +751,7 @@ mod tests {
             VariantError::EmptyDistribution.to_string(),
             "variant distribution is empty"
         );
-        assert_eq!(
-            VariantError::ZeroTotal.to_string(),
-            "total count is zero"
-        );
+        assert_eq!(VariantError::ZeroTotal.to_string(), "total count is zero");
         assert_eq!(
             VariantError::InconsistentTotal.to_string(),
             "sum of frequencies does not match total"
@@ -818,8 +764,7 @@ mod tests {
 
     #[test]
     fn variant_distribution_serde_round_trip() {
-        let dist =
-            VariantDistribution::from_counts(&[("X", 3), ("Y", 7)]).unwrap();
+        let dist = VariantDistribution::from_counts(&[("X", 3), ("Y", 7)]).unwrap();
         let json = serde_json::to_string(&dist).unwrap();
         let restored: VariantDistribution = serde_json::from_str(&json).unwrap();
         assert_eq!(dist, restored);
@@ -827,8 +772,7 @@ mod tests {
 
     #[test]
     fn dispatch_table_serde_round_trip() {
-        let dist =
-            VariantDistribution::from_counts(&[("A", 10), ("B", 90)]).unwrap();
+        let dist = VariantDistribution::from_counts(&[("A", 10), ("B", 90)]).unwrap();
         let table = dispatch_table(&dist).unwrap();
         let json = serde_json::to_string(&table).unwrap();
         let restored: DispatchTable = serde_json::from_str(&json).unwrap();

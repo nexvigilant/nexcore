@@ -508,3 +508,6 @@ pub mod jeopardy;
 
 // Audio: sample conversion, spec computation, codec catalog, pan law, stream states
 pub mod audio;
+
+// Compilation Space: 7D transform algebra (points, transforms, chains, catalog)
+pub mod compilation_space;

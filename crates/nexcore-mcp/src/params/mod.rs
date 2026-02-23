@@ -491,3 +491,7 @@ pub use jeopardy::*;
 // Audio: sample conversion, spec computation, codec catalog, pan law
 pub mod audio;
 pub use audio::*;
+
+// Compilation Space: 7D transform algebra (axes, points, transforms, chains)
+pub mod compilation_space;
+pub use compilation_space::*;

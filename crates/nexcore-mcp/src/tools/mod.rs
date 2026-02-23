@@ -475,3 +475,9 @@ pub mod retrocasting;
 
 // Engram: unified knowledge daemon (TF-IDF search, temporal decay, multi-source ingest)
 pub mod engram;
+
+// Ghost: privacy enforcement, PII scanning, anonymization boundary checking
+pub mod ghost;
+
+// Pharma R&D: taxonomy, transfer confidence, pipeline stages, Chomsky classification
+pub mod pharma_rd;

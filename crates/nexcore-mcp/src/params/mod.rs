@@ -447,3 +447,11 @@ pub use retrocasting::*;
 // Engram: unified knowledge store (search, decay, ingest, duplicates)
 pub mod engram;
 pub use engram::*;
+
+// Ghost: privacy-by-design pseudonymization, PII detection, anonymization boundaries
+pub mod ghost;
+pub use ghost::*;
+
+// Pharma R&D: predictive taxonomy, cross-domain transfer, Chomsky classification
+pub mod pharma_rd;
+pub use pharma_rd::*;

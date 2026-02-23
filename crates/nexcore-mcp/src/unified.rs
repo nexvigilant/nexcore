@@ -2437,6 +2437,23 @@ async fn dispatch_inner(
         "engram_ingest" => typed(params, tools::engram::engram_ingest),
         "engram_by_source" => typed(params, tools::engram::engram_by_source),
 
+        // ── Ghost Privacy ────────────────────────────────────────────────
+        "ghost_boundary_check" => typed(params, tools::ghost::ghost_boundary_check),
+        "ghost_mode_info" => typed(params, tools::ghost::ghost_mode_info),
+        "ghost_category_policy" => typed(params, tools::ghost::ghost_category_policy),
+        "ghost_scan_pii" => typed(params, tools::ghost::ghost_scan_pii),
+        "ghost_scrub_fields" => typed(params, tools::ghost::ghost_scrub_fields),
+
+        // ── Pharma R&D Taxonomy ──────────────────────────────────────────
+        "pharma_taxonomy_summary" => typed(params, tools::pharma_rd::pharma_taxonomy_summary),
+        "pharma_lookup_transfer" => typed(params, tools::pharma_rd::pharma_lookup_transfer),
+        "pharma_transfer_matrix" => typed(params, tools::pharma_rd::pharma_transfer_matrix),
+        "pharma_strongest_transfers" => typed(params, tools::pharma_rd::pharma_strongest_transfers),
+        "pharma_weakest_transfers" => typed(params, tools::pharma_rd::pharma_weakest_transfers),
+        "pharma_symbol_coverage" => typed(params, tools::pharma_rd::pharma_symbol_coverage),
+        "pharma_pipeline_stage" => typed(params, tools::pharma_rd::pharma_pipeline_stage),
+        "pharma_classify_generators" => typed(params, tools::pharma_rd::pharma_classify_generators),
+
         // ====================================================================
         // Unknown command
         // ====================================================================
@@ -2864,6 +2881,8 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "fhir": ["fhir_adverse_event_to_signal", "fhir_batch_to_signals", "fhir_parse_bundle", "fhir_validate_resource"],
             "retrocasting": ["retro_structural_similarity", "retro_signal_significance", "retro_cluster_signals", "retro_correlate_alerts", "retro_extract_features", "retro_dataset_stats"],
             "engram": ["engram_search", "engram_search_decay", "engram_peek", "engram_stats", "engram_find_duplicates", "engram_decay_score", "engram_ingest", "engram_by_source"],
+            "ghost": ["ghost_boundary_check", "ghost_mode_info", "ghost_category_policy", "ghost_scan_pii", "ghost_scrub_fields"],
+            "pharma_rd": ["pharma_taxonomy_summary", "pharma_lookup_transfer", "pharma_transfer_matrix", "pharma_strongest_transfers", "pharma_weakest_transfers", "pharma_symbol_coverage", "pharma_pipeline_stage", "pharma_classify_generators"],
         }
     });
 

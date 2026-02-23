@@ -41,10 +41,12 @@ pub mod grounding;
 pub mod l_functions;
 pub mod riemann_siegel;
 pub mod special;
+pub mod statistics;
 pub mod zeros;
 pub mod zeta;
 
 pub use error::ZetaError;
 pub use explicit::{convergence_series, explicit_psi, explicit_psi_comparison};
 pub use l_functions::DirichletCharacter;
+pub use statistics::{GueComparison, compare_to_gue};
 pub use zeros::{RhVerification, ZetaZero};

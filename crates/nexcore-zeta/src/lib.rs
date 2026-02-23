@@ -36,13 +36,18 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 pub mod adversarial;
+pub mod anomaly;
 pub mod cmv;
 pub mod convergence;
 pub mod error;
 pub mod explicit;
+pub mod fingerprint;
 pub mod grounding;
 pub mod inverse;
+pub mod killip_nenciu;
 pub mod l_functions;
+pub mod pipeline;
+pub mod prediction;
 pub mod riemann_siegel;
 pub mod special;
 pub mod statistics;
@@ -54,6 +59,10 @@ pub use adversarial::{
     CounterexampleCandidate, DensityBand, DensityProfile, ExclusionAnalysis, SensitivityCurve,
     SensitivityPoint, analyze_exclusions, density_profile, sensitivity_curve,
 };
+pub use anomaly::{
+    AnomalyDetail, AnomalyReport, PhaseModel, SpikeFeature, VerblunskyBaseline, build_baseline,
+    detect_anomaly, inject_off_cl_zero,
+};
 pub use cmv::{CmvReconstruction, CmvStructure, reconstruct_cmv};
 pub use convergence::{
     BootstrapResult, ConvergenceAnalysis, ExtendedConvergenceAnalysis, analyze_convergence,
@@ -64,8 +73,19 @@ pub use explicit::{
     AdaptiveTruncation, ResidualByHeight, adaptive_truncation, convergence_series, explicit_psi,
     explicit_psi_comparison, residual_by_height,
 };
+pub use fingerprint::{
+    FingerprintClass, FingerprintComparison, FingerprintDistance, SpectralFingerprint,
+    compare_across_zero_sets, compare_fingerprints, fingerprint_l_function_zeros,
+    fingerprint_zeros,
+};
 pub use inverse::{JacobiReconstruction, OperatorStructure, reconstruct_jacobi};
+pub use killip_nenciu::{DualGueVerdict, KillipNenciuTest, compare_gue_tests, killip_nenciu_test};
 pub use l_functions::DirichletCharacter;
+pub use pipeline::{TelescopeConfig, TelescopeReport, run_telescope};
+pub use prediction::{
+    PredictionAccuracy, VerblunskyModel, estimate_t_for_nth_zero, fit_verblunsky_model,
+    predict_next_zeros, validate_prediction,
+};
 pub use statistics::{GueComparison, compare_to_gue};
 pub use subseries::{
     CouplingExtrapolation, SubseriesAnalysis, analyze_subseries, extrapolate_coupling,

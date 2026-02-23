@@ -6,15 +6,15 @@
 //!
 //! Together, absence (`∅`) and witness generation (`∃`) form the
 //! **∅/∃ duality**: two poles of the same epistemic act. To rule out
-//! existence is to prove ∅; to establish existence is to produce a witness.
+//! existence is to prove `∅`; to establish existence is to produce a witness.
 //!
 //! ## T1 Primitive Grounding
 //!
-//! | Primitive | Symbol | Role in this module |
-//! |-----------|--------|---------------------|
-//! | Existence | ∃      | Dominant — the core act of providing a witness |
-//! | Comparison | κ     | Predicate evaluation against each candidate |
-//! | Sequence  | σ      | Iteration order through the candidate set |
+//! | Primitive  | Symbol | Role in this module                               |
+//! |------------|--------|---------------------------------------------------|
+//! | Existence  | ∃      | Dominant — the core act of providing a witness    |
+//! | Comparison | κ      | Predicate evaluation against each candidate       |
+//! | Sequence   | σ      | Iteration order through the candidate set         |
 //!
 //! ## PV Transfer
 //!
@@ -30,7 +30,7 @@
 //!
 //! ```
 //! use nexcore_tov::proofs::witnesses::{
-//!     search_witness, validate_witness, existence_proof, count_witnesses,
+//!     search_witness, validate_witness, existence_proof,
 //!     WitnessSearchConfig,
 //! };
 //!
@@ -43,8 +43,8 @@
 //! assert_eq!(result.unwrap().value, 2);
 //! ```
 
-use serde::{Deserialize, Serialize};
 use nexcore_error::Error;
+use serde::{Deserialize, Serialize};
 
 // ============================================================================
 // ERROR TYPE
@@ -58,17 +58,17 @@ pub enum WitnessError {
     /// Searching an empty set is epistemically undefined: there is nothing
     /// to examine, so neither existence nor absence can be established.
     #[error("no candidates provided for witness search")]
-    NoCandidates,
+    EmptyCandidates,
 
     /// Returned by [`validate_witness`] when the specific candidate does
     /// not satisfy the predicate.
     #[error("candidate does not satisfy predicate")]
     PredicateNotSatisfied,
 
-    /// Returned when the search loop would exceed the configured iteration
-    /// budget. The inner value is the limit that was reached.
-    #[error("search exceeded maximum iterations ({0})")]
-    MaxIterationsExceeded(usize),
+    /// Returned when the search exhausted the configured iteration budget
+    /// without finding a witness. The inner value is the limit that was reached.
+    #[error("search exhausted maximum iterations ({0})")]
+    SearchExhausted(usize),
 
     /// Returned when the `property` description string is empty.
     ///
@@ -155,30 +155,68 @@ pub struct ExistenceProof<T> {
 /// Configuration for bounded witness search.
 ///
 /// Prevents unbounded iteration on pathological or adversarially large
-/// candidate sets.
+/// candidate sets. The `timeout_ms` field is carried as documentation
+/// metadata — timeout enforcement is the caller's responsibility.
 ///
 /// # Example
 ///
 /// ```
 /// use nexcore_tov::proofs::witnesses::WitnessSearchConfig;
 ///
-/// // Override the default iteration budget
-/// let config = WitnessSearchConfig { max_iterations: 500 };
-/// assert_eq!(config.max_iterations, 500);
+/// // Exhaustive search (default)
+/// let config = WitnessSearchConfig::default();
+/// assert_eq!(config.max_iterations, usize::MAX);
+///
+/// // Bounded search
+/// let limited = WitnessSearchConfig::limited(500);
+/// assert_eq!(limited.max_iterations, 500);
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WitnessSearchConfig {
     /// Maximum number of candidates to examine before stopping.
     ///
-    /// Defaults to `10_000`.
+    /// Defaults to [`usize::MAX`] (exhaustive — examine every candidate).
     pub max_iterations: usize,
+    /// Optional wall-clock timeout hint in milliseconds.
+    ///
+    /// Not enforced at the function level; callers are responsible for
+    /// wrapping searches with their own deadline logic. Carried here for
+    /// documentation, logging, and future executor integration.
+    pub timeout_ms: Option<u64>,
 }
 
 impl Default for WitnessSearchConfig {
-    /// Returns a configuration with a 10 000-iteration budget.
+    /// Returns an exhaustive configuration: no iteration cap, no timeout hint.
+    ///
+    /// Use [`WitnessSearchConfig::limited`] for bounded searches.
     fn default() -> Self {
         Self {
-            max_iterations: 10_000,
+            max_iterations: usize::MAX,
+            timeout_ms: None,
+        }
+    }
+}
+
+impl WitnessSearchConfig {
+    /// Create a bounded search configuration with a fixed iteration cap.
+    ///
+    /// Useful when the candidate set may be large and an exact witness is
+    /// not required — a partial search suffices for early-evidence use cases.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use nexcore_tov::proofs::witnesses::WitnessSearchConfig;
+    ///
+    /// let config = WitnessSearchConfig::limited(100);
+    /// assert_eq!(config.max_iterations, 100);
+    /// assert_eq!(config.timeout_ms, None);
+    /// ```
+    #[must_use]
+    pub const fn limited(max: usize) -> Self {
+        Self {
+            max_iterations: max,
+            timeout_ms: None,
         }
     }
 }
@@ -189,10 +227,11 @@ impl Default for WitnessSearchConfig {
 
 /// Search for the first witness satisfying a predicate among candidates.
 ///
-/// Iterates through `candidates` in order, evaluating `predicate` for each
-/// element, up to `min(candidates.len(), config.max_iterations)`. The first
-/// element for which the predicate returns `true` is returned as a
-/// [`Witness`] with `confidence = 1.0`.
+/// Iterates through `candidates` in order (σ — Sequence), evaluating
+/// `predicate` (κ — Comparison) for each element, up to
+/// `min(candidates.len(), config.max_iterations)`. The first element for
+/// which the predicate returns `true` is returned as a [`Witness`] with
+/// `confidence = 1.0`.
 ///
 /// # Arguments
 ///
@@ -205,9 +244,9 @@ impl Default for WitnessSearchConfig {
 ///
 /// - `Ok(Some(witness))` — a qualifying element was found
 /// - `Ok(None)`          — no qualifying element exists within the examined
-///   range (either exhaustive non-finding or budget exhaustion)
-/// - `Err(WitnessError::NoCandidates)` — `candidates` is empty
-/// - `Err(WitnessError::EmptyProperty)` — `property` is an empty string
+///   range (exhaustive non-finding or budget exhaustion without a match)
+/// - `Err(WitnessError::EmptyCandidates)` — `candidates` is empty
+/// - `Err(WitnessError::EmptyProperty)`   — `property` is an empty string
 ///
 /// # Example
 ///
@@ -221,6 +260,7 @@ impl Default for WitnessSearchConfig {
 ///     .unwrap();
 /// assert_eq!(w.value, 8);
 /// ```
+#[must_use = "the search result carries existence evidence; ignoring it discards the proof"]
 pub fn search_witness<T, F>(
     candidates: &[T],
     predicate: F,
@@ -232,7 +272,7 @@ where
     F: Fn(&T) -> bool,
 {
     if candidates.is_empty() {
-        return Err(WitnessError::NoCandidates);
+        return Err(WitnessError::EmptyCandidates);
     }
     if property.is_empty() {
         return Err(WitnessError::EmptyProperty);
@@ -284,6 +324,7 @@ where
 /// let err = validate_witness(&7u32, |n| *n % 2 == 0, "even number");
 /// assert_eq!(err.unwrap_err(), WitnessError::PredicateNotSatisfied);
 /// ```
+#[must_use = "validation result carries the proof; ignoring it loses the witness"]
 pub fn validate_witness<T, F>(
     candidate: &T,
     predicate: F,
@@ -322,6 +363,11 @@ where
 /// candidate. It is `false` when a witness was found before reaching the
 /// end of the candidate list.
 ///
+/// ## Confidence semantics
+///
+/// `witness.confidence` is always `1.0`: the predicate is deterministic, so
+/// any found witness is a certain proof of ∃.
+///
 /// # Arguments
 ///
 /// - `candidates` — the ordered set of values to examine
@@ -333,7 +379,7 @@ where
 ///
 /// - `Ok(Some(proof))` — existence is established; proof carries metadata
 /// - `Ok(None)`        — no witness was found within the examined range
-/// - `Err(…)`          — propagated from [`search_witness`]
+/// - `Err(…)`          — propagated from validation guards
 ///
 /// # Example
 ///
@@ -349,6 +395,7 @@ where
 /// assert_eq!(proof.candidates_examined, 4); // 1, 2, 3 fail; 4 succeeds
 /// assert!(!proof.search_exhaustive);
 /// ```
+#[must_use = "existence proof carries provenance metadata; ignoring it discards audit evidence"]
 pub fn existence_proof<T, F>(
     candidates: &[T],
     predicate: F,
@@ -359,9 +406,8 @@ where
     T: Clone,
     F: Fn(&T) -> bool,
 {
-    // Guard: propagate pre-condition errors before counting.
     if candidates.is_empty() {
-        return Err(WitnessError::NoCandidates);
+        return Err(WitnessError::EmptyCandidates);
     }
     if property.is_empty() {
         return Err(WitnessError::EmptyProperty);
@@ -387,52 +433,8 @@ where
         }
     }
 
-    // No witness found — report exhaustive only if we examined everything.
+    // No witness found within the iteration budget.
     Ok(None)
-}
-
-/// Count how many candidates satisfy the predicate, bounded by `config`.
-///
-/// Walks the entire candidate slice up to `config.max_iterations`, counting
-/// every element for which `predicate` returns `true`. Unlike
-/// [`search_witness`], this does not stop at the first match.
-///
-/// # Arguments
-///
-/// - `candidates` — the ordered set of values to examine
-/// - `predicate`  — a function returning `true` for qualifying candidates
-/// - `config`     — search bounds configuration
-///
-/// # Returns
-///
-/// - `Ok(count)` — the number of satisfying candidates within the limit
-/// - `Err(WitnessError::NoCandidates)` — `candidates` is empty
-///
-/// # Example
-///
-/// ```
-/// use nexcore_tov::proofs::witnesses::{count_witnesses, WitnessSearchConfig};
-///
-/// let nums = vec![1u32, 2, 3, 4, 5, 6];
-/// let config = WitnessSearchConfig::default();
-/// let count = count_witnesses(&nums, |n| n % 2 == 0, &config).unwrap();
-/// assert_eq!(count, 3); // 2, 4, 6
-/// ```
-pub fn count_witnesses<T, F>(
-    candidates: &[T],
-    predicate: F,
-    config: &WitnessSearchConfig,
-) -> Result<usize, WitnessError>
-where
-    F: Fn(&T) -> bool,
-{
-    if candidates.is_empty() {
-        return Err(WitnessError::NoCandidates);
-    }
-
-    let limit = candidates.len().min(config.max_iterations);
-    let count = candidates.iter().take(limit).filter(|c| predicate(c)).count();
-    Ok(count)
 }
 
 // ============================================================================
@@ -443,22 +445,47 @@ where
 mod tests {
     use super::*;
 
-    // ------------------------------------------------------------------
-    // Helper: default config for test brevity
-    // ------------------------------------------------------------------
+    // -----------------------------------------------------------------------
+    // Helper: exhaustive default config, used throughout for brevity.
+    // -----------------------------------------------------------------------
     fn cfg() -> WitnessSearchConfig {
         WitnessSearchConfig::default()
     }
 
-    // ------------------------------------------------------------------
+    // -----------------------------------------------------------------------
+    // WitnessSearchConfig construction
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn config_default_is_exhaustive() {
+        let config = WitnessSearchConfig::default();
+        assert_eq!(config.max_iterations, usize::MAX);
+        assert_eq!(config.timeout_ms, None);
+    }
+
+    #[test]
+    fn config_limited_sets_max_iterations() {
+        let config = WitnessSearchConfig::limited(500);
+        assert_eq!(config.max_iterations, 500);
+        assert_eq!(config.timeout_ms, None);
+    }
+
+    #[test]
+    fn config_limited_zero_creates_zero_budget() {
+        let config = WitnessSearchConfig::limited(0);
+        assert_eq!(config.max_iterations, 0);
+    }
+
+    // -----------------------------------------------------------------------
     // search_witness — placement tests
-    // ------------------------------------------------------------------
+    // -----------------------------------------------------------------------
 
     #[test]
     fn search_witness_found_at_first_element() {
         let candidates = vec![10u32, 20, 30];
-        let result = search_witness(&candidates, |&n| n == 10, &cfg(), "equals ten");
-        let w = result.unwrap().unwrap();
+        let w = search_witness(&candidates, |&n| n == 10, &cfg(), "equals ten")
+            .unwrap()
+            .unwrap();
         assert_eq!(w.value, 10);
         assert_eq!(w.property, "equals ten");
         assert_eq!(w.confidence, 1.0);
@@ -467,16 +494,18 @@ mod tests {
     #[test]
     fn search_witness_found_at_middle_element() {
         let candidates = vec![1u32, 42, 99];
-        let result = search_witness(&candidates, |&n| n == 42, &cfg(), "the answer");
-        let w = result.unwrap().unwrap();
+        let w = search_witness(&candidates, |&n| n == 42, &cfg(), "the answer")
+            .unwrap()
+            .unwrap();
         assert_eq!(w.value, 42);
     }
 
     #[test]
     fn search_witness_found_at_last_element() {
         let candidates = vec![1u32, 2, 3];
-        let result = search_witness(&candidates, |&n| n == 3, &cfg(), "last element");
-        let w = result.unwrap().unwrap();
+        let w = search_witness(&candidates, |&n| n == 3, &cfg(), "last element")
+            .unwrap()
+            .unwrap();
         assert_eq!(w.value, 3);
     }
 
@@ -491,7 +520,7 @@ mod tests {
     fn search_witness_empty_candidates_returns_error() {
         let candidates: Vec<u32> = vec![];
         let err = search_witness(&candidates, |_| true, &cfg(), "any").unwrap_err();
-        assert_eq!(err, WitnessError::NoCandidates);
+        assert_eq!(err, WitnessError::EmptyCandidates);
     }
 
     #[test]
@@ -517,23 +546,46 @@ mod tests {
         assert_eq!(result.unwrap(), None);
     }
 
-    // ------------------------------------------------------------------
+    // -----------------------------------------------------------------------
     // search_witness — max_iterations boundary
-    // ------------------------------------------------------------------
+    // -----------------------------------------------------------------------
 
     #[test]
-    fn search_witness_max_iterations_limits_search() {
-        // Witness is at index 5 but budget is only 3 — should not be found.
-        let candidates: Vec<u32> = (0..10).collect();
-        let tight_config = WitnessSearchConfig { max_iterations: 3 };
-        let result = search_witness(&candidates, |&n| n == 5, &tight_config, "five");
-        // Examined 0,1,2 only — 5 never checked.
+    fn search_witness_max_iterations_zero_returns_none() {
+        // Budget of zero: no candidates examined, even the first.
+        let candidates = vec![1u32, 2, 3];
+        let zero_config = WitnessSearchConfig::limited(0);
+        let result = search_witness(&candidates, |_| true, &zero_config, "any");
         assert_eq!(result.unwrap(), None);
     }
 
-    // ------------------------------------------------------------------
+    #[test]
+    fn search_witness_max_iterations_one_only_checks_first() {
+        // Budget of 1: only index 0 is examined.
+        let candidates = vec![1u32, 2, 3];
+        let one_config = WitnessSearchConfig::limited(1);
+        // Predicate: matches only 2 (index 1) — should not be found.
+        let result = search_witness(&candidates, |&n| n == 2, &one_config, "two");
+        assert_eq!(result.unwrap(), None);
+        // But 1 (index 0) should be found.
+        let w = search_witness(&candidates, |&n| n == 1, &one_config, "one")
+            .unwrap()
+            .unwrap();
+        assert_eq!(w.value, 1);
+    }
+
+    #[test]
+    fn search_witness_max_iterations_limits_search_to_budget() {
+        // Witness is at index 5 but budget is only 3 — should not be found.
+        let candidates: Vec<u32> = (0..10).collect();
+        let tight_config = WitnessSearchConfig::limited(3);
+        let result = search_witness(&candidates, |&n| n == 5, &tight_config, "five");
+        assert_eq!(result.unwrap(), None);
+    }
+
+    // -----------------------------------------------------------------------
     // validate_witness
-    // ------------------------------------------------------------------
+    // -----------------------------------------------------------------------
 
     #[test]
     fn validate_witness_valid_candidate() {
@@ -544,7 +596,7 @@ mod tests {
     }
 
     #[test]
-    fn validate_witness_invalid_candidate_returns_error() {
+    fn validate_witness_invalid_candidate_returns_predicate_not_satisfied() {
         let err = validate_witness(&3u32, |&n| n % 2 == 0, "even number").unwrap_err();
         assert_eq!(err, WitnessError::PredicateNotSatisfied);
     }
@@ -555,14 +607,21 @@ mod tests {
         assert_eq!(err, WitnessError::EmptyProperty);
     }
 
-    // ------------------------------------------------------------------
+    #[test]
+    fn validate_witness_string_type() {
+        let w = validate_witness(&"hello", |s| s.len() == 5, "length-5 string").unwrap();
+        assert_eq!(w.value, "hello");
+        assert_eq!(w.confidence, 1.0);
+    }
+
+    // -----------------------------------------------------------------------
     // existence_proof — basic correctness
-    // ------------------------------------------------------------------
+    // -----------------------------------------------------------------------
 
     #[test]
     fn existence_proof_found_carries_correct_metadata() {
         let candidates = vec![1u32, 2, 3, 4, 5];
-        // Witness: 3 (index 2), so candidates_examined = 3
+        // Witness: 3 (index 2), so candidates_examined = 3.
         let proof = existence_proof(&candidates, |&n| n == 3, "equals three", &cfg())
             .unwrap()
             .unwrap();
@@ -575,13 +634,12 @@ mod tests {
     #[test]
     fn existence_proof_not_found_returns_none() {
         let candidates = vec![1u32, 3, 5];
-        let result =
-            existence_proof(&candidates, |&n| n % 2 == 0, "even number", &cfg()).unwrap();
+        let result = existence_proof(&candidates, |&n| n % 2 == 0, "even number", &cfg()).unwrap();
         assert!(result.is_none());
     }
 
     #[test]
-    fn existence_proof_search_exhaustive_flag_when_witness_is_last() {
+    fn existence_proof_search_exhaustive_true_when_witness_is_last() {
         let candidates = vec![1u32, 3, 5, 8];
         // 8 is even and is the last element — exhaustive should be true.
         let proof = existence_proof(&candidates, |&n| n % 2 == 0, "even number", &cfg())
@@ -593,7 +651,7 @@ mod tests {
     }
 
     #[test]
-    fn existence_proof_search_exhaustive_flag_when_witness_not_last() {
+    fn existence_proof_search_exhaustive_false_when_witness_not_last() {
         let candidates = vec![2u32, 3, 5];
         // 2 is even and is at index 0 — examined 1, total 3 → not exhaustive.
         let proof = existence_proof(&candidates, |&n| n % 2 == 0, "even number", &cfg())
@@ -607,7 +665,7 @@ mod tests {
     fn existence_proof_empty_candidates_returns_error() {
         let candidates: Vec<u32> = vec![];
         let err = existence_proof(&candidates, |_| true, "any", &cfg()).unwrap_err();
-        assert_eq!(err, WitnessError::NoCandidates);
+        assert_eq!(err, WitnessError::EmptyCandidates);
     }
 
     #[test]
@@ -617,41 +675,88 @@ mod tests {
         assert_eq!(err, WitnessError::EmptyProperty);
     }
 
-    // ------------------------------------------------------------------
-    // count_witnesses
-    // ------------------------------------------------------------------
+    #[test]
+    fn existence_proof_confidence_is_always_one() {
+        let candidates = vec![7u32];
+        let proof = existence_proof(&candidates, |_| true, "any value", &cfg())
+            .unwrap()
+            .unwrap();
+        assert!((proof.witness.confidence - 1.0).abs() < f64::EPSILON);
+    }
+
+    // -----------------------------------------------------------------------
+    // Exhaustive vs partial search metadata
+    // -----------------------------------------------------------------------
 
     #[test]
-    fn count_witnesses_zero_matches() {
-        let candidates = vec![1u32, 3, 5];
-        let count = count_witnesses(&candidates, |&n| n % 2 == 0, &cfg()).unwrap();
-        assert_eq!(count, 0);
+    fn search_exhaustive_single_element_set_is_exhaustive() {
+        let candidates = vec![42u32];
+        let proof = existence_proof(&candidates, |_| true, "sole element", &cfg())
+            .unwrap()
+            .unwrap();
+        assert_eq!(proof.search_space_size, 1);
+        assert_eq!(proof.candidates_examined, 1);
+        assert!(proof.search_exhaustive);
+    }
+
+    // -----------------------------------------------------------------------
+    // Various types: i32, String, custom struct
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn search_witness_i32_negative_values() {
+        let candidates = vec![-5i32, -3, -1, 0, 2, 4];
+        let w = search_witness(&candidates, |&n| n > 0, &cfg(), "positive integer")
+            .unwrap()
+            .unwrap();
+        assert_eq!(w.value, 2);
     }
 
     #[test]
-    fn count_witnesses_all_match() {
-        let candidates = vec![2u32, 4, 6, 8];
-        let count = count_witnesses(&candidates, |&n| n % 2 == 0, &cfg()).unwrap();
-        assert_eq!(count, 4);
+    fn search_witness_string_type() {
+        let candidates = vec!["alpha", "beta", "gamma"];
+        let w = search_witness(&candidates, |s| s.starts_with('g'), &cfg(), "starts with g")
+            .unwrap()
+            .unwrap();
+        assert_eq!(w.value, "gamma");
     }
 
     #[test]
-    fn count_witnesses_partial_match() {
-        let candidates: Vec<u32> = (1..=10).collect();
-        let count = count_witnesses(&candidates, |&n| n % 2 == 0, &cfg()).unwrap();
-        assert_eq!(count, 5); // 2, 4, 6, 8, 10
+    fn search_witness_struct_type() {
+        #[derive(Clone, PartialEq, Debug)]
+        struct Drug {
+            name: &'static str,
+            signal_strength: f64,
+        }
+        let candidates = vec![
+            Drug {
+                name: "DrugA",
+                signal_strength: 1.2,
+            },
+            Drug {
+                name: "DrugB",
+                signal_strength: 2.5,
+            },
+            Drug {
+                name: "DrugC",
+                signal_strength: 0.8,
+            },
+        ];
+        let w = search_witness(
+            &candidates,
+            |d| d.signal_strength >= 2.0,
+            &cfg(),
+            "signal >= PRR threshold",
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!(w.value.name, "DrugB");
+        assert_eq!(w.property, "signal >= PRR threshold");
     }
 
-    #[test]
-    fn count_witnesses_empty_returns_error() {
-        let candidates: Vec<u32> = vec![];
-        let err = count_witnesses(&candidates, |_| true, &cfg()).unwrap_err();
-        assert_eq!(err, WitnessError::NoCandidates);
-    }
-
-    // ------------------------------------------------------------------
+    // -----------------------------------------------------------------------
     // Large candidate set
-    // ------------------------------------------------------------------
+    // -----------------------------------------------------------------------
 
     #[test]
     fn search_witness_large_candidate_set() {
@@ -662,13 +767,13 @@ mod tests {
         assert_eq!(w.value, 999);
     }
 
-    // ------------------------------------------------------------------
+    // -----------------------------------------------------------------------
     // Complex predicate (multiple conditions)
-    // ------------------------------------------------------------------
+    // -----------------------------------------------------------------------
 
     #[test]
     fn search_witness_complex_predicate() {
-        // Must be even, divisible by 3, and greater than 10
+        // Must be even, divisible by 3, and greater than 10.
         let candidates: Vec<u32> = (1..=20).collect();
         let w = search_witness(
             &candidates,
@@ -682,67 +787,31 @@ mod tests {
         assert_eq!(w.property, "even, divisible by 3, greater than 10");
     }
 
-    // ------------------------------------------------------------------
-    // Integer domain: first even number
-    // ------------------------------------------------------------------
+    // -----------------------------------------------------------------------
+    // Error variant display (smoke-test the derive macro)
+    // -----------------------------------------------------------------------
 
     #[test]
-    fn search_witness_integer_first_even() {
-        let candidates = vec![1u32, 3, 7, 4, 9];
-        let w = search_witness(&candidates, |&n| n % 2 == 0, &cfg(), "even number")
-            .unwrap()
-            .unwrap();
-        assert_eq!(w.value, 4);
+    fn witness_error_display_empty_candidates() {
+        let msg = WitnessError::EmptyCandidates.to_string();
+        assert!(msg.contains("no candidates"));
     }
 
-    // ------------------------------------------------------------------
-    // String domain: first string of specific length
-    // ------------------------------------------------------------------
-
     #[test]
-    fn search_witness_string_with_specific_length() {
-        let candidates = vec!["a", "bc", "def", "ghij"];
-        let w = search_witness(&candidates, |s| s.len() == 3, &cfg(), "length-3 string")
-            .unwrap()
-            .unwrap();
-        assert_eq!(w.value, "def");
-        assert_eq!(w.property, "length-3 string");
+    fn witness_error_display_predicate_not_satisfied() {
+        let msg = WitnessError::PredicateNotSatisfied.to_string();
+        assert!(msg.contains("predicate"));
     }
 
-    // ------------------------------------------------------------------
-    // Witness confidence is always 1.0 for deterministic predicates
-    // ------------------------------------------------------------------
-
     #[test]
-    fn witness_confidence_is_always_one() {
-        let candidates = vec![42u32];
-        let w = search_witness(&candidates, |_| true, &cfg(), "any value")
-            .unwrap()
-            .unwrap();
-        assert!((w.confidence - 1.0).abs() < f64::EPSILON);
+    fn witness_error_display_search_exhausted() {
+        let msg = WitnessError::SearchExhausted(42).to_string();
+        assert!(msg.contains("42"));
     }
 
-    // ------------------------------------------------------------------
-    // count_witnesses respects max_iterations budget
-    // ------------------------------------------------------------------
-
     #[test]
-    fn count_witnesses_respects_max_iterations() {
-        // 10 even numbers in 0..20 but budget is only 6 → examines 0..5
-        let candidates: Vec<u32> = (0..20).collect();
-        let tight = WitnessSearchConfig { max_iterations: 6 };
-        let count = count_witnesses(&candidates, |&n| n % 2 == 0, &tight).unwrap();
-        // Examined: 0,1,2,3,4,5 — even ones: 0,2,4
-        assert_eq!(count, 3);
-    }
-
-    // ------------------------------------------------------------------
-    // WitnessSearchConfig Default
-    // ------------------------------------------------------------------
-
-    #[test]
-    fn witness_search_config_default_is_ten_thousand() {
-        let config = WitnessSearchConfig::default();
-        assert_eq!(config.max_iterations, 10_000);
+    fn witness_error_display_empty_property() {
+        let msg = WitnessError::EmptyProperty.to_string();
+        assert!(msg.contains("property"));
     }
 }

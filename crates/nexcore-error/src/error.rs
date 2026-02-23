@@ -60,7 +60,7 @@ impl NexError {
         C: fmt::Display + Send + Sync + 'static,
     {
         Self {
-            inner: Box::new(format!("{}: {}", ctx, err)),
+            inner: Box::new(format!("{ctx}: {err}")),
             source: Some(Box::new(err)),
         }
     }

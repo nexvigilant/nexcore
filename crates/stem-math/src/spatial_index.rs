@@ -41,8 +41,8 @@
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use nexcore_error::Error;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::spatial::{Distance, Neighborhood};
 
@@ -230,12 +230,12 @@ enum Node<const K: usize> {
 
 impl<const K: usize> Node<K> {
     /// Count the total number of points stored below (and at) this node.
-    fn count(&self) -> usize {
+    fn _count(&self) -> usize {
         match self {
             Node::Leaf(_) => 1,
             Node::Split { left, right, .. } => {
-                1 + left.as_ref().map_or(0, |n| n.count())
-                    + right.as_ref().map_or(0, |n| n.count())
+                1 + left.as_ref().map_or(0, |n| n._count())
+                    + right.as_ref().map_or(0, |n| n._count())
             }
         }
     }
@@ -247,8 +247,7 @@ impl<const K: usize> Node<K> {
             Node::Leaf(existing) => {
                 // Promote the leaf into a split node.
                 let existing = existing.clone();
-                let go_right =
-                    new_point.coords[axis] > existing.coords[axis];
+                let go_right = new_point.coords[axis] > existing.coords[axis];
                 let (left_child, right_child) = if go_right {
                     (None, Some(Box::new(Node::Leaf(new_point))))
                 } else {
@@ -268,8 +267,7 @@ impl<const K: usize> Node<K> {
                 right,
                 ..
             } => {
-                let go_right =
-                    new_point.coords[*split_axis] > point.coords[*split_axis];
+                let go_right = new_point.coords[*split_axis] > point.coords[*split_axis];
                 if go_right {
                     match right {
                         Some(child) => child.insert(new_point, depth + 1),
@@ -289,11 +287,7 @@ impl<const K: usize> Node<K> {
     ///
     /// `best` is `(squared_distance, point)` — using squared distances
     /// throughout avoids repeated square-root calls.
-    fn nearest_search(
-        &self,
-        query: &KdPoint<K>,
-        best: &mut Option<(f64, KdPoint<K>)>,
-    ) {
+    fn nearest_search(&self, query: &KdPoint<K>, best: &mut Option<(f64, KdPoint<K>)>) {
         match self {
             Node::Leaf(p) => {
                 let sq = query.squared_distance_to(p);
@@ -372,9 +366,7 @@ impl<const K: usize> Node<K> {
                 // Prune: visit far child only if the split plane could
                 // improve on our current worst candidate.
                 let plane_sq = diff * diff;
-                let worst_sq = heap
-                    .peek()
-                    .map_or(f64::INFINITY, |top| (top.0).0 .0);
+                let worst_sq = heap.peek().map_or(f64::INFINITY, |top| (top.0).0.0);
                 if heap.len() < k || plane_sq < worst_sq {
                     if let Some(far_child) = far {
                         far_child.k_nearest_search(query, k, heap);
@@ -535,10 +527,7 @@ impl<const K: usize> Ord for KdPoint<K> {
 ///
 /// Strategy: sort by the current axis, take the median as the split
 /// point, recurse on both halves.
-fn build_balanced<const K: usize>(
-    points: &mut [KdPoint<K>],
-    depth: usize,
-) -> Option<Box<Node<K>>> {
+fn build_balanced<const K: usize>(points: &mut [KdPoint<K>], depth: usize) -> Option<Box<Node<K>>> {
     if points.is_empty() {
         return None;
     }
@@ -860,14 +849,17 @@ mod tests {
         points: &[KdPoint<K>],
         query: &KdPoint<K>,
     ) -> Option<NearestResult<K>> {
-        points.iter().min_by(|a, b| {
-            let da = a.squared_distance_to(query);
-            let db = b.squared_distance_to(query);
-            OrderedFloat(da).cmp(&OrderedFloat(db))
-        }).map(|p| NearestResult {
-            distance: query.euclidean_distance_to(p),
-            point: p.clone(),
-        })
+        points
+            .iter()
+            .min_by(|a, b| {
+                let da = a.squared_distance_to(query);
+                let db = b.squared_distance_to(query);
+                OrderedFloat(da).cmp(&OrderedFloat(db))
+            })
+            .map(|p| NearestResult {
+                distance: query.euclidean_distance_to(p),
+                point: p.clone(),
+            })
     }
 
     // ---- empty tree ----
@@ -1067,11 +1059,7 @@ mod tests {
 
     #[test]
     fn range_search_finds_within_closed_radius() {
-        let tree = KdTree::from_points(vec![
-            pt2(1.0, 0.0),
-            pt2(2.0, 0.0),
-            pt2(10.0, 0.0),
-        ]);
+        let tree = KdTree::from_points(vec![pt2(1.0, 0.0), pt2(2.0, 0.0), pt2(10.0, 0.0)]);
         let hood = Neighborhood::closed(Distance::new(2.0));
         let results = tree.range_search(&pt2(0.0, 0.0), &hood);
         assert_eq!(results.len(), 2);
@@ -1113,22 +1101,20 @@ mod tests {
         // Deterministic "random" points via a simple LCG.
         let mut seed: u64 = 42;
         let mut next = || -> f64 {
-            seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+            seed = seed
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
             // Map to [-50, 50]
             let raw = ((seed >> 33) as f64) / (u32::MAX as f64);
             raw * 100.0 - 50.0
         };
 
-        let points: Vec<KdPoint<3>> = (0..100)
-            .map(|_| pt3(next(), next(), next()))
-            .collect();
+        let points: Vec<KdPoint<3>> = (0..100).map(|_| pt3(next(), next(), next())).collect();
 
         let tree = KdTree::from_points(points.clone());
 
         // Verify 10 different query points.
-        let queries: Vec<KdPoint<3>> = (0..10)
-            .map(|_| pt3(next(), next(), next()))
-            .collect();
+        let queries: Vec<KdPoint<3>> = (0..10).map(|_| pt3(next(), next(), next())).collect();
 
         for q in &queries {
             let kd_result = tree.nearest(q).unwrap();
@@ -1147,11 +1133,7 @@ mod tests {
 
     #[test]
     fn degenerate_all_same_point() {
-        let tree = KdTree::from_points(vec![
-            pt2(1.0, 1.0),
-            pt2(1.0, 1.0),
-            pt2(1.0, 1.0),
-        ]);
+        let tree = KdTree::from_points(vec![pt2(1.0, 1.0), pt2(1.0, 1.0), pt2(1.0, 1.0)]);
         assert_eq!(tree.len(), 3);
         let r = tree.nearest(&pt2(0.0, 0.0)).unwrap();
         assert_eq!(r.point.coords, [1.0, 1.0]);
@@ -1160,11 +1142,7 @@ mod tests {
 
     #[test]
     fn degenerate_all_same_point_k_nearest_returns_all() {
-        let tree = KdTree::from_points(vec![
-            pt2(1.0, 1.0),
-            pt2(1.0, 1.0),
-            pt2(1.0, 1.0),
-        ]);
+        let tree = KdTree::from_points(vec![pt2(1.0, 1.0), pt2(1.0, 1.0), pt2(1.0, 1.0)]);
         let results = tree.k_nearest(&pt2(0.0, 0.0), 3).unwrap();
         assert_eq!(results.len(), 3);
     }
@@ -1173,9 +1151,7 @@ mod tests {
 
     #[test]
     fn degenerate_collinear_nearest() {
-        let tree = KdTree::from_points(
-            (0..10).map(|i| pt2(i as f64, 0.0)).collect(),
-        );
+        let tree = KdTree::from_points((0..10).map(|i| pt2(i as f64, 0.0)).collect());
         let r = tree.nearest(&pt2(3.5, 0.0)).unwrap();
         // Nearest must be 3.0 or 4.0 — both at distance 0.5.
         assert!((r.distance.value() - 0.5).abs() < 1e-10);
@@ -1183,9 +1159,7 @@ mod tests {
 
     #[test]
     fn degenerate_collinear_range_search() {
-        let tree = KdTree::from_points(
-            (0..20).map(|i| pt2(i as f64, 0.0)).collect(),
-        );
+        let tree = KdTree::from_points((0..20).map(|i| pt2(i as f64, 0.0)).collect());
         let hood = Neighborhood::closed(Distance::new(3.0));
         let results = tree.range_search(&pt2(10.0, 0.0), &hood);
         // Points 7, 8, 9, 10, 11, 12, 13 are within distance 3.

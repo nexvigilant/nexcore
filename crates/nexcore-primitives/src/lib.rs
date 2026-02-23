@@ -5,6 +5,7 @@
 
 pub mod chemistry;
 pub mod dynamics;
+pub mod entropy;
 pub mod grounding;
 pub mod measurement;
 pub mod quantum;

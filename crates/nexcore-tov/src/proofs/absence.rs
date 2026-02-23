@@ -22,27 +22,56 @@
 //! A small p-value means the observation is unlikely under H₀ — if we observed
 //! far fewer events than expected, that is evidence the phenomenon is absent.
 //!
+//! ## Absence Score
+//!
+//! The absence score is `-log₁₀(p_value)`. Higher values indicate stronger
+//! evidence of absence. The scale follows Jeffreys (1939):
+//!
+//! ```text
+//! Score < 0.5  → Negligible
+//! 0.5 ≤ score < 1.0 → Weak
+//! 1.0 ≤ score < 1.5 → Moderate
+//! 1.5 ≤ score < 2.0 → Strong
+//! score ≥ 2.0  → Decisive
+//! ```
+//!
+//! A p-value of 0.05 maps to score ≈ 1.30 (Moderate). A p-value of 0.001
+//! maps to score = 3.0 (Decisive).
+//!
 //! ## Curry-Howard Connection
 //!
 //! Absence detection is the computational dual of the `Void` type in our proof
 //! framework. Just as `Void` (⊥) has no inhabitants, a phenomenon with decisive
 //! absence evidence has no credible observations.
 
-use serde::{Deserialize, Serialize};
 use nexcore_error::Error;
+use serde::{Deserialize, Serialize};
 
 // ============================================================================
 // ERROR TYPE
 // ============================================================================
 
 /// Errors produced by absence detection functions.
+///
+/// # Example
+///
+/// ```
+/// use nexcore_tov::proofs::absence::{AbsenceEvidence, AbsenceError, null_hypothesis_test};
+///
+/// let bad = AbsenceEvidence {
+///     observation_window: -1.0,
+///     expected_count: 5.0,
+///     observed_count: 0,
+/// };
+/// assert_eq!(null_hypothesis_test(&bad).unwrap_err(), AbsenceError::NonPositiveWindow);
+/// ```
 #[derive(Debug, Error, PartialEq, Eq, Clone)]
 pub enum AbsenceError {
-    /// The observation window must span a positive duration.
-    #[error("observation window must be positive")]
+    /// The observation window must span a positive, finite duration.
+    #[error("observation window must be positive and finite")]
     NonPositiveWindow,
-    /// The expected count under the null hypothesis must be non-negative.
-    #[error("expected count must be non-negative")]
+    /// The expected count under the null hypothesis must be non-negative and finite.
+    #[error("expected count must be non-negative and finite")]
     NegativeExpected,
     /// The significance level alpha must lie strictly inside (0, 1).
     #[error("alpha must be in (0, 1)")]
@@ -82,9 +111,10 @@ pub struct AbsenceEvidence {
     pub observed_count: u64,
 }
 
-/// Ordinal classification of statistical evidence for absence.
+/// Ordinal classification of statistical evidence for absence, using the
+/// Jeffreys evidence scale expressed in terms of the absence score
+/// (`-log₁₀(p_value)`).
 ///
-/// Thresholds mirror the conventional p-value ladder used in hypothesis testing.
 /// The ordering is meaningful: `Decisive > Strong > Moderate > Weak > Negligible`.
 ///
 /// # Example
@@ -93,19 +123,21 @@ pub struct AbsenceEvidence {
 /// use nexcore_tov::proofs::absence::EvidenceStrength;
 ///
 /// assert!(EvidenceStrength::Decisive > EvidenceStrength::Strong);
+/// assert!(EvidenceStrength::Strong  > EvidenceStrength::Moderate);
 /// assert!(EvidenceStrength::Moderate > EvidenceStrength::Weak);
+/// assert!(EvidenceStrength::Weak    > EvidenceStrength::Negligible);
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum EvidenceStrength {
-    /// p ≥ 0.10 — data are consistent with the null hypothesis.
+    /// Absence score < 0.5 — data are consistent with the null hypothesis.
     Negligible,
-    /// 0.05 ≤ p < 0.10 — slight tension with the null hypothesis.
+    /// 0.5 ≤ absence score < 1.0 — slight tension with the null hypothesis.
     Weak,
-    /// 0.01 ≤ p < 0.05 — conventional significance threshold.
+    /// 1.0 ≤ absence score < 1.5 — conventional significance threshold.
     Moderate,
-    /// 0.001 ≤ p < 0.01 — strong departure from null hypothesis.
+    /// 1.5 ≤ absence score < 2.0 — strong departure from null hypothesis.
     Strong,
-    /// p < 0.001 — overwhelming evidence against the null hypothesis.
+    /// Absence score ≥ 2.0 — overwhelming evidence against the null hypothesis.
     Decisive,
 }
 
@@ -114,7 +146,7 @@ pub enum EvidenceStrength {
 /// # Example
 ///
 /// ```
-/// use nexcore_tov::proofs::absence::{AbsenceEvidence, null_hypothesis_test};
+/// use nexcore_tov::proofs::absence::{AbsenceEvidence, EvidenceStrength, null_hypothesis_test};
 ///
 /// let evidence = AbsenceEvidence {
 ///     observation_window: 12.0,
@@ -124,6 +156,7 @@ pub enum EvidenceStrength {
 /// let result = null_hypothesis_test(&evidence).unwrap();
 /// assert!(result.is_absent);
 /// assert!(result.p_value < 0.001);
+/// assert_eq!(result.evidence_strength, EvidenceStrength::Decisive);
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AbsenceTestResult {
@@ -131,9 +164,9 @@ pub struct AbsenceTestResult {
     pub p_value: f64,
     /// Whether absence is considered statistically significant at α = 0.05.
     pub is_absent: bool,
-    /// Confidence in absence: `1.0 - p_value`.
+    /// Confidence in absence: `1.0 - p_value`, clamped to `[0.0, 1.0]`.
     pub confidence: f64,
-    /// Qualitative classification of the evidence strength.
+    /// Qualitative classification of the evidence strength via the absence score.
     pub evidence_strength: EvidenceStrength,
 }
 
@@ -141,12 +174,12 @@ pub struct AbsenceTestResult {
 // POISSON CDF — LOG-SPACE IMPLEMENTATION
 // ============================================================================
 
-/// Compute `ln(k!)` using an iterative sum for exact small values.
+/// Compute `ln(k!)` using an iterative sum.
 ///
-/// For k up to a few thousand this is acceptably fast and exact; the
-/// Stirling approximation would introduce error at low k.
+/// For k up to a few thousand this is acceptably fast and exact; Stirling's
+/// approximation would introduce error at low k.
 fn ln_factorial(k: u64) -> f64 {
-    // ln(0!) = ln(1) = 0; sum starts from 2
+    // ln(0!) = ln(1) = 0; the loop starts at i=2 to skip the no-op ln(1)=0.
     let mut acc: f64 = 0.0;
     for i in 2..=k {
         acc += (i as f64).ln();
@@ -154,9 +187,9 @@ fn ln_factorial(k: u64) -> f64 {
     acc
 }
 
-/// Compute ln P(X = k) for X ~ Poisson(lambda) in log-space.
+/// Compute `ln P(X = k)` for `X ~ Poisson(lambda)` in log-space.
 ///
-/// `ln P(X = k) = -λ + k · ln(λ) - ln(k!)`
+/// `ln P(X = k) = k · ln(λ) - λ - ln(k!)`
 ///
 /// Handles the degenerate case λ = 0 explicitly:
 /// - P(X = 0 | λ = 0) = 1  → ln = 0
@@ -165,22 +198,18 @@ fn ln_poisson_pmf(lambda: f64, k: u64) -> f64 {
     if lambda == 0.0 {
         return if k == 0 { 0.0 } else { f64::NEG_INFINITY };
     }
+    // k*ln(λ) - λ - ln(k!)  — fused-multiply-add for numerical stability
     (k as f64).mul_add(lambda.ln(), -lambda) - ln_factorial(k)
 }
 
 /// Compute the Poisson CDF: P(X ≤ k | λ).
 ///
-/// Summation is performed in log-space and then exponentiated term-by-term
-/// to avoid overflow for large λ or k.
-///
-/// # Strategy
-///
-/// We accumulate probabilities as linear values after exponentiating each
-/// log-PMF term. The final sum is clamped to `[0.0, 1.0]` to guard against
-/// any floating-point rounding artefacts.
+/// Summation is performed by exponentiating each log-PMF term individually and
+/// accumulating. The final sum is clamped to `[0.0, 1.0]` to guard against any
+/// floating-point rounding artefacts.
 fn poisson_cdf(lambda: f64, k: u64) -> f64 {
     if lambda == 0.0 {
-        // Degenerate: all mass at 0.
+        // Degenerate Poisson: all probability mass sits at 0.
         return 1.0;
     }
 
@@ -196,23 +225,48 @@ fn poisson_cdf(lambda: f64, k: u64) -> f64 {
 }
 
 // ============================================================================
-// PUBLIC API
+// INTERNAL HELPERS
 // ============================================================================
 
-/// Classify a p-value into an ordinal evidence strength.
-fn classify_evidence(p_value: f64) -> EvidenceStrength {
-    if p_value < 0.001 {
+/// Classify an absence score into an ordinal [`EvidenceStrength`].
+///
+/// The score is `-log₁₀(p_value)`. Thresholds follow the Jeffreys (1939)
+/// evidence scale.
+fn classify_from_score(score: f64) -> EvidenceStrength {
+    if score >= 2.0 {
         EvidenceStrength::Decisive
-    } else if p_value < 0.01 {
+    } else if score >= 1.5 {
         EvidenceStrength::Strong
-    } else if p_value < 0.05 {
+    } else if score >= 1.0 {
         EvidenceStrength::Moderate
-    } else if p_value < 0.10 {
+    } else if score >= 0.5 {
         EvidenceStrength::Weak
     } else {
         EvidenceStrength::Negligible
     }
 }
+
+/// Validate that a window value is positive and finite.
+fn validate_window(window: f64) -> Result<(), AbsenceError> {
+    if !window.is_finite() || window <= 0.0 {
+        Err(AbsenceError::NonPositiveWindow)
+    } else {
+        Ok(())
+    }
+}
+
+/// Validate that an expected count is non-negative and finite.
+fn validate_expected(expected: f64) -> Result<(), AbsenceError> {
+    if !expected.is_finite() || expected < 0.0 {
+        Err(AbsenceError::NegativeExpected)
+    } else {
+        Ok(())
+    }
+}
+
+// ============================================================================
+// PUBLIC API
+// ============================================================================
 
 /// Perform a Poisson null-hypothesis test for absence of a phenomenon.
 ///
@@ -220,10 +274,13 @@ fn classify_evidence(p_value: f64) -> EvidenceStrength {
 /// p-value is `P(X ≤ observed | λ = expected)`. A small p-value means
 /// the observed count is much lower than expected — evidence of absence.
 ///
+/// Absence is declared (`is_absent = true`) when `p_value < 0.05`, which
+/// corresponds to an absence score > 1.30 on the Jeffreys scale.
+///
 /// # Errors
 ///
-/// Returns [`AbsenceError::NonPositiveWindow`] if `observation_window ≤ 0`.
-/// Returns [`AbsenceError::NegativeExpected`] if `expected_count < 0`.
+/// - [`AbsenceError::NonPositiveWindow`] — if `observation_window` is ≤ 0, NaN, or infinite.
+/// - [`AbsenceError::NegativeExpected`] — if `expected_count` is < 0, NaN, or infinite.
 ///
 /// # Example
 ///
@@ -236,23 +293,21 @@ fn classify_evidence(p_value: f64) -> EvidenceStrength {
 ///     observed_count: 0,
 /// };
 /// let result = null_hypothesis_test(&evidence).unwrap();
-/// // p-value = P(X <= 0 | lambda=5) = e^{-5} ≈ 0.0067
+/// // P(X=0 | λ=5) = e^{-5} ≈ 0.0067  →  Strong evidence of absence
 /// assert!(result.p_value < 0.01);
 /// assert!(result.is_absent);
 /// assert_eq!(result.evidence_strength, EvidenceStrength::Strong);
 /// ```
+#[must_use = "absence test result must be inspected to act on the finding"]
 pub fn null_hypothesis_test(evidence: &AbsenceEvidence) -> Result<AbsenceTestResult, AbsenceError> {
-    if evidence.observation_window <= 0.0 {
-        return Err(AbsenceError::NonPositiveWindow);
-    }
-    if evidence.expected_count < 0.0 {
-        return Err(AbsenceError::NegativeExpected);
-    }
+    validate_window(evidence.observation_window)?;
+    validate_expected(evidence.expected_count)?;
 
     let p_value = poisson_cdf(evidence.expected_count, evidence.observed_count);
     let is_absent = p_value < 0.05;
-    let confidence = 1.0 - p_value;
-    let evidence_strength = classify_evidence(p_value);
+    let confidence = (1.0 - p_value).clamp(0.0, 1.0);
+    let score = absence_score_from_p(p_value);
+    let evidence_strength = classify_from_score(score);
 
     Ok(AbsenceTestResult {
         p_value,
@@ -262,68 +317,57 @@ pub fn null_hypothesis_test(evidence: &AbsenceEvidence) -> Result<AbsenceTestRes
     })
 }
 
-/// Compute a continuous absence score in `[0.0, 1.0]`.
+/// Compute the absence score: `-log₁₀(p_value)` for the given evidence.
 ///
-/// The score measures how far the observed count is below the expected count:
+/// The score is a non-negative real number where higher values indicate
+/// stronger evidence that the phenomenon is absent:
 ///
 /// ```text
-/// score = clamp(1.0 - observed / expected, 0.0, 1.0)
+/// absence_score = -log₁₀(P(X ≤ observed | λ = expected))
 /// ```
 ///
-/// - `score = 1.0` → zero observations (maximally absent).
-/// - `score = 0.0` → observed ≥ expected (not absent).
-/// - `score = 0.5` → observed is half of expected.
+/// Equivalently, a score of 2.0 corresponds to p = 0.01, a score of 3.0
+/// corresponds to p = 0.001, and so on.
 ///
-/// When `expected = 0.0` the ratio is undefined; the function returns `0.0`
-/// because there is no baseline against which absence can be measured.
+/// When `expected = 0.0`, the p-value is 1.0 (all mass at zero), so the
+/// score is 0.0 — no baseline exists against which absence can be measured.
 ///
 /// # Errors
 ///
-/// Returns [`AbsenceError::NonPositiveWindow`] if `window ≤ 0`.
-/// Returns [`AbsenceError::NegativeExpected`] if `expected < 0`.
+/// - [`AbsenceError::NonPositiveWindow`] — if `window` is ≤ 0, NaN, or infinite.
+/// - [`AbsenceError::NegativeExpected`] — if `expected` is < 0, NaN, or infinite.
 ///
 /// # Example
 ///
 /// ```
 /// use nexcore_tov::proofs::absence::absence_score;
 ///
+/// // Zero observations when 10 were expected → very high score
 /// let score = absence_score(10.0, 0, 12.0).unwrap();
-/// assert!((score - 1.0).abs() < 1e-10, "zero observed = fully absent");
+/// assert!(score > 2.0, "decisive evidence of absence");
 ///
-/// let score = absence_score(10.0, 5, 12.0).unwrap();
-/// assert!((score - 0.5).abs() < 1e-10, "half observed");
-///
-/// let score = absence_score(10.0, 15, 12.0).unwrap();
-/// assert!((score - 0.0).abs() < 1e-10, "over-observed clamped to 0");
+/// // Observed equals expected → p ≈ 0.5 → score ≈ 0.3 (negligible)
+/// let score = absence_score(5.0, 5, 12.0).unwrap();
+/// assert!(score < 0.5, "negligible evidence");
 /// ```
+#[must_use = "absence score must be inspected to act on the finding"]
 pub fn absence_score(expected: f64, observed: u64, window: f64) -> Result<f64, AbsenceError> {
-    if window <= 0.0 {
-        return Err(AbsenceError::NonPositiveWindow);
-    }
-    if expected < 0.0 {
-        return Err(AbsenceError::NegativeExpected);
-    }
+    validate_window(window)?;
+    validate_expected(expected)?;
 
-    if expected == 0.0 {
-        // No expected events → no meaningful baseline for absence.
-        return Ok(0.0);
-    }
-
-    let ratio = observed as f64 / expected;
-    let score = (1.0 - ratio).clamp(0.0, 1.0);
-    Ok(score)
+    let p_value = poisson_cdf(expected, observed);
+    Ok(absence_score_from_p(p_value))
 }
 
 /// Determine whether a phenomenon is meaningfully absent at significance level α.
 ///
-/// Returns `true` when the Poisson p-value from [`null_hypothesis_test`] is
-/// strictly less than `alpha`.
+/// Returns `true` when `P(X ≤ observed | λ = expected) < alpha`.
 ///
 /// # Errors
 ///
-/// Returns [`AbsenceError::NonPositiveWindow`] if `observation_window ≤ 0`.
-/// Returns [`AbsenceError::NegativeExpected`] if `expected_count < 0`.
-/// Returns [`AbsenceError::InvalidAlpha`] if `alpha` is not in `(0.0, 1.0)`.
+/// - [`AbsenceError::NonPositiveWindow`] — if `observation_window` is ≤ 0, NaN, or infinite.
+/// - [`AbsenceError::NegativeExpected`] — if `expected_count` is < 0, NaN, or infinite.
+/// - [`AbsenceError::InvalidAlpha`] — if `alpha` is not strictly in `(0.0, 1.0)`.
 ///
 /// # Example
 ///
@@ -336,21 +380,45 @@ pub fn absence_score(expected: f64, observed: u64, window: f64) -> Result<f64, A
 ///     observed_count: 0,
 /// };
 ///
-/// // Absent at α = 0.05?
+/// // Absent at the conventional α = 0.05?
 /// assert!(is_meaningfully_absent(&evidence, 0.05).unwrap());
 ///
-/// // Absent at an impossibly tight α = 1e-10? (e^{-10} ≈ 4.5e-5 > 1e-10)
+/// // e^{-10} ≈ 4.5e-5, so absent even at α = 1e-4
+/// assert!(is_meaningfully_absent(&evidence, 1e-4).unwrap());
+///
+/// // Not absent at an impossibly tight α = 1e-10 (p ≈ 4.5e-5 > 1e-10)
 /// assert!(!is_meaningfully_absent(&evidence, 1e-10).unwrap());
 /// ```
+#[must_use = "absence determination must be inspected to act on the finding"]
 pub fn is_meaningfully_absent(
     evidence: &AbsenceEvidence,
     alpha: f64,
 ) -> Result<bool, AbsenceError> {
-    if alpha <= 0.0 || alpha >= 1.0 {
+    if !alpha.is_finite() || alpha <= 0.0 || alpha >= 1.0 {
         return Err(AbsenceError::InvalidAlpha);
     }
     let result = null_hypothesis_test(evidence)?;
     Ok(result.p_value < alpha)
+}
+
+// ============================================================================
+// PRIVATE HELPER — SCORE FROM P-VALUE
+// ============================================================================
+
+/// Convert a p-value to the `-log₁₀(p)` absence score.
+///
+/// When `p_value` is effectively zero (≤ f64::MIN_POSITIVE), the log diverges;
+/// we cap the score at a large but finite constant (50.0) to remain representable.
+fn absence_score_from_p(p_value: f64) -> f64 {
+    if p_value <= 0.0 {
+        // p is numerically indistinguishable from zero: cap at 50 (corresponds
+        // to p ≤ 10^{-50}, which is well beyond any physical measurement).
+        return 50.0;
+    }
+    // p == 1.0 → -log₁₀(1) = 0.0 (no evidence)
+    // Guard against p > 1.0 due to floating-point rounding.
+    let p_clamped = p_value.min(1.0);
+    -(p_clamped.log10())
 }
 
 // ============================================================================
@@ -361,9 +429,9 @@ pub fn is_meaningfully_absent(
 mod tests {
     use super::*;
 
-    // --- Helper ------------------------------------------------------------------
+    // --- Helper -----------------------------------------------------------------
 
-    fn evidence(window: f64, expected: f64, observed: u64) -> AbsenceEvidence {
+    fn ev(window: f64, expected: f64, observed: u64) -> AbsenceEvidence {
         AbsenceEvidence {
             observation_window: window,
             expected_count: expected,
@@ -371,12 +439,12 @@ mod tests {
         }
     }
 
-    // --- null_hypothesis_test: basic semantics ------------------------------------
+    // --- null_hypothesis_test: basic semantics ----------------------------------
 
     #[test]
-    fn test_zero_observed_high_expected_strong_absence() {
-        // P(X=0 | λ=10) = e^{-10} ≈ 4.5e-5  →  Decisive
-        let result = null_hypothesis_test(&evidence(12.0, 10.0, 0)).unwrap();
+    fn test_zero_observed_high_expected_decisive() {
+        // P(X=0 | λ=10) = e^{-10} ≈ 4.5e-5  →  score ≈ 4.35  →  Decisive
+        let result = null_hypothesis_test(&ev(12.0, 10.0, 0)).unwrap();
         assert!(result.p_value < 0.001);
         assert!(result.is_absent);
         assert_eq!(result.evidence_strength, EvidenceStrength::Decisive);
@@ -384,26 +452,25 @@ mod tests {
 
     #[test]
     fn test_observed_equals_expected_not_absent() {
-        // When observed == expected, p-value ≈ 0.5 (median of Poisson) — not absent.
-        let result = null_hypothesis_test(&evidence(12.0, 5.0, 5)).unwrap();
-        // P(X ≤ 5 | λ=5) ≈ 0.616 — well above 0.05
+        // P(X ≤ 5 | λ=5) ≈ 0.616 — well above 0.05, score ≈ 0.21 → Negligible
+        let result = null_hypothesis_test(&ev(12.0, 5.0, 5)).unwrap();
         assert!(!result.is_absent);
         assert_eq!(result.evidence_strength, EvidenceStrength::Negligible);
     }
 
     #[test]
     fn test_observed_greater_than_expected_not_absent() {
-        // observed >> expected → p-value is high (near 1), definitely not absent
-        let result = null_hypothesis_test(&evidence(12.0, 2.0, 20)).unwrap();
+        // observed >> expected → p ≈ 1.0, score ≈ 0  →  not absent
+        let result = null_hypothesis_test(&ev(12.0, 2.0, 20)).unwrap();
         assert!(!result.is_absent);
         assert!(result.p_value > 0.10);
         assert_eq!(result.evidence_strength, EvidenceStrength::Negligible);
     }
 
     #[test]
-    fn test_zero_expected_zero_observed_no_absence() {
-        // λ=0, k=0: P(X ≤ 0 | λ=0) = 1.0 — the null holds perfectly, no absence claim.
-        let result = null_hypothesis_test(&evidence(12.0, 0.0, 0)).unwrap();
+    fn test_zero_expected_zero_observed_not_absent() {
+        // λ=0, k=0: P(X ≤ 0 | λ=0) = 1.0 → score = 0.0 → Negligible, not absent.
+        let result = null_hypothesis_test(&ev(12.0, 0.0, 0)).unwrap();
         assert!((result.p_value - 1.0).abs() < 1e-10);
         assert!(!result.is_absent);
         assert_eq!(result.evidence_strength, EvidenceStrength::Negligible);
@@ -412,7 +479,7 @@ mod tests {
     #[test]
     fn test_very_high_expected_zero_observed_decisive() {
         // P(X=0 | λ=100) = e^{-100} ≈ 3.7e-44 — overwhelmingly decisive
-        let result = null_hypothesis_test(&evidence(24.0, 100.0, 0)).unwrap();
+        let result = null_hypothesis_test(&ev(24.0, 100.0, 0)).unwrap();
         assert!(result.p_value < 0.001);
         assert!(result.is_absent);
         assert_eq!(result.evidence_strength, EvidenceStrength::Decisive);
@@ -420,20 +487,29 @@ mod tests {
 
     #[test]
     fn test_confidence_is_complement_of_p_value() {
-        let result = null_hypothesis_test(&evidence(12.0, 5.0, 0)).unwrap();
-        let expected_confidence = 1.0 - result.p_value;
+        let result = null_hypothesis_test(&ev(12.0, 5.0, 0)).unwrap();
+        let expected_confidence = (1.0 - result.p_value).clamp(0.0, 1.0);
         assert!((result.confidence - expected_confidence).abs() < 1e-12);
     }
 
-    // --- Evidence strength boundary tests ----------------------------------------
-
     #[test]
-    fn test_evidence_strength_negligible_when_p_gte_010() {
-        // λ=1, k=2: P(X ≤ 2 | λ=1) = e^{-1}(1 + 1 + 0.5) ≈ 0.92 → Negligible
-        let result = null_hypothesis_test(&evidence(1.0, 1.0, 2)).unwrap();
-        assert!(result.p_value >= 0.10);
+    fn test_small_lambda_zero_observed_negligible() {
+        // P(X=0 | λ=0.1) = e^{-0.1} ≈ 0.905 → score ≈ 0.04 → Negligible, not absent
+        let result = null_hypothesis_test(&ev(1.0, 0.1, 0)).unwrap();
+        assert!(result.p_value > 0.10);
+        assert!(!result.is_absent);
         assert_eq!(result.evidence_strength, EvidenceStrength::Negligible);
     }
+
+    #[test]
+    fn test_large_lambda_zero_observed_decisive() {
+        // P(X=0 | λ=100) is essentially 0 → score is huge → Decisive
+        let result = null_hypothesis_test(&ev(24.0, 100.0, 0)).unwrap();
+        assert_eq!(result.evidence_strength, EvidenceStrength::Decisive);
+        assert!(result.p_value < 1e-10);
+    }
+
+    // --- Evidence strength ordering ---------------------------------------------
 
     #[test]
     fn test_evidence_strength_ordering_is_correct() {
@@ -443,135 +519,197 @@ mod tests {
         assert!(EvidenceStrength::Weak > EvidenceStrength::Negligible);
     }
 
+    // --- classify_from_score: boundary transitions ------------------------------
+
     #[test]
-    fn test_classify_evidence_moderate_boundary() {
-        // p = 0.04 → Moderate
-        let strength = super::classify_evidence(0.04);
-        assert_eq!(strength, EvidenceStrength::Moderate);
+    fn test_score_below_0_5_is_negligible() {
+        assert_eq!(classify_from_score(0.0), EvidenceStrength::Negligible);
+        assert_eq!(classify_from_score(0.499), EvidenceStrength::Negligible);
     }
 
     #[test]
-    fn test_classify_evidence_weak_boundary() {
-        // p = 0.07 → Weak
-        let strength = super::classify_evidence(0.07);
-        assert_eq!(strength, EvidenceStrength::Weak);
+    fn test_score_at_0_5_is_weak() {
+        assert_eq!(classify_from_score(0.5), EvidenceStrength::Weak);
+        assert_eq!(classify_from_score(0.999), EvidenceStrength::Weak);
     }
 
     #[test]
-    fn test_classify_evidence_strong_boundary() {
-        // p = 0.005 → Strong
-        let strength = super::classify_evidence(0.005);
-        assert_eq!(strength, EvidenceStrength::Strong);
+    fn test_score_at_1_0_is_moderate() {
+        assert_eq!(classify_from_score(1.0), EvidenceStrength::Moderate);
+        assert_eq!(classify_from_score(1.499), EvidenceStrength::Moderate);
     }
 
     #[test]
-    fn test_classify_evidence_decisive_boundary() {
-        // p = 0.0005 → Decisive
-        let strength = super::classify_evidence(0.0005);
-        assert_eq!(strength, EvidenceStrength::Decisive);
+    fn test_score_at_1_5_is_strong() {
+        assert_eq!(classify_from_score(1.5), EvidenceStrength::Strong);
+        assert_eq!(classify_from_score(1.999), EvidenceStrength::Strong);
     }
 
-    // --- absence_score -----------------------------------------------------------
+    #[test]
+    fn test_score_at_2_0_is_decisive() {
+        assert_eq!(classify_from_score(2.0), EvidenceStrength::Decisive);
+        assert_eq!(classify_from_score(10.0), EvidenceStrength::Decisive);
+    }
+
+    // --- absence_score function -------------------------------------------------
 
     #[test]
-    fn test_absence_score_zero_observed_full_score() {
+    fn test_absence_score_zero_observed_high_expected_large() {
+        // P(X=0 | λ=10) = e^{-10} ≈ 4.5e-5 → -log₁₀(4.5e-5) ≈ 4.35
         let score = absence_score(10.0, 0, 12.0).unwrap();
-        assert!((score - 1.0).abs() < 1e-10);
+        assert!(
+            score > 2.0,
+            "zero observed / high expected must be decisive"
+        );
     }
 
     #[test]
-    fn test_absence_score_half_observed() {
-        let score = absence_score(10.0, 5, 12.0).unwrap();
-        assert!((score - 0.5).abs() < 1e-10);
-    }
-
-    #[test]
-    fn test_absence_score_observed_equals_expected_zero_score() {
-        let score = absence_score(10.0, 10, 12.0).unwrap();
-        assert!((score - 0.0).abs() < 1e-10);
-    }
-
-    #[test]
-    fn test_absence_score_over_observed_clamped_to_zero() {
-        // 15 observed / 10 expected → 1.0 - 1.5 = -0.5, clamped to 0.0
-        let score = absence_score(10.0, 15, 12.0).unwrap();
-        assert!((score - 0.0).abs() < 1e-10);
+    fn test_absence_score_observed_at_expected_negligible() {
+        // P(X≤5 | λ=5) ≈ 0.616 → -log₁₀(0.616) ≈ 0.21 → Negligible
+        let score = absence_score(5.0, 5, 12.0).unwrap();
+        assert!(
+            score < 0.5,
+            "score for observed≈expected must be negligible"
+        );
     }
 
     #[test]
     fn test_absence_score_zero_expected_returns_zero() {
-        // No expected baseline → undefined ratio, returns 0.0
+        // λ=0 → p=1.0 → -log₁₀(1.0) = 0.0
         let score = absence_score(0.0, 0, 12.0).unwrap();
         assert!((score - 0.0).abs() < 1e-10);
     }
 
-    // --- is_meaningfully_absent --------------------------------------------------
+    #[test]
+    fn test_absence_score_increases_with_more_expected() {
+        // Holding observed=0, increasing λ should increase the score
+        let score_5 = absence_score(5.0, 0, 1.0).unwrap();
+        let score_10 = absence_score(10.0, 0, 1.0).unwrap();
+        assert!(score_10 > score_5);
+    }
+
+    // --- is_meaningfully_absent -------------------------------------------------
 
     #[test]
-    fn test_is_meaningfully_absent_true_when_p_lt_alpha() {
+    fn test_is_absent_true_when_p_lt_alpha() {
         // P(X=0 | λ=10) ≈ 4.5e-5 < 0.05
-        let ev = evidence(12.0, 10.0, 0);
-        assert!(is_meaningfully_absent(&ev, 0.05).unwrap());
+        let ev_data = ev(12.0, 10.0, 0);
+        assert!(is_meaningfully_absent(&ev_data, 0.05).unwrap());
     }
 
     #[test]
-    fn test_is_meaningfully_absent_false_when_p_gte_alpha() {
-        // P(X ≤ 5 | λ=5) ≈ 0.616 ≥ 0.05
-        let ev = evidence(12.0, 5.0, 5);
-        assert!(!is_meaningfully_absent(&ev, 0.05).unwrap());
+    fn test_is_absent_false_when_p_gte_alpha() {
+        // P(X≤5 | λ=5) ≈ 0.616 ≥ 0.05
+        let ev_data = ev(12.0, 5.0, 5);
+        assert!(!is_meaningfully_absent(&ev_data, 0.05).unwrap());
     }
 
-    // --- Error cases -------------------------------------------------------------
+    #[test]
+    fn test_is_absent_at_tight_alpha() {
+        // P(X=0 | λ=10) ≈ 4.5e-5, so absent at α=1e-4 but not at α=1e-6
+        let ev_data = ev(12.0, 10.0, 0);
+        assert!(is_meaningfully_absent(&ev_data, 1e-4).unwrap());
+        assert!(!is_meaningfully_absent(&ev_data, 1e-6).unwrap());
+    }
+
+    // --- Error cases: null_hypothesis_test -------------------------------------
 
     #[test]
     fn test_error_non_positive_window_zero() {
-        let ev = evidence(0.0, 5.0, 0);
         assert_eq!(
-            null_hypothesis_test(&ev).unwrap_err(),
+            null_hypothesis_test(&ev(0.0, 5.0, 0)).unwrap_err(),
             AbsenceError::NonPositiveWindow
         );
     }
 
     #[test]
     fn test_error_non_positive_window_negative() {
-        let ev = evidence(-1.0, 5.0, 0);
         assert_eq!(
-            null_hypothesis_test(&ev).unwrap_err(),
+            null_hypothesis_test(&ev(-1.0, 5.0, 0)).unwrap_err(),
+            AbsenceError::NonPositiveWindow
+        );
+    }
+
+    #[test]
+    fn test_error_nan_window() {
+        assert_eq!(
+            null_hypothesis_test(&ev(f64::NAN, 5.0, 0)).unwrap_err(),
+            AbsenceError::NonPositiveWindow
+        );
+    }
+
+    #[test]
+    fn test_error_infinite_window() {
+        assert_eq!(
+            null_hypothesis_test(&ev(f64::INFINITY, 5.0, 0)).unwrap_err(),
             AbsenceError::NonPositiveWindow
         );
     }
 
     #[test]
     fn test_error_negative_expected() {
-        let ev = evidence(12.0, -1.0, 0);
         assert_eq!(
-            null_hypothesis_test(&ev).unwrap_err(),
+            null_hypothesis_test(&ev(12.0, -1.0, 0)).unwrap_err(),
             AbsenceError::NegativeExpected
         );
     }
 
     #[test]
-    fn test_error_invalid_alpha_zero() {
-        let ev = evidence(12.0, 5.0, 0);
+    fn test_error_nan_expected() {
         assert_eq!(
-            is_meaningfully_absent(&ev, 0.0).unwrap_err(),
+            null_hypothesis_test(&ev(12.0, f64::NAN, 0)).unwrap_err(),
+            AbsenceError::NegativeExpected
+        );
+    }
+
+    #[test]
+    fn test_error_infinite_expected() {
+        assert_eq!(
+            null_hypothesis_test(&ev(12.0, f64::INFINITY, 0)).unwrap_err(),
+            AbsenceError::NegativeExpected
+        );
+    }
+
+    // --- Error cases: is_meaningfully_absent -----------------------------------
+
+    #[test]
+    fn test_error_invalid_alpha_zero() {
+        assert_eq!(
+            is_meaningfully_absent(&ev(12.0, 5.0, 0), 0.0).unwrap_err(),
             AbsenceError::InvalidAlpha
         );
     }
 
     #[test]
     fn test_error_invalid_alpha_one() {
-        let ev = evidence(12.0, 5.0, 0);
         assert_eq!(
-            is_meaningfully_absent(&ev, 1.0).unwrap_err(),
+            is_meaningfully_absent(&ev(12.0, 5.0, 0), 1.0).unwrap_err(),
             AbsenceError::InvalidAlpha
         );
     }
 
     #[test]
+    fn test_error_invalid_alpha_nan() {
+        assert_eq!(
+            is_meaningfully_absent(&ev(12.0, 5.0, 0), f64::NAN).unwrap_err(),
+            AbsenceError::InvalidAlpha
+        );
+    }
+
+    // --- Error cases: absence_score --------------------------------------------
+
+    #[test]
     fn test_error_absence_score_negative_window() {
         assert_eq!(
             absence_score(5.0, 0, -1.0).unwrap_err(),
+            AbsenceError::NonPositiveWindow
+        );
+    }
+
+    #[test]
+    fn test_error_absence_score_nan_window() {
+        assert_eq!(
+            absence_score(5.0, 0, f64::NAN).unwrap_err(),
             AbsenceError::NonPositiveWindow
         );
     }
@@ -584,30 +722,33 @@ mod tests {
         );
     }
 
-    // --- Small and large lambda edge cases ---------------------------------------
+    // --- absence_score_from_p boundary cases -----------------------------------
 
     #[test]
-    fn test_small_lambda_zero_observed() {
-        // λ=0.1, k=0: P(X=0 | λ=0.1) = e^{-0.1} ≈ 0.905 → not absent
-        let result = null_hypothesis_test(&evidence(1.0, 0.1, 0)).unwrap();
-        assert!(result.p_value > 0.10);
-        assert!(!result.is_absent);
-        assert_eq!(result.evidence_strength, EvidenceStrength::Negligible);
+    fn test_score_from_p_one_is_zero() {
+        // p = 1.0 → -log₁₀(1.0) = 0.0
+        let s = absence_score_from_p(1.0);
+        assert!((s - 0.0).abs() < 1e-10);
     }
 
     #[test]
-    fn test_large_lambda_zero_observed_decisive() {
-        // λ=100, k=0: P(X=0 | λ=100) = e^{-100} — effectively 0
-        let result = null_hypothesis_test(&evidence(24.0, 100.0, 0)).unwrap();
-        assert_eq!(result.evidence_strength, EvidenceStrength::Decisive);
-        assert!(result.p_value < 1e-10);
+    fn test_score_from_p_zero_is_capped() {
+        // p = 0.0 → score is capped at 50.0
+        let s = absence_score_from_p(0.0);
+        assert!((s - 50.0).abs() < 1e-10);
     }
 
     #[test]
-    fn test_observation_window_validated_in_absence_score() {
-        assert_eq!(
-            absence_score(5.0, 2, 0.0).unwrap_err(),
-            AbsenceError::NonPositiveWindow
-        );
+    fn test_score_from_p_0_001_is_3() {
+        // p = 0.001 → -log₁₀(0.001) = 3.0
+        let s = absence_score_from_p(0.001);
+        assert!((s - 3.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_score_from_p_0_01_is_2() {
+        // p = 0.01 → -log₁₀(0.01) = 2.0
+        let s = absence_score_from_p(0.01);
+        assert!((s - 2.0).abs() < 1e-10);
     }
 }

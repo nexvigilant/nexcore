@@ -36,6 +36,7 @@
 pub mod grounding;
 pub mod spatial;
 pub mod spatial_grounding;
+pub mod spatial_index;
 pub mod statistics;
 pub mod statistics_grounding;
 

@@ -23,6 +23,7 @@
 pub mod experiment;
 pub mod grounding;
 pub mod reaction;
+pub mod variant_analysis;
 
 // Re-exports for ergonomic API
 pub use experiment::{ExperimentResult, Specimen, SpectralLine, run_experiment};

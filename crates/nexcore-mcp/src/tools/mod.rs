@@ -493,3 +493,6 @@ pub mod statemind;
 
 // Reason: causal DAG inference and counterfactual evaluation
 pub mod reason;
+
+// Word: binary word trait algebra (popcount, hamming, rotation, GCD, alignment)
+pub mod word;

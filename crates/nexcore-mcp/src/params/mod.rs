@@ -471,3 +471,7 @@ pub use statemind::*;
 // Reason: causal DAG construction, inference, counterfactual evaluation
 pub mod reason;
 pub use reason::*;
+
+// Word: binary word trait algebra (popcount, rotation, GCD, alignment)
+pub mod word;
+pub use word::*;

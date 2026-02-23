@@ -2489,6 +2489,18 @@ async fn dispatch_inner(
         "reason_infer" => typed(params, tools::reason::reason_infer),
         "reason_counterfactual" => typed(params, tools::reason::reason_counterfactual),
 
+        // ── Word (Binary Algebra) ─────────────────────────────────────────
+        "word_analyze" => typed(params, tools::word::word_analyze),
+        "word_popcount" => typed(params, tools::word::word_popcount),
+        "word_hamming_distance" => typed(params, tools::word::word_hamming_distance),
+        "word_parity" => typed(params, tools::word::word_parity),
+        "word_rotate" => typed(params, tools::word::word_rotate),
+        "word_log2" => typed(params, tools::word::word_log2),
+        "word_isqrt" => typed(params, tools::word::word_isqrt),
+        "word_binary_gcd" => typed(params, tools::word::word_binary_gcd),
+        "word_bit_test" => typed(params, tools::word::word_bit_test),
+        "word_align_up" => typed(params, tools::word::word_align_up),
+
         // ====================================================================
         _ => Err(McpError::invalid_params(
             format!("Unknown command: {command}. Use command='help' for catalog."),
@@ -2920,6 +2932,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "tov_grounded": ["tov_grounded_signal_strength", "tov_grounded_safety_margin", "tov_grounded_stability_shell", "tov_grounded_harm_type", "tov_grounded_meta_vigilance", "tov_grounded_eka_intelligence", "tov_grounded_magic_numbers"],
             "statemind": ["statemind_analyze_word", "statemind_constellation"],
             "reason": ["reason_infer", "reason_counterfactual"],
+            "word": ["word_analyze", "word_popcount", "word_hamming_distance", "word_parity", "word_rotate", "word_log2", "word_isqrt", "word_binary_gcd", "word_bit_test", "word_align_up"],
         }
     });
 

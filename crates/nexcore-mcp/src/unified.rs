@@ -2454,6 +2454,31 @@ async fn dispatch_inner(
         "pharma_pipeline_stage" => typed(params, tools::pharma_rd::pharma_pipeline_stage),
         "pharma_classify_generators" => typed(params, tools::pharma_rd::pharma_classify_generators),
 
+        // ── Combinatorics ────────────────────────────────────────────────
+        "comb_catalan" => typed(params, tools::combinatorics::comb_catalan),
+        "comb_catalan_table" => typed(params, tools::combinatorics::comb_catalan_table),
+        "comb_cycle_decomposition" => typed(params, tools::combinatorics::comb_cycle_decomposition),
+        "comb_min_transpositions" => typed(params, tools::combinatorics::comb_min_transpositions),
+        "comb_derangement" => typed(params, tools::combinatorics::comb_derangement),
+        "comb_derangement_probability" => {
+            typed(params, tools::combinatorics::comb_derangement_probability)
+        }
+        "comb_grid_paths" => typed(params, tools::combinatorics::comb_grid_paths),
+        "comb_binomial" => typed(params, tools::combinatorics::comb_binomial),
+        "comb_multinomial" => typed(params, tools::combinatorics::comb_multinomial),
+        "comb_josephus" => typed(params, tools::combinatorics::comb_josephus),
+        "comb_elimination_order" => typed(params, tools::combinatorics::comb_elimination_order),
+        "comb_linear_extensions" => typed(params, tools::combinatorics::comb_linear_extensions),
+
+        // ── Theory of Vigilance (Grounded) ───────────────────────────────
+        "tov_grounded_signal_strength" => typed(params, tools::tov_grounded::tov_signal_strength),
+        "tov_grounded_safety_margin" => typed(params, tools::tov_grounded::tov_safety_margin),
+        "tov_grounded_stability_shell" => typed(params, tools::tov_grounded::tov_stability_shell),
+        "tov_grounded_harm_type" => typed(params, tools::tov_grounded::tov_harm_type),
+        "tov_grounded_meta_vigilance" => typed(params, tools::tov_grounded::tov_meta_vigilance),
+        "tov_grounded_eka_intelligence" => typed(params, tools::tov_grounded::tov_eka_intelligence),
+        "tov_grounded_magic_numbers" => typed(params, tools::tov_grounded::tov_magic_numbers),
+
         // ====================================================================
         // Unknown command
         // ====================================================================
@@ -2883,6 +2908,8 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "engram": ["engram_search", "engram_search_decay", "engram_peek", "engram_stats", "engram_find_duplicates", "engram_decay_score", "engram_ingest", "engram_by_source"],
             "ghost": ["ghost_boundary_check", "ghost_mode_info", "ghost_category_policy", "ghost_scan_pii", "ghost_scrub_fields"],
             "pharma_rd": ["pharma_taxonomy_summary", "pharma_lookup_transfer", "pharma_transfer_matrix", "pharma_strongest_transfers", "pharma_weakest_transfers", "pharma_symbol_coverage", "pharma_pipeline_stage", "pharma_classify_generators"],
+            "combinatorics": ["comb_catalan", "comb_catalan_table", "comb_cycle_decomposition", "comb_min_transpositions", "comb_derangement", "comb_derangement_probability", "comb_grid_paths", "comb_binomial", "comb_multinomial", "comb_josephus", "comb_elimination_order", "comb_linear_extensions"],
+            "tov_grounded": ["tov_grounded_signal_strength", "tov_grounded_safety_margin", "tov_grounded_stability_shell", "tov_grounded_harm_type", "tov_grounded_meta_vigilance", "tov_grounded_eka_intelligence", "tov_grounded_magic_numbers"],
         }
     });
 

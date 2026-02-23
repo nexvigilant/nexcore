@@ -455,3 +455,11 @@ pub use ghost::*;
 // Pharma R&D: predictive taxonomy, cross-domain transfer, Chomsky classification
 pub mod pharma_rd;
 pub use pharma_rd::*;
+
+// Combinatorics: Dudeney-derived algorithms (Catalan, derangement, Josephus, grid paths)
+pub mod combinatorics;
+pub use combinatorics::*;
+
+// Theory of Vigilance (Grounded): signal strength, safety margin, stability shells
+pub mod tov_grounded;
+pub use tov_grounded::*;

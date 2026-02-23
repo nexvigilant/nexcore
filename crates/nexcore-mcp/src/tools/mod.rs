@@ -481,3 +481,9 @@ pub mod ghost;
 
 // Pharma R&D: taxonomy, transfer confidence, pipeline stages, Chomsky classification
 pub mod pharma_rd;
+
+// Combinatorics: Catalan, derangement, cycle decomposition, Josephus, grid paths, linear extensions
+pub mod combinatorics;
+
+// Theory of Vigilance (Grounded): signal strength, safety margin, stability shells, harm types
+pub mod tov_grounded;

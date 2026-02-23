@@ -1,0 +1,23 @@
+
+[package]
+name = "stem-number-theory"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Classical number theory: primes, arithmetic functions, factorization"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nexvigilant/stem"
+keywords = ["number-theory", "primes", "factorization", "mathematics"]
+categories = ["science", "mathematics"]
+publish = true
+
+[dependencies]
+nexcore-error = { workspace = true }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+stem-core = { version = "0.1.0", path = "../stem-core", registry = "nexcore" }
+serde = { version = "1.0.204", features = ["derive"] }
+
+[dev-dependencies]
+
+[lints]
+workspace = true

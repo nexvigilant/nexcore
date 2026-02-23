@@ -1,0 +1,22 @@
+[package]
+name = "nexcore-rh-proofs"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Type-level Riemann Hypothesis proof infrastructure via Curry-Howard correspondence"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nexvigilant/nexcore"
+keywords = ["riemann-hypothesis", "proof", "curry-howard", "number-theory"]
+categories = ["science", "mathematics"]
+publish = true
+
+[dependencies]
+nexcore-error = { workspace = true }
+nexcore-tov-proofs = { workspace = true }
+nexcore-zeta = { workspace = true }
+stem-number-theory = { workspace = true }
+nexcore-lex-primitiva = { workspace = true }
+serde = { workspace = true }
+
+[lints]
+workspace = true

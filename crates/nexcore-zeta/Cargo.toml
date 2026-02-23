@@ -1,0 +1,21 @@
+[package]
+name = "nexcore-zeta"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Riemann Zeta function and L-function computation"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nexvigilant/nexcore"
+keywords = ["zeta", "riemann", "number-theory", "mathematics"]
+categories = ["science", "mathematics"]
+publish = true
+
+[dependencies]
+nexcore-error = { workspace = true }
+stem-complex = { workspace = true }
+stem-number-theory = { workspace = true }
+nexcore-lex-primitiva = { workspace = true }
+serde = { workspace = true }
+
+[lints]
+workspace = true

@@ -83,10 +83,12 @@ prima-pipeline = { path = "crates/prima-pipeline" }
 # Internal Workspace Dependencies (NexCore)
 academy-forge = { path = "crates/academy-forge" }
 antitransformer = { path = "crates/antitransformer" }
+borrow-miner = { path = "crates/borrow-miner" }
 core-true = { path = "crates/core-true" }
 counter-awareness = { path = "crates/counter-awareness" }
 disney-loop = { path = "crates/disney-loop" }
 grounded = { path = "crates/grounded" }
+integrity-calc = { path = "crates/integrity-calc" }
 nexcloud = { path = "crates/nexcloud" }
 nexcore-aggregate = { path = "crates/nexcore-aggregate" }
 nexcore-algovigilance = { path = "crates/nexcore-algovigilance" }
@@ -94,7 +96,9 @@ nexcore-anatomy = { path = "crates/nexcore-anatomy" }
 nexcore-antibodies = { path = "crates/nexcore-antibodies" }
 nexcore-api = { path = "crates/nexcore-api" }
 nexcore-audio = { path = "crates/nexcore-audio" }
+nexcore-bicone = { path = "crates/nexcore-bicone" }
 nexcore-brain = { path = "crates/nexcore-brain" }
+nexcore-build-orchestrator = { path = "crates/nexcore-build-orchestrator" }
 nexcore-browser = { path = "crates/nexcore-browser" }
 nexcore-caesura = { path = "crates/nexcore-caesura" }
 nexcore-cardiovascular = { path = "crates/nexcore-cardiovascular" }
@@ -125,6 +129,8 @@ nexcore-engram = { path = "crates/nexcore-engram" }
 nexcore-error = { path = "crates/nexcore-error" }
 nexcore-error-derive = { path = "crates/nexcore-error-derive" }
 nexcore-faers-etl = { path = "crates/nexcore-faers-etl" }
+nexcore-fhir = { path = "crates/nexcore-fhir" }
+nexcore-firebase = { path = "crates/nexcore-firebase" }
 nexcore-forge-strategy = { path = "crates/nexcore-forge-strategy" }
 nexcore-fs = { path = "crates/nexcore-fs" }
 nexcore-ghost = { path = "crates/nexcore-ghost" }
@@ -153,6 +159,7 @@ nexcore-model-checker = { path = "crates/nexcore-model-checker" }
 nexcore-muscular = { path = "crates/nexcore-muscular" }
 nexcore-nervous = { path = "crates/nexcore-nervous" }
 nexcore-notebooklm = { path = "crates/nexcore-notebooklm" }
+nexcore-openfda = { path = "crates/nexcore-openfda" }
 nexcore-orchestration = { path = "crates/nexcore-orchestration" }
 nexcore-oracle = { path = "crates/nexcore-oracle" }
 nexcore-organize = { path = "crates/nexcore-organize" }
@@ -172,6 +179,7 @@ nexcore-pvdsl = { path = "crates/nexcore-pvdsl" }
 nexcore-pvos = { path = "crates/nexcore-pvos" }
 nexcore-registry = { path = "crates/nexcore-registry" }
 nexcore-renderer = { path = "crates/nexcore-renderer" }
+nexcore-rh-proofs = { path = "crates/nexcore-rh-proofs" }
 nexcore-reproductive = { path = "crates/nexcore-reproductive" }
 nexcore-respiratory = { path = "crates/nexcore-respiratory" }
 nexcore-ribosome = { path = "crates/nexcore-ribosome" }
@@ -182,6 +190,7 @@ nexcore-signal-types = { path = "crates/nexcore-signal-types" }
 nexcore-skeletal = { path = "crates/nexcore-skeletal" }
 nexcore-skill-compiler = { path = "crates/nexcore-skill-compiler" }
 nexcore-skill-exec = { path = "crates/nexcore-skill-exec" }
+nexcore-skills-engine = { path = "crates/nexcore-skills-engine" }
 nexcore-social = { path = "crates/nexcore-social" }
 nexcore-sop-anatomy = { path = "crates/nexcore-sop-anatomy" }
 nexcore-softrender = { path = "crates/nexcore-softrender" }
@@ -205,6 +214,8 @@ nexcore-vigil = { path = "crates/nexcore-vigil" }
 nexcore-vigilance = { path = "crates/nexcore-vigilance" }
 nexcore-viz = { path = "crates/nexcore-viz" }
 nexcore-word = { path = "crates/nexcore-word" }
+nexcore-zeta = { path = "crates/nexcore-zeta" }
+nucli = { path = "crates/nucli" }
 primitive-innovation = { path = "crates/primitive-innovation" }
 pvos-primitive-expansion = { path = "crates/pvos-primitive-expansion" }
 # Package renamed to nexcore-signal-pipeline, consumers import as `signal`
@@ -215,7 +226,10 @@ vr-tenant = { path = "crates/vr-tenant" }
 
 # Internal Workspace Dependencies (Stem)
 stem = { path = "crates/stem" }
+stem-complex = { path = "crates/stem-complex" }
 stem-math = { path = "crates/stem-math" }
+stem-phys = { path = "crates/stem-phys" }
+stem-number-theory = { path = "crates/stem-number-theory" }
 stem-topology = { path = "crates/stem-topology" }
 
 [workspace.lints.rust]

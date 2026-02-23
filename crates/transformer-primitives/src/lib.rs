@@ -4,7 +4,7 @@
 /// Transform: #op_name (stub implementation)
 pub fn transform_positional_encoding(
     df: polars::prelude::LazyFrame,
-) -> anyhow::Result<polars::prelude::LazyFrame> {
+) -> nexcore_error::Result<polars::prelude::LazyFrame> {
     tracing::warn!(
         stage = "positional-encoding",
         operation = "Map",
@@ -15,7 +15,7 @@ pub fn transform_positional_encoding(
 /// Transform: #op_name (stub implementation)
 pub fn transform_qkv_projection(
     df: polars::prelude::LazyFrame,
-) -> anyhow::Result<polars::prelude::LazyFrame> {
+) -> nexcore_error::Result<polars::prelude::LazyFrame> {
     tracing::warn!(
         stage = "qkv-projection",
         operation = "Map",
@@ -26,7 +26,7 @@ pub fn transform_qkv_projection(
 /// Transform: #op_name (stub implementation)
 pub fn transform_attention_scores(
     df: polars::prelude::LazyFrame,
-) -> anyhow::Result<polars::prelude::LazyFrame> {
+) -> nexcore_error::Result<polars::prelude::LazyFrame> {
     tracing::warn!(
         stage = "attention-scores",
         operation = "Map",
@@ -37,7 +37,7 @@ pub fn transform_attention_scores(
 /// Transform: #op_name (stub implementation)
 pub fn transform_softmax_normalize(
     df: polars::prelude::LazyFrame,
-) -> anyhow::Result<polars::prelude::LazyFrame> {
+) -> nexcore_error::Result<polars::prelude::LazyFrame> {
     tracing::warn!(
         stage = "softmax-normalize",
         operation = "Map",
@@ -48,7 +48,7 @@ pub fn transform_softmax_normalize(
 /// Transform: aggregate
 pub fn transform_weighted_values(
     df: polars::prelude::LazyFrame,
-) -> anyhow::Result<polars::prelude::LazyFrame> {
+) -> nexcore_error::Result<polars::prelude::LazyFrame> {
     use polars::prelude::*;
     tracing::info!(stage = "weighted-values", "Aggregating data");
     let aggregated = df
@@ -59,7 +59,7 @@ pub fn transform_weighted_values(
 /// Transform: #op_name (stub implementation)
 pub fn transform_residual_connection(
     df: polars::prelude::LazyFrame,
-) -> anyhow::Result<polars::prelude::LazyFrame> {
+) -> nexcore_error::Result<polars::prelude::LazyFrame> {
     tracing::warn!(
         stage = "residual-connection",
         operation = "Map",
@@ -70,7 +70,7 @@ pub fn transform_residual_connection(
 /// Transform: #op_name (stub implementation)
 pub fn transform_feed_forward(
     df: polars::prelude::LazyFrame,
-) -> anyhow::Result<polars::prelude::LazyFrame> {
+) -> nexcore_error::Result<polars::prelude::LazyFrame> {
     tracing::warn!(
         stage = "feed-forward",
         operation = "Map",
@@ -79,7 +79,7 @@ pub fn transform_feed_forward(
     Ok(df)
 }
 /// Sink: #sink_type_str (stub implementation)
-pub async fn sink_token_prediction(df: polars::prelude::LazyFrame) -> anyhow::Result<u64> {
+pub async fn sink_token_prediction(df: polars::prelude::LazyFrame) -> nexcore_error::Result<u64> {
     tracing::warn!(
         stage = "token-prediction",
         sink_type = "JsonFile",

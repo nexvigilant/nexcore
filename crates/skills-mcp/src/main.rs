@@ -4,7 +4,7 @@
 //! - stdio (default): Standard MCP stdio transport
 //! - `--socket <path>`: Unix socket daemon mode for hot-reload
 
-use anyhow::Result;
+use nexcore_error::Result;
 use rmcp::ServiceExt;
 use rmcp::transport::stdio;
 use skills_mcp::SkillsMcpServer;

@@ -27,7 +27,7 @@ pub mod ndc;
 pub mod spatial_bridge;
 pub mod types;
 
-use anyhow::{Context, Result};
+use nexcore_error::{Context, Result};
 use nexcore_vigilance::pv::faers::parse_quarterly_linked;
 use nexcore_vigilance::pv::signals::batch::{
     BatchContingencyTables, CompleteSignalResult, batch_complete_parallel,
@@ -481,7 +481,7 @@ fn extract_counts_column(df: &DataFrame) -> Result<Vec<u64>> {
     if let Ok(c) = n_col.i64() {
         return Ok(c.iter().map(|v| v.unwrap_or(0) as u64).collect());
     }
-    anyhow::bail!("'n' column must be u32, u64, or i64")
+    nexcore_error::bail!("'n' column must be u32, u64, or i64")
 }
 
 fn compute_marginal_totals(

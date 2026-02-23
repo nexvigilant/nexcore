@@ -89,7 +89,7 @@ impl Source for WebhookSource {
         "webhook"
     }
 
-    async fn run(&self) -> anyhow::Result<()> {
+    async fn run(&self) -> nexcore_error::Result<()> {
         // Webhook needs external access by design — configurable via WEBHOOK_BIND_ADDR
         let bind_host = std::env::var("WEBHOOK_BIND_ADDR").unwrap_or_else(|_| "127.0.0.1".into());
         let addr = format!("{}:{}", bind_host, self.port);

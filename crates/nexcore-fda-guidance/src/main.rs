@@ -76,7 +76,7 @@ const FDA_JSON_URL: &str =
 
 #[cfg(feature = "cli")]
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> nexcore_error::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
@@ -95,7 +95,7 @@ async fn main() -> anyhow::Result<()> {
             let response = client.get(FDA_JSON_URL).send().await?;
             let status_code = response.status();
             if !status_code.is_success() {
-                anyhow::bail!("FDA returned HTTP {status_code}");
+                nexcore_error::bail!("FDA returned HTTP {status_code}");
             }
 
             let raw_json = response.text().await?;

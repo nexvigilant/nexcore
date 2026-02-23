@@ -12,7 +12,7 @@ name = "mcp-stdio-client"
 path = "src/main.rs"
 
 [dependencies]
-anyhow = { version = "1.0.86" }
+nexcore-error = { workspace = true }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 tokio = { version = "1.38.0", features = ["full"] }

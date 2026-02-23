@@ -5,7 +5,7 @@
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use anyhow::Result;
+use nexcore_error::Result;
 
 use toml_edit::{DocumentMut, Item, value};
 

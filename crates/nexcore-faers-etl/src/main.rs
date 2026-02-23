@@ -22,7 +22,7 @@
 //! guardian-faers-etl -vvv
 //! ```
 
-use anyhow::{Context, Result};
+use nexcore_error::{Context, Result};
 use clap::Parser;
 #[allow(unused_imports)]
 use tracing::{error, info, instrument, warn};

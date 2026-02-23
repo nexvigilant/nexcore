@@ -27,6 +27,29 @@ impl Default for EnergyConfig {
     }
 }
 
+/// Endocrine (hormone) subsystem configuration.
+///
+/// Tier: T2-C (N Quantity — hormone levels and half-lives)
+#[derive(Debug, Clone)]
+pub struct EndocrineConfig {
+    /// Baseline cortisol level.
+    pub base_cortisol: f64,
+    /// Baseline dopamine level.
+    pub base_dopamine: f64,
+    /// Baseline adrenaline level.
+    pub base_adrenaline: f64,
+}
+
+impl Default for EndocrineConfig {
+    fn default() -> Self {
+        Self {
+            base_cortisol: 0.1,
+            base_dopamine: 0.5,
+            base_adrenaline: 0.0,
+        }
+    }
+}
+
 /// System configuration loaded from defaults (or future TOML).
 ///
 /// Tier: T2-C (π Persistence + μ Mapping — persistent config mapping)
@@ -42,6 +65,8 @@ pub struct SystemConfig {
     pub trust: TrustOsConfig,
     /// Energy subsystem configuration.
     pub energy: EnergyConfig,
+    /// Endocrine subsystem configuration.
+    pub endocrine: EndocrineConfig,
 }
 
 /// A service definition for boot-time registration.
@@ -93,6 +118,7 @@ impl Default for SystemConfig {
             security: SecurityConfig::default(),
             trust: TrustOsConfig::default(),
             energy: EnergyConfig::default(),
+            endocrine: EndocrineConfig::default(),
         }
     }
 }

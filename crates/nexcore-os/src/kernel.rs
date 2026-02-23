@@ -90,9 +90,11 @@ pub struct NexCoreOs<P: Platform> {
     users: UserManager,
     /// Energy token pool (ATP/ADP metabolic tracking).
     energy: nexcore_energy::TokenPool,
+    /// Endocrine system (behavioral state / Cortisol/Dopamine/Adrenaline).
+    endocrine: nexcore_hormones::EndocrineState,
     /// Guardian bridge (homeostasis file integration).
     guardian: crate::guardian_bridge::GuardianBridge,
-    /// Bayesian trust engine — feeds STOS guard gates (Layer 4).
+    /// Trust engine — feeds STOS guard gates (Layer 4).
     trust: TrustEngine,
     /// System configuration (boot config, service definitions, trust thresholds).
     config: SystemConfig,
@@ -154,6 +156,7 @@ impl<P: Platform> NexCoreOs<P> {
             secure_boot: SecureBootChain::new(policy),
             users: UserManager::new(),
             energy: nexcore_energy::TokenPool::new(config.energy.initial_budget),
+            endocrine: nexcore_hormones::EndocrineState::load(),
             guardian: crate::guardian_bridge::GuardianBridge::new().unwrap_or_default(),
             trust: TrustEngine::new(),
             config,
@@ -435,6 +438,9 @@ impl<P: Platform> NexCoreOs<P> {
         }
 
         // ── Security Heartbeat (Guardian homeostasis) ──────────────
+
+        // Advance the full-scale Guardian homeostasis loop
+        self.security.tick();
 
         // Phase 1: Auto-quarantine services with excessive threats
         let service_ids: Vec<_> = self.services.startup_order().iter().map(|s| s.id).collect();
@@ -887,6 +893,18 @@ impl<P: Platform> NexCoreOs<P> {
     pub fn energy_mut(&mut self) -> &mut nexcore_energy::TokenPool {
         &mut self.energy
     }
+
+    /// Get the endocrine system.
+    pub fn endocrine(&self) -> &nexcore_hormones::EndocrineState {
+        &self.endocrine
+    }
+
+    /// Get a mutable reference to the endocrine system.
+    pub fn endocrine_mut(&mut self) -> &mut nexcore_hormones::EndocrineState {
+        &mut self.endocrine
+    }
+
+    /// Get the persistence engine.
 
     /// Create the initial device owner account.
     ///

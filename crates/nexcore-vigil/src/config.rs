@@ -1,4 +1,4 @@
-use anyhow::Result;
+use nexcore_error::Result;
 use serde::Deserialize;
 use std::path::PathBuf;
 

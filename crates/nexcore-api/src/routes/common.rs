@@ -57,8 +57,8 @@ impl IntoResponse for ApiError {
 pub type ApiResult<T> = Result<Json<T>, ApiError>;
 
 /// Convert anyhow errors to API errors
-impl From<anyhow::Error> for ApiError {
-    fn from(err: anyhow::Error) -> Self {
+impl From<nexcore_error::NexError> for ApiError {
+    fn from(err: nexcore_error::NexError) -> Self {
         ApiError::new("INTERNAL_ERROR", err.to_string())
     }
 }

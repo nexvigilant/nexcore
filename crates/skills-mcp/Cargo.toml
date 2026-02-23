@@ -12,7 +12,7 @@ name = "skills-mcp"
 path = "src/main.rs"
 
 [dependencies]
-anyhow = { workspace = true }
+nexcore-error = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }

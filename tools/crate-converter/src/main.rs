@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, bail};
+use nexcore_error::{Context, Result, bail};
 use clap::Parser;
 use std::path::PathBuf;
 use toml_edit::DocumentMut;
@@ -118,7 +118,7 @@ fn convert_all_crates(
 
         let cargo_path = entry.path();
         let crate_dir = cargo_path.parent().ok_or_else(|| {
-            anyhow::anyhow!(
+            nexcore_error::nexerror!(
                 "Cannot determine parent directory of {}",
                 cargo_path.display()
             )

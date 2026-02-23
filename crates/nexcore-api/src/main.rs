@@ -7,7 +7,7 @@ use std::sync::Arc;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> nexcore_error::Result<()> {
     // Initialize tracing
     tracing_subscriber::registry()
         .with(

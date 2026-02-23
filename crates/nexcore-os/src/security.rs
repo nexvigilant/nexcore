@@ -370,11 +370,21 @@ pub struct SecurityMonitor {
     pamp_count: u64,
     /// Total DAMP events recorded.
     damp_count: u64,
+    /// Guardian homeostasis loop instance
+    guardian_loop: crate::guardian::homeostasis::HomeostasisLoop,
+    /// Tokio runtime to drive the async Guardian loop
+    rt: tokio::runtime::Runtime,
 }
 
 impl SecurityMonitor {
     /// Create a new security monitor.
     pub fn new() -> Self {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("Failed to build tokio runtime for SecurityMonitor");
+        let guardian_loop = crate::guardian::create_monitoring_loop();
+        
         Self {
             threats: Vec::new(),
             level: SecurityLevel::Green,
@@ -383,6 +393,8 @@ impl SecurityMonitor {
             pending_responses: Vec::new(),
             pamp_count: 0,
             damp_count: 0,
+            guardian_loop,
+            rt,
         }
     }
 
@@ -495,13 +507,45 @@ impl SecurityMonitor {
         }
 
         // Record the threat
-        self.record_threat(severity, description, source);
+        self.record_threat(severity, description.clone(), source);
+
+        // Inject signal into the Guardian Homeostasis Loop
+        let g_level = match severity {
+            ThreatSeverity::Info => crate::guardian::sensing::ThreatLevel::Info,
+            ThreatSeverity::Low => crate::guardian::sensing::ThreatLevel::Low,
+            ThreatSeverity::Medium => crate::guardian::sensing::ThreatLevel::Medium,
+            ThreatSeverity::High => crate::guardian::sensing::ThreatLevel::High,
+            ThreatSeverity::Critical => crate::guardian::sensing::ThreatLevel::Critical,
+        };
+        
+        let signal_source = match pattern {
+            ThreatPattern::External(_) => crate::guardian::sensing::SignalSource::Pamp {
+                source_id: "os".to_string(),
+                vector: "threat".to_string(),
+            },
+            ThreatPattern::Internal(_) => crate::guardian::sensing::SignalSource::Damp {
+                subsystem: "os".to_string(),
+                damage_type: "damage".to_string(),
+            },
+        };
+        
+        let signal = crate::guardian::sensing::ThreatSignal::new(
+            description,
+            g_level,
+            signal_source
+        );
+        self.guardian_loop.inject_signal(signal);
 
         // Determine and queue response
         let response = self.assess_response();
         if response != SecurityResponse::Monitor {
             self.pending_responses.push(response);
         }
+    }
+
+    /// Advance the Guardian homeostasis loop.
+    pub fn tick(&mut self) {
+        let _result = self.rt.block_on(self.guardian_loop.tick());
     }
 
     /// Assess what response the current security state demands.

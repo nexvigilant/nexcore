@@ -75,8 +75,8 @@ pub struct VocabSkillMap {
 
 impl VocabSkillMap {
     /// Load from JSON file
-    pub fn from_file(path: impl AsRef<std::path::Path>) -> anyhow::Result<Self> {
-        use anyhow::Context;
+    pub fn from_file(path: impl AsRef<std::path::Path>) -> nexcore_error::Result<Self> {
+        use nexcore_error::Context;
         let path = path.as_ref();
         let content = std::fs::read_to_string(path)
             .context(format!("Failed to read vocab map: {}", path.display()))?;
@@ -86,8 +86,8 @@ impl VocabSkillMap {
     }
 
     /// Load from default path (~/.claude/implicit/vocab_skill_map.json)
-    pub fn load_default() -> anyhow::Result<Self> {
-        use anyhow::Context;
+    pub fn load_default() -> nexcore_error::Result<Self> {
+        use nexcore_error::Context;
         let home = std::env::var("HOME").context("HOME env not set")?;
         let path = format!("{}/.claude/implicit/vocab_skill_map.json", home);
 

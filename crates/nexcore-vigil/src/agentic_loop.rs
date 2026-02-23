@@ -796,7 +796,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_loop_tick() -> anyhow::Result<()> {
+    async fn test_loop_tick() -> nexcore_error::Result<()> {
         let config = LoopConfig::default();
         let mut loop_ctrl = AgenticLoop::new(config)
             .with_pv_sensors()

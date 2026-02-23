@@ -42,7 +42,7 @@ impl RenderBackend {
         commands: &[DisplayCommand],
         bg_color: Color,
         text_renderer: &mut TextRenderer,
-    ) -> anyhow::Result<()> {
+    ) -> nexcore_error::Result<()> {
         match self {
             Self::Custom(r) => r.render(commands, bg_color, text_renderer),
             Self::Vello(r) => r.render(commands, bg_color, text_renderer),
@@ -63,10 +63,10 @@ impl RenderBackend {
     /// # Errors
     /// Returns error if GPU readback or PNG encoding fails.
     /// Only supported on the Vello backend.
-    pub fn capture_to_png(&self) -> anyhow::Result<Vec<u8>> {
+    pub fn capture_to_png(&self) -> nexcore_error::Result<Vec<u8>> {
         match self {
             Self::Vello(r) => r.capture_to_png(),
-            Self::Custom(_) => Err(anyhow::anyhow!(
+            Self::Custom(_) => Err(nexcore_error::nexerror!(
                 "Screenshot not supported on custom backend"
             )),
         }

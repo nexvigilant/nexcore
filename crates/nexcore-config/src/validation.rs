@@ -1,6 +1,6 @@
 //! Configuration validation traits and utilities
 
-use anyhow::{anyhow, Result};
+use nexcore_error::{nexerror, Result};
 use std::path::Path;
 
 /// Validation trait for configuration types
@@ -10,7 +10,7 @@ pub trait Validate {
 
     /// Validate with additional context
     fn validate_with_context(&self, context: &str) -> Result<()> {
-        self.validate().map_err(|e| anyhow!("{}: {}", context, e))
+        self.validate().map_err(|e| nexerror!("{}: {}", context, e))
     }
 }
 
@@ -48,12 +48,12 @@ impl Validate for crate::claude::McpServerConfig {
                 // Check if command exists (if it's an absolute path)
                 let cmd_path = Path::new(command);
                 if cmd_path.is_absolute() && !cmd_path.exists() {
-                    return Err(anyhow!("MCP server command does not exist: {}", command));
+                    return Err(nexerror!("MCP server command does not exist: {}", command));
                 }
 
                 // Validate no suspicious command patterns
                 if command.contains("..") || command.contains("~") {
-                    return Err(anyhow!(
+                    return Err(nexerror!(
                         "MCP server command contains suspicious path: {}",
                         command
                     ));
@@ -73,7 +73,7 @@ impl Validate for crate::claude::McpServerConfig {
                 // Validate args don't contain injection patterns
                 for arg in args {
                     if arg.contains(";") || arg.contains("&&") || arg.contains("|") {
-                        return Err(anyhow!(
+                        return Err(nexerror!(
                             "MCP server arg contains suspicious pattern: {}",
                             arg
                         ));
@@ -99,7 +99,7 @@ impl Validate for crate::gemini::HookDefinition {
     fn validate(&self) -> Result<()> {
         // Validate hook command exists
         if !self.command.exists() {
-            return Err(anyhow!(
+            return Err(nexerror!(
                 "Hook command does not exist: {}",
                 self.command.display()
             ));
@@ -107,7 +107,7 @@ impl Validate for crate::gemini::HookDefinition {
 
         // Validate timeout is reasonable
         if self.timeout == 0 {
-            return Err(anyhow!("Hook timeout must be greater than 0"));
+            return Err(nexerror!("Hook timeout must be greater than 0"));
         }
 
         if self.timeout > 300_000 {
@@ -126,16 +126,16 @@ impl Validate for crate::git::GitConfig {
     fn validate(&self) -> Result<()> {
         // Validate user configuration
         if self.user.name.is_empty() {
-            return Err(anyhow!("Git user.name is required"));
+            return Err(nexerror!("Git user.name is required"));
         }
 
         if self.user.email.is_empty() {
-            return Err(anyhow!("Git user.email is required"));
+            return Err(nexerror!("Git user.email is required"));
         }
 
         // Validate email format (basic check)
         if !self.user.email.contains('@') {
-            return Err(anyhow!("Git user.email must be a valid email address"));
+            return Err(nexerror!("Git user.email must be a valid email address"));
         }
 
         // Validate credential helpers

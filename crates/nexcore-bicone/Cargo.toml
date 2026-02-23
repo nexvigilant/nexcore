@@ -6,6 +6,6 @@ description = "Bicone geometry analysis — mathematical extractions from width 
 license = "MIT"
 
 [dependencies]
-anyhow = { workspace = true }
+nexcore-error = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

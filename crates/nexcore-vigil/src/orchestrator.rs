@@ -33,7 +33,7 @@ impl Executor for ExecutorImpl {
         &self,
         action: &str,
         params: serde_json::Value,
-    ) -> anyhow::Result<crate::models::ExecutorResult> {
+    ) -> nexcore_error::Result<crate::models::ExecutorResult> {
         match self {
             Self::Shell(e) => e.execute(action, params).await,
             Self::Notify(e) => e.execute(action, params).await,
@@ -68,7 +68,7 @@ impl Source for SourceImpl {
             Self::GitMonitor(s) => s.name(),
         }
     }
-    async fn run(&self) -> anyhow::Result<()> {
+    async fn run(&self) -> nexcore_error::Result<()> {
         match self {
             Self::Filesystem(s) => s.run().await,
             Self::Webhook(s) => s.run().await,
@@ -119,7 +119,7 @@ impl Friday {
         self.sources.push(source);
     }
 
-    pub async fn run(self) -> anyhow::Result<()> {
+    pub async fn run(self) -> nexcore_error::Result<()> {
         info!("FRIDAY-RS core loop starting");
 
         for source in self.sources {

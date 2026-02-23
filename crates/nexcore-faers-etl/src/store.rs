@@ -5,7 +5,7 @@
 //! - Indexes on drug_name, reaction_pt for fast queries
 //! - Parquet export support
 
-use anyhow::{Context, Result};
+use nexcore_error::{Context, Result};
 use duckdb::{Connection, params};
 use std::path::Path;
 

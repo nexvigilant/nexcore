@@ -50,14 +50,14 @@ impl GeminiClient {
     }
 
     /// Get access token from GCloud ADC
-    async fn get_access_token(&self) -> anyhow::Result<String> {
+    async fn get_access_token(&self) -> nexcore_error::Result<String> {
         let output = tokio::process::Command::new("gcloud")
             .args(["auth", "application-default", "print-access-token"])
             .output()
             .await?;
 
         if !output.status.success() {
-            return Err(anyhow::anyhow!(
+            return Err(nexcore_error::nexerror!(
                 "Failed to get access token: {:?}",
                 output.stderr
             ));
@@ -69,7 +69,7 @@ impl GeminiClient {
 
 #[async_trait]
 impl LLMClient for GeminiClient {
-    async fn invoke(&self, context: &str, event: &Event) -> anyhow::Result<Interaction> {
+    async fn invoke(&self, context: &str, event: &Event) -> nexcore_error::Result<Interaction> {
         info!(model = %self.model, use_vertex = %self.use_vertex, "invoking_gemini");
         let start = Instant::now();
 
@@ -78,7 +78,7 @@ impl LLMClient for GeminiClient {
             let project = self
                 .project_id
                 .as_ref()
-                .ok_or_else(|| anyhow::anyhow!("Project ID required for Vertex AI"))?;
+                .ok_or_else(|| nexcore_error::nexerror!("Project ID required for Vertex AI"))?;
             let token = self.get_access_token().await?;
             let location = if self.model.starts_with("gemini-3") {
                 "global"
@@ -95,7 +95,7 @@ impl LLMClient for GeminiClient {
             let key = self
                 .api_key
                 .as_ref()
-                .ok_or_else(|| anyhow::anyhow!("API key required"))?;
+                .ok_or_else(|| nexcore_error::nexerror!("API key required"))?;
             let url = format!(
                 "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
                 self.model, key
@@ -134,7 +134,7 @@ Available actions:
 
         let response: reqwest::Response = request.send().await?;
         if !response.status().is_success() {
-            return Err(anyhow::anyhow!("API error: {}", response.text().await?));
+            return Err(nexcore_error::nexerror!("API error: {}", response.text().await?));
         }
 
         let resp_json: serde_json::Value = response.json().await?;

@@ -31,7 +31,7 @@ serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 
 # Error handling
-anyhow = { version = "1.0.86" }
+nexcore-error = { workspace = true }
 
 # Logging
 tracing = { version = "0.1.40" }

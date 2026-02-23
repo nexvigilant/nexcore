@@ -18,7 +18,7 @@ use std::sync::{Arc, Barrier};
 use std::thread;
 use tempfile::TempDir;
 
-use anyhow::{Result, anyhow};
+use nexcore_error::{Result, nexerror};
 use nexcore_brain::{
     Artifact, ArtifactMetadata, ArtifactType, BrainError, Correction, Pattern, Preference,
 };
@@ -115,7 +115,7 @@ fn test_missing_parent_directory() -> Result<()> {
     if nonexistent_path.exists() {
         let parent = nonexistent_path
             .parent()
-            .ok_or_else(|| anyhow!("missing_parent_path"))?;
+            .ok_or_else(|| nexerror!("missing_parent_path"))?;
         fs::remove_dir_all(parent).ok();
     }
 
@@ -168,7 +168,7 @@ fn test_concurrent_uuid_generation_no_collisions() -> Result<()> {
         .collect();
 
     for handle in handles {
-        handle.join().map_err(|_| anyhow!("thread_panicked"))?;
+        handle.join().map_err(|_| nexerror!("thread_panicked"))?;
     }
 
     let uuids = all_uuids.lock().unwrap();
@@ -209,7 +209,7 @@ fn test_concurrent_metadata_updates() -> Result<()> {
         .collect();
 
     for handle in handles {
-        handle.join().map_err(|_| anyhow!("thread_panicked"))?;
+        handle.join().map_err(|_| nexerror!("thread_panicked"))?;
     }
 
     let versions = final_versions.lock().unwrap();
@@ -251,7 +251,7 @@ fn test_concurrent_preference_reinforcement() -> Result<()> {
         .collect();
 
     for handle in handles {
-        handle.join().map_err(|_| anyhow!("thread_panicked"))?;
+        handle.join().map_err(|_| nexerror!("thread_panicked"))?;
     }
 
     let results = results.lock().unwrap();
@@ -393,7 +393,7 @@ fn test_empty_file_handling() -> Result<()> {
         serde_json::from_str(&fs::read_to_string(&index_path).unwrap_or_default());
 
     match result {
-        Ok(_) => return Err(anyhow!("empty_string_should_not_parse_as_valid_json")),
+        Ok(_) => return Err(nexerror!("empty_string_should_not_parse_as_valid_json")),
         Err(_) => {
             // Expected - empty string is not valid JSON
         }
@@ -543,7 +543,7 @@ fn test_error_downcasting() -> Result<()> {
     if let BrainError::Io(inner) = brain_error {
         assert_eq!(inner.kind(), std::io::ErrorKind::PermissionDenied);
     } else {
-        return Err(anyhow!("expected_brain_error_io"));
+        return Err(nexerror!("expected_brain_error_io"));
     }
     Ok(())
 }
@@ -674,7 +674,7 @@ fn test_concurrent_artifact_reads() -> Result<()> {
     for handle in handles {
         handle
             .join()
-            .map_err(|_| anyhow!("thread_panicked_during_concurrent_reads"))?;
+            .map_err(|_| nexerror!("thread_panicked_during_concurrent_reads"))?;
     }
     Ok(())
 }
@@ -720,7 +720,7 @@ fn test_concurrent_hash_computation() -> Result<()> {
     for handle in handles {
         handle
             .join()
-            .map_err(|_| anyhow!("thread_panicked_during_concurrent_hashing"))?;
+            .map_err(|_| nexerror!("thread_panicked_during_concurrent_hashing"))?;
     }
 
     let results = results.lock().unwrap();

@@ -2,7 +2,7 @@
 //!
 //! Type-safe representation of `.gemini.json` configuration.
 
-use anyhow::Result;
+use nexcore_error::Result;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -15,7 +15,7 @@ pub struct GeminiConfig {
 impl GeminiConfig {
     /// Load configuration from JSON file
     pub fn from_file(path: &str) -> Result<Self> {
-        use anyhow::Context;
+        use nexcore_error::Context;
         let content = std::fs::read_to_string(path)
             .context(format!("Failed to read Gemini config: {}", path))?;
         let config = serde_json::from_str(&content)

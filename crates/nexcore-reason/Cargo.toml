@@ -12,7 +12,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 nexcore-lex-primitiva = { workspace = true }
 nexcore-foundry = { path = "../nexcore-foundry" }
-anyhow = { workspace = true }
+nexcore-error = { workspace = true }
 
 [dev-dependencies]
 chrono = { workspace = true }

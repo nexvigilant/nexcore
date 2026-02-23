@@ -3,7 +3,7 @@
 //! Uses the model orchestrator to analyze business challenges and identify capability gaps.
 
 use crate::ai::ModelOrchestrator;
-use anyhow::Result;
+use nexcore_error::Result;
 use serde::{Deserialize, Serialize};
 
 /// A capability gap identified in strategic analysis.

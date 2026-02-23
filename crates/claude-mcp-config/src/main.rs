@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-use anyhow::{Result, anyhow};
+use nexcore_error::{Result, nexerror};
 use clap::{Parser, Subcommand};
 use serde_json::{Value, json};
 
@@ -69,7 +69,7 @@ fn main() -> Result<()> {
                 let mut root = load_json(&path)?;
                 let mcp = ensure_object(root.pointer_mut("/mcpServers"));
                 mcp.as_object_mut()
-                    .ok_or_else(|| anyhow!("mcpServers is not an object"))?
+                    .ok_or_else(|| nexerror!("mcpServers is not an object"))?
                     .insert(
                         name.clone(),
                         json!({
@@ -105,12 +105,12 @@ fn main() -> Result<()> {
                 let perms = ensure_object(root.pointer_mut("/permissions"));
                 let allow = perms
                     .as_object_mut()
-                    .ok_or_else(|| anyhow!("permissions is not an object"))?
+                    .ok_or_else(|| nexerror!("permissions is not an object"))?
                     .entry("allow")
                     .or_insert_with(|| Value::Array(Vec::new()));
                 let list = allow
                     .as_array_mut()
-                    .ok_or_else(|| anyhow!("permissions.allow is not an array"))?;
+                    .ok_or_else(|| nexerror!("permissions.allow is not an array"))?;
                 if !list.iter().any(|v| v.as_str() == Some(&pattern)) {
                     list.push(Value::String(pattern.clone()));
                 }
@@ -142,15 +142,15 @@ fn scope_paths(
 
 fn load_json(path: &PathBuf) -> Result<Value> {
     let text = fs::read_to_string(path)
-        .map_err(|err| anyhow!("failed to read {}: {err}", path.display()))?;
+        .map_err(|err| nexerror!("failed to read {}: {err}", path.display()))?;
     let value = serde_json::from_str(&text)
-        .map_err(|err| anyhow!("invalid json {}: {err}", path.display()))?;
+        .map_err(|err| nexerror!("invalid json {}: {err}", path.display()))?;
     Ok(value)
 }
 
 fn write_json(path: &PathBuf, value: &Value) -> Result<()> {
     let text = serde_json::to_string_pretty(value)?;
-    fs::write(path, text).map_err(|err| anyhow!("failed to write {}: {err}", path.display()))?;
+    fs::write(path, text).map_err(|err| nexerror!("failed to write {}: {err}", path.display()))?;
     Ok(())
 }
 

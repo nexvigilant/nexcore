@@ -31,10 +31,16 @@ pub enum VigilError {
     Llm(String),
 
     #[error("Anyhow error: {0}")]
-    Anyhow(#[from] anyhow::Error),
+    Anyhow(nexcore_error::NexError),
 
     #[error("Unknown error: {0}")]
     Unknown(String),
+}
+
+impl From<nexcore_error::NexError> for VigilError {
+    fn from(err: nexcore_error::NexError) -> Self {
+        VigilError::Anyhow(err)
+    }
 }
 
 pub type Result<T> = std::result::Result<T, VigilError>;

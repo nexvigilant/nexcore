@@ -3,7 +3,7 @@
 //! Forward-only compound discovery pipeline.
 #![forbid(unsafe_code)]
 
-use anyhow::{Context, Result};
+use nexcore_error::{Context, Result};
 use clap::Parser;
 use polars::prelude::*;
 use std::io::{self, BufRead};

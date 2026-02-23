@@ -1,6 +1,6 @@
 //! AI model client implementations.
 
-use anyhow::{Result, anyhow};
+use nexcore_error::{Result, nexerror};
 use async_trait::async_trait;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -43,7 +43,7 @@ impl ClaudeClient {
         let key = api_key
             .or_else(|| env::var("ANTHROPIC_API_KEY").ok())
             .or_else(|| env::var("CLAUDE_API_KEY").ok())
-            .ok_or_else(|| anyhow!("ANTHROPIC_API_KEY not set"))?;
+            .ok_or_else(|| nexerror!("ANTHROPIC_API_KEY not set"))?;
 
         Ok(Self {
             client: Client::new(),
@@ -81,7 +81,7 @@ impl ModelClient for ClaudeClient {
 
         let text = resp["content"][0]["text"]
             .as_str()
-            .ok_or_else(|| anyhow!("Invalid response format from Claude"))?;
+            .ok_or_else(|| nexerror!("Invalid response format from Claude"))?;
 
         Ok(text.to_string())
     }
@@ -102,7 +102,7 @@ impl GeminiClient {
     pub fn new(api_key: Option<String>, model: &str) -> Result<Self> {
         let key = api_key
             .or_else(|| env::var("GEMINI_API_KEY").ok())
-            .ok_or_else(|| anyhow!("GEMINI_API_KEY not set"))?;
+            .ok_or_else(|| nexerror!("GEMINI_API_KEY not set"))?;
 
         Ok(Self {
             client: Client::new(),
@@ -140,7 +140,7 @@ impl ModelClient for GeminiClient {
 
         let text = resp["candidates"][0]["content"]["parts"][0]["text"]
             .as_str()
-            .ok_or_else(|| anyhow!("Invalid response format from Gemini"))?;
+            .ok_or_else(|| nexerror!("Invalid response format from Gemini"))?;
 
         Ok(text.to_string())
     }

@@ -7,7 +7,7 @@ use super::models::{ExecutionResult, Skill};
 use super::perception::PerceptionLayer;
 use super::skill_matcher::SkillMatcher;
 use super::state::SessionStore;
-use anyhow::Result;
+use nexcore_error::Result;
 use std::path::Path;
 
 /// Chain orchestrator agent with 5-phase pipeline.
@@ -63,7 +63,7 @@ impl ChainOrchestratorAgent {
         if let Some(manifold) = &chain.safety_manifold {
             let state = vec![chain.confidence];
             if manifold.distance_to_boundary(&state) < 0.0 {
-                anyhow::bail!(
+                nexcore_error::bail!(
                     "AGENT SAFETY VIOLATION: Execution chain is outside the safety manifold boundary."
                 );
             }

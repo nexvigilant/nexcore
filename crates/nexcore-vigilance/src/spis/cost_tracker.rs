@@ -3,7 +3,7 @@
 //! Wraps GCP cost tracking with STARK project synchronization capabilities.
 
 use crate::cloud::gcp::{CostSummary, CostTracker as GCPTracker};
-use anyhow::Result;
+use nexcore_error::Result;
 
 /// Cost tracker with STARK project synchronization.
 pub struct CostTracker {

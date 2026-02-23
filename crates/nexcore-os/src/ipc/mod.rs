@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Matthew Campion, PharmD; NexVigilant
 // All Rights Reserved. See LICENSE file for details.
 
-//! Synchronous IPC bus using Cytokine typed events.
+//! Synchronous IPC bus using Cytokine typed events and structured ServiceCalls.
 //!
 //! ## Primitive Grounding
 //!
@@ -9,20 +9,32 @@
 //! - μ Mapping: Typed signal matching (family → handlers)
 //! - σ Sequence: FIFO event queue ordering
 //! - N Quantity: Event queue depth tracking
+//! - ∂ Boundary: Capability tokens and caller identity
+
+pub mod call;
+pub mod identity;
+
+pub use call::{ServiceCall, ServiceRequest, ServiceResponse};
+pub use identity::{CallerIdentity, CapabilityToken};
 
 use nexcore_cytokine::{Cytokine, CytokineFamily, Scope, ThreatLevel};
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
+
+use crate::journal::{JournalEntry, Keywords, OsJournal, Severity, Subsystem};
 
 /// Synchronous event bus for inter-service communication.
 ///
-/// Tier: T3 (→ + μ + σ + N)
+/// Tier: T3 (→ + μ + σ + N + ∂)
 ///
-/// Uses `Cytokine` types from the biological signaling crate but operates
-/// synchronously (no async runtime required). Events are queued and drained
-/// during the OS tick loop.
+/// Handles fire-and-forget `Cytokine` events as well as structured
+/// request/response `ServiceCall`s with caller identity and capability tokens.
 pub struct EventBus {
-    /// FIFO event queue.
+    /// FIFO event queue (legacy fire-and-forget).
     queue: VecDeque<Cytokine>,
+    /// Pending service calls waiting for a handler.
+    pending_calls: VecDeque<ServiceCall>,
+    /// Completed responses mapped by call ID.
+    responses: HashMap<String, ServiceResponse>,
     /// Total events emitted since boot.
     total_emitted: u64,
     /// Maximum queue depth (back-pressure).
@@ -36,6 +48,8 @@ impl EventBus {
     pub fn new(source: impl Into<String>) -> Self {
         Self {
             queue: VecDeque::new(),
+            pending_calls: VecDeque::new(),
+            responses: HashMap::new(),
             total_emitted: 0,
             max_depth: 1024,
             source: source.into(),
@@ -52,6 +66,67 @@ impl EventBus {
         self.queue.push_back(signal);
         self.total_emitted += 1;
         true
+    }
+
+    /// Invoke a service call synchronously (queues the call).
+    ///
+    /// In a fully async/multi-process system this would block or return a Future.
+    /// In our synchronous OS loop, we queue it. For testing/sync processing, we
+    /// can directly return a simulated response if we handle it inline, but for now
+    /// it enters the pending queue.
+    pub fn call(&mut self, call: ServiceCall, journal: &mut OsJournal, tick: u64) -> bool {
+        if self.pending_calls.len() >= self.max_depth {
+            return false;
+        }
+
+        // Journal Integration: Record the IPC call
+        journal.record(
+            JournalEntry::new(
+                Subsystem::Ipc,
+                "call",
+                Severity::Debug,
+                format!("IPC call to {}::{}", call.target_service, call.request.method),
+            )
+            .with_keywords(Keywords::IPC)
+            .with_str("caller", format!("{}", call.caller))
+            .with_str("target", &call.target_service)
+            .with_str("method", &call.request.method)
+            .with_str("call_id", &call.id),
+            tick,
+        );
+
+        self.pending_calls.push_back(call);
+        self.total_emitted += 1;
+        true
+    }
+
+    /// Fulfill a pending call with a response.
+    pub fn resolve_call(&mut self, call_id: &str, response: ServiceResponse, journal: &mut OsJournal, tick: u64) {
+        let severity = if response.success { Severity::Debug } else { Severity::Warning };
+        journal.record(
+            JournalEntry::new(
+                Subsystem::Ipc,
+                "response",
+                severity,
+                format!("IPC response for call {}", call_id),
+            )
+            .with_keywords(Keywords::IPC)
+            .with_str("call_id", call_id)
+            .with_bool("success", response.success),
+            tick,
+        );
+
+        self.responses.insert(call_id.to_string(), response);
+    }
+
+    /// Retrieve a response for a given call ID (if ready).
+    pub fn get_response(&mut self, call_id: &str) -> Option<ServiceResponse> {
+        self.responses.remove(call_id)
+    }
+
+    /// Drain pending service calls.
+    pub fn drain_calls(&mut self) -> Vec<ServiceCall> {
+        self.pending_calls.drain(..).collect()
     }
 
     /// Emit a service state change event.
@@ -98,19 +173,24 @@ impl EventBus {
         self.queue.front()
     }
 
-    /// Number of pending events.
+    /// Number of pending events (legacy cytokines).
     pub fn pending(&self) -> usize {
         self.queue.len()
     }
+    
+    /// Number of pending service calls.
+    pub fn pending_calls(&self) -> usize {
+        self.pending_calls.len()
+    }
 
-    /// Total events emitted since boot.
+    /// Total events (and calls) emitted since boot.
     pub fn total_emitted(&self) -> u64 {
         self.total_emitted
     }
 
     /// Whether the queue is empty.
     pub fn is_empty(&self) -> bool {
-        self.queue.is_empty()
+        self.queue.is_empty() && self.pending_calls.is_empty()
     }
 }
 
@@ -200,5 +280,38 @@ mod tests {
         let events = bus.drain();
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].name, "shutdown");
+    }
+    
+    #[test]
+    fn service_call_routing() {
+        let mut bus = EventBus::new("test");
+        let mut journal = OsJournal::with_config(1024, 256, Severity::Debug);
+        
+        let req = ServiceRequest::new("ping", serde_json::json!({}));
+        let call = ServiceCall::new(CallerIdentity::System, "network", req)
+            .with_token(CapabilityToken::new("super-secret-token"));
+            
+        let call_id = call.id.clone();
+        
+        // Dispatch call
+        assert!(bus.call(call, &mut journal, 1));
+        assert_eq!(bus.pending_calls(), 1);
+        
+        // Drain calls
+        let mut calls = bus.drain_calls();
+        assert_eq!(calls.len(), 1);
+        let received_call = calls.remove(0);
+        assert_eq!(received_call.target_service, "network");
+        
+        // Resolve response
+        let resp = ServiceResponse::success(serde_json::json!({ "pong": true }));
+        bus.resolve_call(&call_id, resp, &mut journal, 2);
+        
+        // Retrieve response
+        let retrieved = bus.get_response(&call_id).unwrap();
+        assert!(retrieved.success);
+        
+        // Journal verification
+        assert_eq!(journal.total_recorded(), 2);
     }
 }

@@ -7,7 +7,7 @@
 
 use std::path::PathBuf;
 
-use anyhow::Result;
+use nexcore_error::Result;
 use clap::{Parser, Subcommand};
 use tracing_subscriber::EnvFilter;
 

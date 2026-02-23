@@ -55,15 +55,15 @@ pub fn information_entropy(widths: &[f64]) -> (f64, f64) {
 /// let r = cone_asymmetry(&[3.0, 6.0, 3.0, 2.0, 1.0, 4.0, 1.0], 4).unwrap();
 /// assert!(r > 0.0);
 /// ```
-pub fn cone_asymmetry(widths: &[f64], singularity_idx: usize) -> anyhow::Result<f64> {
-    anyhow::ensure!(
+pub fn cone_asymmetry(widths: &[f64], singularity_idx: usize) -> nexcore_error::Result<f64> {
+    nexcore_error::ensure!(
         singularity_idx < widths.len(),
         "singularity_idx {singularity_idx} out of bounds (len={})",
         widths.len()
     );
     let upper: f64 = widths[..singularity_idx].iter().sum();
     let lower: f64 = widths[singularity_idx + 1..].iter().sum();
-    anyhow::ensure!(
+    nexcore_error::ensure!(
         lower != 0.0,
         "lower-cone mass is zero — asymmetry undefined"
     );
@@ -85,18 +85,18 @@ pub fn convergence_rate(
     widths: &[f64],
     peak_idx: usize,
     singularity_idx: usize,
-) -> anyhow::Result<f64> {
-    anyhow::ensure!(
+) -> nexcore_error::Result<f64> {
+    nexcore_error::ensure!(
         peak_idx < widths.len(),
         "peak_idx {peak_idx} out of bounds (len={})",
         widths.len()
     );
-    anyhow::ensure!(
+    nexcore_error::ensure!(
         singularity_idx < widths.len(),
         "singularity_idx {singularity_idx} out of bounds (len={})",
         widths.len()
     );
-    anyhow::ensure!(
+    nexcore_error::ensure!(
         peak_idx < singularity_idx,
         "peak_idx ({peak_idx}) must be less than singularity_idx ({singularity_idx})"
     );
@@ -146,8 +146,8 @@ pub fn hill_profile(widths: &[f64], k_half: f64, n_hill: f64) -> Vec<HillActivat
 /// let s = spectral_overlap(&[1.0, 0.0], &[1.0, 0.0]).unwrap();
 /// assert!((s - 1.0).abs() < 1e-9);
 /// ```
-pub fn spectral_overlap(a: &[f64], b: &[f64]) -> anyhow::Result<f64> {
-    anyhow::ensure!(
+pub fn spectral_overlap(a: &[f64], b: &[f64]) -> nexcore_error::Result<f64> {
+    nexcore_error::ensure!(
         a.len() == b.len(),
         "slice length mismatch: {} vs {}",
         a.len(),
@@ -156,7 +156,7 @@ pub fn spectral_overlap(a: &[f64], b: &[f64]) -> anyhow::Result<f64> {
     let dot: f64 = a.iter().zip(b.iter()).map(|(x, y)| x * y).sum();
     let norm_a: f64 = a.iter().map(|x| x * x).sum::<f64>().sqrt();
     let norm_b: f64 = b.iter().map(|x| x * x).sum::<f64>().sqrt();
-    anyhow::ensure!(
+    nexcore_error::ensure!(
         norm_a != 0.0 && norm_b != 0.0,
         "zero-norm vector — overlap undefined"
     );
@@ -174,8 +174,8 @@ pub fn spectral_overlap(a: &[f64], b: &[f64]) -> anyhow::Result<f64> {
 /// let d = tool_density(&[6.0, 3.0], &[3.0, 1.0]).unwrap();
 /// assert_eq!(d, vec![2.0, 3.0]);
 /// ```
-pub fn tool_density(tools: &[f64], nodes: &[f64]) -> anyhow::Result<Vec<f64>> {
-    anyhow::ensure!(
+pub fn tool_density(tools: &[f64], nodes: &[f64]) -> nexcore_error::Result<Vec<f64>> {
+    nexcore_error::ensure!(
         tools.len() == nodes.len(),
         "slice length mismatch: {} vs {}",
         tools.len(),
@@ -186,7 +186,7 @@ pub fn tool_density(tools: &[f64], nodes: &[f64]) -> anyhow::Result<Vec<f64>> {
         .zip(nodes.iter())
         .enumerate()
         .map(|(i, (&t, &n))| {
-            anyhow::ensure!(n != 0.0, "nodes[{i}] is zero — density undefined");
+            nexcore_error::ensure!(n != 0.0, "nodes[{i}] is zero — density undefined");
             Ok(t / n)
         })
         .collect()

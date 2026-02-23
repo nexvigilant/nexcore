@@ -255,7 +255,7 @@ impl InferenceEngine {
     ///
     /// # Errors
     ///
-    /// Returns an [`anyhow::Error`] if the DAG contains a link that references
+    /// Returns an [`nexcore_error::NexError`] if the DAG contains a link that references
     /// a node id not present in the node list.
     ///
     /// # Examples
@@ -269,7 +269,7 @@ impl InferenceEngine {
     /// assert_eq!(report.risk_level, nexcore_foundry::analyst::RiskLevel::Low);
     /// assert_eq!(report.confidence, 0.0);
     /// ```
-    pub fn infer(&self) -> Result<IntelligenceReport, anyhow::Error> {
+    pub fn infer(&self) -> Result<IntelligenceReport, nexcore_error::NexError> {
         self.validate_links()?;
 
         let chains = self.find_causal_chains();
@@ -421,18 +421,18 @@ impl InferenceEngine {
     // -----------------------------------------------------------------------
 
     /// Validates that every link endpoint resolves to a known node id.
-    fn validate_links(&self) -> Result<(), anyhow::Error> {
+    fn validate_links(&self) -> Result<(), nexcore_error::NexError> {
         // Collect ids as owned values to avoid double-reference confusion.
         let ids: std::collections::HashSet<NodeId> =
             self.dag.nodes.iter().map(|n| n.id.clone()).collect();
 
         for link in &self.dag.links {
-            anyhow::ensure!(
+            nexcore_error::ensure!(
                 ids.contains(&link.from),
                 "causal link references unknown source node `{}`",
                 link.from
             );
-            anyhow::ensure!(
+            nexcore_error::ensure!(
                 ids.contains(&link.to),
                 "causal link references unknown target node `{}`",
                 link.to

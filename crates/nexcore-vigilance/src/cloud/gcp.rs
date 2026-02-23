@@ -1,6 +1,6 @@
 //! # GCP Cloud Integrations
 
-use anyhow::Result;
+use nexcore_error::Result;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;
@@ -56,7 +56,7 @@ impl CostTracker {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            anyhow::bail!("gcloud billing accounts list failed: {}", stderr);
+            nexcore_error::bail!("gcloud billing accounts list failed: {}", stderr);
         }
 
         let accounts = serde_json::from_slice(&output.stdout)?;
@@ -78,7 +78,7 @@ impl CostTracker {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            anyhow::bail!("gcloud billing projects describe failed: {}", stderr);
+            nexcore_error::bail!("gcloud billing projects describe failed: {}", stderr);
         }
 
         let info: serde_json::Value = serde_json::from_slice(&output.stdout)?;
@@ -113,13 +113,13 @@ impl CostTracker {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            anyhow::bail!("bq query failed: {}", stderr);
+            nexcore_error::bail!("bq query failed: {}", stderr);
         }
 
         let results: serde_json::Value = serde_json::from_slice(&output.stdout)?;
         let row = results
             .get(0)
-            .ok_or_else(|| anyhow::anyhow!("No cost data returned"))?;
+            .ok_or_else(|| nexcore_error::nexerror!("No cost data returned"))?;
 
         Ok(CostSummary {
             period: "current_month".into(),

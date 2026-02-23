@@ -20,7 +20,7 @@ static STORE: OnceLock<Arc<Mutex<GuardianStore>>> = OnceLock::new();
 
 /// Initialize the global store. Must be called once at startup.
 /// Returns an error if neither file-based nor in-memory SQLite can open.
-pub fn init_store() -> anyhow::Result<()> {
+pub fn init_store() -> nexcore_error::Result<()> {
     let db_path = std::env::var("GUARDIAN_DB_PATH").unwrap_or_else(|_| {
         dirs::home_dir()
             .unwrap_or_else(|| PathBuf::from("."))
@@ -131,7 +131,7 @@ fn plan_query_limit(plan: &str) -> i64 {
 
 impl GuardianStore {
     /// Open (or create) the store at the given path
-    pub fn open(db_path: &str) -> anyhow::Result<Self> {
+    pub fn open(db_path: &str) -> nexcore_error::Result<Self> {
         let conn = Connection::open(db_path)?;
         conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;")?;
 
@@ -193,7 +193,7 @@ impl GuardianStore {
         stripe_subscription_id: Option<&str>,
         plan: &str,
         status: &str,
-    ) -> anyhow::Result<()> {
+    ) -> nexcore_error::Result<()> {
         let now = chrono::Utc::now().to_rfc3339();
         let limit = plan_query_limit(plan);
 
@@ -213,7 +213,7 @@ impl GuardianStore {
     }
 
     /// Get subscription by user_id
-    pub fn get_subscription(&self, user_id: &str) -> anyhow::Result<Option<Subscription>> {
+    pub fn get_subscription(&self, user_id: &str) -> nexcore_error::Result<Option<Subscription>> {
         let mut stmt = self.conn.prepare(
             "SELECT user_id, stripe_customer_id, stripe_subscription_id, plan, status,
                     query_limit, queries_used, period_start, period_end, created_at, updated_at
@@ -247,7 +247,7 @@ impl GuardianStore {
     pub fn get_subscription_by_stripe_customer(
         &self,
         stripe_customer_id: &str,
-    ) -> anyhow::Result<Option<Subscription>> {
+    ) -> nexcore_error::Result<Option<Subscription>> {
         let mut stmt = self.conn.prepare(
             "SELECT user_id, stripe_customer_id, stripe_subscription_id, plan, status,
                     query_limit, queries_used, period_start, period_end, created_at, updated_at
@@ -282,7 +282,7 @@ impl GuardianStore {
         &self,
         stripe_customer_id: &str,
         status: &str,
-    ) -> anyhow::Result<()> {
+    ) -> nexcore_error::Result<()> {
         let now = chrono::Utc::now().to_rfc3339();
         self.conn.execute(
             "UPDATE subscriptions SET status = ?1, updated_at = ?2 WHERE stripe_customer_id = ?3",
@@ -296,7 +296,7 @@ impl GuardianStore {
         &self,
         stripe_customer_id: &str,
         plan: &str,
-    ) -> anyhow::Result<()> {
+    ) -> nexcore_error::Result<()> {
         let now = chrono::Utc::now().to_rfc3339();
         let limit = plan_query_limit(plan);
         self.conn.execute(
@@ -307,7 +307,7 @@ impl GuardianStore {
     }
 
     /// Increment usage counter. Returns (queries_used, query_limit) after increment.
-    pub fn increment_usage(&self, user_id: &str) -> anyhow::Result<(i64, i64)> {
+    pub fn increment_usage(&self, user_id: &str) -> nexcore_error::Result<(i64, i64)> {
         let now = chrono::Utc::now().to_rfc3339();
         self.conn.execute(
             "UPDATE subscriptions SET queries_used = queries_used + 1, updated_at = ?1 WHERE user_id = ?2",
@@ -324,7 +324,7 @@ impl GuardianStore {
     }
 
     /// Check if user has remaining queries
-    pub fn check_rate_limit(&self, user_id: &str) -> anyhow::Result<bool> {
+    pub fn check_rate_limit(&self, user_id: &str) -> nexcore_error::Result<bool> {
         let mut stmt = self.conn.prepare(
             "SELECT queries_used < query_limit FROM subscriptions WHERE user_id = ?1 AND status = 'active'",
         )?;
@@ -335,7 +335,7 @@ impl GuardianStore {
     }
 
     /// Reset usage counters (call at period start)
-    pub fn reset_usage(&self, user_id: &str) -> anyhow::Result<()> {
+    pub fn reset_usage(&self, user_id: &str) -> nexcore_error::Result<()> {
         let now = chrono::Utc::now().to_rfc3339();
         self.conn.execute(
             "UPDATE subscriptions SET queries_used = 0, period_start = ?1, updated_at = ?1 WHERE user_id = ?2",
@@ -347,7 +347,7 @@ impl GuardianStore {
     // ── API Keys ──────────────────────────
 
     /// Create an API key. Returns (key_id, raw_key) — raw_key is shown once, then only hash stored.
-    pub fn create_api_key(&self, user_id: &str, name: &str) -> anyhow::Result<(String, String)> {
+    pub fn create_api_key(&self, user_id: &str, name: &str) -> nexcore_error::Result<(String, String)> {
         let key_id = uuid::Uuid::new_v4().to_string();
         let raw_key = format!("grd_{}", generate_random_key());
         let key_hash = hash_api_key(&raw_key);
@@ -364,7 +364,7 @@ impl GuardianStore {
     }
 
     /// Validate an API key. Returns user_id if valid and not revoked.
-    pub fn validate_api_key(&self, raw_key: &str) -> anyhow::Result<Option<String>> {
+    pub fn validate_api_key(&self, raw_key: &str) -> nexcore_error::Result<Option<String>> {
         let key_hash = hash_api_key(raw_key);
         let now = chrono::Utc::now().to_rfc3339();
 
@@ -393,7 +393,7 @@ impl GuardianStore {
     }
 
     /// List API keys for a user (no raw keys — only metadata)
-    pub fn list_api_keys(&self, user_id: &str) -> anyhow::Result<Vec<ApiKeyRecord>> {
+    pub fn list_api_keys(&self, user_id: &str) -> nexcore_error::Result<Vec<ApiKeyRecord>> {
         let mut stmt = self.conn.prepare(
             "SELECT id, user_id, name, key_prefix, created_at, last_used, revoked
              FROM api_keys WHERE user_id = ?1 ORDER BY created_at DESC",
@@ -418,7 +418,7 @@ impl GuardianStore {
     }
 
     /// Revoke an API key
-    pub fn revoke_api_key(&self, key_id: &str, user_id: &str) -> anyhow::Result<bool> {
+    pub fn revoke_api_key(&self, key_id: &str, user_id: &str) -> nexcore_error::Result<bool> {
         let rows = self.conn.execute(
             "UPDATE api_keys SET revoked = 1 WHERE id = ?1 AND user_id = ?2",
             params![key_id, user_id],
@@ -435,7 +435,7 @@ impl GuardianStore {
         endpoint: &str,
         request_body: Option<&str>,
         response_body: Option<&str>,
-    ) -> anyhow::Result<()> {
+    ) -> nexcore_error::Result<()> {
         let now = chrono::Utc::now().to_rfc3339();
         self.conn.execute(
             "INSERT INTO query_history (user_id, endpoint, request_body, response_body, created_at)
@@ -451,7 +451,7 @@ impl GuardianStore {
         user_id: &str,
         limit: i64,
         offset: i64,
-    ) -> anyhow::Result<Vec<serde_json::Value>> {
+    ) -> nexcore_error::Result<Vec<serde_json::Value>> {
         let mut stmt = self.conn.prepare(
             "SELECT id, endpoint, request_body, response_body, created_at
              FROM query_history WHERE user_id = ?1

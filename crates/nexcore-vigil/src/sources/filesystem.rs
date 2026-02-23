@@ -24,7 +24,7 @@ impl Source for FilesystemSource {
         "filesystem"
     }
 
-    async fn run(&self) -> anyhow::Result<()> {
+    async fn run(&self) -> nexcore_error::Result<()> {
         info!(paths = ?self.watch_paths, "filesystem_source_starting");
 
         let (tx, mut rx) = mpsc::channel(100);

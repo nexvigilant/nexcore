@@ -4,7 +4,7 @@ mod tests {
     use chrono::Utc;
 
     #[tokio::test]
-    async fn test_mock_persistence() -> anyhow::Result<()> {
+    async fn test_mock_persistence() -> nexcore_error::Result<()> {
         let persistence = MockPersistence::new();
 
         let report = ReportRecord {

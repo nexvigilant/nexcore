@@ -25,7 +25,7 @@ pub const FOOD_EVENT_ENDPOINT: &str = "/food/event.json";
 pub async fn fetch_food_recalls(
     client: &OpenFdaClient,
     params: &QueryParams,
-) -> Result<OpenFdaResponse<FoodRecall>, anyhow::Error> {
+) -> Result<OpenFdaResponse<FoodRecall>, nexcore_error::NexError> {
     client
         .fetch::<FoodRecall>(FOOD_RECALL_ENDPOINT, params)
         .await
@@ -39,7 +39,7 @@ pub async fn fetch_food_recalls(
 pub async fn fetch_food_events(
     client: &OpenFdaClient,
     params: &QueryParams,
-) -> Result<OpenFdaResponse<FoodEvent>, anyhow::Error> {
+) -> Result<OpenFdaResponse<FoodEvent>, nexcore_error::NexError> {
     client
         .fetch::<FoodEvent>(FOOD_EVENT_ENDPOINT, params)
         .await

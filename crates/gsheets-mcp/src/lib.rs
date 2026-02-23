@@ -37,7 +37,7 @@ pub struct GSheetsMcpServer {
 #[tool_router]
 impl GSheetsMcpServer {
     /// Create the server, authenticating with Google on startup.
-    pub async fn new() -> Result<Self, anyhow::Error> {
+    pub async fn new() -> Result<Self, nexcore_error::NexError> {
         let client = SheetsClient::new().await?;
         Ok(Self {
             tool_router: Self::tool_router(),

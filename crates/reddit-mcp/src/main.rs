@@ -24,7 +24,7 @@
 //! - `reddit_detect_signals` - Detect value signals in posts
 //! - `reddit_search_entity` - Search for posts mentioning an entity
 
-use anyhow::Result;
+use nexcore_error::Result;
 use rmcp::ServiceExt;
 use rmcp::transport::stdio;
 use tracing::info;

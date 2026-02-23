@@ -1,7 +1,7 @@
 use std::process::Stdio;
 use std::time::Duration;
 
-use anyhow::{Result, anyhow};
+use nexcore_error::{Result, nexerror};
 use clap::{ArgAction, Parser};
 use serde_json::{Value, json};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -47,11 +47,11 @@ async fn main() -> Result<()> {
         .stderr(Stdio::inherit())
         .spawn()?;
 
-    let stdin = child.stdin.take().ok_or_else(|| anyhow!("missing stdin"))?;
+    let stdin = child.stdin.take().ok_or_else(|| nexerror!("missing stdin"))?;
     let stdout = child
         .stdout
         .take()
-        .ok_or_else(|| anyhow!("missing stdout"))?;
+        .ok_or_else(|| nexerror!("missing stdout"))?;
 
     let mut writer = tokio::io::BufWriter::new(stdin);
     let mut reader = BufReader::new(stdout).lines();
@@ -93,7 +93,7 @@ async fn main() -> Result<()> {
     if let Some(tool) = args.call {
         let id = 3;
         let params: Value = serde_json::from_str(&args.args_json)
-            .map_err(|err| anyhow!("invalid --args-json: {err}"))?;
+            .map_err(|err| nexerror!("invalid --args-json: {err}"))?;
         let req = json!({
             "jsonrpc": "2.0",
             "id": id,
@@ -138,7 +138,7 @@ async fn find_id_in_stream(
         let line = reader
             .next_line()
             .await?
-            .ok_or_else(|| anyhow!("EOF before response"))?;
+            .ok_or_else(|| nexerror!("EOF before response"))?;
         if line.trim().is_empty() {
             continue;
         }

@@ -11,7 +11,7 @@ name = "skill-hunter"
 path = "src/main.rs"
 
 [dependencies]
-anyhow = "1.0"
+nexcore-error = { workspace = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
 walkdir = "2.5"

@@ -7,7 +7,7 @@
 //!
 //! Execute `.true` files through the full Prima pipeline.
 
-use anyhow::{Context, Result};
+use nexcore_error::{Context, Result};
 use clap::{Parser, Subcommand};
 use prima_pipeline::{PipelineResult, execute_file, execute_pipeline};
 use std::path::PathBuf;

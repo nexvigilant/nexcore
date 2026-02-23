@@ -18,7 +18,7 @@ serde_json = { version = "1.0.120" }
 thiserror = { version = "1.0.61" }
 chrono = { version = "0.4.38", features = ["serde"] }
 parking_lot = "0.12"
-anyhow = { version = "1.0.86" }
+nexcore-error = { workspace = true }
 
 [dev-dependencies]
 criterion = "0.5"

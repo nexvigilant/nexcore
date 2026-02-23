@@ -1,6 +1,6 @@
 //! Google Apps Script API client.
 
-use anyhow::{Result, anyhow};
+use nexcore_error::{Result, nexerror};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
@@ -101,8 +101,8 @@ impl AppsScriptAPI {
             let detail = error
                 .details
                 .first()
-                .ok_or_else(|| anyhow!("Unknown script error"))?;
-            return Err(anyhow!("{}: {}", detail.error_type, detail.error_message));
+                .ok_or_else(|| nexerror!("Unknown script error"))?;
+            return Err(nexerror!("{}: {}", detail.error_type, detail.error_message));
         }
 
         Ok(resp

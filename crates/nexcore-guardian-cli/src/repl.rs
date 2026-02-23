@@ -44,7 +44,7 @@ impl NvreplState {
     }
 }
 
-pub async fn run() -> anyhow::Result<()> {
+pub async fn run() -> nexcore_error::Result<()> {
     print_banner();
 
     let config = rustyline::Config::builder().auto_add_history(true).build();

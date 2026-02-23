@@ -83,7 +83,7 @@ impl CortexClient {
 
 #[async_trait]
 impl LLMClient for CortexClient {
-    async fn invoke(&self, context: &str, event: &Event) -> anyhow::Result<Interaction> {
+    async fn invoke(&self, context: &str, event: &Event) -> nexcore_error::Result<Interaction> {
         info!(source = %event.source, event_type = %event.event_type, "cortex_local_invoke");
 
         let prompt = Self::format_prompt(context, event);

@@ -12,7 +12,7 @@ mod safety;
 mod signal;
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> nexcore_error::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter("warn")
         .with_target(false)

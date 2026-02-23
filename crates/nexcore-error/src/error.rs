@@ -39,8 +39,8 @@ impl NexError {
     #[must_use]
     pub fn context<C: fmt::Display + Send + Sync + 'static>(self, ctx: C) -> Self {
         Self {
-            inner: Box::new(ctx),
-            source: Some(Box::new(self)),
+            inner: Box::new(format!("{}: {}", ctx, self.inner)),
+            source: self.source,
         }
     }
 
@@ -60,7 +60,7 @@ impl NexError {
         C: fmt::Display + Send + Sync + 'static,
     {
         Self {
-            inner: Box::new(ctx),
+            inner: Box::new(format!("{}: {}", ctx, err)),
             source: Some(Box::new(err)),
         }
     }
@@ -84,22 +84,16 @@ impl fmt::Debug for NexError {
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for NexError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        self.source
-            .as_ref()
-            .map(|e| e.as_ref() as &(dyn std::error::Error + 'static))
+impl<E> From<E> for NexError
+where
+    E: std::error::Error + Send + Sync + 'static,
+{
+    fn from(err: E) -> Self {
+        Self {
+            inner: Box::new(err.to_string()),
+            source: Some(Box::new(err)),
+        }
     }
 }
 
-impl From<String> for NexError {
-    fn from(s: String) -> Self {
-        Self::new(s)
-    }
-}
 
-impl From<&str> for NexError {
-    fn from(s: &str) -> Self {
-        Self::new(s)
-    }
-}

@@ -15,7 +15,7 @@ impl Executor for NotifyExecutor {
         &self,
         action: &str,
         _params: serde_json::Value,
-    ) -> anyhow::Result<ExecutorResult> {
+    ) -> nexcore_error::Result<ExecutorResult> {
         Ok(ExecutorResult {
             executor: self.executor_type(),
             success: true,

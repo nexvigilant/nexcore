@@ -5,7 +5,7 @@
 
 use std::time::Instant;
 
-use anyhow::Context;
+use nexcore_error::Context;
 use nexcore_mcp::NexCoreMcpServer;
 
 /// Call a single MCP tool via in-process dispatch.
@@ -16,12 +16,12 @@ pub async fn call_tool(
     tool_name: &str,
     params: serde_json::Value,
     server: &NexCoreMcpServer,
-) -> Result<serde_json::Value, anyhow::Error> {
+) -> Result<serde_json::Value, nexcore_error::NexError> {
     let start = Instant::now();
 
     let result = nexcore_mcp::unified::dispatch(tool_name, params, server)
         .await
-        .map_err(|e| anyhow::anyhow!("MCP dispatch error: {e:?}"))?;
+        .map_err(|e| nexcore_error::nexerror!("MCP dispatch error: {e:?}"))?;
 
     let value =
         serde_json::to_value(&result).context("failed to serialize CallToolResult")?;

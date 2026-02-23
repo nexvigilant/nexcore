@@ -32,12 +32,12 @@ impl Source for VoiceSource {
         "voice"
     }
 
-    async fn run(&self) -> anyhow::Result<()> {
+    async fn run(&self) -> nexcore_error::Result<()> {
         info!("voice_source_starting");
         let host = cpal::default_host();
         let device = host
             .default_input_device()
-            .ok_or_else(|| anyhow::anyhow!("no_input_device"))?;
+            .ok_or_else(|| nexcore_error::nexerror!("no_input_device"))?;
         let config: cpal::StreamConfig = device.default_input_config()?.into();
         let audio_buffer = Arc::new(Mutex::new(Vec::<f32>::new()));
         let buffer_clone = audio_buffer.clone();

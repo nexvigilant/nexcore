@@ -12,7 +12,7 @@
 
 use std::time::Instant;
 
-use anyhow::{Context, Result};
+use nexcore_error::{Context, Result};
 use tracing;
 
 use nexcore_faers_etl::{

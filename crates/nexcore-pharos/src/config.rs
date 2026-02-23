@@ -60,7 +60,7 @@ impl Default for PharosConfig {
 
 impl PharosConfig {
     /// Load config from a TOML file, falling back to defaults.
-    pub fn from_file(path: &std::path::Path) -> anyhow::Result<Self> {
+    pub fn from_file(path: &std::path::Path) -> nexcore_error::Result<Self> {
         if path.exists() {
             let content = std::fs::read_to_string(path)?;
             let config: Self = toml::from_str(&content)?;
@@ -71,9 +71,9 @@ impl PharosConfig {
     }
 
     /// Validate that required paths exist.
-    pub fn validate(&self) -> anyhow::Result<()> {
+    pub fn validate(&self) -> nexcore_error::Result<()> {
         if !self.faers_dir.exists() {
-            anyhow::bail!(
+            nexcore_error::bail!(
                 "FAERS data directory does not exist: {}",
                 self.faers_dir.display()
             );

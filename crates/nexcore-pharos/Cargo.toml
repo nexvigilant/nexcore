@@ -25,7 +25,7 @@ nexcore-primitives = { workspace = true }
 
 # Workspace dependencies
 tokio = { workspace = true, features = ["full"] }
-anyhow = { workspace = true }
+nexcore-error = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }

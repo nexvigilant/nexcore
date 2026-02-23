@@ -28,25 +28,25 @@ use crate::types::{
 #[derive(Debug)]
 pub struct FanOutResults {
     /// Drug adverse events (FAERS).
-    pub drug_events: anyhow::Result<OpenFdaResponse<DrugEvent>>,
+    pub drug_events: nexcore_error::Result<OpenFdaResponse<DrugEvent>>,
     /// Drug structured product labels.
-    pub drug_labels: anyhow::Result<OpenFdaResponse<DrugLabel>>,
+    pub drug_labels: nexcore_error::Result<OpenFdaResponse<DrugLabel>>,
     /// Drug recalls.
-    pub drug_recalls: anyhow::Result<OpenFdaResponse<DrugRecall>>,
+    pub drug_recalls: nexcore_error::Result<OpenFdaResponse<DrugRecall>>,
     /// NDC directory entries.
-    pub drug_ndc: anyhow::Result<OpenFdaResponse<DrugNdc>>,
+    pub drug_ndc: nexcore_error::Result<OpenFdaResponse<DrugNdc>>,
     /// Medical device adverse events.
-    pub device_events: anyhow::Result<OpenFdaResponse<DeviceEvent>>,
+    pub device_events: nexcore_error::Result<OpenFdaResponse<DeviceEvent>>,
     /// Device recalls.
-    pub device_recalls: anyhow::Result<OpenFdaResponse<DeviceRecall>>,
+    pub device_recalls: nexcore_error::Result<OpenFdaResponse<DeviceRecall>>,
     /// Device 510(k) clearances.
-    pub device_510k: anyhow::Result<OpenFdaResponse<Device510k>>,
+    pub device_510k: nexcore_error::Result<OpenFdaResponse<Device510k>>,
     /// Food recalls.
-    pub food_recalls: anyhow::Result<OpenFdaResponse<FoodRecall>>,
+    pub food_recalls: nexcore_error::Result<OpenFdaResponse<FoodRecall>>,
     /// CAERS food adverse events.
-    pub food_events: anyhow::Result<OpenFdaResponse<FoodEvent>>,
+    pub food_events: nexcore_error::Result<OpenFdaResponse<FoodEvent>>,
     /// Substance (UNII) records.
-    pub substances: anyhow::Result<OpenFdaResponse<Substance>>,
+    pub substances: nexcore_error::Result<OpenFdaResponse<Substance>>,
 }
 
 impl FanOutResults {
@@ -187,8 +187,8 @@ mod tests {
     #[test]
     fn fan_out_results_successful_endpoints_all_fail() {
         // Construct a FanOutResults where all arms are Err.
-        let make_err = || -> anyhow::Result<OpenFdaResponse<DrugEvent>> {
-            Err(anyhow::anyhow!("test error"))
+        let make_err = || -> nexcore_error::Result<OpenFdaResponse<DrugEvent>> {
+            Err(nexcore_error::nexerror!("test error"))
         };
 
         // We can't easily build FanOutResults without going through the real

@@ -100,7 +100,7 @@ impl NdcBridge {
     /// # Errors
     ///
     /// Returns error if file cannot be read or parsed.
-    pub fn load_from_file(path: &Path) -> anyhow::Result<Self> {
+    pub fn load_from_file(path: &Path) -> nexcore_error::Result<Self> {
         let content = std::fs::read_to_string(path)?;
         let products: Vec<NdcProduct> = serde_json::from_str(&content)?;
         Ok(Self::from_products(products))

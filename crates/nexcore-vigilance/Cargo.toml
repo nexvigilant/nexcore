@@ -24,7 +24,7 @@ serde_json = "1.0.120"
 thiserror = "1.0.61"
 chrono = { version = "0.4.38", features = ["serde"] }
 nexcore-id = { version = "0.1.0", path = "../nexcore-id", features = ["serde"], registry = "nexcore" }
-anyhow = "1.0.86"
+nexcore-error = { workspace = true }
 
 # AI clients (consolidated from nexcore-ai)
 async-trait = "0.1.81"

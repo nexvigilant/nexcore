@@ -42,7 +42,7 @@ pub struct GVidsMcpServer {
 #[tool_router]
 impl GVidsMcpServer {
     /// Create the server, authenticating with Google on startup.
-    pub async fn new() -> Result<Self, anyhow::Error> {
+    pub async fn new() -> Result<Self, nexcore_error::NexError> {
         let client = VidsClient::new().await?;
         Ok(Self {
             tool_router: Self::tool_router(),

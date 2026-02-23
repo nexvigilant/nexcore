@@ -37,7 +37,7 @@ impl FirestorePersistence {
         }
     }
 
-    pub async fn save_report(&self, report: &ReportRecord) -> anyhow::Result<()> {
+    pub async fn save_report(&self, report: &ReportRecord) -> nexcore_error::Result<()> {
         let url = self.url("reports", Some(&report.id));
         let body = json!({
             "fields": {
@@ -52,7 +52,7 @@ impl FirestorePersistence {
         self.patch(&url, &body).await
     }
 
-    pub async fn list_reports(&self) -> anyhow::Result<Vec<ReportRecord>> {
+    pub async fn list_reports(&self) -> nexcore_error::Result<Vec<ReportRecord>> {
         let url = self.url("reports", None);
         let documents = self.get_list(&url).await?;
         let mut results = Vec::new();
@@ -64,7 +64,7 @@ impl FirestorePersistence {
         Ok(results)
     }
 
-    pub async fn save_post(&self, post: &PostRecord) -> anyhow::Result<()> {
+    pub async fn save_post(&self, post: &PostRecord) -> nexcore_error::Result<()> {
         let url = self.url("posts", Some(&post.id));
         let body = json!({
             "fields": {
@@ -80,7 +80,7 @@ impl FirestorePersistence {
         self.patch(&url, &body).await
     }
 
-    pub async fn list_posts(&self) -> anyhow::Result<Vec<PostRecord>> {
+    pub async fn list_posts(&self) -> nexcore_error::Result<Vec<PostRecord>> {
         let url = self.url("posts", None);
         let documents = self.get_list(&url).await?;
         let mut results = Vec::new();
@@ -92,7 +92,7 @@ impl FirestorePersistence {
         Ok(results)
     }
 
-    pub async fn save_inquiry(&self, inquiry: &InquiryRecord) -> anyhow::Result<()> {
+    pub async fn save_inquiry(&self, inquiry: &InquiryRecord) -> nexcore_error::Result<()> {
         let url = self.url("inquiries", Some(&inquiry.id));
         let body = json!({
             "fields": {
@@ -109,7 +109,7 @@ impl FirestorePersistence {
         self.patch(&url, &body).await
     }
 
-    pub async fn list_inquiries(&self) -> anyhow::Result<Vec<InquiryRecord>> {
+    pub async fn list_inquiries(&self) -> nexcore_error::Result<Vec<InquiryRecord>> {
         let url = self.url("inquiries", None);
         let documents = self.get_list(&url).await?;
         let mut results = Vec::new();
@@ -121,7 +121,7 @@ impl FirestorePersistence {
         Ok(results)
     }
 
-    pub async fn update_inquiry_status(&self, id: &str, status: &str) -> anyhow::Result<()> {
+    pub async fn update_inquiry_status(&self, id: &str, status: &str) -> nexcore_error::Result<()> {
         let url = self.url("inquiries", Some(id));
         let body = json!({
             "fields": {
@@ -134,7 +134,7 @@ impl FirestorePersistence {
         self.patch(&url_with_mask, &body).await
     }
 
-    pub async fn save_enrollment(&self, enrollment: &EnrollmentRecord) -> anyhow::Result<()> {
+    pub async fn save_enrollment(&self, enrollment: &EnrollmentRecord) -> nexcore_error::Result<()> {
         let url = self.url("enrollments", Some(&enrollment.id));
         let body = json!({
             "fields": {
@@ -149,7 +149,7 @@ impl FirestorePersistence {
         self.patch(&url, &body).await
     }
 
-    pub async fn list_enrollments(&self) -> anyhow::Result<Vec<EnrollmentRecord>> {
+    pub async fn list_enrollments(&self) -> nexcore_error::Result<Vec<EnrollmentRecord>> {
         let url = self.url("enrollments", None);
         let documents = self.get_list(&url).await?;
         let mut results = Vec::new();
@@ -161,7 +161,7 @@ impl FirestorePersistence {
         Ok(results)
     }
 
-    pub async fn save_circle(&self, circle: &CircleRecord) -> anyhow::Result<()> {
+    pub async fn save_circle(&self, circle: &CircleRecord) -> nexcore_error::Result<()> {
         let url = self.url("circles", Some(&circle.id));
         let body = json!({
             "fields": {
@@ -176,7 +176,7 @@ impl FirestorePersistence {
         self.patch(&url, &body).await
     }
 
-    pub async fn list_circles(&self) -> anyhow::Result<Vec<CircleRecord>> {
+    pub async fn list_circles(&self) -> nexcore_error::Result<Vec<CircleRecord>> {
         let url = self.url("circles", None);
         let documents = self.get_list(&url).await?;
         let mut results = Vec::new();
@@ -188,7 +188,7 @@ impl FirestorePersistence {
         Ok(results)
     }
 
-    pub async fn save_membership(&self, membership: &MembershipRecord) -> anyhow::Result<()> {
+    pub async fn save_membership(&self, membership: &MembershipRecord) -> nexcore_error::Result<()> {
         let url = self.url("memberships", Some(&membership.id));
         let body = json!({
             "fields": {
@@ -201,7 +201,7 @@ impl FirestorePersistence {
         self.patch(&url, &body).await
     }
 
-    pub async fn list_memberships(&self, _user_id: &str) -> anyhow::Result<Vec<MembershipRecord>> {
+    pub async fn list_memberships(&self, _user_id: &str) -> nexcore_error::Result<Vec<MembershipRecord>> {
         let url = self.url("memberships", None);
         let documents = self.get_list(&url).await?;
         let mut results = Vec::new();
@@ -213,7 +213,7 @@ impl FirestorePersistence {
         Ok(results)
     }
 
-    pub async fn save_message(&self, message: &MessageRecord) -> anyhow::Result<()> {
+    pub async fn save_message(&self, message: &MessageRecord) -> nexcore_error::Result<()> {
         let url = self.url("messages", Some(&message.id));
         let body = json!({
             "fields": {
@@ -228,7 +228,7 @@ impl FirestorePersistence {
         self.patch(&url, &body).await
     }
 
-    pub async fn list_messages(&self, _user_id: &str) -> anyhow::Result<Vec<MessageRecord>> {
+    pub async fn list_messages(&self, _user_id: &str) -> nexcore_error::Result<Vec<MessageRecord>> {
         let url = self.url("messages", None);
         let documents = self.get_list(&url).await?;
         let mut results = Vec::new();
@@ -240,7 +240,7 @@ impl FirestorePersistence {
         Ok(results)
     }
 
-    pub async fn save_ksb_domain(&self, domain: &KsbDomainRecord) -> anyhow::Result<()> {
+    pub async fn save_ksb_domain(&self, domain: &KsbDomainRecord) -> nexcore_error::Result<()> {
         let url = self.url("ksb_domains", Some(&domain.code));
         let body = json!({
             "fields": {
@@ -257,7 +257,7 @@ impl FirestorePersistence {
         self.patch(&url, &body).await
     }
 
-    pub async fn list_ksb_domains(&self) -> anyhow::Result<Vec<KsbDomainRecord>> {
+    pub async fn list_ksb_domains(&self) -> nexcore_error::Result<Vec<KsbDomainRecord>> {
         let url = self.url("ksb_domains", None);
         let documents = self.get_list(&url).await?;
         let mut results = Vec::new();
@@ -269,7 +269,7 @@ impl FirestorePersistence {
         Ok(results)
     }
 
-    async fn patch(&self, url: &str, body: &serde_json::Value) -> anyhow::Result<()> {
+    async fn patch(&self, url: &str, body: &serde_json::Value) -> nexcore_error::Result<()> {
         let mut req = self.http.patch(url).json(body);
         if let Some(ref key) = self.api_key {
             req = req.query(&[("key", key)]);
@@ -277,12 +277,12 @@ impl FirestorePersistence {
         let resp = req.send().await?;
         if !resp.status().is_success() {
             let err_text = resp.text().await?;
-            anyhow::bail!("Firestore error: {}", err_text);
+            nexcore_error::bail!("Firestore error: {}", err_text);
         }
         Ok(())
     }
 
-    async fn get_list(&self, url: &str) -> anyhow::Result<Vec<serde_json::Value>> {
+    async fn get_list(&self, url: &str) -> nexcore_error::Result<Vec<serde_json::Value>> {
         let mut req = self.http.get(url);
         if let Some(ref key) = self.api_key {
             req = req.query(&[("key", key)]);
@@ -290,7 +290,7 @@ impl FirestorePersistence {
         let resp = req.send().await?;
         if !resp.status().is_success() {
             let err_text = resp.text().await?;
-            anyhow::bail!("Firestore error: {}", err_text);
+            nexcore_error::bail!("Firestore error: {}", err_text);
         }
         let body: serde_json::Value = resp.json().await?;
         Ok(body
@@ -301,10 +301,10 @@ impl FirestorePersistence {
     }
 }
 
-fn parse_report_doc(doc: &serde_json::Value) -> anyhow::Result<ReportRecord> {
+fn parse_report_doc(doc: &serde_json::Value) -> nexcore_error::Result<ReportRecord> {
     let fields = doc
         .get("fields")
-        .ok_or_else(|| anyhow::anyhow!("Missing fields"))?;
+        .ok_or_else(|| nexcore_error::nexerror!("Missing fields"))?;
     Ok(ReportRecord {
         id: get_string(fields, "id"),
         report_type: get_string(fields, "report_type"),
@@ -319,10 +319,10 @@ fn parse_report_doc(doc: &serde_json::Value) -> anyhow::Result<ReportRecord> {
     })
 }
 
-fn parse_post_doc(doc: &serde_json::Value) -> anyhow::Result<PostRecord> {
+fn parse_post_doc(doc: &serde_json::Value) -> nexcore_error::Result<PostRecord> {
     let fields = doc
         .get("fields")
-        .ok_or_else(|| anyhow::anyhow!("Missing fields"))?;
+        .ok_or_else(|| nexcore_error::nexerror!("Missing fields"))?;
     Ok(PostRecord {
         id: get_string(fields, "id"),
         author: get_string(fields, "author"),
@@ -334,10 +334,10 @@ fn parse_post_doc(doc: &serde_json::Value) -> anyhow::Result<PostRecord> {
     })
 }
 
-fn parse_inquiry_doc(doc: &serde_json::Value) -> anyhow::Result<InquiryRecord> {
+fn parse_inquiry_doc(doc: &serde_json::Value) -> nexcore_error::Result<InquiryRecord> {
     let fields = doc
         .get("fields")
-        .ok_or_else(|| anyhow::anyhow!("Missing fields"))?;
+        .ok_or_else(|| nexcore_error::nexerror!("Missing fields"))?;
     Ok(InquiryRecord {
         id: get_string(fields, "id"),
         name: get_string(fields, "name"),
@@ -350,10 +350,10 @@ fn parse_inquiry_doc(doc: &serde_json::Value) -> anyhow::Result<InquiryRecord> {
     })
 }
 
-fn parse_enrollment_doc(doc: &serde_json::Value) -> anyhow::Result<EnrollmentRecord> {
+fn parse_enrollment_doc(doc: &serde_json::Value) -> nexcore_error::Result<EnrollmentRecord> {
     let fields = doc
         .get("fields")
-        .ok_or_else(|| anyhow::anyhow!("Missing fields"))?;
+        .ok_or_else(|| nexcore_error::nexerror!("Missing fields"))?;
     Ok(EnrollmentRecord {
         id: get_string(fields, "id"),
         user_id: get_string(fields, "user_id"),
@@ -372,10 +372,10 @@ fn parse_enrollment_doc(doc: &serde_json::Value) -> anyhow::Result<EnrollmentRec
     })
 }
 
-fn parse_circle_doc(doc: &serde_json::Value) -> anyhow::Result<CircleRecord> {
+fn parse_circle_doc(doc: &serde_json::Value) -> nexcore_error::Result<CircleRecord> {
     let fields = doc
         .get("fields")
-        .ok_or_else(|| anyhow::anyhow!("Missing fields"))?;
+        .ok_or_else(|| nexcore_error::nexerror!("Missing fields"))?;
     Ok(CircleRecord {
         id: get_string(fields, "id"),
         name: get_string(fields, "name"),
@@ -386,10 +386,10 @@ fn parse_circle_doc(doc: &serde_json::Value) -> anyhow::Result<CircleRecord> {
     })
 }
 
-fn parse_membership_doc(doc: &serde_json::Value) -> anyhow::Result<MembershipRecord> {
+fn parse_membership_doc(doc: &serde_json::Value) -> nexcore_error::Result<MembershipRecord> {
     let fields = doc
         .get("fields")
-        .ok_or_else(|| anyhow::anyhow!("Missing fields"))?;
+        .ok_or_else(|| nexcore_error::nexerror!("Missing fields"))?;
     Ok(MembershipRecord {
         id: get_string(fields, "id"),
         user_id: get_string(fields, "user_id"),
@@ -398,10 +398,10 @@ fn parse_membership_doc(doc: &serde_json::Value) -> anyhow::Result<MembershipRec
     })
 }
 
-fn parse_message_doc(doc: &serde_json::Value) -> anyhow::Result<MessageRecord> {
+fn parse_message_doc(doc: &serde_json::Value) -> nexcore_error::Result<MessageRecord> {
     let fields = doc
         .get("fields")
-        .ok_or_else(|| anyhow::anyhow!("Missing fields"))?;
+        .ok_or_else(|| nexcore_error::nexerror!("Missing fields"))?;
     Ok(MessageRecord {
         id: get_string(fields, "id"),
         sender_id: get_string(fields, "sender_id"),
@@ -416,10 +416,10 @@ fn parse_message_doc(doc: &serde_json::Value) -> anyhow::Result<MessageRecord> {
     })
 }
 
-fn parse_ksb_domain_doc(doc: &serde_json::Value) -> anyhow::Result<KsbDomainRecord> {
+fn parse_ksb_domain_doc(doc: &serde_json::Value) -> nexcore_error::Result<KsbDomainRecord> {
     let fields = doc
         .get("fields")
-        .ok_or_else(|| anyhow::anyhow!("Missing fields"))?;
+        .ok_or_else(|| nexcore_error::nexerror!("Missing fields"))?;
     let examples = fields
         .get("example_ksbs")
         .and_then(|v| v.get("arrayValue"))
@@ -509,118 +509,118 @@ impl MockPersistence {
         }
     }
 
-    pub async fn save_report(&self, report: &ReportRecord) -> anyhow::Result<()> {
+    pub async fn save_report(&self, report: &ReportRecord) -> nexcore_error::Result<()> {
         let mut reports = self
             .reports
             .lock()
-            .map_err(|_| anyhow::anyhow!("Lock poisoned"))?;
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
         reports.push(report.clone());
         Ok(())
     }
 
-    pub async fn list_reports(&self) -> anyhow::Result<Vec<ReportRecord>> {
+    pub async fn list_reports(&self) -> nexcore_error::Result<Vec<ReportRecord>> {
         let reports = self
             .reports
             .lock()
-            .map_err(|_| anyhow::anyhow!("Lock poisoned"))?;
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
         Ok(reports.clone())
     }
 
-    pub async fn save_post(&self, post: &PostRecord) -> anyhow::Result<()> {
+    pub async fn save_post(&self, post: &PostRecord) -> nexcore_error::Result<()> {
         let mut posts = self
             .posts
             .lock()
-            .map_err(|_| anyhow::anyhow!("Lock poisoned"))?;
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
         posts.push(post.clone());
         Ok(())
     }
 
-    pub async fn list_posts(&self) -> anyhow::Result<Vec<PostRecord>> {
+    pub async fn list_posts(&self) -> nexcore_error::Result<Vec<PostRecord>> {
         let posts = self
             .posts
             .lock()
-            .map_err(|_| anyhow::anyhow!("Lock poisoned"))?;
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
         Ok(posts.clone())
     }
 
-    pub async fn save_inquiry(&self, inquiry: &InquiryRecord) -> anyhow::Result<()> {
+    pub async fn save_inquiry(&self, inquiry: &InquiryRecord) -> nexcore_error::Result<()> {
         let mut inquiries = self
             .inquiries
             .lock()
-            .map_err(|_| anyhow::anyhow!("Lock poisoned"))?;
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
         inquiries.push(inquiry.clone());
         Ok(())
     }
 
-    pub async fn list_inquiries(&self) -> anyhow::Result<Vec<InquiryRecord>> {
+    pub async fn list_inquiries(&self) -> nexcore_error::Result<Vec<InquiryRecord>> {
         let inquiries = self
             .inquiries
             .lock()
-            .map_err(|_| anyhow::anyhow!("Lock poisoned"))?;
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
         Ok(inquiries.clone())
     }
 
-    pub async fn update_inquiry_status(&self, id: &str, status: &str) -> anyhow::Result<()> {
+    pub async fn update_inquiry_status(&self, id: &str, status: &str) -> nexcore_error::Result<()> {
         let mut inquiries = self
             .inquiries
             .lock()
-            .map_err(|_| anyhow::anyhow!("Lock poisoned"))?;
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
         if let Some(inquiry) = inquiries.iter_mut().find(|i| i.id == id) {
             inquiry.status = status.to_string();
             Ok(())
         } else {
-            anyhow::bail!("Inquiry not found")
+            nexcore_error::bail!("Inquiry not found")
         }
     }
 
-    pub async fn save_enrollment(&self, enrollment: &EnrollmentRecord) -> anyhow::Result<()> {
+    pub async fn save_enrollment(&self, enrollment: &EnrollmentRecord) -> nexcore_error::Result<()> {
         let mut enrollments = self
             .enrollments
             .lock()
-            .map_err(|_| anyhow::anyhow!("Lock poisoned"))?;
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
         enrollments.push(enrollment.clone());
         Ok(())
     }
 
-    pub async fn list_enrollments(&self) -> anyhow::Result<Vec<EnrollmentRecord>> {
+    pub async fn list_enrollments(&self) -> nexcore_error::Result<Vec<EnrollmentRecord>> {
         let enrollments = self
             .enrollments
             .lock()
-            .map_err(|_| anyhow::anyhow!("Lock poisoned"))?;
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
         Ok(enrollments.clone())
     }
 
-    pub async fn save_circle(&self, circle: &CircleRecord) -> anyhow::Result<()> {
+    pub async fn save_circle(&self, circle: &CircleRecord) -> nexcore_error::Result<()> {
         let mut circles = self
             .circles
             .lock()
-            .map_err(|_| anyhow::anyhow!("Lock poisoned"))?;
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
         circles.push(circle.clone());
         Ok(())
     }
 
-    pub async fn list_circles(&self) -> anyhow::Result<Vec<CircleRecord>> {
+    pub async fn list_circles(&self) -> nexcore_error::Result<Vec<CircleRecord>> {
         let circles = self
             .circles
             .lock()
-            .map_err(|_| anyhow::anyhow!("Lock poisoned"))?;
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
         Ok(circles.clone())
     }
 
-    pub async fn save_membership(&self, membership: &MembershipRecord) -> anyhow::Result<()> {
+    pub async fn save_membership(&self, membership: &MembershipRecord) -> nexcore_error::Result<()> {
         let mut memberships = self
             .memberships
             .lock()
-            .map_err(|_| anyhow::anyhow!("Lock poisoned"))?;
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
         memberships.push(membership.clone());
         Ok(())
     }
 
-    pub async fn list_memberships(&self, user_id: &str) -> anyhow::Result<Vec<MembershipRecord>> {
+    pub async fn list_memberships(&self, user_id: &str) -> nexcore_error::Result<Vec<MembershipRecord>> {
         let memberships = self
             .memberships
             .lock()
-            .map_err(|_| anyhow::anyhow!("Lock poisoned"))?;
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
         Ok(memberships
             .iter()
             .filter(|m| m.user_id == user_id)
@@ -628,20 +628,20 @@ impl MockPersistence {
             .collect())
     }
 
-    pub async fn save_message(&self, message: &MessageRecord) -> anyhow::Result<()> {
+    pub async fn save_message(&self, message: &MessageRecord) -> nexcore_error::Result<()> {
         let mut messages = self
             .messages
             .lock()
-            .map_err(|_| anyhow::anyhow!("Lock poisoned"))?;
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
         messages.push(message.clone());
         Ok(())
     }
 
-    pub async fn list_messages(&self, user_id: &str) -> anyhow::Result<Vec<MessageRecord>> {
+    pub async fn list_messages(&self, user_id: &str) -> nexcore_error::Result<Vec<MessageRecord>> {
         let messages = self
             .messages
             .lock()
-            .map_err(|_| anyhow::anyhow!("Lock poisoned"))?;
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
         Ok(messages
             .iter()
             .filter(|m| m.sender_id == user_id || m.recipient_id == user_id)
@@ -649,20 +649,20 @@ impl MockPersistence {
             .collect())
     }
 
-    pub async fn save_ksb_domain(&self, domain: &KsbDomainRecord) -> anyhow::Result<()> {
+    pub async fn save_ksb_domain(&self, domain: &KsbDomainRecord) -> nexcore_error::Result<()> {
         let mut domains = self
             .ksb_domains
             .lock()
-            .map_err(|_| anyhow::anyhow!("Lock poisoned"))?;
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
         domains.push(domain.clone());
         Ok(())
     }
 
-    pub async fn list_ksb_domains(&self) -> anyhow::Result<Vec<KsbDomainRecord>> {
+    pub async fn list_ksb_domains(&self) -> nexcore_error::Result<Vec<KsbDomainRecord>> {
         let domains = self
             .ksb_domains
             .lock()
-            .map_err(|_| anyhow::anyhow!("Lock poisoned"))?;
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
         Ok(domains.clone())
     }
 }

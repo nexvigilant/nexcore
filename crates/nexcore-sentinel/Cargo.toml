@@ -23,7 +23,7 @@ regex = { version = "1.10.5" }
 tracing = { version = "0.1.40" }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
-anyhow = { version = "1.0.86" }
+nexcore-error = { workspace = true }
 once_cell = { version = "1.19.0" }
 toml = { version = "0.8.15" }
 notify = "8.2.0"

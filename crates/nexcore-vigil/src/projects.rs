@@ -1,4 +1,4 @@
-use anyhow::Result;
+use nexcore_error::Result;
 use chrono::{DateTime, Utc};
 use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
@@ -77,7 +77,7 @@ impl ProjectRegistry {
             let temp = tempfile::NamedTempFile::new_in(&data_dir)?;
             serde_json::to_writer_pretty(&temp, &*projects)?;
             temp.persist(data_dir.join("projects.json"))?;
-            Ok::<(), anyhow::Error>(())
+            Ok::<(), nexcore_error::NexError>(())
         })
         .await??;
 

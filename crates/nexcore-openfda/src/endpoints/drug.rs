@@ -34,7 +34,7 @@ pub const DRUG_DRUGSFDA_ENDPOINT: &str = "/drug/drugsfda.json";
 pub async fn fetch_drug_events(
     client: &OpenFdaClient,
     params: &QueryParams,
-) -> Result<OpenFdaResponse<DrugEvent>, anyhow::Error> {
+) -> Result<OpenFdaResponse<DrugEvent>, nexcore_error::NexError> {
     client.fetch::<DrugEvent>(DRUG_EVENT_ENDPOINT, params).await
 }
 
@@ -46,7 +46,7 @@ pub async fn fetch_drug_events(
 pub async fn fetch_drug_labels(
     client: &OpenFdaClient,
     params: &QueryParams,
-) -> Result<OpenFdaResponse<DrugLabel>, anyhow::Error> {
+) -> Result<OpenFdaResponse<DrugLabel>, nexcore_error::NexError> {
     client.fetch::<DrugLabel>(DRUG_LABEL_ENDPOINT, params).await
 }
 
@@ -58,7 +58,7 @@ pub async fn fetch_drug_labels(
 pub async fn fetch_drug_recalls(
     client: &OpenFdaClient,
     params: &QueryParams,
-) -> Result<OpenFdaResponse<DrugRecall>, anyhow::Error> {
+) -> Result<OpenFdaResponse<DrugRecall>, nexcore_error::NexError> {
     client
         .fetch::<DrugRecall>(DRUG_RECALL_ENDPOINT, params)
         .await
@@ -72,7 +72,7 @@ pub async fn fetch_drug_recalls(
 pub async fn fetch_drug_ndc(
     client: &OpenFdaClient,
     params: &QueryParams,
-) -> Result<OpenFdaResponse<DrugNdc>, anyhow::Error> {
+) -> Result<OpenFdaResponse<DrugNdc>, nexcore_error::NexError> {
     client.fetch::<DrugNdc>(DRUG_NDC_ENDPOINT, params).await
 }
 
@@ -84,7 +84,7 @@ pub async fn fetch_drug_ndc(
 pub async fn fetch_drugs_at_fda(
     client: &OpenFdaClient,
     params: &QueryParams,
-) -> Result<OpenFdaResponse<DrugApplication>, anyhow::Error> {
+) -> Result<OpenFdaResponse<DrugApplication>, nexcore_error::NexError> {
     client
         .fetch::<DrugApplication>(DRUG_DRUGSFDA_ENDPOINT, params)
         .await

@@ -19,11 +19,11 @@ impl TestResolver {
 }
 
 impl InternalDepResolver for TestResolver {
-    fn resolve_version(&self, crate_name: &str) -> anyhow::Result<String> {
+    fn resolve_version(&self, crate_name: &str) -> nexcore_error::Result<String> {
         self.versions
             .get(crate_name)
             .cloned()
-            .ok_or_else(|| anyhow::anyhow!("Unknown crate: {crate_name}"))
+            .ok_or_else(|| nexcore_error::nexerror!("Unknown crate: {crate_name}"))
     }
 }
 

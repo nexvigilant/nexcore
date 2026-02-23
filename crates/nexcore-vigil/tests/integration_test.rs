@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 #[tokio::test]
-async fn test_full_orchestration_flow() -> anyhow::Result<()> {
+async fn test_full_orchestration_flow() -> nexcore_error::Result<()> {
     let bus = EventBus::new(10);
     let authority = AuthorityConfig {
         autonomous_allowed: vec!["test".into()],

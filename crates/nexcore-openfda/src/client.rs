@@ -173,7 +173,7 @@ impl OpenFdaClient {
         &self,
         endpoint: &str,
         params: &QueryParams,
-    ) -> Result<OpenFdaResponse<T>, anyhow::Error> {
+    ) -> Result<OpenFdaResponse<T>, nexcore_error::NexError> {
         let url = self.build_url(endpoint, params);
 
         // --- Fresh cache hit ---
@@ -207,7 +207,7 @@ impl OpenFdaClient {
                         .map_err(OpenFdaError::ParseError)?;
                     return Ok(response);
                 }
-                return Err(anyhow::Error::from(api_err));
+                return Err(nexcore_error::NexError::from(api_err));
             }
         };
 

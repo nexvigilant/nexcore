@@ -2,7 +2,7 @@
 //! Supports async generation with automatic failover.
 
 use crate::ai::clients::{GenerationOptions, ModelClient};
-use anyhow::{Result, anyhow};
+use nexcore_error::{Result, nexerror};
 use std::collections::HashMap;
 
 /// Orchestrator that manages multiple model clients with fallback.
@@ -63,7 +63,7 @@ impl ModelOrchestrator {
             }
         }
 
-        Err(last_error.unwrap_or_else(|| anyhow!("No clients registered in orchestrator")))
+        Err(last_error.unwrap_or_else(|| nexerror!("No clients registered in orchestrator")))
     }
 
     /// Get the list of registered client names.

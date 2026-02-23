@@ -79,7 +79,7 @@ impl SurveillanceReport {
     }
 
     /// Persist the report as JSON to the output directory.
-    pub fn save(&self, output_dir: &std::path::Path) -> anyhow::Result<()> {
+    pub fn save(&self, output_dir: &std::path::Path) -> nexcore_error::Result<()> {
         std::fs::create_dir_all(output_dir)?;
         let filename = format!("pharos-report-{}.json", self.run_id);
         let path = output_dir.join(filename);

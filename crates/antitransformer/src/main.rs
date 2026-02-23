@@ -16,7 +16,7 @@
 //! [{"id": "h1", "verdict": "human", "probability": 0.12, "confidence": 0.76, "features": {...}}]
 //! ```
 
-use anyhow::{Context, Result};
+use nexcore_error::{Context, Result};
 use clap::{Parser, Subcommand};
 use std::io::{self, BufRead, Write};
 use tracing::{error, info};

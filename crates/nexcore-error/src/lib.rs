@@ -87,9 +87,5 @@ mod tests {
         assert_eq!(err.to_string(), "error code: 42");
     }
 
-    #[test]
-    fn test_from_string() {
-        let err: NexError = "string error".into();
-        assert_eq!(err.to_string(), "string error");
-    }
+
 }

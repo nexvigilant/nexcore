@@ -17,7 +17,7 @@ impl Executor for SpeechExecutor {
         &self,
         action: &str,
         params: serde_json::Value,
-    ) -> anyhow::Result<ExecutorResult> {
+    ) -> nexcore_error::Result<ExecutorResult> {
         let text = params
             .get("text")
             .and_then(|t: &serde_json::Value| t.as_str())

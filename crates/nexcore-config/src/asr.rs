@@ -271,8 +271,8 @@ fn default_min_smst() -> u32 {
 
 impl AsrConfig {
     /// Load from TOML file
-    pub fn from_file(path: impl AsRef<std::path::Path>) -> anyhow::Result<Self> {
-        use anyhow::Context;
+    pub fn from_file(path: impl AsRef<std::path::Path>) -> nexcore_error::Result<Self> {
+        use nexcore_error::Context;
         let path = path.as_ref();
         let content = std::fs::read_to_string(path)
             .context(format!("Failed to read ASR config: {}", path.display()))?;
@@ -282,8 +282,8 @@ impl AsrConfig {
     }
 
     /// Load from default path (~/.claude/config/asr.toml)
-    pub fn load_default() -> anyhow::Result<Self> {
-        use anyhow::Context;
+    pub fn load_default() -> nexcore_error::Result<Self> {
+        use nexcore_error::Context;
         let home = std::env::var("HOME").context("HOME env not set")?;
         let path = format!("{}/.claude/config/asr.toml", home);
 
@@ -295,8 +295,8 @@ impl AsrConfig {
     }
 
     /// Write to TOML file
-    pub fn write_toml(&self, path: impl AsRef<std::path::Path>) -> anyhow::Result<()> {
-        use anyhow::Context;
+    pub fn write_toml(&self, path: impl AsRef<std::path::Path>) -> nexcore_error::Result<()> {
+        use nexcore_error::Context;
         let path = path.as_ref();
         let content = toml::to_string_pretty(self).context("Failed to serialize ASR config")?;
         std::fs::write(path, &content)

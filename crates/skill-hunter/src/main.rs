@@ -2,7 +2,7 @@
 //!
 //! Hunt down issues in your skill ecosystem!
 
-use anyhow::{Context, Result};
+use nexcore_error::{Context, Result};
 use console::style;
 use indicatif::{ProgressBar, ProgressStyle};
 use skill_hunter::*;

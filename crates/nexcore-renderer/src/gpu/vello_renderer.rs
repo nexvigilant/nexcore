@@ -62,7 +62,7 @@ impl VelloRenderer {
     ///
     /// # Errors
     /// Returns error if GPU initialization or Vello renderer creation fails.
-    pub async fn new(window: Arc<Window>) -> anyhow::Result<Self> {
+    pub async fn new(window: Arc<Window>) -> nexcore_error::Result<Self> {
         let size = window.inner_size();
         let gpu = init_gpu(window, size).await?;
 
@@ -118,7 +118,7 @@ impl VelloRenderer {
         commands: &[DisplayCommand],
         bg_color: Color,
         text_renderer: &mut TextRenderer,
-    ) -> anyhow::Result<()> {
+    ) -> nexcore_error::Result<()> {
         let w = self.size.width as f32;
         let h = self.size.height as f32;
 
@@ -146,7 +146,7 @@ impl VelloRenderer {
         &mut self,
         commands: &[DisplayCommand],
         bg_color: Color,
-    ) -> anyhow::Result<()> {
+    ) -> nexcore_error::Result<()> {
         let w = self.size.width as f32;
         let h = self.size.height as f32;
 
@@ -228,7 +228,7 @@ impl VelloRenderer {
     }
 
     /// Render the Vello scene into the intermediate texture.
-    fn render_scene_to_texture(&mut self, scene: &Scene, bg_color: Color) -> anyhow::Result<()> {
+    fn render_scene_to_texture(&mut self, scene: &Scene, bg_color: Color) -> nexcore_error::Result<()> {
         let render_params = RenderParams {
             base_color: to_vello_color(bg_color),
             width: self.size.width,
@@ -244,7 +244,7 @@ impl VelloRenderer {
                 &self.target_view,
                 &render_params,
             )
-            .map_err(|e| anyhow::anyhow!("Vello render failed: {e}"))
+            .map_err(|e| nexcore_error::nexerror!("Vello render failed: {e}"))
     }
 
     /// Capture the current `target_texture` as a PNG byte vector.
@@ -254,13 +254,13 @@ impl VelloRenderer {
     ///
     /// # Errors
     /// Returns error if GPU readback or PNG encoding fails.
-    pub fn capture_to_png(&self) -> anyhow::Result<Vec<u8>> {
+    pub fn capture_to_png(&self) -> nexcore_error::Result<Vec<u8>> {
         use image::ImageEncoder;
 
         let width = self.size.width;
         let height = self.size.height;
         if width == 0 || height == 0 {
-            return Err(anyhow::anyhow!("Cannot capture 0-dimension frame"));
+            return Err(nexcore_error::nexerror!("Cannot capture 0-dimension frame"));
         }
 
         let bytes_per_pixel = 4u32; // RGBA8
@@ -317,8 +317,8 @@ impl VelloRenderer {
         });
         map_rx
             .recv()
-            .map_err(|_| anyhow::anyhow!("GPU map channel closed"))?
-            .map_err(|e| anyhow::anyhow!("GPU buffer map failed: {e}"))?;
+            .map_err(|_| nexcore_error::nexerror!("GPU map channel closed"))?
+            .map_err(|e| nexcore_error::nexerror!("GPU buffer map failed: {e}"))?;
 
         let data = slice.get_mapped_range();
 
@@ -342,7 +342,7 @@ impl VelloRenderer {
     }
 
     /// Acquire surface texture, blit, and present.
-    fn present_to_surface(&mut self) -> anyhow::Result<()> {
+    fn present_to_surface(&mut self) -> nexcore_error::Result<()> {
         let output = self.surface.get_current_texture()?;
         let surface_view = output
             .texture
@@ -399,7 +399,7 @@ impl VelloRenderer {
 // ── GPU Initialization Helpers ──────────────────────────────────
 
 /// Initialize wgpu device, queue, surface, and configure the surface.
-async fn init_gpu(window: Arc<Window>, size: PhysicalSize<u32>) -> anyhow::Result<GpuResources> {
+async fn init_gpu(window: Arc<Window>, size: PhysicalSize<u32>) -> nexcore_error::Result<GpuResources> {
     let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
         backends: wgpu::Backends::all(),
         ..Default::default()
@@ -437,7 +437,7 @@ async fn init_gpu(window: Arc<Window>, size: PhysicalSize<u32>) -> anyhow::Resul
 async fn request_adapter(
     instance: &wgpu::Instance,
     surface: &wgpu::Surface<'static>,
-) -> anyhow::Result<wgpu::Adapter> {
+) -> nexcore_error::Result<wgpu::Adapter> {
     instance
         .request_adapter(&wgpu::RequestAdapterOptions {
             power_preference: wgpu::PowerPreference::default(),
@@ -449,7 +449,7 @@ async fn request_adapter(
 }
 
 /// Request a device and queue from the adapter.
-async fn request_device(adapter: &wgpu::Adapter) -> anyhow::Result<(wgpu::Device, wgpu::Queue)> {
+async fn request_device(adapter: &wgpu::Adapter) -> nexcore_error::Result<(wgpu::Device, wgpu::Queue)> {
     adapter
         .request_device(&wgpu::DeviceDescriptor {
             required_features: wgpu::Features::empty(),
@@ -473,7 +473,7 @@ fn pick_srgb_format(caps: &wgpu::SurfaceCapabilities) -> wgpu::TextureFormat {
 }
 
 /// Create the Vello renderer with full antialiasing support.
-fn create_vello_renderer(device: &wgpu::Device) -> anyhow::Result<Renderer> {
+fn create_vello_renderer(device: &wgpu::Device) -> nexcore_error::Result<Renderer> {
     Renderer::new(
         device,
         RendererOptions {
@@ -483,7 +483,7 @@ fn create_vello_renderer(device: &wgpu::Device) -> anyhow::Result<Renderer> {
             ..Default::default()
         },
     )
-    .map_err(|e| anyhow::anyhow!("Vello renderer init failed: {e}"))
+    .map_err(|e| nexcore_error::nexerror!("Vello renderer init failed: {e}"))
 }
 
 /// Create the intermediate `Rgba8Unorm` texture for Vello output.

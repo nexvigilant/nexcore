@@ -75,7 +75,7 @@ struct BatchResponse {
 ///
 /// # Errors
 /// Returns error if port binding fails.
-pub async fn serve(port: u16, config: AnalysisConfig) -> anyhow::Result<()> {
+pub async fn serve(port: u16, config: AnalysisConfig) -> nexcore_error::Result<()> {
     use axum::http::{Method, header};
 
     let state = Arc::new(AppState { config });

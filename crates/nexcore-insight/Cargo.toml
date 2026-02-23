@@ -20,7 +20,7 @@ serde_json = { version = "1.0.120" }
 chrono = { version = "0.4.38", features = ["serde"] }
 uuid = { version = "1.10.0", features = ["v4", "serde"] }
 
-anyhow = { version = "1.0.86" }
+nexcore-error = { workspace = true }
 
 [dev-dependencies]
 

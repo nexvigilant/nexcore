@@ -45,7 +45,7 @@ nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", 
 
 # Error handling
 thiserror = { version = "1.0.61" }
-anyhow = { version = "1.0.86" }
+nexcore-error = { workspace = true }
 
 # Logging
 tracing = { version = "0.1.40" }

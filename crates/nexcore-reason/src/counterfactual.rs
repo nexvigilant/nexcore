@@ -38,7 +38,7 @@
 
 use std::collections::{HashMap, HashSet, VecDeque};
 
-use anyhow::Result;
+use nexcore_error::Result;
 use serde::{Deserialize, Serialize};
 
 use crate::dag::{CausalDag, CausalLink, CausalNode, NodeId};
@@ -537,7 +537,7 @@ impl CounterfactualEngine {
     ) -> Result<()> {
         match intervention {
             Intervention::RemoveNode(id) => {
-                anyhow::ensure!(
+                nexcore_error::ensure!(
                     original_ids.contains(id),
                     "RemoveNode: node '{}' does not exist in the DAG",
                     id
@@ -546,7 +546,7 @@ impl CounterfactualEngine {
             }
 
             Intervention::RemoveLink { from, to } => {
-                anyhow::ensure!(
+                nexcore_error::ensure!(
                     link_between(modified, from, to).is_some(),
                     "RemoveLink: no link from '{}' to '{}' exists in the DAG",
                     from,
@@ -560,7 +560,7 @@ impl CounterfactualEngine {
                 to,
                 new_strength,
             } => {
-                anyhow::ensure!(
+                nexcore_error::ensure!(
                     link_between(modified, from, to).is_some(),
                     "AdjustStrength: no link from '{}' to '{}' exists in the DAG",
                     from,
@@ -570,7 +570,7 @@ impl CounterfactualEngine {
             }
 
             Intervention::InjectNode(node) => {
-                anyhow::ensure!(
+                nexcore_error::ensure!(
                     !original_ids.contains(&node.id),
                     "InjectNode: node '{}' already exists in the DAG",
                     node.id

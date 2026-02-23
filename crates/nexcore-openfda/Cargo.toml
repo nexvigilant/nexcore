@@ -13,7 +13,7 @@ name = "nexcore_openfda"
 path = "src/lib.rs"
 
 [dependencies]
-anyhow = { workspace = true }
+nexcore-error = { workspace = true }
 chrono = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }

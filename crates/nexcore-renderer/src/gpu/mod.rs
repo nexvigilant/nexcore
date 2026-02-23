@@ -76,7 +76,7 @@ impl GpuRenderer {
     ///
     /// # Errors
     /// Returns error if GPU initialization fails.
-    pub async fn new(window: Arc<Window>) -> anyhow::Result<Self> {
+    pub async fn new(window: Arc<Window>) -> nexcore_error::Result<Self> {
         let size = window.inner_size();
 
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
@@ -325,7 +325,7 @@ impl GpuRenderer {
         commands: &[DisplayCommand],
         bg_color: Color,
         text_renderer: &mut TextRenderer,
-    ) -> anyhow::Result<()> {
+    ) -> nexcore_error::Result<()> {
         let output = self.surface.get_current_texture()?;
         let view = output
             .texture

@@ -8,7 +8,7 @@ use std::sync::Arc;
 use tower::util::ServiceExt;
 
 #[tokio::test]
-async fn test_reporting_flow() -> anyhow::Result<()> {
+async fn test_reporting_flow() -> nexcore_error::Result<()> {
     // Environment setup
     unsafe {
         std::env::set_var("RATE_LIMIT_RPS", "1000");

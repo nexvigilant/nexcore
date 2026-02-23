@@ -29,11 +29,11 @@ impl BrowserExecutor {
     }
 
     /// Execute navigate action
-    async fn execute_navigate(&self, params: &Value) -> anyhow::Result<ExecutorResult> {
+    async fn execute_navigate(&self, params: &Value) -> nexcore_error::Result<ExecutorResult> {
         let url = params
             .get("url")
             .and_then(Value::as_str)
-            .ok_or_else(|| anyhow::anyhow!("Missing 'url' parameter"))?;
+            .ok_or_else(|| nexcore_error::nexerror!("Missing 'url' parameter"))?;
 
         info!(url = %url, "Navigating to URL");
 
@@ -67,7 +67,7 @@ impl BrowserExecutor {
     }
 
     /// Execute new_page action
-    async fn execute_new_page(&self, params: &Value) -> anyhow::Result<ExecutorResult> {
+    async fn execute_new_page(&self, params: &Value) -> nexcore_error::Result<ExecutorResult> {
         let url = params
             .get("url")
             .and_then(Value::as_str)
@@ -102,11 +102,11 @@ impl BrowserExecutor {
     }
 
     /// Execute close_page action
-    async fn execute_close_page(&self, params: &Value) -> anyhow::Result<ExecutorResult> {
+    async fn execute_close_page(&self, params: &Value) -> nexcore_error::Result<ExecutorResult> {
         let page_id = params
             .get("page_id")
             .and_then(Value::as_str)
-            .ok_or_else(|| anyhow::anyhow!("Missing 'page_id' parameter"))?;
+            .ok_or_else(|| nexcore_error::nexerror!("Missing 'page_id' parameter"))?;
 
         info!(page_id = %page_id, "Closing page");
 
@@ -132,7 +132,7 @@ impl BrowserExecutor {
     }
 
     /// Execute close_browser action
-    async fn execute_close_browser(&self) -> anyhow::Result<ExecutorResult> {
+    async fn execute_close_browser(&self) -> nexcore_error::Result<ExecutorResult> {
         info!("Closing browser");
 
         match close_browser().await {
@@ -166,7 +166,7 @@ impl Executor for BrowserExecutor {
         ExecutorType::Browser
     }
 
-    async fn execute(&self, action: &str, params: Value) -> anyhow::Result<ExecutorResult> {
+    async fn execute(&self, action: &str, params: Value) -> nexcore_error::Result<ExecutorResult> {
         debug!(action = %action, "BrowserExecutor executing action");
 
         match action {

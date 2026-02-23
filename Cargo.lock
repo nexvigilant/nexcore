@@ -22,7 +22,7 @@ checksum = "366ffbaa4442f4684d91e2cd7c5ea7c4ed8add41959a31447066e279e432b618"
 name = "academy-forge"
 version = "1.0.0"
 dependencies = [
- "anyhow",
+ "nexcore-error",
  "quote",
  "regex",
  "serde",
@@ -341,9 +341,9 @@ dependencies = [
 name = "antitransformer"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "axum 0.8.8",
  "clap",
+ "nexcore-error",
  "proptest",
  "serde",
  "serde_json",
@@ -2235,9 +2235,9 @@ checksum = "3a822ea5bc7590f9d40f1ba12c0dc3c2760f3482c6984db1573ad11031420831"
 name = "claude-fs-mcp"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
  "flate2",
+ "nexcore-error",
  "rmcp",
  "schemars",
  "serde",
@@ -2253,10 +2253,10 @@ dependencies = [
 name = "claude-knowledge-mcp"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
  "dirs 5.0.1",
  "glob",
+ "nexcore-error",
  "regex",
  "rmcp",
  "rusqlite",
@@ -2274,8 +2274,8 @@ dependencies = [
 name = "claude-mcp-config"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "clap",
+ "nexcore-error",
  "serde_json",
 ]
 
@@ -2283,7 +2283,7 @@ dependencies = [
 name = "claude-repl-mcp"
 version = "1.0.0"
 dependencies = [
- "anyhow",
+ "nexcore-error",
  "rmcp",
  "schemars",
  "serde",
@@ -2343,9 +2343,9 @@ dependencies = [
 name = "codex-mcp-config"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
  "clap",
+ "nexcore-error",
  "toml_edit 0.22.27",
 ]
 
@@ -2900,8 +2900,8 @@ dependencies = [
 name = "crate-converter"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "clap",
+ "nexcore-error",
  "pretty_assertions",
  "toml_edit 0.22.27",
  "walkdir",
@@ -3513,8 +3513,8 @@ checksum = "f27ae1dd37df86211c42e150270f82743308803d90a6f6e6651cd730d5e1732f"
 name = "dag-publish"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "clap",
+ "nexcore-error",
  "serde",
  "tempfile",
  "toml 0.8.23",
@@ -3874,8 +3874,8 @@ name = "disney-loop"
 version = "1.0.0"
 dependencies = [
  "antitransformer",
- "anyhow",
  "clap",
+ "nexcore-error",
  "nexcore-transform",
  "polars",
  "serde",
@@ -5370,10 +5370,10 @@ dependencies = [
 name = "gsheets-mcp"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "base64 0.22.1",
  "chrono",
  "jsonwebtoken",
+ "nexcore-error",
  "reqwest 0.12.28",
  "rmcp",
  "schemars",
@@ -5405,10 +5405,10 @@ dependencies = [
 name = "gvids-mcp"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "base64 0.22.1",
  "chrono",
  "jsonwebtoken",
+ "nexcore-error",
  "reqwest 0.12.28",
  "rmcp",
  "schemars",
@@ -7443,8 +7443,8 @@ dependencies = [
 name = "mcp-stdio-client"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "clap",
+ "nexcore-error",
  "serde",
  "serde_json",
  "tokio",
@@ -7933,7 +7933,6 @@ dependencies = [
 name = "nexcore-api"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "axum 0.8.8",
  "base64 0.22.1",
  "chrono",
@@ -7941,6 +7940,7 @@ dependencies = [
  "futures",
  "hex",
  "hmac",
+ "nexcore-error",
  "nexcore-id",
  "nexcore-mesh",
  "nexcore-primitives",
@@ -7981,7 +7981,7 @@ dependencies = [
 name = "nexcore-bicone"
 version = "0.1.0"
 dependencies = [
- "anyhow",
+ "nexcore-error",
  "serde",
  "serde_json",
 ]
@@ -7990,13 +7990,13 @@ dependencies = [
 name = "nexcore-brain"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
  "clap",
  "dirs 5.0.1",
  "hex",
  "nexcore-constants",
  "nexcore-db",
+ "nexcore-error",
  "nexcore-id",
  "nexcore-immunity",
  "nexcore-insight",
@@ -8205,7 +8205,7 @@ dependencies = [
 name = "nexcore-config"
 version = "0.1.0"
 dependencies = [
- "anyhow",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
@@ -8335,9 +8335,9 @@ dependencies = [
 name = "nexcore-docs-mcp"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "moka",
  "nexcore-constants",
+ "nexcore-error",
  "reqwest 0.12.28",
  "rmcp",
  "serde",
@@ -8424,10 +8424,10 @@ version = "0.1.0"
 name = "nexcore-faers-etl"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
  "clap",
  "duckdb",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "nexcore-vigilance",
  "polars",
@@ -8487,8 +8487,8 @@ dependencies = [
 name = "nexcore-foundry"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
@@ -8573,8 +8573,8 @@ dependencies = [
 name = "nexcore-homeostasis"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
+ "nexcore-error",
  "nexcore-homeostasis-memory",
  "nexcore-homeostasis-primitives",
  "nexcore-homeostasis-storm",
@@ -8589,8 +8589,8 @@ dependencies = [
 name = "nexcore-homeostasis-memory"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
+ "nexcore-error",
  "nexcore-homeostasis-primitives",
  "nexcore-lex-primitiva",
  "serde",
@@ -8604,8 +8604,8 @@ dependencies = [
 name = "nexcore-homeostasis-primitives"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
+ "nexcore-error",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
@@ -8617,8 +8617,8 @@ dependencies = [
 name = "nexcore-homeostasis-storm"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
+ "nexcore-error",
  "nexcore-homeostasis-primitives",
  "serde",
  "serde_json",
@@ -8693,8 +8693,8 @@ dependencies = [
 name = "nexcore-insight"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "chrono",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
@@ -8775,10 +8775,10 @@ dependencies = [
 name = "nexcore-labs"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
  "dashmap 6.1.0",
  "nexcore-constants",
+ "nexcore-error",
  "nexcore-id",
  "nexcore-lex-primitiva",
  "nexcore-signal-types",
@@ -8815,7 +8815,6 @@ version = "1.0.0"
 dependencies = [
  "academy-forge",
  "antitransformer",
- "anyhow",
  "base64 0.22.1",
  "chrono",
  "core-true",
@@ -8861,6 +8860,7 @@ dependencies = [
  "nexcore-education-machine",
  "nexcore-energy",
  "nexcore-engram",
+ "nexcore-error",
  "nexcore-faers-etl",
  "nexcore-fda-guidance",
  "nexcore-forge-strategy",
@@ -8980,8 +8980,8 @@ dependencies = [
 name = "nexcore-mcp-hot"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "clap",
+ "nexcore-error",
  "nexcore-stdio-proxy",
  "serde_json",
  "tempfile",
@@ -9106,10 +9106,10 @@ dependencies = [
 name = "nexcore-nvrepl"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
  "colored",
  "nexcore-energy",
+ "nexcore-error",
  "nexcore-guardian-engine",
  "nexcore-pv-core",
  "nexcore-vigilance",
@@ -9125,8 +9125,8 @@ dependencies = [
 name = "nexcore-openfda"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
+ "nexcore-error",
  "reqwest 0.12.28",
  "serde",
  "serde_json",
@@ -9290,10 +9290,10 @@ dependencies = [
 name = "nexcore-pharos"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
  "clap",
  "nexcore-cytokine",
+ "nexcore-error",
  "nexcore-faers-etl",
  "nexcore-guardian-engine",
  "nexcore-primitives",
@@ -9351,10 +9351,10 @@ dependencies = [
 name = "nexcore-primitives"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
  "criterion",
  "nexcore-constants",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "parking_lot",
  "serde",
@@ -9439,8 +9439,8 @@ dependencies = [
 name = "nexcore-reason"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
+ "nexcore-error",
  "nexcore-foundry",
  "nexcore-lex-primitiva",
  "serde",
@@ -9466,12 +9466,12 @@ dependencies = [
 name = "nexcore-renderer"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "bytemuck",
  "cosmic-text",
  "html5ever",
  "image",
  "markup5ever_rcdom",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "pollster",
  "prima",
@@ -9537,10 +9537,10 @@ dependencies = [
 name = "nexcore-sentinel"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
  "clap",
  "ipnetwork",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "notify",
  "once_cell",
@@ -9588,11 +9588,11 @@ dependencies = [
 name = "nexcore-signal-pipeline"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "axum 0.8.8",
  "bytes",
  "chrono",
  "http-body-util",
+ "nexcore-error",
  "nexcore-id",
  "nexcore-lex-primitiva",
  "nexcore-primitives",
@@ -9706,8 +9706,8 @@ dependencies = [
 name = "nexcore-social"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "reqwest 0.12.28",
  "serde",
@@ -9788,7 +9788,7 @@ dependencies = [
 name = "nexcore-stoichiometry"
 version = "1.0.0"
 dependencies = [
- "anyhow",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "nexcore-primitives",
  "serde",
@@ -9936,8 +9936,8 @@ dependencies = [
 name = "nexcore-value-mining"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "nexcore-social",
  "serde",
@@ -9971,7 +9971,6 @@ dependencies = [
 name = "nexcore-vigil"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "async-trait",
  "axum 0.8.8",
  "chrono",
@@ -9986,6 +9985,7 @@ dependencies = [
  "nexcore-cortex",
  "nexcore-cytokine",
  "nexcore-energy",
+ "nexcore-error",
  "nexcore-forge-strategy",
  "nexcore-hormones",
  "nexcore-id",
@@ -10017,7 +10017,6 @@ dependencies = [
 name = "nexcore-vigilance"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "async-trait",
  "base64 0.22.1",
  "chrono",
@@ -10035,6 +10034,7 @@ dependencies = [
  "nexcore-constants",
  "nexcore-cytokine",
  "nexcore-dtree",
+ "nexcore-error",
  "nexcore-guardian-engine",
  "nexcore-harm-taxonomy",
  "nexcore-hormones",
@@ -11166,7 +11166,7 @@ checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
 name = "perplexity-mcp"
 version = "1.0.0"
 dependencies = [
- "anyhow",
+ "nexcore-error",
  "nexcore-perplexity",
  "rmcp",
  "schemars",
@@ -12138,8 +12138,8 @@ dependencies = [
 name = "prima-pipeline"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "clap",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "prima",
  "serde",
@@ -12365,10 +12365,10 @@ checksum = "40e24eee682d89fb193496edf918a7f407d30175b2e785fe057e4392dfd182e0"
 name = "pvos-primitive-expansion"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "base64 0.22.1",
  "clap",
  "csv",
+ "nexcore-error",
  "polars",
  "proptest",
  "reqwest 0.12.28",
@@ -12981,8 +12981,8 @@ dependencies = [
 name = "reddit-mcp"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "dotenvy",
+ "nexcore-error",
  "nexcore-social",
  "nexcore-value-mining",
  "parking_lot",
@@ -14241,10 +14241,10 @@ dependencies = [
 name = "skill-hunter"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "console 0.15.11",
  "dirs 5.0.1",
  "indicatif 0.17.11",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "rand 0.8.5",
  "serde",
@@ -14327,8 +14327,8 @@ dependencies = [
 name = "skills-mcp"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "chrono",
+ "nexcore-error",
  "rmcp",
  "rusqlite",
  "schemars",
@@ -15994,8 +15994,8 @@ dependencies = [
 name = "transformer-primitives"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "clap",
+ "nexcore-error",
  "polars",
  "proptest",
  "serde",

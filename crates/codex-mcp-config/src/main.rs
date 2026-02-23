@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use anyhow::{Result, anyhow};
+use nexcore_error::{Result, nexerror};
 use clap::{Parser, Subcommand};
 use toml_edit::{DocumentMut, value};
 
@@ -44,7 +44,7 @@ fn main() -> Result<()> {
 
 fn update_codex_config(path: &Path, global_mcp: &Path) -> Result<()> {
     let text = fs::read_to_string(path)
-        .map_err(|err| anyhow!("failed to read {}: {err}", path.display()))?;
+        .map_err(|err| nexerror!("failed to read {}: {err}", path.display()))?;
     let mut doc = text.parse::<DocumentMut>()?;
 
     if !doc.contains_table("mcp") {
@@ -54,13 +54,13 @@ fn update_codex_config(path: &Path, global_mcp: &Path) -> Result<()> {
     doc["mcp"]["config_path"] = value(global_mcp.display().to_string());
 
     fs::write(path, doc.to_string())
-        .map_err(|err| anyhow!("failed to write {}: {err}", path.display()))?;
+        .map_err(|err| nexerror!("failed to write {}: {err}", path.display()))?;
     Ok(())
 }
 
 fn install_default_servers(path: &Path) -> Result<()> {
     let text = fs::read_to_string(path)
-        .map_err(|err| anyhow!("failed to read {}: {err}", path.display()))?;
+        .map_err(|err| nexerror!("failed to read {}: {err}", path.display()))?;
     let mut doc = text.parse::<DocumentMut>()?;
 
     if !doc.contains_table("mcp_servers") {
@@ -87,7 +87,7 @@ fn install_default_servers(path: &Path) -> Result<()> {
     );
 
     fs::write(path, doc.to_string())
-        .map_err(|err| anyhow!("failed to write {}: {err}", path.display()))?;
+        .map_err(|err| nexerror!("failed to write {}: {err}", path.display()))?;
     Ok(())
 }
 
@@ -107,7 +107,7 @@ fn set_http_server(doc: &mut DocumentMut, name: &str, url: &str) {
 
 fn install_symlink(codex_mcp: &Path, global_mcp: &Path) -> Result<()> {
     if !global_mcp.exists() {
-        return Err(anyhow!(
+        return Err(nexerror!(
             "global MCP config missing: {}",
             global_mcp.display()
         ));
@@ -115,25 +115,25 @@ fn install_symlink(codex_mcp: &Path, global_mcp: &Path) -> Result<()> {
 
     if let Some(parent) = codex_mcp.parent() {
         fs::create_dir_all(parent)
-            .map_err(|err| anyhow!("failed to create {}: {err}", parent.display()))?;
+            .map_err(|err| nexerror!("failed to create {}: {err}", parent.display()))?;
     }
 
     if codex_mcp.exists() {
         let stamp = chrono::Local::now().format("%Y%m%d-%H%M%S").to_string();
         let backup = codex_mcp.with_extension(format!("bak-{stamp}"));
         fs::rename(codex_mcp, &backup)
-            .map_err(|err| anyhow!("failed to backup {}: {err}", codex_mcp.display()))?;
+            .map_err(|err| nexerror!("failed to backup {}: {err}", codex_mcp.display()))?;
     }
 
     #[cfg(unix)]
     {
         std::os::unix::fs::symlink(global_mcp, codex_mcp)
-            .map_err(|err| anyhow!("failed to symlink: {err}"))?;
+            .map_err(|err| nexerror!("failed to symlink: {err}"))?;
     }
 
     #[cfg(not(unix))]
     {
-        fs::copy(global_mcp, codex_mcp).map_err(|err| anyhow!("failed to copy: {err}"))?;
+        fs::copy(global_mcp, codex_mcp).map_err(|err| nexerror!("failed to copy: {err}"))?;
     }
 
     Ok(())
@@ -142,26 +142,26 @@ fn install_symlink(codex_mcp: &Path, global_mcp: &Path) -> Result<()> {
 fn install_skills_symlink(agents_skills: &Path, codex_skills: &Path) -> Result<()> {
     if let Some(parent) = agents_skills.parent() {
         fs::create_dir_all(parent)
-            .map_err(|err| anyhow!("failed to create {}: {err}", parent.display()))?;
+            .map_err(|err| nexerror!("failed to create {}: {err}", parent.display()))?;
     }
 
     if agents_skills.exists() {
         let stamp = chrono::Local::now().format("%Y%m%d-%H%M%S").to_string();
         let backup = agents_skills.with_extension(format!("bak-{stamp}"));
         fs::rename(agents_skills, &backup)
-            .map_err(|err| anyhow!("failed to backup {}: {err}", agents_skills.display()))?;
+            .map_err(|err| nexerror!("failed to backup {}: {err}", agents_skills.display()))?;
     }
 
     #[cfg(unix)]
     {
         std::os::unix::fs::symlink(codex_skills, agents_skills)
-            .map_err(|err| anyhow!("failed to symlink: {err}"))?;
+            .map_err(|err| nexerror!("failed to symlink: {err}"))?;
     }
 
     #[cfg(not(unix))]
     {
         fs::create_dir_all(agents_skills)
-            .map_err(|err| anyhow!("failed to create {}: {err}", agents_skills.display()))?;
+            .map_err(|err| nexerror!("failed to create {}: {err}", agents_skills.display()))?;
     }
 
     Ok(())

@@ -4,7 +4,7 @@
 //!
 //! Uses lazy-static pattern for <1ms config access after first load.
 
-use anyhow::{Context, Result};
+use nexcore_error::{Context, Result};
 use nexcore_config::ClaudeConfig;
 use once_cell::sync::Lazy;
 
@@ -54,7 +54,7 @@ fn load_config_internal() -> Result<ClaudeConfig> {
         return Ok(ClaudeConfig::from_file(path_str)?);
     }
 
-    anyhow::bail!(
+    nexcore_error::bail!(
         "No configuration found. Tried:\n  - {}\n  - {}",
         consolidated.display(),
         legacy.display()

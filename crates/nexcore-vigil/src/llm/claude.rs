@@ -12,10 +12,10 @@ pub struct ClaudeClient {
 }
 
 impl ClaudeClient {
-    pub fn new(api_key: String, model: String) -> anyhow::Result<Self> {
+    pub fn new(api_key: String, model: String) -> nexcore_error::Result<Self> {
         let mut headers = header::HeaderMap::new();
         let api_key_value = header::HeaderValue::from_str(&api_key)
-            .map_err(|e| anyhow::anyhow!("invalid_api_key: {e}"))?;
+            .map_err(|e| nexcore_error::nexerror!("invalid_api_key: {e}"))?;
         headers.insert("x-api-key", api_key_value);
         headers.insert(
             "anthropic-version",
@@ -25,7 +25,7 @@ impl ClaudeClient {
         let client = Client::builder()
             .default_headers(headers)
             .build()
-            .map_err(|e| anyhow::anyhow!("client_build_fail: {e}"))?;
+            .map_err(|e| nexcore_error::nexerror!("client_build_fail: {e}"))?;
 
         Ok(Self { client, model })
     }
@@ -33,7 +33,7 @@ impl ClaudeClient {
 
 #[async_trait]
 impl LLMClient for ClaudeClient {
-    async fn invoke(&self, context: &str, event: &Event) -> anyhow::Result<Interaction> {
+    async fn invoke(&self, context: &str, event: &Event) -> nexcore_error::Result<Interaction> {
         info!(model = %self.model, "invoking_claude");
         let body = json!({
             "model": self.model,
@@ -49,7 +49,7 @@ impl LLMClient for ClaudeClient {
             .send()
             .await?;
         if !response.status().is_success() {
-            return Err(anyhow::anyhow!("API error: {}", response.text().await?));
+            return Err(nexcore_error::nexerror!("API error: {}", response.text().await?));
         }
 
         let resp_json: serde_json::Value = response.json().await?;

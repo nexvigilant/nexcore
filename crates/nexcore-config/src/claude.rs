@@ -2,7 +2,7 @@
 //!
 //! Type-safe representation of `.claude.json` configuration.
 
-use anyhow::Result;
+use nexcore_error::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -61,7 +61,7 @@ pub struct ClaudeConfig {
 impl ClaudeConfig {
     /// Load configuration from JSON file
     pub fn from_file(path: &str) -> Result<Self> {
-        use anyhow::Context;
+        use nexcore_error::Context;
         let content = std::fs::read_to_string(path)
             .context(format!("Failed to read Claude config: {}", path))?;
         let config = serde_json::from_str(&content)
@@ -71,7 +71,7 @@ impl ClaudeConfig {
 
     /// Load from default path (~/.claude.json)
     pub fn load_default() -> Result<Self> {
-        use anyhow::Context;
+        use nexcore_error::Context;
         let home = std::env::var("HOME").context("HOME env not set")?;
         Self::from_file(&format!("{}/.claude.json", home))
     }
@@ -81,7 +81,7 @@ impl ClaudeConfig {
     /// Creates a `.bak` backup before overwriting to prevent data loss.
     /// Uses atomic write pattern: write to temp, then rename.
     pub fn save_to_file(&self, path: &str) -> Result<()> {
-        use anyhow::Context;
+        use nexcore_error::Context;
         use std::fs;
         use std::path::Path;
 
@@ -109,7 +109,7 @@ impl ClaudeConfig {
 
     /// Save to default path (~/.claude.json)
     pub fn save_default(&self) -> Result<()> {
-        use anyhow::Context;
+        use nexcore_error::Context;
         let home = std::env::var("HOME").context("HOME env not set")?;
         self.save_to_file(&format!("{}/.claude.json", home))
     }

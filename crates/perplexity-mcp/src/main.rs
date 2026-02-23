@@ -1,7 +1,7 @@
 // Copyright 2026 NexVigilant LLC. All Rights Reserved.
 // Intellectual Property of Matthew Alexander Campion, PharmD
 
-use anyhow::Result;
+use nexcore_error::Result;
 use perplexity_mcp::PerplexityMcpServer;
 use rmcp::ServiceExt;
 use rmcp::transport::stdio;

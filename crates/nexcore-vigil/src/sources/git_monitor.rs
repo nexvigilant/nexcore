@@ -23,7 +23,7 @@ impl GitMonitor {
         }
     }
 
-    async fn check_repository(&self, path: &PathBuf) -> anyhow::Result<()> {
+    async fn check_repository(&self, path: &PathBuf) -> nexcore_error::Result<()> {
         debug!(?path, "checking_git_repo");
 
         let output = Command::new("git")
@@ -36,7 +36,7 @@ impl GitMonitor {
             .await?;
 
         if !output.status.success() {
-            return Err(anyhow::anyhow!("Not a git repository or git error"));
+            return Err(nexcore_error::nexerror!("Not a git repository or git error"));
         }
 
         let timestamp_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -71,7 +71,7 @@ impl Source for GitMonitor {
         "git_monitor"
     }
 
-    async fn run(&self) -> anyhow::Result<()> {
+    async fn run(&self) -> nexcore_error::Result<()> {
         info!(interval = ?self.poll_interval, "git_monitor_starting");
 
         loop {

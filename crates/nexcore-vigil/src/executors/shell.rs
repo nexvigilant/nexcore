@@ -29,7 +29,7 @@ impl Executor for ShellExecutor {
         &self,
         action: &str,
         _params: serde_json::Value,
-    ) -> anyhow::Result<ExecutorResult> {
+    ) -> nexcore_error::Result<ExecutorResult> {
         info!(command = %action, "executing_shell_command");
 
         if action.contains("rm -rf /") || action.contains(":(){ :|:& };:") {

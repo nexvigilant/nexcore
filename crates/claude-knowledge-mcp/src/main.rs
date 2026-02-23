@@ -1,4 +1,4 @@
-use anyhow::Result;
+use nexcore_error::Result;
 use rmcp::handler::server::router::tool::ToolRouter;
 use rmcp::handler::server::tool::ToolCallContext;
 use rmcp::handler::server::wrapper::Parameters;

@@ -165,7 +165,7 @@ impl BrowserSource {
 
 #[async_trait]
 impl Source for BrowserSource {
-    async fn run(&self) -> anyhow::Result<()> {
+    async fn run(&self) -> nexcore_error::Result<()> {
         info!("BrowserSource starting - subscribing to browser events");
 
         let mut rx = subscribe_events();

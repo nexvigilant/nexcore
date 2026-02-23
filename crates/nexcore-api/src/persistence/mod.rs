@@ -120,119 +120,119 @@ pub enum Persistence {
 }
 
 impl Persistence {
-    pub async fn save_report(&self, report: &ReportRecord) -> anyhow::Result<()> {
+    pub async fn save_report(&self, report: &ReportRecord) -> nexcore_error::Result<()> {
         match self {
             Self::Firestore(f) => f.save_report(report).await,
             Self::Mock(m) => m.save_report(report).await,
         }
     }
 
-    pub async fn list_reports(&self) -> anyhow::Result<Vec<ReportRecord>> {
+    pub async fn list_reports(&self) -> nexcore_error::Result<Vec<ReportRecord>> {
         match self {
             Self::Firestore(f) => f.list_reports().await,
             Self::Mock(m) => m.list_reports().await,
         }
     }
 
-    pub async fn save_post(&self, post: &PostRecord) -> anyhow::Result<()> {
+    pub async fn save_post(&self, post: &PostRecord) -> nexcore_error::Result<()> {
         match self {
             Self::Firestore(f) => f.save_post(post).await,
             Self::Mock(m) => m.save_post(post).await,
         }
     }
 
-    pub async fn list_posts(&self) -> anyhow::Result<Vec<PostRecord>> {
+    pub async fn list_posts(&self) -> nexcore_error::Result<Vec<PostRecord>> {
         match self {
             Self::Firestore(f) => f.list_posts().await,
             Self::Mock(m) => m.list_posts().await,
         }
     }
 
-    pub async fn save_inquiry(&self, inquiry: &InquiryRecord) -> anyhow::Result<()> {
+    pub async fn save_inquiry(&self, inquiry: &InquiryRecord) -> nexcore_error::Result<()> {
         match self {
             Self::Firestore(f) => f.save_inquiry(inquiry).await,
             Self::Mock(m) => m.save_inquiry(inquiry).await,
         }
     }
 
-    pub async fn list_inquiries(&self) -> anyhow::Result<Vec<InquiryRecord>> {
+    pub async fn list_inquiries(&self) -> nexcore_error::Result<Vec<InquiryRecord>> {
         match self {
             Self::Firestore(f) => f.list_inquiries().await,
             Self::Mock(m) => m.list_inquiries().await,
         }
     }
 
-    pub async fn update_inquiry_status(&self, id: &str, status: &str) -> anyhow::Result<()> {
+    pub async fn update_inquiry_status(&self, id: &str, status: &str) -> nexcore_error::Result<()> {
         match self {
             Self::Firestore(f) => f.update_inquiry_status(id, status).await,
             Self::Mock(m) => m.update_inquiry_status(id, status).await,
         }
     }
 
-    pub async fn save_enrollment(&self, enrollment: &EnrollmentRecord) -> anyhow::Result<()> {
+    pub async fn save_enrollment(&self, enrollment: &EnrollmentRecord) -> nexcore_error::Result<()> {
         match self {
             Self::Firestore(f) => f.save_enrollment(enrollment).await,
             Self::Mock(m) => m.save_enrollment(enrollment).await,
         }
     }
 
-    pub async fn list_enrollments(&self) -> anyhow::Result<Vec<EnrollmentRecord>> {
+    pub async fn list_enrollments(&self) -> nexcore_error::Result<Vec<EnrollmentRecord>> {
         match self {
             Self::Firestore(f) => f.list_enrollments().await,
             Self::Mock(m) => m.list_enrollments().await,
         }
     }
 
-    pub async fn save_circle(&self, circle: &CircleRecord) -> anyhow::Result<()> {
+    pub async fn save_circle(&self, circle: &CircleRecord) -> nexcore_error::Result<()> {
         match self {
             Self::Firestore(f) => f.save_circle(circle).await,
             Self::Mock(m) => m.save_circle(circle).await,
         }
     }
 
-    pub async fn list_circles(&self) -> anyhow::Result<Vec<CircleRecord>> {
+    pub async fn list_circles(&self) -> nexcore_error::Result<Vec<CircleRecord>> {
         match self {
             Self::Firestore(f) => f.list_circles().await,
             Self::Mock(m) => m.list_circles().await,
         }
     }
 
-    pub async fn save_membership(&self, membership: &MembershipRecord) -> anyhow::Result<()> {
+    pub async fn save_membership(&self, membership: &MembershipRecord) -> nexcore_error::Result<()> {
         match self {
             Self::Firestore(f) => f.save_membership(membership).await,
             Self::Mock(m) => m.save_membership(membership).await,
         }
     }
 
-    pub async fn list_memberships(&self, user_id: &str) -> anyhow::Result<Vec<MembershipRecord>> {
+    pub async fn list_memberships(&self, user_id: &str) -> nexcore_error::Result<Vec<MembershipRecord>> {
         match self {
             Self::Firestore(f) => f.list_memberships(user_id).await,
             Self::Mock(m) => m.list_memberships(user_id).await,
         }
     }
 
-    pub async fn save_message(&self, message: &MessageRecord) -> anyhow::Result<()> {
+    pub async fn save_message(&self, message: &MessageRecord) -> nexcore_error::Result<()> {
         match self {
             Self::Firestore(f) => f.save_message(message).await,
             Self::Mock(m) => m.save_message(message).await,
         }
     }
 
-    pub async fn list_messages(&self, user_id: &str) -> anyhow::Result<Vec<MessageRecord>> {
+    pub async fn list_messages(&self, user_id: &str) -> nexcore_error::Result<Vec<MessageRecord>> {
         match self {
             Self::Firestore(f) => f.list_messages(user_id).await,
             Self::Mock(m) => m.list_messages(user_id).await,
         }
     }
 
-    pub async fn save_ksb_domain(&self, domain: &KsbDomainRecord) -> anyhow::Result<()> {
+    pub async fn save_ksb_domain(&self, domain: &KsbDomainRecord) -> nexcore_error::Result<()> {
         match self {
             Self::Firestore(f) => f.save_ksb_domain(domain).await,
             Self::Mock(m) => m.save_ksb_domain(domain).await,
         }
     }
 
-    pub async fn list_ksb_domains(&self) -> anyhow::Result<Vec<KsbDomainRecord>> {
+    pub async fn list_ksb_domains(&self) -> nexcore_error::Result<Vec<KsbDomainRecord>> {
         match self {
             Self::Firestore(f) => f.list_ksb_domains().await,
             Self::Mock(m) => m.list_ksb_domains().await,

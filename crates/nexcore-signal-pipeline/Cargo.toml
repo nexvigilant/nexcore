@@ -21,7 +21,7 @@ axum = { workspace = true, features = ["macros"] }
 tokio = { workspace = true, features = ["full"] }
 bytes = { workspace = true }
 thiserror = { workspace = true }
-anyhow = { workspace = true }
+nexcore-error = { workspace = true }
 phf = { workspace = true, features = ["macros"] }
 
 [dev-dependencies]

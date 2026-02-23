@@ -10,7 +10,7 @@
 //! - **Acyclicity guaranteed at insertion time.** [`CausalDag::add_link`]
 //!   rejects any edge that would introduce a cycle, so a `CausalDag` value
 //!   is always a valid DAG.
-//! - **Zero panics.** All fallible paths return [`anyhow::Error`].
+//! - **Zero panics.** All fallible paths return [`nexcore_error::NexError`].
 //! - **Fully serialisable.** Every public type derives [`serde::Serialize`]
 //!   and [`serde::Deserialize`].
 //!
@@ -217,7 +217,7 @@ pub struct CausalLink {
 /// associated strength scores and evidence descriptions.
 ///
 /// Acyclicity is maintained as an invariant: [`add_link`] rejects any edge
-/// that would create a cycle and returns an [`anyhow::Error`] instead.
+/// that would create a cycle and returns an [`nexcore_error::NexError`] instead.
 ///
 /// [`add_link`]: CausalDag::add_link
 ///
@@ -299,7 +299,7 @@ impl CausalDag {
     /// Appends a directed causal link to the DAG.
     ///
     /// The link is validated before insertion: if adding it would create a
-    /// cycle the method returns an [`anyhow::Error`] and the DAG is left
+    /// cycle the method returns an [`nexcore_error::NexError`] and the DAG is left
     /// unchanged.
     ///
     /// # Errors
@@ -330,7 +330,7 @@ impl CausalDag {
     ///     evidence: "hypothetical".to_string(),
     /// }).is_err());
     /// ```
-    pub fn add_link(&mut self, link: CausalLink) -> Result<(), anyhow::Error> {
+    pub fn add_link(&mut self, link: CausalLink) -> Result<(), nexcore_error::NexError> {
         // Temporarily push the link then check for a cycle.  If a cycle is
         // detected, remove the link so the DAG invariant is preserved.
         self.links.push(link);
@@ -338,7 +338,7 @@ impl CausalDag {
         if self.has_cycle() {
             // The last element is the one we just pushed.
             self.links.pop();
-            return Err(anyhow::anyhow!(
+            return Err(nexcore_error::nexerror!(
                 "adding this link would introduce a cycle in the causal DAG"
             ));
         }
@@ -643,7 +643,7 @@ impl CausalDag {
     /// assert!(pos[&NodeId::new("x")] < pos[&NodeId::new("y")]);
     /// assert!(pos[&NodeId::new("y")] < pos[&NodeId::new("z")]);
     /// ```
-    pub fn topological_order(&self) -> Result<Vec<&NodeId>, anyhow::Error> {
+    pub fn topological_order(&self) -> Result<Vec<&NodeId>, nexcore_error::NexError> {
         // Map each NodeId to its insertion index so we can produce a stable,
         // deterministic result for nodes with equal in-degree.
         let node_index: HashMap<&NodeId, usize> = self
@@ -698,7 +698,7 @@ impl CausalDag {
         }
 
         if result.len() < self.nodes.len() {
-            return Err(anyhow::anyhow!(
+            return Err(nexcore_error::nexerror!(
                 "topological sort failed: the DAG contains a cycle"
             ));
         }

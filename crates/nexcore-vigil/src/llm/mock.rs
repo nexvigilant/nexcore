@@ -9,7 +9,7 @@ pub struct MockLLMClient {
 
 #[async_trait]
 impl LLMClient for MockLLMClient {
-    async fn invoke(&self, _context: &str, event: &Event) -> anyhow::Result<Interaction> {
+    async fn invoke(&self, _context: &str, event: &Event) -> nexcore_error::Result<Interaction> {
         Ok(Interaction {
             id: "mock-id".to_string(),
             event: event.clone(),

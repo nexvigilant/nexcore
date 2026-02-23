@@ -26,7 +26,7 @@ fn init_logging(verbose: bool) {
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> nexcore_error::Result<()> {
     let config = McpProxyConfig::parse();
     init_logging(config.verbose);
 

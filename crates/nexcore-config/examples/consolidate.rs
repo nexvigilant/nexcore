@@ -6,7 +6,7 @@
 //!   cargo run --example consolidate
 //!   cargo run --example consolidate -- --output /path/to/config.toml
 
-use anyhow::{Context, Result};
+use nexcore_error::{Context, Result};
 use nexcore_config::{ClaudeConfig, GeminiConfig, GitConfig, Validate};
 use std::env;
 use std::path::PathBuf;

@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, bail};
+use nexcore_error::{Context, Result, bail};
 use toml_edit::{Array, DocumentMut, Formatted, InlineTable, Item, Table, Value};
 
 /// Trait for resolving the version of an internal crate by reading its own Cargo.toml.
@@ -65,7 +65,7 @@ impl FileSystemResolver {
         version_item
             .as_str()
             .map(|s| s.to_string())
-            .ok_or_else(|| anyhow::anyhow!("No version string found in {}", cargo_path.display()))
+            .ok_or_else(|| nexcore_error::nexerror!("No version string found in {}", cargo_path.display()))
     }
 
     fn read_workspace_version(&self) -> Result<String> {
@@ -75,7 +75,7 @@ impl FileSystemResolver {
         doc["workspace"]["package"]["version"]
             .as_str()
             .map(|s| s.to_string())
-            .ok_or_else(|| anyhow::anyhow!("No workspace.package.version found"))
+            .ok_or_else(|| nexcore_error::nexerror!("No workspace.package.version found"))
     }
 }
 
@@ -860,6 +860,6 @@ impl InternalDepResolver for MappingResolver {
         self.versions
             .get(crate_name)
             .cloned()
-            .ok_or_else(|| anyhow::anyhow!("Internal crate version not found: {crate_name}"))
+            .ok_or_else(|| nexcore_error::nexerror!("Internal crate version not found: {crate_name}"))
     }
 }

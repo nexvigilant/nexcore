@@ -34,9 +34,9 @@ impl ContextAssembler {
         }
     }
 
-    pub async fn build_context(&self, event: &Event) -> anyhow::Result<String> {
+    pub async fn build_context(&self, event: &Event) -> nexcore_error::Result<String> {
         let mut context = String::with_capacity(8192);
-        let bpe = cl100k_base()?;
+        let bpe = cl100k_base().map_err(|e| nexcore_error::NexError::msg(e.to_string()))?;
 
         // 1. Core Identity
         if let Some(i) = self.get_instructions().await {

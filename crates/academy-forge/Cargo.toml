@@ -27,7 +27,7 @@ serde_json = { workspace = true }
 
 # Error handling
 thiserror = { workspace = true }
-anyhow = { workspace = true }
+nexcore-error = { workspace = true }
 
 # File system walking
 walkdir = { workspace = true }

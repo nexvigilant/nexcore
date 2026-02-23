@@ -3,7 +3,7 @@ use async_trait::async_trait;
 
 #[async_trait]
 pub trait LLMClient: Send + Sync {
-    async fn invoke(&self, context: &str, event: &Event) -> anyhow::Result<Interaction>;
+    async fn invoke(&self, context: &str, event: &Event) -> nexcore_error::Result<Interaction>;
     async fn health_check(&self) -> bool;
 }
 

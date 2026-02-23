@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs;
 use std::path::Path;
 
-use anyhow::{Context, Result, bail};
+use nexcore_error::{Context, Result, bail};
 
 /// Build a dependency graph from crate directories.
 ///

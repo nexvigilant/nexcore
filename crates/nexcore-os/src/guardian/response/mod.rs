@@ -1177,7 +1177,7 @@ mod tests {
         assert!(actuator.can_execute(&action));
         assert!(actuator.get_limit("/api/login").is_none());
 
-        let result = futures::executor::block_on(actuator.execute(&action));
+        let result = tokio::runtime::Runtime::new().unwrap().block_on(actuator.execute(&action));
         assert!(result.success);
         assert_eq!(actuator.get_limit("/api/login"), Some((10, 60)));
 
@@ -1196,7 +1196,7 @@ mod tests {
         assert!(actuator.can_execute(&action));
         assert!(!actuator.is_quarantined("suspicious_file.exe"));
 
-        let result = futures::executor::block_on(actuator.execute(&action));
+        let result = tokio::runtime::Runtime::new().unwrap().block_on(actuator.execute(&action));
         assert!(result.success);
         assert!(actuator.is_quarantined("suspicious_file.exe"));
         assert_eq!(
@@ -1220,7 +1220,7 @@ mod tests {
         assert!(actuator.can_execute(&action));
         assert!(actuator.open_escalations().is_empty());
 
-        let result = futures::executor::block_on(actuator.execute(&action));
+        let result = tokio::runtime::Runtime::new().unwrap().block_on(actuator.execute(&action));
         assert!(result.success);
 
         let open = actuator.open_escalations();
@@ -1245,7 +1245,7 @@ mod tests {
         assert!(actuator.can_execute(&action));
         assert!(!actuator.was_terminated("sess_12345"));
 
-        let result = futures::executor::block_on(actuator.execute(&action));
+        let result = tokio::runtime::Runtime::new().unwrap().block_on(actuator.execute(&action));
         assert!(result.success);
         assert!(actuator.was_terminated("sess_12345"));
     }
@@ -1261,7 +1261,7 @@ mod tests {
         assert!(actuator.can_execute(&action));
         assert!(actuator.required_level("sess_67890").is_none());
 
-        let result = futures::executor::block_on(actuator.execute(&action));
+        let result = tokio::runtime::Runtime::new().unwrap().block_on(actuator.execute(&action));
         assert!(result.success);
         assert_eq!(
             actuator.required_level("sess_67890"),

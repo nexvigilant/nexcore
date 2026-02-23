@@ -846,7 +846,7 @@ const CLIPPY_LINTS: &[ClippyLintInfo] = &[
             "Use `unwrap_or(default)` for fallback values",
             "Use `unwrap_or_else(|| ...)` for computed defaults",
             "Pattern match: `if let Some(v) = value { ... }`",
-            "Use `anyhow::Context`: `value.context(\"msg\")?`",
+            "Use `nexcore_error::Context`: `value.context(\"msg\")?`",
         ],
         default_level: "allow",
     },

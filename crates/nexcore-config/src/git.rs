@@ -2,7 +2,7 @@
 //!
 //! Type-safe representation of `.gitconfig` (INI format).
 
-use anyhow::Result;
+use nexcore_error::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -29,7 +29,7 @@ pub struct GitConfig {
 impl GitConfig {
     /// Load configuration from INI file
     pub fn from_file(path: &str) -> Result<Self> {
-        use anyhow::Context;
+        use nexcore_error::Context;
         let content = std::fs::read_to_string(path)
             .context(format!("Failed to read Git config: {}", path))?;
         Self::parse_ini(&content)

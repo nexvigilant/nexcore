@@ -18,7 +18,7 @@ use std::net::IpAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use anyhow::Context;
+use nexcore_error::Context;
 use clap::{Parser, Subcommand};
 use tracing_subscriber::EnvFilter;
 
@@ -64,11 +64,11 @@ fn init_tracing() {
         .init();
 }
 
-fn load_config(path: &std::path::Path) -> anyhow::Result<SentinelConfig> {
+fn load_config(path: &std::path::Path) -> nexcore_error::Result<SentinelConfig> {
     SentinelConfig::load(path).context("failed to load config")
 }
 
-async fn cmd_run(config: SentinelConfig) -> anyhow::Result<()> {
+async fn cmd_run(config: SentinelConfig) -> nexcore_error::Result<()> {
     let firewall = Arc::new(IptablesFirewall);
     let mut engine = Engine::new(config.clone(), firewall).context("engine init")?;
 
@@ -120,7 +120,7 @@ fn run_watcher(log_path: PathBuf, tx: tokio::sync::mpsc::Sender<String>) {
     }
 }
 
-fn cmd_status(config: &SentinelConfig) -> anyhow::Result<()> {
+fn cmd_status(config: &SentinelConfig) -> nexcore_error::Result<()> {
     let firewall = Arc::new(IptablesFirewall);
     let engine = Engine::new(config.clone(), firewall).context("engine init")?;
     let stats = engine.stats();
@@ -139,7 +139,7 @@ fn cmd_status(config: &SentinelConfig) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn cmd_list(config: &SentinelConfig) -> anyhow::Result<()> {
+fn cmd_list(config: &SentinelConfig) -> nexcore_error::Result<()> {
     let firewall = Arc::new(IptablesFirewall);
     let engine = Engine::new(config.clone(), firewall).context("engine init")?;
     let bans = engine.list_bans();
@@ -166,7 +166,7 @@ fn cmd_list(config: &SentinelConfig) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn cmd_unban(config: &SentinelConfig, ip: IpAddr) -> anyhow::Result<()> {
+fn cmd_unban(config: &SentinelConfig, ip: IpAddr) -> nexcore_error::Result<()> {
     let firewall = Arc::new(IptablesFirewall);
     let mut engine = Engine::new(config.clone(), firewall).context("engine init")?;
 
@@ -179,7 +179,7 @@ fn cmd_unban(config: &SentinelConfig, ip: IpAddr) -> anyhow::Result<()> {
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> nexcore_error::Result<()> {
     init_tracing();
     let cli = Cli::parse();
     let config = load_config(&cli.config)?;

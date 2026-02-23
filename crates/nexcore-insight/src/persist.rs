@@ -11,7 +11,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-use anyhow::{Context, Result};
+use nexcore_error::{Context, Result};
 
 use crate::engine::{InsightConfig, InsightEngine};
 use crate::orchestrator::NexCoreInsight;

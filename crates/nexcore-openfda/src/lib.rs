@@ -34,7 +34,7 @@
 //! use nexcore_openfda::endpoints::drug::drug_event_search_by_drug;
 //!
 //! #[tokio::main]
-//! async fn main() -> anyhow::Result<()> {
+//! async fn main() -> nexcore_error::Result<()> {
 //!     let client = OpenFdaClient::new()?;
 //!     let params = QueryParams::search(drug_event_search_by_drug("aspirin"), 20);
 //!     let response = fetch_drug_events(&client, &params).await?;

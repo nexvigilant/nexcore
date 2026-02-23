@@ -1,4 +1,4 @@
-use anyhow::Result;
+use nexcore_error::Result;
 use gsheets_mcp::GSheetsMcpServer;
 use rmcp::ServiceExt;
 use rmcp::transport::stdio;

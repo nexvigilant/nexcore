@@ -12,4 +12,4 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 chrono = { workspace = true }
 nexcore-lex-primitiva = { workspace = true }
-anyhow = { workspace = true }
+nexcore-error = { workspace = true }

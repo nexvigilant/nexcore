@@ -43,7 +43,7 @@ impl MaestroExecutor {
     }
 
     /// Create a new session for the given project.
-    async fn create_session(&self, project_path: &str, mode: &str) -> anyhow::Result<u32> {
+    async fn create_session(&self, project_path: &str, mode: &str) -> nexcore_error::Result<u32> {
         let url = format!("{}/sessions", self.base_url);
         let resp = self
             .client
@@ -56,7 +56,7 @@ impl MaestroExecutor {
             .await?;
 
         if !resp.status().is_success() {
-            anyhow::bail!("Failed to create session: {}", resp.status());
+            nexcore_error::bail!("Failed to create session: {}", resp.status());
         }
 
         let session: SessionResponse = resp.json().await?;
@@ -64,7 +64,7 @@ impl MaestroExecutor {
     }
 
     /// Write a prompt to a session's PTY.
-    async fn dispatch_prompt(&self, session_id: u32, prompt: &str) -> anyhow::Result<()> {
+    async fn dispatch_prompt(&self, session_id: u32, prompt: &str) -> nexcore_error::Result<()> {
         let url = format!("{}/sessions/{}/execute", self.base_url, session_id);
         let resp = self
             .client
@@ -74,7 +74,7 @@ impl MaestroExecutor {
             .await?;
 
         if !resp.status().is_success() {
-            anyhow::bail!(
+            nexcore_error::bail!(
                 "Failed to execute in session {}: {}",
                 session_id,
                 resp.status()
@@ -95,7 +95,7 @@ impl Executor for MaestroExecutor {
         &self,
         action: &str,
         params: serde_json::Value,
-    ) -> anyhow::Result<ExecutorResult> {
+    ) -> nexcore_error::Result<ExecutorResult> {
         let project_path = params
             .get("project_path")
             .and_then(|v| v.as_str())

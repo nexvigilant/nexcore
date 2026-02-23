@@ -1,4 +1,4 @@
-use anyhow::Result;
+use nexcore_error::Result;
 use gvids_mcp::GVidsMcpServer;
 use rmcp::ServiceExt;
 use rmcp::transport::stdio;

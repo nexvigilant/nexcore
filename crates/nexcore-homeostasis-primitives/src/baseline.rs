@@ -375,7 +375,7 @@ pub struct BaselineConfig {
 
 impl BaselineConfig {
     /// Parse from a JSON string.
-    pub fn from_json(json: &str) -> anyhow::Result<Self> {
+    pub fn from_json(json: &str) -> nexcore_error::Result<Self> {
         Ok(serde_json::from_str(json)?)
     }
 }
@@ -459,7 +459,7 @@ impl Baseline {
     }
 
     /// Create a baseline from a [`BaselineConfig`].
-    pub fn from_config(config: &BaselineConfig) -> anyhow::Result<Self> {
+    pub fn from_config(config: &BaselineConfig) -> nexcore_error::Result<Self> {
         let mut b = Self::new();
         if let Some(secs) = config.control_loop_interval_secs {
             b.control_loop_interval = Duration::from_secs_f64(secs);

@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use nexcore_error::{Context, Result};
 use clap::Parser;
 use nexcore_faers_etl::{RowCount, SignalDetectionResult, columns};
 use polars::prelude::*;
@@ -36,7 +36,7 @@ fn main() -> Result<()> {
 
 fn validate_args(args: &Args) -> Result<()> {
     if !args.faers_dir.exists() {
-        anyhow::bail!("FAERS directory not found: {}", args.faers_dir.display());
+        nexcore_error::bail!("FAERS directory not found: {}", args.faers_dir.display());
     }
     Ok(())
 }

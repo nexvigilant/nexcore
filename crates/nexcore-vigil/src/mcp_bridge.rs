@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
 
-use anyhow::{Result, anyhow};
+use nexcore_error::{Result, nexerror};
 use nexcore_vigilance::primitives::chemistry::{arrhenius_rate, remaining_after_time};
 use nexcore_vigilance::primitives::quantum::{Qubit, Superposition};
 use nexcore_vigilance::pv::causality::{calculate_naranjo_quick, calculate_who_umc_quick};
@@ -67,7 +67,7 @@ impl McpBridge {
         let cat = self
             .supported_tools
             .get(tool)
-            .ok_or_else(|| anyhow!("Unknown"))?;
+            .ok_or_else(|| nexerror!("Unknown"))?;
         match cat {
             ToolCategory::PvSignal => self.invoke_pv_signal(tool, params).await,
             ToolCategory::PvCausality => self.invoke_pv_causality(tool, params).await,
@@ -103,19 +103,19 @@ impl McpBridge {
     }
 
     async fn invoke_skill_validation(&self, params: Value) -> Result<Value> {
-        let path = params["path"].as_str().ok_or_else(|| anyhow!("path"))?;
-        let res = validate_diamond(Path::new(path)).map_err(|e| anyhow!("{}", e))?;
+        let path = params["path"].as_str().ok_or_else(|| nexerror!("path"))?;
+        let res = validate_diamond(Path::new(path)).map_err(|e| nexerror!("{}", e))?;
         Ok(json!({ "level": res.level.to_string() }))
     }
 
     async fn invoke_skill_registry(&self, tool: &str, params: Value) -> Result<Value> {
         if tool == "skill_scan" {
-            let dir = params["directory"].as_str().ok_or_else(|| anyhow!("dir"))?;
+            let dir = params["directory"].as_str().ok_or_else(|| nexerror!("dir"))?;
             let n = self
                 .registry
                 .write()
                 .scan(Path::new(dir))
-                .map_err(|e| anyhow!("{}", e))?;
+                .map_err(|e| nexerror!("{}", e))?;
             Ok(json!({ "found": n }))
         } else {
             Ok(json!({ "count": self.registry.read().len() }))
@@ -124,10 +124,10 @@ impl McpBridge {
 
     async fn invoke_chemistry(&self, tool: &str, _params: Value) -> Result<Value> {
         if tool == "chemistry_threshold_rate" {
-            let r = arrhenius_rate(1.0, 0.0, 298.15).map_err(|e| anyhow!("{}", e))?;
+            let r = arrhenius_rate(1.0, 0.0, 298.15).map_err(|e| nexerror!("{}", e))?;
             Ok(json!({ "rate": r }))
         } else {
-            let r = remaining_after_time(100.0, 1.0, 0.0).map_err(|e| anyhow!("{}", e))?;
+            let r = remaining_after_time(100.0, 1.0, 0.0).map_err(|e| nexerror!("{}", e))?;
             Ok(json!({ "rem": r }))
         }
     }
@@ -147,7 +147,7 @@ fn extract_table(params: &Value) -> Result<ContingencyTable> {
     let a = params["a"].as_u64().unwrap_or(0);
     let b = params["b"].as_u64().unwrap_or(0);
     let c = params["c"].as_u64().unwrap_or(0);
-    let d = params["d"].as_u64().ok_or_else(|| anyhow!("d"))?;
+    let d = params["d"].as_u64().ok_or_else(|| nexerror!("d"))?;
     Ok(ContingencyTable::new(a, b, c, d))
 }
 

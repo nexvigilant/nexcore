@@ -33,7 +33,7 @@ enum Commands {
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> nexcore_error::Result<()> {
     let cli = Cli::parse();
 
     // Initialize logging
@@ -64,7 +64,7 @@ async fn main() -> anyhow::Result<()> {
     }
 }
 
-async fn run_daemon(config: Config) -> anyhow::Result<()> {
+async fn run_daemon(config: Config) -> nexcore_error::Result<()> {
     tracing::info!("FRIDAY-RS starting daemon...");
 
     let bus = EventBus::new(config.event_bus_size);
@@ -109,7 +109,7 @@ async fn run_daemon(config: Config) -> anyhow::Result<()> {
             } else {
                 let key = config
                     .gemini_api_key
-                    .ok_or_else(|| anyhow::anyhow!("GEMINI_API_KEY or GCLOUD_PROJECT required"))?;
+                    .ok_or_else(|| nexcore_error::nexerror!("GEMINI_API_KEY or GCLOUD_PROJECT required"))?;
                 tracing::info!(model = %model, "Initializing Gemini via API key");
                 Box::new(GeminiClient::new(key, model))
             }
@@ -117,14 +117,14 @@ async fn run_daemon(config: Config) -> anyhow::Result<()> {
         "claude" => {
             let key = config
                 .anthropic_api_key
-                .ok_or_else(|| anyhow::anyhow!("ANTHROPIC_API_KEY not set"))?;
+                .ok_or_else(|| nexcore_error::nexerror!("ANTHROPIC_API_KEY not set"))?;
             let model = std::env::var("CLAUDE_MODEL")
                 .unwrap_or_else(|_| "claude-sonnet-4-20250514".to_string());
             tracing::info!(model = %model, "Initializing Claude LLM");
             Box::new(ClaudeClient::new(key, model)?)
         }
         _ => {
-            return Err(anyhow::anyhow!(
+            return Err(nexcore_error::nexerror!(
                 "Unknown LLM provider: {}",
                 config.llm_provider
             ));

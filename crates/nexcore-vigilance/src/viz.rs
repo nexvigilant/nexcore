@@ -21,10 +21,10 @@ pub fn render_prr_timeline_svg(
     criteria: &SignalCriteria,
     width: u32,
     height: u32,
-) -> Result<String, anyhow::Error> {
+) -> Result<String, nexcore_error::NexError> {
     let mut svg_buf = String::new();
 
-    let result: Result<(), anyhow::Error> = (|| {
+    let result: Result<(), nexcore_error::NexError> = (|| {
         let root = SVGBackend::with_string(&mut svg_buf, (width, height)).into_drawing_area();
         root.fill(&WHITE)?;
 
@@ -103,10 +103,10 @@ pub fn render_signal_comparison_svg(
     criteria: &SignalCriteria,
     width: u32,
     height: u32,
-) -> Result<String, anyhow::Error> {
+) -> Result<String, nexcore_error::NexError> {
     let mut svg_buf = String::new();
 
-    let result: Result<(), anyhow::Error> = (|| {
+    let result: Result<(), nexcore_error::NexError> = (|| {
         let root = SVGBackend::with_string(&mut svg_buf, (width, height)).into_drawing_area();
         root.fill(&WHITE)?;
 

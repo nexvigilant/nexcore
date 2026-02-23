@@ -22,7 +22,7 @@ serde_json = { version = "1.0.120" }
 
 # HTTP client for fetching docs
 reqwest = { version = "0.12", features = ["json"] }
-anyhow = { version = "1.0.86" }
+nexcore-error = { workspace = true }
 
 # Caching
 moka = { version = "0.12", features = ["future"] }

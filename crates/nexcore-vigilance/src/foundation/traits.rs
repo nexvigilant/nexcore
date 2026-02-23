@@ -2,7 +2,7 @@
 //!
 //! Foundational traits for execution and calculation patterns.
 
-use anyhow::Result;
+use nexcore_error::Result;
 
 /// A trait for types that perform asynchronous execution.
 ///

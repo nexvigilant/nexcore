@@ -16,10 +16,10 @@
 //! let registry = HookRegistry::from_file("hooks-catalog.json")?;
 //! let dev_hooks = registry.filter_by_tier(HookTier::Dev);
 //! assert!(dev_hooks.len() > 0);
-//! # Ok::<(), anyhow::Error>(())
+//! # Ok::<(), nexcore_error::NexError>(())
 //! ```
 
-use anyhow::{Context, Result};
+use nexcore_error::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;

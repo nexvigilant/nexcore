@@ -22,7 +22,7 @@ pub const SUBSTANCE_ENDPOINT: &str = "/other/substance.json";
 pub async fn fetch_substances(
     client: &OpenFdaClient,
     params: &QueryParams,
-) -> Result<OpenFdaResponse<Substance>, anyhow::Error> {
+) -> Result<OpenFdaResponse<Substance>, nexcore_error::NexError> {
     client.fetch::<Substance>(SUBSTANCE_ENDPOINT, params).await
 }
 

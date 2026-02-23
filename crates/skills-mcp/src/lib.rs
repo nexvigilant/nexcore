@@ -28,7 +28,7 @@ pub struct SkillsMcpServer {
 
 #[tool_router]
 impl SkillsMcpServer {
-    pub fn new() -> Result<Self, anyhow::Error> {
+    pub fn new() -> Result<Self, nexcore_error::NexError> {
         Ok(Self {
             tool_router: Self::tool_router(),
         })

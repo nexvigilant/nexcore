@@ -39,7 +39,7 @@ pub const DEVICE_UDI_ENDPOINT: &str = "/device/udi.json";
 pub async fn fetch_device_events(
     client: &OpenFdaClient,
     params: &QueryParams,
-) -> Result<OpenFdaResponse<DeviceEvent>, anyhow::Error> {
+) -> Result<OpenFdaResponse<DeviceEvent>, nexcore_error::NexError> {
     client
         .fetch::<DeviceEvent>(DEVICE_EVENT_ENDPOINT, params)
         .await
@@ -53,7 +53,7 @@ pub async fn fetch_device_events(
 pub async fn fetch_device_recalls(
     client: &OpenFdaClient,
     params: &QueryParams,
-) -> Result<OpenFdaResponse<DeviceRecall>, anyhow::Error> {
+) -> Result<OpenFdaResponse<DeviceRecall>, nexcore_error::NexError> {
     client
         .fetch::<DeviceRecall>(DEVICE_RECALL_ENDPOINT, params)
         .await
@@ -67,7 +67,7 @@ pub async fn fetch_device_recalls(
 pub async fn fetch_device_510k(
     client: &OpenFdaClient,
     params: &QueryParams,
-) -> Result<OpenFdaResponse<Device510k>, anyhow::Error> {
+) -> Result<OpenFdaResponse<Device510k>, nexcore_error::NexError> {
     client
         .fetch::<Device510k>(DEVICE_510K_ENDPOINT, params)
         .await
@@ -81,7 +81,7 @@ pub async fn fetch_device_510k(
 pub async fn fetch_device_pma(
     client: &OpenFdaClient,
     params: &QueryParams,
-) -> Result<OpenFdaResponse<DevicePma>, anyhow::Error> {
+) -> Result<OpenFdaResponse<DevicePma>, nexcore_error::NexError> {
     client
         .fetch::<DevicePma>(DEVICE_PMA_ENDPOINT, params)
         .await
@@ -95,7 +95,7 @@ pub async fn fetch_device_pma(
 pub async fn fetch_device_class(
     client: &OpenFdaClient,
     params: &QueryParams,
-) -> Result<OpenFdaResponse<DeviceClass>, anyhow::Error> {
+) -> Result<OpenFdaResponse<DeviceClass>, nexcore_error::NexError> {
     client
         .fetch::<DeviceClass>(DEVICE_CLASS_ENDPOINT, params)
         .await
@@ -109,7 +109,7 @@ pub async fn fetch_device_class(
 pub async fn fetch_device_udi(
     client: &OpenFdaClient,
     params: &QueryParams,
-) -> Result<OpenFdaResponse<DeviceUdi>, anyhow::Error> {
+) -> Result<OpenFdaResponse<DeviceUdi>, nexcore_error::NexError> {
     client
         .fetch::<DeviceUdi>(DEVICE_UDI_ENDPOINT, params)
         .await

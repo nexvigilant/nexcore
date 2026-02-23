@@ -8,7 +8,7 @@ pub trait Executor: Send + Sync {
         &self,
         action: &str,
         params: serde_json::Value,
-    ) -> anyhow::Result<ExecutorResult>;
+    ) -> nexcore_error::Result<ExecutorResult>;
     async fn health_check(&self) -> bool;
 }
 

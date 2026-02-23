@@ -139,7 +139,7 @@ serde_yaml = { workspace = true }
 schemars = { version = "1.0" }
 
 # Error handling
-anyhow = { workspace = true }
+nexcore-error = { workspace = true }
 
 # Logging
 tracing = { workspace = true }

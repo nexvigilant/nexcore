@@ -1,5 +1,5 @@
 use crate::models::Interaction;
-use anyhow::{Context, Result};
+use nexcore_error::{Context, Result};
 use qdrant_client::Qdrant;
 use qdrant_client::qdrant::{
     CreateCollectionBuilder, Distance, GetPointsBuilder, PointStruct, UpsertPointsBuilder,

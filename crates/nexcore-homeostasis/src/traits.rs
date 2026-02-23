@@ -3,7 +3,7 @@
 //! The control loop depends on these traits, not concrete implementations.
 //! Users provide sensors that read metrics and actuators that execute actions.
 
-use anyhow::Result;
+use nexcore_error::Result;
 use nexcore_homeostasis_primitives::{
     ActionData, ActionResult, ActionType, SensorReading, SensorType,
 };

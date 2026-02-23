@@ -11,7 +11,7 @@
 //! let api_key = client.get("api-key-secret").await?;
 //! ```
 
-use anyhow::{Result, anyhow};
+use nexcore_error::{Result, nexerror};
 use tokio::process::Command;
 
 /// GCP Secret Manager client.
@@ -76,7 +76,7 @@ impl SecretClient {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(anyhow!(
+            return Err(nexerror!(
                 "Failed to access secret '{}': {}",
                 secret_name,
                 stderr
@@ -127,7 +127,7 @@ impl SecretClient {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(anyhow!("Failed to list secrets: {}", stderr));
+            return Err(nexerror!("Failed to list secrets: {}", stderr));
         }
 
         let stdout = String::from_utf8(output.stdout)?;

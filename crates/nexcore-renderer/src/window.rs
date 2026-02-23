@@ -568,7 +568,7 @@ fn convert_skill(s: crate::bridge::SkillSummary) -> SkillDisplay {
 ///
 /// # Errors
 /// Returns error if event loop fails.
-pub fn run(url: &str) -> anyhow::Result<()> {
+pub fn run(url: &str) -> nexcore_error::Result<()> {
     let event_loop = EventLoop::new()?;
     let mut app = App::new(url.to_string());
     event_loop.run_app(&mut app)?;

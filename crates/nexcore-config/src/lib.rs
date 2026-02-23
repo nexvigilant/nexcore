@@ -35,12 +35,12 @@ pub use hooks::{HookEvent, HookRegistry, HookTier};
 pub use validation::Validate;
 pub use vocab::{SkillChain, SkillMapping, VocabSkillMap};
 
-use anyhow::Result;
+use nexcore_error::Result;
 use std::path::Path;
 
 /// Load all configurations from standard paths
 pub fn load_all_configs() -> Result<AllConfigs> {
-    use anyhow::Context;
+    use nexcore_error::Context;
     let home = std::env::var("HOME").context("HOME env not set")?;
 
     let claude = ClaudeConfig::from_file(&format!("{}/.claude.json", home))?;
@@ -71,7 +71,7 @@ pub struct AllConfigs {
 impl AllConfigs {
     /// Write consolidated config to TOML file
     pub fn write_toml<P: AsRef<Path>>(&self, path: P) -> Result<()> {
-        use anyhow::Context;
+        use nexcore_error::Context;
         // Note: Hooks registry is loaded from hooks-catalog.json (not included in consolidated config)
         // This keeps the hook definitions in their source-of-truth location
         let claude_toml =

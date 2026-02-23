@@ -5,7 +5,7 @@
 
 use crate::params::*;
 use crate::tools;
-use anyhow::{Result, anyhow};
+use nexcore_error::{Result, nexerror};
 use nexcore_social::{RedditClient, RedditConfig};
 use nexcore_value_mining::Baseline;
 use parking_lot::RwLock;
@@ -73,7 +73,7 @@ impl RedditServer {
         let config = self
             .config
             .clone()
-            .ok_or_else(|| anyhow!("Reddit credentials not configured"))?;
+            .ok_or_else(|| nexerror!("Reddit credentials not configured"))?;
 
         let mut client = RedditClient::new(config)?;
         client.authenticate().await?;

@@ -83,7 +83,7 @@ impl TelemetryMonitor {
     }
 
     /// Start monitoring telemetry
-    pub async fn run(&mut self) -> anyhow::Result<()> {
+    pub async fn run(&mut self) -> nexcore_error::Result<()> {
         info!(path = ?self.claude_dir, "Starting telemetry monitor");
 
         // Initial scan
@@ -138,7 +138,7 @@ impl TelemetryMonitor {
     }
 
     /// Scan telemetry files and emit events
-    async fn scan_telemetry(&mut self) -> anyhow::Result<()> {
+    async fn scan_telemetry(&mut self) -> nexcore_error::Result<()> {
         let snapshot = self.collect_snapshot().await?;
 
         // Check for alerts
@@ -162,7 +162,7 @@ impl TelemetryMonitor {
     }
 
     /// Collect current telemetry snapshot
-    async fn collect_snapshot(&self) -> anyhow::Result<TelemetrySnapshot> {
+    async fn collect_snapshot(&self) -> nexcore_error::Result<TelemetrySnapshot> {
         let stats_path = self.claude_dir.join("stats-cache.json");
 
         let stats: serde_json::Value = if stats_path.exists() {
@@ -229,7 +229,7 @@ impl TelemetryMonitor {
     }
 
     /// Check thresholds and emit alerts
-    async fn check_alerts(&self, snapshot: &TelemetrySnapshot) -> anyhow::Result<()> {
+    async fn check_alerts(&self, snapshot: &TelemetrySnapshot) -> nexcore_error::Result<()> {
         // Check token usage
         if snapshot.total_tokens > self.thresholds.token_warning {
             let event = Event {

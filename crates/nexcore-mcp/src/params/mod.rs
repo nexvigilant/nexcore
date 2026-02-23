@@ -427,3 +427,11 @@ pub use signal_pipeline::*;
 // Preemptive PV: 3-tier signal detection (Reactive → Predictive → Preemptive)
 pub mod preemptive_pv;
 pub use preemptive_pv::*;
+
+// OpenFDA: live FDA database access (drugs, devices, food, substances)
+pub mod openfda;
+pub use openfda::*;
+
+// Compound Registry: chemical compound resolution and caching
+pub mod compound_registry;
+pub use compound_registry::*;

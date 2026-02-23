@@ -2387,6 +2387,28 @@ async fn dispatch_inner(
         }
         "preemptive_omega_table" => typed(params, tools::preemptive_pv::preemptive_omega_table),
 
+        // ── OpenFDA ─────────────────────────────────────────────────────
+        "openfda_drug_events" => typed_async(params, tools::openfda::openfda_drug_events).await,
+        "openfda_drug_labels" => typed_async(params, tools::openfda::openfda_drug_labels).await,
+        "openfda_drug_recalls" => typed_async(params, tools::openfda::openfda_drug_recalls).await,
+        "openfda_drug_ndc" => typed_async(params, tools::openfda::openfda_drug_ndc).await,
+        "openfda_drugs_at_fda" => typed_async(params, tools::openfda::openfda_drugs_at_fda).await,
+        "openfda_device_events" => typed_async(params, tools::openfda::openfda_device_events).await,
+        "openfda_device_recalls" => {
+            typed_async(params, tools::openfda::openfda_device_recalls).await
+        }
+        "openfda_food_recalls" => typed_async(params, tools::openfda::openfda_food_recalls).await,
+        "openfda_food_events" => typed_async(params, tools::openfda::openfda_food_events).await,
+        "openfda_substances" => typed_async(params, tools::openfda::openfda_substances).await,
+        "openfda_fan_out" => typed_async(params, tools::openfda::openfda_fan_out).await,
+
+        // ── Compound Registry ───────────────────────────────────────────
+        "compound_resolve" => typed(params, tools::compound_registry::compound_resolve),
+        "compound_resolve_batch" => typed(params, tools::compound_registry::compound_resolve_batch),
+        "compound_cache_search" => typed(params, tools::compound_registry::compound_cache_search),
+        "compound_cache_get" => typed(params, tools::compound_registry::compound_cache_get),
+        "compound_cache_count" => typed(params, tools::compound_registry::compound_cache_count),
+
         // ====================================================================
         // Unknown command
         // ====================================================================
@@ -2809,6 +2831,8 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "zeta": ["zeta_compute", "zeta_find_zeros", "zeta_verify_rh", "zeta_embedded_zeros", "zeta_lmfdb_parse", "zeta_telescope_run", "zeta_batch_run", "zeta_scaling_fit", "zeta_scaling_predict", "zeta_cayley", "zeta_operator_hunt", "zeta_operator_candidate", "zeta_gue_compare"],
             "signal_pipeline": ["pipeline_compute_all", "pipeline_batch_compute", "pipeline_detect", "pipeline_validate", "pipeline_thresholds", "pipeline_report", "pipeline_relay_chain", "pipeline_transfer", "pipeline_primitives"],
             "preemptive_pv": ["preemptive_reactive", "preemptive_gibbs", "preemptive_trajectory", "preemptive_severity", "preemptive_noise", "preemptive_predictive", "preemptive_evaluate", "preemptive_intervention", "preemptive_required_strength", "preemptive_omega_table"],
+            "openfda": ["openfda_drug_events", "openfda_drug_labels", "openfda_drug_recalls", "openfda_drug_ndc", "openfda_drugs_at_fda", "openfda_device_events", "openfda_device_recalls", "openfda_food_recalls", "openfda_food_events", "openfda_substances", "openfda_fan_out"],
+            "compound_registry": ["compound_resolve", "compound_resolve_batch", "compound_cache_search", "compound_cache_get", "compound_cache_count"],
         }
     });
 

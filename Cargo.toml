@@ -111,6 +111,7 @@ nexcore-combinatorics = { path = "crates/nexcore-combinatorics" }
 nexcore-compilation-space = { path = "crates/nexcore-compilation-space" }
 nexcore-compliance = { path = "crates/nexcore-compliance" }
 nexcore-compositor = { path = "crates/nexcore-compositor" }
+nexcore-compound-registry = { path = "crates/nexcore-compound-registry" }
 nexcore-config = { path = "crates/nexcore-config" }
 nexcore-cognition = { path = "crates/nexcore-cognition" }
 nexcore-cortex = { path = "crates/nexcore-cortex" }

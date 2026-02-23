@@ -20,6 +20,8 @@ nexcore-vigilance = { workspace = true, features = ["viz"] }
 nexcore-vigil = { workspace = true }
 nexcore-zeta = { workspace = true }
 nexcore-preemptive-pv = { workspace = true }
+nexcore-openfda = { workspace = true }
+nexcore-compound-registry = { workspace = true }
 signal = { workspace = true }
 stem-complex = { workspace = true }
 nexcore-forge-strategy = { workspace = true }

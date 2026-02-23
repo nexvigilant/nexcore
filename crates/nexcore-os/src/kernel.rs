@@ -39,7 +39,7 @@ use nexcore_guardian_engine::homeostasis::{HomeostasisLoop, RuleBasedEngine};
 use nexcore_guardian_engine::sensing::{SignalSource, ThreatLevel, ThreatSignal};
 use nexcore_guardian_engine::OriginatorType;
 use nexcore_guardian_engine::RiskContext;
-use nexcore_guardian_engine::ThreatPattern;
+use crate::security::{SecurityMonitor, SecurityResponse, ThreatPattern, ThreatSeverity};
 use crate::service::{ServiceManager, ServicePriority, ServiceState};
 use crate::user::UserManager;
 use crate::vault::OsVault;

@@ -13,14 +13,14 @@ use nexcore_lex_primitiva::grounding::GroundsTo;
 use nexcore_lex_primitiva::primitiva::{LexPrimitiva, PrimitiveComposition};
 use nexcore_lex_primitiva::state_mode::StateMode;
 
-use crate::governance::{
+use crate::guardian::governance::{
     ActionJournal, AuthorityDelegation, ConsentRecord, ConsentStatus, EvidenceBasis,
     EvidencedAction, GovernanceScope, LegitimacyChecker, LegitimacyVerdict,
 };
-use crate::homeostasis::HomeostasisLoop;
-use crate::response::{Amplifier, ResponseAction, ResponseCeiling};
-use crate::sensing::{ThreatLevel, ThreatSignal};
-use crate::{OriginatorType, RiskContext, RiskScore};
+use crate::guardian::homeostasis::HomeostasisLoop;
+use crate::guardian::response::{Amplifier, ResponseAction, ResponseCeiling};
+use crate::guardian::sensing::{ThreatLevel, ThreatSignal};
+use crate::guardian::{OriginatorType, RiskContext, RiskScore};
 
 /// OriginatorType: T2-C (κ · × · ∂), dominant ×
 ///

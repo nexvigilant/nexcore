@@ -12,6 +12,7 @@
 //! 2. Read back the pixel under the cursor (or a region).
 //! 3. Decode the RGBA float value back to a `u32` instance ID.
 
+#[allow(unused_imports)]
 use crate::instancing::{decode_pick_color, encode_pick_color};
 use serde::{Deserialize, Serialize};
 

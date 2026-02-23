@@ -19,7 +19,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-use crate::config::FeedbackConfig;
+use crate::guardian::config::FeedbackConfig;
 
 /// A single feedback record from a homeostasis loop iteration.
 ///

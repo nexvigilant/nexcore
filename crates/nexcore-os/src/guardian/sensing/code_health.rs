@@ -9,7 +9,7 @@
 //! # Tier: T3 (Domain-Specific Sensor)
 //! # Grounding: κ (Comparison) + ∂ (Boundary) + N (Quantity)
 
-use crate::sensing::{Measured, Sensor, SignalSource, ThreatLevel, ThreatSignal};
+use crate::guardian::sensing::{Measured, Sensor, SignalSource, ThreatLevel, ThreatSignal};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 

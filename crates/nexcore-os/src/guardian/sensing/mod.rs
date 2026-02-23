@@ -7,7 +7,7 @@
 //! ## Example
 //!
 //! ```ignore
-//! use nexcore_vigilance::guardian::sensing::{Sensor, ThreatSignal, SignalSource, ThreatLevel};
+//! use crate::guardian::sensing::{Sensor, ThreatSignal, SignalSource, ThreatLevel};
 //!
 //! struct ApiThreatSensor;
 //!
@@ -863,7 +863,7 @@ pub struct PvSignalSensor {
     /// Sensitivity level
     sensitivity: f64,
     /// Injection buffer for external risk contexts
-    pending: std::sync::Arc<std::sync::Mutex<Vec<crate::RiskContext>>>,
+    pending: std::sync::Arc<std::sync::Mutex<Vec<crate::guardian::RiskContext>>>,
 }
 
 impl Default for PvSignalSensor {
@@ -883,7 +883,7 @@ impl PvSignalSensor {
     }
 
     /// Inject a risk context for processing on next `detect()` call.
-    pub fn inject(&self, ctx: crate::RiskContext) {
+    pub fn inject(&self, ctx: crate::guardian::RiskContext) {
         if let Ok(mut buf) = self.pending.lock() {
             buf.push(ctx);
         }
@@ -891,7 +891,7 @@ impl PvSignalSensor {
 
     /// Get a cloneable handle to the injection buffer.
     #[must_use]
-    pub fn injector(&self) -> std::sync::Arc<std::sync::Mutex<Vec<crate::RiskContext>>> {
+    pub fn injector(&self) -> std::sync::Arc<std::sync::Mutex<Vec<crate::guardian::RiskContext>>> {
         self.pending.clone()
     }
 
@@ -920,7 +920,7 @@ impl Sensor for PvSignalSensor {
         let mut signals = Vec::new();
 
         for ctx in &contexts {
-            if let Ok(score) = crate::calculate_risk_score_validated(ctx) {
+            if let Ok(score) = crate::guardian::calculate_risk_score_validated(ctx) {
                 let severity = Self::level_to_severity(&score.level);
 
                 let mut signal = ThreatSignal::new(
@@ -1053,7 +1053,7 @@ pub struct KevCatalog {
 /// # Example
 ///
 /// ```ignore
-/// use nexcore_vigilance::guardian::sensing::{KevSensor, Sensor};
+/// use crate::guardian::sensing::{KevSensor, Sensor};
 ///
 /// let sensor = KevSensor::new()
 ///     .with_dependency_cves(vec!["CVE-2024-1234".into()]);
@@ -1344,7 +1344,7 @@ pub struct HealthCheckResult {
 /// # Example
 ///
 /// ```ignore
-/// use nexcore_vigilance::guardian::sensing::{ApiHealthSensor, MonitoredEndpoint};
+/// use crate::guardian::sensing::{ApiHealthSensor, MonitoredEndpoint};
 ///
 /// let sensor = ApiHealthSensor::new()
 ///     .with_endpoint(MonitoredEndpoint::new("custom-api", "https://api.example.com/health"));

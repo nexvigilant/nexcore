@@ -13,7 +13,7 @@
 //! Tier: T3 (μ Mapping + σ Sequence + ∂ Boundary)
 //! Grounding: κ (Comparison) + ∂ (Boundary) + → (Causality)
 
-use crate::sensing::{Measured, Sensor, SignalSource, ThreatLevel, ThreatSignal};
+use crate::guardian::sensing::{Measured, Sensor, SignalSource, ThreatLevel, ThreatSignal};
 use antitransformer::pipeline::{self, AnalysisConfig, AnalysisResult};
 use nexcore_hormones::{EndocrineState, HormoneType};
 use std::sync::{Arc, Mutex};

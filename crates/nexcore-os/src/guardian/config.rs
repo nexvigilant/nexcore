@@ -18,9 +18,9 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::homeostasis::decision_config;
-use crate::pattern_detector::PatternConfig;
-use crate::response::{amplifier_config, ceiling_limits};
+use crate::guardian::homeostasis::decision_config;
+use crate::guardian::pattern_detector::PatternConfig;
+use crate::guardian::response::{amplifier_config, ceiling_limits};
 
 /// Errors from configuration loading.
 ///

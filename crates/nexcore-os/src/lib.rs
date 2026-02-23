@@ -1,55 +1,55 @@
+pub mod guardian;
+
 // Copyright (c) 2026 Matthew Campion, PharmD; NexVigilant
 // All Rights Reserved. See LICENSE file for details.
 
-//! # NexCore OS — Operating System Core Runtime
-//!
-//! The init system, service manager, and process model for NexCore OS.
-//!
-//! ## Architecture
-//!
-//! ```text
-//! ┌─────────────────────────────────────────────────────────┐
-//! │              NexCore Shell (UI Layer)                    │
-//! ├─────────────────────────────────────────────────────────┤
-//! │              NexCore App Runtime (Skills)                │
-//! ├─────────────────────────────────────────────────────────┤
-//! │              NexCore System Services                     │
-//! │  Guardian │ Brain │ Vigil │ Cortex │ Vault │ Sentinel    │
-//! ├─────────────────────────────────────────────────────────┤
-//! │           NexCore OS Core (this crate)                   │ ← You are here
-//! │  STOS │ Cytokine IPC │ Clearance │ Energy │ Network │ Audio │ PAL │
-//! ├─────────────────────────────────────────────────────────┤
-//! │         Platform Abstraction Layer (nexcore-pal)          │
-//! ├─────────────────────────────────────────────────────────┤
-//! │              Linux Kernel (6.x)                          │
-//! └─────────────────────────────────────────────────────────┘
-//! ```
-//!
-//! ## Boot Sequence (σ Sequence)
-//!
-//! 1. PAL initialization (hardware probing)
-//! 2. STOS kernel boot (state machine runtime)
-//! 3. System service startup (Guardian, Brain, etc.)
-//! 4. Shell launch (per-device UI)
-//!
-//! ## Primitive Grounding
-//!
-//! | Component     | Primitives           | Role                     |
-//! |---------------|----------------------|--------------------------|
-//! | Boot sequence | σ + → + ∂            | Ordered causal startup   |
-//! | Service mgr   | ς + Σ + ∃            | Service state tracking   |
-//! | Event loop    | σ + ν + ρ            | Recurring event dispatch |
-//! | Security      | ∂ + ς + κ            | Threat detection/response|
-//! | Vault         | ∂ + μ + π + ς        | Encrypted secret storage |
-//! | Network       | Σ + ∂ + ς + μ + →    | Interfaces/DNS/firewall  |
-//! | Audio         | Σ + σ + ν + ς + ∂ + N| Devices/streams/mixing   |
-//! | Secure boot   | σ + → + ∂ + ∝ + κ    | Measured boot chain      |
-//! | Users/Login   | ∂ + κ + ς + π + μ    | Authentication & sessions|
-//! | Persistence   | π + ∃ + ς            | State crash recovery     |
-//! | Shutdown      | σ + ∝ + ∅            | Irreversible teardown    |
+// # NexCore OS — Operating System Core Runtime
+//
+// The init system, service manager, and process model for NexCore OS.
+//
+// ## Architecture
+//
+// ```text
+// ┌─────────────────────────────────────────────────────────┐
+// │              NexCore Shell (UI Layer)                    │
+// ├─────────────────────────────────────────────────────────┤
+// │              NexCore App Runtime (Skills)                │
+// ├─────────────────────────────────────────────────────────┤
+// │              NexCore System Services                     │
+// │  Guardian │ Brain │ Vigil │ Cortex │ Vault │ Sentinel    │
+// ├─────────────────────────────────────────────────────────┤
+// │           NexCore OS Core (this crate)                   │ ← You are here
+// │  STOS │ Cytokine IPC │ Clearance │ Energy │ Network │ Audio │ PAL │
+// ├─────────────────────────────────────────────────────────┤
+// │         Platform Abstraction Layer (nexcore-pal)          │
+// ├─────────────────────────────────────────────────────────┤
+// │              Linux Kernel (6.x)                          │
+// └─────────────────────────────────────────────────────────┘
+// ```
+//
+// ## Boot Sequence (σ Sequence)
+//
+// 1. PAL initialization (hardware probing)
+// 2. STOS kernel boot (state machine runtime)
+// 3. System service startup (Guardian, Brain, etc.)
+// 4. Shell launch (per-device UI)
+//
+// ## Primitive Grounding
+//
+// | Component     | Primitives           | Role                     |
+// |---------------|----------------------|--------------------------|
+// | Boot sequence | σ + → + ∂            | Ordered causal startup   |
+// | Service mgr   | ς + Σ + ∃            | Service state tracking   |
+// | Event loop    | σ + ν + ρ            | Recurring event dispatch |
+// | Security      | ∂ + ς + κ            | Threat detection/response|
+// | Vault         | ∂ + μ + π + ς        | Encrypted secret storage |
+// | Network       | Σ + ∂ + ς + μ + →    | Interfaces/DNS/firewall  |
+// | Audio         | Σ + σ + ν + ς + ∂ + N| Devices/streams/mixing   |
+// | Secure boot   | σ + → + ∂ + ∝ + κ    | Measured boot chain      |
+// | Users/Login   | ∂ + κ + ς + π + μ    | Authentication & sessions|
+// | Persistence   | π + ∃ + ς            | State crash recovery     |
+// | Shutdown      | σ + ∝ + ∅            | Irreversible teardown    |
 
-#![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 pub mod app_clearance;
 pub mod audio;

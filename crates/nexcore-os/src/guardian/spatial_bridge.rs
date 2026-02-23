@@ -24,7 +24,7 @@ use nexcore_lex_primitiva::grounding::GroundsTo;
 use nexcore_lex_primitiva::primitiva::{LexPrimitiva, PrimitiveComposition};
 use stem_math::spatial::{Distance, Metric, Neighborhood, Orientation};
 
-use crate::sensing::{SignalSource, ThreatLevel};
+use crate::guardian::sensing::{SignalSource, ThreatLevel};
 
 // ============================================================================
 // SeverityMetric: Distance between severity levels

@@ -36,8 +36,8 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::OriginatorType;
-use crate::response::ResponseAction;
+use crate::guardian::OriginatorType;
+use crate::guardian::response::ResponseAction;
 
 // =============================================================================
 // Constants
@@ -1780,7 +1780,7 @@ mod tests {
 
         let action = EvidencedAction::new(
             ResponseAction::Alert {
-                severity: crate::sensing::ThreatLevel::High,
+                severity: crate::guardian::sensing::ThreatLevel::High,
                 message: "Signal detected for Drug X".to_string(),
                 recipients: vec![],
             },
@@ -1808,7 +1808,7 @@ mod tests {
 
         let action = EvidencedAction::new(
             ResponseAction::Alert {
-                severity: crate::sensing::ThreatLevel::Medium,
+                severity: crate::guardian::sensing::ThreatLevel::Medium,
                 message: "test alert".to_string(),
                 recipients: vec![],
             },
@@ -1832,7 +1832,7 @@ mod tests {
 
         let action = EvidencedAction::new(
             ResponseAction::Escalate {
-                level: crate::response::EscalationLevel::L3,
+                level: crate::guardian::response::EscalationLevel::L3,
                 description: "Fatal AE".to_string(),
                 assigned_to: None,
             },
@@ -1857,7 +1857,7 @@ mod tests {
         evidence1.add_threshold_evidence("prr", "PRR", 3.5, 2.0);
         journal.record(EvidencedAction::new(
             ResponseAction::Alert {
-                severity: crate::sensing::ThreatLevel::High,
+                severity: crate::guardian::sensing::ThreatLevel::High,
                 message: "alert 1".to_string(),
                 recipients: vec![],
             },
@@ -1870,7 +1870,7 @@ mod tests {
         evidence2.add_threshold_evidence("cap-act", "threshold", 5.0, 3.0);
         journal.record(EvidencedAction::new(
             ResponseAction::Alert {
-                severity: crate::sensing::ThreatLevel::High,
+                severity: crate::guardian::sensing::ThreatLevel::High,
                 message: "alert 2".to_string(),
                 recipients: vec![],
             },
@@ -1924,7 +1924,7 @@ mod tests {
         journal.record(
             EvidencedAction::new(
                 ResponseAction::Alert {
-                    severity: crate::sensing::ThreatLevel::High,
+                    severity: crate::guardian::sensing::ThreatLevel::High,
                     message: "rogue".to_string(),
                     recipients: vec![],
                 },
@@ -1945,7 +1945,7 @@ mod tests {
         evidence.add_threshold_evidence("metric", "threshold", 5.0, 3.0);
         let action = EvidencedAction::new(
             ResponseAction::Alert {
-                severity: crate::sensing::ThreatLevel::Medium,
+                severity: crate::guardian::sensing::ThreatLevel::Medium,
                 message: "test".to_string(),
                 recipients: vec![],
             },

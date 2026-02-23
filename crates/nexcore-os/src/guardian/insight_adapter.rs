@@ -26,7 +26,7 @@ use nexcore_insight::composites::{Compression, Connection, Pattern};
 use nexcore_insight::engine::{InsightConfig, InsightEngine, InsightEvent, Observation};
 use nexcore_insight::traits::Insight;
 
-use crate::{OriginatorType, RiskContext};
+use crate::guardian::{OriginatorType, RiskContext};
 
 /// Guardian adapter for the Insight trait.
 ///

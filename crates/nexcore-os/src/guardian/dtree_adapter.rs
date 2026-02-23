@@ -414,7 +414,7 @@ impl super::homeostasis::DecisionMaker for FallbackEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::OriginatorType;
+    use crate::guardian::OriginatorType;
 
     fn ctx(prr: f64, ror: f64, ic: f64, eb: f64, n: u64) -> RiskContext {
         RiskContext {

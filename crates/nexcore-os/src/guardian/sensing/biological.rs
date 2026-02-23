@@ -23,7 +23,7 @@
 //! # Tier: T3 (Domain-Specific Sensor)
 //! # Grounding: κ (Comparison) + ∂ (Boundary) + Σ (Sum) — compares 10 systems against set points
 
-use crate::sensing::{Measured, Sensor, SignalSource, ThreatLevel, ThreatSignal};
+use crate::guardian::sensing::{Measured, Sensor, SignalSource, ThreatLevel, ThreatSignal};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 

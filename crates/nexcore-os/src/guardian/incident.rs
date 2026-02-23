@@ -19,8 +19,8 @@ use std::path::{Path, PathBuf};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::response::ResponseAction;
-use crate::sensing::{SignalSource, ThreatLevel, ThreatSignal};
+use crate::guardian::response::ResponseAction;
+use crate::guardian::sensing::{SignalSource, ThreatLevel, ThreatSignal};
 
 // =============================================================================
 // IncidentRecord — the primary unit of incident memory
@@ -526,7 +526,7 @@ impl IncidentMemory for InMemoryIncidentStore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sensing::SignalSource;
+    use crate::guardian::sensing::SignalSource;
 
     fn make_incident(pattern: &str, severity: ThreatLevel, success: bool) -> IncidentRecord {
         IncidentRecord {

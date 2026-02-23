@@ -9,7 +9,7 @@
 //! ## Example
 //!
 //! ```ignore
-//! use nexcore_vigilance::guardian::response::{Actuator, ActuatorResult, ResponseAction};
+//! use crate::guardian::response::{Actuator, ActuatorResult, ResponseAction};
 //!
 //! struct AlertActuator;
 //!

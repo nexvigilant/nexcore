@@ -15,8 +15,8 @@
 //!
 //! `RPN = Severity × Likelihood × (1 - Detectability)`
 
-use crate::tov_types::{HarmType, SafetyMargin};
-use crate::{OriginatorType, RiskContext, RiskScore};
+use crate::guardian::tov_types::{HarmType, SafetyMargin};
+use crate::guardian::{OriginatorType, RiskContext, RiskScore};
 use nexcore_primitives::measurement::{Confidence, Measured};
 use serde::{Deserialize, Serialize};
 
@@ -328,7 +328,7 @@ fn compute_rpn(s: &Measured<f64>, l: &Measured<f64>, d: &Measured<f64>) -> Measu
 /// Compute a 3D safety point from input parameters.
 #[must_use]
 pub fn compute_safety_point(input: &SafetySpace3DInput) -> SafetyPoint3D {
-    let risk_score = crate::calculate_risk_score(&build_risk_context(input));
+    let risk_score = crate::guardian::calculate_risk_score(&build_risk_context(input));
     let safety_margin =
         SafetyMargin::calculate(input.prr, input.ror_lower, input.ic025, input.eb05, input.n);
 

@@ -18,7 +18,7 @@ use nexcore_cytokine::{
 };
 
 use super::{Actuator, ActuatorResult, ResponseAction, actuator_priorities};
-use crate::sensing::ThreatLevel;
+use crate::guardian::sensing::ThreatLevel;
 
 /// Priority level for cytokine actuator (between Alert:80 and Quarantine:85).
 pub const CYTOKINE_PRIORITY: u8 = 82;
@@ -218,7 +218,7 @@ impl Actuator for CytokineActuator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::response::EscalationLevel;
+    use crate::guardian::response::EscalationLevel;
 
     #[tokio::test]
     async fn test_cytokine_actuator_creation() {

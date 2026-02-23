@@ -17,7 +17,7 @@ use nexcore_primitives::measurement::Measured;
 use nexcore_browser::collectors::console::{ConsoleCollector, get_console_collector};
 use nexcore_browser::collectors::network::{NetworkCollector, get_network_collector};
 
-use crate::sensing::{Sensor, SignalSource, ThreatLevel, ThreatSignal};
+use crate::guardian::sensing::{Sensor, SignalSource, ThreatLevel, ThreatSignal};
 
 /// Pattern detected by the browser sensor
 #[derive(Debug, Clone)]

@@ -12,7 +12,7 @@
 //! Tier: T3 (μ Mapping + σ Sequence + ∂ Boundary)
 //! Grounding: κ (Comparison) + ∂ (Boundary) + ς (State)
 
-use crate::sensing::{Measured, Sensor, SignalSource, ThreatLevel, ThreatSignal};
+use crate::guardian::sensing::{Measured, Sensor, SignalSource, ThreatLevel, ThreatSignal};
 use antitransformer::pipeline::{self, AnalysisConfig, AnalysisResult};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;

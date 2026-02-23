@@ -3,8 +3,8 @@
 //! Implements Axiom 2 and Axiom 5 via nested control loops.
 //! Orchestrates safety monitoring across discrete hierarchical levels.
 
-use crate::hierarchy::{Hierarchy, Level};
-use crate::homeostasis::{HomeostasisLoop, LoopIterationResult};
+use crate::guardian::hierarchy::{Hierarchy, Level};
+use crate::guardian::homeostasis::{HomeostasisLoop, LoopIterationResult};
 use std::collections::HashMap;
 
 /// Tier: T3 (Domain-Specific)

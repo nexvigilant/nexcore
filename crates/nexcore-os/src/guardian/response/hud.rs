@@ -185,7 +185,7 @@ impl Actuator for HudCircuitBreakerActuator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sensing::ThreatLevel;
+    use crate::guardian::sensing::ThreatLevel;
     #[test]
     fn test_circuit_initially_closed() {
         let actuator = HudCircuitBreakerActuator::new();

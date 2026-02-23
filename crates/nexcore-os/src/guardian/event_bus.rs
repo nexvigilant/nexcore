@@ -15,7 +15,7 @@
 //! ## Example
 //!
 //! ```ignore
-//! use nexcore_vigilance::guardian::event_bus::{EventBus, GuardianEvent};
+//! use crate::guardian::event_bus::{EventBus, GuardianEvent};
 //!
 //! let bus = EventBus::new(256);
 //! let mut rx = bus.subscribe();
@@ -176,9 +176,9 @@ mod tests {
     use nexcore_primitives::measurement::Measured;
     use std::collections::HashMap;
 
-    use crate::homeostasis::{ActuatorResultSummary, LoopIterationResult};
-    use crate::response::{ActuatorResult, ResponseAction};
-    use crate::sensing::{SignalSource, ThreatLevel, ThreatSignal};
+    use crate::guardian::homeostasis::{ActuatorResultSummary, LoopIterationResult};
+    use crate::guardian::response::{ActuatorResult, ResponseAction};
+    use crate::guardian::sensing::{SignalSource, ThreatLevel, ThreatSignal};
 
     /// Helper: create a test LoopIterationResult
     fn make_loop_result() -> LoopIterationResult {
@@ -193,7 +193,7 @@ mod tests {
                 message: "Alert sent".to_string(),
             }],
             duration_ms: 12,
-            throughput: crate::homeostasis::ThroughputMonitor::default(),
+            throughput: crate::guardian::homeostasis::ThroughputMonitor::default(),
         }
     }
 

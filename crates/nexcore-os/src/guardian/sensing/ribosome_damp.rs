@@ -46,8 +46,8 @@ const DEDUP_MAX: usize = 512;
 /// # Example
 ///
 /// ```ignore
-/// use nexcore_vigilance::guardian::sensing::ribosome_damp::RibosomeDampSensor;
-/// use nexcore_vigilance::guardian::sensing::Sensor;
+/// use crate::guardian::sensing::ribosome_damp::RibosomeDampSensor;
+/// use crate::guardian::sensing::Sensor;
 /// use nexcore_ribosome::DriftSignal;
 ///
 /// let sensor = RibosomeDampSensor::new();

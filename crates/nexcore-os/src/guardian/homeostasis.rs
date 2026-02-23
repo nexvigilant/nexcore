@@ -21,9 +21,9 @@
 //! ## Example
 //!
 //! ```ignore
-//! use nexcore_vigilance::guardian::homeostasis::{HomeostasisLoop, DecisionEngine};
-//! use nexcore_vigilance::guardian::sensing::ExternalSensor;
-//! use nexcore_vigilance::guardian::response::AlertActuator;
+//! use crate::guardian::homeostasis::{HomeostasisLoop, DecisionEngine};
+//! use crate::guardian::sensing::ExternalSensor;
+//! use crate::guardian::response::AlertActuator;
 //!
 //! let mut loop_controller = HomeostasisLoop::new(DecisionEngine::default());
 //! loop_controller.add_sensor(Box::new(ExternalSensor::new()));
@@ -986,8 +986,8 @@ pub fn evaluate_pv_risk(context: &RiskContext) -> (RiskScore, Vec<ResponseAction
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::response::AlertActuator;
-    use crate::sensing::ExternalSensor;
+    use crate::guardian::response::AlertActuator;
+    use crate::guardian::sensing::ExternalSensor;
 
     #[test]
     fn test_decision_engine_default() {

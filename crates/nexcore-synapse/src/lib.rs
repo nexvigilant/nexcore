@@ -59,7 +59,9 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 #![warn(missing_docs)]
 
+pub mod gate_control;
 pub mod grounding;
+pub mod referred_pain;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

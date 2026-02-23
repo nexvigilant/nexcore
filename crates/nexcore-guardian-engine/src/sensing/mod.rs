@@ -30,6 +30,7 @@
 //! ```
 
 pub mod adversarial;
+pub mod allostatic;
 pub mod biological;
 #[cfg(feature = "browser")]
 pub mod browser;

@@ -73,6 +73,7 @@ pub mod co_translational;
 pub mod error;
 pub mod grounding;
 pub mod loader;
+pub mod negative_selection;
 pub mod scanner;
 pub mod smg;
 pub mod thymic;

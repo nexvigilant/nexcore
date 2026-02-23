@@ -392,9 +392,9 @@ pub fn implicit_set(params: BrainImplicitSetParams) -> Result<CallToolResult, Mc
     let mut knowledge =
         ImplicitKnowledge::load().map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
-    // Parse value as JSON
+    // Parse value as JSON; if plain text, wrap as JSON string automatically
     let value: serde_json::Value = serde_json::from_str(&params.value)
-        .map_err(|e| McpError::invalid_params(format!("Invalid JSON value: {e}"), None))?;
+        .unwrap_or_else(|_| serde_json::Value::String(params.value.clone()));
 
     knowledge.set_preference_value(&params.key, value.clone());
     knowledge

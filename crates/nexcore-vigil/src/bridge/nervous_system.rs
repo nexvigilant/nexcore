@@ -850,6 +850,7 @@ mod tests {
             actions_taken: 1,
             results: Vec::new(),
             duration_ms: 42,
+            throughput: nexcore_vigilance::guardian::homeostasis::ThroughputMonitor::default(),
         };
 
         bridge

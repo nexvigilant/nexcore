@@ -193,6 +193,7 @@ mod tests {
                 message: "Alert sent".to_string(),
             }],
             duration_ms: 12,
+            throughput: crate::homeostasis::ThroughputMonitor::default(),
         }
     }
 

@@ -14,6 +14,7 @@
 
 pub mod config;
 pub mod machine;
+pub mod mcp;
 pub mod traits;
 
 // Re-export sub-crates for convenience.

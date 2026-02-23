@@ -294,8 +294,7 @@ fn color_for_edge_type(edge_type: &VdagEdgeType) -> &'static str {
 fn compute_vdag_levels(nodes: &[VdagNode], edges: &[VdagEdge]) -> Vec<Vec<String>> {
     let node_ids: HashSet<String> = nodes.iter().map(|n| n.id.clone()).collect();
 
-    let mut in_degree: HashMap<String, usize> =
-        node_ids.iter().map(|id| (id.clone(), 0)).collect();
+    let mut in_degree: HashMap<String, usize> = node_ids.iter().map(|id| (id.clone(), 0)).collect();
     let mut successors: HashMap<String, Vec<String>> = HashMap::new();
 
     for edge in edges {
@@ -486,9 +485,7 @@ impl Vdag {
     pub fn drugs(&self) -> Vec<&VdagNode> {
         self.nodes
             .iter()
-            .filter(|n| {
-                matches!(n.node_type, VdagNodeType::Drug | VdagNodeType::DrugClass)
-            })
+            .filter(|n| matches!(n.node_type, VdagNodeType::Drug | VdagNodeType::DrugClass))
             .collect()
     }
 
@@ -584,9 +581,7 @@ impl Vdag {
             .iter()
             .filter(|n| {
                 matches!(n.node_type, VdagNodeType::Drug | VdagNodeType::DrugClass)
-                    && n.signals
-                        .iter()
-                        .any(|s| s.ae_name.to_lowercase() == lower)
+                    && n.signals.iter().any(|s| s.ae_name.to_lowercase() == lower)
             })
             .collect()
     }
@@ -873,16 +868,28 @@ impl Vdag {
         let node_entries: &[(&str, &str)] = &[
             ("Drug Class", color_for_node_type(&VdagNodeType::DrugClass)),
             ("Drug", color_for_node_type(&VdagNodeType::Drug)),
-            ("Adverse Event", color_for_node_type(&VdagNodeType::AdverseEvent)),
+            (
+                "Adverse Event",
+                color_for_node_type(&VdagNodeType::AdverseEvent),
+            ),
             ("Indication", color_for_node_type(&VdagNodeType::Indication)),
         ];
 
         let edge_entries: &[(&str, &str)] = &[
             ("Contains", color_for_edge_type(&VdagEdgeType::Contains)),
-            ("Interacts With", color_for_edge_type(&VdagEdgeType::InteractsWith)),
-            ("Contraindicates", color_for_edge_type(&VdagEdgeType::Contraindicates)),
+            (
+                "Interacts With",
+                color_for_edge_type(&VdagEdgeType::InteractsWith),
+            ),
+            (
+                "Contraindicates",
+                color_for_edge_type(&VdagEdgeType::Contraindicates),
+            ),
             ("Class Of", color_for_edge_type(&VdagEdgeType::ClassOf)),
-            ("Has Adverse Event", color_for_edge_type(&VdagEdgeType::HasAdverseEvent)),
+            (
+                "Has Adverse Event",
+                color_for_edge_type(&VdagEdgeType::HasAdverseEvent),
+            ),
         ];
 
         let row_h = 24.0;
@@ -911,7 +918,14 @@ impl Vdag {
                 2.0,
                 3.0,
             ));
-            doc.add(text(pad + swatch_w + 6.0, y, label, 10.0, theme.text, "start"));
+            doc.add(text(
+                pad + swatch_w + 6.0,
+                y,
+                label,
+                10.0,
+                theme.text,
+                "start",
+            ));
             y += row_h;
         }
 
@@ -923,7 +937,14 @@ impl Vdag {
 
         for &(label, color) in edge_entries {
             doc.add(svg_line(pad, y, pad + swatch_w, y, color, 2.5));
-            doc.add(text(pad + swatch_w + 6.0, y, label, 10.0, theme.text, "start"));
+            doc.add(text(
+                pad + swatch_w + 6.0,
+                y,
+                label,
+                10.0,
+                theme.text,
+                "start",
+            ));
             y += row_h;
         }
 
@@ -986,10 +1007,7 @@ impl Vdag {
             let mut map: HashMap<String, Option<f64>> = HashMap::new();
             for node_id in node_ids {
                 if let Some(node) = self.nodes.iter().find(|n| &n.id == node_id) {
-                    if matches!(
-                        node.node_type,
-                        VdagNodeType::Drug | VdagNodeType::DrugClass
-                    ) {
+                    if matches!(node.node_type, VdagNodeType::Drug | VdagNodeType::DrugClass) {
                         for sig in &node.signals {
                             let entry = map.entry(sig.ae_name.clone()).or_insert(None);
                             *entry = match (*entry, sig.prr) {
@@ -1012,22 +1030,13 @@ impl Vdag {
         let aes_a: HashSet<&String> = map_a.keys().collect();
         let aes_b: HashSet<&String> = map_b.keys().collect();
 
-        let mut shared_aes: Vec<String> = aes_a
-            .intersection(&aes_b)
-            .map(|&s| s.clone())
-            .collect();
+        let mut shared_aes: Vec<String> = aes_a.intersection(&aes_b).map(|&s| s.clone()).collect();
         shared_aes.sort();
 
-        let mut unique_to_a: Vec<String> = aes_a
-            .difference(&aes_b)
-            .map(|&s| s.clone())
-            .collect();
+        let mut unique_to_a: Vec<String> = aes_a.difference(&aes_b).map(|&s| s.clone()).collect();
         unique_to_a.sort();
 
-        let mut unique_to_b: Vec<String> = aes_b
-            .difference(&aes_a)
-            .map(|&s| s.clone())
-            .collect();
+        let mut unique_to_b: Vec<String> = aes_b.difference(&aes_a).map(|&s| s.clone()).collect();
         unique_to_b.sort();
 
         let differential_scores: Vec<DifferentialScore> = shared_aes
@@ -1142,19 +1151,18 @@ impl Vdag {
 
             for ancestor_id in &ancestors {
                 // Confirm ancestor is a DrugClass node
-                let is_class = self
-                    .nodes
-                    .iter()
-                    .any(|n| n.id.as_str() == *ancestor_id && n.node_type == VdagNodeType::DrugClass);
+                let is_class = self.nodes.iter().any(|n| {
+                    n.id.as_str() == *ancestor_id && n.node_type == VdagNodeType::DrugClass
+                });
                 if !is_class {
                     continue;
                 }
-                let ae_map = parent_ae
-                    .entry((*ancestor_id).to_string())
-                    .or_default();
+                let ae_map = parent_ae.entry((*ancestor_id).to_string()).or_default();
 
                 for sig in &node.signals {
-                    let entry: &mut AeAgg = ae_map.entry(sig.ae_name.clone()).or_insert((None, None, 0, 0));
+                    let entry: &mut AeAgg = ae_map
+                        .entry(sig.ae_name.clone())
+                        .or_insert((None, None, 0, 0));
                     // Max PRR
                     entry.0 = match (entry.0, sig.prr) {
                         (None, v) => v,
@@ -1178,16 +1186,18 @@ impl Vdag {
         let mut result: Vec<PropagatedSignal> = parent_ae
             .into_iter()
             .flat_map(|(node_id, ae_map)| {
-                ae_map.into_iter().map(move |(ae_name, (prr, ror, cases, count))| {
-                    PropagatedSignal {
-                        node_id: node_id.clone(),
-                        ae_name,
-                        aggregated_prr: prr,
-                        aggregated_ror: ror,
-                        total_cases: cases,
-                        child_count: count,
-                    }
-                })
+                ae_map
+                    .into_iter()
+                    .map(
+                        move |(ae_name, (prr, ror, cases, count))| PropagatedSignal {
+                            node_id: node_id.clone(),
+                            ae_name,
+                            aggregated_prr: prr,
+                            aggregated_ror: ror,
+                            total_cases: cases,
+                            child_count: count,
+                        },
+                    )
             })
             .collect();
 
@@ -1453,13 +1463,11 @@ impl Vdag {
 
         // Clone and sort signals by PRR descending (None last)
         let mut signals = drug_node.signals.clone();
-        signals.sort_by(|a, b| {
-            match (b.prr, a.prr) {
-                (Some(bv), Some(av)) => bv.partial_cmp(&av).unwrap_or(std::cmp::Ordering::Equal),
-                (Some(_), None) => std::cmp::Ordering::Less,
-                (None, Some(_)) => std::cmp::Ordering::Greater,
-                (None, None) => std::cmp::Ordering::Equal,
-            }
+        signals.sort_by(|a, b| match (b.prr, a.prr) {
+            (Some(bv), Some(av)) => bv.partial_cmp(&av).unwrap_or(std::cmp::Ordering::Equal),
+            (Some(_), None) => std::cmp::Ordering::Less,
+            (None, Some(_)) => std::cmp::Ordering::Greater,
+            (None, None) => std::cmp::Ordering::Equal,
         });
 
         // Build reverse adjacency for Contains edges: child -> parents
@@ -1477,10 +1485,7 @@ impl Vdag {
         // We use a layer-by-layer BFS and record discovery order
         let mut parent_chain: Vec<String> = Vec::new();
         let mut visited: HashSet<&str> = HashSet::new();
-        let mut frontier: Vec<&str> = child_to_parents
-            .get(drug_id)
-            .cloned()
-            .unwrap_or_default();
+        let mut frontier: Vec<&str> = child_to_parents.get(drug_id).cloned().unwrap_or_default();
         frontier.sort();
 
         while !frontier.is_empty() {
@@ -1857,10 +1862,7 @@ mod tests {
     fn to_3d_layout_root_has_x_zero() {
         let vdag = build_test_vdag();
         let positions = vdag.to_3d_layout();
-        let root_x = positions
-            .iter()
-            .find(|p| p.id == "N")
-            .map(|p| p.x);
+        let root_x = positions.iter().find(|p| p.id == "N").map(|p| p.x);
         assert!(root_x.is_some(), "node N not found in 3D layout");
         assert!(
             root_x.map_or(false, |x| x.abs() < 1e-9),
@@ -1872,10 +1874,7 @@ mod tests {
     fn to_3d_layout_later_levels_have_larger_x() {
         let vdag = build_test_vdag();
         let positions = vdag.to_3d_layout();
-        let n_x = positions
-            .iter()
-            .find(|p| p.id == "N")
-            .map_or(0.0, |p| p.x);
+        let n_x = positions.iter().find(|p| p.id == "N").map_or(0.0, |p| p.x);
         let aspirin_x = positions
             .iter()
             .find(|p| p.id == "aspirin")
@@ -1966,9 +1965,7 @@ mod tests {
     fn signal_summary_max_prr() {
         let vdag = build_test_vdag();
         // ibuprofen Renal Failure has PRR 4.1 — highest
-        let max_prr = vdag
-            .signal_summary()
-            .and_then(|s| s.max_prr);
+        let max_prr = vdag.signal_summary().and_then(|s| s.max_prr);
         assert!(max_prr.is_some(), "expected signal_summary to have max_prr");
         assert!(
             max_prr.map_or(false, |v| (v - 4.1).abs() < 1e-9),
@@ -1980,9 +1977,7 @@ mod tests {
     fn signal_summary_max_case_count() {
         let vdag = build_test_vdag();
         // aspirin GI Bleeding has 412 — highest
-        let max_count = vdag
-            .signal_summary()
-            .and_then(|s| s.max_case_count);
+        let max_count = vdag.signal_summary().and_then(|s| s.max_case_count);
         assert_eq!(max_count, Some(412));
     }
 
@@ -2045,7 +2040,10 @@ mod tests {
         // Level 0: N (no in-edges from the graph)
         // Level 1: N02
         // Level 2+: aspirin, then ibuprofen (shifted by aspirin->ibuprofen edge)
-        assert!(levels.len() >= 3, "expect at least 3 levels in ATC hierarchy");
+        assert!(
+            levels.len() >= 3,
+            "expect at least 3 levels in ATC hierarchy"
+        );
         assert!(
             levels[0].contains(&"N".to_string()),
             "root N must be in first level"
@@ -2056,7 +2054,10 @@ mod tests {
     fn edge_type_colors_are_distinct() {
         let ci = color_for_edge_type(&VdagEdgeType::Contraindicates);
         let co = color_for_edge_type(&VdagEdgeType::Contains);
-        assert_ne!(ci, co, "contraindication and contains must have distinct colors");
+        assert_ne!(
+            ci, co,
+            "contraindication and contains must have distinct colors"
+        );
     }
 
     #[test]
@@ -2174,7 +2175,10 @@ mod tests {
             .find(|d| d.ae_name == "Nausea");
         assert!(ds.is_some());
         if let Some(d) = ds {
-            assert!((d.diff - 2.0).abs() < 1e-9, "diff should be 4.0 - 2.0 = 2.0");
+            assert!(
+                (d.diff - 2.0).abs() < 1e-9,
+                "diff should be 4.0 - 2.0 = 2.0"
+            );
             assert_eq!(d.prr_a, Some(4.0));
             assert_eq!(d.prr_b, Some(2.0));
         }
@@ -2524,10 +2528,7 @@ mod tests {
             // Verify descending order of those with PRR present
             for pair in prrs.windows(2) {
                 match (pair[0], pair[1]) {
-                    (Some(a), Some(b)) => assert!(
-                        a >= b,
-                        "signals not sorted desc: {a} < {b}"
-                    ),
+                    (Some(a), Some(b)) => assert!(a >= b, "signals not sorted desc: {a} < {b}"),
                     (Some(_), None) => {} // Some > None is correct
                     _ => {}
                 }

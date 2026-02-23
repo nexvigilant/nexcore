@@ -8,11 +8,11 @@ license = "LicenseRef-Proprietary"
 description = "Typed event signaling system based on immune cytokine patterns"
 
 [dependencies]
+nexcore-error = { workspace = true }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 chrono = { version = "0.4.38", features = ["serde"] }
-thiserror = { version = "1.0.61" }
 tokio = { version = "1.38.0", features = ["full", "sync", "time"] }
 tracing = { version = "0.1.40" }
 

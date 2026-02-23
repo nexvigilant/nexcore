@@ -79,15 +79,15 @@ pub mod thymic;
 pub mod types;
 
 // Re-exports for convenience
-pub use error::{ImmunityError, ImmunityResult};
-pub use loader::{DEFAULT_REGISTRY_PATH, load_default_registry, load_from_str, load_registry};
-pub use scanner::ImmunityScanner;
 pub use co_translational::{
     CheckpointObservation, UpfAnomaly, UpfChannel, UpfComplex, UpfConfig, UpfVerdict,
 };
+pub use error::{ImmunityError, ImmunityResult};
+pub use loader::{DEFAULT_REGISTRY_PATH, load_default_registry, load_from_str, load_registry};
+pub use scanner::ImmunityScanner;
 // Re-export spliceosome types used in NMD pipeline
-pub use nexcore_spliceosome::{EjcMarker, TaskCategory};
 pub use adaptive::{NmdAdaptiveEngine, NmdLearningEvent, ThresholdAdjustment};
+pub use nexcore_spliceosome::{EjcMarker, TaskCategory};
 pub use smg::{SmgAction, SmgComplex, SmgConfig};
 pub use thymic::{CategoryObservation, ThymicConfig, ThymicGate};
 pub use types::{

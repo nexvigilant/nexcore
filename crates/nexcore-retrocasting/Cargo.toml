@@ -8,9 +8,9 @@ authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "Retrocasting engine: links FAERS safety signals to molecular structures for pre-market safety prediction"
 
 [dependencies]
+nexcore-error = { workspace = true }
 nexcore-compound-registry = { path = "../nexcore-compound-registry" }
 reqwest = { version = "0.12.5", features = ["json"] }
-thiserror = { version = "1.0.61" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 tokio = { version = "1.38.0", features = ["full"] }

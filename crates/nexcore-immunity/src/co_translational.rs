@@ -225,9 +225,7 @@ impl UpfComplex {
             None
         } else {
             // Out-of-order is less severe than unknown phase
-            let exists_elsewhere = markers
-                .iter()
-                .any(|m| m.phase_id == observation.phase_id);
+            let exists_elsewhere = markers.iter().any(|m| m.phase_id == observation.phase_id);
 
             let severity = if exists_elsewhere { 0.6 } else { 0.9 };
 
@@ -253,8 +251,7 @@ impl UpfComplex {
     ) -> Option<UpfAnomaly> {
         let marker = markers.get(observation.checkpoint_index)?;
 
-        if marker.expected_tool_categories.is_empty()
-            && observation.observed_categories.is_empty()
+        if marker.expected_tool_categories.is_empty() && observation.observed_categories.is_empty()
         {
             return None;
         }
@@ -271,7 +268,9 @@ impl UpfComplex {
             0.0
         } else {
             #[allow(clippy::cast_precision_loss)] // set sizes are small enough for f32
-            { 1.0 - (intersection as f32 / union as f32) }
+            {
+                1.0 - (intersection as f32 / union as f32)
+            }
         };
 
         if drift > self.config.tool_drift_threshold {
@@ -308,8 +307,7 @@ impl UpfComplex {
         }
 
         #[allow(clippy::cast_precision_loss)] // u32 values within f32 range for ratio calculation
-        let grounding_ratio =
-            observation.grounding_signals as f32 / observation.total_calls as f32;
+        let grounding_ratio = observation.grounding_signals as f32 / observation.total_calls as f32;
         let required = marker.grounding_confidence_threshold;
 
         if grounding_ratio < required {
@@ -362,11 +360,7 @@ mod tests {
     #[test]
     fn test_all_pass_returns_continue() {
         let upf = UpfComplex::new();
-        let markers = vec![make_marker(
-            "investigate",
-            vec![TaskCategory::Explore],
-            0.3,
-        )];
+        let markers = vec![make_marker("investigate", vec![TaskCategory::Explore], 0.3)];
         let obs = make_observation("investigate", vec![TaskCategory::Explore], 5, 10, 0);
         assert_eq!(upf.scan_checkpoint(&obs, &markers), UpfVerdict::Continue);
     }
@@ -391,11 +385,7 @@ mod tests {
     #[test]
     fn test_tool_drift_detection() {
         let upf = UpfComplex::new();
-        let markers = vec![make_marker(
-            "investigate",
-            vec![TaskCategory::Explore],
-            0.0,
-        )];
+        let markers = vec![make_marker("investigate", vec![TaskCategory::Explore], 0.0)];
         let obs = make_observation("investigate", vec![TaskCategory::Compute], 0, 10, 0);
         let verdict = upf.scan_checkpoint(&obs, &markers);
         match verdict {
@@ -409,11 +399,7 @@ mod tests {
     #[test]
     fn test_grounding_deficit() {
         let upf = UpfComplex::new();
-        let markers = vec![make_marker(
-            "compute",
-            vec![TaskCategory::Compute],
-            0.7,
-        )];
+        let markers = vec![make_marker("compute", vec![TaskCategory::Compute], 0.7)];
         let obs = make_observation("compute", vec![TaskCategory::Compute], 1, 10, 0);
         let verdict = upf.scan_checkpoint(&obs, &markers);
         match verdict {
@@ -433,11 +419,7 @@ mod tests {
             severity_floor: 0.3,
         };
         let upf = UpfComplex::with_config(config);
-        let markers = vec![make_marker(
-            "investigate",
-            vec![TaskCategory::Explore],
-            0.8,
-        )];
+        let markers = vec![make_marker("investigate", vec![TaskCategory::Explore], 0.8)];
         let obs = make_observation("implement", vec![TaskCategory::Browse], 0, 10, 0);
         let verdict = upf.scan_checkpoint(&obs, &markers);
         assert!(matches!(verdict, UpfVerdict::Degrade { .. }));
@@ -453,11 +435,7 @@ mod tests {
     #[test]
     fn test_zero_calls_skips_grounding() {
         let upf = UpfComplex::new();
-        let markers = vec![make_marker(
-            "investigate",
-            vec![TaskCategory::Explore],
-            0.9,
-        )];
+        let markers = vec![make_marker("investigate", vec![TaskCategory::Explore], 0.9)];
         let obs = make_observation("investigate", vec![TaskCategory::Explore], 0, 0, 0);
         assert_eq!(upf.scan_checkpoint(&obs, &markers), UpfVerdict::Continue);
     }

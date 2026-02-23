@@ -3,9 +3,9 @@
 //! Standard error types for foundation operations including algorithms,
 //! data processing, execution, and state management.
 
+use nexcore_error::Error;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use thiserror::Error;
 
 /// Unified error type for foundation operations
 #[derive(Error, Debug)]

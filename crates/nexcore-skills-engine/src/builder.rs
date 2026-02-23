@@ -18,10 +18,10 @@
 //! | T2-C | BuildOptions | `struct { clean, verbose }` |
 //! | T2-C | BuildReport | `struct { skill_name, tasks_*, messages }` |
 
+use nexcore_error::Error;
+use nexcore_fs::walk::WalkDir;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-use thiserror::Error;
-use walkdir::WalkDir;
 
 // ============================================================================
 // Error Types
@@ -221,7 +221,7 @@ fn try_remove_file(path: &Path) -> bool {
 }
 
 /// Check if entry is a removable generated file.
-fn is_removable_generated(entry: &walkdir::DirEntry) -> bool {
+fn is_removable_generated(entry: &nexcore_fs::walk::DirEntry) -> bool {
     let path = entry.path();
     path.is_file() && is_generated_file(path)
 }
@@ -255,7 +255,11 @@ fn collect_and_remove_generated(
 }
 
 /// Remove a file and optionally log it.
-fn remove_and_log(entry: &walkdir::DirEntry, verbose: bool, report: &mut BuildReport) -> usize {
+fn remove_and_log(
+    entry: &nexcore_fs::walk::DirEntry,
+    verbose: bool,
+    report: &mut BuildReport,
+) -> usize {
     let path = entry.path();
     if try_remove_file(path) {
         if verbose {

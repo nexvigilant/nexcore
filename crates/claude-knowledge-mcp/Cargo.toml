@@ -24,7 +24,6 @@ schemars = { version = "1.0" }
 
 # Error handling
 nexcore-error = { workspace = true }
-thiserror = { workspace = true }
 
 # Logging
 tracing = { workspace = true }
@@ -35,7 +34,5 @@ rusqlite = { workspace = true }
 
 # Utilities
 chrono = { workspace = true }
-dirs = { workspace = true }
-walkdir = { workspace = true }
+nexcore-fs = { workspace = true }
 regex = { workspace = true }
-glob = { workspace = true }

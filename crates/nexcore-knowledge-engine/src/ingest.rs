@@ -1,8 +1,8 @@
 //! Raw knowledge ingestion — converts diverse sources into fragments.
 
 use chrono::{DateTime, Utc};
+use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 use crate::extraction::{ConceptExtractor, ExtractedConcept, ExtractedPrimitive};
 use crate::scoring::{CompendiousScorer, ScoreResult};
@@ -73,7 +73,7 @@ pub fn ingest(raw: RawKnowledge) -> crate::error::Result<KnowledgeFragment> {
     });
 
     Ok(KnowledgeFragment {
-        id: Uuid::new_v4().to_string(),
+        id: NexId::v4().to_string(),
         text: raw.text,
         source: raw.source,
         domain,

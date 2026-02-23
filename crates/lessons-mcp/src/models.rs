@@ -25,19 +25,35 @@ pub struct ExtractedPrimitive {
 
 impl ExtractedPrimitive {
     pub fn t1(name: &str, desc: &str) -> Self {
-        Self { name: name.into(), tier: PrimitiveTier::T1, description: desc.into() }
+        Self {
+            name: name.into(),
+            tier: PrimitiveTier::T1,
+            description: desc.into(),
+        }
     }
 
     pub fn t2p(name: &str, desc: &str) -> Self {
-        Self { name: name.into(), tier: PrimitiveTier::T2P, description: desc.into() }
+        Self {
+            name: name.into(),
+            tier: PrimitiveTier::T2P,
+            description: desc.into(),
+        }
     }
 
     pub fn t2c(name: &str, desc: &str) -> Self {
-        Self { name: name.into(), tier: PrimitiveTier::T2C, description: desc.into() }
+        Self {
+            name: name.into(),
+            tier: PrimitiveTier::T2C,
+            description: desc.into(),
+        }
     }
 
     pub fn t3(name: &str, desc: &str) -> Self {
-        Self { name: name.into(), tier: PrimitiveTier::T3, description: desc.into() }
+        Self {
+            name: name.into(),
+            tier: PrimitiveTier::T3,
+            description: desc.into(),
+        }
     }
 }
 
@@ -77,11 +93,17 @@ impl LessonsDb {
 
     pub fn search(&self, q: &str) -> Vec<&Lesson> {
         let q = q.to_lowercase();
-        self.lessons.iter().filter(|l| matches_query(l, &q)).collect()
+        self.lessons
+            .iter()
+            .filter(|l| matches_query(l, &q))
+            .collect()
     }
 
     pub fn by_context(&self, ctx: &str) -> Vec<&Lesson> {
-        self.lessons.iter().filter(|l| l.context.eq_ignore_ascii_case(ctx)).collect()
+        self.lessons
+            .iter()
+            .filter(|l| l.context.eq_ignore_ascii_case(ctx))
+            .collect()
     }
 
     pub fn by_tag(&self, tag: &str) -> Vec<&Lesson> {

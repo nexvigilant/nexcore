@@ -2,7 +2,7 @@
 //!
 //! Tier: T2-C (composed domain errors)
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors that can occur during measurement operations.
 #[derive(Debug, Error)]
@@ -38,7 +38,7 @@ pub enum MeasureError {
 
     /// WalkDir traversal error.
     #[error("walkdir error: {0}")]
-    WalkDir(#[from] walkdir::Error),
+    WalkDir(#[from] nexcore_fs::walk::WalkError),
 
     /// Insufficient data points for statistical computation.
     #[error("insufficient data: need at least {need}, got {got} for {context}")]

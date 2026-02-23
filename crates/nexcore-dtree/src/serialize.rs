@@ -8,7 +8,7 @@ use crate::node::{DecisionTree, TreeNode};
 use crate::types::Feature;
 
 /// Error type for serialization failures.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum SerializeError {
     /// Tree has not been fitted.
     #[error("tree has not been fitted")]

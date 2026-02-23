@@ -11,7 +11,6 @@ description = "SOP-Anatomy-Code triple mapping: 18 governance sections through b
 nexcore-lex-primitiva = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-thiserror = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

@@ -165,11 +165,7 @@ pub fn manifest() -> CratePrimitiveManifest {
             name: "Existence",
             manifestation: "Signal existence test: does Psi > 0? Does the drug-event pair exist \
                 in the reporting database? The Optional<InterventionResult> tests existence of intervention.",
-            exhibited_by: vec![
-                "DrugEventPair",
-                "PredictiveResult",
-                "PreemptiveResult",
-            ],
+            exhibited_by: vec!["DrugEventPair", "PredictiveResult", "PreemptiveResult"],
         },
         PrimitiveManifestation {
             primitive: LexPrimitiva::Frequency,

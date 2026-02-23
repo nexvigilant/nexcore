@@ -94,21 +94,32 @@ impl FirebaseAuthClient {
 
     /// Sign in with email and password
     pub async fn sign_in(&self, email: &str, password: &str) -> Result<AuthResponse, String> {
-        let url = format!("{AUTH_BASE}/accounts:signInWithPassword?key={}", self.api_key);
+        let url = format!(
+            "{AUTH_BASE}/accounts:signInWithPassword?key={}",
+            self.api_key
+        );
         let body = SignInRequest {
             email: email.to_string(),
             password: password.to_string(),
             return_secure_token: true,
         };
 
-        let resp = self.http.post(&url).json(&body).send().await
+        let resp = self
+            .http
+            .post(&url)
+            .json(&body)
+            .send()
+            .await
             .map_err(|e| format!("Network error: {e}"))?;
 
         if resp.status().is_success() {
-            resp.json::<AuthResponse>().await
+            resp.json::<AuthResponse>()
+                .await
                 .map_err(|e| format!("Parse error: {e}"))
         } else {
-            let err = resp.json::<AuthErrorResponse>().await
+            let err = resp
+                .json::<AuthErrorResponse>()
+                .await
                 .map_err(|e| format!("Error parse error: {e}"))?;
             Err(err.error.message)
         }
@@ -123,14 +134,22 @@ impl FirebaseAuthClient {
             return_secure_token: true,
         };
 
-        let resp = self.http.post(&url).json(&body).send().await
+        let resp = self
+            .http
+            .post(&url)
+            .json(&body)
+            .send()
+            .await
             .map_err(|e| format!("Network error: {e}"))?;
 
         if resp.status().is_success() {
-            resp.json::<AuthResponse>().await
+            resp.json::<AuthResponse>()
+                .await
                 .map_err(|e| format!("Parse error: {e}"))
         } else {
-            let err = resp.json::<AuthErrorResponse>().await
+            let err = resp
+                .json::<AuthErrorResponse>()
+                .await
                 .map_err(|e| format!("Error parse error: {e}"))?;
             Err(err.error.message)
         }
@@ -144,13 +163,20 @@ impl FirebaseAuthClient {
             email: email.to_string(),
         };
 
-        let resp = self.http.post(&url).json(&body).send().await
+        let resp = self
+            .http
+            .post(&url)
+            .json(&body)
+            .send()
+            .await
             .map_err(|e| format!("Network error: {e}"))?;
 
         if resp.status().is_success() {
             Ok(())
         } else {
-            let err = resp.json::<AuthErrorResponse>().await
+            let err = resp
+                .json::<AuthErrorResponse>()
+                .await
                 .map_err(|e| format!("Error parse error: {e}"))?;
             Err(err.error.message)
         }
@@ -158,20 +184,31 @@ impl FirebaseAuthClient {
 
     /// Refresh an expired ID token
     pub async fn refresh_token(&self, refresh_token: &str) -> Result<RefreshResponse, String> {
-        let url = format!("https://securetoken.googleapis.com/v1/token?key={}", self.api_key);
+        let url = format!(
+            "https://securetoken.googleapis.com/v1/token?key={}",
+            self.api_key
+        );
         let body = RefreshTokenRequest {
             grant_type: "refresh_token".to_string(),
             refresh_token: refresh_token.to_string(),
         };
 
-        let resp = self.http.post(&url).json(&body).send().await
+        let resp = self
+            .http
+            .post(&url)
+            .json(&body)
+            .send()
+            .await
             .map_err(|e| format!("Network error: {e}"))?;
 
         if resp.status().is_success() {
-            resp.json::<RefreshResponse>().await
+            resp.json::<RefreshResponse>()
+                .await
                 .map_err(|e| format!("Parse error: {e}"))
         } else {
-            let err = resp.json::<AuthErrorResponse>().await
+            let err = resp
+                .json::<AuthErrorResponse>()
+                .await
                 .map_err(|e| format!("Error parse error: {e}"))?;
             Err(err.error.message)
         }

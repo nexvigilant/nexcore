@@ -2,6 +2,7 @@
 name = "mcp-relay"
 version = "0.1.0"
 edition = "2024"
+license = "LicenseRef-NexVigilant-Proprietary"
 description = "Stdio-to-Unix-socket relay for MCP hot-reload. Bridges Claude Code (stdio) to nexcore-mcp daemon (socket)."
 
 [[bin]]

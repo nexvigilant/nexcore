@@ -970,7 +970,7 @@ impl Sensor for PvSignalSensor {
 // ============================================================================
 
 /// Errors from KEV sensor operations.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum KevError {
     /// HTTP client construction failed
     #[error("Failed to build HTTP client: {0}")]

@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// Errors during maturation assessment.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum MaturationError {
     /// Not enough data points for computation.
     #[error("insufficient data: needed {needed}, have {have}")]

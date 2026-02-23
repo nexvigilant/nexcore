@@ -3,10 +3,10 @@
 use std::path::PathBuf;
 
 /// Errors that can occur during forge operations.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum ForgeError {
     /// Failed to read a file.
-    #[error("Failed to read file {path}: {source}")]
+    #[error("Failed to read file {path:?}: {source}")]
     IoError {
         /// Path that failed.
         path: PathBuf,
@@ -24,7 +24,7 @@ pub enum ForgeError {
     },
 
     /// Failed to parse Cargo.toml.
-    #[error("Failed to parse Cargo.toml at {path}: {message}")]
+    #[error("Failed to parse Cargo.toml at {path:?}: {message}")]
     CargoTomlError {
         /// Path to Cargo.toml.
         path: PathBuf,
@@ -44,7 +44,7 @@ pub enum ForgeError {
     },
 
     /// Crate directory not found.
-    #[error("Crate directory not found: {0}")]
+    #[error("Crate directory not found: {0:?}")]
     CrateNotFound(PathBuf),
 
     /// Unknown domain plugin.

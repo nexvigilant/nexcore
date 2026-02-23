@@ -2,10 +2,10 @@
 //!
 //! Chemistry analogue: atoms and compounds with conservation laws.
 
+use nexcore_id::NexId;
 use nexcore_lex_primitiva::primitiva::LexPrimitiva;
 use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 // =============================================================================
 // SEMANTIC ELEMENT CLASSES
@@ -85,7 +85,7 @@ pub const VECTOR_DIM: usize = 256;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Atom {
     /// Unique, immutable identity. Once assigned, never changes.
-    pub id: Uuid,
+    pub id: NexId,
 
     /// The canonical label (human-readable, but NOT the definition).
     /// "cardiac" is a label. The vector is the definition.
@@ -120,7 +120,7 @@ impl Atom {
     /// of regulatory corpora.
     pub fn new(label: &str, class: ElementClass, volatility: f64) -> Self {
         Self {
-            id: Uuid::new_v4(),
+            id: NexId::v4(),
             label: label.to_string(),
             class,
             vector: vec![OrderedFloat(0.0); VECTOR_DIM],
@@ -171,8 +171,8 @@ pub enum Relation {
 /// Chemistry analogue: chemical bond (covalent, ionic, etc.)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Bond {
-    pub source: Uuid,
-    pub target: Uuid,
+    pub source: NexId,
+    pub target: NexId,
     pub relation: Relation,
     /// Bond strength: how tightly coupled are these atoms?
     /// Strong bond = hard to decompose. Weak bond = easily separated.
@@ -182,7 +182,7 @@ pub struct Bond {
 /// A compound semantic expression — multiple atoms bonded together.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Compound {
-    pub id: Uuid,
+    pub id: NexId,
     pub atoms: Vec<Atom>,
     pub bonds: Vec<Bond>,
     /// The compound's own vector — computed from constituent atoms

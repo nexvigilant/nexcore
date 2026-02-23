@@ -53,7 +53,7 @@ pub mod search;
 pub mod types;
 
 // Top-level re-exports for the most-used items.
-pub use client::{OpenFdaClient, QueryParams, MAX_LIMIT};
+pub use client::{MAX_LIMIT, OpenFdaClient, QueryParams};
 pub use error::OpenFdaError;
-pub use search::{fan_out_search, FanOutResults};
+pub use search::{FanOutResults, fan_out_search};
 pub use types::common::{OpenFdaEnrichment, OpenFdaMeta, OpenFdaResponse, ResultsMeta};

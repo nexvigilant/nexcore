@@ -1,5 +1,6 @@
 //! Rust source code generation for compound skills.
 
+use nexcore_fs::dirs;
 use std::path::{Path, PathBuf};
 
 use crate::error::{CompilerError, Result};

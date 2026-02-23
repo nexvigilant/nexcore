@@ -22,8 +22,8 @@
 //! guardian-faers-etl -vvv
 //! ```
 
-use nexcore_error::{Context, Result};
 use clap::Parser;
+use nexcore_error::{Context, Result};
 #[allow(unused_imports)]
 use tracing::{error, info, instrument, warn};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};

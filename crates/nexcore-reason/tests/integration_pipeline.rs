@@ -17,8 +17,8 @@
 //! ```
 
 use nexcore_foundry::analyst::{
-    AggregatedMetrics, ComplexityRating, IntelligenceReport, Metric, MetricReport,
-    PatternReport, PatternSignature, RiskLevel,
+    AggregatedMetrics, ComplexityRating, IntelligenceReport, Metric, MetricReport, PatternReport,
+    PatternSignature, RiskLevel,
 };
 use nexcore_foundry::artifact::{
     Component, ComponentKind, Contract, DesignSpec, FileEntry, ShippableArtifact, SourceArtifact,
@@ -276,11 +276,7 @@ fn feedback_bridge_a3_to_b1() {
 
     // Feedback bridge transforms intelligence into design constraints.
     let constraints = DesignConstraints {
-        new_components: intelligence
-            .recommendations
-            .iter()
-            .cloned()
-            .collect(),
+        new_components: intelligence.recommendations.iter().cloned().collect(),
         new_constraints: vec!["Max cyclomatic complexity <= 6".to_string()],
         iteration_trigger: intelligence.risk_level >= RiskLevel::High,
     };
@@ -356,11 +352,7 @@ fn vdag_full_ordering_covers_all_stations() {
     assert!(!order.is_empty());
 
     // First station must be B1 (Blueprint).
-    assert_eq!(
-        order.stages[0],
-        StationId::B1,
-        "pipeline must start at B1"
-    );
+    assert_eq!(order.stages[0], StationId::B1, "pipeline must start at B1");
 
     // Last station must be BridgeFeedback.
     assert_eq!(
@@ -380,10 +372,7 @@ fn vdag_full_ordering_covers_all_stations() {
         .iter()
         .position(|s| *s == StationId::A1)
         .expect("A1 must be present");
-    assert!(
-        b3_pos < a1_pos,
-        "B3 (finish) must come before A1 (measure)"
-    );
+    assert!(b3_pos < a1_pos, "B3 (finish) must come before A1 (measure)");
 }
 
 // ---------------------------------------------------------------------------

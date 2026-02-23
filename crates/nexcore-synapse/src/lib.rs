@@ -419,7 +419,8 @@ impl Synapse {
     /// ```
     pub fn observe(&mut self, signal: LearningSignal) {
         // Calculate elapsed time for decay
-        #[allow(clippy::cast_precision_loss)] // Elapsed seconds are typically small; exact precision not needed for decay
+        #[allow(clippy::cast_precision_loss)]
+        // Elapsed seconds are typically small; exact precision not needed for decay
         let elapsed = (signal.observed_at - self.last_observed)
             .num_seconds()
             .max(0) as f64;
@@ -456,7 +457,8 @@ impl Synapse {
     /// Get current amplitude with decay applied.
     #[must_use]
     pub fn current_amplitude(&self) -> Amplitude {
-        #[allow(clippy::cast_precision_loss)] // Elapsed seconds are typically small; exact precision not needed for decay
+        #[allow(clippy::cast_precision_loss)]
+        // Elapsed seconds are typically small; exact precision not needed for decay
         let elapsed = (Utc::now() - self.last_observed).num_seconds().max(0) as f64;
         self.amplitude.decay(elapsed, self.config.half_life_seconds)
     }

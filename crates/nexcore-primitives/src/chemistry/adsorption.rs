@@ -13,7 +13,7 @@
 //! **Bond Application**: Hook slot occupancy - limited concurrent bonds
 //! mean new bonds must wait for slot availability.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors for adsorption calculations.
 #[derive(Debug, Error, PartialEq, Clone)]

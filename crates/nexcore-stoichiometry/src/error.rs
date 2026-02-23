@@ -1,6 +1,6 @@
 //! Stoichiometry error types.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors from stoichiometric operations.
 #[derive(Debug, Error)]

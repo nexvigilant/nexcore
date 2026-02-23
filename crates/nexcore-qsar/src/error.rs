@@ -2,7 +2,7 @@
 
 //! Error types for QSAR toxicity prediction operations.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors that can occur during QSAR prediction.
 #[derive(Debug, Error)]

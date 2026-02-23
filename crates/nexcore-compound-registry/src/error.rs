@@ -3,7 +3,7 @@
 
 //! Error types for compound registry operations.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors from compound registry operations.
 ///

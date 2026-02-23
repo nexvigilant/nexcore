@@ -194,10 +194,10 @@ impl ApoptosisController {
 
         let pm = PostMortem {
             component_id: self.component_id.clone(),
-            cause: self
-                .trigger
-                .as_ref()
-                .map_or_else(|| "unknown".to_string(), |t| format!("{}: {}", t.family, t.name)),
+            cause: self.trigger.as_ref().map_or_else(
+                || "unknown".to_string(),
+                |t| format!("{}: {}", t.family, t.name),
+            ),
             initiated_at: self.initiated_at.unwrap_or(now),
             completed_at: Some(now),
             final_phase: ShutdownPhase::Dead,

@@ -4,8 +4,8 @@
 //! Tier: T2-C (Composed bridge between T3 domains)
 
 use chrono::Utc;
+use nexcore_error::Error;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 use tokio::sync::broadcast;
 use tracing::{debug, info};
 

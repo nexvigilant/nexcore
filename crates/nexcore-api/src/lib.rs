@@ -208,9 +208,7 @@ struct OpenApiQuery {
 /// - `GET /openapi.json` — returns the native OpenAPI 3.1.0 spec.
 /// - `GET /openapi.json?version=3.0` — returns a downconverted OpenAPI 3.0.3
 ///   spec compatible with progenitor and other 3.0-only client generators.
-async fn openapi_json_handler(
-    Query(params): Query<OpenApiQuery>,
-) -> Response {
+async fn openapi_json_handler(Query(params): Query<OpenApiQuery>) -> Response {
     let native = match serde_json::to_value(ApiDoc::openapi()) {
         Ok(v) => v,
         Err(e) => {

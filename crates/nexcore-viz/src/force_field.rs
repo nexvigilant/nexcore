@@ -53,10 +53,16 @@ impl std::fmt::Display for ForceFieldError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::InvalidAtom { index, n_atoms } => {
-                write!(f, "atom index {index} out of bounds (molecule has {n_atoms} atoms)")
+                write!(
+                    f,
+                    "atom index {index} out of bounds (molecule has {n_atoms} atoms)"
+                )
             }
             Self::InvalidBond { bond_idx, atom_idx } => {
-                write!(f, "bond {bond_idx} references invalid atom index {atom_idx}")
+                write!(
+                    f,
+                    "bond {bond_idx} references invalid atom index {atom_idx}"
+                )
             }
             Self::EmptyMolecule => write!(f, "molecule has no atoms"),
         }
@@ -103,7 +109,15 @@ impl ForceFieldParams {
         epsilon: f64,
         sigma: f64,
     ) -> Self {
-        Self { r0, theta0, k_bond, k_angle, k_torsion, epsilon, sigma }
+        Self {
+            r0,
+            theta0,
+            k_bond,
+            k_angle,
+            k_torsion,
+            epsilon,
+            sigma,
+        }
     }
 }
 
@@ -119,25 +133,27 @@ pub fn default_params(element: &Element) -> ForceFieldParams {
     let linear = 180.0_f64.to_radians();
 
     match element {
-        Element::H  => ForceFieldParams::new(0.354, linear,      700.0, 0.0,   0.0,   0.044, 2.886),
-        Element::He => ForceFieldParams::new(0.849, linear,        0.0, 0.0,   0.0,   0.056, 2.362),
-        Element::C  => ForceFieldParams::new(0.757, tetrahedral, 700.0, 100.0, 2.119, 0.105, 3.851),
-        Element::N  => ForceFieldParams::new(0.700, tetrahedral, 700.0, 100.0, 0.450, 0.069, 3.660),
-        Element::O  => ForceFieldParams::new(0.658, tetrahedral, 700.0, 100.0, 0.018, 0.060, 3.500),
-        Element::F  => ForceFieldParams::new(0.668, tetrahedral, 700.0, 100.0, 0.0,   0.050, 3.364),
-        Element::Na => ForceFieldParams::new(1.411, linear,      150.0, 30.0,  0.0,   0.030, 5.540),
-        Element::Mg => ForceFieldParams::new(1.341, tetrahedral, 250.0, 50.0,  0.0,   0.111, 4.936),
-        Element::P  => ForceFieldParams::new(1.117, tetrahedral, 500.0, 75.0,  1.200, 0.305, 4.147),
-        Element::S  => ForceFieldParams::new(1.167, tetrahedral, 500.0, 75.0,  0.484, 0.274, 4.035),
-        Element::Cl => ForceFieldParams::new(1.044, linear,      500.0, 75.0,  0.0,   0.227, 3.947),
-        Element::K  => ForceFieldParams::new(1.672, linear,       80.0, 20.0,  0.0,   0.035, 6.188),
-        Element::Ca => ForceFieldParams::new(1.562, linear,      200.0, 40.0,  0.0,   0.238, 5.581),
-        Element::Fe => ForceFieldParams::new(1.285, tetrahedral, 350.0, 60.0,  0.0,   0.013, 4.886),
-        Element::Zn => ForceFieldParams::new(1.225, tetrahedral, 350.0, 60.0,  0.0,   0.124, 4.541),
-        Element::Br => ForceFieldParams::new(1.141, linear,      450.0, 70.0,  0.0,   0.251, 4.189),
-        Element::I  => ForceFieldParams::new(1.360, linear,      380.0, 60.0,  0.0,   0.339, 4.750),
-        Element::Se => ForceFieldParams::new(1.224, tetrahedral, 430.0, 65.0,  0.416, 0.291, 4.205),
-        Element::Other => ForceFieldParams::new(trigonal, tetrahedral, 300.0, 50.0, 0.0, 0.100, 3.800),
+        Element::H => ForceFieldParams::new(0.354, linear, 700.0, 0.0, 0.0, 0.044, 2.886),
+        Element::He => ForceFieldParams::new(0.849, linear, 0.0, 0.0, 0.0, 0.056, 2.362),
+        Element::C => ForceFieldParams::new(0.757, tetrahedral, 700.0, 100.0, 2.119, 0.105, 3.851),
+        Element::N => ForceFieldParams::new(0.700, tetrahedral, 700.0, 100.0, 0.450, 0.069, 3.660),
+        Element::O => ForceFieldParams::new(0.658, tetrahedral, 700.0, 100.0, 0.018, 0.060, 3.500),
+        Element::F => ForceFieldParams::new(0.668, tetrahedral, 700.0, 100.0, 0.0, 0.050, 3.364),
+        Element::Na => ForceFieldParams::new(1.411, linear, 150.0, 30.0, 0.0, 0.030, 5.540),
+        Element::Mg => ForceFieldParams::new(1.341, tetrahedral, 250.0, 50.0, 0.0, 0.111, 4.936),
+        Element::P => ForceFieldParams::new(1.117, tetrahedral, 500.0, 75.0, 1.200, 0.305, 4.147),
+        Element::S => ForceFieldParams::new(1.167, tetrahedral, 500.0, 75.0, 0.484, 0.274, 4.035),
+        Element::Cl => ForceFieldParams::new(1.044, linear, 500.0, 75.0, 0.0, 0.227, 3.947),
+        Element::K => ForceFieldParams::new(1.672, linear, 80.0, 20.0, 0.0, 0.035, 6.188),
+        Element::Ca => ForceFieldParams::new(1.562, linear, 200.0, 40.0, 0.0, 0.238, 5.581),
+        Element::Fe => ForceFieldParams::new(1.285, tetrahedral, 350.0, 60.0, 0.0, 0.013, 4.886),
+        Element::Zn => ForceFieldParams::new(1.225, tetrahedral, 350.0, 60.0, 0.0, 0.124, 4.541),
+        Element::Br => ForceFieldParams::new(1.141, linear, 450.0, 70.0, 0.0, 0.251, 4.189),
+        Element::I => ForceFieldParams::new(1.360, linear, 380.0, 60.0, 0.0, 0.339, 4.750),
+        Element::Se => ForceFieldParams::new(1.224, tetrahedral, 430.0, 65.0, 0.416, 0.291, 4.205),
+        Element::Other => {
+            ForceFieldParams::new(trigonal, tetrahedral, 300.0, 50.0, 0.0, 0.100, 3.800)
+        }
     }
 }
 
@@ -389,8 +405,11 @@ pub fn compute_energy(
     }
 
     // Build per-atom parameter array (indexed by position in mol.atoms)
-    let params: Vec<ForceFieldParams> =
-        mol.atoms.iter().map(|a| default_params(&a.element)).collect();
+    let params: Vec<ForceFieldParams> = mol
+        .atoms
+        .iter()
+        .map(|a| default_params(&a.element))
+        .collect();
 
     let mut components = EnergyComponents::default();
 
@@ -449,8 +468,7 @@ pub fn compute_energy(
                 let q1 = f64::from(a1.charge);
                 let q2 = f64::from(a2.charge);
                 if r > 1e-10 {
-                    components.electrostatic +=
-                        COULOMB_K * q1 * q2 / (config.dielectric * r);
+                    components.electrostatic += COULOMB_K * q1 * q2 / (config.dielectric * r);
                 }
             }
         }
@@ -521,7 +539,10 @@ pub fn compute_forces(
 /// Retrieve parameters from a pre-built slice; fall back to element default.
 #[inline]
 fn get_params(params: &[ForceFieldParams], idx: usize, element: &Element) -> ForceFieldParams {
-    params.get(idx).copied().unwrap_or_else(|| default_params(element))
+    params
+        .get(idx)
+        .copied()
+        .unwrap_or_else(|| default_params(element))
 }
 
 /// Euclidean distance between two atoms.
@@ -647,8 +668,16 @@ mod tests {
         mol.atoms.push(Atom::new(1, Element::O, [0.0, 0.0, 0.0]));
         mol.atoms.push(Atom::new(2, Element::H, [0.96, 0.0, 0.0]));
         mol.atoms.push(Atom::new(3, Element::H, [-0.24, 0.93, 0.0]));
-        mol.bonds.push(Bond { atom1: 0, atom2: 1, order: BondOrder::Single });
-        mol.bonds.push(Bond { atom1: 0, atom2: 2, order: BondOrder::Single });
+        mol.bonds.push(Bond {
+            atom1: 0,
+            atom2: 1,
+            order: BondOrder::Single,
+        });
+        mol.bonds.push(Bond {
+            atom1: 0,
+            atom2: 2,
+            order: BondOrder::Single,
+        });
         mol
     }
 
@@ -657,12 +686,16 @@ mod tests {
         let mut mol = Molecule::new("Methane");
         let h = 0.629_f64; // ~1.089 Å / sqrt(3)
         mol.atoms.push(Atom::new(1, Element::C, [0.0, 0.0, 0.0]));
-        mol.atoms.push(Atom::new(2, Element::H, [ h,  h,  h]));
-        mol.atoms.push(Atom::new(3, Element::H, [-h, -h,  h]));
-        mol.atoms.push(Atom::new(4, Element::H, [-h,  h, -h]));
-        mol.atoms.push(Atom::new(5, Element::H, [ h, -h, -h]));
+        mol.atoms.push(Atom::new(2, Element::H, [h, h, h]));
+        mol.atoms.push(Atom::new(3, Element::H, [-h, -h, h]));
+        mol.atoms.push(Atom::new(4, Element::H, [-h, h, -h]));
+        mol.atoms.push(Atom::new(5, Element::H, [h, -h, -h]));
         for i in 1..5 {
-            mol.bonds.push(Bond { atom1: 0, atom2: i, order: BondOrder::Single });
+            mol.bonds.push(Bond {
+                atom1: 0,
+                atom2: i,
+                order: BondOrder::Single,
+            });
         }
         mol
     }
@@ -688,8 +721,16 @@ mod tests {
         let mut mol = Molecule::new("HH-stretched");
         mol.atoms.push(Atom::new(1, Element::H, [0.0, 0.0, 0.0]));
         mol.atoms.push(Atom::new(2, Element::H, [5.0, 0.0, 0.0])); // far apart
-        mol.bonds.push(Bond { atom1: 0, atom2: 1, order: BondOrder::Single });
-        let params: Vec<_> = mol.atoms.iter().map(|a| default_params(&a.element)).collect();
+        mol.bonds.push(Bond {
+            atom1: 0,
+            atom2: 1,
+            order: BondOrder::Single,
+        });
+        let params: Vec<_> = mol
+            .atoms
+            .iter()
+            .map(|a| default_params(&a.element))
+            .collect();
         let e = bond_energy(&mol, &mol.bonds[0], &params);
         assert!(e > 0.0, "stretched bond should have positive energy: {e}");
     }
@@ -701,7 +742,11 @@ mod tests {
         let result = compute_energy(&mol, &config);
         assert!(result.is_ok());
         let e = result.unwrap_or_default();
-        assert!(e.total.is_finite(), "energy should be finite, got {}", e.total);
+        assert!(
+            e.total.is_finite(),
+            "energy should be finite, got {}",
+            e.total
+        );
         assert!(e.bond_stretch >= 0.0, "bond stretch must be non-negative");
         assert!(e.angle_bend >= 0.0, "angle bend must be non-negative");
     }
@@ -752,7 +797,11 @@ mod tests {
         let mut mol = Molecule::new("Bad");
         mol.atoms.push(Atom::new(1, Element::C, [0.0, 0.0, 0.0]));
         // Bond references atom index 99 which doesn't exist
-        mol.bonds.push(Bond { atom1: 0, atom2: 99, order: BondOrder::Single });
+        mol.bonds.push(Bond {
+            atom1: 0,
+            atom2: 99,
+            order: BondOrder::Single,
+        });
         let config = ForceFieldConfig::default();
         let result = compute_energy(&mol, &config);
         assert!(matches!(result, Err(ForceFieldError::InvalidBond { .. })));
@@ -769,10 +818,17 @@ mod tests {
         let x2 = 0.96 * theta0.cos();
         let y2 = 0.96 * theta0.sin();
         mol.atoms.push(Atom::new(3, Element::H, [x2, y2, 0.0]));
-        let params: Vec<_> = mol.atoms.iter().map(|a| default_params(&a.element)).collect();
+        let params: Vec<_> = mol
+            .atoms
+            .iter()
+            .map(|a| default_params(&a.element))
+            .collect();
         let e = angle_energy(&mol, 0, 1, 2, &params);
         // Should be near zero (atoms placed at equilibrium angle)
-        assert!(e < 1e-6, "angle energy at equilibrium should be ~0, got {e}");
+        assert!(
+            e < 1e-6,
+            "angle energy at equilibrium should be ~0, got {e}"
+        );
     }
 
     #[test]
@@ -783,10 +839,26 @@ mod tests {
         mol.atoms.push(Atom::new(2, Element::C, [0.0, 0.0, 0.0]));
         mol.atoms.push(Atom::new(3, Element::C, [1.5, 0.0, 0.0]));
         mol.atoms.push(Atom::new(4, Element::H, [1.5, 1.0, 0.0]));
-        mol.bonds.push(Bond { atom1: 0, atom2: 1, order: BondOrder::Single });
-        mol.bonds.push(Bond { atom1: 1, atom2: 2, order: BondOrder::Single });
-        mol.bonds.push(Bond { atom1: 2, atom2: 3, order: BondOrder::Single });
-        let params: Vec<_> = mol.atoms.iter().map(|a| default_params(&a.element)).collect();
+        mol.bonds.push(Bond {
+            atom1: 0,
+            atom2: 1,
+            order: BondOrder::Single,
+        });
+        mol.bonds.push(Bond {
+            atom1: 1,
+            atom2: 2,
+            order: BondOrder::Single,
+        });
+        mol.bonds.push(Bond {
+            atom1: 2,
+            atom2: 3,
+            order: BondOrder::Single,
+        });
+        let params: Vec<_> = mol
+            .atoms
+            .iter()
+            .map(|a| default_params(&a.element))
+            .collect();
         let e = torsion_energy(&mol, 0, 1, 2, 3, &params);
         assert!(e >= 0.0, "torsion energy must be non-negative: {e}");
     }

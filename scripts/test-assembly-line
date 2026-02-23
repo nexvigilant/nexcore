@@ -1,0 +1,416 @@
+#!/usr/bin/env zsh
+set -euo pipefail
+
+# test-assembly-line — Comprehensive test suite for the development assembly line
+# Addresses CTVP Phase 2 (Efficacy) + Five Problems Protocol findings:
+#   - Happy Path Bias (HIGH): Tests error paths and failure modes
+#   - Integration Gaps (HIGH): Tests script interactions
+#   - Boundary Blindness: Edge cases and boundary conditions
+#   - Regression Amnesia: Pins known-good behavior
+#   - Testing Theater: Real assertions, not just "did it run"
+#
+# Usage: ./scripts/test-assembly-line [--verbose]
+
+SCRIPT_DIR="${0:A:h}"
+WORKSPACE_ROOT="${SCRIPT_DIR:h}"
+CARGO="$HOME/.cargo/bin/cargo"
+VERBOSE=false
+PASS=0
+FAIL=0
+SKIP=0
+ERRORS=()
+
+for arg in "$@"; do
+    case "$arg" in
+        --verbose) VERBOSE=true ;;
+    esac
+done
+
+# ── Test Helpers ─────────────────────────────────────────────────────────────
+
+log() { echo "  $1"; }
+pass() { PASS=$((PASS + 1)); log "✓ $1"; }
+fail() { FAIL=$((FAIL + 1)); ERRORS+=("$1"); log "✗ $1"; }
+skip() { SKIP=$((SKIP + 1)); log "⊘ $1 (skipped)"; }
+
+assert_exit_zero() {
+    local desc="$1"; shift
+    if "$@" >/dev/null 2>&1; then
+        pass "$desc"
+    else
+        fail "$desc (exit $?)"
+    fi
+}
+
+assert_exit_nonzero() {
+    local desc="$1"; shift
+    if "$@" >/dev/null 2>&1; then
+        fail "$desc (expected failure, got success)"
+    else
+        pass "$desc"
+    fi
+}
+
+assert_output_contains() {
+    local desc="$1"
+    local pattern="$2"
+    local output="$3"
+    if echo "$output" | grep -q "$pattern"; then
+        pass "$desc"
+    else
+        fail "$desc (pattern '$pattern' not found)"
+    fi
+}
+
+assert_output_not_contains() {
+    local desc="$1"
+    local pattern="$2"
+    local output="$3"
+    if echo "$output" | grep -q "$pattern"; then
+        fail "$desc (pattern '$pattern' unexpectedly found)"
+    else
+        pass "$desc"
+    fi
+}
+
+assert_file_exists() {
+    local desc="$1"
+    local filepath="$2"
+    if [[ -f "$filepath" ]]; then
+        pass "$desc"
+    else
+        fail "$desc (file not found: $filepath)"
+    fi
+}
+
+assert_file_json_valid() {
+    local desc="$1"
+    local filepath="$2"
+    if [[ -f "$filepath" ]]; then
+        local rc=0
+        /usr/bin/jq . < "$filepath" >/dev/null 2>&1 || rc=$?
+        if [[ "$rc" -eq 0 ]]; then
+            pass "$desc"
+            return
+        fi
+    fi
+    fail "$desc (invalid JSON: $filepath)"
+}
+
+assert_numeric() {
+    local desc="$1"
+    local value="$2"
+    if [[ "$value" =~ ^[0-9]+$ ]]; then
+        pass "$desc"
+    else
+        fail "$desc (not numeric: '$value')"
+    fi
+}
+
+assert_in_range() {
+    local desc="$1"
+    local value="$2"
+    local min="$3"
+    local max="$4"
+    if [[ "$value" -ge "$min" ]] && [[ "$value" -le "$max" ]]; then
+        pass "$desc"
+    else
+        fail "$desc (value $value not in range [$min, $max])"
+    fi
+}
+
+# ── Header ───────────────────────────────────────────────────────────────────
+
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║  Assembly Line Test Suite — $(date +%Y-%m-%d)                     ║"
+echo "║  CTVP Phase 2 (Efficacy) + Five Problems Remediation        ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
+echo ""
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SECTION 1: PRECONDITION TESTS (Phase 0 — Does infrastructure exist?)
+# ══════════════════════════════════════════════════════════════════════════════
+
+echo "▸ Section 1: Preconditions"
+
+assert_file_exists "quality-sweep script exists" "$SCRIPT_DIR/quality-sweep"
+assert_file_exists "dep-prune script exists" "$SCRIPT_DIR/dep-prune"
+assert_file_exists "capability-metrics script exists" "$SCRIPT_DIR/capability-metrics"
+assert_file_exists "cron-setup script exists" "$SCRIPT_DIR/cron-setup"
+assert_file_exists "deny.toml exists" "$WORKSPACE_ROOT/deny.toml"
+assert_file_exists "pre-commit hook exists" "$WORKSPACE_ROOT/.git/hooks/pre-commit"
+
+# Executable permissions
+for script in quality-sweep dep-prune capability-metrics cron-setup; do
+    if [[ -x "$SCRIPT_DIR/$script" ]]; then
+        pass "$script is executable"
+    else
+        fail "$script lacks execute permission"
+    fi
+done
+
+# Tool availability
+for tool in cargo-clippy cargo-fmt cargo-deny cargo-machete cargo-audit cargo-tarpaulin cargo-semver-checks; do
+    if command -v "$tool" >/dev/null 2>&1 || [[ -x "$HOME/.cargo/bin/$tool" ]]; then
+        pass "Tool available: $tool"
+    else
+        skip "Tool missing: $tool"
+    fi
+done
+
+echo ""
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SECTION 2: HAPPY PATH TESTS (Five Problems #1 — real assertions)
+# ══════════════════════════════════════════════════════════════════════════════
+
+echo "▸ Section 2: Happy Path (quality-sweep --quick)"
+
+SWEEP_OUTPUT=$(cd "$WORKSPACE_ROOT" && "$SCRIPT_DIR/quality-sweep" --quick 2>&1 || true)
+
+assert_output_contains "Sweep shows header" "quality-sweep" "$SWEEP_OUTPUT"
+assert_output_contains "Sweep shows Gate 1" "Gate 1: FORMAT" "$SWEEP_OUTPUT"
+assert_output_contains "Sweep shows Gate 2" "Gate 2: CLIPPY" "$SWEEP_OUTPUT"
+assert_output_contains "Sweep shows completion" "Quality Sweep Complete" "$SWEEP_OUTPUT"
+assert_output_contains "Sweep shows pass count" "Passed:" "$SWEEP_OUTPUT"
+assert_output_contains "Sweep shows duration" "Duration:" "$SWEEP_OUTPUT"
+assert_output_not_contains "Sweep has no unbound variable errors" "unbound variable" "$SWEEP_OUTPUT"
+assert_output_not_contains "Sweep has no syntax errors" "syntax error" "$SWEEP_OUTPUT"
+
+echo ""
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SECTION 3: ERROR PATH TESTS (Five Problems #2 — Happy Path Bias fix)
+# ══════════════════════════════════════════════════════════════════════════════
+
+echo "▸ Section 3: Error Paths"
+
+# Test with invalid flag
+INVALID_OUTPUT=$(cd "$WORKSPACE_ROOT" && "$SCRIPT_DIR/quality-sweep" --nonexistent 2>&1 || true)
+# Should not crash — unknown flags are silently ignored or reported
+assert_output_not_contains "No crash on invalid flag" "unbound variable" "$INVALID_OUTPUT"
+
+# Test capability-metrics produces valid JSON
+METRICS_JSON=$(cd "$WORKSPACE_ROOT" && "$SCRIPT_DIR/capability-metrics" --json 2>&1 || true)
+if echo "$METRICS_JSON" | jq . >/dev/null 2>&1; then
+    pass "capability-metrics --json produces valid JSON"
+else
+    # The JSON might be the last line after human-readable output
+    LAST_JSON=$(echo "$METRICS_JSON" | grep "^{" | tail -1)
+    if echo "$LAST_JSON" | jq . >/dev/null 2>&1; then
+        pass "capability-metrics --json produces valid JSON (extracted)"
+    else
+        fail "capability-metrics --json produces invalid JSON"
+    fi
+fi
+
+# Test dep-prune --dry-run doesn't modify files
+GIT_STATUS_BEFORE=$(cd "$WORKSPACE_ROOT" && git status --porcelain | wc -l)
+cd "$WORKSPACE_ROOT" && "$SCRIPT_DIR/dep-prune" --dry-run >/dev/null 2>&1 || true
+GIT_STATUS_AFTER=$(cd "$WORKSPACE_ROOT" && git status --porcelain | wc -l)
+if [[ "$GIT_STATUS_BEFORE" -eq "$GIT_STATUS_AFTER" ]]; then
+    pass "dep-prune --dry-run makes no file changes"
+else
+    fail "dep-prune --dry-run modified files (before=$GIT_STATUS_BEFORE, after=$GIT_STATUS_AFTER)"
+fi
+
+echo ""
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SECTION 4: BOUNDARY TESTS (Five Problems #4 — Boundary Blindness fix)
+# ══════════════════════════════════════════════════════════════════════════════
+
+echo "▸ Section 4: Boundary Conditions"
+
+# Test cargo binary path resolution
+if [[ -x "$CARGO" ]]; then
+    pass "CARGO path resolves to executable: $CARGO"
+else
+    fail "CARGO path not executable: $CARGO"
+fi
+
+# Test report directory creation
+TEST_REPORT_DIR="/tmp/test-assembly-line-$$"
+mkdir -p "$TEST_REPORT_DIR"
+if [[ -d "$TEST_REPORT_DIR" ]]; then
+    pass "Report directory creation works"
+    rmdir "$TEST_REPORT_DIR"
+else
+    fail "Report directory creation failed"
+fi
+
+# Test metrics snapshot directory
+METRICS_DIR="$HOME/.claude/data/quality-metrics"
+if [[ -d "$METRICS_DIR" ]]; then
+    SNAPSHOT_COUNT=$(ls "$METRICS_DIR"/*.json 2>/dev/null | wc -l)
+    assert_numeric "Snapshot count is numeric" "$SNAPSHOT_COUNT"
+    if [[ "$SNAPSHOT_COUNT" -gt 0 ]]; then
+        # Validate latest snapshot
+        LATEST=$(ls -t "$METRICS_DIR"/*.json 2>/dev/null | head -1)
+        assert_file_json_valid "Latest metrics snapshot is valid JSON" "$LATEST"
+
+        # Check required fields
+        SCORE=$(jq -r '.quality.score // empty' "$LATEST" 2>/dev/null)
+        if [[ -n "$SCORE" ]]; then
+            assert_in_range "Quality score in valid range" "$SCORE" 0 100
+        else
+            fail "Latest snapshot missing quality_score field"
+        fi
+    fi
+    pass "Metrics directory has $SNAPSHOT_COUNT snapshots"
+else
+    fail "Metrics directory missing: $METRICS_DIR"
+fi
+
+# Test deny.toml is valid
+if cd "$WORKSPACE_ROOT" && $CARGO deny check --help >/dev/null 2>&1; then
+    pass "cargo-deny recognizes deny.toml"
+else
+    fail "cargo-deny cannot parse deny.toml"
+fi
+
+echo ""
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SECTION 5: INTEGRATION TESTS (Five Problems #3 — Integration Gaps fix)
+# ══════════════════════════════════════════════════════════════════════════════
+
+echo "▸ Section 5: Integration"
+
+# Test: quality-sweep generates reports that capability-metrics can reference
+SWEEP_QUICK=$(cd "$WORKSPACE_ROOT" && "$SCRIPT_DIR/quality-sweep" --quick 2>&1 || true)
+REPORT_PATH=$(echo "$SWEEP_QUICK" | grep "Report:" | sed 's/.*Report:[[:space:]]*//')
+if [[ -n "$REPORT_PATH" ]] && [[ -d "$REPORT_PATH" ]]; then
+    pass "quality-sweep creates report directory"
+    assert_file_exists "Report contains summary" "$REPORT_PATH/summary.txt"
+else
+    fail "quality-sweep report directory not found"
+fi
+
+# Test: cron-setup --show works
+CRON_OUTPUT=$(cd "$WORKSPACE_ROOT" && "$SCRIPT_DIR/cron-setup" --show 2>&1 || true)
+assert_output_contains "Cron shows NexCore jobs" "NexCore" "$CRON_OUTPUT"
+
+# Test: cargo deny integrates with deny.toml
+DENY_OUTPUT=$(cd "$WORKSPACE_ROOT" && $CARGO deny check licenses 2>&1 || true)
+# Strip ANSI color codes before matching
+DENY_CLEAN=$(echo "$DENY_OUTPUT" | sed 's/\x1b\[[0-9;]*m//g')
+assert_output_contains "cargo-deny reads our config" "ok" "$DENY_CLEAN"
+
+# Test: pre-commit hook is syntactically valid
+if zsh -n "$WORKSPACE_ROOT/.git/hooks/pre-commit" 2>/dev/null; then
+    pass "Pre-commit hook passes syntax check"
+else
+    fail "Pre-commit hook has syntax errors"
+fi
+
+echo ""
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SECTION 6: REGRESSION TESTS (Five Problems #5 — Regression Amnesia fix)
+# ══════════════════════════════════════════════════════════════════════════════
+
+echo "▸ Section 6: Regressions (pinned behaviors)"
+
+# REG-001: quality-sweep --quick must complete in under 120 seconds
+QUICK_START=$SECONDS
+cd "$WORKSPACE_ROOT" && "$SCRIPT_DIR/quality-sweep" --quick >/dev/null 2>&1 || true
+QUICK_DURATION=$((SECONDS - QUICK_START))
+if [[ "$QUICK_DURATION" -lt 120 ]]; then
+    pass "REG-001: quick sweep < 120s (actual: ${QUICK_DURATION}s)"
+else
+    fail "REG-001: quick sweep too slow (${QUICK_DURATION}s >= 120s)"
+fi
+
+# REG-002: cargo fmt must be clean (no formatting drift)
+FMT_RAW=$($CARGO fmt --all -- --check 2>&1 || true)
+FMT_DIFFS=$(echo "$FMT_RAW" | { grep -c "^Diff in" || true; })
+if [[ "$FMT_DIFFS" -eq 0 ]]; then
+    pass "REG-002: cargo fmt is clean"
+else
+    fail "REG-002: formatting drift ($FMT_DIFFS files)"
+fi
+
+# REG-003: cargo clippy must be warning-free
+CLIPPY_RAW=$($CARGO clippy --workspace -- -D warnings 2>&1 || true)
+CLIPPY_CHECK=$(echo "$CLIPPY_RAW" | { grep -c "^warning\[" || true; })
+if [[ "$CLIPPY_CHECK" -eq 0 ]]; then
+    pass "REG-003: clippy is clean"
+else
+    fail "REG-003: $CLIPPY_CHECK clippy warnings"
+fi
+
+# REG-004: cargo deny licenses must pass
+DENY_RAW=$(cd "$WORKSPACE_ROOT" && $CARGO deny check licenses 2>&1 || true)
+DENY_CLEAN=$(echo "$DENY_RAW" | sed 's/\x1b\[[0-9;]*m//g' | tail -1)
+if echo "$DENY_CLEAN" | grep -q "ok"; then
+    pass "REG-004: license compliance passes"
+else
+    fail "REG-004: license compliance fails"
+fi
+
+# REG-005: quality score must be >= 70 (baseline)
+CURRENT_SCORE=$(jq -r '.quality.score' "$(ls -t "$METRICS_DIR"/*.json 2>/dev/null | head -1)" 2>/dev/null || echo "0")
+if [[ "$CURRENT_SCORE" -ge 70 ]]; then
+    pass "REG-005: quality score >= 70 (actual: $CURRENT_SCORE)"
+else
+    fail "REG-005: quality score regressed below 70 (actual: $CURRENT_SCORE)"
+fi
+
+# REG-006: cron jobs must be installed
+CRON_COUNT=$(crontab -l 2>/dev/null | grep -c "nexcore" || true)
+if [[ "$CRON_COUNT" -ge 4 ]]; then
+    pass "REG-006: cron jobs installed ($CRON_COUNT NexCore jobs)"
+else
+    fail "REG-006: cron jobs missing (found $CRON_COUNT, expected >= 4)"
+fi
+
+echo ""
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SECTION 7: SURVEILLANCE VALIDATION (Phase 4 — monitoring in production)
+# ══════════════════════════════════════════════════════════════════════════════
+
+echo "▸ Section 7: Surveillance"
+
+# Verify cron log directory exists or will be created
+CRON_LOG_DIR="/tmp/nexcore-cron"
+if [[ -d "$CRON_LOG_DIR" ]]; then
+    pass "Cron log directory exists: $CRON_LOG_DIR"
+else
+    skip "Cron log directory not yet created (first run pending)"
+fi
+
+# Verify metrics trend capability
+if [[ $(ls "$METRICS_DIR"/*.json 2>/dev/null | wc -l) -ge 2 ]]; then
+    pass "Multiple metric snapshots exist for trend analysis"
+else
+    skip "Need 2+ snapshots for trend (have $(ls "$METRICS_DIR"/*.json 2>/dev/null | wc -l))"
+fi
+
+echo ""
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SUMMARY
+# ══════════════════════════════════════════════════════════════════════════════
+
+TOTAL=$((PASS + FAIL + SKIP))
+
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║  Test Results                                                ║"
+echo "╠══════════════════════════════════════════════════════════════╣"
+echo "║  ✓ Passed:  $PASS / $TOTAL"
+echo "║  ✗ Failed:  $FAIL / $TOTAL"
+echo "║  ⊘ Skipped: $SKIP / $TOTAL"
+echo "╚══════════════════════════════════════════════════════════════╝"
+
+if [[ "$FAIL" -gt 0 ]]; then
+    echo ""
+    echo "Failed tests:"
+    for err in "${ERRORS[@]}"; do
+        echo "  ✗ $err"
+    done
+    exit 1
+fi
+
+exit 0

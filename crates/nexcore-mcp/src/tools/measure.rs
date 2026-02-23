@@ -11,7 +11,7 @@
 
 use crate::params::{
     MeasureCompareParams, MeasureCrateParams, MeasureDriftParams, MeasureEntropyParams,
-    MeasureStatsParams,
+    MeasureStatsParams, QualityGradientParams,
 };
 use nexcore_measure::prelude::*;
 use rmcp::ErrorData as McpError;
@@ -230,6 +230,109 @@ pub fn measure_stats_tool(params: MeasureStatsParams) -> Result<CallToolResult, 
             "p_value": reg.p_value,
         },
         "n": data.len(),
+    });
+    Ok(CallToolResult::success(vec![Content::text(
+        serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".to_string()),
+    )]))
+}
+
+// ---------------------------------------------------------------------------
+// quality_gradient — per-dimension quality differential between two crates
+// ---------------------------------------------------------------------------
+
+/// Measure the quality gradient between two crates.
+///
+/// Weather bridge: atmospheric pressure gradient drives wind flow.
+/// Quality gradient drives effort flow — from high-quality to low-quality crates.
+///
+/// T1 grounding: ∇ = →(Causality) + κ(Comparison) + ∂(Boundary)
+pub fn quality_gradient_tool(params: QualityGradientParams) -> Result<CallToolResult, McpError> {
+    let ws = ws_root();
+    let m_a = collect::measure_crate(&ws, &params.crate_a)
+        .map_err(|e| McpError::internal_error(format!("crate_a: {e}"), None))?;
+    let m_b = collect::measure_crate(&ws, &params.crate_b)
+        .map_err(|e| McpError::internal_error(format!("crate_b: {e}"), None))?;
+    let now = MeasureTimestamp::now().epoch_secs();
+    let h_a = composite::crate_health(&m_a, now, now);
+    let h_b = composite::crate_health(&m_b, now, now);
+
+    let score_a = h_a.score.value();
+    let score_b = h_b.score.value();
+    let entropy_a = m_a.entropy.value();
+    let entropy_b = m_b.entropy.value();
+    let test_density_a = m_a.test_density.value();
+    let test_density_b = m_b.test_density.value();
+
+    // Coupling: dependency count normalized by sqrt(LOC)
+    let coupling_a = if m_a.loc > 0 {
+        (m_a.dep_count as f64) / (m_a.loc as f64).sqrt()
+    } else {
+        0.0
+    };
+    let coupling_b = if m_b.loc > 0 {
+        (m_b.dep_count as f64) / (m_b.loc as f64).sqrt()
+    } else {
+        0.0
+    };
+
+    let health_delta = score_a - score_b;
+    let magnitude = health_delta.abs();
+
+    // Direction: effort flows from high quality toward low quality (gradient descent)
+    let direction = if health_delta > 0.1 {
+        "a_to_b"
+    } else if health_delta < -0.1 {
+        "b_to_a"
+    } else {
+        "equilibrium"
+    };
+
+    let interpretation = match direction {
+        "a_to_b" => format!(
+            "Effort should flow from {} toward {} (quality deficit of {magnitude:.2})",
+            params.crate_a, params.crate_b
+        ),
+        "b_to_a" => format!(
+            "Effort should flow from {} toward {} (quality deficit of {magnitude:.2})",
+            params.crate_b, params.crate_a
+        ),
+        _ => format!(
+            "{} and {} are in quality equilibrium (delta {magnitude:.2})",
+            params.crate_a, params.crate_b
+        ),
+    };
+
+    let result = json!({
+        "crate_a": { "name": &params.crate_a, "health": score_a },
+        "crate_b": { "name": &params.crate_b, "health": score_b },
+        "gradient": {
+            "magnitude": magnitude,
+            "direction": direction,
+            "dimensions": {
+                "entropy": {
+                    "a": entropy_a,
+                    "b": entropy_b,
+                    "delta": entropy_a - entropy_b,
+                },
+                "test_density": {
+                    "a": test_density_a,
+                    "b": test_density_b,
+                    "delta": test_density_a - test_density_b,
+                },
+                "coupling": {
+                    "a": coupling_a,
+                    "b": coupling_b,
+                    "delta": coupling_a - coupling_b,
+                },
+                "health": {
+                    "a": score_a,
+                    "b": score_b,
+                    "delta": health_delta,
+                },
+            },
+        },
+        "interpretation": interpretation,
+        "t1_grounding": "∇ = →(Causality) + κ(Comparison) + ∂(Boundary)",
     });
     Ok(CallToolResult::success(vec![Content::text(
         serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".to_string()),

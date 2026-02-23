@@ -97,10 +97,10 @@ pub fn compute_cascade_order() -> CascadeOrder {
     const MAX_DEPS: f64 = 76.0;
 
     let fragility = vec![
-        (ArchitectureLayer::Service, 76.0 / MAX_DEPS),       // 1.000
-        (ArchitectureLayer::Domain, 25.0 / MAX_DEPS),        // 0.329
-        (ArchitectureLayer::Orchestration, 5.0 / MAX_DEPS),  // 0.066
-        (ArchitectureLayer::Foundation, 3.0 / MAX_DEPS),     // 0.039
+        (ArchitectureLayer::Service, 76.0 / MAX_DEPS), // 1.000
+        (ArchitectureLayer::Domain, 25.0 / MAX_DEPS),  // 0.329
+        (ArchitectureLayer::Orchestration, 5.0 / MAX_DEPS), // 0.066
+        (ArchitectureLayer::Foundation, 3.0 / MAX_DEPS), // 0.039
     ];
 
     let layers = fragility.iter().map(|(l, _)| l.clone()).collect();
@@ -150,7 +150,12 @@ mod tests {
         let order = compute_cascade_order();
         let scores: Vec<f64> = order.fragility.iter().map(|(_, f)| *f).collect();
         for pair in scores.windows(2) {
-            assert!(pair[0] >= pair[1], "scores must be non-increasing: {} >= {}", pair[0], pair[1]);
+            assert!(
+                pair[0] >= pair[1],
+                "scores must be non-increasing: {} >= {}",
+                pair[0],
+                pair[1]
+            );
         }
     }
 

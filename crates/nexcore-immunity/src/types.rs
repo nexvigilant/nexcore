@@ -414,16 +414,15 @@ impl AntibodyRegistry {
     /// then adjusted by the threat-level bias, and finally clamped to [0.3, 0.95].
     pub fn tune_sensitivity(&mut self, threat_level: ThreatLevel) {
         let (false_positive_total, false_negative_total, total_apps) =
-            self.antibodies.iter().fold(
-                (0u32, 0u32, 0u32),
-                |(fp, fn_, apps), ab| {
+            self.antibodies
+                .iter()
+                .fold((0u32, 0u32, 0u32), |(fp, fn_, apps), ab| {
                     (
                         fp + ab.false_positives,
                         fn_ + ab.false_negatives,
                         apps + ab.applications,
                     )
-                },
-            );
+                });
         let total = f64::from(total_apps.max(1));
         let fpr = f64::from(false_positive_total) / total;
         let fnr = f64::from(false_negative_total) / total;
@@ -636,8 +635,11 @@ impl AntibodyRegistry {
         let system_false_positive_rate = if total_applications == 0 {
             0.0
         } else {
-            #[allow(clippy::cast_precision_loss)] // u64 values won't exceed f64 mantissa in practice
-            { total_false_positives as f64 / total_applications as f64 }
+            #[allow(clippy::cast_precision_loss)]
+            // u64 values won't exceed f64 mantissa in practice
+            {
+                total_false_positives as f64 / total_applications as f64
+            }
         };
 
         AutoimmuneReport {

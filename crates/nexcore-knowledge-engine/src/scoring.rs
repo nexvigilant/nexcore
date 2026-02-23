@@ -82,10 +82,7 @@ impl CompendiousScorer {
     /// Flesch-based readability mapped to (0.1, 1.0) via sigmoid.
     pub fn readability(text: &str) -> f64 {
         let words: Vec<&str> = text.split_whitespace().collect();
-        let sentences = text
-            .matches(['.', '!', '?'])
-            .count()
-            .max(1);
+        let sentences = text.matches(['.', '!', '?']).count().max(1);
         let avg_words_per_sentence = words.len() as f64 / sentences as f64;
         let avg_syllables = Self::estimate_avg_syllables(&words);
         let raw = 206.835 - (1.015 * avg_words_per_sentence) - (84.6 * avg_syllables);

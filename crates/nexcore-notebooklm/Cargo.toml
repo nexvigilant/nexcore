@@ -7,6 +7,7 @@ license = "LicenseRef-Proprietary"
 description = "NotebookLM integration for NexVigilant — notebook library, session management, and browser-automated research queries"
 
 [dependencies]
+nexcore-error = { workspace = true }
 # Serialization
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -15,16 +16,15 @@ serde_json = { workspace = true }
 chrono = { workspace = true }
 
 # Error handling
-thiserror = { workspace = true }
 
 # Logging
 tracing = { workspace = true }
 
 # Unique IDs
-uuid = { workspace = true }
+nexcore-id = { workspace = true }
 
 # Home directory
-dirs = { workspace = true }
+nexcore-fs = { workspace = true }
 
 # Browser automation (CDP via chromiumoxide)
 chromiumoxide = { version = "0.7", features = ["tokio-runtime"], default-features = false }

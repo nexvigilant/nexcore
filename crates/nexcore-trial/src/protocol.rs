@@ -6,7 +6,7 @@
 //! Validates: primary endpoint exists, >= 2 arms, power >= 0.80, alpha in (0, 1).
 
 use chrono::Utc;
-use uuid::Uuid;
+use nexcore_id::NexId;
 
 use crate::error::TrialError;
 use crate::types::{Protocol, ProtocolRequest};
@@ -68,7 +68,7 @@ pub fn register_protocol(req: ProtocolRequest) -> Result<Protocol, TrialError> {
         ));
     }
 
-    let id = Uuid::new_v4().to_string();
+    let id = NexId::v4().to_string();
     let created_at = Utc::now().to_rfc3339();
 
     Ok(Protocol {

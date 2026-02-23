@@ -434,10 +434,7 @@ pub fn project_stereographic(
 ///     assert!(p.position[0].abs() < 1e-10);
 /// }
 /// ```
-pub fn project_perspective(
-    point: &[f64],
-    focal: f64,
-) -> Result<ProjectedPoint, ProjectionError> {
+pub fn project_perspective(point: &[f64], focal: f64) -> Result<ProjectedPoint, ProjectionError> {
     if point.is_empty() {
         return Err(ProjectionError::EmptyInput);
     }
@@ -453,7 +450,11 @@ pub fn project_perspective(
     };
 
     let denom = focal + depth;
-    let scale = if denom.abs() < 1e-12 { 1.0 } else { focal / denom };
+    let scale = if denom.abs() < 1e-12 {
+        1.0
+    } else {
+        focal / denom
+    };
 
     let x = point.first().copied().unwrap_or(0.0) * scale;
     let y = point.get(1).copied().unwrap_or(0.0) * scale;
@@ -550,9 +551,7 @@ pub fn project_points(
     points
         .iter()
         .map(|p| match method {
-            ProjectionMethod::Stereographic => {
-                project_stereographic(p, p.len().saturating_sub(1))
-            }
+            ProjectionMethod::Stereographic => project_stereographic(p, p.len().saturating_sub(1)),
             ProjectionMethod::Perspective { focal_distance } => {
                 project_perspective(p, *focal_distance)
             }
@@ -608,7 +607,11 @@ pub fn generate_tesseract() -> ProjectedMesh {
         .map(|p| {
             let depth = p[3];
             let denom = focal + depth;
-            let scale = if denom.abs() < 1e-12 { 1.0 } else { focal / denom };
+            let scale = if denom.abs() < 1e-12 {
+                1.0
+            } else {
+                focal / denom
+            };
             ProjectedPoint {
                 position: [p[0] * scale, p[1] * scale, p[2] * scale],
                 depth,
@@ -692,7 +695,11 @@ pub fn generate_hypersphere(radius: f64, segments: usize) -> ProjectedMesh {
         .map(|p| {
             let depth = p[3];
             let denom = focal + depth;
-            let scale = if denom.abs() < 1e-12 { 1.0 } else { focal / denom };
+            let scale = if denom.abs() < 1e-12 {
+                1.0
+            } else {
+                focal / denom
+            };
             ProjectedPoint {
                 position: [p[0] * scale, p[1] * scale, p[2] * scale],
                 depth,
@@ -766,7 +773,11 @@ pub fn generate_klein_bottle(scale: f64, u_segments: usize, v_segments: usize) -
         .map(|p| {
             let depth = p[3];
             let denom = focal + depth;
-            let scale_f = if denom.abs() < 1e-12 { 1.0 } else { focal / denom };
+            let scale_f = if denom.abs() < 1e-12 {
+                1.0
+            } else {
+                focal / denom
+            };
             ProjectedPoint {
                 position: [p[0] * scale_f, p[1] * scale_f, p[2] * scale_f],
                 depth,
@@ -828,7 +839,11 @@ pub fn generate_clifford_torus(r1: f64, r2: f64, segments: usize) -> ProjectedMe
         .map(|p| {
             let depth = p[3];
             let denom = focal + depth;
-            let scale = if denom.abs() < 1e-12 { 1.0 } else { focal / denom };
+            let scale = if denom.abs() < 1e-12 {
+                1.0
+            } else {
+                focal / denom
+            };
             ProjectedPoint {
                 position: [p[0] * scale, p[1] * scale, p[2] * scale],
                 depth,
@@ -953,7 +968,11 @@ fn reproject_mesh(
                     let [ox, oy, oz] = recover_xyz(v);
                     let depth = v.depth;
                     let denom = focal_distance + depth;
-                    let scale = if denom.abs() < 1e-12 { 1.0 } else { focal_distance / denom };
+                    let scale = if denom.abs() < 1e-12 {
+                        1.0
+                    } else {
+                        focal_distance / denom
+                    };
                     ProjectedPoint {
                         position: [ox * scale, oy * scale, oz * scale],
                         depth,
@@ -961,7 +980,10 @@ fn reproject_mesh(
                     }
                 })
                 .collect();
-            Ok(ProjectedMesh { vertices, edges: base.edges })
+            Ok(ProjectedMesh {
+                vertices,
+                edges: base.edges,
+            })
         }
         ProjectionMethod::Stereographic => {
             // Reconstruct 4D as [ox, oy, oz, depth] then call project_stereographic.
@@ -974,7 +996,10 @@ fn reproject_mesh(
                     project_stereographic(&point4, 3)
                 })
                 .collect();
-            Ok(ProjectedMesh { vertices: result?, edges: base.edges })
+            Ok(ProjectedMesh {
+                vertices: result?,
+                edges: base.edges,
+            })
         }
         ProjectionMethod::Orthographic { axes } => {
             // Validate all axes are within 4D bounds.
@@ -994,7 +1019,10 @@ fn reproject_mesh(
                     project_orthographic(&point4, axes)
                 })
                 .collect();
-            Ok(ProjectedMesh { vertices: result?, edges: base.edges })
+            Ok(ProjectedMesh {
+                vertices: result?,
+                edges: base.edges,
+            })
         }
     }
 }
@@ -1050,7 +1078,7 @@ mod tests {
         // depth=0, focal=3 → scale = 3/3 = 1.0  → x projects to 1.0
         // depth=3, focal=3 → scale = 3/6 = 0.5  → x projects to 0.5
         let near = project_perspective(&[1.0, 0.0, 0.0, 0.0], 3.0);
-        let far  = project_perspective(&[1.0, 0.0, 0.0, 3.0], 3.0);
+        let far = project_perspective(&[1.0, 0.0, 0.0, 3.0], 3.0);
         match (near, far) {
             (Ok(n), Ok(f)) => {
                 assert!(
@@ -1117,10 +1145,10 @@ mod tests {
         // 90 degree XY rotation: (1,0,0,0) -> (0,1,0,0).
         let r = Rotation4D::xy(FRAC_PI_2);
         let out = r.apply(&[1.0, 0.0, 0.0, 0.0]);
-        assert!((out[0]).abs() < EPS,       "x should be ~0, got {}", out[0]);
+        assert!((out[0]).abs() < EPS, "x should be ~0, got {}", out[0]);
         assert!((out[1] - 1.0).abs() < EPS, "y should be ~1, got {}", out[1]);
-        assert!((out[2]).abs() < EPS,       "z unchanged, got {}", out[2]);
-        assert!((out[3]).abs() < EPS,       "w unchanged, got {}", out[3]);
+        assert!((out[2]).abs() < EPS, "z unchanged, got {}", out[2]);
+        assert!((out[3]).abs() < EPS, "w unchanged, got {}", out[3]);
     }
 
     // ── 8. rotation_compose ───────────────────────────────────────────────────
@@ -1128,14 +1156,14 @@ mod tests {
     #[test]
     fn rotation_compose() {
         // Two 90-degree XY rotations must equal a 180-degree rotation.
-        let r90  = Rotation4D::xy(FRAC_PI_2);
+        let r90 = Rotation4D::xy(FRAC_PI_2);
         let r180 = r90.compose(&r90);
-        let out  = r180.apply(&[1.0, 0.0, 0.0, 0.0]);
+        let out = r180.apply(&[1.0, 0.0, 0.0, 0.0]);
         assert!((out[0] + 1.0).abs() < EPS, "x should be -1, got {}", out[0]);
-        assert!((out[1]).abs()       < EPS, "y should be  0, got {}", out[1]);
+        assert!((out[1]).abs() < EPS, "y should be  0, got {}", out[1]);
 
         // Cross-check against a direct PI rotation.
-        let r_pi    = Rotation4D::xy(PI);
+        let r_pi = Rotation4D::xy(PI);
         let ref_out = r_pi.apply(&[1.0, 0.0, 0.0, 0.0]);
         assert!((out[0] - ref_out[0]).abs() < EPS);
         assert!((out[1] - ref_out[1]).abs() < EPS);
@@ -1146,7 +1174,11 @@ mod tests {
     #[test]
     fn tesseract_vertices() {
         let mesh = generate_tesseract();
-        assert_eq!(mesh.vertices.len(), 16, "tesseract must have exactly 16 vertices");
+        assert_eq!(
+            mesh.vertices.len(),
+            16,
+            "tesseract must have exactly 16 vertices"
+        );
     }
 
     // ── 10. tesseract_edges ───────────────────────────────────────────────────
@@ -1165,8 +1197,8 @@ mod tests {
         // the 3-sphere of the given radius.
         let radius = 2.0_f64;
         let seg = 4_usize;
-        let n1    = seg + 1;
-        let n2    = seg + 1;
+        let n1 = seg + 1;
+        let n2 = seg + 1;
         let n_phi = 2 * seg;
 
         for i1 in 0..n1 {
@@ -1193,8 +1225,12 @@ mod tests {
 
     #[test]
     fn empty_input_error() {
-        let result =
-            project_points(&[], &ProjectionMethod::Perspective { focal_distance: 3.0 });
+        let result = project_points(
+            &[],
+            &ProjectionMethod::Perspective {
+                focal_distance: 3.0,
+            },
+        );
         assert!(
             matches!(result, Err(ProjectionError::EmptyInput)),
             "empty input should return EmptyInput, got: {result:?}"
@@ -1218,7 +1254,10 @@ mod tests {
     fn perspective_depth_is_last_coord() {
         let result = project_perspective(&[1.0, 2.0, 3.0, 7.5], 5.0);
         match result {
-            Ok(p) => assert!((p.depth - 7.5).abs() < EPS, "depth should equal last coordinate"),
+            Ok(p) => assert!(
+                (p.depth - 7.5).abs() < EPS,
+                "depth should equal last coordinate"
+            ),
             Err(e) => assert!(false, "unexpected error: {e}"),
         }
     }

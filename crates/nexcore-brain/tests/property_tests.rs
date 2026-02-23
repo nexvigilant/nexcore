@@ -11,6 +11,7 @@
 //! 4. **Confidence Bounds** - Confidence always in [0.0, 1.0]
 //! 5. **Roundtrip Serialization** - Save → Load → equals original
 
+use nexcore_codec::hex;
 use proptest::prelude::*;
 use std::collections::HashSet;
 use std::fs;

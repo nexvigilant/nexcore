@@ -113,6 +113,9 @@ pub mod primitive_scanner;
 // STEM primitives (Science, Technology, Engineering, Mathematics)
 pub mod stem;
 
+// Topology (TDA: persistent homology, Betti numbers, Vietoris-Rips + graph analysis)
+pub mod topology;
+
 // Visualization (SVG diagrams for STEM taxonomy, type composition, DAGs)
 pub mod viz;
 pub mod viz_advanced;

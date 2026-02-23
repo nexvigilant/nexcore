@@ -123,7 +123,7 @@ impl<'de> Deserialize<'de> for QualityScore {
 }
 
 /// Error type for quality score validation.
-#[derive(Debug, Clone, thiserror::Error)]
+#[derive(Debug, Clone, nexcore_error::Error)]
 pub enum QualityScoreError {
     /// Score value is outside [0.0, 100.0] bounds.
     #[error("Quality score {value} is out of bounds [0.0, 100.0]")]
@@ -247,7 +247,7 @@ impl QualityWeights {
 }
 
 /// Error type for weight validation.
-#[derive(Debug, Clone, thiserror::Error)]
+#[derive(Debug, Clone, nexcore_error::Error)]
 pub enum WeightError {
     /// Weights don't sum to 1.0.
     #[error("Weights sum to {sum}, expected 1.0")]

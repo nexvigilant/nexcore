@@ -193,8 +193,13 @@ impl<P: Platform> NexCoreOs<P> {
         );
         os.ipc.emit_boot_event("KernelBoot");
         os.journal.record(
-            JournalEntry::new(Subsystem::Boot, "stos", Severity::Info, "STOS kernel + trust engine initialized")
-                .with_keywords(Keywords::BOOT | Keywords::LIFECYCLE | Keywords::TRUST),
+            JournalEntry::new(
+                Subsystem::Boot,
+                "stos",
+                Severity::Info,
+                "STOS kernel + trust engine initialized",
+            )
+            .with_keywords(Keywords::BOOT | Keywords::LIFECYCLE | Keywords::TRUST),
             0,
         );
 
@@ -222,9 +227,14 @@ impl<P: Platform> NexCoreOs<P> {
         );
         os.ipc.emit_boot_event("ServicesStarting");
         os.journal.record(
-            JournalEntry::new(Subsystem::Boot, "services", Severity::Info, "Services starting")
-                .with_keywords(Keywords::BOOT | Keywords::LIFECYCLE)
-                .with_u64("service_count", os.services.count() as u64),
+            JournalEntry::new(
+                Subsystem::Boot,
+                "services",
+                Severity::Info,
+                "Services starting",
+            )
+            .with_keywords(Keywords::BOOT | Keywords::LIFECYCLE)
+            .with_u64("service_count", os.services.count() as u64),
             0,
         );
 
@@ -238,8 +248,13 @@ impl<P: Platform> NexCoreOs<P> {
         let verification = os.secure_boot.verify_chain();
         if !verification.should_proceed() {
             os.journal.record(
-                JournalEntry::new(Subsystem::Boot, "secure_boot", Severity::Fatal, "Chain integrity violation — boot halted")
-                    .with_keywords(Keywords::BOOT | Keywords::SECURITY | Keywords::ERROR),
+                JournalEntry::new(
+                    Subsystem::Boot,
+                    "secure_boot",
+                    Severity::Fatal,
+                    "Chain integrity violation — boot halted",
+                )
+                .with_keywords(Keywords::BOOT | Keywords::SECURITY | Keywords::ERROR),
                 0,
             );
             return Err(OsError::Boot(crate::error::BootError::SecureBootFailed(
@@ -248,9 +263,14 @@ impl<P: Platform> NexCoreOs<P> {
         }
 
         os.journal.record(
-            JournalEntry::new(Subsystem::Boot, "complete", Severity::Notice, "Boot complete — system running")
-                .with_keywords(Keywords::BOOT | Keywords::LIFECYCLE)
-                .with_f64("trust_score", os.trust.score()),
+            JournalEntry::new(
+                Subsystem::Boot,
+                "complete",
+                Severity::Notice,
+                "Boot complete — system running",
+            )
+            .with_keywords(Keywords::BOOT | Keywords::LIFECYCLE)
+            .with_f64("trust_score", os.trust.score()),
             0,
         );
         os.state = OsState::Running;
@@ -330,7 +350,10 @@ impl<P: Platform> NexCoreOs<P> {
                 // Layer 4 (κ Guards): Register trust gate on "start" transition.
                 // Services need trust score >= threshold to start.
                 // Non-fatal: guard failure during boot is logged, not blocking.
-                if let Err(e) = self.stos.register_guard(machine_id, "trust_gate", "trust_ok") {
+                if let Err(e) = self
+                    .stos
+                    .register_guard(machine_id, "trust_gate", "trust_ok")
+                {
                     tracing::warn!("Failed to register trust guard for {name}: {e:?}");
                 }
 
@@ -382,6 +405,14 @@ impl<P: Platform> NexCoreOs<P> {
         self.ipc
             .emit_service_event(&name, &format!("{from_state:?}"), &format!("{new_state:?}"));
 
+        // Energy accounting: failures waste energy, successes spend productively.
+        if new_state == ServiceState::Failed {
+            self.energy.spend_waste(self.config.energy.transition_cost);
+        } else {
+            self.energy
+                .spend_productive(self.config.energy.transition_cost);
+        }
+
         // Journal: record service state transition
         let severity = if new_state == ServiceState::Failed {
             Severity::Error
@@ -389,11 +420,16 @@ impl<P: Platform> NexCoreOs<P> {
             Severity::Info
         };
         self.journal.record(
-            JournalEntry::new(Subsystem::Service, "transition", severity, format!("{name}: {from_state:?} -> {new_state:?}"))
-                .with_keywords(Keywords::LIFECYCLE | Keywords::STATE_CHANGE)
-                .with_str("service", &name)
-                .with_str("from", &format!("{from_state:?}"))
-                .with_str("to", &format!("{new_state:?}")),
+            JournalEntry::new(
+                Subsystem::Service,
+                "transition",
+                severity,
+                format!("{name}: {from_state:?} -> {new_state:?}"),
+            )
+            .with_keywords(Keywords::LIFECYCLE | Keywords::STATE_CHANGE)
+            .with_str("service", &name)
+            .with_str("from", &format!("{from_state:?}"))
+            .with_str("to", &format!("{new_state:?}")),
             self.tick_count,
         );
 
@@ -415,6 +451,34 @@ impl<P: Platform> NexCoreOs<P> {
         }
 
         self.tick_count += 1;
+
+        // ── Energy Accounting (ATP/ADP metabolic tracking) ────────────
+        // Every tick costs energy (system upkeep). Track regime transitions.
+        let regime_before = self.energy.regime();
+        self.energy.spend_productive(self.config.energy.tick_cost);
+        let regime_after = self.energy.regime();
+        if regime_before != regime_after {
+            self.journal.record(
+                JournalEntry::new(
+                    Subsystem::Kernel,
+                    "energy",
+                    if regime_after == nexcore_energy::Regime::Crisis {
+                        Severity::Critical
+                    } else if regime_after == nexcore_energy::Regime::Catabolic {
+                        Severity::Warning
+                    } else {
+                        Severity::Notice
+                    },
+                    format!("Energy regime: {} -> {}", regime_before, regime_after),
+                )
+                .with_keywords(Keywords::LIFECYCLE | Keywords::STATE_CHANGE | Keywords::PERFORMANCE)
+                .with_f64("energy_charge", self.energy.energy_charge())
+                .with_u64("t_atp", self.energy.t_atp)
+                .with_u64("t_adp", self.energy.t_adp)
+                .with_u64("t_amp", self.energy.t_amp),
+                self.tick_count,
+            );
+        }
 
         // Layer 12 (ν Temporal): Tick the STOS kernel — executes scheduled
         // transitions and processes timeouts.
@@ -441,6 +505,9 @@ impl<P: Platform> NexCoreOs<P> {
 
         // Advance the full-scale Guardian homeostasis loop
         self.security.tick();
+
+        // ── Endocrine Heartbeat ──────────────
+        self.endocrine.apply_decay();
 
         // Phase 1: Auto-quarantine services with excessive threats
         let service_ids: Vec<_> = self.services.startup_order().iter().map(|s| s.id).collect();
@@ -507,13 +574,23 @@ impl<P: Platform> NexCoreOs<P> {
                     self.degrade_services(crate::service::ServicePriority::Standard);
                 }
                 SecurityResponse::Lockdown => {
+                    // Lockdown is the most expensive security operation.
+                    self.energy.spend_waste(self.config.energy.lockdown_cost);
+
                     // Journal: lockdown is a critical event
                     self.journal.record(
-                        JournalEntry::new(Subsystem::Security, "lockdown", Severity::Critical, "Security lockdown activated — RED")
-                            .with_keywords(Keywords::SECURITY | Keywords::LIFECYCLE | Keywords::STATE_CHANGE)
-                            .with_u64("pamp_count", self.security.pamp_count() as u64)
-                            .with_u64("damp_count", self.security.damp_count() as u64)
-                            .with_f64("trust_score", self.trust.score()),
+                        JournalEntry::new(
+                            Subsystem::Security,
+                            "lockdown",
+                            Severity::Critical,
+                            "Security lockdown activated — RED",
+                        )
+                        .with_keywords(
+                            Keywords::SECURITY | Keywords::LIFECYCLE | Keywords::STATE_CHANGE,
+                        )
+                        .with_u64("pamp_count", self.security.pamp_count() as u64)
+                        .with_u64("damp_count", self.security.damp_count() as u64)
+                        .with_f64("trust_score", self.trust.score()),
                         self.tick_count,
                     );
 
@@ -748,8 +825,17 @@ impl<P: Platform> NexCoreOs<P> {
             ThreatSeverity::Critical => 5.0,
         };
         if severity_weight > 0.0 {
-            self.trust
-                .record(Evidence::Negative(severity_weight * self.config.trust.threat_weight));
+            self.trust.record(Evidence::Negative(
+                severity_weight * self.config.trust.threat_weight,
+            ));
+        }
+
+        // Waste energy proportional to threat severity.
+        // Threats consume resources (investigation, response, recovery).
+        #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
+        let waste = (severity_weight * self.config.energy.threat_base_cost as f64) as u64;
+        if waste > 0 {
+            self.energy.spend_waste(waste);
         }
 
         // Journal: record threat with structured fields
@@ -1067,21 +1153,26 @@ impl<P: Platform> NexCoreOs<P> {
             .startup_order()
             .iter()
             .map(|svc| {
-                let transitions = svc.machine_id
+                let transitions = svc
+                    .machine_id
                     .and_then(|mid| self.stos.metrics(mid).ok())
                     .map_or(0, |m| m.executions);
                 ServiceHealth::from_state(&svc.name, svc.state, transitions)
             })
             .collect();
 
-        let services_running = services.iter().filter(|s| s.health == HealthStatus::Ok).count();
-        let services_failed = services.iter().filter(|s| s.health == HealthStatus::Critical).count();
+        let services_running = services
+            .iter()
+            .filter(|s| s.health == HealthStatus::Ok)
+            .count();
+        let services_failed = services
+            .iter()
+            .filter(|s| s.health == HealthStatus::Critical)
+            .count();
         let services_total = services.len();
 
-        let system_health = DiagnosticSnapshot::compute_system_health(
-            self.security.level(),
-            &services,
-        );
+        let system_health =
+            DiagnosticSnapshot::compute_system_health(self.security.level(), &services);
 
         let stats = self.stos.aggregate_stats();
 
@@ -1102,6 +1193,12 @@ impl<P: Platform> NexCoreOs<P> {
             services_running,
             services_failed,
             services_total,
+            energy_charge: self.energy.energy_charge(),
+            energy_regime: self.energy.regime().to_string(),
+            energy_t_atp: self.energy.t_atp,
+            energy_t_adp: self.energy.t_adp,
+            energy_t_amp: self.energy.t_amp,
+            energy_waste_ratio: self.energy.waste_ratio(),
         }
     }
 
@@ -2099,11 +2196,7 @@ mod tests {
         assert!(result.is_ok());
         if let Ok(mut os) = result {
             let initial = os.trust_score();
-            os.report_threat(
-                crate::security::ThreatSeverity::High,
-                "test-threat",
-                None,
-            );
+            os.report_threat(crate::security::ThreatSeverity::High, "test-threat", None);
             assert!(
                 os.trust_score() < initial,
                 "Trust should decrease after threat: was {initial}, now {}",
@@ -2202,11 +2295,7 @@ mod tests {
         assert!(result.is_ok());
         if let Ok(os) = result {
             // Get metrics for the first service
-            let first_svc = os
-                .services()
-                .startup_order()
-                .first()
-                .map(|s| s.id);
+            let first_svc = os.services().startup_order().first().map(|s| s.id);
             if let Some(svc_id) = first_svc {
                 let metrics = os.service_metrics(svc_id);
                 assert!(
@@ -2260,8 +2349,8 @@ mod tests {
         assert!(result.is_ok());
 
         if let Ok(os) = result {
-            let filter = crate::journal::JournalFilter::new()
-                .keywords(crate::journal::Keywords::BOOT);
+            let filter =
+                crate::journal::JournalFilter::new().keywords(crate::journal::Keywords::BOOT);
             let boot_entries = os.journal().query(&filter);
             assert!(
                 boot_entries.len() >= 4,
@@ -2279,19 +2368,15 @@ mod tests {
 
         if let Ok(mut os) = result {
             let before = os.journal().total_recorded();
-            os.report_threat(
-                crate::security::ThreatSeverity::Medium,
-                "test threat",
-                None,
-            );
+            os.report_threat(crate::security::ThreatSeverity::Medium, "test threat", None);
             assert!(
                 os.journal().total_recorded() > before,
                 "Journal should record threat events"
             );
 
             // Threat should be in security subsystem
-            let filter = crate::journal::JournalFilter::new()
-                .subsystem(crate::journal::Subsystem::Security);
+            let filter =
+                crate::journal::JournalFilter::new().subsystem(crate::journal::Subsystem::Security);
             let security_entries = os.journal().query(&filter);
             assert!(!security_entries.is_empty(), "Should have security entries");
         }
@@ -2327,7 +2412,10 @@ mod tests {
             let snapshot = os.diagnostic_snapshot();
 
             assert_eq!(snapshot.services_total, 11);
-            assert_eq!(snapshot.security_level, crate::security::SecurityLevel::Green);
+            assert_eq!(
+                snapshot.security_level,
+                crate::security::SecurityLevel::Green
+            );
             assert!(snapshot.trust_score > 0.0);
             assert!(snapshot.journal_entries > 0);
             assert_eq!(snapshot.active_threats, 0);
@@ -2377,10 +2465,7 @@ mod tests {
                 snapshot.system_health,
                 crate::diagnostics::HealthStatus::Critical
             );
-            assert_eq!(
-                snapshot.security_level,
-                crate::security::SecurityLevel::Red
-            );
+            assert_eq!(snapshot.security_level, crate::security::SecurityLevel::Red);
         }
     }
 
@@ -2419,9 +2504,7 @@ mod tests {
 
             // Check error buffer for lockdown entry
             let errors = os.journal().errors();
-            let lockdown_entry = errors.iter().find(|e| {
-                e.category == "lockdown"
-            });
+            let lockdown_entry = errors.iter().find(|e| e.category == "lockdown");
             assert!(
                 lockdown_entry.is_some(),
                 "Lockdown should produce a critical journal entry in error buffer"
@@ -2437,7 +2520,11 @@ mod tests {
     fn energy_initialized_from_config() {
         let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
         let config = SystemConfig::default();
-        let result = NexCoreOs::boot_with_config(platform, crate::secure_boot::BootPolicy::Permissive, config.clone());
+        let result = NexCoreOs::boot_with_config(
+            platform,
+            crate::secure_boot::BootPolicy::Permissive,
+            config.clone(),
+        );
         assert!(result.is_ok());
 
         if let Ok(os) = result {
@@ -2462,8 +2549,14 @@ mod tests {
 
             // Standard services should be degraded
             let startup_order = os.services().startup_order();
-            let standard_degraded = startup_order.iter().find(|s| s.priority == crate::service::ServicePriority::Standard && s.state == ServiceState::Degraded);
-            assert!(standard_degraded.is_some(), "Standard services should be degraded in Catabolic regime");
+            let standard_degraded = startup_order.iter().find(|s| {
+                s.priority == crate::service::ServicePriority::Standard
+                    && s.state == ServiceState::Degraded
+            });
+            assert!(
+                standard_degraded.is_some(),
+                "Standard services should be degraded in Catabolic regime"
+            );
         }
     }
 
@@ -2483,8 +2576,221 @@ mod tests {
 
             // Core services should be degraded
             let startup_order = os.services().startup_order();
-            let core_degraded = startup_order.iter().find(|s| s.priority == crate::service::ServicePriority::Core && s.state == ServiceState::Degraded);
-            assert!(core_degraded.is_some(), "Core services should be degraded in Crisis regime");
+            let core_degraded = startup_order.iter().find(|s| {
+                s.priority == crate::service::ServicePriority::Core
+                    && s.state == ServiceState::Degraded
+            });
+            assert!(
+                core_degraded.is_some(),
+                "Core services should be degraded in Crisis regime"
+            );
+        }
+    }
+
+    #[test]
+    fn energy_tick_spends_productive() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+
+        if let Ok(mut os) = result {
+            let atp_before = os.energy().t_atp;
+            let adp_before = os.energy().t_adp;
+
+            // Run 10 ticks
+            for _ in 0..10 {
+                os.tick();
+            }
+
+            // tATP should decrease, tADP should increase (productive work)
+            assert!(
+                os.energy().t_atp < atp_before,
+                "tATP should decrease after ticks"
+            );
+            assert!(
+                os.energy().t_adp > adp_before,
+                "tADP should increase after ticks"
+            );
+            // Conservation law
+            assert_eq!(os.energy().total(), atp_before + adp_before);
+        }
+    }
+
+    #[test]
+    fn energy_threat_wastes_tokens() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+
+        if let Ok(mut os) = result {
+            let amp_before = os.energy().t_amp;
+
+            os.report_threat(crate::security::ThreatSeverity::High, "test threat", None);
+
+            // tAMP should increase (waste from threat handling)
+            assert!(
+                os.energy().t_amp > amp_before,
+                "tAMP should increase after threat: before={amp_before}, after={}",
+                os.energy().t_amp
+            );
+        }
+    }
+
+    #[test]
+    fn energy_lockdown_wastes_significant_tokens() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+
+        if let Ok(mut os) = result {
+            let amp_before = os.energy().t_amp;
+
+            // Trigger lockdown
+            let pattern = crate::security::ThreatPattern::External(
+                crate::security::Pamp::PrivilegeEscalation {
+                    actor: "attacker".to_string(),
+                    target_level: "root".to_string(),
+                },
+            );
+            os.report_pattern(&pattern);
+            os.tick(); // processes lockdown response
+
+            // Lockdown cost (5000) + threat cost should produce significant waste
+            let waste = os.energy().t_amp - amp_before;
+            assert!(
+                waste >= os.config().energy.lockdown_cost,
+                "Lockdown should waste at least lockdown_cost tokens: got {waste}"
+            );
+        }
+    }
+
+    #[test]
+    fn energy_transition_accounting() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+
+        if let Ok(mut os) = result {
+            let adp_before = os.energy().t_adp;
+
+            // Successful transition: degrade guardian
+            let services = os.services().startup_order();
+            let guardian = services.iter().find(|s| s.name == "guardian");
+            if let Some(g) = guardian {
+                let id = g.id;
+                assert!(
+                    os.transition_service(id, ServiceState::Degraded).is_ok(),
+                    "Guardian degrade transition should succeed"
+                );
+            }
+
+            // tADP should increase by transition_cost (productive spend)
+            assert!(
+                os.energy().t_adp > adp_before,
+                "Successful transition should spend productive energy"
+            );
+        }
+    }
+
+    #[test]
+    fn energy_regime_change_journaled() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let mut config = SystemConfig::default();
+        // Small budget so regime transitions are reachable
+        config.energy.initial_budget = 100;
+        config.energy.tick_cost = 20;
+
+        let result = NexCoreOs::boot_with_config(
+            platform,
+            crate::secure_boot::BootPolicy::Permissive,
+            config,
+        );
+        assert!(result.is_ok());
+
+        if let Ok(mut os) = result {
+            // Run ticks until regime changes from Anabolic
+            for _ in 0..10 {
+                os.tick();
+            }
+
+            // Should have journal entries about energy regime changes
+            let entries = os.journal().recent(100);
+            let energy_entries: Vec<_> =
+                entries.iter().filter(|e| e.category == "energy").collect();
+            assert!(
+                !energy_entries.is_empty(),
+                "Regime transitions should be journaled"
+            );
+        }
+    }
+
+    #[test]
+    fn diagnostic_snapshot_includes_energy() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+
+        if let Ok(mut os) = result {
+            // Spend some energy
+            for _ in 0..5 {
+                os.tick();
+            }
+
+            let snap = os.diagnostic_snapshot();
+
+            // Energy fields should be populated
+            assert!(snap.energy_charge > 0.0);
+            assert!(snap.energy_charge <= 1.0);
+            assert!(!snap.energy_regime.is_empty());
+            assert!(snap.energy_t_atp > 0);
+            assert!(snap.energy_t_adp > 0); // ticks spent productive energy
+            assert_eq!(
+                snap.energy_t_atp + snap.energy_t_adp + snap.energy_t_amp,
+                1_000_000,
+                "Conservation law: total should equal initial budget"
+            );
+
+            // Display should contain energy info
+            let display = format!("{snap}");
+            assert!(display.contains("Energy:"));
+            assert!(display.contains("EC="));
+        }
+    }
+
+    #[test]
+    fn energy_conservation_through_full_lifecycle() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+
+        if let Ok(mut os) = result {
+            let initial_total = os.energy().total();
+
+            // Run ticks
+            for _ in 0..20 {
+                os.tick();
+            }
+
+            // Report threats
+            os.report_threat(crate::security::ThreatSeverity::Medium, "test", None);
+            os.report_threat(crate::security::ThreatSeverity::High, "test2", None);
+
+            // Transition a service
+            let services = os.services().startup_order();
+            if let Some(g) = services.iter().find(|s| s.name == "guardian") {
+                assert!(
+                    os.transition_service(g.id, ServiceState::Degraded).is_ok(),
+                    "Guardian degrade should succeed"
+                );
+            }
+
+            // Conservation law holds through all operations
+            assert_eq!(
+                os.energy().total(),
+                initial_total,
+                "Energy conservation violated: total changed from {initial_total} to {}",
+                os.energy().total()
+            );
         }
     }
 }

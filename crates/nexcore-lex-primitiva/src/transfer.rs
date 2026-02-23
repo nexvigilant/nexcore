@@ -243,8 +243,7 @@ impl TransferCalculator {
         // C4: enhanced confidence calibration
         let compositional_isomorphism = structural; // Jaccard proxy for tree edit distance
         let relational_preservation = functional; // functional score as functor proxy
-        let is_clinical_grade =
-            structural > 0.7 && functional > 0.7 && contextual > 0.7;
+        let is_clinical_grade = structural > 0.7 && functional > 0.7 && contextual > 0.7;
 
         TransferResult {
             source: source.name.clone(),

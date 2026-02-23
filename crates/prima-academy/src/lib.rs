@@ -45,8 +45,8 @@ pub mod transfer;
 
 pub use transfer::{AffinityMatrix, CapabilityMultiplier, TransferResult};
 
+use nexcore_error::Error;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ERRORS

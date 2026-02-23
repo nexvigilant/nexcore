@@ -286,7 +286,11 @@ pub fn mode_wavelength(mode: u32, config: &StringConfig) -> f64 {
 #[must_use]
 pub fn mode_energy(mode: &VibrationMode, config: &StringConfig) -> f64 {
     let omega = mode_frequency(mode.mode_number, config);
-    0.5 * config.linear_density * omega * omega * mode.amplitude * mode.amplitude
+    0.5 * config.linear_density
+        * omega
+        * omega
+        * mode.amplitude
+        * mode.amplitude
         * (config.length / 2.0)
 }
 

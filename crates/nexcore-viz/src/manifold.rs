@@ -40,9 +40,9 @@
 //! }
 //! ```
 
-use std::fmt;
-use std::f64::consts::{FRAC_PI_2, TAU};
 use serde::{Deserialize, Serialize};
+use std::f64::consts::{FRAC_PI_2, TAU};
+use std::fmt;
 
 // ─────────────────────────────────────────────────────────────────
 // Error type
@@ -64,18 +64,11 @@ pub enum ManifoldError {
 impl fmt::Display for ManifoldError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::InvalidDegree => write!(
-                f,
-                "invalid degree: manifold degree must be at least 2"
-            ),
-            Self::InvalidResolution => write!(
-                f,
-                "invalid resolution: grid resolution must be at least 2"
-            ),
-            Self::EmptyMesh => write!(
-                f,
-                "empty mesh: surface evaluation produced no geometry"
-            ),
+            Self::InvalidDegree => write!(f, "invalid degree: manifold degree must be at least 2"),
+            Self::InvalidResolution => {
+                write!(f, "invalid resolution: grid resolution must be at least 2")
+            }
+            Self::EmptyMesh => write!(f, "empty mesh: surface evaluation produced no geometry"),
             Self::ComputationFailed(msg) => write!(f, "computation failed: {msg}"),
         }
     }
@@ -188,7 +181,10 @@ impl Complex {
     /// ```
     #[must_use]
     pub fn conj(self) -> Self {
-        Self { re: self.re, im: -self.im }
+        Self {
+            re: self.re,
+            im: -self.im,
+        }
     }
 
     /// Scales the complex number by a real scalar.
@@ -203,7 +199,10 @@ impl Complex {
     /// ```
     #[must_use]
     pub fn scale(self, s: f64) -> Self {
-        Self { re: self.re * s, im: self.im * s }
+        Self {
+            re: self.re * s,
+            im: self.im * s,
+        }
     }
 
     /// Adds two complex numbers.
@@ -407,7 +406,12 @@ pub fn complex_power(z: Complex, n: u32) -> Complex {
 /// z₁ = exp(i·2π·k₁/n) · cos(θ)^(2/n) · exp(i·φ₁·α)
 /// z₂ = exp(i·2π·k₂/n) · sin(θ)^(2/n) · exp(i·φ₂·α)
 /// ```
-fn surface_coords(theta: f64, phi1: f64, phi2: f64, config: &CalabiYauConfig) -> (Complex, Complex) {
+fn surface_coords(
+    theta: f64,
+    phi1: f64,
+    phi2: f64,
+    config: &CalabiYauConfig,
+) -> (Complex, Complex) {
     let n = config.degree as f64;
     let exp = 2.0 / n;
 
@@ -525,7 +529,11 @@ pub fn evaluate_surface_point(
         ProjectionMethod::Stereographic => project_stereographic(z1, z2),
         ProjectionMethod::Orthographic => project_orthographic(z1, z2),
     };
-    [raw[0] * config.scale, raw[1] * config.scale, raw[2] * config.scale]
+    [
+        raw[0] * config.scale,
+        raw[1] * config.scale,
+        raw[2] * config.scale,
+    ]
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -617,12 +625,7 @@ pub fn compute_surface_normal(
 /// assert!(k.is_finite());
 /// ```
 #[must_use]
-pub fn estimate_curvature(
-    theta: f64,
-    phi1: f64,
-    phi2: f64,
-    config: &CalabiYauConfig,
-) -> f64 {
+pub fn estimate_curvature(theta: f64, phi1: f64, phi2: f64, config: &CalabiYauConfig) -> f64 {
     let h = 1e-3_f64;
     let center = evaluate_surface_point(theta, phi1, phi2, config);
     let t_hi = (theta + h).min(FRAC_PI_2 - h);
@@ -688,8 +691,8 @@ pub fn generate_manifold_mesh(config: &CalabiYauConfig) -> Result<ManifoldMesh, 
     let n = config.degree as f64;
 
     // Parameter ranges
-    let theta_range = FRAC_PI_2;           // [0, π/2]
-    let phi_range = TAU / n;               // [0, 2π/n]
+    let theta_range = FRAC_PI_2; // [0, π/2]
+    let phi_range = TAU / n; // [0, 2π/n]
     // phi2 fixed at midpoint for 2D cross-section
     let phi2_fixed = phi_range * 0.5;
 
@@ -697,15 +700,15 @@ pub fn generate_manifold_mesh(config: &CalabiYauConfig) -> Result<ManifoldMesh, 
 
     for j in 0..res {
         for i in 0..res {
-            let u_t = i as f64 / (res - 1) as f64;   // ∈ [0, 1]
-            let u_p = j as f64 / (res - 1) as f64;   // ∈ [0, 1]
+            let u_t = i as f64 / (res - 1) as f64; // ∈ [0, 1]
+            let u_p = j as f64 / (res - 1) as f64; // ∈ [0, 1]
 
             // Clamp theta away from exact 0 and π/2 to avoid 0^(2/n) edge cases
             let theta = (u_t * theta_range).clamp(1e-6, theta_range - 1e-6);
-            let phi1  = u_p * phi_range;
+            let phi1 = u_p * phi_range;
 
-            let position  = evaluate_surface_point(theta, phi1, phi2_fixed, config);
-            let normal    = compute_surface_normal(theta, phi1, phi2_fixed, config);
+            let position = evaluate_surface_point(theta, phi1, phi2_fixed, config);
+            let normal = compute_surface_normal(theta, phi1, phi2_fixed, config);
             let curvature = estimate_curvature(theta, phi1, phi2_fixed, config);
 
             vertices.push(SurfaceVertex {
@@ -730,8 +733,12 @@ pub fn generate_manifold_mesh(config: &CalabiYauConfig) -> Result<ManifoldMesh, 
             let v10 = j * res + i + 1;
             let v01 = (j + 1) * res + i;
             let v11 = (j + 1) * res + i + 1;
-            triangles.push(SurfaceTriangle { indices: [v00, v10, v11] });
-            triangles.push(SurfaceTriangle { indices: [v00, v11, v01] });
+            triangles.push(SurfaceTriangle {
+                indices: [v00, v10, v11],
+            });
+            triangles.push(SurfaceTriangle {
+                indices: [v00, v11, v01],
+            });
         }
     }
 
@@ -871,7 +878,10 @@ mod tests {
     /// Callers must check `.vertices.is_empty()` when the result matters;
     /// most tests use resolution ≥ 2 with degree 5, which always succeeds.
     fn small_mesh(res: usize) -> ManifoldMesh {
-        let config = CalabiYauConfig { resolution: res, ..CalabiYauConfig::default() };
+        let config = CalabiYauConfig {
+            resolution: res,
+            ..CalabiYauConfig::default()
+        };
         generate_manifold_mesh(&config).unwrap_or(ManifoldMesh {
             vertices: vec![],
             triangles: vec![],
@@ -1048,7 +1058,10 @@ mod tests {
     fn test_evaluate_surface_point_finite() {
         let config = CalabiYauConfig::default();
         let p = evaluate_surface_point(FRAC_PI_4, 0.3, 0.3, &config);
-        assert!(p.iter().all(|v| v.is_finite()), "Expected finite coords: {p:?}");
+        assert!(
+            p.iter().all(|v| v.is_finite()),
+            "Expected finite coords: {p:?}"
+        );
     }
 
     #[test]
@@ -1060,7 +1073,7 @@ mod tests {
         };
         // theta very small → mag2 = sin(theta)^(2/n) ≈ 0
         let p_small_theta = evaluate_surface_point(1e-5, 0.0, 0.0, &config);
-        let p_mid         = evaluate_surface_point(FRAC_PI_4, 0.0, 0.0, &config);
+        let p_mid = evaluate_surface_point(FRAC_PI_4, 0.0, 0.0, &config);
         // Re(z2) component (index 1 in orthographic) should be smaller
         assert!(p_small_theta[1].abs() <= p_mid[1].abs() + 1e-10);
     }
@@ -1074,7 +1087,7 @@ mod tests {
         };
         let near_half_pi = FRAC_PI_2 - 1e-5;
         let p_large = evaluate_surface_point(near_half_pi, 0.0, 0.0, &config);
-        let p_mid   = evaluate_surface_point(FRAC_PI_4, 0.0, 0.0, &config);
+        let p_mid = evaluate_surface_point(FRAC_PI_4, 0.0, 0.0, &config);
         // Re(z1) (index 0) should approach 0
         assert!(p_large[0].abs() <= p_mid[0].abs() + 1e-6);
     }
@@ -1109,7 +1122,10 @@ mod tests {
     fn test_estimate_curvature_non_negative() {
         let config = CalabiYauConfig::default();
         let k = estimate_curvature(0.3, 0.2, 0.2, &config);
-        assert!(k >= 0.0, "curvature estimate should be non-negative, got {k}");
+        assert!(
+            k >= 0.0,
+            "curvature estimate should be non-negative, got {k}"
+        );
     }
 
     // ── generate_manifold_mesh ────────────────────────────────────
@@ -1118,7 +1134,11 @@ mod tests {
     fn test_generate_manifold_mesh_default() {
         let config = CalabiYauConfig::default();
         let result = generate_manifold_mesh(&config);
-        assert!(result.is_ok(), "generate_manifold_mesh error: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "generate_manifold_mesh error: {:?}",
+            result.err()
+        );
         if let Ok(mesh) = result {
             assert!(!mesh.vertices.is_empty());
             assert!(!mesh.triangles.is_empty());
@@ -1141,28 +1161,40 @@ mod tests {
 
     #[test]
     fn test_generate_manifold_mesh_resolution_zero_error() {
-        let config = CalabiYauConfig { resolution: 0, ..CalabiYauConfig::default() };
+        let config = CalabiYauConfig {
+            resolution: 0,
+            ..CalabiYauConfig::default()
+        };
         let result = generate_manifold_mesh(&config);
         assert_eq!(result, Err(ManifoldError::InvalidResolution));
     }
 
     #[test]
     fn test_generate_manifold_mesh_resolution_one_error() {
-        let config = CalabiYauConfig { resolution: 1, ..CalabiYauConfig::default() };
+        let config = CalabiYauConfig {
+            resolution: 1,
+            ..CalabiYauConfig::default()
+        };
         let result = generate_manifold_mesh(&config);
         assert_eq!(result, Err(ManifoldError::InvalidResolution));
     }
 
     #[test]
     fn test_generate_manifold_mesh_degree_zero_error() {
-        let config = CalabiYauConfig { degree: 0, ..CalabiYauConfig::default() };
+        let config = CalabiYauConfig {
+            degree: 0,
+            ..CalabiYauConfig::default()
+        };
         let result = generate_manifold_mesh(&config);
         assert_eq!(result, Err(ManifoldError::InvalidDegree));
     }
 
     #[test]
     fn test_generate_manifold_mesh_degree_one_error() {
-        let config = CalabiYauConfig { degree: 1, ..CalabiYauConfig::default() };
+        let config = CalabiYauConfig {
+            degree: 1,
+            ..CalabiYauConfig::default()
+        };
         let result = generate_manifold_mesh(&config);
         assert_eq!(result, Err(ManifoldError::InvalidDegree));
     }
@@ -1171,8 +1203,14 @@ mod tests {
     fn test_generate_manifold_mesh_all_vertices_finite() {
         let mesh = small_mesh(8);
         for v in &mesh.vertices {
-            assert!(v.position.iter().all(|c| c.is_finite()), "non-finite vertex: {v:?}");
-            assert!(v.normal.iter().all(|c| c.is_finite()), "non-finite normal: {v:?}");
+            assert!(
+                v.position.iter().all(|c| c.is_finite()),
+                "non-finite vertex: {v:?}"
+            );
+            assert!(
+                v.normal.iter().all(|c| c.is_finite()),
+                "non-finite normal: {v:?}"
+            );
         }
     }
 
@@ -1259,7 +1297,12 @@ mod tests {
         let mesh = small_mesh(8);
         let (min, max) = mesh_bounding_box(&mesh);
         for i in 0..3 {
-            assert!(min[i] <= max[i], "axis {i}: min={} > max={}", min[i], max[i]);
+            assert!(
+                min[i] <= max[i],
+                "axis {i}: min={} > max={}",
+                min[i],
+                max[i]
+            );
         }
     }
 
@@ -1293,9 +1336,16 @@ mod tests {
         assert!(json.is_ok(), "serialize failed: {:?}", json.as_ref().err());
         let json = json.unwrap_or_default();
         let back: Result<ManifoldMesh, _> = serde_json::from_str(&json);
-        assert!(back.is_ok(), "deserialize failed: {:?}", back.as_ref().err());
+        assert!(
+            back.is_ok(),
+            "deserialize failed: {:?}",
+            back.as_ref().err()
+        );
         let back = back.unwrap_or(ManifoldMesh {
-            vertices: vec![], triangles: vec![], genus: 0, degree: 0,
+            vertices: vec![],
+            triangles: vec![],
+            genus: 0,
+            degree: 0,
         });
         assert_eq!(mesh.vertices.len(), back.vertices.len(), "vertex count");
         assert_eq!(mesh.triangles.len(), back.triangles.len(), "triangle count");
@@ -1307,10 +1357,18 @@ mod tests {
     fn test_serde_roundtrip_complex() {
         let z = Complex::new(1.234, -5.678);
         let json_result = serde_json::to_string(&z);
-        assert!(json_result.is_ok(), "serialize failed: {:?}", json_result.err());
+        assert!(
+            json_result.is_ok(),
+            "serialize failed: {:?}",
+            json_result.err()
+        );
         if let Ok(json) = json_result {
             let back_result = serde_json::from_str::<Complex>(&json);
-            assert!(back_result.is_ok(), "deserialize failed: {:?}", back_result.err());
+            assert!(
+                back_result.is_ok(),
+                "deserialize failed: {:?}",
+                back_result.err()
+            );
             if let Ok(back) = back_result {
                 assert_eq!(z, back);
             }
@@ -1335,8 +1393,18 @@ mod tests {
 
     #[test]
     fn test_different_k1_k2_produce_different_surfaces() {
-        let config_a = CalabiYauConfig { k1: 0, k2: 0, resolution: 5, ..CalabiYauConfig::default() };
-        let config_b = CalabiYauConfig { k1: 1, k2: 2, resolution: 5, ..CalabiYauConfig::default() };
+        let config_a = CalabiYauConfig {
+            k1: 0,
+            k2: 0,
+            resolution: 5,
+            ..CalabiYauConfig::default()
+        };
+        let config_b = CalabiYauConfig {
+            k1: 1,
+            k2: 2,
+            resolution: 5,
+            ..CalabiYauConfig::default()
+        };
         let res_a = generate_manifold_mesh(&config_a);
         let res_b = generate_manifold_mesh(&config_b);
         assert!(res_a.is_ok(), "mesh_a failed: {:?}", res_a.err());
@@ -1346,10 +1414,11 @@ mod tests {
             _ => return,
         };
         // At least one vertex position should differ
-        let differs = mesh_a.vertices.iter().zip(mesh_b.vertices.iter())
-            .any(|(va, vb)| {
-                (0..3).any(|i| (va.position[i] - vb.position[i]).abs() > 1e-10)
-            });
+        let differs = mesh_a
+            .vertices
+            .iter()
+            .zip(mesh_b.vertices.iter())
+            .any(|(va, vb)| (0..3).any(|i| (va.position[i] - vb.position[i]).abs() > 1e-10));
         assert!(differs, "k1/k2 selectors should produce different surfaces");
     }
 
@@ -1370,7 +1439,10 @@ mod tests {
     #[test]
     fn test_manifold_error_display_empty_mesh() {
         let msg = ManifoldError::EmptyMesh.to_string();
-        assert!(msg.contains("empty") || msg.contains("mesh"), "message: {msg}");
+        assert!(
+            msg.contains("empty") || msg.contains("mesh"),
+            "message: {msg}"
+        );
     }
 
     #[test]

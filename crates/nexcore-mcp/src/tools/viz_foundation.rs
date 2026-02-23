@@ -10,8 +10,8 @@ use rmcp::ErrorData as McpError;
 use rmcp::model::CallToolResult;
 
 use crate::params::viz_foundation::{
-    VizCentralityParams, VizCommunityDetectParams, VizMolecularInfoParams, VizSpectralAnalysisParams,
-    VizSurfaceMeshParams, VizVdagOverlayParams,
+    VizCentralityParams, VizCommunityDetectParams, VizMolecularInfoParams,
+    VizSpectralAnalysisParams, VizSurfaceMeshParams, VizVdagOverlayParams,
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -34,14 +34,17 @@ fn parse_graph_spec(
 }
 
 /// Format a `HashMap<String, f64>` as sorted JSON for consistent output.
-fn centrality_to_json(
-    map: &std::collections::HashMap<String, f64>,
-) -> serde_json::Value {
+fn centrality_to_json(map: &std::collections::HashMap<String, f64>) -> serde_json::Value {
     let mut entries: Vec<(&String, &f64)> = map.iter().collect();
     entries.sort_by(|a, b| a.0.cmp(b.0));
     let obj: serde_json::Map<String, serde_json::Value> = entries
         .into_iter()
-        .map(|(k, v)| (k.clone(), serde_json::json!((*v * 1_000_000.0).round() / 1_000_000.0)))
+        .map(|(k, v)| {
+            (
+                k.clone(),
+                serde_json::json!((*v * 1_000_000.0).round() / 1_000_000.0),
+            )
+        })
         .collect();
     serde_json::Value::Object(obj)
 }
@@ -93,7 +96,7 @@ struct AtomInput {
 /// and returns vertex/triangle counts plus a mesh summary.
 pub fn surface_mesh(params: VizSurfaceMeshParams) -> Result<CallToolResult, McpError> {
     use nexcore_viz::molecular::{Atom, Element, Molecule};
-    use nexcore_viz::surface::{generate_surface, triangle_count, vertex_count, SurfaceType};
+    use nexcore_viz::surface::{SurfaceType, generate_surface, triangle_count, vertex_count};
 
     let atoms: Vec<AtomInput> = serde_json::from_str(&params.atoms_json)
         .map_err(|e| McpError::invalid_params(format!("Invalid atoms_json: {e}"), None))?;
@@ -397,15 +400,18 @@ pub fn vdag_overlay(params: VizVdagOverlayParams) -> Result<CallToolResult, McpE
     let mut signal_map: std::collections::HashMap<String, Vec<SignalScore>> =
         std::collections::HashMap::new();
     for s in &signal_inputs {
-        signal_map.entry(s.drug_id.clone()).or_default().push(SignalScore {
-            ae_name: s.ae_name.clone(),
-            prr: s.prr,
-            ror: s.ror,
-            ic025: s.ic025,
-            ebgm: s.ebgm,
-            case_count: s.case_count,
-            timestamp: s.timestamp.clone(),
-        });
+        signal_map
+            .entry(s.drug_id.clone())
+            .or_default()
+            .push(SignalScore {
+                ae_name: s.ae_name.clone(),
+                prr: s.prr,
+                ror: s.ror,
+                ic025: s.ic025,
+                ebgm: s.ebgm,
+                case_count: s.case_count,
+                timestamp: s.timestamp.clone(),
+            });
     }
 
     // Build VDAG nodes
@@ -595,8 +601,9 @@ mod tests {
     fn community_detect_two_cliques() {
         let result = community_detect(VizCommunityDetectParams {
             nodes_json: r#"["a","b","c","x","y","z"]"#.to_string(),
-            edges_json: r#"[["a","b"],["b","c"],["a","c"],["x","y"],["y","z"],["x","z"],["c","x"]]"#
-                .to_string(),
+            edges_json:
+                r#"[["a","b"],["b","c"],["a","c"],["x","y"],["y","z"],["x","z"],["c","x"]]"#
+                    .to_string(),
         });
         assert!(result.is_ok());
         let call = result.unwrap_or_else(|_| CallToolResult::success(vec![]));
@@ -631,7 +638,10 @@ mod tests {
                 _ => None,
             })
             .unwrap_or_default();
-        assert!(text.contains("\"hub\": 1.0"), "hub should have degree centrality 1.0");
+        assert!(
+            text.contains("\"hub\": 1.0"),
+            "hub should have degree centrality 1.0"
+        );
     }
 
     #[test]

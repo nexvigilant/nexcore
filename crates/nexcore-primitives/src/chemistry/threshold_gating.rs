@@ -10,7 +10,7 @@
 //! **PV Application**: Signal detection threshold - signals must exceed
 //! activation energy to trigger detection.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors for threshold gating calculations.
 #[derive(Debug, Error, PartialEq, Clone)]

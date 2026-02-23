@@ -19,6 +19,7 @@ use crate::params::highway::{
     HighwayQualityParams, HighwayTrafficCensusParams, ToolCallSpec,
 };
 use grounded::Confidence;
+use nexcore_fs::dirs;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 use serde_json::json;

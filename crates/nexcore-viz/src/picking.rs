@@ -111,7 +111,7 @@ mod tests {
         };
         assert_eq!(res.instance_id.unwrap(), 42);
     }
-    
+
     #[test]
     fn test_encode_decode_pick_color_wrapper() {
         // Just verifying the wrapper logic holds true

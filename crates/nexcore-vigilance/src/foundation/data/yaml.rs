@@ -9,11 +9,11 @@
 //! - Frontmatter extraction with proper YAML parsing
 //! - Decision tree analysis and traversal
 
+use nexcore_error::Error;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::sync::LazyLock;
-use thiserror::Error;
 
 /// Pre-compiled regex for YAML frontmatter extraction (compiled once).
 static FRONTMATTER_RE: LazyLock<Result<Regex, regex::Error>> =

@@ -134,7 +134,7 @@ pub async fn enroll(
     Json(req): Json<EnrollRequest>,
 ) -> Result<Json<Enrollment>, crate::routes::common::ApiError> {
     let enrollment = Enrollment {
-        id: uuid::Uuid::new_v4().to_string(),
+        id: nexcore_id::NexId::v4().to_string(),
         user_id: req.user_id,
         course_id: req.course_id,
         progress: 0.0,

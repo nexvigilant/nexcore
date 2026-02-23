@@ -14,6 +14,7 @@
 //! - N (Quantity) → confidence scores, entropy, Brier score
 //! - π (Persistence) → file-backed Oracle state
 
+use nexcore_fs::dirs;
 use nexcore_oracle::{EventSequence, Oracle};
 use rmcp::ErrorData as McpError;
 use rmcp::model::CallToolResult;

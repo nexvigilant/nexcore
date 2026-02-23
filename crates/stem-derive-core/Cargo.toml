@@ -3,6 +3,7 @@
 name = "stem-derive-core"
 version = "1.0.0"
 edition = "2021"
+license = "LicenseRef-NexVigilant-Proprietary"
 description = "Shared macro utilities for STEM derive macros — syn/quote/proc-macro2 helpers"
 
 [dependencies]

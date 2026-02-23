@@ -4,6 +4,7 @@
 
 use crate::params::{PrinciplesGetParams, PrinciplesListParams, PrinciplesSearchParams};
 use crate::tooling::{ReadOutcome, ScanLimiter, ScanLimits, read_limited_file, snippet_for};
+use nexcore_fs::dirs;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 use serde_json::json;

@@ -1,0 +1,144 @@
+#!/usr/bin/env zsh
+set -euo pipefail
+
+# dep-prune — Programmatic unused dependency removal with build verification
+# Pure compute: machete detect → git stash → remove → cargo check → revert on failure
+#
+# Usage: ./scripts/dep-prune [--dry-run] [--fix]
+#   --dry-run  Report unused deps without modifying (default)
+#   --fix      Remove unused deps, verify build, revert failures
+
+SCRIPT_DIR="${0:A:h}"
+WORKSPACE_ROOT="${SCRIPT_DIR:h}"
+CARGO="$HOME/.cargo/bin/cargo"
+DRY_RUN=true
+REPORT_FILE="/tmp/dep-prune-report-$(date +%Y%m%d-%H%M%S).txt"
+FIXED=0
+REVERTED=0
+SKIPPED=0
+
+for arg in "$@"; do
+    case "$arg" in
+        --fix) DRY_RUN=false ;;
+        --dry-run) DRY_RUN=true ;;
+        *) echo "Unknown arg: $arg"; exit 1 ;;
+    esac
+done
+
+cd "$WORKSPACE_ROOT"
+
+echo "╔══════════════════════════════════════════════╗"
+echo "║  dep-prune — Unused Dependency Removal       ║"
+echo "║  Mode: $(if $DRY_RUN; then echo 'DRY RUN (report only)'; else echo 'FIX (remove + verify)'; fi)"
+echo "╚══════════════════════════════════════════════╝"
+echo ""
+
+# Phase 1: Detect unused deps via machete
+echo "▸ Phase 1: Scanning with cargo-machete..."
+MACHETE_OUTPUT=$($CARGO machete 2>&1 | grep -v "^error when handling" || true)
+
+# Parse machete output into crate:dep pairs
+typeset -A CRATE_DEPS
+CURRENT_CRATE=""
+
+while IFS= read -r line; do
+    if [[ "$line" =~ "^[a-z].*-- \./crates/" ]]; then
+        CURRENT_CRATE=$(echo "$line" | sed 's/ -- .*//')
+    elif [[ -n "$CURRENT_CRATE" && "$line" =~ "^\t" ]]; then
+        DEP=$(echo "$line" | sed 's/^\t//')
+        if [[ -n "${CRATE_DEPS[$CURRENT_CRATE]:-}" ]]; then
+            CRATE_DEPS[$CURRENT_CRATE]="${CRATE_DEPS[$CURRENT_CRATE]},$DEP"
+        else
+            CRATE_DEPS[$CURRENT_CRATE]="$DEP"
+        fi
+    fi
+done <<< "$MACHETE_OUTPUT"
+
+TOTAL_CRATES=${#CRATE_DEPS[@]}
+TOTAL_DEPS=0
+for crate in ${(k)CRATE_DEPS}; do
+    COUNT=$(echo "${CRATE_DEPS[$crate]}" | tr ',' '\n' | wc -l)
+    TOTAL_DEPS=$((TOTAL_DEPS + COUNT))
+done
+
+echo "  Found $TOTAL_DEPS potentially unused deps across $TOTAL_CRATES crates"
+echo ""
+
+# Phase 2: Report / Fix
+{
+    echo "# dep-prune Report — $(date -Iseconds)"
+    echo "# Mode: $(if $DRY_RUN; then echo 'DRY RUN'; else echo 'FIX'; fi)"
+    echo "# Workspace: $WORKSPACE_ROOT"
+    echo ""
+    echo "## Findings"
+    echo ""
+} > "$REPORT_FILE"
+
+for crate in ${(ko)CRATE_DEPS}; do
+    DEPS="${CRATE_DEPS[$crate]}"
+    CARGO_TOML="crates/$crate/Cargo.toml"
+
+    # Resolve real crate directory (some have different dir names)
+    if [[ ! -f "$CARGO_TOML" ]]; then
+        # Try finding by package name in Cargo.toml
+        FOUND_DIR=$(grep -rl "^name = \"$crate\"" crates/*/Cargo.toml 2>/dev/null | head -1 | sed 's|/Cargo.toml$||' || true)
+        if [[ -n "$FOUND_DIR" ]]; then
+            CARGO_TOML="$FOUND_DIR/Cargo.toml"
+        else
+            echo "  ⊘ $crate — Cargo.toml not found, skipping"
+            SKIPPED=$((SKIPPED + 1))
+            echo "- $crate: SKIPPED (Cargo.toml not found)" >> "$REPORT_FILE"
+            continue
+        fi
+    fi
+
+    echo "▸ $crate ($CARGO_TOML)"
+
+    for dep in ${(s:,:)DEPS}; do
+        if $DRY_RUN; then
+            echo "    ◦ $dep — unused (would remove)"
+            echo "  - $crate → $dep: UNUSED" >> "$REPORT_FILE"
+        else
+            # Backup, remove, verify
+            cp "$CARGO_TOML" "${CARGO_TOML}.bak"
+
+            # Remove the dependency line (handles both inline and table forms)
+            # Simple case: dep = "version" or dep = { workspace = true }
+            CRATE_DIR=$(dirname "$CARGO_TOML")
+            PACKAGE_NAME=$(grep '^name = ' "$CARGO_TOML" | head -1 | sed 's/name = "//;s/"//')
+
+            # Use sed to remove the dep line from [dependencies] section
+            sed -i "/^${dep} = /d" "$CARGO_TOML"
+            sed -i "/^${dep}=/d" "$CARGO_TOML"
+
+            # Verify build
+            if $CARGO check -p "$PACKAGE_NAME" 2>/dev/null; then
+                echo "    ✓ $dep — removed (build passes)"
+                echo "  - $crate → $dep: REMOVED ✓" >> "$REPORT_FILE"
+                rm -f "${CARGO_TOML}.bak"
+                FIXED=$((FIXED + 1))
+            else
+                echo "    ✗ $dep — reverted (build fails without it)"
+                echo "  - $crate → $dep: REVERTED (false positive)" >> "$REPORT_FILE"
+                mv "${CARGO_TOML}.bak" "$CARGO_TOML"
+                REVERTED=$((REVERTED + 1))
+            fi
+        fi
+    done
+done
+
+# Phase 3: Summary
+echo ""
+echo "╔══════════════════════════════════════════════╗"
+echo "║  Summary                                      ║"
+echo "╠══════════════════════════════════════════════╣"
+if $DRY_RUN; then
+    echo "║  Unused deps found: $TOTAL_DEPS across $TOTAL_CRATES crates"
+    echo "║  Run with --fix to remove and verify"
+else
+    echo "║  Removed:  $FIXED deps (verified)"
+    echo "║  Reverted: $REVERTED deps (false positives)"
+    echo "║  Skipped:  $SKIPPED crates"
+fi
+echo "║  Report:   $REPORT_FILE"
+echo "╚══════════════════════════════════════════════╝"

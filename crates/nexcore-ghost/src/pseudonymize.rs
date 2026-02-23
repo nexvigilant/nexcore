@@ -10,7 +10,7 @@
 //!
 //! ## Tier: T2-C (Pseudonymizer trait), T2-P (PseudonymHandle)
 
-use base64::Engine;
+use nexcore_codec::base64 as b64;
 use ring::hmac;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -92,7 +92,7 @@ impl HmacPseudonymizer {
     fn compute(&self, domain: &str, value: &str) -> String {
         let input = format!("{domain}:{value}");
         let tag = hmac::sign(&self.key, input.as_bytes());
-        base64::engine::general_purpose::STANDARD.encode(tag.as_ref())
+        b64::encode(tag.as_ref())
     }
 }
 
@@ -112,8 +112,7 @@ impl Pseudonymizer for HmacPseudonymizer {
         let result = hmac::verify(
             &self.key,
             input.as_bytes(),
-            &base64::engine::general_purpose::STANDARD
-                .decode(&handle.token)
+            &b64::decode(&handle.token)
                 .map_err(|e| GhostError::InvalidKey(format!("bad base64 in handle: {e}")))?,
         );
         Ok(result.is_ok())

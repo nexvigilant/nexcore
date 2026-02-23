@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// ## Tier: T2-P
 /// ## Dominant: ∂ (Boundary) — errors signal violated constraints
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, nexcore_error::Error)]
 pub enum WordError {
     /// Bit position exceeds word width.
     #[error("bit position {position} exceeds word width {width}")]

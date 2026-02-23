@@ -447,7 +447,7 @@ impl<T> MeasuredBound<T> {
 // ============================================================================
 
 /// Errors in mathematical operations
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum MathError {
     /// Value out of bounds
     #[error("value out of bounds")]

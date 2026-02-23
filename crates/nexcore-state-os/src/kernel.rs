@@ -993,11 +993,7 @@ impl StateKernel {
     }
 
     /// Look up a state ID by name.
-    pub fn find_state_id(
-        &self,
-        machine_id: MachineId,
-        name: &str,
-    ) -> Result<StateId, KernelError> {
+    pub fn find_state_id(&self, machine_id: MachineId, name: &str) -> Result<StateId, KernelError> {
         let runtime = self
             .machines
             .get(&machine_id)

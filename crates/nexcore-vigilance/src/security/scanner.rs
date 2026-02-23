@@ -2,7 +2,7 @@
 
 use crate::security::config::{ScanConfig, SeverityLevel};
 use chrono::{DateTime, Utc};
-use glob::Pattern;
+use nexcore_fs::glob::Pattern;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;

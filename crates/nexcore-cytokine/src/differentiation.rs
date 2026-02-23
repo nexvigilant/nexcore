@@ -193,7 +193,7 @@ impl DifferentiableCell {
 }
 
 /// Error during differentiation.
-#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, Eq, nexcore_error::Error)]
 pub enum DifferentiationError {
     /// Cell has already reached terminal differentiation
     #[error("cell is already terminally differentiated")]

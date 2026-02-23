@@ -1,6 +1,6 @@
 //! Error types for the Jeopardy optimizer.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors that can occur in Jeopardy optimization.
 #[derive(Debug, Error)]

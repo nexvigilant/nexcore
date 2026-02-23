@@ -1,7 +1,7 @@
 //! Error types for the TRIAL framework.
 
 /// Errors that can occur during trial protocol execution.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum TrialError {
     /// Protocol validation failed before registration.
     #[error("Protocol validation failed: {0}")]

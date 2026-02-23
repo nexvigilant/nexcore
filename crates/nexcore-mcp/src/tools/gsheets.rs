@@ -69,7 +69,7 @@ async fn get_client() -> Result<SheetsClient, McpError> {
 // Auth types
 // ============================================================================
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 enum AuthError {
     #[error("no credentials found")]
     KeyNotFound,

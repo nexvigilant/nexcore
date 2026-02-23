@@ -7,17 +7,17 @@ description = "Unified skill crate: core types, loader, transfer confidence, pri
 license = "MIT"
 
 [dependencies]
+nexcore-error = { workspace = true }
 # Derive macros (must stay separate crate - proc-macro requirement)
 skill-macros = { version = "0.1.0", path = "../skill-macros", registry = "nexcore"}
 # Direct dependencies (formerly from sub-crates)
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.9"
-thiserror = "2.0"
 async-trait = "0.1"
 regex = "1.11"
 tokio = { version = "1.0", features = ["rt", "macros"] }
-walkdir = "2.5"
+nexcore-fs = { workspace = true }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore"}
 
 [dev-dependencies]

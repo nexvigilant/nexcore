@@ -16,8 +16,7 @@ use std::collections::HashMap;
 
 use crate::error::{ForgeError, ForgeResult};
 use crate::ir::{
-    AloAssessment, AloEdge, AloEdgeType, AloType, AtomicLearningObject, AtomizedPathway,
-    BloomLevel,
+    AloAssessment, AloEdge, AloEdgeType, AloType, AtomicLearningObject, AtomizedPathway, BloomLevel,
 };
 use splitter::{estimate_minutes, split_by_concept};
 
@@ -91,9 +90,7 @@ pub fn atomize(pathway_json: &serde_json::Value) -> ForgeResult<AtomizedPathway>
 
         // ── Step 1: Hook ALO from stage description ──
         let hook_seq = next_seq(&mut type_counters, AloType::Hook);
-        let hook_id = format!(
-            "{pathway_id}-{stage_num:02}-h{hook_seq:02}"
-        );
+        let hook_id = format!("{pathway_id}-{stage_num:02}-h{hook_seq:02}");
         let hook = AtomicLearningObject {
             id: hook_id.clone(),
             title: format!("Why {stage_title} Matters"),
@@ -101,9 +98,7 @@ pub fn atomize(pathway_json: &serde_json::Value) -> ForgeResult<AtomizedPathway>
             learning_objective: format!("Recognize the importance of {stage_title}"),
             estimated_duration: 2,
             bloom_level: BloomLevel::Remember,
-            content: format!(
-                "## Why This Matters\n\n{stage_description}\n"
-            ),
+            content: format!("## Why This Matters\n\n{stage_description}\n"),
             ksb_refs: Vec::new(),
             source_stage_id: stage_id.to_string(),
             source_activity_id: None,
@@ -127,18 +122,12 @@ pub fn atomize(pathway_json: &serde_json::Value) -> ForgeResult<AtomizedPathway>
 
         // ── Step 2: Reading activities → Concept ALOs ──
         for activity in &activities {
-            let act_type = activity
-                .get("type")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
+            let act_type = activity.get("type").and_then(|v| v.as_str()).unwrap_or("");
             let act_title = activity
                 .get("title")
                 .and_then(|v| v.as_str())
                 .unwrap_or("Reading");
-            let act_id = activity
-                .get("id")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
+            let act_id = activity.get("id").and_then(|v| v.as_str()).unwrap_or("");
 
             if act_type == "reading" {
                 // Extract content or generate placeholder
@@ -159,9 +148,7 @@ pub fn atomize(pathway_json: &serde_json::Value) -> ForgeResult<AtomizedPathway>
 
                 for fragment in fragments {
                     let seq = next_seq(&mut type_counters, AloType::Concept);
-                    let concept_id = format!(
-                        "{pathway_id}-{stage_num:02}-c{seq:02}"
-                    );
+                    let concept_id = format!("{pathway_id}-{stage_num:02}-c{seq:02}");
 
                     let duration = fragment.estimated_minutes.clamp(
                         AloType::Concept.min_duration(),
@@ -172,9 +159,7 @@ pub fn atomize(pathway_json: &serde_json::Value) -> ForgeResult<AtomizedPathway>
                         id: concept_id.clone(),
                         title: fragment.title,
                         alo_type: AloType::Concept,
-                        learning_objective: format!(
-                            "Explain the key principles of this concept"
-                        ),
+                        learning_objective: format!("Explain the key principles of this concept"),
                         estimated_duration: duration,
                         bloom_level: bloom_for_concept(bloom),
                         content: fragment.content,
@@ -201,24 +186,16 @@ pub fn atomize(pathway_json: &serde_json::Value) -> ForgeResult<AtomizedPathway>
 
         // ── Step 3: Interactive/case-study activities → Activity ALOs ──
         for activity in &activities {
-            let act_type = activity
-                .get("type")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
+            let act_type = activity.get("type").and_then(|v| v.as_str()).unwrap_or("");
             let act_title = activity
                 .get("title")
                 .and_then(|v| v.as_str())
                 .unwrap_or("Exercise");
-            let act_id = activity
-                .get("id")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
+            let act_id = activity.get("id").and_then(|v| v.as_str()).unwrap_or("");
 
             if act_type == "interactive" || act_type == "case-study" {
                 let seq = next_seq(&mut type_counters, AloType::Activity);
-                let activity_alo_id = format!(
-                    "{pathway_id}-{stage_num:02}-a{seq:02}"
-                );
+                let activity_alo_id = format!("{pathway_id}-{stage_num:02}-a{seq:02}");
 
                 let content = activity
                     .get("content")
@@ -268,24 +245,16 @@ pub fn atomize(pathway_json: &serde_json::Value) -> ForgeResult<AtomizedPathway>
 
         // ── Step 4: Quiz activities → Reflection ALOs ──
         for activity in &activities {
-            let act_type = activity
-                .get("type")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
+            let act_type = activity.get("type").and_then(|v| v.as_str()).unwrap_or("");
             let act_title = activity
                 .get("title")
                 .and_then(|v| v.as_str())
                 .unwrap_or("Assessment");
-            let act_id = activity
-                .get("id")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
+            let act_id = activity.get("id").and_then(|v| v.as_str()).unwrap_or("");
 
             if act_type == "quiz" {
                 let seq = next_seq(&mut type_counters, AloType::Reflection);
-                let reflection_id = format!(
-                    "{pathway_id}-{stage_num:02}-r{seq:02}"
-                );
+                let reflection_id = format!("{pathway_id}-{stage_num:02}-r{seq:02}");
 
                 let questions = activity
                     .get("quiz")
@@ -303,9 +272,7 @@ pub fn atomize(pathway_json: &serde_json::Value) -> ForgeResult<AtomizedPathway>
                         if chunk_idx == 0 {
                             reflection_id.clone()
                         } else {
-                            format!(
-                                "{pathway_id}-{stage_num:02}-r{extra_seq:02}"
-                            )
+                            format!("{pathway_id}-{stage_num:02}-r{extra_seq:02}")
                         }
                     } else {
                         reflection_id.clone()
@@ -319,9 +286,7 @@ pub fn atomize(pathway_json: &serde_json::Value) -> ForgeResult<AtomizedPathway>
                             act_title.to_string()
                         },
                         alo_type: AloType::Reflection,
-                        learning_objective: format!(
-                            "Evaluate your understanding of {stage_title}"
-                        ),
+                        learning_objective: format!("Evaluate your understanding of {stage_title}"),
                         estimated_duration: AloType::Reflection
                             .min_duration()
                             .max((chunk.len() as u16).min(AloType::Reflection.max_duration())),
@@ -454,7 +419,10 @@ fn chunk_questions(
     if questions.is_empty() {
         return vec![Vec::new()];
     }
-    questions.chunks(max_per_chunk).map(|c| c.to_vec()).collect()
+    questions
+        .chunks(max_per_chunk)
+        .map(|c| c.to_vec())
+        .collect()
 }
 
 #[cfg(test)]
@@ -585,9 +553,7 @@ mod tests {
             let inbound_prereqs = a
                 .edges
                 .iter()
-                .filter(|e| {
-                    e.to == first_hook.id && e.edge_type == AloEdgeType::Prereq
-                })
+                .filter(|e| e.to == first_hook.id && e.edge_type == AloEdgeType::Prereq)
                 .count();
             assert_eq!(
                 inbound_prereqs, 0,
@@ -613,20 +579,18 @@ mod tests {
 
         if let Some(a) = &atomized {
             // Find stage 2 hook
-            let stage2_hook = a.alos.iter().find(|alo| {
-                alo.alo_type == AloType::Hook
-                    && alo.source_stage_id == "test-01-02"
-            });
-            assert!(
-                stage2_hook.is_some(),
-                "Should have a hook for stage 2"
-            );
+            let stage2_hook = a
+                .alos
+                .iter()
+                .find(|alo| alo.alo_type == AloType::Hook && alo.source_stage_id == "test-01-02");
+            assert!(stage2_hook.is_some(), "Should have a hook for stage 2");
 
             // Stage 2 hook should have an inbound Extends edge from stage 1
             if let Some(hook) = stage2_hook {
-                let has_extends = a.edges.iter().any(|e| {
-                    e.to == hook.id && e.edge_type == AloEdgeType::Extends
-                });
+                let has_extends = a
+                    .edges
+                    .iter()
+                    .any(|e| e.to == hook.id && e.edge_type == AloEdgeType::Extends);
                 assert!(
                     has_extends,
                     "Stage 2 hook should have Extends edge from stage 1"

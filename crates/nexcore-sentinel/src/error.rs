@@ -6,7 +6,7 @@ use std::net::IpAddr;
 use std::path::PathBuf;
 
 /// Sentinel error hierarchy.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum SentinelError {
     /// Failed to parse a log line.
     #[error("parse error: {0}")]
@@ -17,7 +17,7 @@ pub enum SentinelError {
     InvalidIp(String),
 
     /// I/O error (file watching, persistence, etc.).
-    #[error("I/O error at {path}: {source}")]
+    #[error("I/O error at {path:?}: {source}")]
     Io {
         /// Path involved in the error.
         path: PathBuf,

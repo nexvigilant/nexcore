@@ -9,10 +9,10 @@
 //! - Intrinsic function execution
 //! - Strict mode for Diamond compliance (no LLM fallbacks)
 
+use nexcore_error::Error;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use thiserror::Error;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ERROR TYPES

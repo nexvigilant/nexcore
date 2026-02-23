@@ -384,7 +384,7 @@ impl SecurityMonitor {
             .build()
             .expect("Failed to build tokio runtime for SecurityMonitor");
         let guardian_loop = crate::guardian::create_monitoring_loop();
-        
+
         Self {
             threats: Vec::new(),
             level: SecurityLevel::Green,
@@ -517,7 +517,7 @@ impl SecurityMonitor {
             ThreatSeverity::High => crate::guardian::sensing::ThreatLevel::High,
             ThreatSeverity::Critical => crate::guardian::sensing::ThreatLevel::Critical,
         };
-        
+
         let signal_source = match pattern {
             ThreatPattern::External(_) => crate::guardian::sensing::SignalSource::Pamp {
                 source_id: "os".to_string(),
@@ -528,12 +528,9 @@ impl SecurityMonitor {
                 damage_type: "damage".to_string(),
             },
         };
-        
-        let signal = crate::guardian::sensing::ThreatSignal::new(
-            description,
-            g_level,
-            signal_source
-        );
+
+        let signal =
+            crate::guardian::sensing::ThreatSignal::new(description, g_level, signal_source);
         self.guardian_loop.inject_signal(signal);
 
         // Determine and queue response

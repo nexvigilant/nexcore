@@ -3,9 +3,9 @@
 //! Chemistry: Add a known standard to an unknown until equivalence point.
 //! Semantics: React an expression against canonical atoms to measure meaning.
 
+use nexcore_id::NexId;
 use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 use crate::element::Atom;
 
@@ -13,7 +13,7 @@ use crate::element::Atom;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TitrationPoint {
     /// Which canonical atom was added at this step.
-    pub titrant_atom: Uuid,
+    pub titrant_atom: NexId,
     pub titrant_label: String,
     /// Volume of titrant added.
     pub volume_added: OrderedFloat<f64>,
@@ -36,7 +36,7 @@ pub struct TitrationCurve {
 /// An equivalence point — sharp transition indicating a canonical match.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EquivalencePoint {
-    pub matched_atom: Uuid,
+    pub matched_atom: NexId,
     pub matched_label: String,
     /// Sharpness: 0.0 = broad (ambiguous), 1.0 = razor-sharp (exact).
     pub sharpness: OrderedFloat<f64>,
@@ -114,28 +114,28 @@ pub fn prove_equivalence(
     let curve_a = titrator.titrate(expression_a);
     let curve_b = titrator.titrate(expression_b);
 
-    let atoms_a: Vec<Uuid> = curve_a
+    let atoms_a: Vec<NexId> = curve_a
         .equivalence_points
         .iter()
         .map(|e| e.matched_atom)
         .collect();
-    let atoms_b: Vec<Uuid> = curve_b
+    let atoms_b: Vec<NexId> = curve_b
         .equivalence_points
         .iter()
         .map(|e| e.matched_atom)
         .collect();
 
-    let shared: Vec<Uuid> = atoms_a
+    let shared: Vec<NexId> = atoms_a
         .iter()
         .filter(|a| atoms_b.contains(a))
         .copied()
         .collect();
-    let only_a: Vec<Uuid> = atoms_a
+    let only_a: Vec<NexId> = atoms_a
         .iter()
         .filter(|a| !atoms_b.contains(a))
         .copied()
         .collect();
-    let only_b: Vec<Uuid> = atoms_b
+    let only_b: Vec<NexId> = atoms_b
         .iter()
         .filter(|b| !atoms_a.contains(b))
         .copied()

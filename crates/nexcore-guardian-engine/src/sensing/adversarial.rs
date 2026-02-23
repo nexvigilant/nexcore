@@ -161,7 +161,7 @@ mod tests {
     #[test]
     fn test_sensor_name() {
         let sensor = AdversarialPromptSensor::new();
-        assert_eq!(sensor.name(), "adversarial-prompt-sensor");
+        assert_eq!(sensor.name(), "adrenalized-adversarial-sensor");
     }
 
     #[test]

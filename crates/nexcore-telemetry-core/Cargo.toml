@@ -12,13 +12,13 @@ keywords = ["telemetry", "monitoring", "aggregation", "sources"]
 categories = ["development-tools"]
 
 [dependencies]
+nexcore-error = { workspace = true }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
-thiserror = { version = "1.0.61" }
 chrono = { version = "0.4.38", features = ["serde"] }
 nexcore-id = { version = "0.1.0", path = "../nexcore-id", registry = "nexcore", features = ["serde"] }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
-dirs = { version = "5.0.1" }
+nexcore-fs = { workspace = true }
 similar = "2.5"
 
 [dev-dependencies]

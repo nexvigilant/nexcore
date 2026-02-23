@@ -9,7 +9,7 @@ license = "LicenseRef-Proprietary"
 
 [dependencies]
 serde = { version = "1.0.204", features = ["derive"] }
-dirs = { version = "5.0.1" }
+nexcore-fs = { workspace = true }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 
 [dev-dependencies]

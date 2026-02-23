@@ -3,6 +3,7 @@
 //! Pipeline: Ingest → Extract → Compress → Graph → Pack
 
 use chrono::Utc;
+use nexcore_fs::dirs;
 
 use crate::compression::StructuralCompressor;
 use crate::concept_graph::{ConceptGraph, ConceptRelation};
@@ -170,7 +171,7 @@ impl KnowledgeCompiler {
         }
 
         let mut sources = Vec::new();
-        for entry in walkdir::WalkDir::new(&sessions_dir)
+        for entry in nexcore_fs::walk::WalkDir::new(&sessions_dir)
             .max_depth(3)
             .into_iter()
             .flatten()

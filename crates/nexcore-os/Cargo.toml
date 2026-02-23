@@ -12,6 +12,7 @@ keywords = ["os", "runtime", "boot", "state-machine", "operating-system"]
 categories = ["os", "embedded"]
 
 [dependencies]
+nexcore-error = { workspace = true }
 nexcore-pal = { version = "0.1.0", path = "../nexcore-pal", registry = "nexcore" }
 nexcore-network = { version = "0.1.0", path = "../nexcore-network", registry = "nexcore" }
 nexcore-audio = { version = "0.1.0", path = "../nexcore-audio", registry = "nexcore" }
@@ -28,9 +29,8 @@ sha2 = { version = "0.10.8" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 tracing = { version = "0.1.40" }
-thiserror = { version = "1.0.61" }
 chrono = { version = "0.4.38", features = ["serde"] }
-dirs = { version = "5.0.1" }
+nexcore-fs = { workspace = true }
 nexcore-tov = { version = "1.0.0", path = "../nexcore-tov", registry = "nexcore" }
 nexcore-primitives = { version = "1.0.0", path = "../nexcore-primitives", registry = "nexcore" }
 nexcore-dtree = { version = "1.0.0", path = "../nexcore-dtree", registry = "nexcore" }

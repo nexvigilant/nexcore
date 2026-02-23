@@ -6,7 +6,7 @@
 //! ## Tier: T2-P (∂ + ∃)
 //! Boundary (∂) violations that assert non-existence (¬∃) of valid state.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors from retrocasting operations.
 #[derive(Debug, Error)]

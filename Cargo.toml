@@ -22,9 +22,9 @@ license = "LicenseRef-Proprietary"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [workspace.dependencies]
-anyhow = "1.0.86"
+# anyhow — REMOVED: replaced by nexcore-error
 axum = { version = "0.8.0", features = ["macros", "ws"] }
-base64 = "0.22.1"
+# base64 — REPLACED by nexcore-codec (sovereignty campaign Phase 2)
 burn = { version = "0.20", default-features = false, features = ["ndarray", "autodiff", "std"] }
 burn-ndarray = { version = "0.20", features = ["std"] }
 bytes = "1.6.1"
@@ -33,15 +33,16 @@ bytes = "1.6.1"
 # candle-transformers = "0.9"
 chrono = { version = "0.4.38", features = ["serde"] }
 clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
-dirs = "5.0.1"
+# dirs — REPLACED by nexcore-fs::dirs (sovereignty campaign)
 flate2 = "1.0.30"
 futures = "0.3.30"
-glob = "0.3.1"
-hex = "0.4.3"
+# glob — REPLACED by nexcore-fs::glob (sovereignty campaign)
+# hex — REPLACED by nexcore-codec (sovereignty campaign Phase 2)
 http-body-util = "0.1.2"
 jsonwebtoken = "9"
-once_cell = "1.19.0"
+# once_cell — REMOVED: migrated to std::sync::LazyLock (Rust 1.80+)
 phf = { version = "0.11.2", features = ["macros"] }
+proc-macro2 = "1.0.86"
 proptest = "1.6.0"
 quote = "1.0.36"
 rand = "0.9.0"
@@ -58,7 +59,7 @@ hmac = "0.12.1"
 syn = { version = "2.0.71", features = ["full"] }
 tar = "0.4.41"
 tempfile = "3.10.1"
-thiserror = "1.0.61"
+# thiserror = "1.0.61"  # REPLACED by nexcore-error + nexcore-error-derive
 tokio = { version = "1.38.0", features = ["full"] }
 toml = "0.8.15"
 tower = { version = "0.4.13", features = ["full"] }
@@ -66,9 +67,10 @@ tower-http = { version = "0.5.2", features = ["cors", "trace", "compression-full
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 urlencoding = "2.1.3"
-utoipa = { version = "5.3", features = ["axum_extras", "chrono", "uuid"] }
-uuid = { version = "1.10.0", features = ["v4", "serde"] }
-walkdir = "2.5.0"
+utoipa = { version = "5.3", features = ["axum_extras", "chrono"] }
+# REPLACED by nexcore-id (sovereignty campaign Phase 1B)
+# uuid = { version = "1.10.0", features = ["v4", "serde"] }
+# walkdir — REPLACED by nexcore-fs::walk (sovereignty campaign)
 
 # Internal Workspace Dependencies (Prima)
 prima = { path = "crates/prima" }
@@ -98,6 +100,7 @@ nexcore-caesura = { path = "crates/nexcore-caesura" }
 nexcore-cardiovascular = { path = "crates/nexcore-cardiovascular" }
 nexcore-ccp = { path = "crates/nexcore-ccp" }
 nexcore-circulatory = { path = "crates/nexcore-circulatory" }
+nexcore-codec = { path = "crates/nexcore-codec" }
 nexcore-clearance = { path = "crates/nexcore-clearance" }
 nexcore-combinatorics = { path = "crates/nexcore-combinatorics" }
 nexcore-compilation-space = { path = "crates/nexcore-compilation-space" }
@@ -120,12 +123,15 @@ nexcore-education-machine = { path = "crates/nexcore-education-machine" }
 nexcore-energy = { path = "crates/nexcore-energy" }
 nexcore-engram = { path = "crates/nexcore-engram" }
 nexcore-error = { path = "crates/nexcore-error" }
+nexcore-error-derive = { path = "crates/nexcore-error-derive" }
 nexcore-faers-etl = { path = "crates/nexcore-faers-etl" }
 nexcore-forge-strategy = { path = "crates/nexcore-forge-strategy" }
+nexcore-fs = { path = "crates/nexcore-fs" }
 nexcore-ghost = { path = "crates/nexcore-ghost" }
 nexcore-grammar-lab = { path = "crates/nexcore-grammar-lab" }
 nexcore-guardian-engine = { path = "crates/nexcore-guardian-engine" }
 nexcore-harm-taxonomy = { path = "crates/nexcore-harm-taxonomy" }
+nexcore-hash = { path = "crates/nexcore-hash" }
 # nexcore-hooks — REMOVED 2026-02-22 (dead crate, see ~/.claude/hooks/archive/AUDIT-2026-02-22.md)
 nexcore-hormones = { path = "crates/nexcore-hormones" }
 nexcore-id = { path = "crates/nexcore-id", features = ["serde"] }
@@ -210,6 +216,7 @@ vr-tenant = { path = "crates/vr-tenant" }
 # Internal Workspace Dependencies (Stem)
 stem = { path = "crates/stem" }
 stem-math = { path = "crates/stem-math" }
+stem-topology = { path = "crates/stem-topology" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

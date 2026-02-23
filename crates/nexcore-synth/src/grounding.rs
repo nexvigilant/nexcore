@@ -31,9 +31,9 @@ use crate::{SynthCandidate, SynthEngine, SynthError};
 impl GroundsTo for SynthCandidate {
     fn primitive_composition() -> PrimitiveComposition {
         PrimitiveComposition::new(vec![
-            LexPrimitiva::Sum,       // Σ -- primitive composition
-            LexPrimitiva::Existence, // ∃ -- candidate presence
-            LexPrimitiva::Comparison, // κ -- confidence scoring
+            LexPrimitiva::Sum,         // Σ -- primitive composition
+            LexPrimitiva::Existence,   // ∃ -- candidate presence
+            LexPrimitiva::Comparison,  // κ -- confidence scoring
             LexPrimitiva::Persistence, // π -- metadata storage
         ])
         .with_dominant(LexPrimitiva::Sum, 0.80)

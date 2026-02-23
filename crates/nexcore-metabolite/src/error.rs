@@ -2,7 +2,7 @@
 
 //! Error types for the metabolite prediction engine.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors produced by the metabolite prediction engine.
 #[derive(Debug, Error)]

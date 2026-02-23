@@ -34,14 +34,14 @@ pub mod grounding;
 
 use chrono::{DateTime, Utc};
 use dashmap::DashMap;
+use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use uuid::Uuid;
 
 // ─── Errors ────────────────────────────────────────────────────────────────
 
 /// Tier: T2-C | Grounding: Σ (Sum) + ∂ (Boundary)
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum AntibodyError {
     #[error("antigen not recognized: {0}")]
     UnrecognizedAntigen(String),
@@ -217,7 +217,7 @@ pub enum ThreatSeverity {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Antigen {
     /// Unique antigen identifier.
-    pub id: Uuid,
+    pub id: NexId,
     /// Human-readable name (e.g., "unwrap-in-production", "signal-suppression").
     pub name: String,
     /// Threat severity classification.
@@ -258,7 +258,7 @@ pub enum NeutralizationAction {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Antibody {
     /// Unique identifier.
-    pub id: Uuid,
+    pub id: NexId,
     /// Human-readable label.
     pub name: String,
     /// Recognition site — what this antibody binds to.
@@ -283,9 +283,9 @@ pub struct Antibody {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BindingResult {
     /// The antibody that attempted binding.
-    pub antibody_id: Uuid,
+    pub antibody_id: NexId,
     /// The antigen targeted.
-    pub antigen_id: Uuid,
+    pub antigen_id: NexId,
     /// Epitope that was matched (if any).
     pub matched_epitope: Option<String>,
     /// Computed affinity score.
@@ -309,9 +309,9 @@ pub struct BindingResult {
 /// Thread-safe via `DashMap` for concurrent access.
 pub struct AntibodyRepertoire {
     /// Antibodies indexed by ID.
-    antibodies: DashMap<Uuid, Antibody>,
+    antibodies: DashMap<NexId, Antibody>,
     /// Paratope → Antibody ID index for fast epitope lookup.
-    paratope_index: DashMap<String, Vec<Uuid>>,
+    paratope_index: DashMap<String, Vec<NexId>>,
 }
 
 impl AntibodyRepertoire {
@@ -347,7 +347,7 @@ impl AntibodyRepertoire {
 
     /// Look up an antibody by ID.
     #[must_use]
-    pub fn get(&self, id: &Uuid) -> Option<Antibody> {
+    pub fn get(&self, id: &NexId) -> Option<Antibody> {
         self.antibodies.get(id).map(|entry| entry.clone())
     }
 
@@ -490,7 +490,7 @@ mod tests {
 
     fn make_antigen(name: &str, severity: ThreatSeverity, epitopes: Vec<Epitope>) -> Antigen {
         Antigen {
-            id: Uuid::new_v4(),
+            id: NexId::v4(),
             name: name.to_string(),
             severity,
             epitopes,
@@ -501,7 +501,7 @@ mod tests {
 
     fn make_antibody(name: &str, matcher: &str, class: ImmunoglobulinClass) -> Antibody {
         Antibody {
-            id: Uuid::new_v4(),
+            id: NexId::v4(),
             name: name.to_string(),
             paratope: make_paratope(&format!("p-{name}"), matcher),
             class,

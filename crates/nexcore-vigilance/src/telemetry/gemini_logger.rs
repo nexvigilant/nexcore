@@ -4,6 +4,7 @@
 //! unified monitoring via Watchtower MCP tools.
 
 use chrono::{DateTime, Utc};
+use nexcore_fs::dirs;
 use serde::{Deserialize, Serialize};
 use std::fs::{self, OpenOptions};
 use std::io::Write;

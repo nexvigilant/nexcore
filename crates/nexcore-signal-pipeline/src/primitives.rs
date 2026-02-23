@@ -170,7 +170,11 @@ static PRIMITIVE_MANIFESTATIONS: &[PrimitiveManifestation] = &[
         primitive: LexPrimitiva::Sequence,
         symbol: "sigma",
         manifestation: "Pipeline stage ordering and data flow direction",
-        examples: &["Pipeline::run", "ingest -> normalize -> detect", "relay chain"],
+        examples: &[
+            "Pipeline::run",
+            "ingest -> normalize -> detect",
+            "relay chain",
+        ],
     },
     PrimitiveManifestation {
         primitive: LexPrimitiva::Mapping,
@@ -230,11 +234,7 @@ static PRIMITIVE_MANIFESTATIONS: &[PrimitiveManifestation] = &[
         primitive: LexPrimitiva::Existence,
         symbol: "exists",
         manifestation: "Constructors and factory methods",
-        examples: &[
-            "DrugEventPair::new",
-            "Pipeline::new",
-            "NexId generation",
-        ],
+        examples: &["DrugEventPair::new", "Pipeline::new", "NexId generation"],
     },
     PrimitiveManifestation {
         primitive: LexPrimitiva::Location,
@@ -246,7 +246,11 @@ static PRIMITIVE_MANIFESTATIONS: &[PrimitiveManifestation] = &[
         primitive: LexPrimitiva::Frequency,
         symbol: "nu",
         manifestation: "Reporting rates and disproportionality ratios",
-        examples: &["PRR (proportional reporting ratio)", "case counts", "cell frequencies"],
+        examples: &[
+            "PRR (proportional reporting ratio)",
+            "case counts",
+            "cell frequencies",
+        ],
     },
     PrimitiveManifestation {
         primitive: LexPrimitiva::Sum,
@@ -263,7 +267,10 @@ static PRIMITIVE_MANIFESTATIONS: &[PrimitiveManifestation] = &[
         primitive: LexPrimitiva::Recursion,
         symbol: "rho",
         manifestation: "Hierarchical signal aggregation (SOC -> PT -> report)",
-        examples: &["meddra_soc -> meddra_pt hierarchy", "nested pipeline chains"],
+        examples: &[
+            "meddra_soc -> meddra_pt hierarchy",
+            "nested pipeline chains",
+        ],
     },
 ];
 
@@ -392,7 +399,11 @@ mod tests {
     #[test]
     fn mapping_dominates_three_stages() {
         let mu_stages = stages_for_primitive(LexPrimitiva::Mapping);
-        assert_eq!(mu_stages.len(), 3, "mu should dominate normalize, stats, report");
+        assert_eq!(
+            mu_stages.len(),
+            3,
+            "mu should dominate normalize, stats, report"
+        );
         let names: Vec<&str> = mu_stages.iter().map(|s| s.stage).collect();
         assert!(names.contains(&"normalize"));
         assert!(names.contains(&"stats"));
@@ -402,7 +413,11 @@ mod tests {
     #[test]
     fn sequence_dominates_two_stages() {
         let sigma_stages = stages_for_primitive(LexPrimitiva::Sequence);
-        assert_eq!(sigma_stages.len(), 2, "sigma should dominate ingest and orchestrate");
+        assert_eq!(
+            sigma_stages.len(),
+            2,
+            "sigma should dominate ingest and orchestrate"
+        );
     }
 
     #[test]
@@ -467,6 +482,9 @@ mod tests {
         // Void (empty set) is NOT one of the 13 operational primitives
         // in this crate — signal pipeline always has data.
         let m = manifestation(LexPrimitiva::Void);
-        assert!(m.is_none(), "Void should not be manifested in signal pipeline");
+        assert!(
+            m.is_none(),
+            "Void should not be manifested in signal pipeline"
+        );
     }
 }

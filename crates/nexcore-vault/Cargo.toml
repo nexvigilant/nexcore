@@ -9,16 +9,16 @@ license = "LicenseRef-Proprietary"
 rust-version = "1.85"
 
 [dependencies]
+nexcore-error = { workspace = true }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 ring = "0.17"
-base64 = { version = "0.22.1" }
+nexcore-codec = { version = "0.1.0", path = "../nexcore-codec", registry = "nexcore" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 chrono = { version = "0.4.38", features = ["serde"] }
-dirs = { version = "5.0.1" }
+nexcore-fs = { workspace = true }
 toml = { version = "0.8.15" }
 tracing = { version = "0.1.40" }
-thiserror = { version = "1.0.61" }
 clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
 rand = { version = "0.9.0" }
 

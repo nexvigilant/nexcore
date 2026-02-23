@@ -1,8 +1,8 @@
 use std::process::Stdio;
 use std::time::Duration;
 
-use nexcore_error::{Result, nexerror};
 use clap::{ArgAction, Parser};
+use nexcore_error::{Result, nexerror};
 use serde_json::{Value, json};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::Command;
@@ -47,7 +47,10 @@ async fn main() -> Result<()> {
         .stderr(Stdio::inherit())
         .spawn()?;
 
-    let stdin = child.stdin.take().ok_or_else(|| nexerror!("missing stdin"))?;
+    let stdin = child
+        .stdin
+        .take()
+        .ok_or_else(|| nexerror!("missing stdin"))?;
     let stdout = child
         .stdout
         .take()

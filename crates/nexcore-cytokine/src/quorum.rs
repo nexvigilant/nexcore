@@ -247,7 +247,9 @@ impl PopulationHealth {
         let responsive = self.reports.iter().filter(|r| r.responsive).count();
         // Precision loss acceptable: report counts are small
         #[allow(clippy::cast_precision_loss)]
-        { responsive as f64 / self.reports.len() as f64 }
+        {
+            responsive as f64 / self.reports.len() as f64
+        }
     }
 
     /// Mean health across all responsive members.
@@ -260,7 +262,9 @@ impl PopulationHealth {
 
         // Precision loss acceptable: report counts are small
         #[allow(clippy::cast_precision_loss)]
-        { responsive.iter().map(|r| r.health).sum::<f64>() / responsive.len() as f64 }
+        {
+            responsive.iter().map(|r| r.health).sum::<f64>() / responsive.len() as f64
+        }
     }
 
     /// Check if population health is above a threshold.

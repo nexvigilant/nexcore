@@ -168,10 +168,7 @@ pub fn validate_alo(pathway: &AtomizedPathway) -> Vec<ValidationFinding> {
             findings.push(ValidationFinding {
                 rule: "R30".to_string(),
                 severity: Severity::Warning,
-                message: format!(
-                    "Reflection ALO '{}' has no assessment data",
-                    alo.id
-                ),
+                message: format!("Reflection ALO '{}' has no assessment data", alo.id),
                 field_path: Some(format!("alos[id={}].assessment", alo.id)),
             });
         }
@@ -183,10 +180,7 @@ pub fn validate_alo(pathway: &AtomizedPathway) -> Vec<ValidationFinding> {
             findings.push(ValidationFinding {
                 rule: "R31".to_string(),
                 severity: Severity::Error,
-                message: format!(
-                    "Edge from '{}' references nonexistent ALO",
-                    edge.from
-                ),
+                message: format!("Edge from '{}' references nonexistent ALO", edge.from),
                 field_path: Some(format!("edges[from={}]", edge.from)),
             });
         }
@@ -194,10 +188,7 @@ pub fn validate_alo(pathway: &AtomizedPathway) -> Vec<ValidationFinding> {
             findings.push(ValidationFinding {
                 rule: "R31".to_string(),
                 severity: Severity::Error,
-                message: format!(
-                    "Edge to '{}' references nonexistent ALO",
-                    edge.to
-                ),
+                message: format!("Edge to '{}' references nonexistent ALO", edge.to),
                 field_path: Some(format!("edges[to={}]", edge.to)),
             });
         }
@@ -286,9 +277,8 @@ pub fn validate_alo(pathway: &AtomizedPathway) -> Vec<ValidationFinding> {
     for alo in &pathway.alos {
         if alo.alo_type == AloType::Activity {
             let sources = prereq_sources.get(alo.id.as_str());
-            let has_concept_prereq = sources.map_or(false, |srcs| {
-                srcs.iter().any(|s| concept_ids.contains(s))
-            });
+            let has_concept_prereq =
+                sources.map_or(false, |srcs| srcs.iter().any(|s| concept_ids.contains(s)));
 
             if !has_concept_prereq {
                 findings.push(ValidationFinding {
@@ -375,9 +365,7 @@ fn has_cycle(pathway: &AtomizedPathway) -> bool {
 }
 
 /// Validate an atomized pathway and return a full report.
-pub fn validate_alo_report(
-    pathway: &AtomizedPathway,
-) -> super::ValidationReport {
+pub fn validate_alo_report(pathway: &AtomizedPathway) -> super::ValidationReport {
     let findings = validate_alo(pathway);
 
     let error_count = findings

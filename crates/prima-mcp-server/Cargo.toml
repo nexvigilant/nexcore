@@ -13,13 +13,13 @@ name = "prima-mcp-server"
 path = "src/main.rs"
 
 [dependencies]
+nexcore-error = { workspace = true }
 prima = { version = "0.1.0", path = "../prima", registry = "nexcore" }
 prima-mcp = { version = "0.1.0", path = "../prima-mcp", registry = "nexcore" }
 prima-codegen = { version = "0.1.0", path = "../prima-codegen", registry = "nexcore" }
 lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore", package = "nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
-thiserror = { version = "1.0.61" }
 tokio = { version = "1.38.0", features = ["full"] }
 
 [dev-dependencies]

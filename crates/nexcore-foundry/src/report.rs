@@ -342,8 +342,14 @@ mod tests {
 
     #[test]
     fn delivery_status_labels_correct() {
-        assert_eq!(delivery_status_label(&DeliveryStatus::Delivered), "Delivered");
+        assert_eq!(
+            delivery_status_label(&DeliveryStatus::Delivered),
+            "Delivered"
+        );
         assert_eq!(delivery_status_label(&DeliveryStatus::Blocked), "Blocked");
-        assert_eq!(delivery_status_label(&DeliveryStatus::Iterating), "Iterating");
+        assert_eq!(
+            delivery_status_label(&DeliveryStatus::Iterating),
+            "Iterating"
+        );
     }
 }

@@ -10,6 +10,7 @@ rust-version = "1.85"
 description = "Skill registry, routing, validation, taxonomy, and code generation engine"
 
 [dependencies]
+nexcore-error = { workspace = true }
 nexcore-constants = { version = "1.0.0", path = "../nexcore-constants", registry = "nexcore" }
 nexcore-dtree = { version = "1.0.0", path = "../nexcore-dtree", registry = "nexcore" }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
@@ -18,13 +19,10 @@ nexcore-primitives = { version = "1.0.0", path = "../nexcore-primitives", regist
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 serde_yaml = { version = "0.9.34" }
-thiserror = { version = "1.0.61" }
 chrono = { version = "0.4.38", features = ["serde"] }
-walkdir = { version = "2.5.0" }
-glob = "0.3"
+nexcore-fs = { workspace = true }
 regex = { version = "1.10.5" }
 phf = { version = "0.11.2", features = ["macros"] }
-dirs = { version = "5.0.1" }
 rayon = { version = "1.10.0" }
 
 [dev-dependencies]

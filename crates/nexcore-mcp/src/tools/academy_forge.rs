@@ -3,6 +3,7 @@
 //! Extract structured knowledge from NexCore Rust source into IR,
 //! and validate generated academy content against schema + accuracy rules.
 
+use nexcore_fs::dirs;
 use std::path::PathBuf;
 
 use rmcp::ErrorData as McpError;
@@ -375,7 +376,9 @@ pub fn forge_scaffold_from_guidance(
 /// Decomposes each stage into Hook + Concept + Activity + Reflection ALOs
 /// with intra-pathway dependency edges. Returns the full `AtomizedPathway`
 /// structure with per-type counts, duration analysis, and edge breakdown.
-pub fn forge_atomize(params: crate::params::ForgeAtomizeParams) -> Result<CallToolResult, McpError> {
+pub fn forge_atomize(
+    params: crate::params::ForgeAtomizeParams,
+) -> Result<CallToolResult, McpError> {
     let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/home/matthew"));
     let nexcore = home.join("nexcore");
 
@@ -418,10 +421,26 @@ pub fn forge_atomize(params: crate::params::ForgeAtomizeParams) -> Result<CallTo
             let edge_count = atomized.edges.len();
 
             // Type breakdown
-            let hooks = atomized.alos.iter().filter(|a| a.alo_type == academy_forge::ir::AloType::Hook).count();
-            let concepts = atomized.alos.iter().filter(|a| a.alo_type == academy_forge::ir::AloType::Concept).count();
-            let activities = atomized.alos.iter().filter(|a| a.alo_type == academy_forge::ir::AloType::Activity).count();
-            let reflections = atomized.alos.iter().filter(|a| a.alo_type == academy_forge::ir::AloType::Reflection).count();
+            let hooks = atomized
+                .alos
+                .iter()
+                .filter(|a| a.alo_type == academy_forge::ir::AloType::Hook)
+                .count();
+            let concepts = atomized
+                .alos
+                .iter()
+                .filter(|a| a.alo_type == academy_forge::ir::AloType::Concept)
+                .count();
+            let activities = atomized
+                .alos
+                .iter()
+                .filter(|a| a.alo_type == academy_forge::ir::AloType::Activity)
+                .count();
+            let reflections = atomized
+                .alos
+                .iter()
+                .filter(|a| a.alo_type == academy_forge::ir::AloType::Reflection)
+                .count();
             let total_duration: u16 = atomized.alos.iter().map(|a| a.estimated_duration).sum();
 
             // Validation
@@ -451,7 +470,9 @@ pub fn forge_atomize(params: crate::params::ForgeAtomizeParams) -> Result<CallTo
             });
 
             if report.passed {
-                Ok(CallToolResult::success(vec![Content::text(json.to_string())]))
+                Ok(CallToolResult::success(vec![Content::text(
+                    json.to_string(),
+                )]))
             } else {
                 Ok(CallToolResult::error(vec![Content::text(json.to_string())]))
             }
@@ -528,7 +549,9 @@ pub fn forge_graph(params: crate::params::ForgeGraphParams) -> Result<CallToolRe
                 "graph": graph,
             });
 
-            Ok(CallToolResult::success(vec![Content::text(json.to_string())]))
+            Ok(CallToolResult::success(vec![Content::text(
+                json.to_string(),
+            )]))
         }
         Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
             "Graph build failed: {e}"
@@ -606,7 +629,9 @@ pub fn forge_shortest_path(
                     "target": target_alo_id,
                     "result": result,
                 });
-                Ok(CallToolResult::success(vec![Content::text(json.to_string())]))
+                Ok(CallToolResult::success(vec![Content::text(
+                    json.to_string(),
+                )]))
             }
             None => Ok(CallToolResult::error(vec![Content::text(format!(
                 "No path found to ALO '{target_alo_id}'. It may not exist or may already be completed."
@@ -621,7 +646,9 @@ pub fn forge_shortest_path(
                     "target": target_ksb,
                     "result": result,
                 });
-                Ok(CallToolResult::success(vec![Content::text(json.to_string())]))
+                Ok(CallToolResult::success(vec![Content::text(
+                    json.to_string(),
+                )]))
             }
             None => Ok(CallToolResult::error(vec![Content::text(format!(
                 "No path found to KSB '{target_ksb}'. No ALOs reference this KSB or all are completed."
@@ -636,7 +663,9 @@ pub fn forge_shortest_path(
             "completed_count": completed.len(),
             "result": surface,
         });
-        Ok(CallToolResult::success(vec![Content::text(json.to_string())]))
+        Ok(CallToolResult::success(vec![Content::text(
+            json.to_string(),
+        )]))
     }
 }
 

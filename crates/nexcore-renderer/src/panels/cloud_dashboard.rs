@@ -74,8 +74,8 @@ impl CloudDashboardPanel {
 
 impl Default for CloudDashboardPanel {
     fn default() -> Self {
-        let url = std::env::var("NEXCLOUD_URL")
-            .unwrap_or_else(|_| "http://localhost:8080".to_string());
+        let url =
+            std::env::var("NEXCLOUD_URL").unwrap_or_else(|_| "http://localhost:8080".to_string());
         Self::new(url)
     }
 }

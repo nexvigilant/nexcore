@@ -1,0 +1,218 @@
+#!/usr/bin/env zsh
+set -euo pipefail
+
+# capability-metrics — Development assembly line telemetry
+# Pure compute: measures workspace health, tracks trends, identifies acceleration opportunities
+# Design constraint: must complete in <60 seconds (no compilation, no cargo test)
+#
+# Usage: ./scripts/capability-metrics [--json] [--trend]
+#   (default)  Human-readable dashboard
+#   --json     Machine-readable JSON output
+#   --trend    Show trend from previous snapshots
+
+SCRIPT_DIR="${0:A:h}"
+WORKSPACE_ROOT="${SCRIPT_DIR:h}"
+METRICS_DIR="$HOME/.claude/data/quality-metrics"
+CARGO="$HOME/.cargo/bin/cargo"
+JSON_MODE=false
+TREND_MODE=false
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+SNAPSHOT_FILE="$METRICS_DIR/$TIMESTAMP.json"
+
+for arg in "$@"; do
+    case "$arg" in
+        --json) JSON_MODE=true ;;
+        --trend) TREND_MODE=true ;;
+        *) echo "Unknown arg: $arg"; exit 1 ;;
+    esac
+done
+
+mkdir -p "$METRICS_DIR"
+cd "$WORKSPACE_ROOT"
+
+# ── Safe numeric extraction ────────────────────────────────────────
+
+# Ensures a value is a valid integer, defaults to 0
+safe_int() {
+    local val="${1:-0}"
+    # Strip whitespace, handle "null" from jq
+    val=$(echo "$val" | tr -d '[:space:]')
+    if [[ "$val" =~ '^[0-9]+$' ]]; then
+        echo "$val"
+    else
+        echo "0"
+    fi
+}
+
+# ── Collect Metrics (fast path — no compilation) ──────────────────
+
+# Workspace size (from cargo metadata cache)
+CRATE_COUNT=$(safe_int "$($CARGO metadata --format-version 1 2>/dev/null | jq '.workspace_members | length' 2>/dev/null)")
+TOTAL_RS_FILES=$(safe_int "$(find crates/ -name '*.rs' -not -path '*/target/*' 2>/dev/null | wc -l)")
+TOTAL_RS_LINES=$(safe_int "$(find crates/ -name '*.rs' -not -path '*/target/*' -print0 2>/dev/null | xargs -0 wc -l 2>/dev/null | tail -1 | awk '{print $1}')")
+TOTAL_TOML_FILES=$(safe_int "$(find crates/ -name 'Cargo.toml' 2>/dev/null | wc -l)")
+
+# Dependency metrics (from metadata cache)
+DIRECT_DEPS=$(safe_int "$($CARGO metadata --format-version 1 2>/dev/null | jq '[.packages[] | select(.source == null) | .dependencies | length] | add // 0' 2>/dev/null)")
+TOTAL_DEPS=$(safe_int "$($CARGO metadata --format-version 1 2>/dev/null | jq '.packages | length' 2>/dev/null)")
+
+# Clippy warnings (incremental — fast if recently built)
+CLIPPY_WARNINGS=$(safe_int "$($CARGO clippy --workspace --message-format=short 2>&1 | { grep -c '^warning' || true; })")
+
+# Formatting issues
+FMT_ISSUES=$(safe_int "$($CARGO fmt --all -- --check 2>&1 | { grep -c '^Diff in' || true; })")
+
+# Security advisories (uses cached advisory DB)
+VULN_COUNT=$(safe_int "$($CARGO audit 2>&1 | { grep -c 'RUSTSEC-' || true; })")
+
+# Unused deps (machete is fast — source scan only, count indented dep names)
+UNUSED_DEPS=$(safe_int "$($CARGO machete 2>&1 | { grep -c '^	[a-z]' || true; })")
+
+# Build infrastructure
+HOOK_COUNT=$(safe_int "$(ls ~/.claude/hooks/core-hooks/target/release/ 2>/dev/null | grep -v '\.d$' | grep -v -E '^(build|deps|examples|incremental|lib)' | wc -l 2>/dev/null)")
+SKILL_COUNT=$(safe_int "$(ls -d ~/.claude/skills/*/ 2>/dev/null | wc -l 2>/dev/null)")
+JUST_RECIPES=$(safe_int "$(cd "$WORKSPACE_ROOT" && just --list 2>/dev/null | wc -l 2>/dev/null)")
+
+# Binary sizes (key binaries)
+MCP_SIZE=0
+API_SIZE=0
+if [[ -f target/release/nexcore-mcp ]]; then
+    MCP_SIZE=$(safe_int "$(stat -c%s target/release/nexcore-mcp 2>/dev/null)")
+fi
+if [[ -f target/release/nexcore-api ]]; then
+    API_SIZE=$(safe_int "$(stat -c%s target/release/nexcore-api 2>/dev/null)")
+fi
+
+# sccache stats
+SCCACHE_HITS=$(safe_int "$(sccache --show-stats 2>/dev/null | grep 'Cache hits' | head -1 | awk '{print $NF}' 2>/dev/null)")
+SCCACHE_MISSES=$(safe_int "$(sccache --show-stats 2>/dev/null | grep 'Cache misses ' | head -1 | awk '{print $NF}' 2>/dev/null)")
+
+# Compute derived metrics
+LINES_PER_CRATE=0
+if [[ "$CRATE_COUNT" -gt 0 ]] && [[ "$TOTAL_RS_LINES" -gt 0 ]]; then
+    LINES_PER_CRATE=$((TOTAL_RS_LINES / CRATE_COUNT))
+fi
+
+CACHE_TOTAL=$((SCCACHE_HITS + SCCACHE_MISSES))
+CACHE_HIT_RATE=0
+if [[ "$CACHE_TOTAL" -gt 0 ]]; then
+    CACHE_HIT_RATE=$(( (SCCACHE_HITS * 100) / CACHE_TOTAL ))
+fi
+
+# Compute quality score (0-100)
+# Weighted: clippy (critical) > security > fmt > unused deps (many false positives)
+QUALITY_SCORE=100
+if [[ "$FMT_ISSUES" -gt 0 ]]; then QUALITY_SCORE=$((QUALITY_SCORE - 5)); fi
+if [[ "$CLIPPY_WARNINGS" -gt 0 ]]; then QUALITY_SCORE=$((QUALITY_SCORE - CLIPPY_WARNINGS * 5)); fi
+if [[ "$VULN_COUNT" -gt 5 ]]; then QUALITY_SCORE=$((QUALITY_SCORE - 15)); elif [[ "$VULN_COUNT" -gt 0 ]]; then QUALITY_SCORE=$((QUALITY_SCORE - 5)); fi
+if [[ "$UNUSED_DEPS" -gt 100 ]]; then QUALITY_SCORE=$((QUALITY_SCORE - 10)); elif [[ "$UNUSED_DEPS" -gt 20 ]]; then QUALITY_SCORE=$((QUALITY_SCORE - 5)); fi
+if [[ "$QUALITY_SCORE" -lt 0 ]]; then QUALITY_SCORE=0; fi
+
+# ── Save Snapshot ──────────────────────────────────────────────────
+
+cat > "$SNAPSHOT_FILE" << ENDJSON
+{
+  "timestamp": "$(date -Iseconds)",
+  "workspace": {
+    "crates": $CRATE_COUNT,
+    "rs_files": $TOTAL_RS_FILES,
+    "rs_lines": $TOTAL_RS_LINES,
+    "lines_per_crate": $LINES_PER_CRATE,
+    "toml_files": $TOTAL_TOML_FILES,
+    "direct_deps": $DIRECT_DEPS,
+    "total_deps": $TOTAL_DEPS
+  },
+  "quality": {
+    "score": $QUALITY_SCORE,
+    "fmt_issues": $FMT_ISSUES,
+    "clippy_warnings": $CLIPPY_WARNINGS,
+    "vulnerabilities": $VULN_COUNT,
+    "unused_deps": $UNUSED_DEPS
+  },
+  "infrastructure": {
+    "hook_binaries": $HOOK_COUNT,
+    "skills": $SKILL_COUNT,
+    "just_recipes": $JUST_RECIPES,
+    "mcp_binary_bytes": $MCP_SIZE,
+    "api_binary_bytes": $API_SIZE,
+    "sccache_hits": $SCCACHE_HITS,
+    "sccache_misses": $SCCACHE_MISSES,
+    "cache_hit_rate_pct": $CACHE_HIT_RATE
+  }
+}
+ENDJSON
+
+# ── Output ─────────────────────────────────────────────────────────
+
+if $JSON_MODE; then
+    cat "$SNAPSHOT_FILE"
+    exit 0
+fi
+
+# ── Trend Analysis ─────────────────────────────────────────────────
+
+PREV_SCORE=""
+PREV_CRATES=""
+PREV_VULNS=""
+PREV_LINES=""
+
+if $TREND_MODE; then
+    PREV_FILE=$(ls -t "$METRICS_DIR"/*.json 2>/dev/null | sed -n '2p')
+    if [[ -n "${PREV_FILE:-}" ]]; then
+        PREV_SCORE=$(jq '.quality.score' "$PREV_FILE" 2>/dev/null || true)
+        PREV_CRATES=$(jq '.workspace.crates' "$PREV_FILE" 2>/dev/null || true)
+        PREV_VULNS=$(jq '.quality.vulnerabilities' "$PREV_FILE" 2>/dev/null || true)
+        PREV_LINES=$(jq '.workspace.rs_lines' "$PREV_FILE" 2>/dev/null || true)
+    fi
+fi
+
+# Helper for trend indicator
+trend() {
+    local current="$1"
+    local previous="${2:-}"
+    if [[ -z "$previous" ]] || [[ "$previous" = "null" ]]; then echo ""; return; fi
+    local diff=$((current - previous))
+    if [[ "$diff" -gt 0 ]]; then
+        echo " (+$diff)"
+    elif [[ "$diff" -lt 0 ]]; then
+        echo " ($diff)"
+    else
+        echo " (=)"
+    fi
+}
+
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║  NexCore Capability Metrics — $(date +%Y-%m-%d)                  ║"
+echo "╠══════════════════════════════════════════════════════════════╣"
+echo "║                                                              ║"
+echo "║  QUALITY SCORE: $QUALITY_SCORE / 100$(trend $QUALITY_SCORE "${PREV_SCORE:-}")"
+echo "║                                                              ║"
+echo "╠══ Workspace ═══════════════════════════════════════════════╣"
+echo "║  Crates:       $CRATE_COUNT$(trend $CRATE_COUNT "${PREV_CRATES:-}")"
+echo "║  Rust files:   $TOTAL_RS_FILES"
+echo "║  Rust lines:   $TOTAL_RS_LINES$(trend $TOTAL_RS_LINES "${PREV_LINES:-}")"
+echo "║  Lines/crate:  $LINES_PER_CRATE"
+echo "║  Direct deps:  $DIRECT_DEPS"
+echo "║  Total deps:   $TOTAL_DEPS"
+echo "╠══ Quality Gates ═══════════════════════════════════════════╣"
+echo "║  Format:       $(if [[ $FMT_ISSUES -eq 0 ]]; then echo '✓ clean'; else echo "✗ $FMT_ISSUES issues"; fi)"
+echo "║  Clippy:       $(if [[ $CLIPPY_WARNINGS -eq 0 ]]; then echo '✓ clean'; else echo "⚠ $CLIPPY_WARNINGS warnings"; fi)"
+echo "║  Security:     $(if [[ $VULN_COUNT -eq 0 ]]; then echo '✓ clean'; else echo "⚠ $VULN_COUNT advisories"; fi)$(trend $VULN_COUNT "${PREV_VULNS:-}")"
+echo "║  Unused deps:  $(if [[ $UNUSED_DEPS -eq 0 ]]; then echo '✓ clean'; else echo "⚠ $UNUSED_DEPS detected"; fi)"
+echo "╠══ Infrastructure ══════════════════════════════════════════╣"
+echo "║  Hook binaries: $HOOK_COUNT"
+echo "║  Skills:        $SKILL_COUNT"
+echo "║  Just recipes:  $JUST_RECIPES"
+echo "║  sccache:       ${CACHE_HIT_RATE}% hit rate ($SCCACHE_HITS/$CACHE_TOTAL)"
+if [[ "$MCP_SIZE" -gt 0 ]]; then
+    echo "║  MCP binary:    $((MCP_SIZE / 1048576))MB"
+fi
+if [[ "$API_SIZE" -gt 0 ]]; then
+    echo "║  API binary:    $((API_SIZE / 1048576))MB"
+fi
+echo "║                                                              ║"
+echo "╠══ Snapshots ═══════════════════════════════════════════════╣"
+SNAPSHOT_COUNT=$(safe_int "$(ls "$METRICS_DIR"/*.json 2>/dev/null | wc -l 2>/dev/null)")
+echo "║  Total:    $SNAPSHOT_COUNT snapshots"
+echo "║  Latest:   $SNAPSHOT_FILE"
+echo "╚══════════════════════════════════════════════════════════════╝"

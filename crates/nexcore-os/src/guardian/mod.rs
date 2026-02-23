@@ -1,4 +1,3 @@
-
 //! # Guardian Engine
 //!
 //! Risk scoring, threat detection, and homeostasis control loop.

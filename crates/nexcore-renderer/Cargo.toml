@@ -44,7 +44,6 @@ prima = { version = "0.1.0", path = "../prima", registry = "nexcore" }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 
 # Error handling
-thiserror = { version = "1.0.61" }
 nexcore-error = { workspace = true }
 
 # Logging

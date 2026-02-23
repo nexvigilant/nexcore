@@ -3,7 +3,7 @@
 
 //! Error types for social media API operations.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Result type alias for social media operations.
 pub type SocialResult<T> = Result<T, SocialError>;

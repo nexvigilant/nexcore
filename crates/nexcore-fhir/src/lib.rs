@@ -41,8 +41,10 @@ pub mod adapter;
 
 // Convenience re-exports
 pub use adapter::{SignalInput, adverse_event_to_signal, adverse_events_to_signals};
-pub use base::{CodeableConcept, Coding, Identifier, Reference, MEDDRA_SYSTEM, RXNORM_SYSTEM, SNOMED_SYSTEM};
+pub use base::{
+    CodeableConcept, Coding, Identifier, MEDDRA_SYSTEM, RXNORM_SYSTEM, Reference, SNOMED_SYSTEM,
+};
 pub use resources::{
-    AdverseEvent, Bundle, Condition, Encounter, Medication, MedicationAdministration,
-    Observation, Organization, Patient, Practitioner,
+    AdverseEvent, Bundle, Condition, Encounter, Medication, MedicationAdministration, Observation,
+    Organization, Patient, Practitioner,
 };

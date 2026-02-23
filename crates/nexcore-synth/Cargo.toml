@@ -3,6 +3,7 @@
 name = "nexcore-synth"
 version = "0.1.0"
 edition = "2024"
+license = "LicenseRef-NexVigilant-Proprietary"
 description = "Autonomous primitive synthesis engine — Level 5 Evolution tool"
 
 [dependencies]

@@ -4,7 +4,7 @@ use crate::ids::TenantId;
 use crate::tenant::{Action, Resource, SubscriptionTier};
 
 /// Platform-wide error type.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum VrError {
     #[error("tenant {tenant_id} not found")]
     TenantNotFound { tenant_id: TenantId },

@@ -425,7 +425,7 @@ pub struct PageInfo {
 /// Browser errors
 ///
 /// Tier: T3 (Domain-specific browser error)
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum BrowserError {
     /// Browser process failed to start.
     #[error("Failed to launch browser: {0}")]

@@ -9,7 +9,7 @@
 //!
 //! **PV Application**: Signal persistence after intervention.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors for decay calculations.
 #[derive(Debug, Error, PartialEq, Clone)]

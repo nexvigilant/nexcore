@@ -322,7 +322,11 @@ mod tests {
     fn average_complexity_is_reasonable() {
         let avg = average_complexity();
         // All composites have 4-10 fields; average should be in that range
-        assert!(avg >= 4.0 && avg <= 10.0, "Average complexity {} out of expected range", avg);
+        assert!(
+            avg >= 4.0 && avg <= 10.0,
+            "Average complexity {} out of expected range",
+            avg
+        );
     }
 
     #[test]
@@ -356,6 +360,10 @@ mod tests {
         let original_len = names.len();
         names.sort_unstable();
         names.dedup();
-        assert_eq!(names.len(), original_len, "Duplicate type names in composite inventory");
+        assert_eq!(
+            names.len(),
+            original_len,
+            "Duplicate type names in composite inventory"
+        );
     }
 }

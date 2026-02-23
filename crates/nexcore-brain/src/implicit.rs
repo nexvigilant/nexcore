@@ -349,8 +349,7 @@ impl Correction {
     /// Record that this correction was applied (resets decay clock)
     pub fn mark_applied(&mut self) {
         self.application_count += 1;
-        self.confidence =
-            1.0 - (0.2 / (self.application_count as f64 + 1.0));
+        self.confidence = 1.0 - (0.2 / (self.application_count as f64 + 1.0));
         self.updated_at = Utc::now();
     }
 
@@ -1678,11 +1677,19 @@ impl ImplicitKnowledge {
         let candidates: Vec<(String, String, String, u32, f64)> = self
             .corrections
             .iter()
-            .filter(|c| c.effective_confidence() >= min_confidence && c.application_count >= min_applications)
+            .filter(|c| {
+                c.effective_confidence() >= min_confidence
+                    && c.application_count >= min_applications
+            })
             .map(|c| {
                 let id = format!(
                     "crystallized:{}",
-                    c.mistake.chars().take(40).collect::<String>().replace(' ', "_").to_lowercase()
+                    c.mistake
+                        .chars()
+                        .take(40)
+                        .collect::<String>()
+                        .replace(' ', "_")
+                        .to_lowercase()
                 );
                 (
                     id,
@@ -1702,9 +1709,14 @@ impl ImplicitKnowledge {
                     let evidence = EvidenceRef {
                         id: default_evidence_id(),
                         evidence_type: EvidenceType::Observation,
-                        description: format!("Re-crystallized: {app_count} applications, confidence {eff_conf:.2}"),
+                        description: format!(
+                            "Re-crystallized: {app_count} applications, confidence {eff_conf:.2}"
+                        ),
                         weight: 0.3,
-                        source: format!("crystallization:correction:{}", mistake_text.chars().take(30).collect::<String>()),
+                        source: format!(
+                            "crystallization:correction:{}",
+                            mistake_text.chars().take(30).collect::<String>()
+                        ),
                         recorded_at: Utc::now(),
                         artifact_ref: None,
                         execution_id: None,
@@ -1723,7 +1735,10 @@ impl ImplicitKnowledge {
                     mistake_text.chars().take(60).collect::<String>()
                 ),
                 weight: eff_conf.min(1.0),
-                source: format!("crystallization:correction:{}", mistake_text.chars().take(30).collect::<String>()),
+                source: format!(
+                    "crystallization:correction:{}",
+                    mistake_text.chars().take(30).collect::<String>()
+                ),
                 recorded_at: Utc::now(),
                 artifact_ref: None,
                 execution_id: None,

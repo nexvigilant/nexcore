@@ -7,14 +7,14 @@ description = "SQLite registry for Claude Code skills, agents, metrics, and KPIs
 license = "LicenseRef-Proprietary"
 
 [dependencies]
+nexcore-error = { workspace = true }
 rusqlite = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }
 tracing = { workspace = true }
-thiserror = { workspace = true }
-walkdir = { workspace = true }
+nexcore-fs = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

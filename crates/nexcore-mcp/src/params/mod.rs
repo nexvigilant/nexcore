@@ -411,3 +411,7 @@ pub use cloud::*;
 // Rust Development (error types, derive advisor, match gen, borrow explain)
 pub mod rust_dev;
 pub use rust_dev::*;
+
+// Topology (TDA + graph analysis)
+pub mod topology;
+pub use topology::*;

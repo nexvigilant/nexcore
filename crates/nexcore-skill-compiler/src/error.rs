@@ -1,6 +1,6 @@
 //! Compiler error types.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors produced by the skill compiler pipeline.
 #[derive(Debug, Error)]
@@ -27,7 +27,7 @@ pub enum CompilerError {
     },
 
     /// Skill dependency graph contains a cycle.
-    #[error("Circular dependency detected: {}", cycle.join(" -> "))]
+    #[error("Circular dependency detected: {cycle:?}")]
     CircularDependency {
         /// Cycle path.
         cycle: Vec<String>,

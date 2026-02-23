@@ -440,7 +440,7 @@ impl MeasuredRate {
 // ============================================================================
 
 /// Errors in chemistry operations
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum ChemistryError {
     /// Concentration measurement failed
     #[error("concentration measurement failed: {0}")]

@@ -601,7 +601,7 @@ impl Axiom2Verification {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// Errors related to hierarchical organization.
-#[derive(Debug, Clone, thiserror::Error)]
+#[derive(Debug, Clone, nexcore_error::Error)]
 pub enum HierarchyError {
     /// Empty hierarchy (no levels).
     #[error("Hierarchy must have at least one level")]

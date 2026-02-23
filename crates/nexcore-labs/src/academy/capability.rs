@@ -73,7 +73,7 @@ impl<'de> Deserialize<'de> for CapabilityScore {
 }
 
 /// Error type for capability score validation.
-#[derive(Debug, Clone, thiserror::Error)]
+#[derive(Debug, Clone, nexcore_error::Error)]
 pub enum CapabilityScoreError {
     /// Score value > 100.
     #[error("Capability score {value} exceeds maximum of 100")]

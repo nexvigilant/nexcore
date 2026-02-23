@@ -255,7 +255,9 @@ impl Phagocyte {
         }
         // Precision loss acceptable: digestion counts are small
         #[allow(clippy::cast_precision_loss)]
-        { self.digesting.len() as f64 / self.max_load as f64 }
+        {
+            self.digesting.len() as f64 / self.max_load as f64
+        }
     }
 
     /// Get lifetime statistics.

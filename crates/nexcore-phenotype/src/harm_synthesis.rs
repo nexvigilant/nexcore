@@ -210,10 +210,7 @@ pub fn baseline_drug_record() -> serde_json::Value {
 /// Returns a `PvHarmPhenotype` with the mutation applied and full
 /// traceability metadata.
 #[must_use]
-pub fn synthesize_harm(
-    baseline: &serde_json::Value,
-    scenario: HarmScenario,
-) -> PvHarmPhenotype {
+pub fn synthesize_harm(baseline: &serde_json::Value, scenario: HarmScenario) -> PvHarmPhenotype {
     let mut data = baseline.clone();
     let mutation = apply_harm_mutation(&mut data, scenario);
     let safety_impact = mutation.safety_impact;
@@ -263,10 +260,7 @@ pub fn synthesize_compound_harm(
 }
 
 /// Core dispatch: apply a specific harm mutation to a mutable JSON value.
-fn apply_harm_mutation(
-    data: &mut serde_json::Value,
-    scenario: HarmScenario,
-) -> PvHarmMutation {
+fn apply_harm_mutation(data: &mut serde_json::Value, scenario: HarmScenario) -> PvHarmMutation {
     match scenario {
         HarmScenario::SeverityDowngrade => severity_downgrade(data),
         HarmScenario::MissingSeriousness => missing_seriousness(data),
@@ -289,10 +283,7 @@ fn severity_downgrade(data: &mut serde_json::Value) -> PvHarmMutation {
 
     // Replace serious AE term with a mild one
     if let Some(obj) = data.as_object_mut() {
-        obj.insert(
-            "adverse_event".to_string(),
-            serde_json::json!("nausea"),
-        );
+        obj.insert("adverse_event".to_string(), serde_json::json!("nausea"));
         obj.insert(
             "adverse_event_code".to_string(),
             serde_json::json!("10028813"),
@@ -338,10 +329,7 @@ fn drug_misattribution(data: &mut serde_json::Value) -> PvHarmMutation {
         .unwrap_or(serde_json::Value::Null);
 
     if let Some(obj) = data.as_object_mut() {
-        obj.insert(
-            "drug_name".to_string(),
-            serde_json::json!("aspirin"),
-        );
+        obj.insert("drug_name".to_string(), serde_json::json!("aspirin"));
     }
 
     PvHarmMutation {
@@ -390,10 +378,7 @@ fn duplicate_injection(data: &mut serde_json::Value) -> PvHarmMutation {
                 "CASE-2025-00001-DUP3"
             ]),
         );
-        obj.insert(
-            "_injected_flag".to_string(),
-            serde_json::json!(true),
-        );
+        obj.insert("_injected_flag".to_string(), serde_json::json!(true));
     }
 
     PvHarmMutation {
@@ -413,10 +398,7 @@ fn narrative_truncation(data: &mut serde_json::Value) -> PvHarmMutation {
         .unwrap_or(serde_json::Value::Null);
 
     if let Some(obj) = data.as_object_mut() {
-        obj.insert(
-            "narrative".to_string(),
-            serde_json::json!("Truncated."),
-        );
+        obj.insert("narrative".to_string(), serde_json::json!("Truncated."));
     }
 
     PvHarmMutation {
@@ -436,10 +418,7 @@ fn temporal_shift(data: &mut serde_json::Value) -> PvHarmMutation {
         .unwrap_or(serde_json::Value::Null);
 
     if let Some(obj) = data.as_object_mut() {
-        obj.insert(
-            "report_date".to_string(),
-            serde_json::json!("2020-01-01"),
-        );
+        obj.insert("report_date".to_string(), serde_json::json!("2020-01-01"));
     }
 
     PvHarmMutation {
@@ -459,10 +438,7 @@ fn outcome_masking(data: &mut serde_json::Value) -> PvHarmMutation {
         .unwrap_or(serde_json::Value::Null);
 
     if let Some(obj) = data.as_object_mut() {
-        obj.insert(
-            "outcome".to_string(),
-            serde_json::json!("recovered"),
-        );
+        obj.insert("outcome".to_string(), serde_json::json!("recovered"));
     }
 
     PvHarmMutation {
@@ -496,10 +472,7 @@ mod tests {
     fn test_all_scenarios_have_expected_drifts() {
         for scenario in HarmScenario::ALL {
             let drifts = scenario.expected_drift_types();
-            assert!(
-                !drifts.is_empty(),
-                "{scenario} has no expected drift types"
-            );
+            assert!(!drifts.is_empty(), "{scenario} has no expected drift types");
         }
     }
 
@@ -645,20 +618,14 @@ mod tests {
     #[test]
     fn test_mutation_records_scenario() {
         let phenotype = synthesize_harm(&baseline(), HarmScenario::TemporalShift);
-        assert_eq!(
-            phenotype.mutations[0].scenario,
-            HarmScenario::TemporalShift
-        );
+        assert_eq!(phenotype.mutations[0].scenario, HarmScenario::TemporalShift);
     }
 
     // ── Display ───────────────────────────────────────────────────────────
 
     #[test]
     fn test_harm_scenario_display() {
-        assert_eq!(
-            HarmScenario::OutcomeMasking.to_string(),
-            "Outcome Masking"
-        );
+        assert_eq!(HarmScenario::OutcomeMasking.to_string(), "Outcome Masking");
         assert_eq!(
             HarmScenario::SeverityDowngrade.to_string(),
             "Severity Downgrade"

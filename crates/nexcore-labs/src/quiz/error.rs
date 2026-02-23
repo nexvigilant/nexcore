@@ -3,8 +3,8 @@
 //! Uses `thiserror` for ergonomic error handling with automatic
 //! `From` implementations for common error sources.
 
+use nexcore_error::Error;
 use nexcore_id::NexId;
-use thiserror::Error;
 
 /// Result type alias for quiz operations.
 pub type QuizResult<T> = Result<T, QuizError>;

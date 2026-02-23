@@ -3,6 +3,7 @@
 //! Parses JSON session files from external telemetry sources.
 //! Source files are located at ~/.gemini/tmp/{project_hash}/chats/session-*.json
 
+use nexcore_fs::dirs;
 use std::fs;
 use std::path::{Path, PathBuf};
 

@@ -3,7 +3,7 @@
 
 //! Error types for value mining operations.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Result type alias for mining operations.
 pub type MiningResult<T> = Result<T, MiningError>;

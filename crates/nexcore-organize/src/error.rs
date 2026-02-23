@@ -7,10 +7,10 @@ use std::path::PathBuf;
 /// All errors that can occur during the ORGANIZE pipeline.
 ///
 /// Tier: T2-P (dominant: ∂ Boundary)
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum OrganizeError {
     /// I/O error during file operations.
-    #[error("I/O error at {path}: {source}")]
+    #[error("I/O error at {path:?}: {source}")]
     Io {
         /// Path where the error occurred.
         path: PathBuf,
@@ -20,7 +20,7 @@ pub enum OrganizeError {
 
     /// Directory walk error.
     #[error("walk error: {0}")]
-    Walk(#[from] walkdir::Error),
+    Walk(#[from] nexcore_fs::walk::WalkError),
 
     /// Configuration parse error.
     #[error("config error: {0}")]
@@ -35,7 +35,7 @@ pub enum OrganizeError {
     Json(#[from] serde_json::Error),
 
     /// Naming conflict that cannot be auto-resolved.
-    #[error("naming conflict: {existing} and {incoming} both target {target}")]
+    #[error("naming conflict: {existing:?} and {incoming:?} both target {target:?}")]
     NamingConflict {
         /// Existing file at target.
         existing: PathBuf,

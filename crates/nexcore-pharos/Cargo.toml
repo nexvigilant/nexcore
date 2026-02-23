@@ -26,14 +26,13 @@ nexcore-primitives = { workspace = true }
 # Workspace dependencies
 tokio = { workspace = true, features = ["full"] }
 nexcore-error = { workspace = true }
-thiserror = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 clap = { workspace = true, features = ["derive", "cargo", "env"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }
-uuid = { workspace = true, features = ["v4", "serde"] }
+nexcore-id = { workspace = true }
 reqwest = { workspace = true, features = ["json"] }
 toml = { workspace = true }
 

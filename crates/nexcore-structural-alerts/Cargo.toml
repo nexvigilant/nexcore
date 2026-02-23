@@ -8,11 +8,11 @@ authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "ICH M7 structural alert library with substructure matching"
 
 [dependencies]
+nexcore-error = { workspace = true }
 nexcore-molcore = { path = "../nexcore-molcore" }
 prima-chem = { path = "../prima-chem" }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-thiserror = { workspace = true }
 
 [lints.rust]
 dead_code = "allow"

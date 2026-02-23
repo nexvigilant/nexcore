@@ -1,8 +1,9 @@
 //! CTVP Configuration Management
 
+use nexcore_error::Error;
+use nexcore_fs::dirs;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use thiserror::Error;
 
 /// Configuration errors
 #[derive(Debug, Error)]

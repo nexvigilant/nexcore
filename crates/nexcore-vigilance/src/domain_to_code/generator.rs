@@ -10,8 +10,8 @@
 
 use super::extractor::ExtractedPattern;
 use super::languages::{DomainLanguage, LanguageClassification};
+use nexcore_error::Error;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
 /// Errors during code generation.
 #[derive(Debug, Error)]

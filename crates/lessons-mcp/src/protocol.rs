@@ -2,7 +2,7 @@
 //! Tier: T2-P (wraps T1 serialization)
 
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 #[derive(Deserialize)]
 pub struct Request {
@@ -31,7 +31,12 @@ pub struct Error {
 
 impl Response {
     pub fn success(id: Value, result: Value) -> Self {
-        Self { jsonrpc: "2.0".into(), id, result: Some(result), error: None }
+        Self {
+            jsonrpc: "2.0".into(),
+            id,
+            result: Some(result),
+            error: None,
+        }
     }
 
     pub fn error(id: Value, code: i32, message: &str) -> Self {
@@ -39,7 +44,10 @@ impl Response {
             jsonrpc: "2.0".into(),
             id,
             result: None,
-            error: Some(Error { code, message: message.into() }),
+            error: Some(Error {
+                code,
+                message: message.into(),
+            }),
         }
     }
 

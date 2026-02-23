@@ -70,12 +70,7 @@ static TRANSFER_TABLE: &[TransferMapping] = &[
         "Clinical trial 2x2 table",
         0.95,
     ),
-    TransferMapping::new(
-        "ContingencyTable",
-        "Cloud/SRE",
-        "Confusion matrix",
-        0.88,
-    ),
+    TransferMapping::new("ContingencyTable", "Cloud/SRE", "Confusion matrix", 0.88),
     TransferMapping::new(
         "ContingencyTable",
         "Economics",
@@ -87,12 +82,7 @@ static TRANSFER_TABLE: &[TransferMapping] = &[
     TransferMapping::new("Alert", "Cloud/SRE", "PagerDuty incident", 0.92),
     TransferMapping::new("Alert", "Economics", "Market circuit breaker", 0.78),
     // DetectionResult
-    TransferMapping::new(
-        "DetectionResult",
-        "Biology",
-        "Diagnostic test result",
-        0.88,
-    ),
+    TransferMapping::new("DetectionResult", "Biology", "Diagnostic test result", 0.88),
     TransferMapping::new(
         "DetectionResult",
         "Cloud/SRE",
@@ -119,18 +109,8 @@ static TRANSFER_TABLE: &[TransferMapping] = &[
     TransferMapping::new("RawReport", "Cloud/SRE", "Unprocessed log entry", 0.90),
     TransferMapping::new("RawReport", "Economics", "Raw transaction record", 0.85),
     // NormalizedEvent
-    TransferMapping::new(
-        "NormalizedEvent",
-        "Biology",
-        "Standardized lab value",
-        0.85,
-    ),
-    TransferMapping::new(
-        "NormalizedEvent",
-        "Cloud/SRE",
-        "Structured log event",
-        0.90,
-    ),
+    TransferMapping::new("NormalizedEvent", "Biology", "Standardized lab value", 0.85),
+    TransferMapping::new("NormalizedEvent", "Cloud/SRE", "Structured log event", 0.90),
     TransferMapping::new(
         "NormalizedEvent",
         "Economics",
@@ -139,12 +119,7 @@ static TRANSFER_TABLE: &[TransferMapping] = &[
     ),
     // ThresholdConfig
     TransferMapping::new("ThresholdConfig", "Biology", "Normal lab ranges", 0.88),
-    TransferMapping::new(
-        "ThresholdConfig",
-        "Cloud/SRE",
-        "SLO configuration",
-        0.92,
-    ),
+    TransferMapping::new("ThresholdConfig", "Cloud/SRE", "SLO configuration", 0.92),
     TransferMapping::new(
         "ThresholdConfig",
         "Economics",
@@ -158,12 +133,7 @@ static TRANSFER_TABLE: &[TransferMapping] = &[
         "Genotype-phenotype association",
         0.78,
     ),
-    TransferMapping::new(
-        "DrugEventPair",
-        "Cloud/SRE",
-        "Service-error pair",
-        0.85,
-    ),
+    TransferMapping::new("DrugEventPair", "Cloud/SRE", "Service-error pair", 0.85),
     TransferMapping::new(
         "DrugEventPair",
         "Economics",
@@ -221,7 +191,11 @@ pub fn best_transfer(source_type: &str) -> Option<&'static TransferMapping> {
     TRANSFER_TABLE
         .iter()
         .filter(|m| m.source_type == source_type)
-        .max_by(|a, b| a.confidence.partial_cmp(&b.confidence).unwrap_or(std::cmp::Ordering::Equal))
+        .max_by(|a, b| {
+            a.confidence
+                .partial_cmp(&b.confidence)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        })
 }
 
 #[cfg(test)]

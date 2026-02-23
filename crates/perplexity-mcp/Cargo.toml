@@ -20,7 +20,6 @@ serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 tokio = { version = "1.38.0", features = ["full"] }
 nexcore-error = { workspace = true }
-thiserror = { version = "1.0.61" }
 
 [dev-dependencies]
 serde_json = { version = "1.0.120" }

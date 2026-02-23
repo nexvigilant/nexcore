@@ -2,7 +2,7 @@
 
 //! Error types for the structural alert library.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors produced by the structural alert library.
 #[derive(Debug, Error)]

@@ -428,7 +428,7 @@ impl FiveProblemsAnalyzer {
 
     /// Scans files for patterns
     fn scan_for_patterns(&self, path: &Path, patterns: &[&str]) -> CtvpResult<Vec<String>> {
-        use walkdir::WalkDir;
+        use nexcore_fs::walk::WalkDir;
 
         let mut findings = Vec::new();
         let mut files_scanned = 0;

@@ -357,9 +357,7 @@ pub fn compute_phi_psi(mol: &Molecule, backbone: &[BackboneAtoms]) -> Vec<Dihedr
                     let p_ca_i = mol.atoms.get(ca_i).map(|a| a.position);
                     let p_c_i = mol.atoms.get(c_i).map(|a| a.position);
                     match (p_c_prev, p_n_i, p_ca_i, p_c_i) {
-                        (Some(a), Some(b), Some(c), Some(d)) => {
-                            Some(dihedral_angle(a, b, c, d))
-                        }
+                        (Some(a), Some(b), Some(c), Some(d)) => Some(dihedral_angle(a, b, c, d)),
                         _ => None,
                     }
                 }
@@ -379,9 +377,7 @@ pub fn compute_phi_psi(mol: &Molecule, backbone: &[BackboneAtoms]) -> Vec<Dihedr
                     let p_c_i = mol.atoms.get(c_i).map(|a| a.position);
                     let p_n_next = mol.atoms.get(n_next).map(|a| a.position);
                     match (p_n_i, p_ca_i, p_c_i, p_n_next) {
-                        (Some(a), Some(b), Some(c), Some(d)) => {
-                            Some(dihedral_angle(a, b, c, d))
-                        }
+                        (Some(a), Some(b), Some(c), Some(d)) => Some(dihedral_angle(a, b, c, d)),
                         _ => None,
                     }
                 }
@@ -524,11 +520,7 @@ pub fn detect_hydrogen_bonds(mol: &Molecule, distance_cutoff: f64) -> Vec<Hydrog
         // Virtual hydrogen position: N + normalise(N - C_prev) * 1.0 Å
         let h_pos = if let Some(c_prev_pos) = n_c_prev.get(n_entry_idx).copied().flatten() {
             let dir = normalize(sub(n_pos, c_prev_pos));
-            [
-                n_pos[0] + dir[0],
-                n_pos[1] + dir[1],
-                n_pos[2] + dir[2],
-            ]
+            [n_pos[0] + dir[0], n_pos[1] + dir[1], n_pos[2] + dir[2]]
         } else {
             n_pos // fallback: H at N position
         };
@@ -538,7 +530,9 @@ pub fn detect_hydrogen_bonds(mol: &Molecule, distance_cutoff: f64) -> Vec<Hydrog
             // Heuristic: N and O from the same residue would share a backbone entry,
             // which means n_idx and o_idx appear together in a BackboneAtoms.
             // We detect this by checking if they appear in the same backbone slot.
-            let same_residue = backbone.iter().any(|bb| bb.n == Some(n_idx) && bb.o == Some(o_idx));
+            let same_residue = backbone
+                .iter()
+                .any(|bb| bb.n == Some(n_idx) && bb.o == Some(o_idx));
             if same_residue {
                 continue;
             }
@@ -602,8 +596,7 @@ pub fn assign_secondary_structure(
     }
 
     // Build index: atom_idx -> residue_index (in flattened backbone order)
-    let mut atom_to_res: std::collections::HashMap<usize, usize> =
-        std::collections::HashMap::new();
+    let mut atom_to_res: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
     for (res_idx, bb) in backbone.iter().enumerate() {
         for atom_idx in [bb.n, bb.ca, bb.c, bb.o].into_iter().flatten() {
             atom_to_res.insert(atom_idx, res_idx);
@@ -684,11 +677,7 @@ pub fn compute_contact_map(mol: &Molecule, threshold: f64) -> Vec<ContactMapEntr
     // Collect CA positions
     let ca_positions: Vec<Option<[f64; 3]>> = backbone
         .iter()
-        .map(|bb| {
-            bb.ca
-                .and_then(|idx| mol.atoms.get(idx))
-                .map(|a| a.position)
-        })
+        .map(|bb| bb.ca.and_then(|idx| mol.atoms.get(idx)).map(|a| a.position))
         .collect();
 
     let mut contacts = Vec::new();
@@ -755,12 +744,16 @@ pub fn radius_of_gyration(mol: &Molecule) -> f64 {
     cz /= nf;
 
     // Sum of squared distances from centroid
-    let sum_sq: f64 = mol.atoms.iter().map(|a| {
-        let dx = a.position[0] - cx;
-        let dy = a.position[1] - cy;
-        let dz = a.position[2] - cz;
-        dx * dx + dy * dy + dz * dz
-    }).sum();
+    let sum_sq: f64 = mol
+        .atoms
+        .iter()
+        .map(|a| {
+            let dx = a.position[0] - cx;
+            let dy = a.position[1] - cy;
+            let dz = a.position[2] - cz;
+            dx * dx + dy * dy + dz * dz
+        })
+        .sum();
 
     (sum_sq / nf).sqrt()
 }
@@ -781,7 +774,9 @@ pub fn compute_protein_metrics(mol: &Molecule) -> ProteinMetrics {
         for residue in &chain.residues {
             residue_count += 1;
             match residue.secondary_structure {
-                SecondaryStructure::Helix | SecondaryStructure::Helix310 | SecondaryStructure::HelixPi => {
+                SecondaryStructure::Helix
+                | SecondaryStructure::Helix310
+                | SecondaryStructure::HelixPi => {
                     helix_count += 1;
                 }
                 SecondaryStructure::Sheet => {
@@ -810,11 +805,7 @@ pub fn compute_protein_metrics(mol: &Molecule) -> ProteinMetrics {
     let backbone = extract_backbone(mol);
     let ca_positions: Vec<Option<[f64; 3]>> = backbone
         .iter()
-        .map(|bb| {
-            bb.ca
-                .and_then(|idx| mol.atoms.get(idx))
-                .map(|a| a.position)
-        })
+        .map(|bb| bb.ca.and_then(|idx| mol.atoms.get(idx)).map(|a| a.position))
         .collect();
 
     // Walk through CA positions per chain to avoid cross-chain distances.
@@ -908,10 +899,7 @@ mod tests {
             [1.0, 0.0, 0.0],
             [1.0, 1.0, 0.0],
         );
-        assert!(
-            angle.abs() < 1e-6,
-            "expected angle ≈ 0, got {angle}"
-        );
+        assert!(angle.abs() < 1e-6, "expected angle ≈ 0, got {angle}");
     }
 
     // -------------------------------------------------------------------------
@@ -922,10 +910,10 @@ mod tests {
     fn dihedral_angle_perpendicular() {
         // p1 above the XY plane, p4 along the Y axis → 90° dihedral.
         let angle = dihedral_angle(
-            [0.0, 0.0, 1.0],  // p1: up
-            [0.0, 0.0, 0.0],  // p2: origin
-            [1.0, 0.0, 0.0],  // p3: along X
-            [1.0, 1.0, 0.0],  // p4: in XY plane
+            [0.0, 0.0, 1.0], // p1: up
+            [0.0, 0.0, 0.0], // p2: origin
+            [1.0, 0.0, 0.0], // p3: along X
+            [1.0, 1.0, 0.0], // p4: in XY plane
         );
         let expected = std::f64::consts::FRAC_PI_2; // π/2
         assert!(
@@ -943,12 +931,17 @@ mod tests {
         let mut mol = Molecule::new("test_protein");
 
         // Add backbone atoms for a single residue
-        mol.atoms.push(make_atom(1, Element::N, [0.0, 0.0, 0.0], "N"));  // idx 0
-        mol.atoms.push(make_atom(2, Element::C, [1.0, 0.0, 0.0], "CA")); // idx 1
-        mol.atoms.push(make_atom(3, Element::C, [2.0, 0.0, 0.0], "C"));  // idx 2
-        mol.atoms.push(make_atom(4, Element::O, [2.0, 1.0, 0.0], "O"));  // idx 3
+        mol.atoms
+            .push(make_atom(1, Element::N, [0.0, 0.0, 0.0], "N")); // idx 0
+        mol.atoms
+            .push(make_atom(2, Element::C, [1.0, 0.0, 0.0], "CA")); // idx 1
+        mol.atoms
+            .push(make_atom(3, Element::C, [2.0, 0.0, 0.0], "C")); // idx 2
+        mol.atoms
+            .push(make_atom(4, Element::O, [2.0, 1.0, 0.0], "O")); // idx 3
         // A sidechain atom that should be ignored
-        mol.atoms.push(make_atom(5, Element::C, [1.0, 1.0, 0.0], "CB")); // idx 4
+        mol.atoms
+            .push(make_atom(5, Element::C, [1.0, 1.0, 0.0], "CB")); // idx 4
 
         let residue = Residue {
             name: "ALA".to_string(),
@@ -957,7 +950,10 @@ mod tests {
             atom_indices: vec![0, 1, 2, 3, 4],
             secondary_structure: SecondaryStructure::Coil,
         };
-        let chain = Chain { id: 'A', residues: vec![residue] };
+        let chain = Chain {
+            id: 'A',
+            residues: vec![residue],
+        };
         mol.chains.push(chain);
 
         let backbone = extract_backbone(&mol);
@@ -1010,10 +1006,7 @@ mod tests {
         let mut mol = Molecule::new("single");
         mol.atoms.push(Atom::new(1, Element::C, [5.0, 3.0, -2.0]));
         let rg = radius_of_gyration(&mol);
-        assert!(
-            rg.abs() < 1e-9,
-            "single atom should have Rg = 0, got {rg}"
-        );
+        assert!(rg.abs() < 1e-9, "single atom should have Rg = 0, got {rg}");
     }
 
     // -------------------------------------------------------------------------
@@ -1025,8 +1018,10 @@ mod tests {
         // Two atoms at x = ±d/2, same y and z → centroid at origin → Rg = d/2.
         let d = 6.0_f64;
         let mut mol = Molecule::new("dimer");
-        mol.atoms.push(Atom::new(1, Element::C, [-d / 2.0, 0.0, 0.0]));
-        mol.atoms.push(Atom::new(2, Element::C, [d / 2.0, 0.0, 0.0]));
+        mol.atoms
+            .push(Atom::new(1, Element::C, [-d / 2.0, 0.0, 0.0]));
+        mol.atoms
+            .push(Atom::new(2, Element::C, [d / 2.0, 0.0, 0.0]));
         let rg = radius_of_gyration(&mol);
         // Each atom is d/2 from centroid; Rg = sqrt((2 * (d/2)^2) / 2) = d/2
         let expected = d / 2.0;
@@ -1045,9 +1040,11 @@ mod tests {
         let mut mol = Molecule::new("two_residue");
 
         // Residue 0: CA at origin
-        mol.atoms.push(make_atom(1, Element::C, [0.0, 0.0, 0.0], "CA")); // idx 0
+        mol.atoms
+            .push(make_atom(1, Element::C, [0.0, 0.0, 0.0], "CA")); // idx 0
         // Residue 1: CA at 5 Å — within 8 Å threshold
-        mol.atoms.push(make_atom(2, Element::C, [5.0, 0.0, 0.0], "CA")); // idx 1
+        mol.atoms
+            .push(make_atom(2, Element::C, [5.0, 0.0, 0.0], "CA")); // idx 1
 
         let res0 = Residue {
             name: "ALA".to_string(),
@@ -1063,7 +1060,10 @@ mod tests {
             atom_indices: vec![1],
             secondary_structure: SecondaryStructure::Coil,
         };
-        let chain = Chain { id: 'A', residues: vec![res0, res1] };
+        let chain = Chain {
+            id: 'A',
+            residues: vec![res0, res1],
+        };
         mol.chains.push(chain);
 
         let contacts = compute_contact_map(&mol, 8.0);
@@ -1081,8 +1081,10 @@ mod tests {
     fn contact_map_distant_residues_excluded() {
         let mut mol = Molecule::new("far_apart");
 
-        mol.atoms.push(make_atom(1, Element::C, [0.0, 0.0, 0.0], "CA"));  // idx 0
-        mol.atoms.push(make_atom(2, Element::C, [20.0, 0.0, 0.0], "CA")); // idx 1
+        mol.atoms
+            .push(make_atom(1, Element::C, [0.0, 0.0, 0.0], "CA")); // idx 0
+        mol.atoms
+            .push(make_atom(2, Element::C, [20.0, 0.0, 0.0], "CA")); // idx 1
 
         let res0 = Residue {
             name: "ALA".to_string(),
@@ -1098,11 +1100,17 @@ mod tests {
             atom_indices: vec![1],
             secondary_structure: SecondaryStructure::Coil,
         };
-        let chain = Chain { id: 'A', residues: vec![res0, res1] };
+        let chain = Chain {
+            id: 'A',
+            residues: vec![res0, res1],
+        };
         mol.chains.push(chain);
 
         let contacts = compute_contact_map(&mol, 8.0);
-        assert!(contacts.is_empty(), "distant residues should not form a contact");
+        assert!(
+            contacts.is_empty(),
+            "distant residues should not form a contact"
+        );
     }
 
     // -------------------------------------------------------------------------
@@ -1114,8 +1122,10 @@ mod tests {
         let mut mol = Molecule::new("partial");
 
         // Only N and CA, no C or O
-        mol.atoms.push(make_atom(1, Element::N, [0.0, 0.0, 0.0], "N"));  // idx 0
-        mol.atoms.push(make_atom(2, Element::C, [1.0, 0.0, 0.0], "CA")); // idx 1
+        mol.atoms
+            .push(make_atom(1, Element::N, [0.0, 0.0, 0.0], "N")); // idx 0
+        mol.atoms
+            .push(make_atom(2, Element::C, [1.0, 0.0, 0.0], "CA")); // idx 1
 
         let residue = Residue {
             name: "GLY".to_string(),
@@ -1124,7 +1134,10 @@ mod tests {
             atom_indices: vec![0, 1],
             secondary_structure: SecondaryStructure::Coil,
         };
-        let chain = Chain { id: 'A', residues: vec![residue] };
+        let chain = Chain {
+            id: 'A',
+            residues: vec![residue],
+        };
         mol.chains.push(chain);
 
         let backbone = extract_backbone(&mol);
@@ -1172,7 +1185,8 @@ mod tests {
 
         // 2 helix residues, 1 sheet residue, 1 coil residue
         for i in 0..4_u32 {
-            mol.atoms.push(make_atom(i + 1, Element::C, [i as f64, 0.0, 0.0], "CA"));
+            mol.atoms
+                .push(make_atom(i + 1, Element::C, [i as f64, 0.0, 0.0], "CA"));
         }
 
         let ss_list = [
@@ -1199,7 +1213,10 @@ mod tests {
         let m = compute_protein_metrics(&mol);
         assert_eq!(m.residue_count, 4);
         let total = m.helix_fraction + m.sheet_fraction + m.coil_fraction;
-        assert!((total - 1.0).abs() < 1e-9, "fractions must sum to 1, got {total}");
+        assert!(
+            (total - 1.0).abs() < 1e-9,
+            "fractions must sum to 1, got {total}"
+        );
         assert!((m.helix_fraction - 0.5).abs() < 1e-9);
         assert!((m.sheet_fraction - 0.25).abs() < 1e-9);
         assert!((m.coil_fraction - 0.25).abs() < 1e-9);

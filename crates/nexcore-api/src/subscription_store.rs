@@ -7,6 +7,8 @@
 //! Tier: T2-S (Service boundary — λ Location + π Persistence + ∂ Boundary)
 
 use hmac::{Hmac, Mac};
+use nexcore_codec::hex;
+use nexcore_fs::dirs;
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
@@ -32,14 +34,18 @@ pub fn init_store() -> nexcore_error::Result<()> {
     let store = match GuardianStore::open(&db_path) {
         Ok(s) => s,
         Err(e) => {
-            tracing::error!("Failed to open guardian DB at {db_path}: {e}, falling back to in-memory");
+            tracing::error!(
+                "Failed to open guardian DB at {db_path}: {e}, falling back to in-memory"
+            );
             GuardianStore::open(":memory:")?
         }
     };
 
     // OnceLock::set returns Err if already initialized — that's fine, first writer wins
     #[allow(unused_results)]
-    { STORE.set(Arc::new(Mutex::new(store))); }
+    {
+        STORE.set(Arc::new(Mutex::new(store)));
+    }
     Ok(())
 }
 
@@ -54,13 +60,16 @@ pub fn get_store() -> Arc<Mutex<GuardianStore>> {
                     let arc = Arc::new(Mutex::new(store));
                     // OnceLock::set returns Err if already set — benign race, first writer wins
                     #[allow(unused_results)]
-                    { STORE.set(arc.clone()); }
+                    {
+                        STORE.set(arc.clone());
+                    }
                     arc
                 }
                 Err(e) => {
                     tracing::error!("Cannot open in-memory SQLite: {e}");
                     // Return a disconnected store — all operations will fail gracefully via Result
-                    let conn = Connection::open_in_memory().unwrap_or_else(|_| std::process::abort());
+                    let conn =
+                        Connection::open_in_memory().unwrap_or_else(|_| std::process::abort());
                     Arc::new(Mutex::new(GuardianStore { conn }))
                 }
             }
@@ -314,9 +323,9 @@ impl GuardianStore {
             params![now, user_id],
         )?;
 
-        let mut stmt = self.conn.prepare(
-            "SELECT queries_used, query_limit FROM subscriptions WHERE user_id = ?1",
-        )?;
+        let mut stmt = self
+            .conn
+            .prepare("SELECT queries_used, query_limit FROM subscriptions WHERE user_id = ?1")?;
         let result = stmt.query_row(params![user_id], |row| {
             Ok((row.get::<_, i64>(0)?, row.get::<_, i64>(1)?))
         })?;
@@ -347,8 +356,12 @@ impl GuardianStore {
     // ── API Keys ──────────────────────────
 
     /// Create an API key. Returns (key_id, raw_key) — raw_key is shown once, then only hash stored.
-    pub fn create_api_key(&self, user_id: &str, name: &str) -> nexcore_error::Result<(String, String)> {
-        let key_id = uuid::Uuid::new_v4().to_string();
+    pub fn create_api_key(
+        &self,
+        user_id: &str,
+        name: &str,
+    ) -> nexcore_error::Result<(String, String)> {
+        let key_id = nexcore_id::NexId::v4().to_string();
         let raw_key = format!("grd_{}", generate_random_key());
         let key_hash = hash_api_key(&raw_key);
         let key_prefix = raw_key.chars().take(12).collect::<String>();
@@ -507,9 +520,15 @@ fn generate_random_key() -> String {
     let mut state = seed;
     let mut key = String::with_capacity(32);
     for _ in 0..32 {
-        state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        state = state
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
         let nibble = ((state >> 33) & 0xF) as u8;
-        key.push(char::from(if nibble < 10 { b'0' + nibble } else { b'a' + nibble - 10 }));
+        key.push(char::from(if nibble < 10 {
+            b'0' + nibble
+        } else {
+            b'a' + nibble - 10
+        }));
     }
     key
 }
@@ -527,7 +546,13 @@ mod tests {
         let store = test_store();
 
         store
-            .upsert_subscription("user1", Some("cus_123"), Some("sub_456"), "researcher", "active")
+            .upsert_subscription(
+                "user1",
+                Some("cus_123"),
+                Some("sub_456"),
+                "researcher",
+                "active",
+            )
             .unwrap_or_else(|_| std::process::abort());
 
         let sub = store
@@ -604,7 +629,12 @@ mod tests {
             .unwrap_or_else(|_| std::process::abort());
 
         store
-            .record_query("user1", "/analyze", Some(r#"{"a":15}"#), Some(r#"{"prr":2.5}"#))
+            .record_query(
+                "user1",
+                "/analyze",
+                Some(r#"{"a":15}"#),
+                Some(r#"{"prr":2.5}"#),
+            )
             .unwrap_or_else(|_| std::process::abort());
 
         let history = store

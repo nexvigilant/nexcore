@@ -1,11 +1,11 @@
 //! # Hierarchical Z-Buffer (HZB) Occlusion Culling
 //!
 //! Two-phase occlusion culling on the GPU using a Hierarchical Z-Buffer.
-//! 
+//!
 //! ## Architecture
 //!
 //! 1. **Phase 1: Previous-Frame Culling**
-//!    Test all instances against the HZB from the previous frame. 
+//!    Test all instances against the HZB from the previous frame.
 //!    Visible instances are written to an indirect draw buffer.
 //! 2. **Render Phase 1**
 //!    Issue an indirect draw for these highly-likely-visible instances, generating
@@ -175,7 +175,7 @@ mod tests {
         let config2 = HzbConfig::new(1920, 1080);
         assert_eq!(config2.mip_levels, 12);
     }
-    
+
     #[test]
     fn test_wgsl_downsample_shader() {
         let shader = wgsl_hzb_downsample_shader();

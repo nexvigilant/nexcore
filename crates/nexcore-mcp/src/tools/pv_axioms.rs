@@ -8,6 +8,7 @@ use crate::params::{
     PvAxiomsDomainDashboardParams, PvAxiomsKsbLookupParams, PvAxiomsQueryParams,
     PvAxiomsRegulationSearchParams, PvAxiomsTraceabilityParams,
 };
+use nexcore_fs::dirs;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 use rusqlite::{Connection, OpenFlags};

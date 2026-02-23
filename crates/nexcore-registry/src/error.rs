@@ -1,7 +1,7 @@
 //! Error types for the registry layer.
 
 /// Registry errors.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum RegistryError {
     /// SQLite error
     #[error("SQLite error: {0}")]

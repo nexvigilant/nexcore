@@ -2,8 +2,8 @@
 //!
 //! Chemistry analogue: Crystallization + the Periodic Table.
 
+use nexcore_id::NexId;
 use std::collections::HashMap;
-use uuid::Uuid;
 
 use crate::element::{Atom, ElementClass};
 use crate::spectrum::Spectrum;
@@ -11,13 +11,13 @@ use crate::spectrum::Spectrum;
 /// The canonical registry of all defined semantic atoms.
 pub struct AtomRegistry {
     /// All registered atoms, indexed by UUID.
-    atoms: HashMap<Uuid, RegisteredAtom>,
+    atoms: HashMap<NexId, RegisteredAtom>,
     /// Label -> UUID index for lookup by name.
-    label_index: HashMap<String, Uuid>,
+    label_index: HashMap<String, NexId>,
     /// MedDRA code -> UUID index for interop.
-    meddra_index: HashMap<String, Uuid>,
+    meddra_index: HashMap<String, NexId>,
     /// Class -> Vec<UUID> index for browsing.
-    class_index: HashMap<ElementClass, Vec<Uuid>>,
+    class_index: HashMap<ElementClass, Vec<NexId>>,
 }
 
 /// A registered atom includes the atom itself plus its crystallization metadata.
@@ -69,7 +69,7 @@ pub enum AtomStatus {
     /// Active but still being refined — may change.
     Supersaturated,
     /// Deprecated — replaced by another atom.
-    Dissolved { replacement: Option<Uuid> },
+    Dissolved { replacement: Option<NexId> },
 }
 
 impl AtomRegistry {
@@ -119,7 +119,7 @@ impl AtomRegistry {
     }
 
     /// Freeze an atom — make it immutable / production-grade.
-    pub fn freeze(&mut self, id: &Uuid) -> Result<(), RegistryError> {
+    pub fn freeze(&mut self, id: &NexId) -> Result<(), RegistryError> {
         let entry = self
             .atoms
             .get_mut(id)
@@ -408,20 +408,20 @@ impl Default for AtomRegistry {
 #[derive(Debug)]
 pub enum CrystallizationResult {
     Crystallized {
-        id: Uuid,
+        id: NexId,
         label: String,
         status: AtomStatus,
     },
     AlreadyExists {
-        existing_id: Uuid,
+        existing_id: NexId,
         label: String,
     },
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum RegistryError {
     #[error("Atom {0} not found in registry")]
-    AtomNotFound(Uuid),
+    AtomNotFound(NexId),
     #[error("Atom {0} has no reference spectrum — cannot freeze")]
-    NoReferenceSpectrum(Uuid),
+    NoReferenceSpectrum(NexId),
 }

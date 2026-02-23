@@ -32,7 +32,7 @@ const V1_WEIGHTS: [f64; 6] = [0.15, 0.20, 0.15, 0.20, 0.15, 0.15];
 // ============================================================================
 
 /// Errors during SQI computation.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum SqiError {
     /// Missing frontmatter delimiter
     #[error("missing frontmatter: {0}")]

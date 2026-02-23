@@ -50,7 +50,10 @@ pub async fn re_auth() -> Result<AuthResult, NotebookLmError> {
     if profile_dir.exists() {
         std::fs::remove_dir_all(&profile_dir)
             .map_err(|e| NotebookLmError::Other(format!("failed to remove profile: {e}")))?;
-        info!("NLM auth: wiped Chrome profile at {}", profile_dir.display());
+        info!(
+            "NLM auth: wiped Chrome profile at {}",
+            profile_dir.display()
+        );
     }
 
     // Now run setup_auth with clean state

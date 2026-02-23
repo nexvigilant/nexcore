@@ -174,7 +174,7 @@ pub async fn create_engagement(
     Json(req): Json<CreateEngagementRequest>,
 ) -> Result<Json<EngagementResponse>, crate::routes::common::ApiError> {
     Ok(Json(EngagementResponse {
-        id: uuid::Uuid::new_v4().to_string(),
+        id: nexcore_id::NexId::v4().to_string(),
         expert_id: req.expert_id,
         status: "requested".to_string(),
         platform_commission_percent: 15.0,

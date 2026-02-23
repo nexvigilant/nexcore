@@ -23,6 +23,7 @@
 //! | Guardian | actuator state | iteration number |
 //! | Hooks | Cargo.lock | hook binary name |
 
+use nexcore_fs::dirs;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::fs;

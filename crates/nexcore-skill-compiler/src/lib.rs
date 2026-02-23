@@ -11,6 +11,8 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
+use nexcore_fs::dirs;
+
 pub mod analyzer;
 pub mod builder;
 pub mod codegen;

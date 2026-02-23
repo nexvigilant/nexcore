@@ -230,7 +230,7 @@ pub fn has_assessment_pass(module_code: &str, rows: &[GvpAssessmentPass]) -> boo
 
 #[cfg(test)]
 mod tests {
-    use super::{guardian_seed_for_module, gvp_module_by_code, GVP_MODULES};
+    use super::{GVP_MODULES, guardian_seed_for_module, gvp_module_by_code};
 
     #[test]
     fn has_all_ema_module_slots() {

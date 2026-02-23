@@ -7,9 +7,9 @@ description = "Core traits and types for Claude Code skills as Rust crates"
 license = "MIT"
 
 [dependencies]
+nexcore-error = { workspace = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-thiserror = "2.0"
 async-trait = "0.1"
 regex = "1.11"
 tokio = { version = "1.0", features = ["rt", "macros"] }

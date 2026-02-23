@@ -74,7 +74,9 @@ impl PvContractCategory {
     pub const fn severity_override(&self, drift_type: DriftType) -> Option<DriftSeverity> {
         match (self, drift_type) {
             // AE records: type changes and missing fields are always critical
-            (Self::AdverseEvent, DriftType::TypeMismatch | DriftType::MissingField) => Some(DriftSeverity::Critical),
+            (Self::AdverseEvent, DriftType::TypeMismatch | DriftType::MissingField) => {
+                Some(DriftSeverity::Critical)
+            }
             // Drug records: type changes are at least Warning
             (Self::Drug, DriftType::TypeMismatch) => Some(DriftSeverity::Warning),
             // All other combinations: use default severity
@@ -315,8 +317,12 @@ impl fmt::Display for PvDriftEvaluation {
         write!(
             f,
             "[{}] {} — drift={:.3}, critical={}, warnings={}, action={}",
-            self.category, self.contract_id, self.drift_score,
-            self.critical_count, self.warning_count, self.action
+            self.category,
+            self.contract_id,
+            self.drift_score,
+            self.critical_count,
+            self.warning_count,
+            self.action
         )
     }
 }
@@ -339,10 +345,7 @@ impl fmt::Display for PvDriftEvaluation {
 ///     // emit Guardian signal, stop processing
 /// }
 /// ```
-pub fn evaluate_drift(
-    result: &DriftResult,
-    category: PvContractCategory,
-) -> PvDriftEvaluation {
+pub fn evaluate_drift(result: &DriftResult, category: PvContractCategory) -> PvDriftEvaluation {
     let mut critical_count = 0u32;
     let mut warning_count = 0u32;
 
@@ -401,11 +404,7 @@ mod tests {
         }
     }
 
-    fn make_violation(
-        field: &str,
-        drift_type: DriftType,
-        severity: DriftSeverity,
-    ) -> SchemaDrift {
+    fn make_violation(field: &str, drift_type: DriftType, severity: DriftSeverity) -> SchemaDrift {
         SchemaDrift {
             field: field.to_string(),
             drift_type,
@@ -487,8 +486,10 @@ mod tests {
 
     #[test]
     fn test_ae_threshold_is_strictest() {
-        assert!(PvContractCategory::AdverseEvent.drift_threshold()
-            < PvContractCategory::Drug.drift_threshold());
+        assert!(
+            PvContractCategory::AdverseEvent.drift_threshold()
+                < PvContractCategory::Drug.drift_threshold()
+        );
     }
 
     #[test]
@@ -503,7 +504,10 @@ mod tests {
     fn test_field_specs_have_required_fields() {
         let ae_fields = adverse_event_fields();
         let required: Vec<_> = ae_fields.iter().filter(|f| f.required).collect();
-        assert!(required.len() >= 2, "AE records need at least reaction_meddra_pt and serious");
+        assert!(
+            required.len() >= 2,
+            "AE records need at least reaction_meddra_pt and serious"
+        );
     }
 
     #[test]

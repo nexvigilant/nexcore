@@ -734,7 +734,9 @@ pub fn force_atlas2(
 
         // Gravity towards origin.
         for (i, node) in nodes.iter().enumerate() {
-            let dist = node.position[0].hypot(node.position[1]).max(config.min_distance);
+            let dist = node.position[0]
+                .hypot(node.position[1])
+                .max(config.min_distance);
             forces[i][0] -= gravity * node.mass * node.position[0] / dist;
             forces[i][1] -= gravity * node.mass * node.position[1] / dist;
         }
@@ -1644,8 +1646,7 @@ impl OctreeNode {
                 let ei_pos = nodes[ei].position;
                 let q = self.octant_for(ei_pos);
                 if self.children[q].is_none() {
-                    self.children[q] =
-                        Some(Box::new(OctreeNode::new(self.child_bounds(q))));
+                    self.children[q] = Some(Box::new(OctreeNode::new(self.child_bounds(q))));
                 }
                 if let Some(child) = self.children[q].as_mut() {
                     child.insert(ei, nodes, depth + 1);
@@ -1717,8 +1718,7 @@ pub fn build_octree(nodes: &[LayoutNode3D]) -> Octree {
         z_max = z_max.max(n.position[2]);
     }
 
-    let margin =
-        ((x_max - x_min) + (y_max - y_min) + (z_max - z_min)) * 0.01 + 1.0;
+    let margin = ((x_max - x_min) + (y_max - y_min) + (z_max - z_min)) * 0.01 + 1.0;
     let bounds = [
         x_min - margin,
         y_min - margin,
@@ -1733,7 +1733,10 @@ pub fn build_octree(nodes: &[LayoutNode3D]) -> Octree {
         root.insert(idx, nodes, 0);
     }
 
-    Octree { root, node_count: nodes.len() }
+    Octree {
+        root,
+        node_count: nodes.len(),
+    }
 }
 
 /// Compute the Barnes-Hut repulsion force on a single 3D node from the octree.
@@ -1813,12 +1816,7 @@ pub fn random_layout_3d(n: usize, width: f64, height: f64, depth: f64) -> Vec<La
 /// assert!((nodes[1].position[0] - 400.0).abs() < 1e-9);
 /// assert!((nodes[1].position[2] - 200.0).abs() < 1e-9);
 /// ```
-pub fn normalize_positions_3d(
-    nodes: &mut [LayoutNode3D],
-    width: f64,
-    height: f64,
-    depth: f64,
-) {
+pub fn normalize_positions_3d(nodes: &mut [LayoutNode3D], width: f64, height: f64, depth: f64) {
     if nodes.is_empty() {
         return;
     }
@@ -1960,8 +1958,8 @@ pub fn fruchterman_reingold_3d(
             }
             let mag = vec3_len(force).max(f64::MIN_POSITIVE);
             let scale = mag.min(temperature) / mag;
-            for k in 0..3 {
-                node.velocity[k] = (node.velocity[k] + force[k] * scale) * config.damping;
+            for (v, f) in node.velocity.iter_mut().zip(force.iter()) {
+                *v = (*v + f * scale) * config.damping;
             }
             let disp = vec3_len(&node.velocity);
             max_displacement = max_displacement.max(disp);
@@ -1980,7 +1978,12 @@ pub fn fruchterman_reingold_3d(
     }
 
     let energy = compute_energy_3d(nodes, edges, config);
-    Ok(LayoutResult3D { nodes: nodes.to_vec(), iterations_run, converged, energy })
+    Ok(LayoutResult3D {
+        nodes: nodes.to_vec(),
+        iterations_run,
+        converged,
+        energy,
+    })
 }
 
 /// ForceAtlas2 variant with spherical gravity in 3D.
@@ -2056,8 +2059,8 @@ pub fn force_atlas2_3d(
         // Spherical gravity towards origin.
         for (i, node) in nodes.iter().enumerate() {
             let d = vec3_len(&node.position).max(config.min_distance);
-            for k in 0..3 {
-                forces[i][k] -= gravity * node.mass * node.position[k] / d;
+            for (force_k, pos_k) in forces[i].iter_mut().zip(node.position.iter()) {
+                *force_k -= gravity * node.mass * pos_k / d;
             }
         }
 
@@ -2066,7 +2069,9 @@ pub fn force_atlas2_3d(
             let dx = nodes[edge.target].position[0] - nodes[edge.source].position[0];
             let dy = nodes[edge.target].position[1] - nodes[edge.source].position[1];
             let dz = nodes[edge.target].position[2] - nodes[edge.source].position[2];
-            let d = (dx * dx + dy * dy + dz * dz).sqrt().max(config.min_distance);
+            let d = (dx * dx + dy * dy + dz * dz)
+                .sqrt()
+                .max(config.min_distance);
             let factor = config.attraction_strength * edge.weight * (1.0 + d).ln() / d;
             forces[edge.source][0] += dx * factor;
             forces[edge.source][1] += dy * factor;
@@ -2084,8 +2089,8 @@ pub fn force_atlas2_3d(
             }
             let mag = vec3_len(force).max(f64::MIN_POSITIVE);
             let scale = mag.min(temperature) / mag;
-            for k in 0..3 {
-                node.velocity[k] = (node.velocity[k] + force[k] * scale) * config.damping;
+            for (v, f) in node.velocity.iter_mut().zip(force.iter()) {
+                *v = (*v + f * scale) * config.damping;
             }
             let disp = vec3_len(&node.velocity);
             max_displacement = max_displacement.max(disp);
@@ -2106,7 +2111,12 @@ pub fn force_atlas2_3d(
     }
 
     let energy = compute_energy_3d(nodes, edges, config);
-    Ok(LayoutResult3D { nodes: nodes.to_vec(), iterations_run, converged, energy })
+    Ok(LayoutResult3D {
+        nodes: nodes.to_vec(),
+        iterations_run,
+        converged,
+        energy,
+    })
 }
 
 /// High-level 3D layout entry point.
@@ -2271,7 +2281,9 @@ pub fn compute_energy_3d(
             let dx = nodes[j].position[0] - nodes[i].position[0];
             let dy = nodes[j].position[1] - nodes[i].position[1];
             let dz = nodes[j].position[2] - nodes[i].position[2];
-            let d = (dx * dx + dy * dy + dz * dz).sqrt().max(config.min_distance);
+            let d = (dx * dx + dy * dy + dz * dz)
+                .sqrt()
+                .max(config.min_distance);
             repulsion += config.repulsion_strength * nodes[i].mass * nodes[j].mass / d;
         }
     }
@@ -2517,8 +2529,11 @@ pub fn compute_neighborhood_preservation(
             .collect();
         spatial.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        let spatial_set: std::collections::HashSet<usize> =
-            spatial.iter().take(graph_nb.len()).map(|&(j, _)| j).collect();
+        let spatial_set: std::collections::HashSet<usize> = spatial
+            .iter()
+            .take(graph_nb.len())
+            .map(|&(j, _)| j)
+            .collect();
         let graph_set: std::collections::HashSet<usize> = graph_nb.iter().copied().collect();
 
         let overlap = graph_set.intersection(&spatial_set).count();
@@ -3149,10 +3164,7 @@ mod tests {
     // ── Helper builders ──────────────────────────────────────────────────────
 
     fn two_node_graph(dist: f64, ideal: f64) -> (Vec<LayoutNode>, Vec<LayoutEdge>) {
-        let nodes = vec![
-            LayoutNode::new(0, 0.0, 0.0),
-            LayoutNode::new(1, dist, 0.0),
-        ];
+        let nodes = vec![LayoutNode::new(0, 0.0, 0.0), LayoutNode::new(1, dist, 0.0)];
         let edges = vec![LayoutEdge {
             source: 0,
             target: 1,
@@ -3170,9 +3182,24 @@ mod tests {
             LayoutNode::new(2, -r / 2.0, -r * 0.866),
         ];
         let edges = vec![
-            LayoutEdge { source: 0, target: 1, weight: 1.0, ideal_length: r },
-            LayoutEdge { source: 1, target: 2, weight: 1.0, ideal_length: r },
-            LayoutEdge { source: 2, target: 0, weight: 1.0, ideal_length: r },
+            LayoutEdge {
+                source: 0,
+                target: 1,
+                weight: 1.0,
+                ideal_length: r,
+            },
+            LayoutEdge {
+                source: 1,
+                target: 2,
+                weight: 1.0,
+                ideal_length: r,
+            },
+            LayoutEdge {
+                source: 2,
+                target: 0,
+                weight: 1.0,
+                ideal_length: r,
+            },
         ];
         (nodes, edges)
     }
@@ -3254,8 +3281,7 @@ mod tests {
         let result = result.unwrap_or_else(|_| unreachable!());
         let p0 = result.nodes[0].position;
         let p1 = result.nodes[1].position;
-        let final_dist =
-            ((p1[0] - p0[0]).powi(2) + (p1[1] - p0[1]).powi(2)).sqrt();
+        let final_dist = ((p1[0] - p0[0]).powi(2) + (p1[1] - p0[1]).powi(2)).sqrt();
 
         // The layout must pull the nodes at least 50% closer than they started.
         // The exact equilibrium depends on repulsion_strength vs attraction_strength,
@@ -3417,7 +3443,10 @@ mod tests {
     fn test_wgsl_force_shader_non_empty() {
         let src = wgsl_force_shader();
         assert!(!src.is_empty());
-        assert!(src.contains("@compute"), "expected @compute in force shader");
+        assert!(
+            src.contains("@compute"),
+            "expected @compute in force shader"
+        );
         assert!(src.contains("fn main"), "expected fn main in force shader");
     }
 
@@ -3509,9 +3538,24 @@ mod tests {
     fn test_force_atlas2_small_graph() {
         let mut nodes = random_layout(6, 300.0, 300.0);
         let edges = vec![
-            LayoutEdge { source: 0, target: 1, weight: 1.0, ideal_length: 80.0 },
-            LayoutEdge { source: 1, target: 2, weight: 1.0, ideal_length: 80.0 },
-            LayoutEdge { source: 3, target: 4, weight: 1.0, ideal_length: 80.0 },
+            LayoutEdge {
+                source: 0,
+                target: 1,
+                weight: 1.0,
+                ideal_length: 80.0,
+            },
+            LayoutEdge {
+                source: 1,
+                target: 2,
+                weight: 1.0,
+                ideal_length: 80.0,
+            },
+            LayoutEdge {
+                source: 3,
+                target: 4,
+                weight: 1.0,
+                ideal_length: 80.0,
+            },
         ];
         let mut config = LayoutConfig::default();
         config.iterations = 50;
@@ -3537,10 +3581,30 @@ mod tests {
     fn test_energy_decreases_over_iterations() {
         let nodes_init = random_layout(8, 600.0, 600.0);
         let edges = vec![
-            LayoutEdge { source: 0, target: 1, weight: 1.0, ideal_length: 100.0 },
-            LayoutEdge { source: 1, target: 2, weight: 1.0, ideal_length: 100.0 },
-            LayoutEdge { source: 2, target: 3, weight: 1.0, ideal_length: 100.0 },
-            LayoutEdge { source: 4, target: 5, weight: 1.0, ideal_length: 100.0 },
+            LayoutEdge {
+                source: 0,
+                target: 1,
+                weight: 1.0,
+                ideal_length: 100.0,
+            },
+            LayoutEdge {
+                source: 1,
+                target: 2,
+                weight: 1.0,
+                ideal_length: 100.0,
+            },
+            LayoutEdge {
+                source: 2,
+                target: 3,
+                weight: 1.0,
+                ideal_length: 100.0,
+            },
+            LayoutEdge {
+                source: 4,
+                target: 5,
+                weight: 1.0,
+                ideal_length: 100.0,
+            },
         ];
         let config = LayoutConfig::default();
 
@@ -3581,15 +3645,16 @@ pub fn accumulate_repulsion_3d(
         force[1] -= dy / dist * mag;
         force[2] -= dz / dist * mag;
     } else {
-        for child_opt in &node.children {
-            if let Some(child) = child_opt {
-                accumulate_repulsion_3d(child, body, theta, force, strength, min_dist);
-            }
+        for child in node.children.iter().flatten() {
+            accumulate_repulsion_3d(child, body, theta, force, strength, min_dist);
         }
     }
 }
 
-pub fn validate_edges_3d(nodes: &[LayoutNode3D], edges: &[LayoutEdge3D]) -> Result<(), LayoutError> {
+pub fn validate_edges_3d(
+    nodes: &[LayoutNode3D],
+    edges: &[LayoutEdge3D],
+) -> Result<(), LayoutError> {
     let n = nodes.len();
     for e in edges {
         if e.source >= n || e.target >= n {

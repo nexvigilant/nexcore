@@ -13,7 +13,7 @@
 //! **Bond Application**: Bond activation rate considering both energy and
 //! organizational overhead (entropy cost of coordination).
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Boltzmann constant (J/K)
 pub const BOLTZMANN: f64 = 1.380649e-23;

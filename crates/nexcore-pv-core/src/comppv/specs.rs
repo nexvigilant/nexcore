@@ -4,12 +4,12 @@
 //! and documented safety implications of violation.
 
 use crate::comppv::types::{ConservationLaw, ConservationLawSpec};
-use once_cell::sync::Lazy;
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 /// Static map of all 11 conservation law specifications.
-pub static CONSERVATION_LAW_SPECS: Lazy<HashMap<ConservationLaw, ConservationLawSpec>> =
-    Lazy::new(|| {
+pub static CONSERVATION_LAW_SPECS: LazyLock<HashMap<ConservationLaw, ConservationLawSpec>> =
+    LazyLock::new(|| {
         let mut m = HashMap::new();
 
         m.insert(

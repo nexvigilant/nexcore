@@ -2,9 +2,9 @@
 //!
 //! Diamond v2 compliance scoring with 8 weighted components.
 
+use nexcore_error::Error;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-use thiserror::Error;
 
 /// SMST v2 validation errors.
 #[derive(Debug, Error)]

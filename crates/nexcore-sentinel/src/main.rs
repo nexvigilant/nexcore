@@ -18,8 +18,8 @@ use std::net::IpAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use nexcore_error::Context;
 use clap::{Parser, Subcommand};
+use nexcore_error::Context;
 use tracing_subscriber::EnvFilter;
 
 use nexcore_sentinel::config::SentinelConfig;

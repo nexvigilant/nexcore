@@ -12,6 +12,7 @@ keywords = ["pharmacovigilance", "deduplication", "signal-detection", "triage", 
 categories = ["algorithms", "science"]
 
 [dependencies]
+nexcore-error = { workspace = true }
 # NexCore internal
 nexcore-dtree = { version = "1.0.0", path = "../nexcore-dtree", registry = "nexcore" }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
@@ -21,7 +22,6 @@ serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 
 # Error handling
-thiserror = { version = "1.0.61" }
 
 # Date/time and IDs
 chrono = { version = "0.4.38", features = ["serde"] }
@@ -30,7 +30,7 @@ chrono = { version = "0.4.38", features = ["serde"] }
 rayon = { version = "1.10.0" }
 
 # Home directory
-dirs = { version = "5.0.1" }
+nexcore-fs = { workspace = true }
 
 [dev-dependencies]
 tempfile = { version = "3.10.1" }

@@ -10,6 +10,7 @@ use nexcore_cortex::cloud::{DatasetConfig, FineTuneJob, JobStatus};
 use nexcore_cortex::generate::GenerateParams;
 use nexcore_cortex::lora::LoraConfig;
 use nexcore_cortex::model::{ModelConfig, ModelFormat, list_cached_models};
+use nexcore_fs::dirs;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 

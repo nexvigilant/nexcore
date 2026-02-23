@@ -389,7 +389,7 @@ pub struct Device {
 /// Error type for device operations.
 ///
 /// Tier: T2-C
-#[derive(Debug, Clone, thiserror::Error, Serialize, Deserialize)]
+#[derive(Debug, Clone, nexcore_error::Error, Serialize, Deserialize)]
 pub enum DeviceError {
     #[error("invalid state transition: {from:?} → {to:?}")]
     InvalidTransition { from: DeviceState, to: DeviceState },

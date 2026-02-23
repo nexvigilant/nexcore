@@ -10,6 +10,7 @@ repository = "https://github.com/nexvigilant/nexcore"
 description = "Perplexity AI Sonar API client for search-grounded research"
 
 [dependencies]
+nexcore-error = { workspace = true }
 # Lex Primitiva grounding
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 
@@ -24,7 +25,6 @@ serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 
 # Error handling
-thiserror = { version = "1.0.61" }
 
 # Logging
 tracing = { version = "0.1.40" }

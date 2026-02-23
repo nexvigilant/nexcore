@@ -553,7 +553,7 @@ impl MeasuredForce {
 // ============================================================================
 
 /// Errors in physics operations
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum PhysicsError {
     /// Conservation violated
     #[error("conservation violated: expected {expected}, got {actual}")]

@@ -283,11 +283,7 @@ mod tests {
     #[test]
     fn absent_primitives_are_void_location_irreversibility_product() {
         let manifest = crate_primitive_manifest();
-        let absent_prims: Vec<LexPrimitiva> = manifest
-            .absent
-            .iter()
-            .map(|a| a.primitive)
-            .collect();
+        let absent_prims: Vec<LexPrimitiva> = manifest.absent.iter().map(|a| a.primitive).collect();
         assert!(absent_prims.contains(&LexPrimitiva::Void));
         assert!(absent_prims.contains(&LexPrimitiva::Location));
         assert!(absent_prims.contains(&LexPrimitiva::Irreversibility));
@@ -297,11 +293,7 @@ mod tests {
     #[test]
     fn no_overlap_between_present_and_absent() {
         let manifest = crate_primitive_manifest();
-        let present: Vec<LexPrimitiva> = manifest
-            .manifests
-            .iter()
-            .map(|m| m.primitive)
-            .collect();
+        let present: Vec<LexPrimitiva> = manifest.manifests.iter().map(|m| m.primitive).collect();
         for absent in &manifest.absent {
             assert!(
                 !present.contains(&absent.primitive),
@@ -338,14 +330,16 @@ mod tests {
     #[test]
     fn root_primitives_present() {
         let manifest = crate_primitive_manifest();
-        let prims: Vec<LexPrimitiva> = manifest
-            .manifests
-            .iter()
-            .map(|m| m.primitive)
-            .collect();
+        let prims: Vec<LexPrimitiva> = manifest.manifests.iter().map(|m| m.primitive).collect();
         // The two root primitives (N + →) must be present
-        assert!(prims.contains(&LexPrimitiva::Quantity), "Root primitive N missing");
-        assert!(prims.contains(&LexPrimitiva::Causality), "Root primitive → missing");
+        assert!(
+            prims.contains(&LexPrimitiva::Quantity),
+            "Root primitive N missing"
+        );
+        assert!(
+            prims.contains(&LexPrimitiva::Causality),
+            "Root primitive → missing"
+        );
     }
 
     #[test]

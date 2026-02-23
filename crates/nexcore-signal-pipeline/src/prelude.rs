@@ -11,8 +11,8 @@
 
 /// Domain types: the building blocks of every signal detection workflow.
 pub use crate::core::{
-    Alert, AlertState, ContingencyTable, DetectionResult, DrugEventPair, NormalizedEvent, RawReport,
-    ReportSource, SignalStrength, ThresholdConfig, ValidationCheck, ValidationReport,
+    Alert, AlertState, ContingencyTable, DetectionResult, DrugEventPair, NormalizedEvent,
+    RawReport, ReportSource, SignalStrength, ThresholdConfig, ValidationCheck, ValidationReport,
 };
 
 /// Signal metric newtypes: no naked f64.
@@ -27,7 +27,7 @@ pub use crate::core::SignalError;
 pub use crate::orchestrate::Pipeline;
 
 /// All-in-one signal metrics and compute function.
-pub use crate::stats::{compute_all, SignalMetrics};
+pub use crate::stats::{SignalMetrics, compute_all};
 
 // ---- Relay fidelity ----
 

@@ -15,7 +15,7 @@ pub fn discover_modules(crate_src: &Path) -> Result<Vec<ModuleInfo>, ForgeError>
         return Err(ForgeError::CrateNotFound(crate_src.to_path_buf()));
     }
 
-    for entry in walkdir::WalkDir::new(crate_src)
+    for entry in nexcore_fs::walk::WalkDir::new(crate_src)
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|e| e.path().extension().is_some_and(|ext| ext == "rs") && e.file_type().is_file())

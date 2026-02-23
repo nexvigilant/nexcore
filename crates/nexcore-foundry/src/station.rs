@@ -47,7 +47,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum StationId {
     // -- Builder pipeline --------------------------------------------------
-
     /// B1 — Blueprint station. Produces a [`DesignSpec`] from a prompt.
     ///
     /// [`DesignSpec`]: crate::artifact::DesignSpec
@@ -67,7 +66,6 @@ pub enum StationId {
     B3,
 
     // -- Analyst pipeline --------------------------------------------------
-
     /// A1 — Measure station. Collects quantitative signals from the
     /// deliverable.
     A1,
@@ -80,7 +78,6 @@ pub enum StationId {
     A3,
 
     // -- Bridge stations ---------------------------------------------------
-
     /// Codification bridge — encodes builder output into a canonical form
     /// before B2 processing.
     BridgeCodify,
@@ -284,10 +281,7 @@ impl StationConfig {
         Self {
             id: StationId::A1,
             agent_name: "foundry-measure".to_string(),
-            skills: vec![
-                "data-transformer".to_string(),
-                "craft-program".to_string(),
-            ],
+            skills: vec!["data-transformer".to_string(), "craft-program".to_string()],
             run_mode: RunMode::Background,
         }
     }

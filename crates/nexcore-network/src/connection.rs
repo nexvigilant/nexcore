@@ -318,7 +318,7 @@ impl Connection {
 /// Connection state machine errors.
 ///
 /// Tier: T2-P (∂ Boundary — constraint violations)
-#[derive(Debug, Clone, thiserror::Error)]
+#[derive(Debug, Clone, nexcore_error::Error)]
 pub enum ConnectionError {
     /// Invalid state transition attempted.
     #[error("invalid transition: {from:?} → {to:?}")]

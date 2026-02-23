@@ -134,7 +134,10 @@ impl FirestorePersistence {
         self.patch(&url_with_mask, &body).await
     }
 
-    pub async fn save_enrollment(&self, enrollment: &EnrollmentRecord) -> nexcore_error::Result<()> {
+    pub async fn save_enrollment(
+        &self,
+        enrollment: &EnrollmentRecord,
+    ) -> nexcore_error::Result<()> {
         let url = self.url("enrollments", Some(&enrollment.id));
         let body = json!({
             "fields": {
@@ -188,7 +191,10 @@ impl FirestorePersistence {
         Ok(results)
     }
 
-    pub async fn save_membership(&self, membership: &MembershipRecord) -> nexcore_error::Result<()> {
+    pub async fn save_membership(
+        &self,
+        membership: &MembershipRecord,
+    ) -> nexcore_error::Result<()> {
         let url = self.url("memberships", Some(&membership.id));
         let body = json!({
             "fields": {
@@ -201,7 +207,10 @@ impl FirestorePersistence {
         self.patch(&url, &body).await
     }
 
-    pub async fn list_memberships(&self, _user_id: &str) -> nexcore_error::Result<Vec<MembershipRecord>> {
+    pub async fn list_memberships(
+        &self,
+        _user_id: &str,
+    ) -> nexcore_error::Result<Vec<MembershipRecord>> {
         let url = self.url("memberships", None);
         let documents = self.get_list(&url).await?;
         let mut results = Vec::new();
@@ -573,7 +582,10 @@ impl MockPersistence {
         }
     }
 
-    pub async fn save_enrollment(&self, enrollment: &EnrollmentRecord) -> nexcore_error::Result<()> {
+    pub async fn save_enrollment(
+        &self,
+        enrollment: &EnrollmentRecord,
+    ) -> nexcore_error::Result<()> {
         let mut enrollments = self
             .enrollments
             .lock()
@@ -607,7 +619,10 @@ impl MockPersistence {
         Ok(circles.clone())
     }
 
-    pub async fn save_membership(&self, membership: &MembershipRecord) -> nexcore_error::Result<()> {
+    pub async fn save_membership(
+        &self,
+        membership: &MembershipRecord,
+    ) -> nexcore_error::Result<()> {
         let mut memberships = self
             .memberships
             .lock()
@@ -616,7 +631,10 @@ impl MockPersistence {
         Ok(())
     }
 
-    pub async fn list_memberships(&self, user_id: &str) -> nexcore_error::Result<Vec<MembershipRecord>> {
+    pub async fn list_memberships(
+        &self,
+        user_id: &str,
+    ) -> nexcore_error::Result<Vec<MembershipRecord>> {
         let memberships = self
             .memberships
             .lock()

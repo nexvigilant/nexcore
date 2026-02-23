@@ -244,7 +244,7 @@ impl ContainerOrchestrator {
 
     fn build_running_handle(&self, config: &ContainerConfig) -> RunningContainer {
         RunningContainer {
-            id: format!("container-{}", uuid::Uuid::new_v4()),
+            id: format!("container-{}", nexcore_id::NexId::v4()),
             name: config.name.clone(),
             ports: config.ports.clone(),
             connection_strings: self.generate_connection_strings(config),

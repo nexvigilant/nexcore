@@ -1,7 +1,7 @@
 //! Error types for the nexcore-openfda client.
 
 /// Errors from OpenFDA API operations.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum OpenFdaError {
     /// Failed to build the HTTP client.
     #[error("Failed to build HTTP client: {0}")]

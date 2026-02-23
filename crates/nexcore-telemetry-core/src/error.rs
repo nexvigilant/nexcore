@@ -3,8 +3,8 @@
 //! Provides unified error handling for source parsing,
 //! snapshot management, and cross-reference analysis.
 
+use nexcore_error::Error;
 use std::path::PathBuf;
-use thiserror::Error;
 
 /// Errors during telemetry operations.
 #[derive(Debug, Error)]
@@ -18,11 +18,11 @@ pub enum TelemetryError {
     Json(#[from] serde_json::Error),
 
     /// Source file not found
-    #[error("Source not found: {path}")]
+    #[error("Source not found: {path:?}")]
     SourceNotFound { path: PathBuf },
 
     /// Snapshot not found
-    #[error("Snapshot not found: {path}")]
+    #[error("Snapshot not found: {path:?}")]
     SnapshotNotFound { path: PathBuf },
 
     /// Invalid source format

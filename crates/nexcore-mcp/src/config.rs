@@ -4,14 +4,15 @@
 //!
 //! Uses lazy-static pattern for <1ms config access after first load.
 
-use nexcore_error::{Context, Result};
 use nexcore_config::ClaudeConfig;
-use once_cell::sync::Lazy;
+use nexcore_error::{Context, Result};
+use nexcore_fs::dirs;
+use std::sync::LazyLock;
 
 /// Global config singleton (loaded once, reused forever)
 ///
 /// First access loads from disk (~15-20ms), subsequent accesses are <1ms.
-static CONFIG: Lazy<Option<ClaudeConfig>> = Lazy::new(|| load_config_internal().ok());
+static CONFIG: LazyLock<Option<ClaudeConfig>> = LazyLock::new(|| load_config_internal().ok());
 
 /// Get global config reference
 ///

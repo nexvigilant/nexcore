@@ -78,8 +78,7 @@ pub fn dynamics_step(params: VizDynamicsStepParams) -> Result<CallToolResult, Mc
 
     match run_simulation(&mut mol, &config, &ff_config) {
         Ok(result) => {
-            let final_positions: Vec<[f64; 3]> =
-                mol.atoms.iter().map(|a| a.position).collect();
+            let final_positions: Vec<[f64; 3]> = mol.atoms.iter().map(|a| a.position).collect();
             let json = serde_json::json!({
                 "status": "completed",
                 "steps_run": result.total_steps,
@@ -101,7 +100,7 @@ pub fn dynamics_step(params: VizDynamicsStepParams) -> Result<CallToolResult, Mc
 
 /// Compute molecular force field energy breakdown.
 pub fn force_field_energy(params: VizForceFieldEnergyParams) -> Result<CallToolResult, McpError> {
-    use nexcore_viz::force_field::{compute_energy, ForceFieldConfig};
+    use nexcore_viz::force_field::{ForceFieldConfig, compute_energy};
 
     let mol = build_molecule(&params.elements, &params.positions, &params.bonds)?;
 
@@ -136,7 +135,7 @@ pub fn force_field_energy(params: VizForceFieldEnergyParams) -> Result<CallToolR
 
 /// Run force-directed graph layout (CPU-side Fruchterman-Reingold / ForceAtlas2).
 pub fn gpu_layout(params: VizGpuLayoutParams) -> Result<CallToolResult, McpError> {
-    use nexcore_viz::gpu_layout::{compute_layout, random_layout, LayoutConfig, LayoutEdge};
+    use nexcore_viz::gpu_layout::{LayoutConfig, LayoutEdge, compute_layout, random_layout};
 
     if params.node_count == 0 {
         return Ok(CallToolResult::error(vec![rmcp::model::Content::text(
@@ -174,8 +173,7 @@ pub fn gpu_layout(params: VizGpuLayoutParams) -> Result<CallToolResult, McpError
 
     match compute_layout(nodes, edges, &config) {
         Ok(result) => {
-            let positions: Vec<[f64; 2]> =
-                result.nodes.iter().map(|n| n.position).collect();
+            let positions: Vec<[f64; 2]> = result.nodes.iter().map(|n| n.position).collect();
             let json = serde_json::json!({
                 "node_count": result.nodes.len(),
                 "edge_count": edge_count,
@@ -199,7 +197,7 @@ pub fn gpu_layout(params: VizGpuLayoutParams) -> Result<CallToolResult, McpError
 /// Construct a hypergraph and compute metrics, components, bipartiteness.
 pub fn hypergraph(params: VizHypergraphParams) -> Result<CallToolResult, McpError> {
     use nexcore_viz::hypergraph::{
-        compute_metrics, connected_components, detect_bipartite, HyperEdge, HyperNode, Hypergraph,
+        HyperEdge, HyperNode, Hypergraph, compute_metrics, connected_components, detect_bipartite,
     };
 
     let raw_edges: Vec<Vec<usize>> = serde_json::from_str(&params.hyperedges)
@@ -257,7 +255,10 @@ pub fn lod_select(params: VizLodSelectParams) -> Result<CallToolResult, McpError
     } else if params.atom_count < 5_000 {
         ("CalphaTrace", "C-alpha backbone trace only")
     } else if params.atom_count < 20_000 {
-        ("SecondaryStructure", "Helix cylinders, sheet arrows, coil tubes")
+        (
+            "SecondaryStructure",
+            "Helix cylinders, sheet arrows, coil tubes",
+        )
     } else if params.atom_count < 50_000 {
         ("DomainBlob", "One sphere per domain/chain segment")
     } else {
@@ -292,7 +293,7 @@ pub fn lod_select(params: VizLodSelectParams) -> Result<CallToolResult, McpError
 
 /// Run energy minimization on a molecular structure.
 pub fn minimize_energy(params: VizMinimizeEnergyParams) -> Result<CallToolResult, McpError> {
-    use nexcore_viz::force_field::{compute_energy, compute_forces, ForceFieldConfig};
+    use nexcore_viz::force_field::{ForceFieldConfig, compute_energy, compute_forces};
 
     let mut mol = build_molecule(&params.elements, &params.positions, &params.bonds)?;
     let ff_config = ForceFieldConfig::default();
@@ -394,7 +395,9 @@ pub fn particle_preset(params: VizParticlePresetParams) -> Result<CallToolResult
 
 /// Compute an AE signal heatmap from drug signal data.
 pub fn ae_overlay(params: VizAeOverlayParams) -> Result<CallToolResult, McpError> {
-    use nexcore_viz::ae_overlay::{compute_heatmap, NormalizationMethod, OverlayConfig, ScoreField};
+    use nexcore_viz::ae_overlay::{
+        NormalizationMethod, OverlayConfig, ScoreField, compute_heatmap,
+    };
     use nexcore_viz::vdag::{SignalScore, VdagNode, VdagNodeType};
     use std::collections::HashMap;
 
@@ -489,7 +492,7 @@ pub fn ae_overlay(params: VizAeOverlayParams) -> Result<CallToolResult, McpError
 
 /// Generate 3D molecular coordinates via distance geometry.
 pub fn coord_gen(params: VizCoordGenParams) -> Result<CallToolResult, McpError> {
-    use nexcore_viz::coord_gen::{generate_coordinates, CoordGenConfig};
+    use nexcore_viz::coord_gen::{CoordGenConfig, generate_coordinates};
     use nexcore_viz::molecular::{Atom, Bond, BondOrder, Element, Molecule};
 
     if params.bonds.len() % 2 != 0 {
@@ -500,8 +503,11 @@ pub fn coord_gen(params: VizCoordGenParams) -> Result<CallToolResult, McpError> 
 
     let mut mol = Molecule::new("input");
     for (i, sym) in params.elements.iter().enumerate() {
-        mol.atoms
-            .push(Atom::new((i + 1) as u32, Element::from_symbol(sym), [0.0, 0.0, 0.0]));
+        mol.atoms.push(Atom::new(
+            (i + 1) as u32,
+            Element::from_symbol(sym),
+            [0.0, 0.0, 0.0],
+        ));
     }
     for chunk in params.bonds.chunks(2) {
         if let [a1, a2] = chunk {
@@ -543,7 +549,7 @@ pub fn coord_gen(params: VizCoordGenParams) -> Result<CallToolResult, McpError> 
 /// Compute bipartite drug-AE network layout from a VDAG definition.
 pub fn bipartite_layout(params: VizBipartiteLayoutParams) -> Result<CallToolResult, McpError> {
     use nexcore_viz::bipartite::{
-        default_config, from_vdag, layout_bipartite, render_bipartite_svg, Side,
+        Side, default_config, from_vdag, layout_bipartite, render_bipartite_svg,
     };
     use nexcore_viz::theme::Theme;
     use nexcore_viz::vdag::{Vdag, VdagEdge, VdagEdgeType, VdagNode, VdagNodeType};
@@ -552,7 +558,10 @@ pub fn bipartite_layout(params: VizBipartiteLayoutParams) -> Result<CallToolResu
     let raw: serde_json::Value = serde_json::from_str(&params.vdag_json)
         .map_err(|e| McpError::invalid_params(format!("Invalid VDAG JSON: {e}"), None))?;
 
-    let title = raw["title"].as_str().unwrap_or("Drug-AE Network").to_string();
+    let title = raw["title"]
+        .as_str()
+        .unwrap_or("Drug-AE Network")
+        .to_string();
 
     let raw_nodes = raw["nodes"].as_array().cloned().unwrap_or_default();
     let raw_edges = raw["edges"].as_array().cloned().unwrap_or_default();

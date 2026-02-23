@@ -3,6 +3,7 @@
 name = "nexcore-softrender"
 version = "1.0.0"
 edition = "2024"
+license = "LicenseRef-NexVigilant-Proprietary"
 description = "Pure-Rust software rasterizer — first-principles rendering from math to pixels"
 
 [dependencies]

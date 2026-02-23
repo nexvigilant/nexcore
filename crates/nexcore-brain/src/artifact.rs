@@ -102,7 +102,10 @@ impl ArtifactType {
             ArtifactType::Audit
         } else if lower.contains("spec") {
             ArtifactType::Specification
-        } else if lower.contains("schematic") || lower.contains("wiring") || lower.contains("diagram") {
+        } else if lower.contains("schematic")
+            || lower.contains("wiring")
+            || lower.contains("diagram")
+        {
             ArtifactType::Schematic
         } else if lower.contains("reference") || lower.contains("guide") {
             ArtifactType::Reference

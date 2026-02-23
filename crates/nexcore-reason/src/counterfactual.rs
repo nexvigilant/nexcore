@@ -232,9 +232,7 @@ fn structural_leaves(dag: &CausalDag) -> HashSet<NodeId> {
 
 /// Looks up the first link matching `from -> to` in `dag`.
 fn link_between<'d>(dag: &'d CausalDag, from: &NodeId, to: &NodeId) -> Option<&'d CausalLink> {
-    dag.links
-        .iter()
-        .find(|l| &l.from == from && &l.to == to)
+    dag.links.iter().find(|l| &l.from == from && &l.to == to)
 }
 
 /// Removes `node_id` and all links that touch it from `dag`.
@@ -461,9 +459,7 @@ impl CounterfactualEngine {
         let broken_paths: Vec<(NodeId, NodeId)> = original_reachable
             .iter()
             .filter(|(a, b)| {
-                modified_ids.contains(a)
-                    && modified_ids.contains(b)
-                    && !can_reach(&modified, a, b)
+                modified_ids.contains(a) && modified_ids.contains(b) && !can_reach(&modified, a, b)
             })
             .map(|(a, b)| (a.clone(), b.clone()))
             .collect();
@@ -610,10 +606,7 @@ impl CounterfactualEngine {
 
         // Nodes whose reachability set shrank.
         for id in modified_ids {
-            let original_reach_count = original_reachable
-                .iter()
-                .filter(|(a, _)| a == id)
-                .count();
+            let original_reach_count = original_reachable.iter().filter(|(a, _)| a == id).count();
             let modified_reach_count = modified
                 .nodes
                 .iter()
@@ -661,13 +654,16 @@ impl CounterfactualEngine {
         }
 
         match intervention {
-            Intervention::AdjustStrength { from, to, new_strength } => {
+            Intervention::AdjustStrength {
+                from,
+                to,
+                new_strength,
+            } => {
                 let old_strength = link_between(&self.dag, from, to)
                     .map(|l| l.strength)
                     .unwrap_or(0.0);
                 let delta = (old_strength - new_strength.clamp(0.0, 1.0)).abs();
-                let node_fraction =
-                    affected_nodes.len() as f64 / original_node_count as f64;
+                let node_fraction = affected_nodes.len() as f64 / original_node_count as f64;
                 (delta + node_fraction * 0.1_f64).clamp(0.0, 1.0)
             }
             _ => {
@@ -924,7 +920,10 @@ mod tests {
     fn inject_node_appears_as_new_root_and_leaf() {
         let engine = CounterfactualEngine::new(chain_dag());
         let result = engine
-            .evaluate(&Intervention::InjectNode(node("hypo", NodeType::Recommendation)))
+            .evaluate(&Intervention::InjectNode(node(
+                "hypo",
+                NodeType::Recommendation,
+            )))
             .expect("evaluation failed");
 
         assert!(
@@ -942,7 +941,10 @@ mod tests {
     #[test]
     fn inject_duplicate_node_returns_error() {
         let engine = CounterfactualEngine::new(chain_dag());
-        let err = engine.evaluate(&Intervention::InjectNode(node("a", NodeType::Recommendation)));
+        let err = engine.evaluate(&Intervention::InjectNode(node(
+            "a",
+            NodeType::Recommendation,
+        )));
         assert!(err.is_err(), "expected error for duplicate node id");
     }
 

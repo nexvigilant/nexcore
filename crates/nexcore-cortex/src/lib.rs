@@ -68,7 +68,7 @@ pub use tokenizer::CortexTokenizer;
 /// Errors that can occur during cortex operations.
 ///
 /// Tier: T2-P (∂ + ∃ — Boundary + Existence)
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum CortexError {
     /// Model file not found in cache.
     #[error("Model not found: {0}")]

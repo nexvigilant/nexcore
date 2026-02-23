@@ -437,10 +437,7 @@ mod tests {
     #[test]
     fn visibility_is_t1() {
         assert_eq!(Visibility::tier(), Tier::T1Universal);
-        assert_eq!(
-            Visibility::dominant_primitive(),
-            Some(LexPrimitiva::State)
-        );
+        assert_eq!(Visibility::dominant_primitive(), Some(LexPrimitiva::State));
     }
 
     // T2-P tier tests

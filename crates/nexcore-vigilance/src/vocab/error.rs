@@ -1,6 +1,6 @@
 //! Error types for vocabulary intelligence operations.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Result type for vocabulary operations.
 pub type VocabResult<T> = Result<T, VocabError>;

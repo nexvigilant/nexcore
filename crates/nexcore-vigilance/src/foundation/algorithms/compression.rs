@@ -39,10 +39,7 @@ pub fn decompress_gzip(data: &[u8]) -> FoundationResult<Vec<u8>> {
 /// Returns an error if compression fails.
 pub fn compress_string_to_base64(input: &str) -> FoundationResult<String> {
     let compressed = compress_gzip(input.as_bytes())?;
-    Ok(base64::Engine::encode(
-        &base64::engine::general_purpose::STANDARD,
-        &compressed,
-    ))
+    Ok(nexcore_codec::base64::encode(&compressed))
 }
 
 /// Decompress a base64-encoded gzip string
@@ -51,7 +48,7 @@ pub fn compress_string_to_base64(input: &str) -> FoundationResult<String> {
 ///
 /// Returns an error if decompression or base64 decoding fails.
 pub fn decompress_base64_to_string(input: &str) -> FoundationResult<String> {
-    let decoded = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, input)
+    let decoded = nexcore_codec::base64::decode(input)
         .map_err(|e| FoundationError::Serialization(e.to_string()))?;
     let decompressed = decompress_gzip(&decoded)?;
     String::from_utf8(decompressed).map_err(|e| FoundationError::Serialization(e.to_string()))

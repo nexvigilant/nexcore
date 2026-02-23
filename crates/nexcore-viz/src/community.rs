@@ -208,11 +208,7 @@ pub fn detect_communities(graph: &GraphSpec) -> Vec<Vec<String>> {
 /// Runs Phase 1 (greedy local moves) in place on `partition`.
 ///
 /// Returns `true` if at least one node moved community.
-fn phase1(
-    graph: &GraphSpec,
-    adj: &HashMap<(usize, usize), f64>,
-    partition: &mut [usize],
-) -> bool {
+fn phase1(graph: &GraphSpec, adj: &HashMap<(usize, usize), f64>, partition: &mut [usize]) -> bool {
     let n = graph.n();
     let m = edge_count(graph);
     if m == 0 {
@@ -272,8 +268,7 @@ fn phase1(
             for candidate_comm in candidates {
                 let ki_in_candidate = comm_weights.get(&candidate_comm).copied().unwrap_or(0.0);
                 let sigma_tot_candidate = sigma_tot.get(&candidate_comm).copied().unwrap_or(0.0);
-                let gain =
-                    delta_q(ki_in_candidate, sigma_tot_candidate, ki, two_m) - removal_gain;
+                let gain = delta_q(ki_in_candidate, sigma_tot_candidate, ki, two_m) - removal_gain;
                 if gain > best_gain {
                     best_gain = gain;
                     best_comm = candidate_comm;
@@ -358,11 +353,7 @@ fn build_super_graph(
         let su = comm_to_super.get(&cu).cloned().unwrap_or_default();
         let sv = comm_to_super.get(&cv).cloned().unwrap_or_default();
         // Canonical ordering to deduplicate (a,b) vs (b,a).
-        let edge = if su <= sv {
-            (su, sv)
-        } else {
-            (sv, su)
-        };
+        let edge = if su <= sv { (su, sv) } else { (sv, su) };
         super_edge_set.insert(edge);
     }
 
@@ -390,9 +381,11 @@ fn partition_to_communities(graph: &GraphSpec, partition: &[usize]) -> Vec<Vec<S
     let mut result: Vec<Vec<String>> = comm_map.into_values().collect();
     // Sort communities by size descending, then alphabetically within each.
     result.sort_by(|a, b| {
-        b.len()
-            .cmp(&a.len())
-            .then_with(|| a.first().map_or("", String::as_str).cmp(b.first().map_or("", String::as_str)))
+        b.len().cmp(&a.len()).then_with(|| {
+            a.first()
+                .map_or("", String::as_str)
+                .cmp(b.first().map_or("", String::as_str))
+        })
     });
     for comm in &mut result {
         comm.sort();
@@ -421,10 +414,7 @@ fn edge_count(graph: &GraphSpec) -> usize {
 }
 
 /// Builds an adjacency weight map `(i, j) → weight` for both directions.
-fn build_adjacency(
-    graph: &GraphSpec,
-    idx: &HashMap<&str, usize>,
-) -> HashMap<(usize, usize), f64> {
+fn build_adjacency(graph: &GraphSpec, idx: &HashMap<&str, usize>) -> HashMap<(usize, usize), f64> {
     let mut adj: HashMap<(usize, usize), f64> = HashMap::new();
     for (u, v) in &graph.edges {
         let Some(&i) = idx.get(u.as_str()) else {
@@ -531,7 +521,10 @@ mod tests {
             vec!["x".into(), "y".into(), "z".into()],
         ];
         let q = modularity(&g, &comms);
-        assert!(q > 0.0, "well-separated partition should have Q > 0, got {q}");
+        assert!(
+            q > 0.0,
+            "well-separated partition should have Q > 0, got {q}"
+        );
     }
 
     #[test]
@@ -600,7 +593,10 @@ mod tests {
         let n = g.n();
         let comms = detect_communities(&g);
         let total: usize = comms.iter().map(|c| c.len()).sum();
-        assert_eq!(total, n, "all nodes must be assigned to exactly one community");
+        assert_eq!(
+            total, n,
+            "all nodes must be assigned to exactly one community"
+        );
     }
 
     #[test]

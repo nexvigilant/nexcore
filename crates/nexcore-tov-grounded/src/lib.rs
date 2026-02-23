@@ -203,7 +203,7 @@ impl StabilityShell for ComplexityChi {
 
 /// Tier: T2-P (Cross-Domain Primitive)
 /// Formal error states for the vigilance kernel.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, nexcore_error::Error)]
 pub enum VigilanceError {
     #[error("Safety Manifold violation: {0}")]
     ManifoldViolation(String),

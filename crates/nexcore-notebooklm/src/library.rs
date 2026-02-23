@@ -55,7 +55,10 @@ impl Library {
 
     /// Get the active notebook.
     pub fn active(&self) -> Result<&Notebook, NotebookLmError> {
-        let id = self.active_id.as_deref().ok_or(NotebookLmError::NoActiveNotebook)?;
+        let id = self
+            .active_id
+            .as_deref()
+            .ok_or(NotebookLmError::NoActiveNotebook)?;
         self.get(id)
     }
 

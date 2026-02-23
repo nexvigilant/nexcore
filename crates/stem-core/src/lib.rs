@@ -345,7 +345,7 @@ pub trait Validate<T> {
 }
 
 /// Errors for integrity gate failures (∂).
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum IntegrityError {
     /// Comparison failed: value out of bounds.
     #[error("boundary violation: {0}")]
@@ -480,7 +480,7 @@ pub trait ContextSource<C> {
 // ============================================================================
 
 /// Errors that can occur during scientific method execution
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum ScienceError {
     /// Sensing failed to produce signal
     #[error("sensing failed: {0}")]

@@ -256,8 +256,7 @@ pub mod pv_cascades {
     pub fn signal_escalation() -> CascadeRule {
         CascadeRule::new(
             "pv_signal_escalation",
-            ReceptorFilter::family(CytokineFamily::Il1)
-                .with_name("pv_signal_detected"),
+            ReceptorFilter::family(CytokineFamily::Il1).with_name("pv_signal_detected"),
         )
         .with_response(
             CascadeResponse::new(CytokineFamily::IfnGamma, "pv_escalate_review")
@@ -292,8 +291,7 @@ pub mod pv_cascades {
     pub fn drift_alarm() -> CascadeRule {
         CascadeRule::new(
             "pv_drift_alarm",
-            ReceptorFilter::family(CytokineFamily::Il6)
-                .with_name("pv_drift_detected"),
+            ReceptorFilter::family(CytokineFamily::Il6).with_name("pv_drift_detected"),
         )
         .with_response(
             CascadeResponse::new(CytokineFamily::Il1, "pv_drift_guardian_alert")
@@ -310,8 +308,7 @@ pub mod pv_cascades {
     pub fn batch_cooldown() -> CascadeRule {
         CascadeRule::new(
             "pv_batch_cooldown",
-            ReceptorFilter::family(CytokineFamily::Il10)
-                .with_name("pv_batch_completed"),
+            ReceptorFilter::family(CytokineFamily::Il10).with_name("pv_batch_completed"),
         )
         .with_response(
             CascadeResponse::new(CytokineFamily::TgfBeta, "pv_normalize_thresholds")

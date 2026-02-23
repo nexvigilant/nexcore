@@ -1,6 +1,6 @@
 //! Error types for the Guardian healthcare compliance domain.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Result type alias for Guardian operations.
 pub type GuardianResult<T> = Result<T, GuardianError>;

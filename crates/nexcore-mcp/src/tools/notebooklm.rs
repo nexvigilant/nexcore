@@ -10,8 +10,7 @@ use crate::params::{
     NlmAddNotebookParams, NlmAskQuestionParams, NlmCleanupDataParams, NlmCloseSessionParams,
     NlmGetHealthParams, NlmGetLibraryStatsParams, NlmGetNotebookParams, NlmListNotebooksParams,
     NlmListSessionsParams, NlmReAuthParams, NlmRemoveNotebookParams, NlmResetSessionParams,
-    NlmSearchNotebooksParams, NlmSelectNotebookParams, NlmSetupAuthParams,
-    NlmUpdateNotebookParams,
+    NlmSearchNotebooksParams, NlmSelectNotebookParams, NlmSetupAuthParams, NlmUpdateNotebookParams,
 };
 use chrono::Utc;
 use nexcore_notebooklm::{HealthStatus, Library, Notebook, SessionStore};
@@ -35,7 +34,13 @@ fn err_text(msg: &str) -> Result<CallToolResult, McpError> {
 fn slugify(name: &str) -> String {
     name.to_lowercase()
         .chars()
-        .map(|c| if c.is_alphanumeric() || c == '-' { c } else { '-' })
+        .map(|c| {
+            if c.is_alphanumeric() || c == '-' {
+                c
+            } else {
+                '-'
+            }
+        })
         .collect::<String>()
         .trim_matches('-')
         .to_string()
@@ -131,7 +136,10 @@ pub fn select_notebook(params: NlmSelectNotebookParams) -> Result<CallToolResult
         return err_text(&format!("{e}"));
     }
 
-    let name = lib.get(&params.id).map(|n| n.name.clone()).unwrap_or_default();
+    let name = lib
+        .get(&params.id)
+        .map(|n| n.name.clone())
+        .unwrap_or_default();
 
     ok_json(json!({
         "success": true,
@@ -225,8 +233,7 @@ pub fn get_library_stats(_params: NlmGetLibraryStatsParams) -> Result<CallToolRe
 
 /// List all active sessions.
 pub fn list_sessions(_params: NlmListSessionsParams) -> Result<CallToolResult, McpError> {
-    let store =
-        SessionStore::load().map_err(|e| McpError::internal_error(format!("{e}"), None))?;
+    let store = SessionStore::load().map_err(|e| McpError::internal_error(format!("{e}"), None))?;
 
     let sessions: Vec<serde_json::Value> = store
         .list()
@@ -351,7 +358,9 @@ pub async fn ask_question(params: NlmAskQuestionParams) -> Result<CallToolResult
     // Resolve notebook URL
     let (notebook_id, notebook_url) = if let Some(ref url) = params.notebook_url {
         // Direct URL override
-        let id = params.notebook_id.unwrap_or_else(|| "direct-url".to_string());
+        let id = params
+            .notebook_id
+            .unwrap_or_else(|| "direct-url".to_string());
         (id, url.clone())
     } else if let Some(ref id) = params.notebook_id {
         // Look up by ID in library
@@ -362,15 +371,12 @@ pub async fn ask_question(params: NlmAskQuestionParams) -> Result<CallToolResult
     } else {
         // Use active notebook
         match lib.active() {
-            Ok(nb) => (
-                lib.active_id.clone().unwrap_or_default(),
-                nb.url.clone(),
-            ),
+            Ok(nb) => (lib.active_id.clone().unwrap_or_default(), nb.url.clone()),
             Err(_) => {
                 return err_text(
                     "no notebook specified and no active notebook set. \
                      Use notebook_url, notebook_id, or nlm_select_notebook first.",
-                )
+                );
             }
         }
     };

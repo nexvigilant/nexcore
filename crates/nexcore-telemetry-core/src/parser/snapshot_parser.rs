@@ -3,6 +3,7 @@
 //! Parses brain artifacts from ~/.gemini/antigravity/brain/{uuid}/
 //! including *.md files, *.metadata.json files, and *.resolved.N versions.
 
+use nexcore_fs::dirs;
 use std::fs;
 use std::path::{Path, PathBuf};
 

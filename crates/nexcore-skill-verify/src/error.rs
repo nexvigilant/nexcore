@@ -1,6 +1,6 @@
 //! Verification errors.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 #[derive(Error, Debug)]
 pub enum VerifyError {

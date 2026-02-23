@@ -82,9 +82,7 @@ pub async fn fetch_device_pma(
     client: &OpenFdaClient,
     params: &QueryParams,
 ) -> Result<OpenFdaResponse<DevicePma>, nexcore_error::NexError> {
-    client
-        .fetch::<DevicePma>(DEVICE_PMA_ENDPOINT, params)
-        .await
+    client.fetch::<DevicePma>(DEVICE_PMA_ENDPOINT, params).await
 }
 
 /// Fetch device classification records.
@@ -110,9 +108,7 @@ pub async fn fetch_device_udi(
     client: &OpenFdaClient,
     params: &QueryParams,
 ) -> Result<OpenFdaResponse<DeviceUdi>, nexcore_error::NexError> {
-    client
-        .fetch::<DeviceUdi>(DEVICE_UDI_ENDPOINT, params)
-        .await
+    client.fetch::<DeviceUdi>(DEVICE_UDI_ENDPOINT, params).await
 }
 
 // =============================================================================

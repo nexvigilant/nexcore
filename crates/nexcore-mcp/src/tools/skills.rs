@@ -3,6 +3,7 @@
 //! Skill discovery, Diamond compliance validation, O(1) taxonomy lookups,
 //! and real skill execution via nexcore-skill-exec.
 
+use nexcore_fs::dirs;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -812,12 +813,21 @@ pub fn route(
                 .filter_map(|s| {
                     let intent_lower = s.intent.as_deref().unwrap_or("").to_lowercase();
                     let name_lower = s.name.to_lowercase();
-                    let tag_match = s.tags.iter().any(|t| t.to_lowercase().contains(&query_lower));
+                    let tag_match = s
+                        .tags
+                        .iter()
+                        .any(|t| t.to_lowercase().contains(&query_lower));
                     let intent_match = intent_lower.contains(&query_lower);
                     let name_match = name_lower.contains(&query_lower);
                     if intent_match || name_match || tag_match {
                         // Score: name > tag > intent
-                        let score = if name_match { 3 } else if tag_match { 2 } else { 1 };
+                        let score = if name_match {
+                            3
+                        } else if tag_match {
+                            2
+                        } else {
+                            1
+                        };
                         Some((s, score))
                     } else {
                         None
@@ -865,9 +875,7 @@ pub fn route(
     let pipeline_siblings: Vec<_> = if let Some(ref pipe) = primary.pipeline {
         reg.list()
             .into_iter()
-            .filter(|s| {
-                s.pipeline.as_deref() == Some(pipe.as_str()) && s.name != primary.name
-            })
+            .filter(|s| s.pipeline.as_deref() == Some(pipe.as_str()) && s.name != primary.name)
             .map(|s| {
                 json!({
                     "name": s.name,
@@ -912,10 +920,7 @@ fn resolve_chain(
 ) -> Vec<serde_json::Value> {
     let mut chain = Vec::new();
     let mut visited = std::collections::HashSet::new();
-    let mut frontier: Vec<(String, usize)> = start_names
-        .iter()
-        .map(|n| (n.clone(), 1))
-        .collect();
+    let mut frontier: Vec<(String, usize)> = start_names.iter().map(|n| (n.clone(), 1)).collect();
 
     while let Some((name, depth)) = frontier.pop() {
         if depth > max_depth || visited.contains(&name) {

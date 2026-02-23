@@ -7,7 +7,7 @@
 //!
 //! Errors represent boundaries between valid and invalid molecular states.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Chemistry error type.
 ///

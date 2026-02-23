@@ -46,6 +46,7 @@ nexcore-immunity = { workspace = true }
 nexcore-insight = { workspace = true }
 stem = { workspace = true }
 stem-math = { workspace = true }
+stem-topology = { workspace = true }
 nexcore-viz = { workspace = true }
 nexcore-synth = { workspace = true }
 nexcore-trust = { workspace = true }
@@ -146,7 +147,6 @@ tracing = { workspace = true }
 
 # Thread-safe state
 parking_lot = "0.12"
-once_cell = { workspace = true }
 
 # HTTP client (FAERS, Wolfram)
 reqwest = { workspace = true }
@@ -158,22 +158,19 @@ urlencoding = { workspace = true }
 chrono = { workspace = true }
 
 # Home directory detection
-dirs = { workspace = true }
+nexcore-fs = { workspace = true }
 
 # Symbol audit dependencies
 regex = { workspace = true }
-walkdir = { workspace = true }
 
 # Consolidated MCP server deps (claude-fs, compendious, docs, gsheets, reddit)
 flate2 = { workspace = true }
 tar = { workspace = true }
 jsonwebtoken = { workspace = true }
-base64 = { workspace = true }
 moka = { version = "0.12", features = ["future"] }
 nexcore-social = { workspace = true }
 nexcore-sop-anatomy = { workspace = true }
 nexcore-perplexity = { workspace = true }
-thiserror = { workspace = true }
 
 # XML parsing (Wolfram Full Results API)
 quick-xml = "0.37"

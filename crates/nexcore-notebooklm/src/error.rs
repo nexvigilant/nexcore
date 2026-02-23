@@ -2,7 +2,7 @@
 //!
 //! Grounding: ∂(Boundary) — error classification at domain boundary.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors from NotebookLM operations.
 #[derive(Debug, Error)]

@@ -5,7 +5,7 @@
 
 pub const MAX_COMBO: u32 = 10;
 
-pub mod types;
+pub mod achievements;
 pub mod challenges;
 pub mod signals;
-pub mod achievements;
+pub mod types;

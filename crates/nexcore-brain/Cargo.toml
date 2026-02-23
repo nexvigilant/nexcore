@@ -28,10 +28,10 @@ nexcore-id = { version = "0.1.0", path = "../nexcore-id", registry = "nexcore", 
 
 # Cryptographic hashing for content-addressable storage
 sha2 = { version = "0.10.8" }
-hex = { version = "0.4.3" }
+nexcore-codec = { version = "0.1.0", path = "../nexcore-codec", registry = "nexcore" }
 
 # File system operations
-dirs = { version = "5.0.1" }
+nexcore-fs = { workspace = true }
 
 # Foundation primitives (BathroomLock for file write protection)
 nexcore-constants = { version = "1.0.0", path = "../nexcore-constants", registry = "nexcore" }

@@ -356,9 +356,8 @@ pub fn prove(params: StoichiometryProveParams) -> Result<CallToolResult, McpErro
         .map_err(|e| McpError::invalid_params(format!("Invalid equation JSON: {e}"), None))?;
 
     let proof = Balancer::prove(&equation.reactants, &equation.concept);
-    let proof_json = serde_json::to_value(&proof).map_err(|e| {
-        McpError::internal_error(format!("Serialization failed: {e}"), None)
-    })?;
+    let proof_json = serde_json::to_value(&proof)
+        .map_err(|e| McpError::internal_error(format!("Serialization failed: {e}"), None))?;
 
     Ok(CallToolResult::success(vec![Content::text(
         json!({

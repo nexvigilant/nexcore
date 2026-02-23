@@ -8,7 +8,7 @@
 //! | T1: Mapping (μ) | Error → display string |
 
 /// Tier: T2-C — All proxy error variants.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum ProxyError {
     #[error("child process error: {0}")]
     Child(String),

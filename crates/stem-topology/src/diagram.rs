@@ -39,8 +39,7 @@ impl PersistencePoint {
     /// Returns true if this is a stable signal: persistence > `min_persistence`
     /// AND ratio > `min_ratio`.
     pub fn is_stable(&self, min_persistence: f64, min_ratio: f64, max_filtration: f64) -> bool {
-        self.persistence() > min_persistence
-            && self.persistence_ratio(max_filtration) > min_ratio
+        self.persistence() > min_persistence && self.persistence_ratio(max_filtration) > min_ratio
     }
 
     /// Returns true if this feature persists to infinity (essential class).

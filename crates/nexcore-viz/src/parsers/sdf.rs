@@ -403,21 +403,23 @@ fn parse_counts_line(line: &str) -> Result<(usize, usize), ParseError> {
     let atom_field = &line[0..3];
     let bond_field = &line[3..6];
 
-    let num_atoms = atom_field
-        .trim()
-        .parse::<usize>()
-        .map_err(|_| ParseError::MalformedCountsLine {
-            line: line.to_string(),
-            reason: "atom count field is not a valid integer",
-        })?;
+    let num_atoms =
+        atom_field
+            .trim()
+            .parse::<usize>()
+            .map_err(|_| ParseError::MalformedCountsLine {
+                line: line.to_string(),
+                reason: "atom count field is not a valid integer",
+            })?;
 
-    let num_bonds = bond_field
-        .trim()
-        .parse::<usize>()
-        .map_err(|_| ParseError::MalformedCountsLine {
-            line: line.to_string(),
-            reason: "bond count field is not a valid integer",
-        })?;
+    let num_bonds =
+        bond_field
+            .trim()
+            .parse::<usize>()
+            .map_err(|_| ParseError::MalformedCountsLine {
+                line: line.to_string(),
+                reason: "bond count field is not a valid integer",
+            })?;
 
     Ok((num_atoms, num_bonds))
 }
@@ -433,11 +435,7 @@ fn parse_counts_line(line: &str) -> Result<(usize, usize), ParseError> {
 ///
 /// `atom_id` is 1-based (as the SDF spec states).
 /// `line_number` is the 1-based index within the full input (for error reporting).
-fn parse_atom_line(
-    line: &str,
-    atom_id: usize,
-    line_number: usize,
-) -> Result<Atom, ParseError> {
+fn parse_atom_line(line: &str, atom_id: usize, line_number: usize) -> Result<Atom, ParseError> {
     // Minimum length to reach end of element field (char 34 = index 33)
     if line.len() < 34 {
         return Err(ParseError::MalformedAtomLine {
@@ -472,11 +470,7 @@ fn parse_atom_line(
 ///
 /// Atom indices are validated against `atom_count`.
 /// Returned [`Bond`] uses 0-based indices.
-fn parse_bond_line(
-    line: &str,
-    line_number: usize,
-    atom_count: usize,
-) -> Result<Bond, ParseError> {
+fn parse_bond_line(line: &str, line_number: usize, atom_count: usize) -> Result<Bond, ParseError> {
     if line.len() < 9 {
         return Err(ParseError::MalformedBondLine {
             line_number,
@@ -612,10 +606,7 @@ $$$$
 
     #[test]
     fn aspirin_source_format() {
-        assert_eq!(
-            aspirin().source_format.as_deref(),
-            Some("SDF/V2000")
-        );
+        assert_eq!(aspirin().source_format.as_deref(), Some("SDF/V2000"));
     }
 
     #[test]
@@ -889,7 +880,10 @@ NoEnd
 
     #[test]
     fn parse_error_display_unexpected_eof() {
-        let e = ParseError::UnexpectedEof { found: 2, needed: 4 };
+        let e = ParseError::UnexpectedEof {
+            found: 2,
+            needed: 4,
+        };
         let s = e.to_string();
         assert!(s.contains("2"));
         assert!(s.contains("4"));

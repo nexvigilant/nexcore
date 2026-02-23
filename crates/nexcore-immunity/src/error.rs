@@ -8,7 +8,7 @@
 //! Errors define boundaries between valid and invalid states.
 //! The error enum is a sum type (Σ) of all possible failure modes.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Immunity system errors.
 ///

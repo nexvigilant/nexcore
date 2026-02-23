@@ -3,6 +3,7 @@
 name = "skill-macros-core"
 version = "1.0.0"
 edition = "2024"
+license = "LicenseRef-NexVigilant-Proprietary"
 description = "Shared macro utilities for Claude Code skill proc macros — syn/quote/proc-macro2 helpers"
 
 [dependencies]

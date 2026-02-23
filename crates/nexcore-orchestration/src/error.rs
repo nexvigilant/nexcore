@@ -3,7 +3,7 @@
 use crate::types::{AgentId, TaskGroupId};
 
 /// Unified error type for the orchestration crate.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum OrcError {
     /// Agent not found in registry.
     #[error("agent not found: {0}")]

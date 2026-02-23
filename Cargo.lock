@@ -23,15 +23,14 @@ name = "academy-forge"
 version = "1.0.0"
 dependencies = [
  "nexcore-error",
+ "nexcore-fs",
  "quote",
  "regex",
  "serde",
  "serde_json",
  "syn 2.0.116",
  "tempfile",
- "thiserror 1.0.69",
  "toml 0.8.23",
- "walkdir",
 ]
 
 [[package]]
@@ -347,7 +346,6 @@ dependencies = [
  "proptest",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "tower 0.4.13",
  "tower-http 0.5.2",
@@ -2238,15 +2236,14 @@ dependencies = [
  "chrono",
  "flate2",
  "nexcore-error",
+ "nexcore-fs",
  "rmcp",
  "schemars",
  "serde",
  "serde_json",
  "tar",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
- "walkdir",
 ]
 
 [[package]]
@@ -2254,20 +2251,17 @@ name = "claude-knowledge-mcp"
 version = "1.0.0"
 dependencies = [
  "chrono",
- "dirs 5.0.1",
- "glob",
  "nexcore-error",
+ "nexcore-fs",
  "regex",
  "rmcp",
  "rusqlite",
  "schemars",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
  "tracing-subscriber",
- "walkdir",
 ]
 
 [[package]]
@@ -2288,7 +2282,6 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
 ]
@@ -2794,9 +2787,9 @@ dependencies = [
 name = "counter-awareness"
 version = "1.0.0"
 dependencies = [
+ "nexcore-error",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -3109,7 +3102,7 @@ dependencies = [
  "cfg_aliases 0.2.1",
  "derive-new",
  "derive_more",
- "dirs 6.0.0",
+ "dirs",
  "embassy-futures",
  "embassy-time",
  "float4",
@@ -3331,7 +3324,7 @@ dependencies = [
  "cubecl-ir",
  "derive-new",
  "derive_more",
- "dirs 6.0.0",
+ "dirs",
  "enumset",
  "foldhash 0.1.5",
  "hashbrown 0.15.5",
@@ -3824,16 +3817,7 @@ version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16f5094c54661b38d03bd7e50df373292118db60b585c08a411c6d840017fe7d"
 dependencies = [
- "dirs-sys 0.5.0",
-]
-
-[[package]]
-name = "dirs"
-version = "5.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44c45a9d03d6676652bcb5e724c7e988de1acad23a711b5217ab9cbecbec2225"
-dependencies = [
- "dirs-sys 0.4.1",
+ "dirs-sys",
 ]
 
 [[package]]
@@ -3842,19 +3826,7 @@ version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3e8aa94d75141228480295a7d0e7feb620b1a5ad9f12bc40be62411e38cce4e"
 dependencies = [
- "dirs-sys 0.5.0",
-]
-
-[[package]]
-name = "dirs-sys"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "520f05a5cbd335fae5a99ff7a6ab8627577660ee5cfd6a94a6a929b52ff0321c"
-dependencies = [
- "libc",
- "option-ext",
- "redox_users 0.4.6",
- "windows-sys 0.48.0",
+ "dirs-sys",
 ]
 
 [[package]]
@@ -3865,7 +3837,7 @@ checksum = "e01a3366d27ee9890022452ee61b2b63a67e6f13f58900b651ff5665f0bb1fab"
 dependencies = [
  "libc",
  "option-ext",
- "redox_users 0.5.2",
+ "redox_users",
  "windows-sys 0.61.2",
 ]
 
@@ -3881,7 +3853,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -5359,18 +5330,17 @@ name = "grounded"
 version = "1.0.0"
 dependencies = [
  "chrono",
+ "nexcore-error",
  "rusqlite",
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
 ]
 
 [[package]]
 name = "gsheets-mcp"
 version = "1.0.0"
 dependencies = [
- "base64 0.22.1",
  "chrono",
  "jsonwebtoken",
  "nexcore-error",
@@ -5379,7 +5349,6 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -5405,7 +5374,6 @@ dependencies = [
 name = "gvids-mcp"
 version = "1.0.0"
 dependencies = [
- "base64 0.22.1",
  "chrono",
  "jsonwebtoken",
  "nexcore-error",
@@ -5414,7 +5382,6 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -5604,7 +5571,7 @@ version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "629d8f3bbeda9d148036d6b0de0a3ab947abd08ce90626327fc3547a49d59d97"
 dependencies = [
- "dirs 6.0.0",
+ "dirs",
  "http",
  "indicatif 0.17.11",
  "libc",
@@ -7861,6 +7828,7 @@ dependencies = [
  "http-body-util",
  "hyper",
  "hyper-util",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "nix 0.29.0",
  "reqwest 0.12.28",
@@ -7870,7 +7838,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "tokio-rustls",
  "toml 0.8.23",
@@ -7882,11 +7849,11 @@ dependencies = [
 name = "nexcore-aggregate"
 version = "1.0.0"
 dependencies = [
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "proptest",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -7894,14 +7861,14 @@ name = "nexcore-algovigilance"
 version = "1.0.0"
 dependencies = [
  "chrono",
- "dirs 5.0.1",
  "nexcore-dtree",
+ "nexcore-error",
+ "nexcore-fs",
  "nexcore-lex-primitiva",
  "rayon",
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
 ]
 
@@ -7920,13 +7887,13 @@ version = "1.0.0"
 dependencies = [
  "chrono",
  "dashmap 6.1.0",
+ "nexcore-error",
+ "nexcore-id",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
  "tracing",
- "uuid",
 ]
 
 [[package]]
@@ -7934,13 +7901,12 @@ name = "nexcore-api"
 version = "1.0.0"
 dependencies = [
  "axum 0.8.8",
- "base64 0.22.1",
  "chrono",
- "dirs 5.0.1",
  "futures",
- "hex",
  "hmac",
+ "nexcore-codec",
  "nexcore-error",
+ "nexcore-fs",
  "nexcore-id",
  "nexcore-mesh",
  "nexcore-primitives",
@@ -7964,7 +7930,6 @@ dependencies = [
  "tracing-subscriber",
  "utoipa",
  "utoipa-scalar",
- "uuid",
  "vr-core",
  "vr-tenant",
 ]
@@ -7992,11 +7957,11 @@ version = "1.0.0"
 dependencies = [
  "chrono",
  "clap",
- "dirs 5.0.1",
- "hex",
+ "nexcore-codec",
  "nexcore-constants",
  "nexcore-db",
  "nexcore-error",
+ "nexcore-fs",
  "nexcore-id",
  "nexcore-immunity",
  "nexcore-insight",
@@ -8017,11 +7982,11 @@ dependencies = [
  "chromiumoxide",
  "chrono",
  "futures",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "parking_lot",
  "serde",
  "serde_json",
- "thiserror 2.0.18",
  "tokio",
  "tokio-test",
  "tracing",
@@ -8034,13 +7999,13 @@ dependencies = [
  "chrono",
  "clap",
  "fs2",
- "hex",
+ "nexcore-codec",
+ "nexcore-fs",
  "serde",
  "serde_json",
  "sha2",
  "tracing",
  "tracing-subscriber",
- "walkdir",
 ]
 
 [[package]]
@@ -8050,25 +8015,24 @@ dependencies = [
  "axum 0.7.9",
  "chrono",
  "clap",
- "hex",
  "leptos",
  "leptos_axum",
  "leptos_meta",
  "leptos_router",
  "nexcore-build-gate",
+ "nexcore-error",
+ "nexcore-fs",
  "nexcore-lex-primitiva",
  "nexcore-measure",
  "serde",
  "serde_json",
  "sha2",
- "thiserror 1.0.69",
  "tokio",
  "tokio-stream",
  "tower 0.5.3",
  "tower-http 0.6.8",
  "tracing",
  "tracing-subscriber",
- "walkdir",
 ]
 
 [[package]]
@@ -8097,7 +8061,6 @@ dependencies = [
  "proptest",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -8105,13 +8068,13 @@ name = "nexcore-chemivigilance"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "nexcore-error",
  "nexcore-metabolite",
  "nexcore-molcore",
  "nexcore-qsar",
  "nexcore-structural-alerts",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -8132,15 +8095,18 @@ dependencies = [
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
+
+[[package]]
+name = "nexcore-codec"
+version = "0.1.0"
 
 [[package]]
 name = "nexcore-cognition"
 version = "0.1.0"
 dependencies = [
+ "nexcore-error",
  "rand 0.9.2",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -8164,13 +8130,13 @@ name = "nexcore-compliance"
 version = "1.0.0"
 dependencies = [
  "chrono",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "proptest",
  "reqwest 0.12.28",
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
  "tracing",
 ]
 
@@ -8192,11 +8158,11 @@ name = "nexcore-compound-registry"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "nexcore-error",
  "reqwest 0.12.28",
  "rusqlite",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
 ]
@@ -8217,7 +8183,7 @@ dependencies = [
 name = "nexcore-constants"
 version = "1.0.0"
 dependencies = [
- "dirs 5.0.1",
+ "nexcore-fs",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
@@ -8235,10 +8201,8 @@ dependencies = [
  "nexcore-vigilance",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "utoipa",
- "uuid",
 ]
 
 [[package]]
@@ -8248,12 +8212,12 @@ dependencies = [
  "candle-core",
  "candle-nn",
  "candle-transformers",
- "dirs 5.0.1",
  "hf-hub",
+ "nexcore-error",
+ "nexcore-fs",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokenizers",
  "tracing",
 ]
@@ -8264,6 +8228,9 @@ version = "1.0.0"
 dependencies = [
  "chrono",
  "glob",
+ "nexcore-error",
+ "nexcore-fs",
+ "nexcore-id",
  "ordered-float 5.1.0",
  "proptest",
  "regex",
@@ -8272,12 +8239,9 @@ dependencies = [
  "serde_json",
  "stem-core",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "toml 0.8.23",
  "tracing",
- "uuid",
- "walkdir",
 ]
 
 [[package]]
@@ -8285,10 +8249,10 @@ name = "nexcore-cytokine"
 version = "1.0.0"
 dependencies = [
  "chrono",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
 ]
@@ -8298,10 +8262,10 @@ name = "nexcore-db"
 version = "1.0.0"
 dependencies = [
  "chrono",
+ "nexcore-error",
  "rusqlite",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tracing",
 ]
 
@@ -8366,12 +8330,12 @@ name = "nexcore-dtree"
 version = "1.0.0"
 dependencies = [
  "nexcore-constants",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "proptest",
  "serde",
  "serde_json",
  "stem-math",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -8393,7 +8357,6 @@ dependencies = [
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -8419,6 +8382,18 @@ dependencies = [
 [[package]]
 name = "nexcore-error"
 version = "0.1.0"
+dependencies = [
+ "nexcore-error-derive",
+]
+
+[[package]]
+name = "nexcore-error-derive"
+version = "1.0.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.116",
+]
 
 [[package]]
 name = "nexcore-faers-etl"
@@ -8438,7 +8413,6 @@ dependencies = [
  "serde_json",
  "stem-math",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -8448,13 +8422,12 @@ dependencies = [
 name = "nexcore-fda-guidance"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "clap",
+ "nexcore-error",
  "regex",
  "reqwest 0.12.28",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
 ]
 
@@ -8495,16 +8468,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexcore-fs"
+version = "0.1.0"
+
+[[package]]
 name = "nexcore-ghost"
 version = "1.0.0"
 dependencies = [
- "base64 0.22.1",
  "chrono",
+ "nexcore-codec",
  "nexcore-lex-primitiva",
  "ring",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -8534,6 +8510,7 @@ dependencies = [
  "nexcore-cytokine",
  "nexcore-digestive",
  "nexcore-dtree",
+ "nexcore-error",
  "nexcore-hormones",
  "nexcore-id",
  "nexcore-insight",
@@ -8555,7 +8532,6 @@ dependencies = [
  "serde_json",
  "stem-math",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "toml 0.8.23",
  "tracing",
@@ -8570,6 +8546,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexcore-hash"
+version = "0.1.0"
+
+[[package]]
 name = "nexcore-homeostasis"
 version = "1.0.0"
 dependencies = [
@@ -8580,7 +8560,6 @@ dependencies = [
  "nexcore-homeostasis-storm",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
 ]
@@ -8595,7 +8574,6 @@ dependencies = [
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
 ]
@@ -8608,7 +8586,6 @@ dependencies = [
  "nexcore-error",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
 ]
@@ -8622,7 +8599,6 @@ dependencies = [
  "nexcore-homeostasis-primitives",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
 ]
@@ -8663,7 +8639,8 @@ dependencies = [
 name = "nexcore-immunity"
 version = "0.1.0"
 dependencies = [
- "glob",
+ "nexcore-error",
+ "nexcore-fs",
  "nexcore-lex-primitiva",
  "nexcore-spliceosome",
  "proptest",
@@ -8671,7 +8648,6 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
- "thiserror 1.0.69",
  "tracing",
 ]
 
@@ -8695,21 +8671,21 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "nexcore-error",
+ "nexcore-id",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
- "uuid",
 ]
 
 [[package]]
 name = "nexcore-integrity"
 version = "1.0.0"
 dependencies = [
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "proptest",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -8727,24 +8703,24 @@ name = "nexcore-jeopardy"
 version = "1.0.0"
 dependencies = [
  "nexcore-constants",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "proptest",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
 name = "nexcore-knowledge"
 version = "1.0.0"
 dependencies = [
+ "nexcore-fs",
  "nexcore-lex-primitiva",
  "rayon",
  "regex",
  "serde",
  "serde_yaml",
  "tempfile",
- "walkdir",
 ]
 
 [[package]]
@@ -8752,14 +8728,13 @@ name = "nexcore-knowledge-engine"
 version = "1.0.0"
 dependencies = [
  "chrono",
- "dirs 5.0.1",
+ "nexcore-error",
+ "nexcore-fs",
+ "nexcore-id",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
- "uuid",
- "walkdir",
 ]
 
 [[package]]
@@ -8785,7 +8760,6 @@ dependencies = [
  "rand 0.9.2",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -8815,11 +8789,9 @@ version = "1.0.0"
 dependencies = [
  "academy-forge",
  "antitransformer",
- "base64 0.22.1",
  "chrono",
  "core-true",
  "counter-awareness",
- "dirs 5.0.1",
  "disney-loop",
  "flate2",
  "grounded",
@@ -8865,6 +8837,7 @@ dependencies = [
  "nexcore-fda-guidance",
  "nexcore-forge-strategy",
  "nexcore-foundry",
+ "nexcore-fs",
  "nexcore-ghost",
  "nexcore-grammar-lab",
  "nexcore-guardian-engine",
@@ -8945,7 +8918,6 @@ dependencies = [
  "nexcore-vigilance",
  "nexcore-viz",
  "nexcore-word",
- "once_cell",
  "parking_lot",
  "prima",
  "prima-academy",
@@ -8967,13 +8939,12 @@ dependencies = [
  "skills",
  "stem",
  "stem-math",
+ "stem-topology",
  "tar",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
  "urlencoding",
- "walkdir",
 ]
 
 [[package]]
@@ -8998,13 +8969,13 @@ dependencies = [
  "clap",
  "flate2",
  "nexcore-constants",
+ "nexcore-error",
+ "nexcore-fs",
  "nexcore-lex-primitiva",
  "proptest",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "toml 0.8.23",
- "walkdir",
 ]
 
 [[package]]
@@ -9015,25 +8986,25 @@ dependencies = [
  "dashmap 6.1.0",
  "nexcore-clearance",
  "nexcore-cytokine",
+ "nexcore-error",
+ "nexcore-id",
  "nexcore-lex-primitiva",
  "nexcore-primitives",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
- "uuid",
 ]
 
 [[package]]
 name = "nexcore-metabolite"
 version = "0.1.0"
 dependencies = [
+ "nexcore-error",
  "nexcore-molcore",
  "prima-chem",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -9049,11 +9020,11 @@ dependencies = [
 name = "nexcore-molcore"
 version = "0.1.0"
 dependencies = [
+ "nexcore-error",
  "prima-chem",
  "proptest",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -9081,8 +9052,8 @@ name = "nexcore-network"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "nexcore-error",
  "serde",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -9091,15 +9062,15 @@ version = "0.1.0"
 dependencies = [
  "chromiumoxide",
  "chrono",
- "dirs 5.0.1",
  "futures",
+ "nexcore-error",
+ "nexcore-fs",
+ "nexcore-id",
  "parking_lot",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
- "uuid",
 ]
 
 [[package]]
@@ -9130,7 +9101,6 @@ dependencies = [
  "reqwest 0.12.28",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
 ]
@@ -9154,7 +9124,8 @@ dependencies = [
  "axum 0.8.8",
  "chrono",
  "dashmap 6.1.0",
- "hex",
+ "nexcore-codec",
+ "nexcore-error",
  "nexcore-id",
  "nexcore-lex-primitiva",
  "nexcore-vigilance",
@@ -9162,7 +9133,6 @@ dependencies = [
  "serde_json",
  "sha2",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
 ]
@@ -9173,15 +9143,15 @@ version = "1.0.0"
 dependencies = [
  "chrono",
  "clap",
- "hex",
+ "nexcore-codec",
+ "nexcore-error",
+ "nexcore-fs",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
  "sha2",
  "tempfile",
- "thiserror 1.0.69",
  "toml 0.8.23",
- "walkdir",
 ]
 
 [[package]]
@@ -9192,7 +9162,6 @@ dependencies = [
  "async-trait",
  "chrono",
  "dashmap 6.1.0",
- "dirs 5.0.1",
  "nexcore-audio",
  "nexcore-brain",
  "nexcore-browser",
@@ -9202,6 +9171,8 @@ dependencies = [
  "nexcore-digestive",
  "nexcore-dtree",
  "nexcore-energy",
+ "nexcore-error",
+ "nexcore-fs",
  "nexcore-hormones",
  "nexcore-id",
  "nexcore-insight",
@@ -9230,7 +9201,6 @@ dependencies = [
  "sha2",
  "stem-math",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "toml 0.8.23",
  "tracing",
@@ -9258,12 +9228,12 @@ dependencies = [
 name = "nexcore-perplexity"
 version = "1.0.0"
 dependencies = [
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "reqwest 0.12.28",
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
 ]
@@ -9296,18 +9266,17 @@ dependencies = [
  "nexcore-error",
  "nexcore-faers-etl",
  "nexcore-guardian-engine",
+ "nexcore-id",
  "nexcore-primitives",
  "nexcore-vigilance",
  "reqwest 0.12.28",
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "toml 0.8.23",
  "tracing",
  "tracing-subscriber",
- "uuid",
 ]
 
 [[package]]
@@ -9334,6 +9303,7 @@ dependencies = [
 name = "nexcore-prima"
 version = "0.2.0"
 dependencies = [
+ "nexcore-error",
  "prima",
 ]
 
@@ -9356,11 +9326,9 @@ dependencies = [
  "nexcore-constants",
  "nexcore-error",
  "nexcore-lex-primitiva",
- "parking_lot",
  "serde",
  "serde_json",
  "stem-math",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -9368,12 +9336,12 @@ name = "nexcore-proof-of-meaning"
 version = "1.0.0"
 dependencies = [
  "chrono",
+ "nexcore-error",
+ "nexcore-id",
  "nexcore-lex-primitiva",
  "ordered-float 4.6.0",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
- "uuid",
 ]
 
 [[package]]
@@ -9382,11 +9350,11 @@ version = "1.0.0"
 dependencies = [
  "chrono",
  "nexcore-constants",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "nexcore-preemptive-pv",
  "nexcore-signal-types",
  "nexcore-tov",
- "once_cell",
  "phf",
  "rand 0.9.2",
  "rayon",
@@ -9394,7 +9362,6 @@ dependencies = [
  "serde_json",
  "signal",
  "tempfile",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -9402,11 +9369,11 @@ name = "nexcore-pvdsl"
 version = "1.0.0"
 dependencies = [
  "chrono",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "nexcore-pv-core",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -9414,25 +9381,23 @@ name = "nexcore-pvos"
 version = "1.0.0"
 dependencies = [
  "chrono",
- "hex",
  "nexcore-constants",
  "nexcore-lex-primitiva",
  "rand 0.9.2",
  "serde",
  "serde_json",
  "sha2",
- "thiserror 1.0.69",
 ]
 
 [[package]]
 name = "nexcore-qsar"
 version = "0.1.0"
 dependencies = [
+ "nexcore-error",
  "nexcore-molcore",
  "prima-chem",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -9452,14 +9417,14 @@ name = "nexcore-registry"
 version = "1.0.0"
 dependencies = [
  "chrono",
+ "nexcore-error",
+ "nexcore-fs",
  "rusqlite",
  "serde",
  "serde_json",
  "serde_yaml",
  "tempfile",
- "thiserror 1.0.69",
  "tracing",
- "walkdir",
 ]
 
 [[package]]
@@ -9478,7 +9443,6 @@ dependencies = [
  "reqwest 0.12.28",
  "taffy",
  "tempfile",
- "thiserror 1.0.69",
  "tracing",
  "tracing-subscriber",
  "url",
@@ -9513,10 +9477,10 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "nexcore-compound-registry",
+ "nexcore-error",
  "reqwest 0.12.28",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
 ]
@@ -9526,11 +9490,11 @@ name = "nexcore-ribosome"
 version = "1.0.0"
 dependencies = [
  "chrono",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "nexcore-transcriptase",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -9543,13 +9507,11 @@ dependencies = [
  "nexcore-error",
  "nexcore-lex-primitiva",
  "notify",
- "once_cell",
  "proptest",
  "regex",
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "toml 0.8.23",
  "tracing",
@@ -9580,7 +9542,6 @@ dependencies = [
  "nexcore-signal-theory",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tracing",
 ]
 
@@ -9600,7 +9561,6 @@ dependencies = [
  "serde",
  "serde_json",
  "stem-math",
- "thiserror 1.0.69",
  "tokio",
  "tower 0.4.13",
 ]
@@ -9637,13 +9597,13 @@ name = "nexcore-skill-compiler"
 version = "1.0.0"
 dependencies = [
  "clap",
- "dirs 5.0.1",
+ "nexcore-error",
+ "nexcore-fs",
  "nexcore-lex-primitiva",
  "nexcore-skill-exec",
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
  "toml 0.8.23",
  "tracing",
  "tracing-subscriber",
@@ -9654,13 +9614,13 @@ name = "nexcore-skill-exec"
 version = "1.0.0"
 dependencies = [
  "async-trait",
- "dirs 5.0.1",
  "jsonschema",
+ "nexcore-error",
+ "nexcore-fs",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "tokio-test",
  "tracing",
@@ -9671,12 +9631,12 @@ name = "nexcore-skill-verify"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
  "serde_yaml",
  "tempfile",
- "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -9684,10 +9644,10 @@ name = "nexcore-skills-engine"
 version = "1.0.0"
 dependencies = [
  "chrono",
- "dirs 5.0.1",
- "glob",
  "nexcore-constants",
  "nexcore-dtree",
+ "nexcore-error",
+ "nexcore-fs",
  "nexcore-lex-primitiva",
  "nexcore-measure",
  "nexcore-primitives",
@@ -9698,8 +9658,6 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "tempfile",
- "thiserror 1.0.69",
- "walkdir",
 ]
 
 [[package]]
@@ -9713,7 +9671,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -9733,7 +9690,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -9777,9 +9733,9 @@ dependencies = [
 name = "nexcore-stdio-proxy"
 version = "1.0.0"
 dependencies = [
+ "nexcore-error",
  "notify",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
 ]
@@ -9793,18 +9749,17 @@ dependencies = [
  "nexcore-primitives",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
 name = "nexcore-structural-alerts"
 version = "0.1.0"
 dependencies = [
+ "nexcore-error",
  "nexcore-molcore",
  "prima-chem",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -9837,14 +9792,14 @@ name = "nexcore-telemetry-core"
 version = "1.0.0"
 dependencies = [
  "chrono",
- "dirs 5.0.1",
+ "nexcore-error",
+ "nexcore-fs",
  "nexcore-id",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
  "similar",
  "tempfile",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -9852,9 +9807,9 @@ name = "nexcore-tov"
 version = "1.0.0"
 dependencies = [
  "nexcore-constants",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "serde",
- "thiserror 2.0.18",
  "tokio",
  "typenum",
 ]
@@ -9863,9 +9818,9 @@ dependencies = [
 name = "nexcore-tov-grounded"
 version = "1.0.0"
 dependencies = [
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "serde",
- "thiserror 2.0.18",
  "tokio",
 ]
 
@@ -9883,10 +9838,10 @@ name = "nexcore-transcriptase"
 version = "1.0.0"
 dependencies = [
  "clap",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -9905,13 +9860,13 @@ name = "nexcore-trial"
 version = "1.0.0"
 dependencies = [
  "chrono",
+ "nexcore-error",
+ "nexcore-id",
  "nexcore-lex-primitiva",
  "nexcore-primitives",
  "rand 0.9.2",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
- "uuid",
 ]
 
 [[package]]
@@ -9943,7 +9898,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
 ]
@@ -9952,17 +9906,17 @@ dependencies = [
 name = "nexcore-vault"
 version = "1.0.0"
 dependencies = [
- "base64 0.22.1",
  "chrono",
  "clap",
- "dirs 5.0.1",
+ "nexcore-codec",
+ "nexcore-error",
+ "nexcore-fs",
  "nexcore-lex-primitiva",
  "rand 0.9.2",
  "ring",
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
  "toml 0.8.23",
  "tracing",
 ]
@@ -9980,13 +9934,14 @@ dependencies = [
  "criterion",
  "dashmap 5.5.3",
  "flume",
- "hex",
  "nexcore-browser",
+ "nexcore-codec",
  "nexcore-cortex",
  "nexcore-cytokine",
  "nexcore-energy",
  "nexcore-error",
  "nexcore-forge-strategy",
+ "nexcore-fs",
  "nexcore-hormones",
  "nexcore-id",
  "nexcore-immunity",
@@ -10003,14 +9958,12 @@ dependencies = [
  "serde_json",
  "sha2",
  "tempfile",
- "thiserror 2.0.18",
  "tiktoken-rs",
  "tokio",
  "tokio-util",
  "toml 0.8.23",
  "tracing",
  "tracing-subscriber",
- "walkdir",
 ]
 
 [[package]]
@@ -10018,23 +9971,21 @@ name = "nexcore-vigilance"
 version = "1.0.0"
 dependencies = [
  "async-trait",
- "base64 0.22.1",
  "chrono",
  "clap",
  "colored",
  "criterion",
  "dashmap 6.1.0",
- "dirs 5.0.1",
  "flate2",
  "futures",
- "glob",
- "hex",
  "indexmap 2.13.0",
  "nexcore-browser",
+ "nexcore-codec",
  "nexcore-constants",
  "nexcore-cytokine",
  "nexcore-dtree",
  "nexcore-error",
+ "nexcore-fs",
  "nexcore-guardian-engine",
  "nexcore-harm-taxonomy",
  "nexcore-hormones",
@@ -10052,7 +10003,6 @@ dependencies = [
  "nexcore-skills-engine",
  "nexcore-tov",
  "nexcore-transcriptase",
- "once_cell",
  "phf",
  "plotters",
  "pprof",
@@ -10070,11 +10020,9 @@ dependencies = [
  "stem-math",
  "syn 2.0.116",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "toml 0.8.23",
  "tracing",
- "walkdir",
 ]
 
 [[package]]
@@ -10112,11 +10060,11 @@ dependencies = [
 name = "nexcore-word"
 version = "1.0.0"
 dependencies = [
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "proptest",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -11172,7 +11120,6 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
 ]
 
@@ -12065,32 +12012,32 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "criterion",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "proptest",
  "rustyline 14.0.0",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
 name = "prima-academy"
 version = "0.1.0"
 dependencies = [
+ "nexcore-error",
  "proptest",
  "serde",
- "thiserror 1.0.69",
 ]
 
 [[package]]
 name = "prima-chem"
 version = "0.1.0"
 dependencies = [
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "proptest",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -12098,12 +12045,12 @@ name = "prima-codegen"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "prima",
  "proptest",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -12116,13 +12063,13 @@ dependencies = [
  "proptest",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
 ]
 
 [[package]]
 name = "prima-mcp-server"
 version = "0.1.0"
 dependencies = [
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "prima",
  "prima-codegen",
@@ -12130,7 +12077,6 @@ dependencies = [
  "proptest",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
 ]
 
@@ -12145,7 +12091,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -12365,7 +12310,6 @@ checksum = "40e24eee682d89fb193496edf918a7f407d30175b2e785fe057e4392dfd182e0"
 name = "pvos-primitive-expansion"
 version = "1.0.0"
 dependencies = [
- "base64 0.22.1",
  "clap",
  "csv",
  "nexcore-error",
@@ -12375,7 +12319,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -13019,17 +12962,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "35985aa610addc02e24fc232012c86fd11f14111180f902b67e2d5331f8ebf2b"
 dependencies = [
  "bitflags 2.11.0",
-]
-
-[[package]]
-name = "redox_users"
-version = "0.4.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba009ff324d1fc1b900bd1fdb31564febe58a8ccc8a6fdbb93b543d33b13ca43"
-dependencies = [
- "getrandom 0.2.17",
- "libredox",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -14099,7 +14031,7 @@ version = "3.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8b1fdf65dd6331831494dd616b30351c38e96e45921a27745cf98490458b90bb"
 dependencies = [
- "dirs 6.0.0",
+ "dirs",
 ]
 
 [[package]]
@@ -14112,6 +14044,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 name = "signal"
 version = "1.1.0"
 dependencies = [
+ "nexcore-error",
  "nexcore-signal-pipeline",
 ]
 
@@ -14229,11 +14162,11 @@ name = "skill-core"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "regex",
  "serde",
  "serde_json",
- "thiserror 2.0.18",
  "tokio",
 ]
 
@@ -14242,26 +14175,25 @@ name = "skill-hunter"
 version = "0.1.0"
 dependencies = [
  "console 0.15.11",
- "dirs 5.0.1",
  "indicatif 0.17.11",
  "nexcore-error",
+ "nexcore-fs",
  "nexcore-lex-primitiva",
  "rand 0.8.5",
  "serde",
  "serde_yaml",
- "walkdir",
 ]
 
 [[package]]
 name = "skill-loader"
 version = "0.1.0"
 dependencies = [
+ "nexcore-error",
+ "nexcore-fs",
  "nexcore-lex-primitiva",
  "serde",
  "serde_yaml",
  "skill-core",
- "thiserror 2.0.18",
- "walkdir",
 ]
 
 [[package]]
@@ -14312,15 +14244,15 @@ name = "skills"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "nexcore-error",
+ "nexcore-fs",
  "nexcore-lex-primitiva",
  "regex",
  "serde",
  "serde_json",
  "serde_yaml",
  "skill-macros",
- "thiserror 2.0.18",
  "tokio",
- "walkdir",
 ]
 
 [[package]]
@@ -14334,7 +14266,6 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -14739,12 +14670,12 @@ version = "0.1.0"
 dependencies = [
  "criterion",
  "nexcore-constants",
+ "nexcore-error",
  "nexcore-hormones",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
  "stem-derive",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
 ]
@@ -14764,10 +14695,10 @@ name = "stem-core"
 version = "0.1.0"
 dependencies = [
  "nexcore-constants",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
 ]
@@ -14795,20 +14726,20 @@ dependencies = [
 name = "stem-math"
 version = "0.1.0"
 dependencies = [
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "serde",
  "stem-core",
- "thiserror 1.0.69",
 ]
 
 [[package]]
 name = "stem-phys"
 version = "0.1.0"
 dependencies = [
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "serde",
  "stem-core",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -15855,7 +15786,7 @@ dependencies = [
  "anyhow",
  "bytes",
  "constcat",
- "dirs 6.0.0",
+ "dirs",
  "liblzma",
  "regex",
  "reqwest 0.12.28",
@@ -16001,7 +15932,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -16430,7 +16360,6 @@ dependencies = [
  "quote",
  "regex",
  "syn 2.0.116",
- "uuid",
 ]
 
 [[package]]
@@ -16576,10 +16505,9 @@ name = "vr-billing"
 version = "1.0.0"
 dependencies = [
  "chrono",
+ "nexcore-id",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
- "uuid",
  "vr-core",
 ]
 
@@ -16588,12 +16516,10 @@ name = "vr-compliance"
 version = "1.0.0"
 dependencies = [
  "chrono",
- "hex",
+ "nexcore-id",
  "serde",
  "serde_json",
  "sha2",
- "thiserror 1.0.69",
- "uuid",
  "vr-core",
 ]
 
@@ -16602,11 +16528,11 @@ name = "vr-core"
 version = "1.0.0"
 dependencies = [
  "chrono",
+ "nexcore-error",
+ "nexcore-id",
  "proptest",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
- "uuid",
 ]
 
 [[package]]
@@ -16614,10 +16540,9 @@ name = "vr-marketplace"
 version = "1.0.0"
 dependencies = [
  "chrono",
+ "nexcore-id",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
- "uuid",
  "vr-core",
 ]
 
@@ -16626,10 +16551,9 @@ name = "vr-platform-ml"
 version = "1.0.0"
 dependencies = [
  "chrono",
+ "nexcore-id",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
- "uuid",
  "vr-core",
 ]
 
@@ -16638,11 +16562,10 @@ name = "vr-tenant"
 version = "1.0.0"
 dependencies = [
  "chrono",
+ "nexcore-id",
  "proptest",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
- "uuid",
  "vr-core",
 ]
 
@@ -18178,9 +18101,9 @@ name = "wksp-types"
 version = "1.0.0"
 dependencies = [
  "chrono",
+ "nexcore-id",
  "serde",
  "serde_json",
- "uuid",
 ]
 
 [[package]]

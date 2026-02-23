@@ -69,15 +69,17 @@ impl FirestoreClient {
             self.project_id, collection, doc_id
         );
 
-        let resp = self.http.get(&url)
+        let resp = self
+            .http
+            .get(&url)
             .header("Authorization", format!("Bearer {token}"))
             .send()
             .await
             .map_err(|e| format!("Network error: {e}"))?;
 
         if resp.status().is_success() {
-            let doc: serde_json::Value = resp.json().await
-                .map_err(|e| format!("Parse error: {e}"))?;
+            let doc: serde_json::Value =
+                resp.json().await.map_err(|e| format!("Parse error: {e}"))?;
             parse_firestore_document(&doc)
         } else {
             Err(format!("Firestore error: {}", resp.status()))
@@ -100,24 +102,25 @@ impl FirestoreClient {
             url.push_str(&format!("?pageSize={size}"));
         }
 
-        let resp = self.http.get(&url)
+        let resp = self
+            .http
+            .get(&url)
             .header("Authorization", format!("Bearer {token}"))
             .send()
             .await
             .map_err(|e| format!("Network error: {e}"))?;
 
         if resp.status().is_success() {
-            let body: serde_json::Value = resp.json().await
-                .map_err(|e| format!("Parse error: {e}"))?;
+            let body: serde_json::Value =
+                resp.json().await.map_err(|e| format!("Parse error: {e}"))?;
 
-            let documents = body.get("documents")
+            let documents = body
+                .get("documents")
                 .and_then(|d| d.as_array())
                 .cloned()
                 .unwrap_or_default();
 
-            documents.iter()
-                .map(parse_firestore_document)
-                .collect()
+            documents.iter().map(parse_firestore_document).collect()
         } else {
             Err(format!("Firestore error: {}", resp.status()))
         }
@@ -137,19 +140,18 @@ impl Default for FirestoreClient {
 /// typed value wrappers (`stringValue`, `integerValue`, etc.).
 /// This function extracts the fields and converts them to a flat JSON object.
 pub fn parse_firestore_document<T: DeserializeOwned>(doc: &serde_json::Value) -> Result<T, String> {
-    let fields = doc.get("fields")
-        .ok_or("Document missing 'fields'")?;
+    let fields = doc.get("fields").ok_or("Document missing 'fields'")?;
 
     let flat = convert_firestore_fields(fields);
-    serde_json::from_value(flat)
-        .map_err(|e| format!("Deserialization error: {e}"))
+    serde_json::from_value(flat).map_err(|e| format!("Deserialization error: {e}"))
 }
 
 /// Convert Firestore typed fields to plain JSON values
 pub fn convert_firestore_fields(fields: &serde_json::Value) -> serde_json::Value {
     match fields {
         serde_json::Value::Object(map) => {
-            let converted: serde_json::Map<String, serde_json::Value> = map.iter()
+            let converted: serde_json::Map<String, serde_json::Value> = map
+                .iter()
                 .map(|(k, v)| (k.clone(), convert_firestore_value(v)))
                 .collect();
             serde_json::Value::Object(converted)
@@ -178,7 +180,11 @@ pub fn convert_firestore_value(val: &serde_json::Value) -> serde_json::Value {
     if let Some(d) = val.get("doubleValue") {
         return d.clone();
     }
-    if let Some(arr) = val.get("arrayValue").and_then(|a| a.get("values")).and_then(|v| v.as_array()) {
+    if let Some(arr) = val
+        .get("arrayValue")
+        .and_then(|a| a.get("values"))
+        .and_then(|v| v.as_array())
+    {
         let items: Vec<serde_json::Value> = arr.iter().map(convert_firestore_value).collect();
         return serde_json::Value::Array(items);
     }

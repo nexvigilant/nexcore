@@ -2,6 +2,7 @@
 //!
 //! Loaded from TOML; every field has a serde default.
 
+use nexcore_fs::dirs;
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};

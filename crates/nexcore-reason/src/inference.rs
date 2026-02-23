@@ -279,10 +279,7 @@ impl InferenceEngine {
             .filter(|(_, score)| *score >= self.config.confidence_floor)
             .collect();
 
-        let max_score = retained
-            .iter()
-            .map(|(_, s)| *s)
-            .fold(0.0_f64, f64::max);
+        let max_score = retained.iter().map(|(_, s)| *s).fold(0.0_f64, f64::max);
         let risk_level = self.classify_risk(max_score);
 
         let findings = self.build_findings(&retained);
@@ -586,11 +583,13 @@ impl InferenceEngine {
             }
         }
 
-        recommendations.sort_by(|(_, a), (_, b)| {
-            b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal)
-        });
+        recommendations
+            .sort_by(|(_, a), (_, b)| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal));
         recommendations.truncate(self.config.max_recommendations);
-        recommendations.into_iter().map(|(label, _)| label).collect()
+        recommendations
+            .into_iter()
+            .map(|(label, _)| label)
+            .collect()
     }
 
     /// Formats a human-readable description for a single causal finding.
@@ -727,7 +726,9 @@ mod tests {
             max_recommendations: 5,
         };
         let engine = InferenceEngine::with_config(dag, config);
-        let report = engine.infer().expect("config override inference must succeed");
+        let report = engine
+            .infer()
+            .expect("config override inference must succeed");
 
         assert_eq!(report.risk_level, RiskLevel::Moderate);
         assert!(!report.findings.is_empty());
@@ -763,15 +764,24 @@ mod tests {
         let mut dag = CausalDag::new();
         dag.add_node(node("root", "Missing coverage", NodeType::Metric));
         dag.add_node(node("factor", "Untested paths", NodeType::Pattern));
-        dag.add_node(node("rec", "Add integration tests", NodeType::Recommendation));
+        dag.add_node(node(
+            "rec",
+            "Add integration tests",
+            NodeType::Recommendation,
+        ));
         dag.add_link(link("root", "factor", 0.9)).expect("acyclic");
         dag.add_link(link("factor", "rec", 0.9)).expect("acyclic");
 
         let engine = InferenceEngine::new(dag);
-        let report = engine.infer().expect("recommendation inference must succeed");
+        let report = engine
+            .infer()
+            .expect("recommendation inference must succeed");
 
         assert!(
-            report.recommendations.iter().any(|r| r == "Add integration tests"),
+            report
+                .recommendations
+                .iter()
+                .any(|r| r == "Add integration tests"),
             "recommendation label should appear; got: {:?}",
             report.recommendations
         );

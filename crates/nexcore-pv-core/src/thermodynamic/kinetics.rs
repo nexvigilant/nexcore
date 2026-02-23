@@ -11,7 +11,7 @@
 //! - Arrhenius S (1889) Z Phys Chem
 
 use super::binding::R_J_MOL_K;
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors for kinetic calculations.
 #[derive(Debug, Error, PartialEq)]

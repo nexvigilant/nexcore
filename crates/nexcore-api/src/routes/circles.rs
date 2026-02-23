@@ -97,7 +97,7 @@ pub async fn join_circle(
     Json(req): Json<JoinRequest>,
 ) -> Result<Json<serde_json::Value>, crate::routes::common::ApiError> {
     let membership = MembershipRecord {
-        id: uuid::Uuid::new_v4().to_string(),
+        id: nexcore_id::NexId::v4().to_string(),
         user_id: req.user_id,
         circle_id,
         joined_at: Utc::now(),

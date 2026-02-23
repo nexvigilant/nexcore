@@ -163,7 +163,7 @@ pub trait IncidentMemory: Send + Sync {
 }
 
 /// Errors from incident memory operations
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum IncidentError {
     /// Storage I/O failure
     #[error("incident storage error: {0}")]

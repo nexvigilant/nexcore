@@ -13,9 +13,9 @@
 
 use crate::incident::{Incident, IncidentSeverity, IncidentSignature};
 use crate::playbook::{Playbook, PlaybookMatch};
+use nexcore_error::Error;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use thiserror::Error;
 
 /// Errors from memory store operations.
 #[derive(Debug, Error)]
@@ -284,16 +284,12 @@ impl MemoryStore {
         let avg_resolution = if resolved.is_empty() {
             0.0
         } else {
-            let total: f64 = resolved
+            let total: f64 = resolved.iter().filter_map(|i| i.duration_secs).sum();
+            let count = resolved
                 .iter()
-                .filter_map(|i| i.duration_secs)
-                .sum();
-            let count = resolved.iter().filter(|i| i.duration_secs.is_some()).count();
-            if count > 0 {
-                total / count as f64
-            } else {
-                0.0
-            }
+                .filter(|i| i.duration_secs.is_some())
+                .count();
+            if count > 0 { total / count as f64 } else { 0.0 }
         };
 
         let mut by_severity: HashMap<String, usize> = HashMap::new();

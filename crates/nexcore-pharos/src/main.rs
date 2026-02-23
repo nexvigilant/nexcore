@@ -7,8 +7,8 @@
 
 use std::path::PathBuf;
 
-use nexcore_error::Result;
 use clap::{Parser, Subcommand};
+use nexcore_error::Result;
 use tracing_subscriber::EnvFilter;
 
 use nexcore_pharos::{PharosConfig, PharosPipeline, SignalThresholds};

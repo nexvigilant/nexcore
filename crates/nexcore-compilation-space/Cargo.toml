@@ -4,7 +4,7 @@ name = "nexcore-compilation-space"
 version = "0.1.0"
 edition = "2024"
 description = "The Full Compilation Space — 7-axis framework for modeling code transformations"
-license = "Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary"
 
 [dependencies]
 serde = { version = "1.0.204", features = ["derive"] }

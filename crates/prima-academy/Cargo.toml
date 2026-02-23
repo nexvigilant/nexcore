@@ -9,8 +9,8 @@ authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "Academic course classification primitives for Prima"
 
 [dependencies]
+nexcore-error = { workspace = true }
 serde = { version = "1.0.204", features = ["derive"] }
-thiserror = { version = "1.0.61" }
 
 [dev-dependencies]
 proptest = { version = "1.6.0" }

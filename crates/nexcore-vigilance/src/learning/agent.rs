@@ -1,9 +1,9 @@
 //! Teachable agent with teacher trait system.
 
 use super::models::{AgentSession, Intervention, Observation, ObservationEventType};
-use nexcore_error::Result;
 use async_trait::async_trait;
 use chrono::Utc;
+use nexcore_error::Result;
 use std::collections::HashMap;
 
 /// Agent configuration.

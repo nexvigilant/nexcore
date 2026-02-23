@@ -29,7 +29,12 @@ impl BettiNumbers {
 ///
 /// `β_k(t)` = number of points in dimension-k diagram with `birth ≤ t < death`.
 pub fn betti_numbers(diagram: &PersistenceDiagram, at_filtration: f64) -> BettiNumbers {
-    let max_dim = diagram.points.iter().map(|p| p.dimension).max().unwrap_or(0);
+    let max_dim = diagram
+        .points
+        .iter()
+        .map(|p| p.dimension)
+        .max()
+        .unwrap_or(0);
     let numbers: Vec<(usize, usize)> = (0..=max_dim)
         .map(|dim| {
             let count = diagram

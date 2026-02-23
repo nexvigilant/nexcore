@@ -427,8 +427,7 @@ mod tests {
         use chrono::Utc;
         use nexcore_primitives::measurement::Measured;
         use nexcore_vigilance::guardian::homeostasis::{
-            ActuatorResultSummary as DomainActuatorSummary, LoopIterationResult,
-            ThroughputMonitor,
+            ActuatorResultSummary as DomainActuatorSummary, LoopIterationResult, ThroughputMonitor,
         };
         use nexcore_vigilance::guardian::response::{ActuatorResult, ResponseAction};
         use nexcore_vigilance::guardian::sensing::{SignalSource, ThreatLevel, ThreatSignal};

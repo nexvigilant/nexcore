@@ -1,0 +1,254 @@
+#!/usr/bin/env zsh
+set -euo pipefail
+
+# quality-sweep — Pure-compute code quality automation pipeline
+# No LLMs. Just cargo toolchain, static analysis, and programmatic fixes.
+#
+# Pipeline: FORMAT → LINT-FIX → DEP-PRUNE → AUDIT → TEST-COMPILE → REPORT
+#
+# Usage: ./scripts/quality-sweep [--fix] [--quick] [--report-only]
+#   --fix          Apply auto-fixes (fmt, clippy --fix, dep-prune --fix)
+#   --quick        Skip dep-prune and full test (faster)
+#   --report-only  Only generate report, no fixes
+
+SCRIPT_DIR="${0:A:h}"
+WORKSPACE_ROOT="${SCRIPT_DIR:h}"
+CARGO="$HOME/.cargo/bin/cargo"
+FIX_MODE=false
+QUICK_MODE=false
+REPORT_ONLY=false
+REPORT_DIR="/tmp/quality-sweep-$(date +%Y%m%d-%H%M%S)"
+PASS=0
+FAIL=0
+WARN=0
+START_TIME=$SECONDS
+
+for arg in "$@"; do
+    case "$arg" in
+        --fix) FIX_MODE=true ;;
+        --quick) QUICK_MODE=true ;;
+        --report-only) REPORT_ONLY=true ;;
+        *) echo "Unknown arg: $arg"; exit 1 ;;
+    esac
+done
+
+mkdir -p "$REPORT_DIR"
+cd "$WORKSPACE_ROOT"
+
+# ── Utilities ──────────────────────────────────────────────────────
+
+# Safe grep count — isolated from pipefail via subshell
+count_matches() {
+    local input="$1"
+    local pattern="$2"
+    # Run in subshell to isolate from pipefail
+    local n
+    n=$(echo "$input" | { grep -c "$pattern" 2>/dev/null || true; })
+    echo "${n:-0}"
+}
+
+gate_pass() {
+    echo "  ✓ $1"
+    PASS=$((PASS + 1))
+    echo "PASS: $1" >> "$REPORT_DIR/summary.txt"
+}
+
+gate_fail() {
+    echo "  ✗ $1"
+    FAIL=$((FAIL + 1))
+    echo "FAIL: $1" >> "$REPORT_DIR/summary.txt"
+}
+
+gate_warn() {
+    echo "  ⚠ $1"
+    WARN=$((WARN + 1))
+    echo "WARN: $1" >> "$REPORT_DIR/summary.txt"
+}
+
+# ── Header ─────────────────────────────────────────────────────────
+
+CRATE_COUNT=$($CARGO metadata --format-version 1 2>/dev/null | jq '.workspace_members | length' 2>/dev/null || echo "?")
+
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║  quality-sweep — Pure Compute Code Quality Pipeline          ║"
+echo "║  Workspace: $CRATE_COUNT crates | $(date -Iseconds)"
+echo "║  Mode: $(if $FIX_MODE; then echo 'FIX (auto-repair)'; elif $REPORT_ONLY; then echo 'REPORT ONLY'; else echo 'CHECK (detect only)'; fi)"
+echo "╚══════════════════════════════════════════════════════════════╝"
+echo ""
+
+{
+    echo "# Quality Sweep Report"
+    echo "Date: $(date -Iseconds)"
+    echo "Crates: $CRATE_COUNT"
+    echo "Mode: $(if $FIX_MODE; then echo 'FIX'; elif $REPORT_ONLY; then echo 'REPORT'; else echo 'CHECK'; fi)"
+    echo ""
+} > "$REPORT_DIR/summary.txt"
+
+# ── Gate 1: FORMAT ─────────────────────────────────────────────────
+
+echo "▸ Gate 1: FORMAT"
+FMT_OUTPUT=$($CARGO fmt --all -- --check 2>&1 || true)
+FMT_COUNT=$(count_matches "$FMT_OUTPUT" "^Diff in")
+
+if [[ "$FMT_COUNT" -eq 0 ]]; then
+    gate_pass "Formatting clean"
+else
+    if $FIX_MODE && ! $REPORT_ONLY; then
+        $CARGO fmt --all 2>/dev/null || true
+        gate_pass "Formatting: $FMT_COUNT diffs auto-fixed"
+    else
+        gate_fail "Formatting: $FMT_COUNT files need formatting"
+    fi
+    echo "$FMT_OUTPUT" > "$REPORT_DIR/fmt.txt"
+fi
+
+# ── Gate 2: CLIPPY ─────────────────────────────────────────────────
+
+echo "▸ Gate 2: CLIPPY"
+CLIPPY_OUTPUT=$($CARGO clippy --workspace --message-format=short 2>&1 || true)
+CLIPPY_WARNINGS=$(count_matches "$CLIPPY_OUTPUT" "^warning")
+CLIPPY_ERRORS=$(count_matches "$CLIPPY_OUTPUT" "^error")
+
+if [[ "$CLIPPY_ERRORS" -gt 0 ]]; then
+    gate_fail "Clippy: $CLIPPY_ERRORS errors, $CLIPPY_WARNINGS warnings"
+    echo "$CLIPPY_OUTPUT" > "$REPORT_DIR/clippy.txt"
+elif [[ "$CLIPPY_WARNINGS" -gt 0 ]]; then
+    if $FIX_MODE && ! $REPORT_ONLY; then
+        $CARGO clippy --workspace --fix --allow-dirty --allow-staged 2>/dev/null || true
+        RECHECK_OUTPUT=$($CARGO clippy --workspace --message-format=short 2>&1 || true)
+        RECHECK=$(count_matches "$RECHECK_OUTPUT" "^warning")
+        if [[ "$RECHECK" -eq 0 ]]; then
+            gate_pass "Clippy: $CLIPPY_WARNINGS warnings auto-fixed"
+        else
+            gate_warn "Clippy: $RECHECK warnings remaining after auto-fix"
+        fi
+    else
+        gate_warn "Clippy: $CLIPPY_WARNINGS warnings"
+    fi
+    echo "$CLIPPY_OUTPUT" > "$REPORT_DIR/clippy.txt"
+else
+    gate_pass "Clippy clean"
+fi
+
+# ── Gate 3: DEP-PRUNE ─────────────────────────────────────────────
+
+if ! $QUICK_MODE; then
+    echo "▸ Gate 3: DEP-PRUNE (unused dependencies)"
+    MACHETE_RAW=$($CARGO machete 2>&1 || true)
+    MACHETE_OUTPUT=$(echo "$MACHETE_RAW" | { grep -v "^error when handling" || true; })
+    UNUSED_COUNT=$(count_matches "$MACHETE_OUTPUT" "	")
+
+    if [[ "$UNUSED_COUNT" -eq 0 ]]; then
+        gate_pass "No unused dependencies"
+    else
+        CRATE_COUNT_UNUSED=$(count_matches "$MACHETE_OUTPUT" "^[a-z].*-- ")
+        if $FIX_MODE && ! $REPORT_ONLY; then
+            "$SCRIPT_DIR/dep-prune" --fix 2>&1 | tee "$REPORT_DIR/dep-prune.txt"
+            gate_warn "Dep-prune: $UNUSED_COUNT unused deps processed (see dep-prune.txt)"
+        else
+            gate_warn "Dep-prune: $UNUSED_COUNT unused deps in $CRATE_COUNT_UNUSED crates"
+        fi
+        echo "$MACHETE_OUTPUT" > "$REPORT_DIR/machete.txt"
+    fi
+else
+    echo "▸ Gate 3: DEP-PRUNE (skipped — quick mode)"
+fi
+
+# ── Gate 4: SECURITY AUDIT ────────────────────────────────────────
+
+echo "▸ Gate 4: SECURITY AUDIT"
+AUDIT_OUTPUT=$($CARGO audit 2>&1 || true)
+VULN_COUNT=$(count_matches "$AUDIT_OUTPUT" "RUSTSEC-")
+
+if [[ "$VULN_COUNT" -eq 0 ]]; then
+    gate_pass "No known vulnerabilities"
+else
+    gate_warn "Security: $VULN_COUNT advisories found"
+    echo "$AUDIT_OUTPUT" > "$REPORT_DIR/audit.txt"
+
+    {
+        echo ""
+        echo "## Security Advisories"
+        echo "$AUDIT_OUTPUT" | { grep -E "(RUSTSEC-|Crate:|Version:|Title:|Warning:|ID:)" || true; }
+    } >> "$REPORT_DIR/summary.txt"
+fi
+
+# ── Gate 5: TEST COMPILE ──────────────────────────────────────────
+
+if ! $QUICK_MODE; then
+    echo "▸ Gate 5: TEST COMPILE (--no-run)"
+    TEST_OUTPUT=$($CARGO test --workspace --no-run 2>&1 || true)
+    TEST_ERRORS=$(count_matches "$TEST_OUTPUT" "^error")
+
+    if [[ "$TEST_ERRORS" -eq 0 ]]; then
+        gate_pass "All test targets compile"
+    else
+        gate_fail "Test compilation: $TEST_ERRORS errors"
+        echo "$TEST_OUTPUT" > "$REPORT_DIR/test-compile.txt"
+    fi
+else
+    echo "▸ Gate 5: TEST COMPILE (skipped — quick mode)"
+fi
+
+# ── Gate 6: OUTDATED DEPS ─────────────────────────────────────────
+
+if ! $QUICK_MODE && command -v cargo-outdated &>/dev/null; then
+    echo "▸ Gate 6: OUTDATED DEPS"
+    OUTDATED_OUTPUT=$($CARGO outdated --workspace --root-deps-only 2>&1 || true)
+    OUTDATED_COUNT=$(count_matches "$OUTDATED_OUTPUT" "^[a-z]")
+
+    if [[ "$OUTDATED_COUNT" -le 1 ]]; then
+        gate_pass "Dependencies up to date"
+    else
+        gate_warn "Outdated: $((OUTDATED_COUNT - 1)) deps have newer versions"
+        echo "$OUTDATED_OUTPUT" > "$REPORT_DIR/outdated.txt"
+    fi
+else
+    echo "▸ Gate 6: OUTDATED DEPS (skipped)"
+fi
+
+# ── Gate 7: WORKSPACE HYGIENE ─────────────────────────────────────
+
+echo "▸ Gate 7: WORKSPACE HYGIENE"
+if $CARGO generate-lockfile --check 2>/dev/null; then
+    gate_pass "Cargo.lock is fresh"
+else
+    gate_warn "Cargo.lock may be stale"
+fi
+
+ARCHIVE_REFS=$(count_matches "$(cat Cargo.toml 2>/dev/null)" 'path.*=.*".*archive/')
+if [[ "$ARCHIVE_REFS" -eq 0 ]]; then
+    gate_pass "No archive crate references"
+else
+    gate_warn "Found $ARCHIVE_REFS references to archived crates"
+fi
+
+# ── Summary ────────────────────────────────────────────────────────
+
+ELAPSED=$((SECONDS - START_TIME))
+TOTAL=$((PASS + FAIL + WARN))
+
+echo ""
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║  Quality Sweep Complete                                      ║"
+echo "╠══════════════════════════════════════════════════════════════╣"
+echo "║  ✓ Passed:  $PASS / $TOTAL gates"
+echo "║  ⚠ Warning: $WARN / $TOTAL gates"
+echo "║  ✗ Failed:  $FAIL / $TOTAL gates"
+echo "║  Duration:  ${ELAPSED}s"
+echo "║  Report:    $REPORT_DIR/"
+echo "╚══════════════════════════════════════════════════════════════╝"
+
+{
+    echo ""
+    echo "## Score"
+    echo "Passed: $PASS / $TOTAL"
+    echo "Warning: $WARN / $TOTAL"
+    echo "Failed: $FAIL / $TOTAL"
+    echo "Duration: ${ELAPSED}s"
+} >> "$REPORT_DIR/summary.txt"
+
+# Exit code: 0 if no failures, 1 if any failures
+if [[ "$FAIL" -gt 0 ]]; then
+    exit 1
+fi

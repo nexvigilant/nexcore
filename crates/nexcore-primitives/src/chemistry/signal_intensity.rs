@@ -9,7 +9,7 @@
 //!
 //! **PV Application**: Dose-response linearity - signal proportional to exposure.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors for signal intensity calculations.
 #[derive(Debug, Error, PartialEq, Clone)]

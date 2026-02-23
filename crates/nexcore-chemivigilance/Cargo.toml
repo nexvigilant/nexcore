@@ -8,6 +8,7 @@ authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "Chemivigilance pipeline orchestrator generating SafetyBrief with min-3 limitations"
 
 [dependencies]
+nexcore-error = { workspace = true }
 nexcore-molcore = { path = "../nexcore-molcore" }
 nexcore-structural-alerts = { path = "../nexcore-structural-alerts" }
 nexcore-qsar = { path = "../nexcore-qsar" }
@@ -15,7 +16,6 @@ nexcore-metabolite = { path = "../nexcore-metabolite" }
 chrono = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-thiserror = { workspace = true }
 
 [lints.rust]
 dead_code = "allow"

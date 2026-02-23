@@ -1,6 +1,6 @@
 //! Error types for the GROUNDED system.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 #[derive(Debug, Error)]
 pub enum GroundedError {

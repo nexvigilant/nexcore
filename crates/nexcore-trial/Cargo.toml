@@ -8,12 +8,12 @@ description = "Universal experimentation framework derived from FDA clinical tri
 license.workspace = true
 
 [dependencies]
+nexcore-error = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-thiserror = { workspace = true }
 rand = { workspace = true }
 chrono = { workspace = true }
-uuid = { workspace = true }
+nexcore-id = { workspace = true }
 nexcore-primitives = { workspace = true }
 nexcore-lex-primitiva = { workspace = true }
 

@@ -170,6 +170,16 @@ async fn dispatch_inner(
         "foundation_concept_grep" => typed(params, tools::foundation::concept_grep),
 
         // ====================================================================
+        // Topology — TDA + Graph Analysis (6 tools)
+        // ====================================================================
+        "topo_vietoris_rips" => typed(params, tools::topology::topo_vietoris_rips),
+        "topo_persistence" => typed(params, tools::topology::topo_persistence),
+        "topo_betti" => typed(params, tools::topology::topo_betti),
+        "graph_centrality" => typed(params, tools::topology::graph_centrality),
+        "graph_components" => typed(params, tools::topology::graph_components),
+        "graph_shortest_path" => typed(params, tools::topology::graph_shortest_path),
+
+        // ====================================================================
         // Formula-Derived Tools (5) — KU extraction → MCP tools
         // ====================================================================
         "pv_signal_strength" => typed(params, tools::formula::signal_strength),
@@ -785,7 +795,6 @@ async fn dispatch_inner(
         "oracle_reset" => typed(params, tools::oracle::oracle_reset),
         "oracle_top_predictions" => typed(params, tools::oracle::oracle_top_predictions),
 
-
         // ====================================================================
         // Immunity Tools (6)
         // ====================================================================
@@ -821,7 +830,6 @@ async fn dispatch_inner(
         "brand_decomposition_get" => typed(params, tools::brand_semantics::brand_decomposition_get),
         "brand_primitive_test" => typed(params, tools::brand_semantics::brand_primitive_test),
         "brand_semantic_tiers" => tools::brand_semantics::brand_semantic_tiers(),
-
 
         // ====================================================================
         // Forge Tools (6) — Primitive-first technology construction
@@ -1034,9 +1042,10 @@ async fn dispatch_inner(
         "epidemiology_attributable_fraction" => {
             typed(params, tools::epidemiology::attributable_fraction)
         }
-        "epidemiology_population_attributable_fraction" => {
-            typed(params, tools::epidemiology::population_attributable_fraction)
-        }
+        "epidemiology_population_attributable_fraction" => typed(
+            params,
+            tools::epidemiology::population_attributable_fraction,
+        ),
         "epidemiology_incidence_rate" => typed(params, tools::epidemiology::incidence_rate),
         "epidemiology_prevalence" => typed(params, tools::epidemiology::prevalence),
         "epidemiology_kaplan_meier" => typed(params, tools::epidemiology::kaplan_meier),
@@ -1470,6 +1479,7 @@ async fn dispatch_inner(
         "measure_drift" => typed(params, tools::measure::measure_drift_tool),
         "measure_compare" => typed(params, tools::measure::measure_compare_tool),
         "measure_stats" => typed(params, tools::measure::measure_stats_tool),
+        "quality_gradient" => typed(params, tools::measure::quality_gradient_tool),
 
         // ====================================================================
         // Anatomy — Workspace structural analysis (4)
@@ -2179,6 +2189,13 @@ async fn dispatch_inner(
         "stoichiometry_dictionary" => typed(params, tools::stoichiometry::dictionary),
 
         // ====================================================================
+        // Observatory Phase 9 — Graph Layout, Career Transitions, Learning DAG
+        // ====================================================================
+        "graph_layout_converge" => typed(params, tools::graph_layout::converge),
+        "career_transitions" => typed(params, tools::career::transitions),
+        "learning_dag_resolve" => typed(params, tools::learning_dag::resolve),
+
+        // ====================================================================
         // TRIAL Framework (10) — universal experimentation (FDA clinical trial methodology)
         // ====================================================================
         "trial_protocol_register" => typed(params, tools::trial::protocol_register),
@@ -2222,7 +2239,9 @@ async fn dispatch_inner(
         "chem_similarity" => typed(params, tools::chemivigilance::chem_similarity),
         "chem_structural_alerts" => typed(params, tools::chemivigilance::chem_structural_alerts),
         "chem_predict_toxicity" => typed(params, tools::chemivigilance::chem_predict_toxicity),
-        "chem_predict_metabolites" => typed(params, tools::chemivigilance::chem_predict_metabolites),
+        "chem_predict_metabolites" => {
+            typed(params, tools::chemivigilance::chem_predict_metabolites)
+        }
         "chem_predict_degradants" => typed(params, tools::chemivigilance::chem_predict_degradants),
         "chem_safety_brief" => typed(params, tools::chemivigilance::chem_safety_brief),
         "chem_substructure" => typed(params, tools::chemivigilance::chem_substructure),
@@ -2238,7 +2257,9 @@ async fn dispatch_inner(
         "chem_predict_mutagenicity" => typed(params, tools::qsar::chem_predict_mutagenicity),
         "chem_predict_hepatotoxicity" => typed(params, tools::qsar::chem_predict_hepatotoxicity),
         "chem_predict_cardiotoxicity" => typed(params, tools::qsar::chem_predict_cardiotoxicity),
-        "chem_assess_applicability_domain" => typed(params, tools::qsar::chem_assess_applicability_domain),
+        "chem_assess_applicability_domain" => {
+            typed(params, tools::qsar::chem_assess_applicability_domain)
+        }
 
         // ====================================================================
         // PV Pharmacokinetics (6) — AUC, clearance, half-life, steady-state, ionization, Michaelis-Menten
@@ -2267,8 +2288,12 @@ async fn dispatch_inner(
         // Knowledge Engine Extended (3) — scoring, primitives, concepts
         // ====================================================================
         "knowledge_engine_score" => typed(params, tools::knowledge_engine::score_compendious),
-        "knowledge_engine_extract_primitives" => typed(params, tools::knowledge_engine::extract_primitives),
-        "knowledge_engine_extract_concepts" => typed(params, tools::knowledge_engine::extract_concepts),
+        "knowledge_engine_extract_primitives" => {
+            typed(params, tools::knowledge_engine::extract_primitives)
+        }
+        "knowledge_engine_extract_concepts" => {
+            typed(params, tools::knowledge_engine::extract_concepts)
+        }
 
         // ====================================================================
         // Stoichiometry Extended (3) — balance check, proof, isomer
@@ -2509,6 +2534,7 @@ fn help_catalog_json() -> serde_json::Value {
         "categories": {
             "system": ["nexcore_health", "config_validate", "mcp_servers_list", "mcp_server_get"],
             "foundation": ["foundation_levenshtein", "foundation_levenshtein_bounded", "foundation_fuzzy_search", "foundation_sha256", "foundation_yaml_parse", "foundation_graph_topsort", "foundation_graph_levels", "foundation_fsrs_review", "foundation_concept_grep", "foundation_domain_distance", "foundation_flywheel_velocity", "foundation_token_ratio", "foundation_spectral_overlap"],
+            "topology": ["topo_vietoris_rips", "topo_persistence", "topo_betti", "graph_centrality", "graph_components", "graph_shortest_path"],
             "pv": ["pv_signal_complete", "pv_signal_prr", "pv_signal_ror", "pv_signal_ic", "pv_signal_ebgm", "pv_chi_square", "pv_signal_cooperative", "pv_naranjo_quick", "pv_who_umc_quick", "pv_signal_strength"],
             "benefit_risk": ["pv_qbri_compute", "pv_qbri_derive", "pv_qbri_equation"],
             "signal": ["signal_detect", "signal_batch", "signal_thresholds"],
@@ -2551,14 +2577,30 @@ fn help_catalog_json() -> serde_json::Value {
             "pvdsl": ["pvdsl_compile", "pvdsl_execute", "pvdsl_eval", "pvdsl_functions"],
             "dtree": ["dtree_train", "dtree_predict", "dtree_importance", "dtree_prune", "dtree_export", "dtree_info"],
             "game_theory": ["game_theory_nash_2x2", "forge_payoff_matrix", "forge_nash_solve", "forge_quality_score", "forge_code_generate"],
-            "epi": ["epi_relative_risk", "epi_odds_ratio", "epi_attributable_risk", "epi_nnt_nnh", "epi_attributable_fraction", "epi_population_af", "epi_incidence_rate", "epi_prevalence", "epi_kaplan_meier", "epi_smr", "epi_pv_mappings"],
+            "epidemiology": ["epidemiology_relative_risk", "epidemiology_odds_ratio", "epidemiology_attributable_risk", "epidemiology_nnt_nnh", "epidemiology_attributable_fraction", "epidemiology_population_attributable_fraction", "epidemiology_incidence_rate", "epidemiology_prevalence", "epidemiology_kaplan_meier", "epidemiology_smr", "epidemiology_mappings"],
             "chemivigilance": ["chem_parse_smiles", "chem_descriptors", "chem_fingerprint", "chem_similarity", "chem_structural_alerts", "chem_predict_toxicity", "chem_predict_metabolites", "chem_predict_degradants", "chem_safety_brief", "chem_substructure", "chem_watchlist", "chem_alert_library", "chem_ring_scan", "chem_aromaticity", "chem_molecular_formula", "chem_predict_mutagenicity", "chem_predict_hepatotoxicity", "chem_predict_cardiotoxicity", "chem_assess_applicability_domain"],
             "pk": ["pk_auc", "pk_clearance", "pk_half_life", "pk_steady_state", "pk_ionization", "pk_michaelis_menten"],
             "causality": ["causality_rucam", "causality_ucas"],
             "temporal": ["temporal_tto", "temporal_challenge", "temporal_plausibility"],
             "knowledge_engine": ["knowledge_engine_compress", "knowledge_engine_compile", "knowledge_engine_query", "knowledge_engine_score", "knowledge_engine_extract_primitives", "knowledge_engine_extract_concepts"],
             "notebooklm": ["nlm_add_notebook", "nlm_list_notebooks", "nlm_get_notebook", "nlm_select_notebook", "nlm_update_notebook", "nlm_remove_notebook", "nlm_search_notebooks", "nlm_get_library_stats", "nlm_list_sessions", "nlm_close_session", "nlm_reset_session", "nlm_get_health", "nlm_setup_auth", "nlm_re_auth", "nlm_ask_question", "nlm_cleanup_data"],
-            "cloud": ["cloud_primitive_composition", "cloud_transfer_confidence", "cloud_tier_classify", "cloud_compare_types", "cloud_reverse_synthesize", "cloud_list_types", "cloud_molecular_weight", "cloud_dominant_shift", "cloud_infra_status", "cloud_infra_map", "cloud_capacity_project", "cloud_supervisor_health", "cloud_reverse_transfer", "cloud_transfer_chain", "cloud_architecture_advisor", "cloud_anomaly_detect", "cloud_transfer_matrix"]
+            "cloud": ["cloud_primitive_composition", "cloud_transfer_confidence", "cloud_tier_classify", "cloud_compare_types", "cloud_reverse_synthesize", "cloud_list_types", "cloud_molecular_weight", "cloud_dominant_shift", "cloud_infra_status", "cloud_infra_map", "cloud_capacity_project", "cloud_supervisor_health", "cloud_reverse_transfer", "cloud_transfer_chain", "cloud_architecture_advisor", "cloud_anomaly_detect", "cloud_transfer_matrix"],
+            "kellnr_pk": ["kellnr_compute_pk_auc", "kellnr_compute_pk_steady_state", "kellnr_compute_pk_ionization", "kellnr_compute_pk_clearance", "kellnr_compute_pk_volume_distribution", "kellnr_compute_pk_michaelis_menten"],
+            "kellnr_thermo": ["kellnr_compute_thermo_gibbs", "kellnr_compute_thermo_kd", "kellnr_compute_thermo_binding_affinity", "kellnr_compute_thermo_arrhenius"],
+            "kellnr_stats": ["kellnr_compute_stats_welch_ttest", "kellnr_compute_stats_ols_regression", "kellnr_compute_stats_poisson_ci", "kellnr_compute_stats_bayesian_posterior", "kellnr_compute_stats_entropy"],
+            "kellnr_graph": ["kellnr_compute_graph_betweenness", "kellnr_compute_graph_mutual_info", "kellnr_compute_graph_tarjan_scc", "kellnr_compute_graph_topsort"],
+            "kellnr_dtree": ["kellnr_compute_dtree_feature_importance", "kellnr_compute_dtree_prune", "kellnr_compute_dtree_to_rules"],
+            "kellnr_signal": ["kellnr_compute_signal_sprt", "kellnr_compute_signal_cusum", "kellnr_compute_signal_weibull_tto"],
+            "kellnr_registry": ["kellnr_search_crates", "kellnr_get_crate_metadata", "kellnr_list_crate_versions", "kellnr_get_version_details", "kellnr_list_owners", "kellnr_add_owner", "kellnr_remove_owner", "kellnr_yank_version", "kellnr_unyank_version", "kellnr_list_all_crates", "kellnr_get_dependencies", "kellnr_get_dependents", "kellnr_health_check", "kellnr_download_crate", "kellnr_registry_stats"],
+            "graph_layout": ["graph_layout_converge"],
+            "career": ["career_transitions"],
+            "learning_dag": ["learning_dag_resolve"],
+            "stoichiometry": ["stoichiometry_encode", "stoichiometry_decode", "stoichiometry_sisters", "stoichiometry_mass_state", "stoichiometry_dictionary", "stoichiometry_is_balanced", "stoichiometry_prove", "stoichiometry_is_isomer"],
+            "drift": ["drift_ks_test", "drift_psi", "drift_jsd", "drift_detect"],
+            "rate_limit": ["rate_limit_token_bucket", "rate_limit_sliding_window", "rate_limit_status"],
+            "rank_fusion": ["rank_fusion_rrf", "rank_fusion_hybrid", "rank_fusion_borda"],
+            "security_posture": ["security_posture_assess", "security_threat_readiness", "security_compliance_gap"],
+            "observability": ["observability_record_latency", "observability_query", "observability_freshness"]
         }
     })
 }
@@ -2572,6 +2614,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "forge": ["forge_init", "forge_reference", "forge_mine", "forge_prompt", "forge_suggest", "forge_summary", "forge_system_prompt", "forge_tier"],
             "academy_forge": ["forge_extract", "forge_validate", "forge_scaffold", "forge_schema", "forge_compile", "forge_atomize", "forge_graph", "forge_shortest_path"],
             "foundation": ["foundation_levenshtein", "foundation_levenshtein_bounded", "foundation_fuzzy_search", "foundation_sha256", "foundation_yaml_parse", "foundation_graph_topsort", "foundation_graph_levels", "foundation_fsrs_review", "foundation_concept_grep", "foundation_domain_distance", "foundation_flywheel_velocity", "foundation_token_ratio", "foundation_spectral_overlap"],
+            "topology": ["topo_vietoris_rips", "topo_persistence", "topo_betti", "graph_centrality", "graph_components", "graph_shortest_path"],
             "pv": ["pv_signal_complete", "pv_signal_prr", "pv_signal_ror", "pv_signal_ic", "pv_signal_ebgm", "pv_chi_square", "pv_signal_cooperative", "pv_naranjo_quick", "pv_who_umc_quick", "pv_signal_strength"],
             "benefit_risk": ["pv_qbri_compute", "pv_qbri_derive", "pv_qbri_equation"],
             "signal": ["signal_detect", "signal_batch", "signal_thresholds"],
@@ -2649,7 +2692,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "integrity": ["integrity_analyze", "integrity_assess_ksb", "integrity_calibration"],
             "organize": ["organize_analyze", "organize_config_default", "organize_report_markdown", "organize_report_json", "organize_observe", "organize_rank"],
             "sentinel": ["sentinel_status", "sentinel_check_ip", "sentinel_parse_line", "sentinel_config_defaults"],
-            "measure": ["measure_crate", "measure_workspace", "measure_entropy", "measure_graph", "measure_drift", "measure_compare", "measure_stats"],
+            "measure": ["measure_crate", "measure_workspace", "measure_entropy", "measure_graph", "measure_drift", "measure_compare", "measure_stats", "quality_gradient"],
             "anatomy": ["anatomy_health", "anatomy_blast_radius", "anatomy_chomsky", "anatomy_violations"],
             "sqi": ["sqi_score", "sqi_ecosystem"],
             "sos": ["sos_create", "sos_transition", "sos_state", "sos_history", "sos_validate", "sos_list", "sos_cycles", "sos_audit", "sos_schedule", "sos_route"],
@@ -2710,6 +2753,15 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "kellnr_registry": ["kellnr_search_crates", "kellnr_get_crate_metadata", "kellnr_list_crate_versions", "kellnr_get_version_details", "kellnr_list_owners", "kellnr_add_owner", "kellnr_remove_owner", "kellnr_yank_version", "kellnr_unyank_version", "kellnr_list_all_crates", "kellnr_get_dependencies", "kellnr_get_dependents", "kellnr_health_check", "kellnr_download_crate", "kellnr_registry_stats"],
             "registry": ["registry_assess_skill", "registry_assess_all", "registry_gap_report", "registry_promotable", "registry_promotion_plan", "registry_tov_safety", "registry_tov_harm", "registry_tov_is_safe"],
             "stoichiometry": ["stoichiometry_encode", "stoichiometry_decode", "stoichiometry_sisters", "stoichiometry_mass_state", "stoichiometry_dictionary", "stoichiometry_is_balanced", "stoichiometry_prove", "stoichiometry_is_isomer"],
+            "graph_layout": ["graph_layout_converge"],
+            "career": ["career_transitions"],
+            "learning_dag": ["learning_dag_resolve"],
+            "drift": ["drift_ks_test", "drift_psi", "drift_jsd", "drift_detect"],
+            "rate_limit": ["rate_limit_token_bucket", "rate_limit_sliding_window", "rate_limit_status"],
+            "rank_fusion": ["rank_fusion_rrf", "rank_fusion_hybrid", "rank_fusion_borda"],
+            "security_posture": ["security_posture_assess", "security_threat_readiness", "security_compliance_gap"],
+            "observability": ["observability_record_latency", "observability_query", "observability_freshness"],
+            "epidemiology": ["epidemiology_relative_risk", "epidemiology_odds_ratio", "epidemiology_attributable_risk", "epidemiology_nnt_nnh", "epidemiology_attributable_fraction", "epidemiology_population_attributable_fraction", "epidemiology_incidence_rate", "epidemiology_prevalence", "epidemiology_kaplan_meier", "epidemiology_smr", "epidemiology_mappings"],
             "trial": ["trial_protocol_register", "trial_power_analysis", "trial_randomize", "trial_blind_verify", "trial_interim_analyze", "trial_safety_check", "trial_endpoint_evaluate", "trial_multiplicity_adjust", "trial_adapt_decide", "trial_report_generate"],
             "cognition": ["cognition_process", "cognition_analyze", "cognition_forward", "cognition_entropy", "cognition_perplexity", "cognition_embed", "cognition_sample", "cognition_confidence"],
             "notebooklm": ["nlm_add_notebook", "nlm_list_notebooks", "nlm_get_notebook", "nlm_select_notebook", "nlm_update_notebook", "nlm_remove_notebook", "nlm_search_notebooks", "nlm_get_library_stats", "nlm_list_sessions", "nlm_close_session", "nlm_reset_session", "nlm_get_health", "nlm_setup_auth", "nlm_re_auth", "nlm_ask_question", "nlm_cleanup_data"],

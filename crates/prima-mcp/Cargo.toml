@@ -18,7 +18,6 @@ prima-academy = { version = "0.1.0", path = "../prima-academy", registry = "nexc
 lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore", package = "nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
-thiserror = { version = "1.0.61" }
 
 [dev-dependencies]
 proptest = { version = "1.6.0" }

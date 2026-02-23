@@ -3,9 +3,7 @@
 
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
-use academy_forge::{
-    AloType, AtomizedPathway, CrateAnalysis, DomainAnalysis, ValidationReport,
-};
+use academy_forge::{AloType, AtomizedPathway, CrateAnalysis, DomainAnalysis, ValidationReport};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -517,8 +515,8 @@ fn test_all_pathways_atomize_and_graph() {
 
         let raw = std::fs::read_to_string(&path)
             .unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
-        let pathway_json: serde_json::Value =
-            serde_json::from_str(&raw).unwrap_or_else(|e| panic!("{filename} is not valid JSON: {e}"));
+        let pathway_json: serde_json::Value = serde_json::from_str(&raw)
+            .unwrap_or_else(|e| panic!("{filename} is not valid JSON: {e}"));
 
         let start = std::time::Instant::now();
         let atomized = academy_forge::atomize(&pathway_json)
@@ -532,7 +530,10 @@ fn test_all_pathways_atomize_and_graph() {
         // ── R28-R36 validation per pathway ──
         let alo_report = academy_forge::validate::alo::validate_alo_report(&atomized);
         let status = if alo_report.passed {
-            format!("OK E={} W={}", alo_report.error_count, alo_report.warning_count)
+            format!(
+                "OK E={} W={}",
+                alo_report.error_count, alo_report.warning_count
+            )
         } else {
             format!("FAIL E={}", alo_report.error_count)
         };
@@ -576,8 +577,8 @@ fn test_all_pathways_atomize_and_graph() {
 
     // ── Step 3: Build cross-pathway graph ─────────────────────────────────
     let graph_start = std::time::Instant::now();
-    let graph = academy_forge::build_graph(&atomized_pathways, true, 0.5)
-        .expect("build_graph failed");
+    let graph =
+        academy_forge::build_graph(&atomized_pathways, true, 0.5).expect("build_graph failed");
     let graph_ms = graph_start.elapsed().as_millis();
 
     let m = &graph.metadata;
@@ -588,10 +589,23 @@ fn test_all_pathways_atomize_and_graph() {
     eprintln!("  Total edges:              {:>6}", m.edge_count);
     eprintln!("  Connected components:     {:>6}", m.connected_components);
     eprintln!("  Graph diameter:           {:>6}", m.diameter);
-    eprintln!("  Overlap clusters:         {:>6}", graph.overlap_clusters.len());
-    eprintln!("  Overlap ratio:            {:>5.1}%", m.overlap_ratio * 100.0);
-    eprintln!("  Avg ALO duration:         {:>5.1} min", m.avg_duration_min);
-    eprintln!("  Total learning time:      {:>5} min ({:.1}h)", m.total_duration_min, m.total_duration_min as f32 / 60.0);
+    eprintln!(
+        "  Overlap clusters:         {:>6}",
+        graph.overlap_clusters.len()
+    );
+    eprintln!(
+        "  Overlap ratio:            {:>5.1}%",
+        m.overlap_ratio * 100.0
+    );
+    eprintln!(
+        "  Avg ALO duration:         {:>5.1} min",
+        m.avg_duration_min
+    );
+    eprintln!(
+        "  Total learning time:      {:>5} min ({:.1}h)",
+        m.total_duration_min,
+        m.total_duration_min as f32 / 60.0
+    );
     eprintln!("  Pathways included:        {:?}", graph.pathways);
     eprintln!();
 
@@ -620,12 +634,11 @@ fn test_all_pathways_atomize_and_graph() {
 
     // Each pathway has ALOs and a Hook in every stage
     for ap in &atomized_pathways {
-        assert!(
-            !ap.alos.is_empty(),
-            "Pathway {} has no ALOs",
-            ap.id
-        );
-        let has_hooks = ap.alos.iter().any(|a| a.alo_type == academy_forge::AloType::Hook);
+        assert!(!ap.alos.is_empty(), "Pathway {} has no ALOs", ap.id);
+        let has_hooks = ap
+            .alos
+            .iter()
+            .any(|a| a.alo_type == academy_forge::AloType::Hook);
         assert!(has_hooks, "Pathway {} has no Hook ALOs", ap.id);
         assert!(!ap.edges.is_empty(), "Pathway {} has no edges", ap.id);
     }
@@ -662,8 +675,16 @@ fn test_all_pathways_atomize_and_graph() {
     // Diameter should be positive (pathways have depth)
     assert!(m.diameter > 0, "Graph diameter should be > 0");
 
-    eprintln!("  RESULT: All {} pathways atomized and validated. Cross-pathway graph built.", atomized_count);
-    eprintln!("  Total: {} ALOs, {} graph edges, {} overlap clusters.", m.node_count, m.edge_count, graph.overlap_clusters.len());
+    eprintln!(
+        "  RESULT: All {} pathways atomized and validated. Cross-pathway graph built.",
+        atomized_count
+    );
+    eprintln!(
+        "  Total: {} ALOs, {} graph edges, {} overlap clusters.",
+        m.node_count,
+        m.edge_count,
+        graph.overlap_clusters.len()
+    );
     eprintln!();
 }
 
@@ -685,8 +706,7 @@ fn atomize_tov_01_experiential_report() {
         serde_json::from_str(&raw).expect("tov-01.json is not valid JSON");
 
     // ── Run atomizer ──
-    let atomized: AtomizedPathway =
-        academy_forge::atomize(&pathway_json).expect("atomize failed");
+    let atomized: AtomizedPathway = academy_forge::atomize(&pathway_json).expect("atomize failed");
 
     // ── Report: Overview ──
     eprintln!("\n{}", "=".repeat(70));
@@ -815,7 +835,10 @@ fn atomize_tov_01_experiential_report() {
         .unwrap_or(0);
 
     eprintln!("  DURATION ANALYSIS:");
-    eprintln!("    Total:   {total_duration} min ({:.1} hours)", total_duration as f32 / 60.0);
+    eprintln!(
+        "    Total:   {total_duration} min ({:.1} hours)",
+        total_duration as f32 / 60.0
+    );
     eprintln!("    Average: {avg_duration:.1} min/ALO");
     eprintln!("    Range:   {min_dur}-{max_dur} min");
     eprintln!();
@@ -864,8 +887,7 @@ fn atomize_tov_01_experiential_report() {
     eprintln!();
 
     // ── Validation: R28-R36 ──
-    let alo_report =
-        academy_forge::validate::alo::validate_alo_report(&atomized);
+    let alo_report = academy_forge::validate::alo::validate_alo_report(&atomized);
     eprintln!("  ALO VALIDATION (R28-R36):");
     eprintln!("    Passed:    {}", alo_report.passed);
     eprintln!("    Errors:    {}", alo_report.error_count);
@@ -874,21 +896,18 @@ fn atomize_tov_01_experiential_report() {
     if !alo_report.findings.is_empty() {
         eprintln!("    Findings:");
         for f in &alo_report.findings {
-            eprintln!(
-                "      [{:?}] {} — {}",
-                f.severity, f.rule, f.message
-            );
+            eprintln!("      [{:?}] {} — {}", f.severity, f.rule, f.message);
         }
     }
     eprintln!();
 
     // ── Assertions ──
-    assert!(total_alos >= 20, "Expected 20+ ALOs from 8 stages, got {total_alos}");
-    assert!(total_edges > 0, "Expected edges, got 0");
     assert!(
-        by_type.contains_key("Hook"),
-        "Should have Hook ALOs"
+        total_alos >= 20,
+        "Expected 20+ ALOs from 8 stages, got {total_alos}"
     );
+    assert!(total_edges > 0, "Expected edges, got 0");
+    assert!(by_type.contains_key("Hook"), "Should have Hook ALOs");
     assert!(
         by_type.contains_key("Reflection"),
         "Should have Reflection ALOs"
@@ -902,6 +921,8 @@ fn atomize_tov_01_experiential_report() {
     }
 
     eprintln!("  RESULT: Atomizer produced {total_alos} ALOs, {total_edges} edges from 8 stages.");
-    eprintln!("  Pipeline position: forge_extract → forge_scaffold → forge_validate → forge_atomize ✓");
+    eprintln!(
+        "  Pipeline position: forge_extract → forge_scaffold → forge_validate → forge_atomize ✓"
+    );
     eprintln!();
 }

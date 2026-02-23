@@ -1,6 +1,6 @@
 //! Error types for the bioinfo crate.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Result type alias for bioinfo operations.
 pub type BioinfoResult<T> = Result<T, BioinfoError>;

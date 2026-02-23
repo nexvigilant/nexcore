@@ -44,7 +44,7 @@ const CACHE_TTL_SECS: u64 = 900;
 // =============================================================================
 
 /// Errors from OpenFDA API operations.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum OpenFdaError {
     /// Failed to build HTTP client.
     #[error("Failed to build HTTP client: {0}")]

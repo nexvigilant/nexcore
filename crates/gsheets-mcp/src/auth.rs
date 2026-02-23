@@ -29,7 +29,7 @@ const SHEETS_SCOPE: &str = "https://www.googleapis.com/auth/spreadsheets";
 const REFRESH_MARGIN_SECS: i64 = 300;
 
 /// Errors that can occur during authentication.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum AuthError {
     #[error("no credentials found: checked GOOGLE_APPLICATION_CREDENTIALS, {0}, and gcloud ADC")]
     KeyNotFound(String),

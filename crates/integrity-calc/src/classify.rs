@@ -37,8 +37,7 @@ pub struct Classification {
 /// Classify with custom threshold.
 #[must_use]
 pub fn classify_with_threshold(hill_score: f64, threshold: f64) -> Classification {
-    let probability =
-        chemistry::arrhenius_probability(ACTIVATION_ENERGY, hill_score, SCALE_FACTOR);
+    let probability = chemistry::arrhenius_probability(ACTIVATION_ENERGY, hill_score, SCALE_FACTOR);
 
     let verdict = if probability > threshold {
         Verdict::Generated

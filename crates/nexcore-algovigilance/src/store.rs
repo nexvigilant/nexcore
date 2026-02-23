@@ -7,6 +7,7 @@
 //! Tier: T2-C (cross-domain composite — aggregates two persistence backends)
 //! Grounds to: T1::State (encapsulated persistence context)
 
+use nexcore_fs::dirs;
 use std::collections::HashMap;
 use std::path::PathBuf;
 

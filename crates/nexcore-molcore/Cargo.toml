@@ -8,8 +8,8 @@ authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "Pure Rust molecular core: SMILES parser, molecular graph, descriptors, fingerprints"
 
 [dependencies]
+nexcore-error = { workspace = true }
 prima-chem = { path = "../prima-chem" }
-thiserror = { version = "1.0.61" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 

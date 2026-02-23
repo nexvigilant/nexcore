@@ -10,6 +10,7 @@ rust-version = "1.85"
 description = "Guardian homeostasis engine — SENSE→COMPARE→ACT control loop with threat sensing"
 
 [dependencies]
+nexcore-error = { workspace = true }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 nexcore-tov = { version = "1.0.0", path = "../nexcore-tov", registry = "nexcore" }
 nexcore-dtree = { version = "1.0.0", path = "../nexcore-dtree", registry = "nexcore" }
@@ -35,7 +36,6 @@ nexcore-reproductive = { version = "1.0.0", path = "../nexcore-reproductive", re
 nexcore-browser = { version = "0.1.0", path = "../nexcore-browser", optional = true, registry = "nexcore" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.120"
-thiserror = "1.0.61"
 chrono = { version = "0.4.38", features = ["serde"] }
 tracing = "0.1.40"
 reqwest = { version = "0.12.5", features = ["json"] }

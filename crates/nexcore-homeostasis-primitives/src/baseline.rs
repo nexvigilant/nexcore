@@ -133,13 +133,13 @@ impl AllostasisTracker {
 
         if self.is_exposed {
             // Adapting upward: set-point converges to the stressed target.
-            let target = self.original_baseline
-                * (1.2 + self.ratchet_factor * f64::from(self.cycle_count));
+            let target =
+                self.original_baseline * (1.2 + self.ratchet_factor * f64::from(self.cycle_count));
             target + (self.setpoint - target) * (-dt_secs / self.tau_on_secs).exp()
         } else {
             // Recovering: set-point converges back to the ratcheted floor.
-            let floor = self.original_baseline
-                * (1.0 + self.ratchet_factor * f64::from(self.cycle_count));
+            let floor =
+                self.original_baseline * (1.0 + self.ratchet_factor * f64::from(self.cycle_count));
             floor + (self.setpoint - floor) * (-dt_secs / self.tau_off_secs).exp()
         }
     }
@@ -222,7 +222,10 @@ mod allostasis_tests {
         // After 5 × tau_on (5 min), should be close to stressed target (120).
         let sp = t.current_setpoint(t0 + 5 * 60_000);
         assert!(sp > 100.0, "setpoint {sp} should be above baseline");
-        assert!(sp < 121.0, "setpoint {sp} should not exceed stressed target");
+        assert!(
+            sp < 121.0,
+            "setpoint {sp} should not exceed stressed target"
+        );
     }
 
     #[test]
@@ -233,7 +236,10 @@ mod allostasis_tests {
         let original_floor = t.original_baseline;
         t.end_exposure(t0 + 300_000); // 5 min later
         // Ratchet raises original_baseline by 1%.
-        assert!(t.original_baseline > original_floor, "ratchet should raise baseline");
+        assert!(
+            t.original_baseline > original_floor,
+            "ratchet should raise baseline"
+        );
         assert_eq!(t.cycle_count, 1);
         assert!(!t.is_exposed);
     }
@@ -259,7 +265,10 @@ mod allostasis_tests {
         t.begin_exposure(t0);
         // After 20 × tau_on, very close to stressed target → drift ≈ 1.0.
         let frac = t.drift_fraction(t0 + 20 * 60_000);
-        assert!(frac > 0.9, "drift_fraction {frac} should be near 1.0 after 20×tau_on");
+        assert!(
+            frac > 0.9,
+            "drift_fraction {frac} should be near 1.0 after 20×tau_on"
+        );
     }
 }
 

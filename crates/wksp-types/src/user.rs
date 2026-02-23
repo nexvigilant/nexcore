@@ -1,7 +1,7 @@
 //! User types — profiles, roles, auth state
 
-use serde::{Deserialize, Serialize};
 use crate::common::Timestamp;
+use serde::{Deserialize, Serialize};
 
 /// User role in the platform
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]

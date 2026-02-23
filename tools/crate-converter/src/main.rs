@@ -1,5 +1,5 @@
-use nexcore_error::{Context, Result, bail};
 use clap::Parser;
+use nexcore_error::{Context, Result, bail};
 use std::path::PathBuf;
 use toml_edit::DocumentMut;
 

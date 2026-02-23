@@ -43,7 +43,7 @@ use serde::{Deserialize, Serialize};
 // ─── Error Types ────────────────────────────────────────────────────────────
 
 /// Ribosome error type.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum RibosomeError {
     #[error("∂[json]: {0}")]
     Json(#[from] serde_json::Error),
@@ -329,7 +329,8 @@ fn range_drift_score(baseline: &SchemaKind, observed: &SchemaKind) -> f64 {
                 ..
             },
         ) => {
-            #[allow(clippy::cast_precision_loss)] // String lengths are small; exact precision not needed
+            #[allow(clippy::cast_precision_loss)]
+            // String lengths are small; exact precision not needed
             let base_range = (*b_max - *b_min).max(1) as f64;
             #[allow(clippy::cast_precision_loss)]
             let obs_range = (*o_max - *o_min).max(1) as f64;

@@ -5,8 +5,8 @@
 //! for compliance reporting, incident investigation, and SOC 2 evidence.
 
 use chrono::{DateTime, Utc};
+use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use vr_core::{TenantId, UserId};
 
 // ============================================================================
@@ -51,7 +51,7 @@ pub enum AuditEventType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditEvent {
     /// Unique identifier for this event.
-    pub id: Uuid,
+    pub id: NexId,
     /// Tenant that generated this event.
     pub tenant_id: TenantId,
     /// User who performed the action.
@@ -191,13 +191,13 @@ mod tests {
 
     fn make_event(tenant_id: TenantId, user_id: UserId, event_type: AuditEventType) -> AuditEvent {
         AuditEvent {
-            id: Uuid::new_v4(),
+            id: NexId::v4(),
             tenant_id,
             user_id,
             timestamp: Utc::now(),
             event_type,
             resource_type: "compound".to_string(),
-            resource_id: Uuid::new_v4().to_string(),
+            resource_id: NexId::v4().to_string(),
             action: "test action".to_string(),
             details: serde_json::json!({}),
             ip_address: Some("192.168.1.1".to_string()),

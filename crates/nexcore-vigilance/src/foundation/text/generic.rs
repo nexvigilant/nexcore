@@ -2,16 +2,16 @@
 //!
 //! General-purpose text manipulation utilities.
 
-use once_cell::sync::Lazy;
 use regex::Regex;
+use std::sync::LazyLock;
 
 /// Compiled whitespace normalization regex (avoids per-call compilation).
-static WHITESPACE_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"\s+").unwrap_or_else(|_| unreachable!()));
+static WHITESPACE_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\s+").unwrap_or_else(|_| unreachable!()));
 
 /// Compiled code block extraction regex.
-static CODE_BLOCK_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"```(\w*)\n([\s\S]*?)```").unwrap_or_else(|_| unreachable!()));
+static CODE_BLOCK_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"```(\w*)\n([\s\S]*?)```").unwrap_or_else(|_| unreachable!()));
 
 /// Normalize whitespace in a string
 ///

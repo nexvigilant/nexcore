@@ -12,11 +12,11 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use lex_primitiva::LexPrimitiva;
+use nexcore_error::Error;
 use prima::PrimaError;
 use prima::prelude::{Lexer, Parser, Program, Token, TokenKind, Value, ValueData};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-use thiserror::Error;
 
 /// Pipeline execution error.
 ///

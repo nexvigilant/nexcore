@@ -1,6 +1,6 @@
 //! Error types for medical coding operations.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors that can occur during medical coding.
 #[derive(Debug, Error)]

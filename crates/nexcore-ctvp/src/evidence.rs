@@ -5,10 +5,10 @@
 
 use crate::error::{CtvpError, CtvpResult};
 use crate::types::*;
+use nexcore_fs::walk::WalkDir;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use walkdir::WalkDir;
 
 /// Inventory of evidence extracted from a deliverable.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

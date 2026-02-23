@@ -71,9 +71,7 @@ pub use crate::stos::irreversibility_auditor::{
 };
 
 // Layer 15: Mapping Transformer
-pub use crate::stos::mapping_transformer::{
-    EventStateMapping, MappingTransformer, StateMapping,
-};
+pub use crate::stos::mapping_transformer::{EventStateMapping, MappingTransformer, StateMapping};
 
 // Kernel new types
 pub use crate::TickResult;

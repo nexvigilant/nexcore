@@ -12,8 +12,8 @@
 //! | TimeConcProfile | T2-C | Horus (∂+σ Boundary+Sequence) |
 //! | PkError | T3 | Domain error envelope |
 
+use nexcore_error::Error;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
 // ============================================================================
 // Unified PK Error

@@ -6,12 +6,11 @@
 //! - `viz_render_pipeline`  — Pipeline config / quality / WGSL shaders
 //! - `viz_orbital_density`  — Electron density grid computation
 
-use rmcp::model::CallToolResult;
 use rmcp::ErrorData as McpError;
+use rmcp::model::CallToolResult;
 
 use crate::params::{
-    VizManifoldSampleParams, VizOrbitalDensityParams, VizRenderPipelineParams,
-    VizStringModesParams,
+    VizManifoldSampleParams, VizOrbitalDensityParams, VizRenderPipelineParams, VizStringModesParams,
 };
 
 // ════════════════════════════════════════════════════════════════
@@ -23,9 +22,7 @@ use crate::params::{
 /// Returns: vertex/triangle counts, genus, surface area, bounding box,
 /// and sample surface points with normals and curvature.
 pub fn manifold_sample(params: VizManifoldSampleParams) -> Result<CallToolResult, McpError> {
-    use nexcore_viz::manifold::{
-        self, CalabiYauConfig, ProjectionMethod,
-    };
+    use nexcore_viz::manifold::{self, CalabiYauConfig, ProjectionMethod};
 
     let projection = match params
         .projection
@@ -54,9 +51,8 @@ pub fn manifold_sample(params: VizManifoldSampleParams) -> Result<CallToolResult
         projection_method: projection,
     };
 
-    let mesh = manifold::generate_manifold_mesh(&config).map_err(|e| {
-        McpError::invalid_params(format!("Manifold generation failed: {e}"), None)
-    })?;
+    let mesh = manifold::generate_manifold_mesh(&config)
+        .map_err(|e| McpError::invalid_params(format!("Manifold generation failed: {e}"), None))?;
 
     let genus = manifold::compute_genus(config.degree);
     let area = manifold::mesh_surface_area(&mesh);
@@ -170,14 +166,17 @@ pub fn string_modes(params: VizStringModesParams) -> Result<CallToolResult, McpE
         let mode_freq = string_modes::mode_frequency(mode_num, &config);
 
         if let Some(obj) = result.as_object_mut() {
-            obj.insert("query_mode".to_string(), serde_json::json!({
-                "mode_number": mode_num,
-                "frequency": mode_freq,
-                "nodes": nodes,
-                "antinodes": antinodes,
-                "node_count": nodes.len(),
-                "antinode_count": antinodes.len(),
-            }));
+            obj.insert(
+                "query_mode".to_string(),
+                serde_json::json!({
+                    "mode_number": mode_num,
+                    "frequency": mode_freq,
+                    "nodes": nodes,
+                    "antinodes": antinodes,
+                    "node_count": nodes.len(),
+                    "antinode_count": antinodes.len(),
+                }),
+            );
         }
     }
 
@@ -211,9 +210,7 @@ pub fn render_pipeline(params: VizRenderPipelineParams) -> Result<CallToolResult
         }
 
         "quality" => {
-            let level = parse_quality_level(
-                params.quality_level.as_deref().unwrap_or("high"),
-            )?;
+            let level = parse_quality_level(params.quality_level.as_deref().unwrap_or("high"))?;
             let qs = renderer::quality_settings(level.clone());
             serde_json::json!({
                 "action": "quality",
@@ -234,9 +231,8 @@ pub fn render_pipeline(params: VizRenderPipelineParams) -> Result<CallToolResult
                 )
             })?;
             let target_fps = params.target_fps.unwrap_or(60.0);
-            let current_level = parse_quality_level(
-                params.quality_level.as_deref().unwrap_or("high"),
-            )?;
+            let current_level =
+                parse_quality_level(params.quality_level.as_deref().unwrap_or("high"))?;
             let new_level =
                 renderer::adaptive_quality(current_fps, target_fps, current_level.clone());
             serde_json::json!({
@@ -249,10 +245,7 @@ pub fn render_pipeline(params: VizRenderPipelineParams) -> Result<CallToolResult
         }
 
         "shaders" => {
-            let passes = params
-                .shader_passes
-                .as_deref()
-                .unwrap_or("vertex,fragment");
+            let passes = params.shader_passes.as_deref().unwrap_or("vertex,fragment");
             let mut shaders = serde_json::Map::new();
             for pass in passes.split(',').map(|s| s.trim()) {
                 let code = match pass.to_lowercase().as_str() {
@@ -280,9 +273,7 @@ pub fn render_pipeline(params: VizRenderPipelineParams) -> Result<CallToolResult
         }
 
         "sss_profile" => {
-            let material = parse_sss_material(
-                params.sss_material.as_deref().unwrap_or("skin"),
-            )?;
+            let material = parse_sss_material(params.sss_material.as_deref().unwrap_or("skin"))?;
             let profile = renderer::preset_sss_profile(&material);
             let diffusion = renderer::sss_diffusion_profile(&material);
 
@@ -385,14 +376,12 @@ pub fn orbital_density(params: VizOrbitalDensityParams) -> Result<CallToolResult
     let mut mol = Molecule::new(mol_name);
 
     for (i, raw) in raw_atoms.iter().enumerate() {
-        let element_str = raw["element"]
-            .as_str()
-            .ok_or_else(|| {
-                McpError::invalid_params(
-                    format!("Atom {i}: missing or invalid 'element' field"),
-                    None,
-                )
-            })?;
+        let element_str = raw["element"].as_str().ok_or_else(|| {
+            McpError::invalid_params(
+                format!("Atom {i}: missing or invalid 'element' field"),
+                None,
+            )
+        })?;
 
         let element = parse_element(element_str)?;
         let pos = parse_position(&raw["position"], i)?;
@@ -442,7 +431,11 @@ pub fn orbital_density(params: VizOrbitalDensityParams) -> Result<CallToolResult
         let mut overlap_entries = Vec::new();
         for i in 0..n {
             for j in i..n {
-                let val = overlap.get(i).and_then(|row| row.get(j)).copied().unwrap_or(0.0);
+                let val = overlap
+                    .get(i)
+                    .and_then(|row| row.get(j))
+                    .copied()
+                    .unwrap_or(0.0);
                 if val.abs() > 1e-10 {
                     overlap_entries.push(serde_json::json!({
                         "i": i, "j": j, "value": val,
@@ -529,7 +522,10 @@ mod tests {
             projection: None,
         };
         let result = manifold_sample(params);
-        assert!(result.is_ok(), "manifold_sample should succeed with defaults");
+        assert!(
+            result.is_ok(),
+            "manifold_sample should succeed with defaults"
+        );
     }
 
     #[test]
@@ -575,7 +571,10 @@ mod tests {
             query_mode: Some(3),
         };
         let result = string_modes(params);
-        assert!(result.is_ok(), "string_modes should succeed for open string");
+        assert!(
+            result.is_ok(),
+            "string_modes should succeed for open string"
+        );
     }
 
     #[test]

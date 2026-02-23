@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 use std::process::Command;
 
-use nexcore_error::{Context, Result, bail};
 use clap::Parser;
+use nexcore_error::{Context, Result, bail};
 
 use dag_publish::{build_dag, group_into_phases, topological_sort};
 

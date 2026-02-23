@@ -4,16 +4,16 @@
 //! aggregated into [`UsageAggregation`] records for billing period totals.
 
 use chrono::{DateTime, Utc};
+use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use uuid::Uuid;
 use vr_core::{TenantId, UserId};
 
 /// A single metered usage event.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MeterEvent {
     /// Unique event identifier.
-    pub event_id: Uuid,
+    pub event_id: NexId,
     /// Tenant that generated this event.
     pub tenant_id: TenantId,
     /// User who triggered the event.
@@ -201,7 +201,7 @@ mod tests {
 
     fn make_event(tenant_id: TenantId, meter_type: MeterType, quantity: f64) -> MeterEvent {
         MeterEvent {
-            event_id: Uuid::new_v4(),
+            event_id: NexId::v4(),
             tenant_id,
             user_id: UserId::new(),
             timestamp: Utc.with_ymd_and_hms(2025, 6, 15, 12, 0, 0).unwrap(),

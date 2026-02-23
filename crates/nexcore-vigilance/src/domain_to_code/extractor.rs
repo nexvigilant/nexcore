@@ -4,8 +4,8 @@
 
 use super::languages::DomainLanguage;
 use super::patterns::DomainPattern;
+use nexcore_error::Error;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
 /// Errors during pattern extraction.
 #[derive(Debug, Error)]

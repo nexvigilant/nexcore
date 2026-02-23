@@ -48,3 +48,15 @@ pub struct MeasureStatsParams {
     /// Numeric data points
     pub counts: Vec<f64>,
 }
+
+/// Parameters for quality gradient measurement between two crates.
+/// Weather bridge: pressure gradient → quality gradient drives effort flow.
+/// T1 grounding: ∇ = →(Causality) + κ(Comparison) + ∂(Boundary)
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct QualityGradientParams {
+    /// First crate name (source of gradient measurement)
+    pub crate_a: String,
+    /// Second crate name (target of gradient measurement)
+    pub crate_b: String,
+}

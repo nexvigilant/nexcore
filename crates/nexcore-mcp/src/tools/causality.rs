@@ -3,7 +3,7 @@
 //! RUCAM hepatotoxicity and UCAS universal causality assessment MCP tools.
 
 use crate::params::causality::{
-    CriterionResponseParam, RucamParams, RucamReactionType, RechallengeResultParam,
+    CriterionResponseParam, RechallengeResultParam, RucamParams, RucamReactionType,
     SerologyResultParam, UcasParams, YesNoNaParam,
 };
 use crate::tooling::attach_forensic_meta;
@@ -101,7 +101,10 @@ pub fn causality_rucam(params: RucamParams) -> Result<CallToolResult, McpError> 
             reaction_known: params.previous_hepatotoxicity.reaction_known,
         },
         rechallenge_performed: params.rechallenge_performed,
-        rechallenge_result: params.rechallenge_result.as_ref().map(to_rechallenge_result),
+        rechallenge_result: params
+            .rechallenge_result
+            .as_ref()
+            .map(to_rechallenge_result),
     };
 
     let result = calculate_rucam(&input);

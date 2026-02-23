@@ -19,7 +19,6 @@ serde_json = { version = "1.0.120" }
 chrono = { version = "0.4.38", features = ["serde"] }
 ipnetwork = "0.20"
 tracing = { version = "0.1.40" }
-thiserror = { version = "1.0.61" }
 
 [lints.rust]
 async_fn_in_trait = "allow"

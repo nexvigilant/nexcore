@@ -151,7 +151,7 @@ pub const SHAPES_DEMO: &str = r#"<html>
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Renderer error types.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum Error {
     /// Network error during fetch.
     #[error("Network error: {0}")]

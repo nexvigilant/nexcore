@@ -46,7 +46,11 @@ impl DistanceMatrix {
 /// - `dm`: pairwise distance matrix
 /// - `max_dim`: maximum simplex dimension to include (1 = edges only, 2 = triangles, …)
 /// - `max_filtration`: upper bound on filtration parameter
-pub fn vietoris_rips(dm: &DistanceMatrix, max_dim: usize, max_filtration: f64) -> SimplicialComplex {
+pub fn vietoris_rips(
+    dm: &DistanceMatrix,
+    max_dim: usize,
+    max_filtration: f64,
+) -> SimplicialComplex {
     let n = dm.size;
     let mut complex = SimplicialComplex::new();
 
@@ -141,8 +145,8 @@ mod tests {
 
     #[test]
     fn vietoris_rips_with_labels() {
-        let dm = three_point_dm()
-            .with_labels(vec!["A".to_string(), "B".to_string(), "C".to_string()]);
+        let dm =
+            three_point_dm().with_labels(vec!["A".to_string(), "B".to_string(), "C".to_string()]);
         assert!(dm.labels.is_some());
         let c = vietoris_rips(&dm, 1, 2.0);
         assert_eq!(c.simplices_of_dim(0).len(), 3);

@@ -57,7 +57,7 @@ pub struct FdaGuidanceDoc {
 }
 
 /// Errors from FDA guidance operations
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum FdaGuidanceError {
     /// Failed to parse the embedded JSON index
     #[error("Failed to parse FDA guidance index: {0}")]

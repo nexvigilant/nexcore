@@ -431,7 +431,7 @@ impl TransferConfidence {
 /// Errors during machine operation.
 ///
 /// Each variant identifies the failure point for correction (Codex XI).
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum MachineError {
     /// A component failed to operate.
     #[error("component {0} failed")]

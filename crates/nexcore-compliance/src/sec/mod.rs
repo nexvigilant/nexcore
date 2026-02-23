@@ -33,7 +33,7 @@ const USER_AGENT: &str = "NexVigilant contact@nexvigilant.com";
 // =============================================================================
 
 /// Errors from SEC EDGAR API operations.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum SecError {
     /// Failed to build HTTP client.
     #[error("Failed to build HTTP client: {0}")]

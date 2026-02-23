@@ -40,9 +40,7 @@ pub async fn fetch_food_events(
     client: &OpenFdaClient,
     params: &QueryParams,
 ) -> Result<OpenFdaResponse<FoodEvent>, nexcore_error::NexError> {
-    client
-        .fetch::<FoodEvent>(FOOD_EVENT_ENDPOINT, params)
-        .await
+    client.fetch::<FoodEvent>(FOOD_EVENT_ENDPOINT, params).await
 }
 
 // =============================================================================

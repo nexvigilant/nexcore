@@ -3,6 +3,7 @@
 name = "nexcore-trust"
 version = "0.1.0"
 edition = "2024"
+license = "LicenseRef-NexVigilant-Proprietary"
 description = "Bayesian trust engine: Beta(alpha, beta) scoring, asymmetric evidence weighting, temporal decay, multi-dimensional trust (Mayer et al.), and network transitivity"
 
 [lints.rust]

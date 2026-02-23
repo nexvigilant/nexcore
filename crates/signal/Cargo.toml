@@ -19,6 +19,7 @@ path = "src/lib.rs"
 
 [dependencies]
 nexcore-signal-pipeline = { version = "1.0.0", path = "../nexcore-signal-pipeline" }
+nexcore-error = { workspace = true }
 
 [lints]
 workspace = true

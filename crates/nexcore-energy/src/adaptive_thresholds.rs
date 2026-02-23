@@ -147,11 +147,17 @@ impl SignalHistory {
         let signal_count = if self.wrapped {
             self.outcomes.iter().filter(|&&s| s).count()
         } else {
-            self.outcomes[..self.position].iter().filter(|&&s| s).count()
+            self.outcomes[..self.position]
+                .iter()
+                .filter(|&&s| s)
+                .count()
         };
 
-        #[allow(clippy::cast_precision_loss)] // Signal counts in window are small (max DEFAULT_HISTORY_WINDOW=100)
-        { signal_count as f64 / count as f64 }
+        #[allow(clippy::cast_precision_loss)]
+        // Signal counts in window are small (max DEFAULT_HISTORY_WINDOW=100)
+        {
+            signal_count as f64 / count as f64
+        }
     }
 
     /// Reset all history.
@@ -371,10 +377,7 @@ pub fn adapt(
 ///
 /// Returns adapted thresholds for PRR, ROR CI, and Chi-square.
 #[must_use]
-pub fn adapt_all_pv(
-    energy_charge: f64,
-    history: &SignalHistory,
-) -> Vec<AdaptedThreshold> {
+pub fn adapt_all_pv(energy_charge: f64, history: &SignalHistory) -> Vec<AdaptedThreshold> {
     let configs = [
         AdaptiveThresholdConfig::prr(),
         AdaptiveThresholdConfig::ror_ci(),

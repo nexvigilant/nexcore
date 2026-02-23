@@ -11,8 +11,8 @@ use crate::entropy;
 use crate::error::{MeasureError, MeasureResult};
 use crate::graph;
 use crate::types::*;
+use nexcore_fs::walk::WalkDir;
 use std::path::Path;
-use walkdir::WalkDir;
 
 /// Collect a single crate's measurement.
 pub fn measure_crate(workspace_root: &Path, crate_name: &str) -> MeasureResult<CrateMeasurement> {

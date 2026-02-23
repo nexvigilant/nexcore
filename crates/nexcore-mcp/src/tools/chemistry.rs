@@ -532,7 +532,9 @@ fn build_open_result(
 /// This tool encodes that lesson as a reusable computation.
 ///
 /// PV confidence: 0.78 (wavefunction overlap → signal co-occurrence)
-pub fn gaussian_overlap(params: ChemistryGaussianOverlapParams) -> Result<CallToolResult, McpError> {
+pub fn gaussian_overlap(
+    params: ChemistryGaussianOverlapParams,
+) -> Result<CallToolResult, McpError> {
     use std::f64::consts::PI;
 
     // Validate equal lengths
@@ -817,8 +819,7 @@ mod tests {
                 _ => None,
             })
             .collect();
-        let json: serde_json::Value =
-            serde_json::from_str(&text).expect("valid JSON");
+        let json: serde_json::Value = serde_json::from_str(&text).expect("valid JSON");
         let overlap = json["overlap_integral"].as_f64().expect("overlap field");
         assert!(
             (overlap - 1.0).abs() < 0.02,

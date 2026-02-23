@@ -109,8 +109,11 @@ impl IncidentSignature {
 
         let system_score = jaccard_similarity(&self.affected_systems, &other.affected_systems);
 
-        let action_strs_self: Vec<String> =
-            self.actions_taken.iter().map(|a| format!("{a:?}")).collect();
+        let action_strs_self: Vec<String> = self
+            .actions_taken
+            .iter()
+            .map(|a| format!("{a:?}"))
+            .collect();
         let action_strs_other: Vec<String> = other
             .actions_taken
             .iter()

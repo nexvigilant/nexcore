@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use chrono::{DateTime, Utc};
+use nexcore_codec::hex;
 use sha2::{Digest, Sha256};
 
 use crate::error::{OrganizeError, OrganizeResult};
@@ -68,7 +69,7 @@ pub fn snapshot(root: &Path) -> OrganizeResult<OrganizeState> {
 
     let mut entries = HashMap::new();
 
-    let walker = walkdir::WalkDir::new(root).min_depth(1);
+    let walker = nexcore_fs::walk::WalkDir::new(root).min_depth(1);
 
     for entry in walker {
         let entry = entry?;

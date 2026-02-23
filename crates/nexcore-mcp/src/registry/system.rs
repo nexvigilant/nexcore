@@ -281,6 +281,70 @@ pub async fn foundation_fsrs_review(
     tools::foundation::fsrs_review(params)
 }
 
+// ====================================================================
+// Topology — TDA + Graph Analysis (6 tools)
+// ====================================================================
+
+#[tool(
+    description = "Build a Vietoris-Rips simplicial complex from a distance matrix. Returns simplex counts by dimension. Use for topological structure analysis of point clouds, dependency graphs, or signal networks."
+)]
+pub async fn topo_vietoris_rips(
+    &self,
+    Parameters(params): Parameters<params::topology::TopoVietorisRipsParams>
+) -> Result<CallToolResult, McpError> {
+    tools::topology::topo_vietoris_rips(params)
+}
+
+#[tool(
+    description = "Compute persistent homology from a distance matrix. Returns birth/death pairs showing which topological features (components, loops, voids) persist across scales. Essential features (infinite persistence) indicate true structure; short-lived features indicate noise."
+)]
+pub async fn topo_persistence(
+    &self,
+    Parameters(params): Parameters<params::topology::TopoPersistenceParams>
+) -> Result<CallToolResult, McpError> {
+    tools::topology::topo_persistence(params)
+}
+
+#[tool(
+    description = "Compute Betti numbers at a specific filtration value. β₀ = connected components, β₁ = independent loops/cycles, β₂ = enclosed voids. Snapshot of topological structure at a given scale."
+)]
+pub async fn topo_betti(
+    &self,
+    Parameters(params): Parameters<params::topology::TopoBettiParams>
+) -> Result<CallToolResult, McpError> {
+    tools::topology::topo_betti(params)
+}
+
+#[tool(
+    description = "Compute betweenness centrality for all nodes in a directed graph (Brandes algorithm). Identifies bottleneck nodes that control information flow. Returns ranked nodes with centrality score, in-degree, and out-degree."
+)]
+pub async fn graph_centrality(
+    &self,
+    Parameters(params): Parameters<params::topology::GraphCentralityParams>
+) -> Result<CallToolResult, McpError> {
+    tools::topology::graph_centrality(params)
+}
+
+#[tool(
+    description = "Find connected components in a graph (edges treated as undirected). Returns component count, largest component size, standalone nodes, and all components with their members."
+)]
+pub async fn graph_components(
+    &self,
+    Parameters(params): Parameters<params::topology::GraphComponentsParams>
+) -> Result<CallToolResult, McpError> {
+    tools::topology::graph_components(params)
+}
+
+#[tool(
+    description = "Find shortest path between two nodes in a directed graph (BFS, unweighted). Returns path and distance, or indicates unreachable."
+)]
+pub async fn graph_shortest_path(
+    &self,
+    Parameters(params): Parameters<params::topology::GraphShortestPathParams>
+) -> Result<CallToolResult, McpError> {
+    tools::topology::graph_shortest_path(params)
+}
+
 #[tool(
     description = "Expand a concept into all deterministic search variants: case forms (lower/UPPER/Title/camelCase/snake_case/kebab-case), singular/plural, abbreviation, truncated stems, and optional section markers. Returns patterns and combined regex. 100% deterministic, zero I/O."
 )]

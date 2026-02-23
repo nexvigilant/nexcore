@@ -14,14 +14,14 @@ name = "skill-compile"
 path = "bin/skill-compile.rs"
 
 [dependencies]
+nexcore-error = { workspace = true }
 nexcore-skill-exec = { version = "1.0.0", path = "../nexcore-skill-exec", registry = "nexcore" }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 toml = { version = "0.8.15" }
-thiserror = { version = "1.0.61" }
 tracing = { version = "0.1.40" }
-dirs = { version = "5.0.1" }
+nexcore-fs = { workspace = true }
 clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 

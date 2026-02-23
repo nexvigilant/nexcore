@@ -10,11 +10,11 @@ keywords = ["skills", "execution", "orchestration", "automation"]
 categories = ["command-line-utilities"]
 
 [dependencies]
+nexcore-error = { workspace = true }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 tokio = { version = "1.38.0", features = ["full"] }
-thiserror = { version = "1.0.61" }
 tracing = { version = "0.1.40" }
 
 # Async trait support
@@ -22,7 +22,7 @@ async-trait = "0.1"
 
 # JSON Schema validation
 jsonschema = "0.29"
-dirs = { version = "5.0.1" }
+nexcore-fs = { workspace = true }
 
 [dev-dependencies]
 tempfile = { version = "3.10.1" }

@@ -9,7 +9,7 @@ use crate::node::{DecisionTree, TreeNode};
 use crate::types::{Direction, Feature, PredictionResult, RegressionResult, SplitDescription};
 
 /// Error type for prediction failures.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum PredictError {
     /// Tree has not been fitted.
     #[error("tree has not been fitted")]

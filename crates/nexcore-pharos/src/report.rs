@@ -64,7 +64,7 @@ impl SurveillanceReport {
     /// Create a new empty report with a generated run ID.
     pub fn new(faers_dir: &str) -> Self {
         Self {
-            run_id: uuid::Uuid::new_v4().to_string(),
+            run_id: nexcore_id::NexId::v4().to_string(),
             timestamp: Utc::now(),
             faers_dir: faers_dir.to_string(),
             total_pairs: 0,

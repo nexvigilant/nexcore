@@ -107,10 +107,7 @@ impl ThymicGate {
             return verdict;
         }
 
-        let obs = self
-            .observations
-            .entry(category.to_string())
-            .or_default();
+        let obs = self.observations.entry(category.to_string()).or_default();
 
         obs.runs_observed += 1;
 
@@ -170,18 +167,18 @@ impl ThymicGate {
             if obs.runs_observed == 0 {
                 0.0
             } else {
-                #[allow(clippy::cast_precision_loss)] // u32 values within f32 mantissa range for practical use
-                { obs.suppressed_degrades as f32 / obs.runs_observed as f32 }
+                #[allow(clippy::cast_precision_loss)]
+                // u32 values within f32 mantissa range for practical use
+                {
+                    obs.suppressed_degrades as f32 / obs.runs_observed as f32
+                }
             }
         })
     }
 
     /// Manually graduate a category (skip remaining observation).
     pub fn force_graduate(&mut self, category: &str) {
-        let obs = self
-            .observations
-            .entry(category.to_string())
-            .or_default();
+        let obs = self.observations.entry(category.to_string()).or_default();
         obs.graduated = true;
     }
 

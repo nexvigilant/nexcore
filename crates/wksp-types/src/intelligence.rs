@@ -1,7 +1,7 @@
 //! Intelligence types — articles, series, content hub
 
-use serde::{Deserialize, Serialize};
 use crate::common::ContentStatus;
+use serde::{Deserialize, Serialize};
 
 /// Content type matching editorial categories
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]

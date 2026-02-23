@@ -606,8 +606,46 @@ impl PatternRegistry {
             ],
         });
 
+        // 13. Gradient: → + κ + ∂ (freq=23) — Weather bridge: pressure gradient drives flow
+        registry.register(Pattern {
+            name: "Gradient".to_string(),
+            composition: PrimitiveComposition::new(vec![Causality, Comparison, Boundary])
+                .with_dominant(Boundary, 0.9),
+            description:
+                "Difference across a boundary that drives flow — quality, knowledge, effort"
+                    .to_string(),
+            examples: vec![
+                "CausalityScore".to_string(),
+                "SafetyMargin".to_string(),
+                "Determination".to_string(),
+            ],
+            frequency: 23,
+            interactions: vec![
+                Interaction::new(Boundary, Comparison, InteractionType::Guards),
+                Interaction::new(Comparison, Causality, InteractionType::Transforms),
+            ],
+        });
+
+        // 14. PhaseTransition: ς + ∝ + ∂ (freq=18) — Weather bridge: qualitative state reorganization
+        registry.register(Pattern {
+            name: "PhaseTransition".to_string(),
+            composition: PrimitiveComposition::new(vec![State, Irreversibility, Boundary])
+                .with_dominant(State, 0.85),
+            description: "Qualitative state change — fundamentally different organization, not quantitative shift".to_string(),
+            examples: vec![
+                "DominantShift".to_string(),
+                "Checkpoint".to_string(),
+                "PhaseGate".to_string(),
+            ],
+            frequency: 18,
+            interactions: vec![
+                Interaction::new(State, Boundary, InteractionType::Constrains),
+                Interaction::new(Boundary, Irreversibility, InteractionType::Transforms),
+            ],
+        });
+
         // Verify canonical graph is used
-        let _ = graph;
+        drop(graph);
 
         registry
     }
@@ -832,9 +870,9 @@ mod tests {
     // ─── Registry tests ───
 
     #[test]
-    fn test_canonical_registry_has_12_patterns() {
+    fn test_canonical_registry_has_14_patterns() {
         let registry = PatternRegistry::canonical();
-        assert_eq!(registry.len(), 12);
+        assert_eq!(registry.len(), 14);
     }
 
     #[test]

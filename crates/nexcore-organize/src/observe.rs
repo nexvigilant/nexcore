@@ -9,7 +9,7 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 use chrono::{DateTime, Utc};
-use walkdir::WalkDir;
+use nexcore_fs::walk::WalkDir;
 
 use crate::config::OrganizeConfig;
 use crate::error::{OrganizeError, OrganizeResult};
@@ -127,8 +127,11 @@ fn should_exclude(path: &Path, root: &Path, exclude_set: &HashSet<&str>) -> bool
     false
 }
 
-/// Build an `EntryMeta` from a `walkdir::DirEntry`.
-fn entry_meta_from_direntry(entry: &walkdir::DirEntry, root: &Path) -> OrganizeResult<EntryMeta> {
+/// Build an `EntryMeta` from a `nexcore_fs::walk::DirEntry`.
+fn entry_meta_from_direntry(
+    entry: &nexcore_fs::walk::DirEntry,
+    root: &Path,
+) -> OrganizeResult<EntryMeta> {
     let path = entry.path().to_path_buf();
     let is_dir = entry.file_type().is_dir();
 

@@ -60,7 +60,10 @@ impl fmt::Display for OrbitalError {
         match self {
             Self::EmptyMolecule => write!(f, "molecule has no atoms; cannot build basis set"),
             Self::UnsupportedElement(sym) => {
-                write!(f, "element '{sym}' has no STO-3G parameters in basis library")
+                write!(
+                    f,
+                    "element '{sym}' has no STO-3G parameters in basis library"
+                )
             }
             Self::InvalidQuantumNumbers => {
                 write!(f, "quantum numbers are inconsistent or out of range")
@@ -293,9 +296,18 @@ pub fn sto3g_basis(
         Element::H => Ok(vec![(
             OrbitalType::S,
             vec![
-                GaussianPrimitive { exponent: 3.425_250_91, coefficient: 0.154_328_97 },
-                GaussianPrimitive { exponent: 0.623_913_73, coefficient: 0.535_328_14 },
-                GaussianPrimitive { exponent: 0.168_855_40, coefficient: 0.444_634_54 },
+                GaussianPrimitive {
+                    exponent: 3.425_250_91,
+                    coefficient: 0.154_328_97,
+                },
+                GaussianPrimitive {
+                    exponent: 0.623_913_73,
+                    coefficient: 0.535_328_14,
+                },
+                GaussianPrimitive {
+                    exponent: 0.168_855_40,
+                    coefficient: 0.444_634_54,
+                },
             ],
         )]),
 
@@ -304,19 +316,46 @@ pub fn sto3g_basis(
         // ------------------------------------------------------------------
         Element::C => {
             let s1 = vec![
-                GaussianPrimitive { exponent: 71.616_837, coefficient: 0.154_328_97 },
-                GaussianPrimitive { exponent: 13.045_096, coefficient: 0.535_328_14 },
-                GaussianPrimitive { exponent: 3.530_512_2, coefficient: 0.444_634_54 },
+                GaussianPrimitive {
+                    exponent: 71.616_837,
+                    coefficient: 0.154_328_97,
+                },
+                GaussianPrimitive {
+                    exponent: 13.045_096,
+                    coefficient: 0.535_328_14,
+                },
+                GaussianPrimitive {
+                    exponent: 3.530_512_2,
+                    coefficient: 0.444_634_54,
+                },
             ];
             let s2 = vec![
-                GaussianPrimitive { exponent: 2.941_249_4, coefficient: -0.099_967_23 },
-                GaussianPrimitive { exponent: 0.683_483_1, coefficient: 0.399_512_83 },
-                GaussianPrimitive { exponent: 0.222_289_9, coefficient: 0.700_115_47 },
+                GaussianPrimitive {
+                    exponent: 2.941_249_4,
+                    coefficient: -0.099_967_23,
+                },
+                GaussianPrimitive {
+                    exponent: 0.683_483_1,
+                    coefficient: 0.399_512_83,
+                },
+                GaussianPrimitive {
+                    exponent: 0.222_289_9,
+                    coefficient: 0.700_115_47,
+                },
             ];
             let p_shared = vec![
-                GaussianPrimitive { exponent: 2.941_249_4, coefficient: 0.155_916_27 },
-                GaussianPrimitive { exponent: 0.683_483_1, coefficient: 0.607_683_72 },
-                GaussianPrimitive { exponent: 0.222_289_9, coefficient: 0.391_957_39 },
+                GaussianPrimitive {
+                    exponent: 2.941_249_4,
+                    coefficient: 0.155_916_27,
+                },
+                GaussianPrimitive {
+                    exponent: 0.683_483_1,
+                    coefficient: 0.607_683_72,
+                },
+                GaussianPrimitive {
+                    exponent: 0.222_289_9,
+                    coefficient: 0.391_957_39,
+                },
             ];
             Ok(vec![
                 (OrbitalType::S, s1),
@@ -332,19 +371,46 @@ pub fn sto3g_basis(
         // ------------------------------------------------------------------
         Element::N => {
             let s1 = vec![
-                GaussianPrimitive { exponent: 99.106_169, coefficient: 0.154_328_97 },
-                GaussianPrimitive { exponent: 18.052_312, coefficient: 0.535_328_14 },
-                GaussianPrimitive { exponent: 4.885_660_2, coefficient: 0.444_634_54 },
+                GaussianPrimitive {
+                    exponent: 99.106_169,
+                    coefficient: 0.154_328_97,
+                },
+                GaussianPrimitive {
+                    exponent: 18.052_312,
+                    coefficient: 0.535_328_14,
+                },
+                GaussianPrimitive {
+                    exponent: 4.885_660_2,
+                    coefficient: 0.444_634_54,
+                },
             ];
             let s2 = vec![
-                GaussianPrimitive { exponent: 3.780_455_9, coefficient: -0.099_967_23 },
-                GaussianPrimitive { exponent: 0.878_496_5, coefficient: 0.399_512_83 },
-                GaussianPrimitive { exponent: 0.285_714_4, coefficient: 0.700_115_47 },
+                GaussianPrimitive {
+                    exponent: 3.780_455_9,
+                    coefficient: -0.099_967_23,
+                },
+                GaussianPrimitive {
+                    exponent: 0.878_496_5,
+                    coefficient: 0.399_512_83,
+                },
+                GaussianPrimitive {
+                    exponent: 0.285_714_4,
+                    coefficient: 0.700_115_47,
+                },
             ];
             let p_shared = vec![
-                GaussianPrimitive { exponent: 3.780_455_9, coefficient: 0.155_916_27 },
-                GaussianPrimitive { exponent: 0.878_496_5, coefficient: 0.607_683_72 },
-                GaussianPrimitive { exponent: 0.285_714_4, coefficient: 0.391_957_39 },
+                GaussianPrimitive {
+                    exponent: 3.780_455_9,
+                    coefficient: 0.155_916_27,
+                },
+                GaussianPrimitive {
+                    exponent: 0.878_496_5,
+                    coefficient: 0.607_683_72,
+                },
+                GaussianPrimitive {
+                    exponent: 0.285_714_4,
+                    coefficient: 0.391_957_39,
+                },
             ];
             Ok(vec![
                 (OrbitalType::S, s1),
@@ -360,19 +426,46 @@ pub fn sto3g_basis(
         // ------------------------------------------------------------------
         Element::O => {
             let s1 = vec![
-                GaussianPrimitive { exponent: 130.709_320, coefficient: 0.154_328_97 },
-                GaussianPrimitive { exponent: 23.808_861, coefficient: 0.535_328_14 },
-                GaussianPrimitive { exponent: 6.443_608_3, coefficient: 0.444_634_54 },
+                GaussianPrimitive {
+                    exponent: 130.709_320,
+                    coefficient: 0.154_328_97,
+                },
+                GaussianPrimitive {
+                    exponent: 23.808_861,
+                    coefficient: 0.535_328_14,
+                },
+                GaussianPrimitive {
+                    exponent: 6.443_608_3,
+                    coefficient: 0.444_634_54,
+                },
             ];
             let s2 = vec![
-                GaussianPrimitive { exponent: 5.033_151_3, coefficient: -0.099_967_23 },
-                GaussianPrimitive { exponent: 1.169_596_1, coefficient: 0.399_512_83 },
-                GaussianPrimitive { exponent: 0.380_389_0, coefficient: 0.700_115_47 },
+                GaussianPrimitive {
+                    exponent: 5.033_151_3,
+                    coefficient: -0.099_967_23,
+                },
+                GaussianPrimitive {
+                    exponent: 1.169_596_1,
+                    coefficient: 0.399_512_83,
+                },
+                GaussianPrimitive {
+                    exponent: 0.380_389_0,
+                    coefficient: 0.700_115_47,
+                },
             ];
             let p_shared = vec![
-                GaussianPrimitive { exponent: 5.033_151_3, coefficient: 0.155_916_27 },
-                GaussianPrimitive { exponent: 1.169_596_1, coefficient: 0.607_683_72 },
-                GaussianPrimitive { exponent: 0.380_389_0, coefficient: 0.391_957_39 },
+                GaussianPrimitive {
+                    exponent: 5.033_151_3,
+                    coefficient: 0.155_916_27,
+                },
+                GaussianPrimitive {
+                    exponent: 1.169_596_1,
+                    coefficient: 0.607_683_72,
+                },
+                GaussianPrimitive {
+                    exponent: 0.380_389_0,
+                    coefficient: 0.391_957_39,
+                },
             ];
             Ok(vec![
                 (OrbitalType::S, s1),
@@ -388,19 +481,46 @@ pub fn sto3g_basis(
         // ------------------------------------------------------------------
         Element::F => {
             let s1 = vec![
-                GaussianPrimitive { exponent: 166.679_134, coefficient: 0.154_328_97 },
-                GaussianPrimitive { exponent: 30.360_812, coefficient: 0.535_328_14 },
-                GaussianPrimitive { exponent: 8.216_820_3, coefficient: 0.444_634_54 },
+                GaussianPrimitive {
+                    exponent: 166.679_134,
+                    coefficient: 0.154_328_97,
+                },
+                GaussianPrimitive {
+                    exponent: 30.360_812,
+                    coefficient: 0.535_328_14,
+                },
+                GaussianPrimitive {
+                    exponent: 8.216_820_3,
+                    coefficient: 0.444_634_54,
+                },
             ];
             let s2 = vec![
-                GaussianPrimitive { exponent: 6.464_803_2, coefficient: -0.099_967_23 },
-                GaussianPrimitive { exponent: 1.502_281_2, coefficient: 0.399_512_83 },
-                GaussianPrimitive { exponent: 0.488_588_7, coefficient: 0.700_115_47 },
+                GaussianPrimitive {
+                    exponent: 6.464_803_2,
+                    coefficient: -0.099_967_23,
+                },
+                GaussianPrimitive {
+                    exponent: 1.502_281_2,
+                    coefficient: 0.399_512_83,
+                },
+                GaussianPrimitive {
+                    exponent: 0.488_588_7,
+                    coefficient: 0.700_115_47,
+                },
             ];
             let p_shared = vec![
-                GaussianPrimitive { exponent: 6.464_803_2, coefficient: 0.155_916_27 },
-                GaussianPrimitive { exponent: 1.502_281_2, coefficient: 0.607_683_72 },
-                GaussianPrimitive { exponent: 0.488_588_7, coefficient: 0.391_957_39 },
+                GaussianPrimitive {
+                    exponent: 6.464_803_2,
+                    coefficient: 0.155_916_27,
+                },
+                GaussianPrimitive {
+                    exponent: 1.502_281_2,
+                    coefficient: 0.607_683_72,
+                },
+                GaussianPrimitive {
+                    exponent: 0.488_588_7,
+                    coefficient: 0.391_957_39,
+                },
             ];
             Ok(vec![
                 (OrbitalType::S, s1),
@@ -416,29 +536,74 @@ pub fn sto3g_basis(
         // ------------------------------------------------------------------
         Element::P => {
             let s1 = vec![
-                GaussianPrimitive { exponent: 488.884_599, coefficient: 0.154_328_97 },
-                GaussianPrimitive { exponent: 89.078_255, coefficient: 0.535_328_14 },
-                GaussianPrimitive { exponent: 24.103_864, coefficient: 0.444_634_54 },
+                GaussianPrimitive {
+                    exponent: 488.884_599,
+                    coefficient: 0.154_328_97,
+                },
+                GaussianPrimitive {
+                    exponent: 89.078_255,
+                    coefficient: 0.535_328_14,
+                },
+                GaussianPrimitive {
+                    exponent: 24.103_864,
+                    coefficient: 0.444_634_54,
+                },
             ];
             let s2 = vec![
-                GaussianPrimitive { exponent: 19.338_085, coefficient: -0.099_967_23 },
-                GaussianPrimitive { exponent: 4.490_876_1, coefficient: 0.399_512_83 },
-                GaussianPrimitive { exponent: 1.461_534_5, coefficient: 0.700_115_47 },
+                GaussianPrimitive {
+                    exponent: 19.338_085,
+                    coefficient: -0.099_967_23,
+                },
+                GaussianPrimitive {
+                    exponent: 4.490_876_1,
+                    coefficient: 0.399_512_83,
+                },
+                GaussianPrimitive {
+                    exponent: 1.461_534_5,
+                    coefficient: 0.700_115_47,
+                },
             ];
             let p2 = vec![
-                GaussianPrimitive { exponent: 19.338_085, coefficient: 0.155_916_27 },
-                GaussianPrimitive { exponent: 4.490_876_1, coefficient: 0.607_683_72 },
-                GaussianPrimitive { exponent: 1.461_534_5, coefficient: 0.391_957_39 },
+                GaussianPrimitive {
+                    exponent: 19.338_085,
+                    coefficient: 0.155_916_27,
+                },
+                GaussianPrimitive {
+                    exponent: 4.490_876_1,
+                    coefficient: 0.607_683_72,
+                },
+                GaussianPrimitive {
+                    exponent: 1.461_534_5,
+                    coefficient: 0.391_957_39,
+                },
             ];
             let s3 = vec![
-                GaussianPrimitive { exponent: 1.938_468_0, coefficient: -0.223_154_10 },
-                GaussianPrimitive { exponent: 0.543_361_3, coefficient: 0.117_299_75 },
-                GaussianPrimitive { exponent: 0.215_704_0, coefficient: 1.130_767_01 },
+                GaussianPrimitive {
+                    exponent: 1.938_468_0,
+                    coefficient: -0.223_154_10,
+                },
+                GaussianPrimitive {
+                    exponent: 0.543_361_3,
+                    coefficient: 0.117_299_75,
+                },
+                GaussianPrimitive {
+                    exponent: 0.215_704_0,
+                    coefficient: 1.130_767_01,
+                },
             ];
             let p3 = vec![
-                GaussianPrimitive { exponent: 1.938_468_0, coefficient: 0.018_919_79 },
-                GaussianPrimitive { exponent: 0.543_361_3, coefficient: 0.603_802_47 },
-                GaussianPrimitive { exponent: 0.215_704_0, coefficient: 0.496_609_96 },
+                GaussianPrimitive {
+                    exponent: 1.938_468_0,
+                    coefficient: 0.018_919_79,
+                },
+                GaussianPrimitive {
+                    exponent: 0.543_361_3,
+                    coefficient: 0.603_802_47,
+                },
+                GaussianPrimitive {
+                    exponent: 0.215_704_0,
+                    coefficient: 0.496_609_96,
+                },
             ];
             Ok(vec![
                 (OrbitalType::S, s1),
@@ -458,29 +623,74 @@ pub fn sto3g_basis(
         // ------------------------------------------------------------------
         Element::S => {
             let s1 = vec![
-                GaussianPrimitive { exponent: 553.384_200, coefficient: 0.154_328_97 },
-                GaussianPrimitive { exponent: 100.828_400, coefficient: 0.535_328_14 },
-                GaussianPrimitive { exponent: 27.297_070, coefficient: 0.444_634_54 },
+                GaussianPrimitive {
+                    exponent: 553.384_200,
+                    coefficient: 0.154_328_97,
+                },
+                GaussianPrimitive {
+                    exponent: 100.828_400,
+                    coefficient: 0.535_328_14,
+                },
+                GaussianPrimitive {
+                    exponent: 27.297_070,
+                    coefficient: 0.444_634_54,
+                },
             ];
             let s2 = vec![
-                GaussianPrimitive { exponent: 22.013_480, coefficient: -0.099_967_23 },
-                GaussianPrimitive { exponent: 5.112_620_0, coefficient: 0.399_512_83 },
-                GaussianPrimitive { exponent: 1.663_700_0, coefficient: 0.700_115_47 },
+                GaussianPrimitive {
+                    exponent: 22.013_480,
+                    coefficient: -0.099_967_23,
+                },
+                GaussianPrimitive {
+                    exponent: 5.112_620_0,
+                    coefficient: 0.399_512_83,
+                },
+                GaussianPrimitive {
+                    exponent: 1.663_700_0,
+                    coefficient: 0.700_115_47,
+                },
             ];
             let p2 = vec![
-                GaussianPrimitive { exponent: 22.013_480, coefficient: 0.155_916_27 },
-                GaussianPrimitive { exponent: 5.112_620_0, coefficient: 0.607_683_72 },
-                GaussianPrimitive { exponent: 1.663_700_0, coefficient: 0.391_957_39 },
+                GaussianPrimitive {
+                    exponent: 22.013_480,
+                    coefficient: 0.155_916_27,
+                },
+                GaussianPrimitive {
+                    exponent: 5.112_620_0,
+                    coefficient: 0.607_683_72,
+                },
+                GaussianPrimitive {
+                    exponent: 1.663_700_0,
+                    coefficient: 0.391_957_39,
+                },
             ];
             let s3 = vec![
-                GaussianPrimitive { exponent: 2.216_000_0, coefficient: -0.223_154_10 },
-                GaussianPrimitive { exponent: 0.621_800_0, coefficient: 0.117_299_75 },
-                GaussianPrimitive { exponent: 0.246_700_0, coefficient: 1.130_767_01 },
+                GaussianPrimitive {
+                    exponent: 2.216_000_0,
+                    coefficient: -0.223_154_10,
+                },
+                GaussianPrimitive {
+                    exponent: 0.621_800_0,
+                    coefficient: 0.117_299_75,
+                },
+                GaussianPrimitive {
+                    exponent: 0.246_700_0,
+                    coefficient: 1.130_767_01,
+                },
             ];
             let p3 = vec![
-                GaussianPrimitive { exponent: 2.216_000_0, coefficient: 0.018_919_79 },
-                GaussianPrimitive { exponent: 0.621_800_0, coefficient: 0.603_802_47 },
-                GaussianPrimitive { exponent: 0.246_700_0, coefficient: 0.496_609_96 },
+                GaussianPrimitive {
+                    exponent: 2.216_000_0,
+                    coefficient: 0.018_919_79,
+                },
+                GaussianPrimitive {
+                    exponent: 0.621_800_0,
+                    coefficient: 0.603_802_47,
+                },
+                GaussianPrimitive {
+                    exponent: 0.246_700_0,
+                    coefficient: 0.496_609_96,
+                },
             ];
             Ok(vec![
                 (OrbitalType::S, s1),
@@ -500,29 +710,74 @@ pub fn sto3g_basis(
         // ------------------------------------------------------------------
         Element::Cl => {
             let s1 = vec![
-                GaussianPrimitive { exponent: 685.527_900, coefficient: 0.154_328_97 },
-                GaussianPrimitive { exponent: 124.908_400, coefficient: 0.535_328_14 },
-                GaussianPrimitive { exponent: 33.815_890, coefficient: 0.444_634_54 },
+                GaussianPrimitive {
+                    exponent: 685.527_900,
+                    coefficient: 0.154_328_97,
+                },
+                GaussianPrimitive {
+                    exponent: 124.908_400,
+                    coefficient: 0.535_328_14,
+                },
+                GaussianPrimitive {
+                    exponent: 33.815_890,
+                    coefficient: 0.444_634_54,
+                },
             ];
             let s2 = vec![
-                GaussianPrimitive { exponent: 27.259_680, coefficient: -0.099_967_23 },
-                GaussianPrimitive { exponent: 6.330_790_0, coefficient: 0.399_512_83 },
-                GaussianPrimitive { exponent: 2.060_100_0, coefficient: 0.700_115_47 },
+                GaussianPrimitive {
+                    exponent: 27.259_680,
+                    coefficient: -0.099_967_23,
+                },
+                GaussianPrimitive {
+                    exponent: 6.330_790_0,
+                    coefficient: 0.399_512_83,
+                },
+                GaussianPrimitive {
+                    exponent: 2.060_100_0,
+                    coefficient: 0.700_115_47,
+                },
             ];
             let p2 = vec![
-                GaussianPrimitive { exponent: 27.259_680, coefficient: 0.155_916_27 },
-                GaussianPrimitive { exponent: 6.330_790_0, coefficient: 0.607_683_72 },
-                GaussianPrimitive { exponent: 2.060_100_0, coefficient: 0.391_957_39 },
+                GaussianPrimitive {
+                    exponent: 27.259_680,
+                    coefficient: 0.155_916_27,
+                },
+                GaussianPrimitive {
+                    exponent: 6.330_790_0,
+                    coefficient: 0.607_683_72,
+                },
+                GaussianPrimitive {
+                    exponent: 2.060_100_0,
+                    coefficient: 0.391_957_39,
+                },
             ];
             let s3 = vec![
-                GaussianPrimitive { exponent: 2.660_000_0, coefficient: -0.223_154_10 },
-                GaussianPrimitive { exponent: 0.746_200_0, coefficient: 0.117_299_75 },
-                GaussianPrimitive { exponent: 0.296_000_0, coefficient: 1.130_767_01 },
+                GaussianPrimitive {
+                    exponent: 2.660_000_0,
+                    coefficient: -0.223_154_10,
+                },
+                GaussianPrimitive {
+                    exponent: 0.746_200_0,
+                    coefficient: 0.117_299_75,
+                },
+                GaussianPrimitive {
+                    exponent: 0.296_000_0,
+                    coefficient: 1.130_767_01,
+                },
             ];
             let p3 = vec![
-                GaussianPrimitive { exponent: 2.660_000_0, coefficient: 0.018_919_79 },
-                GaussianPrimitive { exponent: 0.746_200_0, coefficient: 0.603_802_47 },
-                GaussianPrimitive { exponent: 0.296_000_0, coefficient: 0.496_609_96 },
+                GaussianPrimitive {
+                    exponent: 2.660_000_0,
+                    coefficient: 0.018_919_79,
+                },
+                GaussianPrimitive {
+                    exponent: 0.746_200_0,
+                    coefficient: 0.603_802_47,
+                },
+                GaussianPrimitive {
+                    exponent: 0.296_000_0,
+                    coefficient: 0.496_609_96,
+                },
             ];
             Ok(vec![
                 (OrbitalType::S, s1),
@@ -979,7 +1234,10 @@ mod tests {
         BasisFunction {
             center,
             orbital_type: OrbitalType::S,
-            primitives: vec![GaussianPrimitive { exponent, coefficient: 1.0 }],
+            primitives: vec![GaussianPrimitive {
+                exponent,
+                coefficient: 1.0,
+            }],
         }
     }
 
@@ -991,15 +1249,20 @@ mod tests {
         BasisFunction {
             center,
             orbital_type,
-            primitives: vec![GaussianPrimitive { exponent, coefficient: 1.0 }],
+            primitives: vec![GaussianPrimitive {
+                exponent,
+                coefficient: 1.0,
+            }],
         }
     }
 
     fn water_molecule() -> Molecule {
         let mut mol = Molecule::new("Water");
         mol.atoms.push(Atom::new(1, Element::O, [0.0, 0.0, 0.0]));
-        mol.atoms.push(Atom::new(2, Element::H, [0.757, 0.586, 0.0]));
-        mol.atoms.push(Atom::new(3, Element::H, [-0.757, 0.586, 0.0]));
+        mol.atoms
+            .push(Atom::new(2, Element::H, [0.757, 0.586, 0.0]));
+        mol.atoms
+            .push(Atom::new(3, Element::H, [-0.757, 0.586, 0.0]));
         mol
     }
 
@@ -1207,7 +1470,10 @@ mod tests {
             primitives: fns[0].1.clone(),
         };
         let s = compute_overlap(&bf, &bf);
-        assert!(s > 0.0 && s.is_finite(), "H 1s STO-3G self-overlap must be positive and finite, got {s}");
+        assert!(
+            s > 0.0 && s.is_finite(),
+            "H 1s STO-3G self-overlap must be positive and finite, got {s}"
+        );
     }
 
     #[test]
@@ -1215,7 +1481,10 @@ mod tests {
         let px = make_p_function([0.0, 0.0, 0.0], OrbitalType::Px, 1.0);
         let py = make_p_function([0.0, 0.0, 0.0], OrbitalType::Py, 1.0);
         let s = compute_overlap(&px, &py);
-        assert!(s.abs() < 0.1, "Px and Py on same center must be orthogonal, got {s}");
+        assert!(
+            s.abs() < 0.1,
+            "Px and Py on same center must be orthogonal, got {s}"
+        );
     }
 
     #[test]
@@ -1320,8 +1589,7 @@ mod tests {
         let config = OrbitalConfig::default();
         let basis = build_basis_set(&mol).unwrap_or_default();
         let coeffs = default_coefficients(&basis);
-        let grid =
-            density_grid(&mol, &basis, &coeffs, &config).unwrap_or_else(|_| fallback_grid());
+        let grid = density_grid(&mol, &basis, &coeffs, &config).unwrap_or_else(|_| fallback_grid());
         assert_eq!(grid.values.len(), grid.nx * grid.ny * grid.nz);
     }
 
@@ -1331,8 +1599,7 @@ mod tests {
         let config = OrbitalConfig::default();
         let basis = build_basis_set(&mol).unwrap_or_default();
         let coeffs = default_coefficients(&basis);
-        let grid =
-            density_grid(&mol, &basis, &coeffs, &config).unwrap_or_else(|_| fallback_grid());
+        let grid = density_grid(&mol, &basis, &coeffs, &config).unwrap_or_else(|_| fallback_grid());
         assert!(
             grid.max_value >= config.isovalue,
             "maximum density {:.4} should exceed isovalue {}",
@@ -1362,9 +1629,11 @@ mod tests {
         let config = OrbitalConfig::default();
         let basis = build_basis_set(&mol).unwrap_or_default();
         let coeffs = default_coefficients(&basis);
-        let grid =
-            density_grid(&mol, &basis, &coeffs, &config).unwrap_or_else(|_| fallback_grid());
-        assert!(grid.min_value >= 0.0, "density must be non-negative everywhere");
+        let grid = density_grid(&mol, &basis, &coeffs, &config).unwrap_or_else(|_| fallback_grid());
+        assert!(
+            grid.min_value >= 0.0,
+            "density must be non-negative everywhere"
+        );
     }
 
     // -----------------------------------------------------------------------

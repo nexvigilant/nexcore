@@ -14,6 +14,7 @@
 //! - κ Comparison: Threat level comparison for escalation
 //! - ∂ Boundary: File I/O boundary with graceful fallback
 
+use nexcore_fs::dirs;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::Write;

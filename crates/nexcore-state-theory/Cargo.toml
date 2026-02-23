@@ -3,6 +3,7 @@
 name = "nexcore-state-theory"
 version = "0.1.0"
 edition = "2024"
+license = "LicenseRef-NexVigilant-Proprietary"
 rust-version = "1.85"
 description = "Universal Theory of State — domain-agnostic state machine foundations"
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]

@@ -30,7 +30,9 @@ use crate::boot::{BootPhase, BootSequence};
 use crate::error::OsError;
 use crate::ipc::EventBus;
 use crate::secure_boot::{BootStage, SecureBootChain};
-use crate::security::{Damp, Pamp, SecurityLevel, SecurityMonitor, SecurityResponse, ThreatPattern};
+use crate::security::{
+    Damp, Pamp, SecurityLevel, SecurityMonitor, SecurityResponse, ThreatPattern,
+};
 use crate::service::{Service, ServiceId, ServiceState};
 use crate::user::{AccountStatus, AuthError, Session, UserManager, UserRecord, UserRole};
 use crate::vault::{OsVault, SecretCategory, VaultState};

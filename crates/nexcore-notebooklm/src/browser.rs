@@ -111,7 +111,10 @@ pub async fn launch() -> Result<(), NotebookLmError> {
     s.page = None;
     s.stealth_injected = false;
 
-    info!("NLM browser launched with persistent profile at {}", profile_dir.display());
+    info!(
+        "NLM browser launched with persistent profile at {}",
+        profile_dir.display()
+    );
     Ok(())
 }
 
@@ -140,7 +143,9 @@ pub async fn get_or_create_page(url: &str) -> Result<Arc<Page>, NotebookLmError>
     // Create new page
     let browser = {
         let s = state.lock();
-        s.browser.clone().ok_or(NotebookLmError::BrowserNotRunning)?
+        s.browser
+            .clone()
+            .ok_or(NotebookLmError::BrowserNotRunning)?
     };
 
     let page = browser

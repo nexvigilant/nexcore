@@ -49,7 +49,10 @@ impl LLMClient for ClaudeClient {
             .send()
             .await?;
         if !response.status().is_success() {
-            return Err(nexcore_error::nexerror!("API error: {}", response.text().await?));
+            return Err(nexcore_error::nexerror!(
+                "API error: {}",
+                response.text().await?
+            ));
         }
 
         let resp_json: serde_json::Value = response.json().await?;

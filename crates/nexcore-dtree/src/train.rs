@@ -12,7 +12,7 @@ use crate::types::{Confidence, CriterionType, Feature, Impurity, TreeConfig};
 use std::collections::HashMap;
 
 /// Error type for training failures.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum TrainError {
     /// No training data provided.
     #[error("no training data provided")]

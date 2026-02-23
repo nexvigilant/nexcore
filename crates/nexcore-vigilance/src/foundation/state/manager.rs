@@ -20,11 +20,11 @@
 //! - List checkpoints: < 50ms for 1000 files
 
 use chrono::{DateTime, Utc};
+use nexcore_error::Error;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use thiserror::Error;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ERROR TYPES

@@ -76,11 +76,7 @@ impl FaersToOmopMapper {
     /// Register an adverse event name → OMOP concept_id mapping.
     ///
     /// Keys are normalised to lowercase for case-insensitive lookup.
-    pub fn add_event_mapping(
-        &mut self,
-        faers_event_name: impl Into<String>,
-        concept_id: i64,
-    ) {
+    pub fn add_event_mapping(&mut self, faers_event_name: impl Into<String>, concept_id: i64) {
         self.event_map
             .insert(faers_event_name.into().to_lowercase(), concept_id);
     }

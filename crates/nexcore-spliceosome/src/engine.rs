@@ -146,7 +146,9 @@ mod tests {
     #[test]
     fn test_splice_explore_task() {
         let s = Spliceosome::new();
-        let result = s.splice("read the codebase and understand the architecture").unwrap();
+        let result = s
+            .splice("read the codebase and understand the architecture")
+            .unwrap();
         assert_eq!(result.task_category, TaskCategory::Explore);
         assert!(!result.markers.is_empty());
         assert_eq!(result.generator_version, GENERATOR_VERSION);
@@ -155,7 +157,9 @@ mod tests {
     #[test]
     fn test_splice_mutate_task() {
         let s = Spliceosome::new();
-        let result = s.splice("implement a new REST endpoint and add error handling").unwrap();
+        let result = s
+            .splice("implement a new REST endpoint and add error handling")
+            .unwrap();
         assert_eq!(result.task_category, TaskCategory::Mutate);
         // Mutate template has 3 phases: investigate, implement, verify
         assert_eq!(result.markers.len(), 3);
@@ -225,6 +229,9 @@ mod tests {
             .iter()
             .map(|m| m.grounding_confidence_threshold)
             .fold(0.0f32, f32::max);
-        assert!(max_threshold >= 0.7, "Compute tasks need high grounding: got {max_threshold}");
+        assert!(
+            max_threshold >= 0.7,
+            "Compute tasks need high grounding: got {max_threshold}"
+        );
     }
 }

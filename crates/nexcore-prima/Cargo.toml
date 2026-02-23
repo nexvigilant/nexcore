@@ -23,6 +23,7 @@ path = "src/lib.rs"
 
 [dependencies]
 prima = { version = "0.1.0", path = "../prima" }
+nexcore-error = { workspace = true }
 
 [lints.rust]
 dead_code = "allow"

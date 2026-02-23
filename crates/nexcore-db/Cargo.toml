@@ -8,12 +8,12 @@ description = "Persistent SQLite storage for NexCore Brain working memory"
 license = "LicenseRef-Proprietary"
 
 [dependencies]
+nexcore-error = { workspace = true }
 rusqlite = { version = "0.32", features = ["bundled", "serde_json"] }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 chrono = { version = "0.4.38", features = ["serde"] }
 tracing = { version = "0.1.40" }
-thiserror = { version = "1.0.61" }
 
 [[bin]]
 name = "brain-migrate"

@@ -1,6 +1,6 @@
 //! Error types for CLI-UI mapper
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors that can occur during CLI-UI mapping
 #[derive(Error, Debug)]

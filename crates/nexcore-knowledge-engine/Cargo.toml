@@ -7,14 +7,13 @@ license = "LicenseRef-Proprietary"
 description = "Knowledge compression, compilation, and query engine for structured knowledge packs"
 
 [dependencies]
+nexcore-error = { workspace = true }
 nexcore-lex-primitiva = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }
-uuid = { workspace = true, features = ["v4", "serde"] }
-thiserror = { workspace = true }
-walkdir = { workspace = true }
-dirs = { workspace = true }
+nexcore-id = { workspace = true }
+nexcore-fs = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

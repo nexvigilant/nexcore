@@ -1,7 +1,7 @@
 //! Core types for the 11 Conservation Laws.
 
+use nexcore_error::Error;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
 /// The 11 Conservation Laws of Comprehensive Pharmacovigilance.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

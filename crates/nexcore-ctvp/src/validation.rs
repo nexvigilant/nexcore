@@ -593,7 +593,7 @@ impl CapabilityValidator {
 // Helper functions
 
 fn count_test_files(path: &Path) -> CtvpResult<usize> {
-    use walkdir::WalkDir;
+    use nexcore_fs::walk::WalkDir;
 
     let count = WalkDir::new(path)
         .into_iter()
@@ -608,7 +608,7 @@ fn count_test_files(path: &Path) -> CtvpResult<usize> {
 }
 
 fn search_files_for_patterns(path: &Path, patterns: &[&str]) -> CtvpResult<Vec<String>> {
-    use walkdir::WalkDir;
+    use nexcore_fs::walk::WalkDir;
     let mut found = Vec::new();
 
     for entry in WalkDir::new(path)

@@ -9,8 +9,8 @@
 //!
 //! **PV Application**: Signal dependency - how inputs affect detection rate.
 
+use nexcore_error::Error;
 use std::cmp::Ordering;
-use thiserror::Error;
 
 /// Errors for rate law calculations.
 #[derive(Debug, Error, PartialEq, Clone)]

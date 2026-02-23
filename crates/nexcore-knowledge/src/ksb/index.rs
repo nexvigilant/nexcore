@@ -3,8 +3,8 @@
 use std::collections::HashMap;
 use std::path::Path;
 
+use nexcore_fs::walk::WalkDir;
 use rayon::prelude::*;
-use walkdir::WalkDir;
 
 use super::{KsbArticle, KsbDomain};
 use crate::KnowledgeError;

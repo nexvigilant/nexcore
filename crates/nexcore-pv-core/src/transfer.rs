@@ -267,10 +267,7 @@ pub fn transfers_for_domain(domain: &str) -> Vec<&'static TransferMapping> {
 /// Returns the set of unique source types that have transfer mappings.
 #[must_use]
 pub fn mapped_source_types() -> Vec<&'static str> {
-    let mut types: Vec<&'static str> = TRANSFER_REGISTRY
-        .iter()
-        .map(|m| m.source_type)
-        .collect();
+    let mut types: Vec<&'static str> = TRANSFER_REGISTRY.iter().map(|m| m.source_type).collect();
     types.sort_unstable();
     types.dedup();
     types
@@ -279,10 +276,7 @@ pub fn mapped_source_types() -> Vec<&'static str> {
 /// Returns the set of unique target domains.
 #[must_use]
 pub fn target_domains() -> Vec<&'static str> {
-    let mut domains: Vec<&'static str> = TRANSFER_REGISTRY
-        .iter()
-        .map(|m| m.domain)
-        .collect();
+    let mut domains: Vec<&'static str> = TRANSFER_REGISTRY.iter().map(|m| m.domain).collect();
     domains.sort_unstable();
     domains.dedup();
     domains
@@ -343,7 +337,11 @@ mod tests {
     #[test]
     fn transfers_for_domain_biology() {
         let bio = transfers_for_domain("biology");
-        assert!(bio.len() >= 8, "Expected at least 8 biology mappings, got {}", bio.len());
+        assert!(
+            bio.len() >= 8,
+            "Expected at least 8 biology mappings, got {}",
+            bio.len()
+        );
         // Every biology mapping should have the "biology" domain
         for m in &bio {
             assert_eq!(m.domain, "biology");
@@ -354,7 +352,12 @@ mod tests {
     fn mapped_source_types_are_unique_and_sorted() {
         let types = mapped_source_types();
         for window in types.windows(2) {
-            assert!(window[0] < window[1], "Not sorted: {} >= {}", window[0], window[1]);
+            assert!(
+                window[0] < window[1],
+                "Not sorted: {} >= {}",
+                window[0],
+                window[1]
+            );
         }
     }
 

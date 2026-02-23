@@ -10,6 +10,7 @@ rust-version = "1.85"
 description = "Browser automation foundation for Vigil/Guardian ecosystem"
 
 [dependencies]
+nexcore-error = { workspace = true }
 # Lex Primitiva
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 
@@ -31,7 +32,6 @@ chrono = { version = "0.4", features = ["serde"] }
 parking_lot = "0.12"
 
 # Error handling
-thiserror = "2.0"
 
 # Logging
 tracing = "0.1"

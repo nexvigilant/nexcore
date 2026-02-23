@@ -1,6 +1,6 @@
 //! Skill error types
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Skill execution errors
 #[derive(Debug, Error)]

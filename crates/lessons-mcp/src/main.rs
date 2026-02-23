@@ -2,7 +2,7 @@
 //! Tier: T1 (Sequence - main loop)
 
 use lessons_mcp::{protocol::Response, tools};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::io::{BufRead, BufReader, Write};
 
 fn main() {
@@ -39,11 +39,14 @@ fn dispatch(method: &str, params: &Value, id: Value) -> Response {
 }
 
 fn initialize_response(id: Value) -> Response {
-    Response::success(id, json!({
-        "protocolVersion": "2024-11-05",
-        "capabilities": { "tools": {} },
-        "serverInfo": { "name": "lessons-mcp", "version": "0.1.0" }
-    }))
+    Response::success(
+        id,
+        json!({
+            "protocolVersion": "2024-11-05",
+            "capabilities": { "tools": {} },
+            "serverInfo": { "name": "lessons-mcp", "version": "0.1.0" }
+        }),
+    )
 }
 
 fn write_response(stdout: &mut std::io::Stdout, response: &Response) {

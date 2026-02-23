@@ -86,10 +86,7 @@ fn apply_degradation(
 }
 
 /// Map a threshold adjustment to a boundary belief.
-fn apply_threshold_adjustment(
-    knowledge: &mut ImplicitKnowledge,
-    adj: &ThresholdAdjustment,
-) {
+fn apply_threshold_adjustment(knowledge: &mut ImplicitKnowledge, adj: &ThresholdAdjustment) {
     let belief_id = format!(
         "nmd_adjust_{}_{}",
         adj.category.to_lowercase(),
@@ -232,9 +229,10 @@ mod tests {
         assert!(applied >= 2);
 
         // Should have created a degradation belief
-        let has_degrade_belief = knowledge.list_beliefs().iter().any(|b| {
-            b.category == "nmd_surveillance" || b.category == "nmd_threshold"
-        });
+        let has_degrade_belief = knowledge
+            .list_beliefs()
+            .iter()
+            .any(|b| b.category == "nmd_surveillance" || b.category == "nmd_threshold");
         assert!(has_degrade_belief);
 
         // Trust should record a failure
@@ -358,9 +356,11 @@ mod tests {
 
         // Verify all three types applied
         assert!(knowledge.get_belief("nmd_degrade_compute").is_some());
-        assert!(knowledge
-            .get_belief("nmd_adjust_compute_upf1_max_phase_skip")
-            .is_some());
+        assert!(
+            knowledge
+                .get_belief("nmd_adjust_compute_upf1_max_phase_skip")
+                .is_some()
+        );
         assert!(knowledge.get_trust("nmd_surveillance").is_some());
     }
 }

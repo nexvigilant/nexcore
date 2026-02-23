@@ -2,6 +2,7 @@
 
 use crate::{ExecutionRequest, ExecutionResult, Result, ShellExecutor, SkillInfo};
 use async_trait::async_trait;
+use nexcore_fs::dirs;
 use std::path::Path;
 use std::path::PathBuf;
 

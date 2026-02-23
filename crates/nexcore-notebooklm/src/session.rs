@@ -7,7 +7,7 @@ use crate::error::NotebookLmError;
 use crate::persistence;
 use crate::types::Session;
 use chrono::Utc;
-use uuid::Uuid;
+use nexcore_id::NexId;
 
 /// In-memory session store — persisted to JSON.
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
@@ -32,7 +32,7 @@ impl SessionStore {
     pub fn create(&mut self, notebook_id: &str) -> Result<&Session, NotebookLmError> {
         let now = Utc::now();
         let session = Session {
-            id: Uuid::new_v4().to_string(),
+            id: NexId::v4().to_string(),
             notebook_id: notebook_id.to_string(),
             message_count: 0,
             created_at: now,

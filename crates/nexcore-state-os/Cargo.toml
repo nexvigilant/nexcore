@@ -3,6 +3,7 @@
 name = "nexcore-state-os"
 version = "0.1.0"
 edition = "2024"
+license = "LicenseRef-NexVigilant-Proprietary"
 rust-version = "1.85"
 description = "State Operating System — 15-layer runtime for state machine orchestration"
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]

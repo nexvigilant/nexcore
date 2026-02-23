@@ -12,8 +12,8 @@
 //! | Suddenness | sigma + boundary + N + kappa | T2-C |
 
 use chrono::{DateTime, Utc};
+use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 // ============================================================================
 // PATTERN = sigma + kappa + mu
@@ -28,7 +28,7 @@ use uuid::Uuid;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Pattern {
     /// Unique identifier for this pattern.
-    pub id: Uuid,
+    pub id: NexId,
     /// Human-readable label describing the pattern.
     pub label: String,
     /// The observation keys that participate in this pattern.
@@ -49,7 +49,7 @@ impl Pattern {
     pub fn new(label: impl Into<String>, members: Vec<String>) -> Self {
         let now = Utc::now();
         Self {
-            id: Uuid::new_v4(),
+            id: NexId::v4(),
             label: label.into(),
             members,
             occurrence_count: 1,
@@ -102,7 +102,7 @@ pub struct Recognition {
     /// The key that was recognized.
     pub recognized_key: String,
     /// Which pattern it was recognized as belonging to.
-    pub pattern_id: Uuid,
+    pub pattern_id: NexId,
     /// Match strength (0.0-1.0).
     pub match_strength: f64,
     /// When this recognition occurred.
@@ -112,7 +112,7 @@ pub struct Recognition {
 impl Recognition {
     /// Create a new recognition event.
     #[must_use]
-    pub fn new(recognized_key: impl Into<String>, pattern_id: Uuid, match_strength: f64) -> Self {
+    pub fn new(recognized_key: impl Into<String>, pattern_id: NexId, match_strength: f64) -> Self {
         Self {
             recognized_key: recognized_key.into(),
             pattern_id,
@@ -244,7 +244,7 @@ impl std::fmt::Display for Novelty {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Connection {
     /// Unique identifier for this connection.
-    pub id: Uuid,
+    pub id: NexId,
     /// Source element key.
     pub from: String,
     /// Target element key.
@@ -267,7 +267,7 @@ impl Connection {
         strength: f64,
     ) -> Self {
         Self {
-            id: Uuid::new_v4(),
+            id: NexId::v4(),
             from: from.into(),
             to: to.into(),
             relation: relation.into(),

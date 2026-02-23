@@ -255,9 +255,7 @@ pub fn transfer_confidence(
 ) -> Result<CallToolResult, McpError> {
     let conf = nexcloud::transfer::transfer_confidence(&p.cloud_type, &p.domain);
     let mappings = transfers_for_type(&p.cloud_type);
-    let mapping = mappings
-        .iter()
-        .find(|m| m.domain == p.domain);
+    let mapping = mappings.iter().find(|m| m.domain == p.domain);
 
     match (conf, mapping) {
         (Some(c), Some(m)) => {
@@ -286,9 +284,7 @@ pub fn transfer_confidence(
 }
 
 /// cloud_tier_classify — Primitive names → tier classification.
-pub fn tier_classify(
-    p: params::CloudTierClassifyParams,
-) -> Result<CallToolResult, McpError> {
+pub fn tier_classify(p: params::CloudTierClassifyParams) -> Result<CallToolResult, McpError> {
     let primitives = parse_primitive_list(&p.primitives)?;
     if primitives.is_empty() {
         return Err(McpError::new(
@@ -322,9 +318,7 @@ pub fn tier_classify(
 }
 
 /// cloud_compare_types — Two types → overlap, unique-to-each, Jaccard.
-pub fn compare_types(
-    p: params::CloudCompareTypesParams,
-) -> Result<CallToolResult, McpError> {
+pub fn compare_types(p: params::CloudCompareTypesParams) -> Result<CallToolResult, McpError> {
     let comp_a = require_composition(&p.type_a)?;
     let comp_b = require_composition(&p.type_b)?;
 
@@ -432,9 +426,7 @@ pub fn reverse_synthesize(
 }
 
 /// cloud_list_types — Inventory of all 35 types, filterable by tier.
-pub fn list_types(
-    p: params::CloudListTypesParams,
-) -> Result<CallToolResult, McpError> {
+pub fn list_types(p: params::CloudListTypesParams) -> Result<CallToolResult, McpError> {
     let filter = p.tier.as_deref();
 
     let types: Vec<serde_json::Value> = all_cloud_types()
@@ -477,9 +469,7 @@ pub fn list_types(
 }
 
 /// cloud_molecular_weight — Type → Shannon bits, transfer prediction.
-pub fn molecular_weight(
-    p: params::CloudMolecularWeightParams,
-) -> Result<CallToolResult, McpError> {
+pub fn molecular_weight(p: params::CloudMolecularWeightParams) -> Result<CallToolResult, McpError> {
     let comp = require_composition(&p.type_name)?;
 
     let formula = MolecularFormula::new(&p.type_name).with_all(&comp.primitives);
@@ -504,9 +494,7 @@ pub fn molecular_weight(
 }
 
 /// cloud_dominant_shift — Type + added primitive → phase transition detection.
-pub fn dominant_shift(
-    p: params::CloudDominantShiftParams,
-) -> Result<CallToolResult, McpError> {
+pub fn dominant_shift(p: params::CloudDominantShiftParams) -> Result<CallToolResult, McpError> {
     let comp = require_composition(&p.type_name)?;
     let added = parse_primitive(&p.added_primitive)?;
 
@@ -570,22 +558,17 @@ pub fn dominant_shift(
 // ============================================================================
 
 /// cloud_infra_status — GCE instance list mapped through cloud primitives.
-pub async fn infra_status(
-    p: params::CloudInfraStatusParams,
-) -> Result<CallToolResult, McpError> {
+pub async fn infra_status(p: params::CloudInfraStatusParams) -> Result<CallToolResult, McpError> {
     let mut cmd = tokio::process::Command::new("gcloud");
     cmd.args(["compute", "instances", "list", "--format=json"]);
     if let Some(proj) = &p.project {
         cmd.arg("--project").arg(proj);
     }
 
-    let output = cmd.output().await.map_err(|e| {
-        McpError::new(
-            ErrorCode(500),
-            format!("Failed to run gcloud: {e}"),
-            None,
-        )
-    })?;
+    let output = cmd
+        .output()
+        .await
+        .map_err(|e| McpError::new(ErrorCode(500), format!("Failed to run gcloud: {e}"), None))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -597,8 +580,7 @@ pub async fn infra_status(
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let instances: Vec<serde_json::Value> =
-        serde_json::from_str(&stdout).unwrap_or_default();
+    let instances: Vec<serde_json::Value> = serde_json::from_str(&stdout).unwrap_or_default();
 
     let mapped: Vec<serde_json::Value> = instances
         .iter()
@@ -644,9 +626,7 @@ pub async fn infra_status(
 }
 
 /// cloud_infra_map — Single instance → full model with composition overlay.
-pub async fn infra_map(
-    p: params::CloudInfraMapParams,
-) -> Result<CallToolResult, McpError> {
+pub async fn infra_map(p: params::CloudInfraMapParams) -> Result<CallToolResult, McpError> {
     let mut cmd = tokio::process::Command::new("gcloud");
     cmd.args(["compute", "instances", "describe"]);
     cmd.arg(&p.instance);
@@ -655,13 +635,10 @@ pub async fn infra_map(
         cmd.arg("--zone").arg(z);
     }
 
-    let output = cmd.output().await.map_err(|e| {
-        McpError::new(
-            ErrorCode(500),
-            format!("Failed to run gcloud: {e}"),
-            None,
-        )
-    })?;
+    let output = cmd
+        .output()
+        .await
+        .map_err(|e| McpError::new(ErrorCode(500), format!("Failed to run gcloud: {e}"), None))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -673,8 +650,7 @@ pub async fn infra_map(
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let inst: serde_json::Value =
-        serde_json::from_str(&stdout).unwrap_or(json!({}));
+    let inst: serde_json::Value = serde_json::from_str(&stdout).unwrap_or(json!({}));
 
     let name = inst["name"].as_str().unwrap_or("unknown");
     let machine_type = inst["machineType"]
@@ -738,9 +714,7 @@ pub async fn infra_map(
 }
 
 /// cloud_capacity_project — Pure computation: utilization projection over time.
-pub fn capacity_project(
-    p: params::CloudCapacityProjectParams,
-) -> Result<CallToolResult, McpError> {
+pub fn capacity_project(p: params::CloudCapacityProjectParams) -> Result<CallToolResult, McpError> {
     if p.total_capacity <= 0.0 {
         return Err(McpError::new(
             ErrorCode(400),
@@ -777,7 +751,10 @@ pub fn capacity_project(
     }
 
     let recommendation = match days_until_full {
-        Some(d) if d <= 7 => format!("CRITICAL: Capacity exhausted in {} days. Scale immediately.", d),
+        Some(d) if d <= 7 => format!(
+            "CRITICAL: Capacity exhausted in {} days. Scale immediately.",
+            d
+        ),
         Some(d) if d <= 30 => format!("WARNING: Capacity exhausted in {} days. Plan scaling.", d),
         Some(d) => format!("INFO: Capacity exhausted in {} days. Monitor growth.", d),
         None => format!("OK: Capacity sufficient for {} day projection.", p.days),
@@ -840,9 +817,7 @@ pub fn supervisor_health(
 // ============================================================================
 
 /// cloud_reverse_transfer — Domain concept → matching cloud types.
-pub fn reverse_transfer(
-    p: params::CloudReverseTransferParams,
-) -> Result<CallToolResult, McpError> {
+pub fn reverse_transfer(p: params::CloudReverseTransferParams) -> Result<CallToolResult, McpError> {
     if p.keywords.is_empty() {
         return Err(McpError::new(
             ErrorCode(400),
@@ -901,9 +876,7 @@ pub fn reverse_transfer(
 }
 
 /// cloud_transfer_chain — Multi-hop BFS across transfer graph.
-pub fn transfer_chain(
-    p: params::CloudTransferChainParams,
-) -> Result<CallToolResult, McpError> {
+pub fn transfer_chain(p: params::CloudTransferChainParams) -> Result<CallToolResult, McpError> {
     // Validate start type exists
     require_composition(&p.start_type)?;
     // BFS currently implements up to 2-hop chains; cap max_hops accordingly
@@ -1092,9 +1065,7 @@ pub fn architecture_advisor(
 }
 
 /// cloud_anomaly_detect — Type + observed → drift detection.
-pub fn anomaly_detect(
-    p: params::CloudAnomalyDetectParams,
-) -> Result<CallToolResult, McpError> {
+pub fn anomaly_detect(p: params::CloudAnomalyDetectParams) -> Result<CallToolResult, McpError> {
     if p.observed_primitives.is_empty() {
         return Err(McpError::new(
             ErrorCode(400),
@@ -1124,8 +1095,7 @@ pub fn anomaly_detect(
     let drift_score = if expected_set.is_empty() {
         0.0
     } else {
-        (missing.len() + unexpected.len()) as f64
-            / (expected_set.len() + observed_set.len()) as f64
+        (missing.len() + unexpected.len()) as f64 / (expected_set.len() + observed_set.len()) as f64
     };
 
     let severity = if drift_score == 0.0 {
@@ -1172,19 +1142,15 @@ pub fn anomaly_detect(
 }
 
 /// cloud_transfer_matrix — Full type×domain confidence matrix.
-pub fn transfer_matrix(
-    p: params::CloudTransferMatrixParams,
-) -> Result<CallToolResult, McpError> {
+pub fn transfer_matrix(p: params::CloudTransferMatrixParams) -> Result<CallToolResult, McpError> {
     let all_mappings = transfer_mappings();
     let domains = ["PV", "Biology", "Economics"];
 
     let types: Vec<&str> = all_cloud_types()
         .into_iter()
-        .filter(|name| {
-            match p.tier.as_deref() {
-                Some(t) => tier_label(name) == t,
-                None => true,
-            }
+        .filter(|name| match p.tier.as_deref() {
+            Some(t) => tier_label(name) == t,
+            None => true,
         })
         .collect();
 

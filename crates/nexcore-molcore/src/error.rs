@@ -3,7 +3,7 @@
 
 //! Error types for molecular core operations.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors from molecular core operations.
 #[derive(Debug, Error)]

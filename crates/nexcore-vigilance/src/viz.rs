@@ -78,10 +78,7 @@ pub fn render_prr_timeline_svg(
                 .map(|(x, y)| Circle::new((*x, *y), 3, BLUE.filled())),
         )?;
 
-        chart
-            .configure_series_labels()
-            .border_style(BLACK)
-            .draw()?;
+        chart.configure_series_labels().border_style(BLACK).draw()?;
 
         root.present()?;
         Ok(())
@@ -169,10 +166,7 @@ pub fn render_signal_comparison_svg(
             .label("ROR")
             .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], GREEN));
 
-        chart
-            .configure_series_labels()
-            .border_style(BLACK)
-            .draw()?;
+        chart.configure_series_labels().border_style(BLACK).draw()?;
 
         root.present()?;
         Ok(())
@@ -213,10 +207,8 @@ mod tests {
             ContingencyTable::new(10, 90, 100, 9800),
             ContingencyTable::new(20, 80, 200, 9700),
         ];
-        let data: Vec<(&str, &ContingencyTable)> = vec![
-            ("DrugA-EventX", &tables[0]),
-            ("DrugB-EventY", &tables[1]),
-        ];
+        let data: Vec<(&str, &ContingencyTable)> =
+            vec![("DrugA-EventX", &tables[0]), ("DrugB-EventY", &tables[1])];
         let criteria = SignalCriteria::evans();
 
         let svg = render_signal_comparison_svg("Test Comparison", &data, &criteria, 800, 400);

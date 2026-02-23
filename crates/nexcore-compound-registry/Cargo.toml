@@ -8,7 +8,7 @@ authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "Compound resolution via PubChem/ChEMBL with local SQLite cache"
 
 [dependencies]
-thiserror = { version = "1.0.61" }
+nexcore-error = { workspace = true }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 reqwest = { version = "0.12.5", features = ["json"] }

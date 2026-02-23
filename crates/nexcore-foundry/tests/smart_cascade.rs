@@ -203,14 +203,8 @@ fn team_report_renders_to_markdown() {
 
     assert!(md.contains("# Team Report"), "should contain title");
     assert!(md.contains("Delivered"), "should contain delivery status");
-    assert!(
-        md.contains("test_coverage"),
-        "should contain KPI name"
-    );
-    assert!(
-        md.contains("foundry-frame"),
-        "should contain agent name"
-    );
+    assert!(md.contains("test_coverage"), "should contain KPI name");
+    assert!(md.contains("foundry-frame"), "should contain agent name");
     assert!(
         md.contains("All stations green."),
         "should contain intelligence summary"

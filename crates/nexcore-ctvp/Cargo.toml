@@ -15,13 +15,13 @@ testcontainers = []
 llm = ["dep:reqwest", "dep:tokio"]
 
 [dependencies]
+nexcore-error = { workspace = true }
 # Core
 stem-core = { version = "0.1.0", path = "../stem-core", registry = "nexcore" }
-thiserror = { version = "1.0.61" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 chrono = { version = "0.4.38", features = ["serde"] }
-uuid = { version = "1.10.0", features = ["v4", "serde"] }
+nexcore-id = { workspace = true }
 
 # Async runtime (optional for LLM)
 tokio = { version = "1.38.0", features = ["full"], optional = true }
@@ -30,7 +30,7 @@ tokio = { version = "1.38.0", features = ["full"], optional = true }
 reqwest = { version = "0.12.5", features = ["json"], optional = true }
 
 # File parsing
-walkdir = { version = "2.5.0" }
+nexcore-fs = { workspace = true }
 glob = { version = "0.3.1" }
 regex = { version = "1.10.5" }
 toml = { version = "0.8.15" }

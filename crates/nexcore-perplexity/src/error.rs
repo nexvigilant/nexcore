@@ -8,7 +8,7 @@
 //! `PerplexityError`: T2-C (boundary + causality + void), dominant boundary.
 //! HTTP failures, auth errors, rate limits are all boundary violations.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Result type alias for Perplexity API operations.
 ///

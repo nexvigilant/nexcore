@@ -32,7 +32,7 @@ use serde::{Deserialize, Serialize};
 // ─── Error Types ────────────────────────────────────────────
 
 /// Unified error type for the signal detection pipeline.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum SignalError {
     /// Data ingestion stage failure.
     #[error("ingestion failed: {0}")]

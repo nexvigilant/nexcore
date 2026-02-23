@@ -55,8 +55,14 @@ impl PointLight {
 
     pub fn pack(&self, buffer: &mut Vec<f32>) {
         buffer.extend_from_slice(&[
-            self.position[0], self.position[1], self.position[2], self.radius,
-            self.color[0], self.color[1], self.color[2], self.intensity,
+            self.position[0],
+            self.position[1],
+            self.position[2],
+            self.radius,
+            self.color[0],
+            self.color[1],
+            self.color[2],
+            self.intensity,
         ]);
     }
 }

@@ -20,5 +20,5 @@ pub use drug::{
     ActiveIngredient, DrugApplication, DrugEvent, DrugLabel, DrugNdc, DrugRecall, EventDrug,
     FdaProduct, FdaSubmission, Patient, PrimarySource, Reaction,
 };
-pub use food::{FoodConsumer, FoodEvent, FoodProduct, FoodRecall, FoodReaction};
+pub use food::{FoodConsumer, FoodEvent, FoodProduct, FoodReaction, FoodRecall};
 pub use substance::{Substance, SubstanceCode, SubstanceName};

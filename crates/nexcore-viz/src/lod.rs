@@ -796,7 +796,9 @@ fn dominant_ss_color(residues: &[crate::molecular::Residue]) -> String {
 
     for r in residues {
         match r.secondary_structure {
-            SecondaryStructure::Helix | SecondaryStructure::Helix310 | SecondaryStructure::HelixPi => helix += 1,
+            SecondaryStructure::Helix
+            | SecondaryStructure::Helix310
+            | SecondaryStructure::HelixPi => helix += 1,
             SecondaryStructure::Sheet => sheet += 1,
             _ => coil += 1,
         }
@@ -1012,7 +1014,9 @@ fn gift_wrap_hull(points: &[[f64; 3]], interior: &[f64; 3]) -> Vec<[usize; 3]> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::molecular::{Atom, Bond, BondOrder, Chain, Element, Molecule, Residue, SecondaryStructure};
+    use crate::molecular::{
+        Atom, Bond, BondOrder, Chain, Element, Molecule, Residue, SecondaryStructure,
+    };
 
     // -----------------------------------------------------------------------
     // Helpers
@@ -1096,8 +1100,14 @@ mod tests {
         assert_eq!(LodLevel::from_atom_count(499), LodLevel::FullAtom);
         assert_eq!(LodLevel::from_atom_count(500), LodLevel::CalphaTrace);
         assert_eq!(LodLevel::from_atom_count(4_999), LodLevel::CalphaTrace);
-        assert_eq!(LodLevel::from_atom_count(5_000), LodLevel::SecondaryStructure);
-        assert_eq!(LodLevel::from_atom_count(19_999), LodLevel::SecondaryStructure);
+        assert_eq!(
+            LodLevel::from_atom_count(5_000),
+            LodLevel::SecondaryStructure
+        );
+        assert_eq!(
+            LodLevel::from_atom_count(19_999),
+            LodLevel::SecondaryStructure
+        );
         assert_eq!(LodLevel::from_atom_count(20_000), LodLevel::DomainBlob);
         assert_eq!(LodLevel::from_atom_count(49_999), LodLevel::DomainBlob);
         assert_eq!(LodLevel::from_atom_count(50_000), LodLevel::ConvexHull);
@@ -1131,7 +1141,10 @@ mod tests {
     #[test]
     fn empty_molecule_extract_calpha_error() {
         let mol = Molecule::new("empty");
-        assert!(matches!(extract_calpha_trace(&mol), Err(LodError::EmptyMolecule)));
+        assert!(matches!(
+            extract_calpha_trace(&mol),
+            Err(LodError::EmptyMolecule)
+        ));
     }
 
     // -----------------------------------------------------------------------
@@ -1142,9 +1155,14 @@ mod tests {
     fn small_molecule_returns_full_atom() -> Result<(), LodError> {
         let mut mol = Molecule::new("small");
         for i in 0..10u32 {
-            mol.atoms.push(Atom::new(i + 1, Element::C, [f64::from(i), 0.0, 0.0]));
+            mol.atoms
+                .push(Atom::new(i + 1, Element::C, [f64::from(i), 0.0, 0.0]));
         }
-        mol.bonds.push(Bond { atom1: 0, atom2: 1, order: BondOrder::Single });
+        mol.bonds.push(Bond {
+            atom1: 0,
+            atom2: 1,
+            order: BondOrder::Single,
+        });
 
         let repr = auto_lod(&mol, &LodConfig::default())?;
         assert_eq!(repr.level, LodLevel::FullAtom);
@@ -1175,7 +1193,10 @@ mod tests {
     fn calpha_trace_no_chains_error() {
         let mut mol = Molecule::new("ligand");
         mol.atoms.push(Atom::new(1, Element::C, [0.0; 3]));
-        assert!(matches!(extract_calpha_trace(&mol), Err(LodError::NoChains)));
+        assert!(matches!(
+            extract_calpha_trace(&mol),
+            Err(LodError::NoChains)
+        ));
     }
 
     #[test]
@@ -1203,7 +1224,10 @@ mod tests {
                 secondary_structure: SecondaryStructure::Coil,
             }],
         });
-        assert!(matches!(extract_calpha_trace(&mol), Err(LodError::NoCalpha)));
+        assert!(matches!(
+            extract_calpha_trace(&mol),
+            Err(LodError::NoCalpha)
+        ));
     }
 
     // -----------------------------------------------------------------------
@@ -1265,7 +1289,10 @@ mod tests {
     fn domain_blob_no_chains_error() {
         let mut mol = Molecule::new("ligand");
         mol.atoms.push(Atom::new(1, Element::C, [0.0; 3]));
-        assert!(matches!(compute_domain_blobs(&mol, 5), Err(LodError::NoChains)));
+        assert!(matches!(
+            compute_domain_blobs(&mol, 5),
+            Err(LodError::NoChains)
+        ));
     }
 
     // -----------------------------------------------------------------------
@@ -1368,7 +1395,8 @@ mod tests {
         // 10 atoms → FullAtom (no chain hierarchy needed at FullAtom).
         let mut mol = Molecule::new("tiny");
         for i in 0..10u32 {
-            mol.atoms.push(Atom::new(i + 1, Element::C, [f64::from(i), 0.0, 0.0]));
+            mol.atoms
+                .push(Atom::new(i + 1, Element::C, [f64::from(i), 0.0, 0.0]));
         }
         let repr = auto_lod(&mol, &LodConfig::default())?;
         assert_eq!(repr.level, LodLevel::FullAtom);
@@ -1434,7 +1462,10 @@ mod tests {
     fn lod_level_display() {
         assert_eq!(LodLevel::FullAtom.to_string(), "FullAtom");
         assert_eq!(LodLevel::CalphaTrace.to_string(), "CalphaTrace");
-        assert_eq!(LodLevel::SecondaryStructure.to_string(), "SecondaryStructure");
+        assert_eq!(
+            LodLevel::SecondaryStructure.to_string(),
+            "SecondaryStructure"
+        );
         assert_eq!(LodLevel::DomainBlob.to_string(), "DomainBlob");
         assert_eq!(LodLevel::ConvexHull.to_string(), "ConvexHull");
     }

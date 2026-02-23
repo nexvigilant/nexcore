@@ -59,10 +59,9 @@ impl fmt::Display for RendererError {
             Self::ShaderGenerationFailed(msg) => {
                 write!(f, "Shader generation failed: {msg}")
             }
-            Self::InvalidSampleCount => write!(
-                f,
-                "Invalid sample count: must be 1, 2, 4, 8, or 16"
-            ),
+            Self::InvalidSampleCount => {
+                write!(f, "Invalid sample count: must be 1, 2, 4, 8, or 16")
+            }
         }
     }
 }
@@ -949,7 +948,10 @@ pub fn generate_ao_samples(config: &GtaoConfig) -> Vec<AoSample> {
             } else {
                 0.0
             };
-            samples.push(AoSample { direction: dir, step_offset });
+            samples.push(AoSample {
+                direction: dir,
+                step_offset,
+            });
         }
     }
     samples
@@ -1280,7 +1282,10 @@ mod tests {
 
     #[test]
     fn test_jitter_pattern_length_matches_config() {
-        let cfg = TaaConfig { jitter_sequence_length: 8, ..TaaConfig::default() };
+        let cfg = TaaConfig {
+            jitter_sequence_length: 8,
+            ..TaaConfig::default()
+        };
         assert_eq!(generate_jitter_pattern(&cfg).len(), 8);
     }
 
@@ -1325,13 +1330,21 @@ mod tests {
 
     #[test]
     fn test_ao_samples_count_4x4() {
-        let cfg = GtaoConfig { num_directions: 4, num_steps: 4, ..GtaoConfig::default() };
+        let cfg = GtaoConfig {
+            num_directions: 4,
+            num_steps: 4,
+            ..GtaoConfig::default()
+        };
         assert_eq!(generate_ao_samples(&cfg).len(), 16);
     }
 
     #[test]
     fn test_ao_samples_count_3x5() {
-        let cfg = GtaoConfig { num_directions: 3, num_steps: 5, ..GtaoConfig::default() };
+        let cfg = GtaoConfig {
+            num_directions: 3,
+            num_steps: 5,
+            ..GtaoConfig::default()
+        };
         assert_eq!(generate_ao_samples(&cfg).len(), 15);
     }
 
@@ -1381,9 +1394,11 @@ mod tests {
 
     #[test]
     fn test_sss_diffusion_profile_positive_weights() {
-        assert!(sss_diffusion_profile(&SssMaterial::Skin)
-            .iter()
-            .all(|s| s.weight > 0.0));
+        assert!(
+            sss_diffusion_profile(&SssMaterial::Skin)
+                .iter()
+                .all(|s| s.weight > 0.0)
+        );
     }
 
     // --- Burley R(r) --------------------------------------------------------
@@ -1532,7 +1547,11 @@ mod tests {
 
     #[test]
     fn test_error_invalid_sample_count_display() {
-        assert!(RendererError::InvalidSampleCount.to_string().contains("Invalid sample count"));
+        assert!(
+            RendererError::InvalidSampleCount
+                .to_string()
+                .contains("Invalid sample count")
+        );
     }
 
     // --- Serde roundtrip ----------------------------------------------------

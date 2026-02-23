@@ -31,8 +31,7 @@ use nexcore_lex_primitiva::state_mode::StateMode;
 
 impl GroundsTo for IncidentSeverity {
     fn primitive_composition() -> PrimitiveComposition {
-        PrimitiveComposition::new(vec![LexPrimitiva::Sum])
-            .with_dominant(LexPrimitiva::Sum, 1.0)
+        PrimitiveComposition::new(vec![LexPrimitiva::Sum]).with_dominant(LexPrimitiva::Sum, 1.0)
     }
 
     fn state_mode() -> Option<StateMode> {
@@ -42,8 +41,7 @@ impl GroundsTo for IncidentSeverity {
 
 impl GroundsTo for MemoryError {
     fn primitive_composition() -> PrimitiveComposition {
-        PrimitiveComposition::new(vec![LexPrimitiva::Sum])
-            .with_dominant(LexPrimitiva::Sum, 1.0)
+        PrimitiveComposition::new(vec![LexPrimitiva::Sum]).with_dominant(LexPrimitiva::Sum, 1.0)
     }
 }
 
@@ -163,10 +161,7 @@ mod tests {
     #[test]
     fn memory_error_is_t1() {
         assert_eq!(MemoryError::tier(), Tier::T1Universal);
-        assert_eq!(
-            MemoryError::dominant_primitive(),
-            Some(LexPrimitiva::Sum),
-        );
+        assert_eq!(MemoryError::dominant_primitive(), Some(LexPrimitiva::Sum),);
         assert!(MemoryError::is_pure_primitive());
     }
 
@@ -254,10 +249,7 @@ mod tests {
     #[test]
     fn playbook_is_t2c() {
         assert_eq!(Playbook::tier(), Tier::T2Composite);
-        assert_eq!(
-            Playbook::dominant_primitive(),
-            Some(LexPrimitiva::Sequence),
-        );
+        assert_eq!(Playbook::dominant_primitive(), Some(LexPrimitiva::Sequence),);
         let comp = Playbook::primitive_composition();
         assert_eq!(comp.unique().len(), 4);
         assert!((comp.confidence - 0.60).abs() < f64::EPSILON);

@@ -7,8 +7,7 @@
 //! - Broadcast → ρ (recursion) - one signal to many
 
 use crate::{
-    CascadeRule, Cytokine, CytokineFamily, EmitResult, Emitter, Receptor, Scope,
-    ThreatLevel,
+    CascadeRule, Cytokine, CytokineFamily, EmitResult, Emitter, Receptor, Scope, ThreatLevel,
 };
 use std::collections::HashMap;
 use std::future::Future;

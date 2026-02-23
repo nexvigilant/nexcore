@@ -4,7 +4,7 @@
 //!
 //! Errors are boundaries that delimit valid from invalid states.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors that can occur in mesh networking operations.
 ///

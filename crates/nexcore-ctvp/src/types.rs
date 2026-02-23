@@ -4,9 +4,9 @@
 //! including validation phases, outcomes, severity levels, and evidence types.
 
 use chrono::{DateTime, Utc};
+use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use uuid::Uuid;
 
 /// Validation phase in the CTVP framework.
 ///
@@ -303,7 +303,7 @@ pub enum EvidenceType {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Evidence {
     /// Unique identifier
-    pub id: Uuid,
+    pub id: NexId,
 
     /// Evidence type and data
     pub evidence_type: EvidenceType,
@@ -330,7 +330,7 @@ impl Evidence {
         source: impl Into<String>,
     ) -> Self {
         Self {
-            id: Uuid::new_v4(),
+            id: NexId::v4(),
             evidence_type,
             description: description.into(),
             collected_at: Utc::now(),

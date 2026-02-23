@@ -24,12 +24,12 @@
 
 use crate::params::{PvEmbeddingGetParams, PvEmbeddingSimilarityParams, PvEmbeddingStatsParams};
 use nexcore_vigilance::pv::regulatory::ich_glossary::{Term, all_terms, lookup_term, search_terms};
-use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 use serde_json::json;
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::sync::LazyLock;
 
 // ============================================================================
 // TF-IDF Index (computed once, cached)
@@ -153,7 +153,7 @@ fn build_index() -> TfIdfIndex {
     }
 }
 
-static INDEX: Lazy<RwLock<TfIdfIndex>> = Lazy::new(|| RwLock::new(build_index()));
+static INDEX: LazyLock<RwLock<TfIdfIndex>> = LazyLock::new(|| RwLock::new(build_index()));
 
 // ============================================================================
 // Tokenization & Similarity

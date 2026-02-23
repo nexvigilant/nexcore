@@ -13,7 +13,6 @@ path = "src/main.rs"
 
 [dependencies]
 nexcore-error = { workspace = true }
-thiserror = { version = "1.0.61" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 tracing = { version = "0.1.40" }
@@ -22,7 +21,7 @@ rmcp = { version = "0.14", features = ["server", "transport-io"] }
 schemars = "1.2"
 flate2 = { version = "1.0.30" }
 tar = { version = "0.4.41" }
-walkdir = { version = "2.5.0" }
+nexcore-fs = { workspace = true }
 chrono = { version = "0.4.38", features = ["serde"] }
 
 [dev-dependencies]

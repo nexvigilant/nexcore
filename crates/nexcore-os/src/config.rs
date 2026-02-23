@@ -17,12 +17,24 @@
 pub struct EnergyConfig {
     /// Initial token budget.
     pub initial_budget: u64,
+    /// Energy cost per OS tick (system upkeep).
+    pub tick_cost: u64,
+    /// Energy cost per successful service transition.
+    pub transition_cost: u64,
+    /// Base energy waste per security threat (multiplied by severity).
+    pub threat_base_cost: u64,
+    /// Energy waste for security lockdown event.
+    pub lockdown_cost: u64,
 }
 
 impl Default for EnergyConfig {
     fn default() -> Self {
         Self {
             initial_budget: 1_000_000,
+            tick_cost: 1,
+            transition_cost: 10,
+            threat_base_cost: 50,
+            lockdown_cost: 5_000,
         }
     }
 }

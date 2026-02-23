@@ -117,7 +117,7 @@ impl<'de> serde::Deserialize<'de> for Score {
 }
 
 /// Error type for score validation.
-#[derive(Debug, Clone, thiserror::Error)]
+#[derive(Debug, Clone, nexcore_error::Error)]
 pub enum ScoreError {
     /// Score value is outside [0.0, 1.0] bounds.
     #[error("Score {value} is out of bounds [0.0, 1.0]")]

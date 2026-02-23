@@ -1,0 +1,12 @@
+
+[package]
+name = "nexcore-hash"
+version = "0.1.0"
+edition = "2024"
+license = "LicenseRef-NexVigilant-Proprietary"
+authors = ["NexVigilant Team"]
+description = "Zero-dependency cryptographic hashing (SHA-256, HMAC-SHA256) for NexCore ecosystem"
+rust-version = "1.85"
+
+[lints]
+workspace = true

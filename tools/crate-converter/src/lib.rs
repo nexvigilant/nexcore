@@ -62,10 +62,9 @@ impl FileSystemResolver {
             }
         }
 
-        version_item
-            .as_str()
-            .map(|s| s.to_string())
-            .ok_or_else(|| nexcore_error::nexerror!("No version string found in {}", cargo_path.display()))
+        version_item.as_str().map(|s| s.to_string()).ok_or_else(|| {
+            nexcore_error::nexerror!("No version string found in {}", cargo_path.display())
+        })
     }
 
     fn read_workspace_version(&self) -> Result<String> {
@@ -857,9 +856,8 @@ impl MappingResolver {
 
 impl InternalDepResolver for MappingResolver {
     fn resolve_version(&self, crate_name: &str) -> Result<String> {
-        self.versions
-            .get(crate_name)
-            .cloned()
-            .ok_or_else(|| nexcore_error::nexerror!("Internal crate version not found: {crate_name}"))
+        self.versions.get(crate_name).cloned().ok_or_else(|| {
+            nexcore_error::nexerror!("Internal crate version not found: {crate_name}")
+        })
     }
 }

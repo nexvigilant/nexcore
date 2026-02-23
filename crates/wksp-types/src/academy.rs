@@ -2,8 +2,8 @@
 //!
 //! Terminology: Course = Capability Pathway, Lesson = Practice Activity
 
-use serde::{Deserialize, Serialize};
 use crate::common::Timestamp;
+use serde::{Deserialize, Serialize};
 
 /// Proficiency level for skill assessment
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -267,11 +267,11 @@ impl LearnerState {
     #[must_use]
     pub const fn primitive_symbol(&self) -> &'static str {
         match self {
-            Self::Onboarding => "∃",  // Existence — establishing presence
-            Self::Exploring => "λ",   // Location — finding your place
-            Self::Assessed => "κ",    // Comparison — measuring yourself
-            Self::Learning => "σ",    // Sequence — following pathways
-            Self::Certified => "π",   // Persistence — lasting competence
+            Self::Onboarding => "∃", // Existence — establishing presence
+            Self::Exploring => "λ",  // Location — finding your place
+            Self::Assessed => "κ",   // Comparison — measuring yourself
+            Self::Learning => "σ",   // Sequence — following pathways
+            Self::Certified => "π",  // Persistence — lasting competence
         }
     }
 }
@@ -357,7 +357,11 @@ impl LearningPathway {
     #[must_use]
     pub fn completion_stats(&self) -> (usize, usize, usize) {
         let completed = self.nodes.iter().filter(|n| n.completed).count();
-        let unlocked = self.nodes.iter().filter(|n| n.unlocked && !n.completed).count();
+        let unlocked = self
+            .nodes
+            .iter()
+            .filter(|n| n.unlocked && !n.completed)
+            .count();
         let locked = self.nodes.len() - completed - unlocked;
         (completed, unlocked, locked)
     }

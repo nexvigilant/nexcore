@@ -3,15 +3,15 @@
 //! Chemistry analogue: UV-Vis / IR / NMR spectroscopy.
 //! Each atom has a unique contextual spectrum. Match to identify unknowns.
 
+use nexcore_id::NexId;
 use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 /// A probe context — a canonical regulatory sentence with a blank.
 /// Insert an atom and observe the contextual behavior.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Probe {
-    pub id: Uuid,
+    pub id: NexId,
     /// The probe template with a placeholder for atom insertion.
     pub template: String,
     /// What aspect of meaning this probe tests.
@@ -40,7 +40,7 @@ pub enum ExcitationTarget {
 /// A single spectral line — the atom's response to one probe.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpectralLine {
-    pub probe_id: Uuid,
+    pub probe_id: NexId,
     /// The response value — how the atom "absorbed" this probe.
     pub absorption: OrderedFloat<f64>,
     /// Width of the absorption peak — sharp = precise meaning,
@@ -51,7 +51,7 @@ pub struct SpectralLine {
 /// Complete spectral fingerprint of an atom.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Spectrum {
-    pub atom_id: Uuid,
+    pub atom_id: NexId,
     pub lines: Vec<SpectralLine>,
     /// Timestamp — spectra can drift over time as regulatory
     /// contexts evolve.
@@ -148,37 +148,37 @@ impl ProbeSet {
     pub fn pv_standard() -> Self {
         let probes = vec![
             Probe {
-                id: Uuid::new_v4(),
+                id: NexId::v4(),
                 template: "The patient experienced a ___ following drug administration.".into(),
                 excitation_target: ExcitationTarget::EventNature,
                 response_dim: 1,
             },
             Probe {
-                id: Uuid::new_v4(),
+                id: NexId::v4(),
                 template: "The ___ was assessed as related to the investigational product.".into(),
                 excitation_target: ExcitationTarget::CausalRole,
                 response_dim: 1,
             },
             Probe {
-                id: Uuid::new_v4(),
+                id: NexId::v4(),
                 template: "The ___ occurred within 24 hours of the first dose.".into(),
                 excitation_target: ExcitationTarget::TemporalBehavior,
                 response_dim: 1,
             },
             Probe {
-                id: Uuid::new_v4(),
+                id: NexId::v4(),
                 template: "The ___ was graded as CTCAE Grade 3.".into(),
                 excitation_target: ExcitationTarget::SeverityInteraction,
                 response_dim: 1,
             },
             Probe {
-                id: Uuid::new_v4(),
+                id: NexId::v4(),
                 template: "A ___ serious adverse event was reported to the IRB.".into(),
                 excitation_target: ExcitationTarget::GrammaticalRole,
                 response_dim: 1,
             },
             Probe {
-                id: Uuid::new_v4(),
+                id: NexId::v4(),
                 template: "The ___ is listed in the Reference Safety Information.".into(),
                 excitation_target: ExcitationTarget::ContextSensitivity,
                 response_dim: 1,

@@ -47,8 +47,7 @@ use crate::types::{
 /// A single state variable with no other primitive in play.
 impl GroundsTo for TouchPhase {
     fn primitive_composition() -> PrimitiveComposition {
-        PrimitiveComposition::new(vec![LexPrimitiva::State])
-            .with_dominant(LexPrimitiva::State, 1.0)
+        PrimitiveComposition::new(vec![LexPrimitiva::State]).with_dominant(LexPrimitiva::State, 1.0)
     }
 }
 
@@ -57,8 +56,7 @@ impl GroundsTo for TouchPhase {
 /// Pure lifecycle state: Pressed | Released | Repeat.
 impl GroundsTo for KeyState {
     fn primitive_composition() -> PrimitiveComposition {
-        PrimitiveComposition::new(vec![LexPrimitiva::State])
-            .with_dominant(LexPrimitiva::State, 1.0)
+        PrimitiveComposition::new(vec![LexPrimitiva::State]).with_dominant(LexPrimitiva::State, 1.0)
     }
 }
 
@@ -453,10 +451,7 @@ mod tests {
     #[test]
     fn power_state_is_t2p() {
         assert_eq!(PowerState::tier(), Tier::T2Primitive);
-        assert_eq!(
-            PowerState::dominant_primitive(),
-            Some(LexPrimitiva::State)
-        );
+        assert_eq!(PowerState::dominant_primitive(), Some(LexPrimitiva::State));
     }
 
     #[test]
@@ -488,10 +483,7 @@ mod tests {
             tier == Tier::T2Primitive || tier == Tier::T2Composite,
             "expected T2-P or T2-C, got {tier:?}"
         );
-        assert_eq!(
-            KeyEvent::dominant_primitive(),
-            Some(LexPrimitiva::Sequence)
-        );
+        assert_eq!(KeyEvent::dominant_primitive(), Some(LexPrimitiva::Sequence));
     }
 
     #[test]
@@ -510,10 +502,7 @@ mod tests {
     #[test]
     fn pal_error_is_t2p() {
         assert_eq!(PalError::tier(), Tier::T2Primitive);
-        assert_eq!(
-            PalError::dominant_primitive(),
-            Some(LexPrimitiva::Boundary)
-        );
+        assert_eq!(PalError::dominant_primitive(), Some(LexPrimitiva::Boundary));
     }
 
     // All types have a dominant primitive

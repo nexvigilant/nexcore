@@ -32,9 +32,7 @@
 //! let _result = steepest_descent(&mut mol, &min_config, &ff_config);
 //! ```
 
-use crate::force_field::{
-    ForceFieldConfig, ForceFieldError, compute_energy, compute_forces,
-};
+use crate::force_field::{ForceFieldConfig, ForceFieldError, compute_energy, compute_forces};
 use crate::molecular::Molecule;
 use serde::{Deserialize, Serialize};
 
@@ -56,7 +54,10 @@ pub enum MinimizerError {
 impl std::fmt::Display for MinimizerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::MaxIterations { iterations, force_rms } => write!(
+            Self::MaxIterations {
+                iterations,
+                force_rms,
+            } => write!(
                 f,
                 "maximum iterations ({iterations}) reached; final force RMS = {force_rms}"
             ),
@@ -429,8 +430,16 @@ mod tests {
         mol.atoms.push(Atom::new(1, Element::O, [0.0, 0.0, 0.0]));
         mol.atoms.push(Atom::new(2, Element::H, [1.5, 0.0, 0.0])); // stretched
         mol.atoms.push(Atom::new(3, Element::H, [0.0, 1.5, 0.0])); // stretched
-        mol.bonds.push(Bond { atom1: 0, atom2: 1, order: BondOrder::Single });
-        mol.bonds.push(Bond { atom1: 0, atom2: 2, order: BondOrder::Single });
+        mol.bonds.push(Bond {
+            atom1: 0,
+            atom2: 1,
+            order: BondOrder::Single,
+        });
+        mol.bonds.push(Bond {
+            atom1: 0,
+            atom2: 2,
+            order: BondOrder::Single,
+        });
         mol
     }
 
@@ -442,7 +451,11 @@ mod tests {
         mol.atoms.push(Atom::new(4, Element::H, [0.0, 0.0, 1.5]));
         mol.atoms.push(Atom::new(5, Element::H, [-1.0, -1.0, -1.0]));
         for i in 1..5 {
-            mol.bonds.push(Bond { atom1: 0, atom2: i, order: BondOrder::Single });
+            mol.bonds.push(Bond {
+                atom1: 0,
+                atom2: i,
+                order: BondOrder::Single,
+            });
         }
         mol
     }
@@ -560,7 +573,10 @@ mod tests {
 
     #[test]
     fn minimizer_error_display_contains_key_info() {
-        let e = MinimizerError::MaxIterations { iterations: 500, force_rms: 0.42 };
+        let e = MinimizerError::MaxIterations {
+            iterations: 500,
+            force_rms: 0.42,
+        };
         let s = e.to_string();
         assert!(s.contains("500"), "display should contain iteration count");
         assert!(s.contains("0.42"), "display should contain force RMS");

@@ -53,7 +53,7 @@ impl KnowledgePack {
     ) -> Self {
         let stats = Self::compute_stats(&fragments, &concept_graph);
         Self {
-            id: uuid::Uuid::new_v4().to_string(),
+            id: nexcore_id::NexId::v4().to_string(),
             name,
             version,
             fragments,

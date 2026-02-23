@@ -21,13 +21,13 @@
 use crate::params::{
     RateLimitSlidingWindowParams, RateLimitStatusParams, RateLimitTokenBucketParams,
 };
-use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 // ============================================================================
 // State
@@ -176,8 +176,8 @@ struct RateLimiterState {
     windows: HashMap<String, SlidingWindow>,
 }
 
-static STATE: Lazy<RwLock<RateLimiterState>> =
-    Lazy::new(|| RwLock::new(RateLimiterState::default()));
+static STATE: LazyLock<RwLock<RateLimiterState>> =
+    LazyLock::new(|| RwLock::new(RateLimiterState::default()));
 
 // ============================================================================
 // MCP Tools

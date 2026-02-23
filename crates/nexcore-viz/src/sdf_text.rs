@@ -55,9 +55,18 @@ impl GlyphInstance {
     /// Pack into a raw f32 buffer for WebGPU.
     pub fn pack(&self, buffer: &mut Vec<f32>) {
         buffer.extend_from_slice(&[
-            self.position[0], self.position[1], self.position[2], self.scale,
-            self.uv_rect[0], self.uv_rect[1], self.uv_rect[2], self.uv_rect[3],
-            self.color[0], self.color[1], self.color[2], self.color[3],
+            self.position[0],
+            self.position[1],
+            self.position[2],
+            self.scale,
+            self.uv_rect[0],
+            self.uv_rect[1],
+            self.uv_rect[2],
+            self.uv_rect[3],
+            self.color[0],
+            self.color[1],
+            self.color[2],
+            self.color[3],
         ]);
     }
 }
@@ -156,21 +165,21 @@ mod tests {
             [1.0, 0.0, 0.0, 1.0],
         );
         glyph.pack(&mut buffer);
-        
+
         assert_eq!(buffer.len(), 12);
         assert_eq!(buffer[0], 1.0);
         assert_eq!(buffer[3], 0.5);
         assert_eq!(buffer[4], 0.1);
         assert_eq!(buffer[8], 1.0);
     }
-    
+
     #[test]
     fn test_sdf_config_default() {
         let config = SdfConfig::default();
         assert_eq!(config.edge_value, 0.5);
         assert_eq!(config.smoothing, 0.05);
     }
-    
+
     #[test]
     fn test_wgsl_shader_contains_smoothstep() {
         let shader = wgsl_sdf_text_shader();

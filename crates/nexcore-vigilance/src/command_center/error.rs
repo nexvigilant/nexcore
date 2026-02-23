@@ -1,6 +1,6 @@
 //! Error types for the Command Center crate.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Result type alias for Command Center operations.
 pub type CommandCenterResult<T> = Result<T, CommandCenterError>;

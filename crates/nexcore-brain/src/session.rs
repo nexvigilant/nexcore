@@ -1073,7 +1073,10 @@ mod tests {
 
         // Inject a malformed line directly
         let events_path = sess_dir.join("events.jsonl");
-        let mut file = fs::OpenOptions::new().append(true).open(&events_path).unwrap();
+        let mut file = fs::OpenOptions::new()
+            .append(true)
+            .open(&events_path)
+            .unwrap();
         use std::io::Write;
         writeln!(file, "{{not valid json}}").unwrap();
 
@@ -1098,7 +1101,10 @@ mod tests {
 
         // Inject blank lines
         let events_path = sess_dir.join("events.jsonl");
-        let mut file = fs::OpenOptions::new().append(true).open(&events_path).unwrap();
+        let mut file = fs::OpenOptions::new()
+            .append(true)
+            .open(&events_path)
+            .unwrap();
         use std::io::Write;
         writeln!(file).unwrap();
         writeln!(file, "   ").unwrap();

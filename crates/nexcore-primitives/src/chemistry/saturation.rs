@@ -9,7 +9,7 @@
 //!
 //! **PV Application**: Case processing throughput - systems saturate at capacity.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors for saturation calculations.
 #[derive(Debug, Error, PartialEq, Clone)]

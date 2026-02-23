@@ -1,9 +1,9 @@
 //! Skill loader from filesystem
 
 use super::frontmatter::{SkillFrontmatter, parse_frontmatter};
+use nexcore_error::Error;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use thiserror::Error;
 
 /// Loader errors
 #[derive(Debug, Error)]

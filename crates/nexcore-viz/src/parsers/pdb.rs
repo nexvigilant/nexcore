@@ -32,7 +32,9 @@
 
 use std::collections::HashMap;
 
-use crate::molecular::{Atom, Bond, BondOrder, Chain, Element, Molecule, Residue, SecondaryStructure};
+use crate::molecular::{
+    Atom, Bond, BondOrder, Chain, Element, Molecule, Residue, SecondaryStructure,
+};
 
 // ============================================================================
 // Error type
@@ -51,7 +53,10 @@ pub struct ParseError {
 
 impl ParseError {
     fn new(line: usize, message: impl Into<String>) -> Self {
-        Self { line, message: message.into() }
+        Self {
+            line,
+            message: message.into(),
+        }
     }
 }
 
@@ -99,7 +104,11 @@ fn col(line: &str, start: usize, end: usize) -> &str {
 /// Parse a column as a trimmed string, returning `None` if blank.
 fn col_str(line: &str, start: usize, end: usize) -> Option<String> {
     let s = col(line, start, end).trim();
-    if s.is_empty() { None } else { Some(s.to_string()) }
+    if s.is_empty() {
+        None
+    } else {
+        Some(s.to_string())
+    }
 }
 
 /// Parse a column as `i32`, returning `None` on blank or parse failure.
@@ -145,22 +154,17 @@ struct AtomRecord {
 ///
 /// Returns `Err` if any mandatory field is missing or malformed.
 fn parse_atom_line(line: &str, lineno: usize) -> Result<AtomRecord, ParseError> {
-    let serial = col_u32(line, 7, 11)
-        .ok_or_else(|| ParseError::new(lineno, "missing atom serial"))?;
-    let name = col_str(line, 13, 16)
-        .ok_or_else(|| ParseError::new(lineno, "missing atom name"))?;
-    let res_name = col_str(line, 18, 20)
-        .ok_or_else(|| ParseError::new(lineno, "missing residue name"))?;
-    let chain_id = col_char(line, 22)
-        .ok_or_else(|| ParseError::new(lineno, "missing chain ID"))?;
-    let res_seq = col_i32(line, 23, 26)
-        .ok_or_else(|| ParseError::new(lineno, "missing residue seq"))?;
-    let x = col_f64(line, 31, 38)
-        .ok_or_else(|| ParseError::new(lineno, "missing x coordinate"))?;
-    let y = col_f64(line, 39, 46)
-        .ok_or_else(|| ParseError::new(lineno, "missing y coordinate"))?;
-    let z = col_f64(line, 47, 54)
-        .ok_or_else(|| ParseError::new(lineno, "missing z coordinate"))?;
+    let serial =
+        col_u32(line, 7, 11).ok_or_else(|| ParseError::new(lineno, "missing atom serial"))?;
+    let name = col_str(line, 13, 16).ok_or_else(|| ParseError::new(lineno, "missing atom name"))?;
+    let res_name =
+        col_str(line, 18, 20).ok_or_else(|| ParseError::new(lineno, "missing residue name"))?;
+    let chain_id = col_char(line, 22).ok_or_else(|| ParseError::new(lineno, "missing chain ID"))?;
+    let res_seq =
+        col_i32(line, 23, 26).ok_or_else(|| ParseError::new(lineno, "missing residue seq"))?;
+    let x = col_f64(line, 31, 38).ok_or_else(|| ParseError::new(lineno, "missing x coordinate"))?;
+    let y = col_f64(line, 39, 46).ok_or_else(|| ParseError::new(lineno, "missing y coordinate"))?;
+    let z = col_f64(line, 47, 54).ok_or_else(|| ParseError::new(lineno, "missing z coordinate"))?;
     let b_factor = col_f64(line, 61, 66);
 
     // Element column (77-78) is preferred; fall back to first alphabetic chars of name.
@@ -171,7 +175,18 @@ fn parse_atom_line(line: &str, lineno: usize) -> Result<AtomRecord, ParseError> 
         Element::from_symbol(&sym)
     };
 
-    Ok(AtomRecord { serial, name, res_name, chain_id, res_seq, x, y, z, b_factor, element })
+    Ok(AtomRecord {
+        serial,
+        name,
+        res_name,
+        chain_id,
+        res_seq,
+        x,
+        y,
+        z,
+        b_factor,
+        element,
+    })
 }
 
 // ============================================================================
@@ -189,7 +204,11 @@ fn parse_conect_line(line: &str) -> Option<(u32, Vec<u32>)> {
             bonded.push(s);
         }
     }
-    if bonded.is_empty() { None } else { Some((src, bonded)) }
+    if bonded.is_empty() {
+        None
+    } else {
+        Some((src, bonded))
+    }
 }
 
 // ============================================================================
@@ -216,7 +235,12 @@ fn parse_helix_line(line: &str) -> Option<SecStrRange> {
         _ => SecondaryStructure::Helix,
     };
 
-    Some(SecStrRange { chain_id: init_chain, init_seq, end_seq, kind })
+    Some(SecStrRange {
+        chain_id: init_chain,
+        init_seq,
+        end_seq,
+        kind,
+    })
 }
 
 // ============================================================================
@@ -264,10 +288,13 @@ fn infer_bonds_by_distance(atoms: &[Atom]) -> Vec<Bond> {
             if a1.element == Element::H && a2.element == Element::H {
                 continue;
             }
-            let cutoff =
-                (a1.element.covalent_radius() + a2.element.covalent_radius()) * 1.2;
+            let cutoff = (a1.element.covalent_radius() + a2.element.covalent_radius()) * 1.2;
             if a1.distance_to(a2) < cutoff {
-                bonds.push(Bond { atom1: i, atom2: j, order: BondOrder::Single });
+                bonds.push(Bond {
+                    atom1: i,
+                    atom2: j,
+                    order: BondOrder::Single,
+                });
             }
         }
     }
@@ -404,7 +431,10 @@ pub fn parse_pdb(input: &str) -> Result<Molecule, ParseError> {
             });
         }
 
-        mol.chains.push(Chain { id: *chain_id, residues });
+        mol.chains.push(Chain {
+            id: *chain_id,
+            residues,
+        });
     }
 
     // -------------------------------------------------------------------------
@@ -659,12 +689,16 @@ END\n";
     #[test]
     fn parse_error_on_missing_serial() {
         // Deliberately malformed: serial field (cols 7-11) is blank.
-        let pdb = "ATOM         N   THR A   1      17.047  14.099   3.625  1.00 13.79           N  \n";
+        let pdb =
+            "ATOM         N   THR A   1      17.047  14.099   3.625  1.00 13.79           N  \n";
         let result = parse_pdb(pdb);
         assert!(result.is_err(), "expected ParseError for blank serial");
         if let Err(e) = result {
             assert_eq!(e.line, 1);
-            assert!(e.message.contains("serial"), "error message should mention serial");
+            assert!(
+                e.message.contains("serial"),
+                "error message should mention serial"
+            );
         }
     }
 

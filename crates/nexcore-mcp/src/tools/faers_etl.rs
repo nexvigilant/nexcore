@@ -13,6 +13,7 @@ use crate::params::{
     FaersEtlKnownPairsParams, FaersEtlRunParams, FaersEtlSignalsParams, FaersEtlStatusParams,
 };
 use nexcore_faers_etl::SignalDetectionResult;
+use nexcore_fs::dirs;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 use serde_json::json;

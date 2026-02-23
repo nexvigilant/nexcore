@@ -12,7 +12,7 @@ use crate::types::{AppendResponse, BatchGetResponse, SpreadsheetMeta, UpdateResp
 const SHEETS_BASE: &str = "https://sheets.googleapis.com/v4/spreadsheets";
 
 /// Errors from the Sheets API client.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum ClientError {
     #[error("auth error: {0}")]
     Auth(#[from] crate::auth::AuthError),

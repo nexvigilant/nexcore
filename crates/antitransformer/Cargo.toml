@@ -11,7 +11,6 @@ description = "AI text detector via statistical fingerprints — Zipf deviation,
 [dependencies]
 tokio = { version = "1.38.0", features = ["full"] }
 nexcore-error = { workspace = true }
-thiserror = { version = "1.0.61" }
 tracing = { version = "0.1.40" }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }

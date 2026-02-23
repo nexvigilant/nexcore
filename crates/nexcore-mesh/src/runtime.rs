@@ -577,7 +577,7 @@ impl MeshRuntime {
         let reachable = self.neighbors.reachable_ids();
         for neighbor_id in &reachable {
             let msg = MeshMessage {
-                id: uuid::Uuid::new_v4().to_string(),
+                id: nexcore_id::NexId::v4().to_string(),
                 kind: MessageKind::Heartbeat,
                 source: self.node_id.clone(),
                 destination: neighbor_id.clone(),
@@ -595,7 +595,7 @@ impl MeshRuntime {
     fn on_heartbeat_received(&mut self, msg: &MeshMessage) {
         self.neighbors.record_success(&msg.source);
         let ack = MeshMessage {
-            id: uuid::Uuid::new_v4().to_string(),
+            id: nexcore_id::NexId::v4().to_string(),
             kind: MessageKind::HeartbeatAck,
             source: self.node_id.clone(),
             destination: msg.source.clone(),

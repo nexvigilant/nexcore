@@ -65,9 +65,7 @@ pub struct CoverageResult {
 /// assert_eq!(result.uncovered, 1);
 /// assert!(!result.passes);
 /// ```
-pub fn validate_corpus_coverage(
-    ksbs: &[(String, String, Vec<String>)],
-) -> CoverageResult {
+pub fn validate_corpus_coverage(ksbs: &[(String, String, Vec<String>)]) -> CoverageResult {
     let total = ksbs.len();
     let mut covered = 0usize;
     let mut uncovered_ksbs = Vec::new();

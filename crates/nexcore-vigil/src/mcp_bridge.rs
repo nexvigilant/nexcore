@@ -110,7 +110,9 @@ impl McpBridge {
 
     async fn invoke_skill_registry(&self, tool: &str, params: Value) -> Result<Value> {
         if tool == "skill_scan" {
-            let dir = params["directory"].as_str().ok_or_else(|| nexerror!("dir"))?;
+            let dir = params["directory"]
+                .as_str()
+                .ok_or_else(|| nexerror!("dir"))?;
             let n = self
                 .registry
                 .write()

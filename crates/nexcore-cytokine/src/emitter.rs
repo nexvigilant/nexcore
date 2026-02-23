@@ -11,7 +11,7 @@ use std::future::Future;
 use std::pin::Pin;
 
 /// Error type for emission failures
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum EmitError {
     /// Channel closed or full
     #[error("emission channel unavailable: {0}")]

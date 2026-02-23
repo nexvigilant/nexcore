@@ -442,10 +442,10 @@ pub trait Orient {
 // ============================================================================
 
 /// Errors in spatial operations
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum SpatialError {
     /// Triangle inequality violated
-    #[error("triangle inequality violated: d(a,c)={ac} > d(a,b)+d(b,c)={sum}", ac = .ac, sum = .ab + .bc)]
+    #[error("triangle inequality violated: d(a,c)={ac} > d(a,b)={ab} + d(b,c)={bc}")]
     TriangleViolation {
         /// d(a,b)
         ab: f64,

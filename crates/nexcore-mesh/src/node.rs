@@ -9,9 +9,9 @@ use crate::error::MeshError;
 use crate::neighbor::NeighborRegistry;
 use crate::routing::RoutingTable;
 use crate::topology::Path;
+use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
-use uuid::Uuid;
 
 /// Default maximum TTL for messages.
 pub const DEFAULT_MAX_TTL: u8 = 16;
@@ -117,7 +117,7 @@ impl MeshMessage {
     ) -> Self {
         let src = source.into();
         Self {
-            id: Uuid::new_v4().to_string(),
+            id: NexId::v4().to_string(),
             kind: MessageKind::Data,
             source: src.clone(),
             destination: destination.into(),
@@ -135,7 +135,7 @@ impl MeshMessage {
     ) -> Self {
         let src = source.into();
         Self {
-            id: Uuid::new_v4().to_string(),
+            id: NexId::v4().to_string(),
             kind,
             source: src.clone(),
             destination: String::new(),

@@ -1,7 +1,7 @@
 //! Error types for the database layer.
 
 /// Database errors
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum DbError {
     /// SQLite error
     #[error("SQLite error: {0}")]

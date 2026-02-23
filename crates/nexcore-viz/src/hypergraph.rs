@@ -741,19 +741,12 @@ pub fn force_directed_layout(hg: &Hypergraph, iterations: usize) -> HypergraphLa
 
         // Attraction: each hyperedge pulls its members toward the centroid.
         for edge in &hg.edges {
-            let members: Vec<usize> = edge
-                .nodes
-                .iter()
-                .copied()
-                .filter(|&ni| ni < n)
-                .collect();
+            let members: Vec<usize> = edge.nodes.iter().copied().filter(|&ni| ni < n).collect();
             if members.is_empty() {
                 continue;
             }
-            let cx: f64 =
-                members.iter().map(|&ni| pos[ni][0]).sum::<f64>() / members.len() as f64;
-            let cy: f64 =
-                members.iter().map(|&ni| pos[ni][1]).sum::<f64>() / members.len() as f64;
+            let cx: f64 = members.iter().map(|&ni| pos[ni][0]).sum::<f64>() / members.len() as f64;
+            let cy: f64 = members.iter().map(|&ni| pos[ni][1]).sum::<f64>() / members.len() as f64;
             for &ni in &members {
                 let dx = cx - pos[ni][0];
                 let dy = cy - pos[ni][1];
@@ -986,13 +979,11 @@ fn dijkstra(adj: &[Vec<f64>], source: usize, n: usize) -> (HashMap<usize, f64>, 
 
     for _ in 0..n {
         // Find the unvisited node with minimum distance (simple O(n^2) Dijkstra).
-        let u = (0..n)
-            .filter(|&i| !visited[i])
-            .min_by(|&a, &b| {
-                dist[a]
-                    .partial_cmp(&dist[b])
-                    .unwrap_or(std::cmp::Ordering::Equal)
-            });
+        let u = (0..n).filter(|&i| !visited[i]).min_by(|&a, &b| {
+            dist[a]
+                .partial_cmp(&dist[b])
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         let Some(u) = u else { break };
         if dist[u] == f64::INFINITY {
@@ -1132,8 +1123,7 @@ mod tests {
                 label: "e-ab".into(),
             })
             .is_err()
-        {
-        }
+        {}
         if hg
             .add_edge(HyperEdge {
                 id: 1,
@@ -1142,8 +1132,7 @@ mod tests {
                 label: "e-cd".into(),
             })
             .is_err()
-        {
-        }
+        {}
         hg
     }
 
@@ -1294,14 +1283,15 @@ mod tests {
             position: None,
         });
         // Only i0 and i1 in edge; i2 is isolated.
-        assert!(hg
-            .add_edge(HyperEdge {
+        assert!(
+            hg.add_edge(HyperEdge {
                 id: 0,
                 nodes: vec![i0, i1],
                 weight: 1.0,
                 label: "e".into(),
             })
-            .is_ok());
+            .is_ok()
+        );
         let mat = build_incidence_matrix(&hg);
         assert_eq!(mat.data[0][0], 1.0);
         assert_eq!(mat.data[1][0], 1.0);
@@ -1352,22 +1342,24 @@ mod tests {
             metadata: None,
             position: None,
         });
-        assert!(hg
-            .add_edge(HyperEdge {
+        assert!(
+            hg.add_edge(HyperEdge {
                 id: 0,
                 nodes: vec![i0, i1],
                 weight: 1.5,
                 label: "e0".into(),
             })
-            .is_ok());
-        assert!(hg
-            .add_edge(HyperEdge {
+            .is_ok()
+        );
+        assert!(
+            hg.add_edge(HyperEdge {
                 id: 1,
                 nodes: vec![i0, i1],
                 weight: 0.5,
                 label: "e1".into(),
             })
-            .is_ok());
+            .is_ok()
+        );
         let adj = build_adjacency_from_hypergraph(&hg);
         assert!((adj[0][1] - 2.0).abs() < f64::EPSILON);
     }
@@ -1398,22 +1390,24 @@ mod tests {
             metadata: None,
             position: None,
         });
-        assert!(hg
-            .add_edge(HyperEdge {
+        assert!(
+            hg.add_edge(HyperEdge {
                 id: 0,
                 nodes: vec![i0, i1],
                 weight: 1.0,
                 label: "e0".into(),
             })
-            .is_ok());
-        assert!(hg
-            .add_edge(HyperEdge {
+            .is_ok()
+        );
+        assert!(
+            hg.add_edge(HyperEdge {
                 id: 1,
                 nodes: vec![i1, i2],
                 weight: 1.0,
                 label: "e1".into(),
             })
-            .is_ok());
+            .is_ok()
+        );
         let dual = compute_dual(&hg).ok().unwrap_or(DualGraph {
             nodes: vec![],
             edges: vec![],
@@ -1453,11 +1447,13 @@ mod tests {
     #[test]
     fn steiner_tree_terminals_in_result() {
         let hg = triangle_hg();
-        let st = approximate_steiner_tree(&hg, &[0, 2]).ok().unwrap_or(SteinerTree {
-            nodes: vec![],
-            edges: vec![],
-            total_weight: 0.0,
-        });
+        let st = approximate_steiner_tree(&hg, &[0, 2])
+            .ok()
+            .unwrap_or(SteinerTree {
+                nodes: vec![],
+                edges: vec![],
+                total_weight: 0.0,
+            });
         assert!(st.nodes.contains(&0), "terminal 0 must be in Steiner tree");
         assert!(st.nodes.contains(&2), "terminal 2 must be in Steiner tree");
     }
@@ -1599,22 +1595,24 @@ mod tests {
             metadata: None,
             position: None,
         });
-        assert!(hg
-            .add_edge(HyperEdge {
+        assert!(
+            hg.add_edge(HyperEdge {
                 id: 0,
                 nodes: vec![i0, i1],
                 weight: 1.0,
                 label: "e0".into(),
             })
-            .is_ok());
-        assert!(hg
-            .add_edge(HyperEdge {
+            .is_ok()
+        );
+        assert!(
+            hg.add_edge(HyperEdge {
                 id: 1,
                 nodes: vec![i0, i2],
                 weight: 1.0,
                 label: "e1".into(),
             })
-            .is_ok());
+            .is_ok()
+        );
         assert_eq!(hg.degree(i0).ok(), Some(2));
         assert_eq!(hg.degree(i1).ok(), Some(1));
     }

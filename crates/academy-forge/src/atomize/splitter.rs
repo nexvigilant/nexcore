@@ -111,10 +111,7 @@ fn split_on_headings(content: &str, heading_prefix: &str) -> Vec<ContentFragment
                     });
                 }
             }
-            current_title = line
-                .trim_start_matches('#')
-                .trim()
-                .to_string();
+            current_title = line.trim_start_matches('#').trim().to_string();
             current_content = String::new();
         } else {
             current_content.push_str(line);

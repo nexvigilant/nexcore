@@ -288,8 +288,7 @@ impl Emitter {
             let speed = (self.config.initial_speed + speed_offset).max(0.0);
             let velocity = [dir[0] * speed, dir[1] * speed, dir[2] * speed];
 
-            let lifetime_offset =
-                (random_f64(rng) * 2.0 - 1.0) * self.config.lifetime_variance;
+            let lifetime_offset = (random_f64(rng) * 2.0 - 1.0) * self.config.lifetime_variance;
             let lifetime = (self.config.lifetime + lifetime_offset).max(0.001);
 
             out.push(Particle {
@@ -530,14 +529,23 @@ impl ParticleSystem {
 
         for emitter in &self.emitters {
             for p in emitter.particles.iter().filter(|p| p.alive) {
-                positions.push([p.position[0] as f32, p.position[1] as f32, p.position[2] as f32]);
+                positions.push([
+                    p.position[0] as f32,
+                    p.position[1] as f32,
+                    p.position[2] as f32,
+                ]);
                 colors.push(p.color);
                 sizes.push(p.size);
             }
         }
 
         let count = sizes.len();
-        ParticleSnapshot { positions, colors, sizes, count }
+        ParticleSnapshot {
+            positions,
+            colors,
+            sizes,
+            count,
+        }
     }
 
     /// Total number of alive particles across all emitters.
@@ -650,7 +658,10 @@ pub fn apply_force(particle: &mut Particle, force: &ForceField, dt: f64) {
                 particle.acceleration[2] += (dz / dist) * mag;
             }
         }
-        ForceField::Turbulence { frequency, amplitude } => {
+        ForceField::Turbulence {
+            frequency,
+            amplitude,
+        } => {
             // Cheap spatially-varying turbulence: hash position components.
             let x = particle.position[0] * frequency;
             let y = particle.position[1] * frequency;
@@ -662,7 +673,11 @@ pub fn apply_force(particle: &mut Particle, force: &ForceField, dt: f64) {
             particle.velocity[1] += ty * amplitude * dt;
             particle.velocity[2] += tz * amplitude * dt;
         }
-        ForceField::Vortex { axis, center, strength } => {
+        ForceField::Vortex {
+            axis,
+            center,
+            strength,
+        } => {
             // Velocity += strength * (axis × (pos - center)) * dt
             let rx = particle.position[0] - center[0];
             let ry = particle.position[1] - center[1];
@@ -991,7 +1006,11 @@ fn sample_shape(shape: &EmitterShape, rng: &mut u64) -> [f64; 3] {
                 min[2] + rz * (max[2] - min[2]),
             ]
         }
-        EmitterShape::Ring { center, normal, radius } => {
+        EmitterShape::Ring {
+            center,
+            normal,
+            radius,
+        } => {
             // Build two tangent vectors perpendicular to normal
             let n = normalize3(*normal);
             let (t1, t2) = orthonormal_basis(n);
@@ -1030,7 +1049,11 @@ fn normalize3(v: [f64; 3]) -> [f64; 3] {
 /// Build two unit vectors orthogonal to `n` (which must be a unit vector).
 fn orthonormal_basis(n: [f64; 3]) -> ([f64; 3], [f64; 3]) {
     // Pick an axis not parallel to n
-    let up = if n[0].abs() < 0.9 { [1.0, 0.0, 0.0] } else { [0.0, 1.0, 0.0] };
+    let up = if n[0].abs() < 0.9 {
+        [1.0, 0.0, 0.0]
+    } else {
+        [0.0, 1.0, 0.0]
+    };
     // t1 = n × up
     let t1 = normalize3(cross(n, up));
     let t2 = cross(n, t1);
@@ -1096,7 +1119,10 @@ mod tests {
         sys.add_emitter(cfg);
         // Run for several frames; should produce particles
         let sys = run_system(sys, 10, 0.1);
-        assert!(sys.total_alive() > 0, "expected alive particles after update");
+        assert!(
+            sys.total_alive() > 0,
+            "expected alive particles after update"
+        );
     }
 
     #[test]
@@ -1147,7 +1173,10 @@ mod tests {
         // and the system should be in steady-state rather than growing without bound
         let alive_late = sys.total_alive();
         // Alive count must be bounded by max_particles
-        assert!(alive_late <= 200, "alive_late={alive_late} exceeds max_particles");
+        assert!(
+            alive_late <= 200,
+            "alive_late={alive_late} exceeds max_particles"
+        );
     }
 
     #[test]
@@ -1407,7 +1436,10 @@ mod tests {
     fn test_wgsl_shader_is_non_empty() {
         let shader = wgsl_particle_update_shader();
         assert!(!shader.is_empty());
-        assert!(shader.contains("@compute"), "shader should contain @compute entry point");
+        assert!(
+            shader.contains("@compute"),
+            "shader should contain @compute entry point"
+        );
         assert!(shader.contains("dt"), "shader should reference dt uniform");
     }
 
@@ -1463,7 +1495,10 @@ mod tests {
     #[test]
     fn test_particle_error_display() {
         let e1 = ParticleError::InvalidEmitter("bad shape".to_string());
-        let e2 = ParticleError::MaxParticlesExceeded { requested: 2000, limit: 1000 };
+        let e2 = ParticleError::MaxParticlesExceeded {
+            requested: 2000,
+            limit: 1000,
+        };
         let e3 = ParticleError::InvalidLifetime(-1.0);
         assert!(e1.to_string().contains("bad shape"));
         assert!(e2.to_string().contains("2000"));

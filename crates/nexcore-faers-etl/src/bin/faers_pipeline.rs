@@ -1,5 +1,5 @@
-use nexcore_error::{Context, Result};
 use clap::Parser;
+use nexcore_error::{Context, Result};
 use nexcore_faers_etl::{RowCount, SignalDetectionResult, columns};
 use polars::prelude::*;
 use std::path::PathBuf;

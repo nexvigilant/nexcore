@@ -221,7 +221,9 @@ impl HookNeuralProfile {
         }
         // Precision loss acceptable: hook counts fit well within f64 mantissa
         #[allow(clippy::cast_precision_loss)]
-        { self.gaba_count as f64 / total as f64 }
+        {
+            self.gaba_count as f64 / total as f64
+        }
     }
 
     /// Excitation ratio: ACh / total.
@@ -233,7 +235,9 @@ impl HookNeuralProfile {
         }
         // Precision loss acceptable: hook counts fit well within f64 mantissa
         #[allow(clippy::cast_precision_loss)]
-        { self.ach_count as f64 / total as f64 }
+        {
+            self.ach_count as f64 / total as f64
+        }
     }
 }
 

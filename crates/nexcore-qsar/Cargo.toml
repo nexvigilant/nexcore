@@ -8,11 +8,11 @@ authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "Rule-based toxicity prediction models with applicability domain"
 
 [dependencies]
+nexcore-error = { workspace = true }
 nexcore-molcore = { path = "../nexcore-molcore" }
 prima-chem = { path = "../prima-chem" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
-thiserror = { version = "1.0.61" }
 
 [lints.clippy]
 unwrap_used = "deny"

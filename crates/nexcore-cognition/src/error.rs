@@ -13,7 +13,7 @@
 //! - `κ` (Comparison): shape mismatches are comparison failures
 //! - `→` (Causality): error chains preserve causal history via `source`
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// All cognitive engine errors.
 #[derive(Debug, Error)]

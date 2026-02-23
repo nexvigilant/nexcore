@@ -589,7 +589,10 @@ pub enum RenderMode {
 ///
 /// Returns atom spheres and bond cylinders ready for frontend consumption.
 #[must_use]
-pub fn render_molecule(mol: &Molecule, mode: RenderMode) -> (Vec<AtomRenderData>, Vec<BondRenderData>) {
+pub fn render_molecule(
+    mol: &Molecule,
+    mode: RenderMode,
+) -> (Vec<AtomRenderData>, Vec<BondRenderData>) {
     let scale = match mode {
         RenderMode::BallAndStick => 0.3,
         RenderMode::SpaceFilling => 1.0,
@@ -644,8 +647,10 @@ mod tests {
     fn water() -> Molecule {
         let mut mol = Molecule::new("Water");
         mol.atoms.push(Atom::new(1, Element::O, [0.0, 0.0, 0.0]));
-        mol.atoms.push(Atom::new(2, Element::H, [0.757, 0.586, 0.0]));
-        mol.atoms.push(Atom::new(3, Element::H, [-0.757, 0.586, 0.0]));
+        mol.atoms
+            .push(Atom::new(2, Element::H, [0.757, 0.586, 0.0]));
+        mol.atoms
+            .push(Atom::new(3, Element::H, [-0.757, 0.586, 0.0]));
         mol.bonds.push(Bond {
             atom1: 0,
             atom2: 1,

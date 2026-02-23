@@ -79,7 +79,7 @@ pub async fn send_message(
     Json(req): Json<SendMessageRequest>,
 ) -> Result<Json<Message>, crate::routes::common::ApiError> {
     let message = Message {
-        id: uuid::Uuid::new_v4().to_string(),
+        id: nexcore_id::NexId::v4().to_string(),
         sender_id: req.sender_id,
         recipient_id: req.recipient_id,
         content: req.content,

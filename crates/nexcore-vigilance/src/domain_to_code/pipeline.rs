@@ -14,7 +14,7 @@ use std::marker::PhantomData;
 use super::extractor::{ExtractedPattern, ExtractionContext, ExtractionError, PatternExtractor};
 use super::generator::{GeneratedCode, GeneratorError, RustCodeGenerator};
 use super::languages::{LanguageClassification, LanguageClassifier};
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Pipeline stage marker trait (sealed).
 pub trait PipelineStage: private::Sealed {}

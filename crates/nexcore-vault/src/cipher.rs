@@ -10,7 +10,7 @@
 use ring::aead::{AES_256_GCM, Aad, LessSafeKey, NONCE_LEN, Nonce, UnboundKey};
 use ring::rand::{SecureRandom, SystemRandom};
 
-use base64::Engine;
+use nexcore_codec::base64 as b64;
 
 use crate::error::{Result, VaultError};
 
@@ -40,9 +40,8 @@ pub fn encrypt(key: &[u8; 32], plaintext: &[u8]) -> Result<(String, String)> {
         .seal_in_place_append_tag(nonce, Aad::empty(), &mut in_out)
         .map_err(|_| VaultError::Crypto("AES-256-GCM encryption failed".into()))?;
 
-    let engine = base64::engine::general_purpose::STANDARD;
-    let nonce_b64 = engine.encode(nonce_bytes);
-    let ciphertext_b64 = engine.encode(&in_out);
+    let nonce_b64 = b64::encode(nonce_bytes);
+    let ciphertext_b64 = b64::encode(&in_out);
 
     Ok((nonce_b64, ciphertext_b64))
 }
@@ -55,11 +54,8 @@ pub fn encrypt(key: &[u8; 32], plaintext: &[u8]) -> Result<(String, String)> {
 /// Returns `VaultError::AuthFailed` if decryption fails (wrong key or tampered).
 /// Returns `VaultError::Base64` if base64 decoding fails.
 pub fn decrypt(key: &[u8; 32], nonce_b64: &str, ciphertext_b64: &str) -> Result<Vec<u8>> {
-    let engine = base64::engine::general_purpose::STANDARD;
-
-    let nonce_bytes: Vec<u8> = engine
-        .decode(nonce_b64)
-        .map_err(|e| VaultError::Base64(format!("nonce: {e}")))?;
+    let nonce_bytes: Vec<u8> =
+        b64::decode(nonce_b64).map_err(|e| VaultError::Base64(format!("nonce: {e}")))?;
 
     if nonce_bytes.len() != NONCE_LEN {
         return Err(VaultError::InvalidFormat(format!(
@@ -71,9 +67,8 @@ pub fn decrypt(key: &[u8; 32], nonce_b64: &str, ciphertext_b64: &str) -> Result<
     let mut nonce_arr = [0u8; NONCE_LEN];
     nonce_arr.copy_from_slice(&nonce_bytes);
 
-    let mut ciphertext = engine
-        .decode(ciphertext_b64)
-        .map_err(|e| VaultError::Base64(format!("ciphertext: {e}")))?;
+    let mut ciphertext =
+        b64::decode(ciphertext_b64).map_err(|e| VaultError::Base64(format!("ciphertext: {e}")))?;
 
     let unbound_key = UnboundKey::new(&AES_256_GCM, key)
         .map_err(|_| VaultError::Crypto("failed to create AES-256-GCM key".into()))?;
@@ -164,12 +159,11 @@ mod tests {
         let (nonce, ciphertext) = result.unwrap_or(("".into(), "".into()));
 
         // Tamper with the ciphertext by modifying the base64
-        let engine = base64::engine::general_purpose::STANDARD;
-        let mut raw = engine.decode(&ciphertext).unwrap_or_default();
+        let mut raw = b64::decode(&ciphertext).unwrap_or_default();
         if !raw.is_empty() {
             raw[0] ^= 0xFF;
         }
-        let tampered = engine.encode(&raw);
+        let tampered = b64::encode(&raw);
 
         let decrypted = decrypt(&key, &nonce, &tampered);
         assert!(decrypted.is_err());
@@ -178,8 +172,7 @@ mod tests {
     #[test]
     fn invalid_nonce_length_fails() {
         let key = test_key();
-        let engine = base64::engine::general_purpose::STANDARD;
-        let bad_nonce = engine.encode([0u8; 5]); // Wrong length
+        let bad_nonce = b64::encode([0u8; 5]); // Wrong length
 
         let result = decrypt(&key, &bad_nonce, "AAAA");
         assert!(result.is_err());

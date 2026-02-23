@@ -19,7 +19,7 @@
 //! ## Tier: T2-P (∂ + Σ)
 
 use crate::token::Span;
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Prima error type.
 ///

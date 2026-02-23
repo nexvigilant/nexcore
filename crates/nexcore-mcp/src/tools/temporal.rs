@@ -163,18 +163,20 @@ pub fn temporal_plausibility_tool(
 
     let challenge = if has_challenge_data {
         Some(assess_challenge_with_timing(
-            dechallenge, None, rechallenge, None,
+            dechallenge,
+            None,
+            rechallenge,
+            None,
         ))
     } else {
         None
     };
 
     // Build expected range
-    let expected_range =
-        match (params.expected_min_days, params.expected_max_days) {
-            (Some(min), Some(max)) => Some((min, max)),
-            _ => None,
-        };
+    let expected_range = match (params.expected_min_days, params.expected_max_days) {
+        (Some(min), Some(max)) => Some((min, max)),
+        _ => None,
+    };
 
     let result = temporal_plausibility(tto, challenge, expected_range);
 

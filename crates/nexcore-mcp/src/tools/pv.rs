@@ -324,7 +324,11 @@ pub fn signal_cooperative(params: PvSignalCooperativeParams) -> Result<CallToolR
         },
     });
 
-    let confidence = if cooperation_class == "mechanistic" { 0.85 } else { 0.5 };
+    let confidence = if cooperation_class == "mechanistic" {
+        0.85
+    } else {
+        0.5
+    };
     let mut res = CallToolResult::success(vec![Content::text(json.to_string())]);
     attach_forensic_meta(&mut res, confidence, Some(ic_combined > 0.0), "pv_signal");
     Ok(res)

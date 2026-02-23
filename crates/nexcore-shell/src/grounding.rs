@@ -34,7 +34,9 @@ use crate::input::{InputAction, InputProcessor, SwipeDirection};
 use crate::launcher::{AppLauncher, GridConfig, LauncherCell, LauncherView};
 use crate::layout::{LayoutRegion, ShellLayout};
 use crate::login::{AuthMethod, LoginLayout, LoginScreen, LoginState};
-use crate::notification::{Notification, NotificationManager, NotificationPriority, NotificationState};
+use crate::notification::{
+    Notification, NotificationManager, NotificationPriority, NotificationState,
+};
 use crate::shell::{Shell, ShellState};
 use crate::status_bar::{IndicatorSlot, StatusBar, StatusBarConfig, StatusIndicator};
 
@@ -617,11 +619,11 @@ impl GroundsTo for LoginScreen {
 impl GroundsTo for Shell {
     fn primitive_composition() -> PrimitiveComposition {
         PrimitiveComposition::new(vec![
-            LexPrimitiva::Mapping,   // μ -- user input → device actions
-            LexPrimitiva::Sequence,  // σ -- boot → event loop ordering
-            LexPrimitiva::State,     // ς -- shell lifecycle state
-            LexPrimitiva::Boundary,  // ∂ -- form-factor layout constraints
-            LexPrimitiva::Sum,       // Σ -- composition of all subsystems
+            LexPrimitiva::Mapping,  // μ -- user input → device actions
+            LexPrimitiva::Sequence, // σ -- boot → event loop ordering
+            LexPrimitiva::State,    // ς -- shell lifecycle state
+            LexPrimitiva::Boundary, // ∂ -- form-factor layout constraints
+            LexPrimitiva::Sum,      // Σ -- composition of all subsystems
         ])
         .with_dominant(LexPrimitiva::Mapping, 0.75)
         .with_state_mode(StateMode::Mutable)
@@ -678,10 +680,7 @@ mod tests {
     #[test]
     fn app_id_is_t2p() {
         assert_eq!(AppId::tier(), Tier::T2Primitive);
-        assert_eq!(
-            AppId::dominant_primitive(),
-            Some(LexPrimitiva::Existence)
-        );
+        assert_eq!(AppId::dominant_primitive(), Some(LexPrimitiva::Existence));
     }
 
     #[test]
@@ -765,10 +764,7 @@ mod tests {
             tier == Tier::T2Composite || tier == Tier::T3DomainSpecific,
             "expected T2-C or T3, got {tier:?}"
         );
-        assert_eq!(
-            LoginState::dominant_primitive(),
-            Some(LexPrimitiva::State)
-        );
+        assert_eq!(LoginState::dominant_primitive(), Some(LexPrimitiva::State));
     }
 
     #[test]
@@ -860,10 +856,7 @@ mod tests {
             tier == Tier::T2Composite || tier == Tier::T3DomainSpecific,
             "expected T2-C or T3, got {tier:?}"
         );
-        assert_eq!(
-            AppRegistry::dominant_primitive(),
-            Some(LexPrimitiva::Sum)
-        );
+        assert_eq!(AppRegistry::dominant_primitive(), Some(LexPrimitiva::Sum));
     }
 
     #[test]
@@ -899,10 +892,7 @@ mod tests {
             tier == Tier::T2Composite || tier == Tier::T3DomainSpecific,
             "expected T2-C or T3, got {tier:?}"
         );
-        assert_eq!(
-            AppLauncher::dominant_primitive(),
-            Some(LexPrimitiva::Sum)
-        );
+        assert_eq!(AppLauncher::dominant_primitive(), Some(LexPrimitiva::Sum));
     }
 
     #[test]

@@ -88,7 +88,10 @@ impl std::fmt::Display for BipartiteError {
             Self::EmptyGraph => write!(f, "bipartite: graph contains no nodes"),
             Self::NoEdges => write!(f, "bipartite: no HasAdverseEvent edges found"),
             Self::InvalidPartition => {
-                write!(f, "bipartite: edge references a node absent from the partition")
+                write!(
+                    f,
+                    "bipartite: edge references a node absent from the partition"
+                )
             }
         }
     }
@@ -272,9 +275,7 @@ pub fn default_config() -> BipartiteConfig {
 ///     assert_eq!(edges_out.len(), 1);
 /// }
 /// ```
-pub fn from_vdag(
-    vdag: &Vdag,
-) -> Result<(Vec<BipartiteNode>, Vec<BipartiteEdge>), BipartiteError> {
+pub fn from_vdag(vdag: &Vdag) -> Result<(Vec<BipartiteNode>, Vec<BipartiteEdge>), BipartiteError> {
     if vdag.nodes.is_empty() {
         return Err(BipartiteError::EmptyGraph);
     }
@@ -1301,7 +1302,10 @@ mod tests {
         // A→Y, B→X: 1 crossing, no iterations allowed
         let edges = vec![make_bi_edge("A", "Y", 2.0), make_bi_edge("B", "X", 2.0)];
         let result = minimize_crossings(&mut left, &mut right, &edges, 0);
-        assert_eq!(result, 1, "zero iterations should leave crossings unchanged");
+        assert_eq!(
+            result, 1,
+            "zero iterations should leave crossings unchanged"
+        );
     }
 
     // =========================================================================
@@ -1564,10 +1568,7 @@ mod tests {
         ];
         // L1→R2, L2→R1: 1 crossing — minimizer should swap right to R2, R1
         // Barycenter: R2 neighbor L1 at pos 0 → 0.0, R1 neighbor L2 at pos 1 → 1.0
-        let edges = vec![
-            make_bi_edge("L1", "R2", 3.0),
-            make_bi_edge("L2", "R1", 3.0),
-        ];
+        let edges = vec![make_bi_edge("L1", "R2", 3.0), make_bi_edge("L2", "R1", 3.0)];
         minimize_crossings(&mut left, &mut right, &edges, 10);
         assert_eq!(
             right[0].id, "R2",

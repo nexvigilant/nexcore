@@ -14,7 +14,7 @@
 //! assert!(format!("{e}").contains("empty SMILES"));
 //! ```
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors produced by the chemivigilance pipeline.
 #[derive(Debug, Error)]

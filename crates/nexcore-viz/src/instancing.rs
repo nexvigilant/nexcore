@@ -50,16 +50,22 @@
 //! | 0      | instance_id  | Sequential index (0, 1, 2, …)    |
 //! | 1      | metadata_tag | Bitpacked metadata / payload     |
 
-use std::fmt;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// Error types for instancing operations.
 #[derive(Debug, Clone, PartialEq)]
 pub enum InstancingError {
     EmptyInstances,
-    BufferOverflow { requested: usize, limit: usize },
+    BufferOverflow {
+        requested: usize,
+        limit: usize,
+    },
     InvalidAttribute(String),
-    MismatchedCounts { instances: usize, attribute_count: usize },
+    MismatchedCounts {
+        instances: usize,
+        attribute_count: usize,
+    },
 }
 
 impl fmt::Display for InstancingError {
@@ -72,7 +78,10 @@ impl fmt::Display for InstancingError {
                 requested, limit
             ),
             Self::InvalidAttribute(msg) => write!(f, "Invalid attribute: {}", msg),
-            Self::MismatchedCounts { instances, attribute_count } => write!(
+            Self::MismatchedCounts {
+                instances,
+                attribute_count,
+            } => write!(
                 f,
                 "Mismatched counts: {} instances, {} attributes",
                 instances, attribute_count
@@ -97,6 +106,12 @@ pub struct InstanceBuffer<T: InstanceData> {
     pub instances: Vec<T>,
     pub float_data: Vec<f32>,
     pub uint_data: Vec<u32>,
+}
+
+impl<T: InstanceData> Default for InstanceBuffer<T> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<T: InstanceData> InstanceBuffer<T> {
@@ -124,12 +139,11 @@ impl<T: InstanceData> InstanceBuffer<T> {
         let id = self.instances.len() as u32;
 
         self.float_data.extend_from_slice(&[
-            pos[0], pos[1], pos[2], scale,
-            col[0], col[1], col[2], col[3],
+            pos[0], pos[1], pos[2], scale, col[0], col[1], col[2], col[3],
         ]);
         self.uint_data.push(id);
         self.uint_data.push(tag);
-        
+
         self.instances.push(instance);
     }
 
@@ -153,14 +167,20 @@ pub struct SignalInstance {
 }
 
 impl InstanceData for SignalInstance {
-    fn position(&self) -> [f32; 3] { self.position }
-    fn color(&self) -> [f32; 4] { 
+    fn position(&self) -> [f32; 3] {
+        self.position
+    }
+    fn color(&self) -> [f32; 4] {
         // Simple mapping: red = high PRR
         let r = (self.prr / 10.0).clamp(0.0, 1.0);
-        [r, 0.2, 0.2, 1.0] 
+        [r, 0.2, 0.2, 1.0]
     }
-    fn scale(&self) -> f32 { self.significance.max(0.1) }
-    fn metadata_tag(&self) -> u32 { self.id }
+    fn scale(&self) -> f32 {
+        self.significance.max(0.1)
+    }
+    fn metadata_tag(&self) -> u32 {
+        self.id
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -172,19 +192,25 @@ pub struct GraphNodeInstance {
 }
 
 impl InstanceData for GraphNodeInstance {
-    fn position(&self) -> [f32; 3] { self.position }
-    fn color(&self) -> [f32; 4] { 
-        let hue = (self.community as f32 * 0.618033988749895) % 1.0;
+    fn position(&self) -> [f32; 3] {
+        self.position
+    }
+    fn color(&self) -> [f32; 4] {
+        let hue = (self.community as f32 * 0.618_034) % 1.0;
         if self.selected {
             [1.0, 1.0, 1.0, 1.0] // white when selected
         } else {
             [hue, 0.5, 0.8, 1.0]
         }
     }
-    fn scale(&self) -> f32 { 1.0 + (self.degree * 0.1).ln().max(0.0) }
-    fn metadata_tag(&self) -> u32 { 
+    fn scale(&self) -> f32 {
+        1.0 + (self.degree * 0.1).ln().max(0.0)
+    }
+    fn metadata_tag(&self) -> u32 {
         let mut tag = self.community;
-        if self.selected { tag |= 1 << 31; }
+        if self.selected {
+            tag |= 1 << 31;
+        }
         tag
     }
 }
@@ -198,10 +224,18 @@ pub struct PointCloudInstance {
 }
 
 impl InstanceData for PointCloudInstance {
-    fn position(&self) -> [f32; 3] { self.position }
-    fn color(&self) -> [f32; 4] { self.color }
-    fn scale(&self) -> f32 { self.scale }
-    fn metadata_tag(&self) -> u32 { self.category }
+    fn position(&self) -> [f32; 3] {
+        self.position
+    }
+    fn color(&self) -> [f32; 4] {
+        self.color
+    }
+    fn scale(&self) -> f32 {
+        self.scale
+    }
+    fn metadata_tag(&self) -> u32 {
+        self.category
+    }
 }
 
 // ── Culling & LOD ─────────────────────────────────────────────────────────────
@@ -223,12 +257,10 @@ impl Frustum {
     }
 }
 
-pub fn cull_instances_frustum<T: InstanceData>(
+pub fn cull_instances_frustum<T: InstanceData + Clone>(
     instances: &[T],
     frustum: &Frustum,
-) -> Vec<T> 
-where T: Clone
-{
+) -> Vec<T> {
     instances
         .iter()
         .filter(|inst| frustum.sphere_visible(inst.position(), inst.scale()))
@@ -359,7 +391,7 @@ mod tests {
         let decoded = decode_pick_color(col);
         assert_eq!(id, decoded);
     }
-    
+
     #[test]
     fn test_frustum_cull() {
         let f = Frustum {
@@ -370,12 +402,22 @@ mod tests {
                 [0.0, -1.0, 0.0, 10.0], // y < 10
                 [0.0, 0.0, 1.0, 10.0],  // z > -10
                 [0.0, 0.0, -1.0, 10.0], // z < 10
-            ]
+            ],
         };
-        
-        let p1 = PointCloudInstance { position: [0.0, 0.0, 0.0], color: [0.0;4], scale: 1.0, category: 0 };
-        let p2 = PointCloudInstance { position: [20.0, 0.0, 0.0], color: [0.0;4], scale: 1.0, category: 0 };
-        
+
+        let p1 = PointCloudInstance {
+            position: [0.0, 0.0, 0.0],
+            color: [0.0; 4],
+            scale: 1.0,
+            category: 0,
+        };
+        let p2 = PointCloudInstance {
+            position: [20.0, 0.0, 0.0],
+            color: [0.0; 4],
+            scale: 1.0,
+            category: 0,
+        };
+
         assert!(f.sphere_visible(p1.position, p1.scale));
         assert!(!f.sphere_visible(p2.position, p2.scale));
     }

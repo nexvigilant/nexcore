@@ -35,7 +35,7 @@ const DEFAULT_PAGE_SIZE: u32 = 10;
 // =============================================================================
 
 /// Errors from SAM.gov API operations.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum SamError {
     /// Failed to build HTTP client.
     #[error("Failed to build HTTP client: {0}")]

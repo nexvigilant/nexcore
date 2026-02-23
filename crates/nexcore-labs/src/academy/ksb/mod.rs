@@ -244,7 +244,7 @@ impl KsbComponent {
 }
 
 /// Validation issues for KSB components.
-#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, Eq, nexcore_error::Error)]
 pub enum ValidationIssue {
     /// Title is empty
     #[error("Component title is empty")]

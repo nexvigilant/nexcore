@@ -208,11 +208,7 @@ pub fn laplacian_matrix(graph: &GraphSpec) -> Vec<Vec<f64>> {
 /// assert!((lambda - 2.0).abs() < 1e-6);
 /// ```
 #[must_use]
-pub fn power_iteration(
-    matrix: &[Vec<f64>],
-    max_iter: usize,
-    tolerance: f64,
-) -> (f64, Vec<f64>) {
+pub fn power_iteration(matrix: &[Vec<f64>], max_iter: usize, tolerance: f64) -> (f64, Vec<f64>) {
     let n = matrix.len();
     if n == 0 {
         return (0.0, vec![]);

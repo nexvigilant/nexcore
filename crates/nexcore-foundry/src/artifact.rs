@@ -316,7 +316,10 @@ mod tests {
         assert_eq!(restored.contracts[0].input_type, "RateLimitRequest");
         assert_eq!(restored.contracts[0].output_type, "RateLimitDecision");
         assert_eq!(restored.test_plan.len(), 2);
-        assert_eq!(restored.primitives, vec![LexPrimitiva::Frequency, LexPrimitiva::Boundary]);
+        assert_eq!(
+            restored.primitives,
+            vec![LexPrimitiva::Frequency, LexPrimitiva::Boundary]
+        );
         assert_eq!(restored.constraints.len(), 1);
         assert_eq!(restored.constraints[0], "no heap allocation in hot path");
     }
@@ -326,13 +329,11 @@ mod tests {
     #[test]
     fn source_artifact_tracks_build_order() {
         let artifact = SourceArtifact {
-            files: vec![
-                FileEntry {
-                    path: "crates/nexcore-primitives/src/lib.rs".to_string(),
-                    content_hash: "abc123".to_string(),
-                    loc: 120,
-                },
-            ],
+            files: vec![FileEntry {
+                path: "crates/nexcore-primitives/src/lib.rs".to_string(),
+                content_hash: "abc123".to_string(),
+                loc: 120,
+            }],
             build_order: vec![
                 "nexcore-primitives".to_string(),
                 "nexcore-lex-primitiva".to_string(),

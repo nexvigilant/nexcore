@@ -726,7 +726,7 @@ impl Axiom3Verification {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// Errors related to conservation constraints.
-#[derive(Debug, Clone, thiserror::Error)]
+#[derive(Debug, Clone, nexcore_error::Error)]
 pub enum ConservationError {
     /// Empty constraint set.
     #[error("Constraint set is empty")]

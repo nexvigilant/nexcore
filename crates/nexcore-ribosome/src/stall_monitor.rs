@@ -217,11 +217,7 @@ impl StallDetector {
             .values()
             .map(|&count| {
                 let p = f64::from(count) / total_f;
-                if p > 0.0 {
-                    -p * p.log2()
-                } else {
-                    0.0
-                }
+                if p > 0.0 { -p * p.log2() } else { 0.0 }
             })
             .sum();
 
@@ -248,8 +244,7 @@ impl StallDetector {
             return None;
         }
 
-        let window =
-            &self.history[self.history.len() - self.config.plateau_window_size..];
+        let window = &self.history[self.history.len() - self.config.plateau_window_size..];
         let values: Vec<f64> = window.iter().map(|o| o.confidence).collect();
 
         let slope = linear_regression_slope(&values);
@@ -292,7 +287,8 @@ fn linear_regression_slope(values: &[f64]) -> f64 {
         sum_x2 += x * x;
     }
 
-    #[allow(clippy::suspicious_operation_groupings)] // Correct linear regression formula: n*Σx² - (Σx)²
+    #[allow(clippy::suspicious_operation_groupings)]
+    // Correct linear regression formula: n*Σx² - (Σx)²
     let denom = n.mul_add(sum_x2, -(sum_x * sum_x));
     if denom.abs() < f64::EPSILON {
         return 0.0;
@@ -330,9 +326,11 @@ mod tests {
         detector.observe(make_obs("stuck", vec!["read"], 0.5));
         detector.observe(make_obs("stuck", vec!["read"], 0.5));
         let signals = detector.detect();
-        assert!(signals
-            .iter()
-            .any(|s| matches!(s, StallSignal::NoProgress { .. })));
+        assert!(
+            signals
+                .iter()
+                .any(|s| matches!(s, StallSignal::NoProgress { .. }))
+        );
     }
 
     #[test]
@@ -346,9 +344,11 @@ mod tests {
             detector.observe(make_obs("step", vec!["read", "read", "read"], 0.5));
         }
         let signals = detector.detect();
-        assert!(signals
-            .iter()
-            .any(|s| matches!(s, StallSignal::CircularExecution { .. })));
+        assert!(
+            signals
+                .iter()
+                .any(|s| matches!(s, StallSignal::CircularExecution { .. }))
+        );
     }
 
     #[test]
@@ -360,11 +360,17 @@ mod tests {
         let mut detector = StallDetector::with_config(config);
         detector.observe(make_obs("s1", vec!["read", "write", "test", "grep"], 0.5));
         detector.observe(make_obs("s2", vec!["glob", "edit", "bash", "task"], 0.6));
-        detector.observe(make_obs("s3", vec!["search", "build", "run", "deploy"], 0.7));
+        detector.observe(make_obs(
+            "s3",
+            vec!["search", "build", "run", "deploy"],
+            0.7,
+        ));
         let signals = detector.detect();
-        assert!(!signals
-            .iter()
-            .any(|s| matches!(s, StallSignal::CircularExecution { .. })));
+        assert!(
+            !signals
+                .iter()
+                .any(|s| matches!(s, StallSignal::CircularExecution { .. }))
+        );
     }
 
     #[test]
@@ -379,9 +385,11 @@ mod tests {
             detector.observe(make_obs("step", vec!["read"], 0.5));
         }
         let signals = detector.detect();
-        assert!(signals
-            .iter()
-            .any(|s| matches!(s, StallSignal::ConfidencePlateau { .. })));
+        assert!(
+            signals
+                .iter()
+                .any(|s| matches!(s, StallSignal::ConfidencePlateau { .. }))
+        );
     }
 
     #[test]
@@ -396,9 +404,11 @@ mod tests {
             detector.observe(make_obs("step", vec!["read"], 0.3 + (i as f64 * 0.1)));
         }
         let signals = detector.detect();
-        assert!(!signals
-            .iter()
-            .any(|s| matches!(s, StallSignal::ConfidencePlateau { .. })));
+        assert!(
+            !signals
+                .iter()
+                .any(|s| matches!(s, StallSignal::ConfidencePlateau { .. }))
+        );
     }
 
     #[test]

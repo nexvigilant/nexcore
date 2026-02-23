@@ -7,6 +7,7 @@
 //! - π (Persistence): Cached models persist across sessions
 //! - ∃ (Existence): Model existence validation
 
+use nexcore_fs::dirs;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 

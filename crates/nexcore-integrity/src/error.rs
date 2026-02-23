@@ -9,7 +9,7 @@
 /// Tier: T2-C (domain composite)
 ///
 /// Errors that can occur during integrity analysis.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum IntegrityError {
     /// Text has insufficient tokens for reliable analysis.
     #[error("insufficient text: {token_count} tokens (minimum {minimum} required)")]

@@ -8,9 +8,9 @@ description = "FDA Guidance Documents: search, retrieval, and refresh for 2,794+
 license.workspace = true
 
 [dependencies]
+nexcore-error = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-thiserror = { workspace = true }
 regex = { workspace = true }
 
 [dependencies.reqwest]
@@ -25,13 +25,9 @@ optional = true
 workspace = true
 optional = true
 
-[dependencies.anyhow]
-workspace = true
-optional = true
-
 [features]
 default = []
-cli = ["dep:clap", "dep:reqwest", "dep:tokio", "dep:anyhow"]
+cli = ["dep:clap", "dep:reqwest", "dep:tokio"]
 
 [[bin]]
 name = "fda-guidance"

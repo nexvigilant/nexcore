@@ -643,7 +643,7 @@ impl MeasuredReturn {
 // ============================================================================
 
 /// Errors in financial operations
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum FinanceError {
     /// Invalid price (negative)
     #[error("invalid price: {0}")]

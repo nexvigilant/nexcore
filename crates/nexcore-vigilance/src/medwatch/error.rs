@@ -1,6 +1,6 @@
 //! Error types for MedWatch validation
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// MedWatch validation and processing errors
 #[derive(Debug, Error)]

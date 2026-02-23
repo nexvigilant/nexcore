@@ -236,9 +236,7 @@ pub fn chem_assess_applicability_domain(
             confidence,
             warning,
         } => ("borderline", *confidence, warning.clone()),
-        DomainStatus::OutOfDomain { warning, .. } => {
-            ("out_of_domain", 0.0, warning.clone())
-        }
+        DomainStatus::OutOfDomain { warning, .. } => ("out_of_domain", 0.0, warning.clone()),
     };
 
     let violations_count = match &status {

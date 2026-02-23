@@ -228,7 +228,11 @@ impl VelloRenderer {
     }
 
     /// Render the Vello scene into the intermediate texture.
-    fn render_scene_to_texture(&mut self, scene: &Scene, bg_color: Color) -> nexcore_error::Result<()> {
+    fn render_scene_to_texture(
+        &mut self,
+        scene: &Scene,
+        bg_color: Color,
+    ) -> nexcore_error::Result<()> {
         let render_params = RenderParams {
             base_color: to_vello_color(bg_color),
             width: self.size.width,
@@ -399,7 +403,10 @@ impl VelloRenderer {
 // ── GPU Initialization Helpers ──────────────────────────────────
 
 /// Initialize wgpu device, queue, surface, and configure the surface.
-async fn init_gpu(window: Arc<Window>, size: PhysicalSize<u32>) -> nexcore_error::Result<GpuResources> {
+async fn init_gpu(
+    window: Arc<Window>,
+    size: PhysicalSize<u32>,
+) -> nexcore_error::Result<GpuResources> {
     let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
         backends: wgpu::Backends::all(),
         ..Default::default()
@@ -449,7 +456,9 @@ async fn request_adapter(
 }
 
 /// Request a device and queue from the adapter.
-async fn request_device(adapter: &wgpu::Adapter) -> nexcore_error::Result<(wgpu::Device, wgpu::Queue)> {
+async fn request_device(
+    adapter: &wgpu::Adapter,
+) -> nexcore_error::Result<(wgpu::Device, wgpu::Queue)> {
     adapter
         .request_device(&wgpu::DeviceDescriptor {
             required_features: wgpu::Features::empty(),

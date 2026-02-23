@@ -35,7 +35,7 @@ use std::collections::BTreeMap;
 // ─── Error Types ────────────────────────────────────────────────────────────
 
 /// Transcriptase error type.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum TranscriptaseError {
     #[error("∂[json]: {0}")]
     Json(#[from] serde_json::Error),
@@ -119,22 +119,20 @@ fn infer_named(json: &serde_json::Value, name: Option<String>) -> Schema {
             true_count: usize::from(*b),
             false_count: usize::from(!*b),
         },
-        Value::Number(n) => {
-            n.as_i64().map_or_else(
-                || {
-                    n.as_f64().map_or(SchemaKind::Mixed, |f| SchemaKind::Float {
-                        min: f,
-                        max: f,
-                        sum: f,
-                    })
-                },
-                |i| SchemaKind::Int {
-                    min: i,
-                    max: i,
-                    sum: i,
-                },
-            )
-        }
+        Value::Number(n) => n.as_i64().map_or_else(
+            || {
+                n.as_f64().map_or(SchemaKind::Mixed, |f| SchemaKind::Float {
+                    min: f,
+                    max: f,
+                    sum: f,
+                })
+            },
+            |i| SchemaKind::Int {
+                min: i,
+                max: i,
+                sum: i,
+            },
+        ),
         Value::String(s) => SchemaKind::Str {
             min_len: s.len(),
             max_len: s.len(),
@@ -291,9 +289,32 @@ fn merge_kinds(a: &SchemaKind, b: &SchemaKind) -> SchemaKind {
         }
 
         // Int + Float → Float (widening), order-independent
-        #[allow(clippy::cast_precision_loss)] // i64→f64 precision loss acceptable for range tracking
-        (SchemaKind::Int { min: imin, max: imax, sum: isum }, SchemaKind::Float { min: fmin, max: fmax, sum: fsum })
-        | (SchemaKind::Float { min: fmin, max: fmax, sum: fsum }, SchemaKind::Int { min: imin, max: imax, sum: isum }) => SchemaKind::Float {
+        #[allow(clippy::cast_precision_loss)]
+        // i64→f64 precision loss acceptable for range tracking
+        (
+            SchemaKind::Int {
+                min: imin,
+                max: imax,
+                sum: isum,
+            },
+            SchemaKind::Float {
+                min: fmin,
+                max: fmax,
+                sum: fsum,
+            },
+        )
+        | (
+            SchemaKind::Float {
+                min: fmin,
+                max: fmax,
+                sum: fsum,
+            },
+            SchemaKind::Int {
+                min: imin,
+                max: imax,
+                sum: isum,
+            },
+        ) => SchemaKind::Float {
             min: fmin.min(*imin as f64),
             max: fmax.max(*imax as f64),
             sum: fsum + *isum as f64,
@@ -489,8 +510,7 @@ pub fn generate(schema: &Schema) -> serde_json::Value {
 
         SchemaKind::Float { min, max, .. } => {
             let mid = (min + max) / 2.0;
-            serde_json::Number::from_f64(mid)
-                .map_or(Value::Null, Value::Number)
+            serde_json::Number::from_f64(mid).map_or(Value::Null, Value::Number)
         }
 
         SchemaKind::Str {

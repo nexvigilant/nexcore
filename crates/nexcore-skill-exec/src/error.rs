@@ -1,7 +1,7 @@
 //! Error types for skill execution.
 
+use nexcore_error::Error;
 use std::path::PathBuf;
-use thiserror::Error;
 
 /// Result type for skill execution operations.
 pub type Result<T> = std::result::Result<T, ExecutionError>;
@@ -10,7 +10,7 @@ pub type Result<T> = std::result::Result<T, ExecutionError>;
 #[derive(Debug, Error)]
 pub enum ExecutionError {
     /// Skill not found at expected path.
-    #[error("Skill not found: {name} at {path}")]
+    #[error("Skill not found: {name} at {path:?}")]
     SkillNotFound {
         /// Skill name.
         name: String,
@@ -28,7 +28,7 @@ pub enum ExecutionError {
     },
 
     /// Script execution failed.
-    #[error("Script execution failed: {script} - {message}")]
+    #[error("Script execution failed: {script:?} - {message}")]
     ScriptFailed {
         /// Script path.
         script: PathBuf,

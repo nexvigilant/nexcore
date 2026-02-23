@@ -8,11 +8,11 @@
 //! ## Tier: T2-C (μ + σ + → + ∂)
 
 use crate::serialize::{SerializeError, json_to_prima, prima_to_json};
+use nexcore_error::Error;
 use prima::value::{Value, ValueData};
 use prima_mcp::{FunctionSig, extract_functions};
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
-use thiserror::Error;
 
 /// Executor errors.
 #[derive(Debug, Error)]

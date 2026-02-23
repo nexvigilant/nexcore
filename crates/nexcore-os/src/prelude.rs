@@ -41,7 +41,9 @@ pub use crate::security::{
 pub use crate::service::{Service, ServiceId, ServiceState};
 
 // User
-pub use crate::user::{AccountStatus, AuthError, Session, UserId, UserManager, UserRecord, UserRole};
+pub use crate::user::{
+    AccountStatus, AuthError, Session, UserId, UserManager, UserRecord, UserRole,
+};
 
 // Vault
 pub use crate::vault::{OsVault, SecretCategory, VaultState};

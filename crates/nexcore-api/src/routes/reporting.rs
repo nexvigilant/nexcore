@@ -69,7 +69,7 @@ pub async fn generate_report(
         }
     };
 
-    let id = uuid::Uuid::new_v4().to_string();
+    let id = nexcore_id::NexId::v4().to_string();
     let generated_at = Utc::now();
     let report_type_str = format!("{:?}", req.report_type);
 

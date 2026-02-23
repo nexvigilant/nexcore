@@ -3,6 +3,7 @@
 //! Provides real-time Claude Code session monitoring, primitive extraction,
 //! and hook telemetry analysis.
 
+use nexcore_fs::dirs;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::collections::HashMap;
@@ -637,7 +638,7 @@ pub fn watchtower_symbol_audit(path: &str) -> Value {
     let files: Vec<PathBuf> = if target.is_file() {
         vec![target.clone()]
     } else {
-        walkdir::WalkDir::new(&target)
+        nexcore_fs::walk::WalkDir::new(&target)
             .into_iter()
             .filter_map(|e| e.ok())
             .filter(|e| {

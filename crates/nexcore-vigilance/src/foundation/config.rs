@@ -2,6 +2,7 @@
 //!
 //! Environment-aware configuration loading with sensible defaults.
 
+use nexcore_fs::dirs;
 use serde::{Deserialize, Serialize};
 
 /// Runtime environment for configuration selection.

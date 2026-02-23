@@ -74,7 +74,7 @@ pub fn create_provisioning_plan(request: &SignupRequest) -> ProvisioningPlan {
     let trial_ends_at = now + trial_duration;
 
     let slug = generate_slug(&request.organization_name);
-    let storage_prefix = format!("tenants/{}/", tenant_id.as_uuid());
+    let storage_prefix = format!("tenants/{}/", tenant_id.as_nexid());
 
     let steps = vec![
         ProvisioningStep {

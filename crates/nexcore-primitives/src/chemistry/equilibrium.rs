@@ -9,7 +9,7 @@
 //!
 //! **PV Application**: Reporting baseline - expected vs observed steady state.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors for equilibrium calculations.
 #[derive(Debug, Error, PartialEq, Clone)]

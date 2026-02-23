@@ -161,10 +161,7 @@ impl NmdAdaptiveEngine {
 
     /// Record a successful pipeline completion (no degradation).
     pub fn record_success(&mut self, category: &str) {
-        let stats = self
-            .category_stats
-            .entry(category.to_string())
-            .or_default();
+        let stats = self.category_stats.entry(category.to_string()).or_default();
         stats.total_runs += 1;
     }
 
@@ -197,10 +194,7 @@ impl NmdAdaptiveEngine {
         self.events.push(event);
 
         // Update category stats
-        let stats = self
-            .category_stats
-            .entry(category.clone())
-            .or_default();
+        let stats = self.category_stats.entry(category.clone()).or_default();
         stats.total_runs += 1;
         stats.degradation_count += 1;
 
@@ -260,8 +254,11 @@ impl NmdAdaptiveEngine {
             if s.total_runs == 0 {
                 0.0
             } else {
-                #[allow(clippy::cast_precision_loss)] // u32 values within f32 range for rate calculations
-                { s.degradation_count as f32 / s.total_runs as f32 }
+                #[allow(clippy::cast_precision_loss)]
+                // u32 values within f32 range for rate calculations
+                {
+                    s.degradation_count as f32 / s.total_runs as f32
+                }
             }
         })
     }
@@ -301,10 +298,10 @@ impl NmdAdaptiveEngine {
         let mut adjustments = Vec::new();
 
         // Find the dominant failing channel
-        if let Some((dominant_channel, &count)) =
-            stats.channel_hits.iter().max_by_key(|&(_, c)| *c)
+        if let Some((dominant_channel, &count)) = stats.channel_hits.iter().max_by_key(|&(_, c)| *c)
         {
-            #[allow(clippy::cast_precision_loss)] // u32 values within f32 range for rate calculations
+            #[allow(clippy::cast_precision_loss)]
+            // u32 values within f32 range for rate calculations
             let channel_rate = count as f32 / stats.degradation_count as f32;
 
             // If one channel accounts for >50% of failures, recommend tightening
@@ -368,19 +365,17 @@ fn extract_channels(details: &serde_json::Value) -> Vec<UpfChannel> {
         .map(|arr| {
             arr.iter()
                 .filter_map(|a| {
-                    a.get("channel")
-                        .and_then(|c| c.as_str())
-                        .and_then(|s| {
-                            if s.starts_with("UPF1") {
-                                Some(UpfChannel::Upf1)
-                            } else if s.starts_with("UPF2") {
-                                Some(UpfChannel::Upf2)
-                            } else if s.starts_with("UPF3") {
-                                Some(UpfChannel::Upf3)
-                            } else {
-                                None
-                            }
-                        })
+                    a.get("channel").and_then(|c| c.as_str()).and_then(|s| {
+                        if s.starts_with("UPF1") {
+                            Some(UpfChannel::Upf1)
+                        } else if s.starts_with("UPF2") {
+                            Some(UpfChannel::Upf2)
+                        } else if s.starts_with("UPF3") {
+                            Some(UpfChannel::Upf3)
+                        } else {
+                            None
+                        }
+                    })
                 })
                 .collect()
         })
@@ -426,8 +421,16 @@ mod tests {
 
         // Should produce at least RecordDegradation + RecordTrustEvent
         assert!(events.len() >= 2);
-        assert!(events.iter().any(|e| matches!(e, NmdLearningEvent::RecordDegradation { .. })));
-        assert!(events.iter().any(|e| matches!(e, NmdLearningEvent::RecordTrustEvent { .. })));
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, NmdLearningEvent::RecordDegradation { .. }))
+        );
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, NmdLearningEvent::RecordTrustEvent { .. }))
+        );
 
         assert_eq!(engine.total_events(), 1);
         assert!((engine.degradation_rate("Explore") - 1.0).abs() < f32::EPSILON);
@@ -438,11 +441,7 @@ mod tests {
         let mut engine = NmdAdaptiveEngine::new();
 
         // 1 degradation
-        engine.process_adaptive_action(&make_adaptive_action(
-            "Mutate",
-            0.6,
-            "UPF3-Grounding",
-        ));
+        engine.process_adaptive_action(&make_adaptive_action("Mutate", 0.6, "UPF3-Grounding"));
 
         // 4 successes
         for _ in 0..4 {
@@ -457,16 +456,8 @@ mod tests {
     fn test_category_stats_tracking() {
         let mut engine = NmdAdaptiveEngine::new();
 
-        engine.process_adaptive_action(&make_adaptive_action(
-            "Explore",
-            0.5,
-            "UPF2-ToolDrift",
-        ));
-        engine.process_adaptive_action(&make_adaptive_action(
-            "Explore",
-            0.9,
-            "UPF1-PhaseOrder",
-        ));
+        engine.process_adaptive_action(&make_adaptive_action("Explore", 0.5, "UPF2-ToolDrift"));
+        engine.process_adaptive_action(&make_adaptive_action("Explore", 0.9, "UPF1-PhaseOrder"));
 
         let stats = engine.category_stats("Explore");
         assert!(stats.is_some());
@@ -482,20 +473,17 @@ mod tests {
         let mut engine = NmdAdaptiveEngine::new();
 
         // Only 1 event — below min_events_for_adjustment (5)
-        engine.process_adaptive_action(&make_adaptive_action(
-            "Compute",
-            0.8,
-            "UPF2-ToolDrift",
-        ));
+        engine.process_adaptive_action(&make_adaptive_action("Compute", 0.8, "UPF2-ToolDrift"));
 
-        let events = engine.process_adaptive_action(&make_adaptive_action(
-            "Compute",
-            0.7,
-            "UPF2-ToolDrift",
-        ));
+        let events =
+            engine.process_adaptive_action(&make_adaptive_action("Compute", 0.7, "UPF2-ToolDrift"));
 
         // Should NOT produce AdjustThresholds (only 2 events, need 5)
-        assert!(!events.iter().any(|e| matches!(e, NmdLearningEvent::AdjustThresholds { .. })));
+        assert!(
+            !events
+                .iter()
+                .any(|e| matches!(e, NmdLearningEvent::AdjustThresholds { .. }))
+        );
     }
 
     #[test]
@@ -508,21 +496,10 @@ mod tests {
         let mut engine = NmdAdaptiveEngine::with_config(config);
 
         // 3 degradations, all UPF2 → rate = 100% > 30%, and UPF2 dominance = 100%
-        engine.process_adaptive_action(&make_adaptive_action(
-            "Explore",
-            0.8,
-            "UPF2-ToolDrift",
-        ));
-        engine.process_adaptive_action(&make_adaptive_action(
-            "Explore",
-            0.7,
-            "UPF2-ToolDrift",
-        ));
-        let events = engine.process_adaptive_action(&make_adaptive_action(
-            "Explore",
-            0.9,
-            "UPF2-ToolDrift",
-        ));
+        engine.process_adaptive_action(&make_adaptive_action("Explore", 0.8, "UPF2-ToolDrift"));
+        engine.process_adaptive_action(&make_adaptive_action("Explore", 0.7, "UPF2-ToolDrift"));
+        let events =
+            engine.process_adaptive_action(&make_adaptive_action("Explore", 0.9, "UPF2-ToolDrift"));
 
         // Should produce AdjustThresholds
         let adjust = events
@@ -548,28 +525,21 @@ mod tests {
         let mut engine = NmdAdaptiveEngine::with_config(config);
 
         // 1 degradation + 4 successes = rate 20% < 50% trigger
-        engine.process_adaptive_action(&make_adaptive_action(
-            "Mutate",
-            0.8,
-            "UPF2-ToolDrift",
-        ));
+        engine.process_adaptive_action(&make_adaptive_action("Mutate", 0.8, "UPF2-ToolDrift"));
         for _ in 0..4 {
             engine.record_success("Mutate");
         }
 
         // Add 2 more degradations (total 3 degradations, 7 runs = 42% < 50%)
-        engine.process_adaptive_action(&make_adaptive_action(
-            "Mutate",
-            0.7,
-            "UPF2-ToolDrift",
-        ));
-        let events = engine.process_adaptive_action(&make_adaptive_action(
-            "Mutate",
-            0.6,
-            "UPF2-ToolDrift",
-        ));
+        engine.process_adaptive_action(&make_adaptive_action("Mutate", 0.7, "UPF2-ToolDrift"));
+        let events =
+            engine.process_adaptive_action(&make_adaptive_action("Mutate", 0.6, "UPF2-ToolDrift"));
 
-        assert!(!events.iter().any(|e| matches!(e, NmdLearningEvent::AdjustThresholds { .. })));
+        assert!(
+            !events
+                .iter()
+                .any(|e| matches!(e, NmdLearningEvent::AdjustThresholds { .. }))
+        );
     }
 
     #[test]
@@ -599,16 +569,8 @@ mod tests {
     fn test_multiple_categories_independent() {
         let mut engine = NmdAdaptiveEngine::new();
 
-        engine.process_adaptive_action(&make_adaptive_action(
-            "Explore",
-            0.8,
-            "UPF2-ToolDrift",
-        ));
-        engine.process_adaptive_action(&make_adaptive_action(
-            "Mutate",
-            0.6,
-            "UPF3-Grounding",
-        ));
+        engine.process_adaptive_action(&make_adaptive_action("Explore", 0.8, "UPF2-ToolDrift"));
+        engine.process_adaptive_action(&make_adaptive_action("Mutate", 0.6, "UPF3-Grounding"));
 
         assert!((engine.degradation_rate("Explore") - 1.0).abs() < f32::EPSILON);
         assert!((engine.degradation_rate("Mutate") - 1.0).abs() < f32::EPSILON);
@@ -629,17 +591,10 @@ mod tests {
 
         // 3 UPF3 degradations
         for _ in 0..2 {
-            engine.process_adaptive_action(&make_adaptive_action(
-                "Verify",
-                0.7,
-                "UPF3-Grounding",
-            ));
+            engine.process_adaptive_action(&make_adaptive_action("Verify", 0.7, "UPF3-Grounding"));
         }
-        let events = engine.process_adaptive_action(&make_adaptive_action(
-            "Verify",
-            0.8,
-            "UPF3-Grounding",
-        ));
+        let events =
+            engine.process_adaptive_action(&make_adaptive_action("Verify", 0.8, "UPF3-Grounding"));
 
         if let Some(NmdLearningEvent::AdjustThresholds { adjustments }) = events
             .iter()

@@ -237,33 +237,30 @@ impl DrugEvent {
 /// Generate sample drug-event pairs for game testing
 pub fn sample_drug_events() -> Vec<DrugEvent> {
     vec![
-        DrugEvent::new("Aspirin", "GI Bleeding", 838)
-            .with_signal(SignalResult {
-                prr: PRR(3.2),
-                ror: ROR(3.5),
-                ic: IC(1.8),
-                eb05: EB05(2.8),
-                case_count: CaseCount(838),
-                chi_square: 245.6,
-            }),
-        DrugEvent::new("Metformin", "Lactic Acidosis", 156)
-            .with_signal(SignalResult {
-                prr: PRR(5.1),
-                ror: ROR(5.8),
-                ic: IC(2.4),
-                eb05: EB05(4.2),
-                case_count: CaseCount(156),
-                chi_square: 89.3,
-            }),
-        DrugEvent::new("Warfarin", "Hemorrhage", 2341)
-            .with_signal(SignalResult {
-                prr: PRR(8.7),
-                ror: ROR(9.2),
-                ic: IC(3.1),
-                eb05: EB05(7.5),
-                case_count: CaseCount(2341),
-                chi_square: 1205.8,
-            }),
+        DrugEvent::new("Aspirin", "GI Bleeding", 838).with_signal(SignalResult {
+            prr: PRR(3.2),
+            ror: ROR(3.5),
+            ic: IC(1.8),
+            eb05: EB05(2.8),
+            case_count: CaseCount(838),
+            chi_square: 245.6,
+        }),
+        DrugEvent::new("Metformin", "Lactic Acidosis", 156).with_signal(SignalResult {
+            prr: PRR(5.1),
+            ror: ROR(5.8),
+            ic: IC(2.4),
+            eb05: EB05(4.2),
+            case_count: CaseCount(156),
+            chi_square: 89.3,
+        }),
+        DrugEvent::new("Warfarin", "Hemorrhage", 2341).with_signal(SignalResult {
+            prr: PRR(8.7),
+            ror: ROR(9.2),
+            ic: IC(3.1),
+            eb05: EB05(7.5),
+            case_count: CaseCount(2341),
+            chi_square: 1205.8,
+        }),
         DrugEvent::new("Lisinopril", "Cough", 445),
         DrugEvent::new("Atorvastatin", "Myalgia", 312),
     ]

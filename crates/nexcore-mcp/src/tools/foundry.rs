@@ -8,8 +8,8 @@ use crate::params::foundry::{
     FoundryCascadeValidateParams, FoundryInferParams, FoundryRenderIntelligenceParams,
     FoundryValidateArtifactParams, FoundryVdagOrderParams,
 };
-use rmcp::model::{CallToolResult, Content};
 use rmcp::ErrorData as McpError;
+use rmcp::model::{CallToolResult, Content};
 use serde_json::json;
 
 use nexcore_foundry::analyst::{IntelligenceReport, RiskLevel};
@@ -122,9 +122,7 @@ pub fn foundry_render_intelligence(
         "critical" => RiskLevel::Critical,
         other => {
             return Err(McpError::invalid_params(
-                format!(
-                    "Invalid risk_level '{other}'. Expected: low, moderate, high, critical"
-                ),
+                format!("Invalid risk_level '{other}'. Expected: low, moderate, high, critical"),
                 None,
             ));
         }
@@ -181,11 +179,7 @@ pub fn foundry_vdag_order(params: FoundryVdagOrderParams) -> Result<CallToolResu
         }
     };
 
-    let stage_names: Vec<String> = order
-        .stages
-        .iter()
-        .map(|s| format!("{s:?}"))
-        .collect();
+    let stage_names: Vec<String> = order.stages.iter().map(|s| format!("{s:?}")).collect();
 
     let result = json!({
         "success": true,
@@ -263,9 +257,9 @@ pub fn foundry_infer(params: FoundryInferParams) -> Result<CallToolResult, McpEr
     }
 
     let engine = InferenceEngine::new(dag);
-    let report = engine.infer().map_err(|e| {
-        McpError::invalid_params(format!("Inference failed: {e}"), None)
-    })?;
+    let report = engine
+        .infer()
+        .map_err(|e| McpError::invalid_params(format!("Inference failed: {e}"), None))?;
 
     let graph = engine.to_causal_graph();
 

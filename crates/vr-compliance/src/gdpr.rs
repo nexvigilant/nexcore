@@ -13,8 +13,8 @@
 //! from Article 4(11).
 
 use chrono::{DateTime, Duration, Utc};
+use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use vr_core::TenantId;
 
 // ============================================================================
@@ -63,7 +63,7 @@ pub enum RequestStatus {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataSubjectRequest {
     /// Unique identifier for tracking this request.
-    pub id: Uuid,
+    pub id: NexId,
     /// Tenant whose data is subject to the request.
     pub tenant_id: TenantId,
     /// Type of GDPR right being exercised.
@@ -234,7 +234,7 @@ mod tests {
     fn make_request(status: RequestStatus, days_ago: i64) -> DataSubjectRequest {
         let requested_at = Utc::now() - Duration::days(days_ago);
         DataSubjectRequest {
-            id: Uuid::new_v4(),
+            id: NexId::v4(),
             tenant_id: TenantId::new(),
             request_type: RequestType::Access,
             requester_email: "subject@example.com".to_string(),

@@ -18,6 +18,7 @@ use axum::{
     http::{StatusCode, request::Parts},
     response::{IntoResponse, Response},
 };
+use nexcore_codec::base64 as b64;
 use serde::{Deserialize, Serialize};
 use vr_core::ids::{TenantId, UserId};
 use vr_core::tenant::{SubscriptionTier, TenantContext, UserRole};
@@ -130,8 +131,7 @@ fn decode_tenant_claims(token: &str) -> Result<TenantClaims, String> {
     let payload_b64_std = padded.replace('-', "+").replace('_', "/");
 
     let payload_bytes =
-        base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &payload_b64_std)
-            .map_err(|e| format!("base64 decode failed: {e}"))?;
+        b64::decode(&payload_b64_std).map_err(|e| format!("base64 decode failed: {e}"))?;
 
     let claims: TenantClaims =
         serde_json::from_slice(&payload_bytes).map_err(|e| format!("JSON parse failed: {e}"))?;
@@ -193,23 +193,17 @@ mod tests {
 
     fn make_test_jwt(claims: &TenantClaims) -> String {
         // Minimal JWT: header.payload.signature
-        let header = base64::Engine::encode(
-            &base64::engine::general_purpose::URL_SAFE_NO_PAD,
-            b"{\"alg\":\"HS256\",\"typ\":\"JWT\"}",
-        );
+        let header = b64::encode_url_safe_no_pad(b"{\"alg\":\"HS256\",\"typ\":\"JWT\"}");
         let payload_json = serde_json::to_vec(claims).unwrap_or_default();
-        let payload = base64::Engine::encode(
-            &base64::engine::general_purpose::URL_SAFE_NO_PAD,
-            &payload_json,
-        );
+        let payload = b64::encode_url_safe_no_pad(&payload_json);
         format!("{header}.{payload}.fake_signature")
     }
 
     #[test]
     fn decode_valid_claims() {
         let claims = TenantClaims {
-            tenant_id: uuid::Uuid::new_v4().to_string(),
-            user_id: uuid::Uuid::new_v4().to_string(),
+            tenant_id: nexcore_id::NexId::v4().to_string(),
+            user_id: nexcore_id::NexId::v4().to_string(),
             role: "admin".to_string(),
             tier: "enterprise".to_string(),
         };

@@ -131,8 +131,7 @@ async fn wait_for_chat_ready(page: &Arc<Page>) -> Result<(), NotebookLmError> {
     }
 
     // Fallback selector (localization variants)
-    let fallback_deadline =
-        Instant::now() + Duration::from_millis(selectors::FALLBACK_TIMEOUT_MS);
+    let fallback_deadline = Instant::now() + Duration::from_millis(selectors::FALLBACK_TIMEOUT_MS);
     while Instant::now() < fallback_deadline {
         let visible = element_visible(page, selectors::CHAT_INPUT_FALLBACK).await;
         if visible {
@@ -244,7 +243,10 @@ async fn wait_for_response(
 
     // Timeout — return whatever we have
     if !last_text.is_empty() {
-        warn!("response timeout — returning partial text ({} chars)", last_text.len());
+        warn!(
+            "response timeout — returning partial text ({} chars)",
+            last_text.len()
+        );
         Ok(last_text)
     } else {
         Err(NotebookLmError::Other(

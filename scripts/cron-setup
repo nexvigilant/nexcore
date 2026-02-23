@@ -1,0 +1,71 @@
+#!/usr/bin/env zsh
+set -euo pipefail
+
+# cron-setup — Install automated quality pipeline cron jobs
+# Pure compute, runs nightly without human or LLM intervention
+#
+# Usage: ./scripts/cron-setup [--install | --remove | --status]
+
+ACTION="${1:-status}"
+NEXCORE="/home/matthew/Projects/nexcore"
+JUST="/home/matthew/.cargo/bin/just"
+METRICS_SCRIPT="$NEXCORE/scripts/capability-metrics"
+SWEEP_SCRIPT="$NEXCORE/scripts/quality-sweep"
+LOG_DIR="/tmp/nexcore-cron"
+
+case "$ACTION" in
+    --install)
+        mkdir -p "$LOG_DIR"
+
+        # Define cron entries
+        CRON_METRICS="30 2 * * * cd $NEXCORE && $METRICS_SCRIPT --json >> $LOG_DIR/metrics.log 2>&1"
+        CRON_SWEEP_FIX="0 3 * * 0 cd $NEXCORE && $SWEEP_SCRIPT --fix >> $LOG_DIR/sweep-fix.log 2>&1"
+        CRON_SWEEP_CHECK="0 3 * * 1-6 cd $NEXCORE && $SWEEP_SCRIPT --quick >> $LOG_DIR/sweep-check.log 2>&1"
+        CRON_CLEANUP="0 4 * * 0 cd $NEXCORE && $JUST clean-stale-targets >> $LOG_DIR/cleanup.log 2>&1"
+        CRON_AUDIT="0 2 * * 1 cd $NEXCORE && $HOME/.cargo/bin/cargo audit >> $LOG_DIR/audit.log 2>&1"
+
+        # Remove existing nexcore cron entries, then add new ones
+        EXISTING=$(crontab -l 2>/dev/null | grep -v "nexcore" || true)
+        {
+            echo "$EXISTING"
+            echo "# NexCore Development Assembly Line (installed $(date -Iseconds))"
+            echo "$CRON_METRICS"
+            echo "$CRON_SWEEP_FIX"
+            echo "$CRON_SWEEP_CHECK"
+            echo "$CRON_CLEANUP"
+            echo "$CRON_AUDIT"
+        } | crontab -
+
+        echo "Installed NexCore cron jobs:"
+        echo "  2:30 daily    — Capability metrics snapshot"
+        echo "  3:00 Sun      — Quality sweep with auto-fix"
+        echo "  3:00 Mon-Sat  — Quality sweep quick check"
+        echo "  4:00 Sun      — Stale target cleanup"
+        echo "  2:00 Mon      — Security audit"
+        echo ""
+        echo "Logs: $LOG_DIR/"
+        echo "Verify: crontab -l | grep nexcore"
+        ;;
+
+    --remove)
+        crontab -l 2>/dev/null | grep -v "nexcore\|NexCore" | crontab -
+        echo "Removed all NexCore cron jobs"
+        ;;
+
+    --status|*)
+        echo "NexCore cron jobs:"
+        crontab -l 2>/dev/null | grep -E "(nexcore|NexCore)" || echo "  (none installed)"
+        echo ""
+        echo "Log directory: $LOG_DIR/"
+        if [[ -d "$LOG_DIR" ]]; then
+            ls -la "$LOG_DIR/" 2>/dev/null | tail -10
+        fi
+        echo ""
+        echo "Metrics snapshots:"
+        ls ~/.claude/data/quality-metrics/*.json 2>/dev/null | wc -l
+        echo ""
+        echo "Run with --install to set up automated quality pipeline"
+        ;;
+esac
+
+exit 0

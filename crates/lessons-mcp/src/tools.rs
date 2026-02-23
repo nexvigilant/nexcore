@@ -3,7 +3,7 @@
 
 use crate::{extract, models, protocol::Response, storage};
 use chrono::Utc;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Tool Schema Builders (keep each small)
@@ -133,7 +133,11 @@ fn handle_add(params: &Value) -> Result<Value, String> {
 fn extract_tags(params: &Value) -> Vec<String> {
     params["tags"]
         .as_array()
-        .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|v| v.as_str().map(String::from))
+                .collect()
+        })
         .unwrap_or_default()
 }
 

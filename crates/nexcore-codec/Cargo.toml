@@ -1,0 +1,13 @@
+[package]
+name = "nexcore-codec"
+version = "0.1.0"
+edition = "2024"
+license = "LicenseRef-NexVigilant-Proprietary"
+authors = ["NexVigilant Team"]
+description = "Zero-dependency codec library (hex, base64, percent-encoding) for NexCore ecosystem"
+rust-version = "1.85"
+
+# Zero external dependencies — sovereignty by design.
+
+[lints]
+workspace = true

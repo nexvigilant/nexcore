@@ -17,10 +17,10 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use antitransformer::pipeline::{self, AnalysisConfig};
+use core::fmt;
 use nexcore_lex_primitiva::prelude::*;
 use nexcore_transcriptase as transcriptase;
 use serde::{Deserialize, Serialize};
-use core::fmt;
 
 pub mod grounding;
 
@@ -39,7 +39,9 @@ impl fmt::Display for SynthError {
             Self::Analysis(msg) => write!(f, "Statistical analysis failed: {}", msg),
             Self::Transcription(err) => write!(f, "Schema synthesis failed: {}", err),
             Self::Synthesis(err) => write!(f, "Reverse synthesis failed: {}", err),
-            Self::LowNovelty(score) => write!(f, "Insufficient novelty detected (score: {})", score),
+            Self::LowNovelty(score) => {
+                write!(f, "Insufficient novelty detected (score: {})", score)
+            }
         }
     }
 }

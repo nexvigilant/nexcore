@@ -61,6 +61,8 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 #![warn(missing_docs)]
 
+use nexcore_fs::dirs;
+
 pub mod artifact;
 pub mod config;
 pub mod coordination;

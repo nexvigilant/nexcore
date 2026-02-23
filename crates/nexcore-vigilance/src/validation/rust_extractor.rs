@@ -5,8 +5,8 @@
 use std::fs;
 use std::path::Path;
 
+use nexcore_error::Error;
 use syn::{Attribute, File, Item, ItemFn, ItemMod};
-use thiserror::Error;
 
 use super::test_taxonomy::{
     ClassificationPatterns, ClassifiedTest, TestCategory, TestClassification, build_classification,

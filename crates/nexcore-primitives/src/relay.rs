@@ -278,6 +278,18 @@ impl RelayChain {
         })
     }
 
+    /// Verify conservation law: output signal >= input signal * F_min.
+    /// Returns `(conservation_satisfied, preservation_ratio)`.
+    /// Weather bridge: atmospheric conservation of energy/mass/momentum.
+    #[must_use]
+    pub fn verify_conservation(&self, signal_in: f64, signal_out: f64) -> (bool, f64) {
+        if signal_in <= 0.0 {
+            return (true, 1.0); // No input = vacuously true
+        }
+        let ratio = signal_out / signal_in;
+        (ratio >= self.f_min, ratio)
+    }
+
     /// Run full axiom verification (A1-A5) on the chain.
     #[must_use]
     pub fn verify(&self) -> RelayVerification {
@@ -300,7 +312,20 @@ impl RelayChain {
                 .weakest_hop()
                 .map(|h| h.stage.clone())
                 .unwrap_or_default(),
+            a6_conservation: None,
+            signal_preservation_ratio: None,
         }
+    }
+
+    /// Run full axiom verification (A1-A6) including conservation check.
+    /// Requires measured signal values at chain input and output.
+    #[must_use]
+    pub fn verify_with_conservation(&self, signal_in: f64, signal_out: f64) -> RelayVerification {
+        let mut v = self.verify();
+        let (conserved, ratio) = self.verify_conservation(signal_in, signal_out);
+        v.a6_conservation = Some(conserved);
+        v.signal_preservation_ratio = Some(ratio);
+        v
     }
 }
 
@@ -326,7 +351,7 @@ impl fmt::Display for RelayChain {
 // RelayVerification — Axiom A1-A5 verification result
 // ============================================================================
 
-/// Result of verifying relay axioms A1-A5 on a chain.
+/// Result of verifying relay axioms A1-A5 (+ optional A6) on a chain.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RelayVerification {
     /// A1: Signal flows in one direction (source → destination).
@@ -347,10 +372,18 @@ pub struct RelayVerification {
     pub active_hops: usize,
     /// Name of the weakest stage.
     pub weakest_stage: String,
+    /// A6: Conservation — signal output meets minimum preservation ratio.
+    /// Only populated when `verify_with_conservation()` is used.
+    /// Weather bridge: atmospheric conservation of energy/mass/momentum.
+    #[serde(default)]
+    pub a6_conservation: Option<bool>,
+    /// Signal preservation ratio (signal_out / signal_in).
+    #[serde(default)]
+    pub signal_preservation_ratio: Option<f64>,
 }
 
 impl RelayVerification {
-    /// Whether all 5 axioms pass.
+    /// Whether all axioms pass (A1-A5, plus A6 if present).
     #[must_use]
     pub fn is_valid(&self) -> bool {
         self.a1_directionality
@@ -358,16 +391,27 @@ impl RelayVerification {
             && self.a3_preservation
             && self.a4_threshold
             && self.a5_boundedness
+            && self.a6_conservation.unwrap_or(true) // backward-compat: absent = pass
     }
 
-    /// Count of passing axioms (0-5).
+    /// Count of passing axioms. Returns 0-5 when A6 absent, 0-6 when present.
     #[must_use]
     pub fn axioms_passing(&self) -> u8 {
-        u8::from(self.a1_directionality)
+        let base = u8::from(self.a1_directionality)
             + u8::from(self.a2_mediation)
             + u8::from(self.a3_preservation)
             + u8::from(self.a4_threshold)
-            + u8::from(self.a5_boundedness)
+            + u8::from(self.a5_boundedness);
+        match self.a6_conservation {
+            Some(v) => base + u8::from(v),
+            None => base,
+        }
+    }
+
+    /// Total axiom count (5 or 6 depending on A6 presence).
+    #[must_use]
+    pub fn axiom_count(&self) -> u8 {
+        if self.a6_conservation.is_some() { 6 } else { 5 }
     }
 }
 
@@ -376,8 +420,9 @@ impl fmt::Display for RelayVerification {
         let status = if self.is_valid() { "VALID" } else { "FAILED" };
         write!(
             f,
-            "Relay {status} ({}/5 axioms, F={}, loss={:.1}%)",
+            "Relay {status} ({}/{} axioms, F={}, loss={:.1}%)",
             self.axioms_passing(),
+            self.axiom_count(),
             self.total_fidelity,
             self.signal_loss * 100.0
         )

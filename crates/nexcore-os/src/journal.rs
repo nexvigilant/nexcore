@@ -238,7 +238,7 @@ impl JournalEntry {
         message: impl Into<String>,
     ) -> Self {
         Self {
-            seq: 0, // set by OsJournal on append
+            seq: 0,  // set by OsJournal on append
             tick: 0, // set by OsJournal on append
             subsystem,
             category: category.into(),
@@ -419,10 +419,7 @@ impl OsJournal {
 
     /// Query recent entries, optionally filtered.
     pub fn query(&self, filter: &JournalFilter) -> Vec<&JournalEntry> {
-        self.entries
-            .iter()
-            .filter(|e| filter.matches(e))
-            .collect()
+        self.entries.iter().filter(|e| filter.matches(e)).collect()
     }
 
     /// Query the error buffer (Error+ entries with longer retention).
@@ -580,7 +577,12 @@ mod tests {
     fn journal_assigns_monotonic_seq() {
         let mut journal = OsJournal::new();
         for i in 0..5 {
-            let entry = JournalEntry::new(Subsystem::Kernel, "tick", Severity::Info, format!("tick {i}"));
+            let entry = JournalEntry::new(
+                Subsystem::Kernel,
+                "tick",
+                Severity::Info,
+                format!("tick {i}"),
+            );
             let seq = journal.record(entry, i);
             assert_eq!(seq, Some(i + 1));
         }
@@ -607,7 +609,12 @@ mod tests {
         let mut journal = OsJournal::new();
         let info = JournalEntry::new(Subsystem::Service, "start", Severity::Info, "started");
         let error = JournalEntry::new(Subsystem::Service, "crash", Severity::Error, "crashed");
-        let crit = JournalEntry::new(Subsystem::Security, "breach", Severity::Critical, "breach detected");
+        let crit = JournalEntry::new(
+            Subsystem::Security,
+            "breach",
+            Severity::Critical,
+            "breach detected",
+        );
 
         journal.record(info, 1);
         journal.record(error, 2);
@@ -621,7 +628,12 @@ mod tests {
     fn journal_ring_buffer_rotates() {
         let mut journal = OsJournal::with_config(5, 5, Severity::Info);
         for i in 0..10 {
-            let entry = JournalEntry::new(Subsystem::Kernel, "tick", Severity::Info, format!("entry {i}"));
+            let entry = JournalEntry::new(
+                Subsystem::Kernel,
+                "tick",
+                Severity::Info,
+                format!("entry {i}"),
+            );
             journal.record(entry, i);
         }
         assert_eq!(journal.len(), 5); // Only last 5 retained
@@ -634,9 +646,18 @@ mod tests {
     #[test]
     fn journal_filter_by_severity() {
         let mut journal = OsJournal::new();
-        journal.record(JournalEntry::new(Subsystem::Kernel, "a", Severity::Info, "info"), 1);
-        journal.record(JournalEntry::new(Subsystem::Kernel, "a", Severity::Warning, "warn"), 2);
-        journal.record(JournalEntry::new(Subsystem::Kernel, "a", Severity::Error, "error"), 3);
+        journal.record(
+            JournalEntry::new(Subsystem::Kernel, "a", Severity::Info, "info"),
+            1,
+        );
+        journal.record(
+            JournalEntry::new(Subsystem::Kernel, "a", Severity::Warning, "warn"),
+            2,
+        );
+        journal.record(
+            JournalEntry::new(Subsystem::Kernel, "a", Severity::Error, "error"),
+            3,
+        );
 
         let filter = JournalFilter::new().severity(Severity::Warning);
         let results = journal.query(&filter);
@@ -646,9 +667,18 @@ mod tests {
     #[test]
     fn journal_filter_by_subsystem() {
         let mut journal = OsJournal::new();
-        journal.record(JournalEntry::new(Subsystem::Kernel, "a", Severity::Info, "k"), 1);
-        journal.record(JournalEntry::new(Subsystem::Security, "b", Severity::Info, "s"), 2);
-        journal.record(JournalEntry::new(Subsystem::Kernel, "c", Severity::Info, "k2"), 3);
+        journal.record(
+            JournalEntry::new(Subsystem::Kernel, "a", Severity::Info, "k"),
+            1,
+        );
+        journal.record(
+            JournalEntry::new(Subsystem::Security, "b", Severity::Info, "s"),
+            2,
+        );
+        journal.record(
+            JournalEntry::new(Subsystem::Kernel, "c", Severity::Info, "k2"),
+            3,
+        );
 
         let filter = JournalFilter::new().subsystem(Subsystem::Kernel);
         let results = journal.query(&filter);
@@ -678,8 +708,14 @@ mod tests {
     #[test]
     fn journal_filter_by_tick() {
         let mut journal = OsJournal::new();
-        journal.record(JournalEntry::new(Subsystem::Kernel, "a", Severity::Info, "old"), 5);
-        journal.record(JournalEntry::new(Subsystem::Kernel, "a", Severity::Info, "new"), 15);
+        journal.record(
+            JournalEntry::new(Subsystem::Kernel, "a", Severity::Info, "old"),
+            5,
+        );
+        journal.record(
+            JournalEntry::new(Subsystem::Kernel, "a", Severity::Info, "new"),
+            15,
+        );
 
         let filter = JournalFilter::new().since(10);
         let results = journal.query(&filter);
@@ -698,8 +734,14 @@ mod tests {
             keywords: Keywords::LIFECYCLE,
             message: "guardian started".to_string(),
             fields: vec![
-                Field { name: "service".to_string(), value: FieldValue::Str("guardian".to_string()) },
-                Field { name: "priority".to_string(), value: FieldValue::U64(1) },
+                Field {
+                    name: "service".to_string(),
+                    value: FieldValue::Str("guardian".to_string()),
+                },
+                Field {
+                    name: "priority".to_string(),
+                    value: FieldValue::U64(1),
+                },
             ],
         };
         let display = format!("{entry}");
@@ -712,11 +754,16 @@ mod tests {
 
     #[test]
     fn journal_entry_builder_chain() {
-        let entry = JournalEntry::new(Subsystem::Trust, "degrade", Severity::Warning, "trust degraded")
-            .with_keywords(Keywords::TRUST | Keywords::SECURITY)
-            .with_f64("score", 0.45)
-            .with_str("reason", "threat detected")
-            .with_bool("critical", false);
+        let entry = JournalEntry::new(
+            Subsystem::Trust,
+            "degrade",
+            Severity::Warning,
+            "trust degraded",
+        )
+        .with_keywords(Keywords::TRUST | Keywords::SECURITY)
+        .with_f64("score", 0.45)
+        .with_str("reason", "threat detected")
+        .with_bool("critical", false);
 
         assert_eq!(entry.subsystem, Subsystem::Trust);
         assert_eq!(entry.fields.len(), 3);

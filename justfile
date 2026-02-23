@@ -257,6 +257,61 @@ docs:
 docs-open:
     cargo doc --workspace --no-deps --open
 
+# ── Quality Sweep (Pure-Compute Automation) ──────────────────────
+
+# Full quality sweep: fmt → clippy → deps → audit → test-compile → report
+sweep:
+    ./scripts/quality-sweep
+
+# Quality sweep with auto-fix: formatting, clippy, unused deps
+sweep-fix:
+    ./scripts/quality-sweep --fix
+
+# Full CI pipeline: sweep + deny + build + test
+ci: sweep-fix deny test
+    @echo "CI pipeline complete."
+
+# Record quality metrics snapshot (for trend tracking)
+metrics:
+    ./scripts/capability-metrics
+
+# Build with timing report
+build-timed:
+    cargo build --release --workspace --timings
+    @echo "Timing report: target/cargo-timings/cargo-timing.html"
+
+# Quick quality check (skip dep-prune and test compile)
+sweep-quick:
+    ./scripts/quality-sweep --quick
+
+# Report-only quality check (no modifications)
+sweep-report:
+    ./scripts/quality-sweep --report-only
+
+# Detect unused dependencies
+dep-scan:
+    ./scripts/dep-prune --dry-run
+
+# Remove unused dependencies (with build verification)
+dep-prune:
+    ./scripts/dep-prune --fix
+
+# Find outdated dependencies
+dep-outdated:
+    cargo outdated --workspace --root-deps-only
+
+# API semver compatibility check (requires baseline)
+semver-check crate:
+    cargo semver-checks -p {{crate}}
+
+# Test coverage for a single crate
+coverage crate:
+    cargo tarpaulin -p {{crate}} --out stdout --skip-clean
+
+# Test coverage for core vigilance
+coverage-core:
+    cargo tarpaulin -p nexcore-vigilance --out stdout --skip-clean
+
 # ── Cleanup ──────────────────────────────────────────────────────
 
 # Clean build artifacts
@@ -378,11 +433,35 @@ clean-everything: clean-all-targets clean-docker clean-debug waste-rotate
     @echo ""
     @echo "Full cleanup complete. Run 'just waste-audit' to see results."
 
-# ── Security Audit ─────────────────────────────────────────────
+# ── Security & Supply Chain ───────────────────────────────────
 
 # Audit workspace dependencies for known vulnerabilities
 audit:
     cargo audit
+
+# Full policy check: advisories + licenses + bans + sources
+deny:
+    cargo deny check
+
+# License compliance only
+deny-licenses:
+    cargo deny check licenses
+
+# Advisory + ban check only
+deny-advisories:
+    cargo deny check advisories bans
+
+# Supply chain analysis (publisher trust)
+supply-chain:
+    cargo supply-chain crates
+
+# Binary size analysis for MCP server
+bloat-mcp:
+    cargo bloat --release -p nexcore-mcp --crates | head -40
+
+# Binary size analysis for any crate
+bloat crate:
+    cargo bloat --release -p {{crate}} --crates | head -30
 
 # Audit with JSON output for CI integration
 audit-json:

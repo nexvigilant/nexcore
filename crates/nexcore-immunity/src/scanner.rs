@@ -20,7 +20,7 @@ struct CompiledAntibody {
     code_patterns: Vec<Regex>,
     error_patterns: Vec<Regex>,
     exception_patterns: Vec<Regex>,
-    file_globs: Vec<glob::Pattern>,
+    file_globs: Vec<nexcore_fs::glob::Pattern>,
 }
 
 /// Scanner for detecting antipatterns.
@@ -77,7 +77,7 @@ impl ImmunityScanner {
 
             // Compile file globs
             for fg in &ab.detection.file_contexts {
-                if let Ok(pattern) = glob::Pattern::new(fg) {
+                if let Ok(pattern) = nexcore_fs::glob::Pattern::new(fg) {
                     file_globs.push(pattern);
                 }
             }

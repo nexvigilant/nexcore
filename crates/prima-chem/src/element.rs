@@ -1139,7 +1139,11 @@ mod tests {
         assert_eq!(selenium.atomic_number, 34);
         // mass should be approximately 78.971
         let mass_diff = (selenium.mass - 78.971_f64).abs();
-        assert!(mass_diff < 0.01, "Selenium mass out of expected range: {}", selenium.mass);
+        assert!(
+            mass_diff < 0.01,
+            "Selenium mass out of expected range: {}",
+            selenium.mass
+        );
     }
 
     #[test]

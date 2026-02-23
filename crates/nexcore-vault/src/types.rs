@@ -23,8 +23,7 @@ impl Salt {
     /// Create a Salt from raw bytes, encoding as base64.
     #[must_use]
     pub fn from_bytes(bytes: &[u8; 32]) -> Self {
-        use base64::Engine;
-        Self(base64::engine::general_purpose::STANDARD.encode(bytes))
+        Self(nexcore_codec::base64::encode(bytes))
     }
 
     /// Decode the salt back to raw bytes.
@@ -32,9 +31,7 @@ impl Salt {
     /// # Errors
     /// Returns `VaultError::Base64` if the stored string is invalid base64.
     pub fn to_bytes(&self) -> crate::error::Result<Vec<u8>> {
-        use base64::Engine;
-        base64::engine::general_purpose::STANDARD
-            .decode(&self.0)
+        nexcore_codec::base64::decode(&self.0)
             .map_err(|e| crate::error::VaultError::Base64(e.to_string()))
     }
 }

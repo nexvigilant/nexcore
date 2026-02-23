@@ -1,6 +1,6 @@
 //! Error types for the CTVP library.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Main error type for CTVP operations.
 #[derive(Error, Debug)]

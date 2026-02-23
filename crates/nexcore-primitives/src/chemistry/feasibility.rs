@@ -9,7 +9,7 @@
 //!
 //! **PV Application**: Causality likelihood - is relationship plausible?
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors for feasibility calculations.
 #[derive(Debug, Error, PartialEq, Clone)]

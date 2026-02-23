@@ -655,10 +655,8 @@ impl CausalDag {
 
         // Compute in-degree for every registered node. Nodes with no edges
         // at all start at degree 0.
-        let mut in_degree: HashMap<&NodeId, usize> = node_index
-            .keys()
-            .map(|&id| (id, 0_usize))
-            .collect();
+        let mut in_degree: HashMap<&NodeId, usize> =
+            node_index.keys().map(|&id| (id, 0_usize)).collect();
 
         for link in &self.links {
             *in_degree.entry(&link.to).or_insert(0) += 1;
@@ -901,11 +899,8 @@ mod tests {
         dag.add_link(link("c", "d", 1.0)).expect("acyclic");
 
         let order = dag.topological_order().expect("acyclic diamond");
-        let pos: HashMap<&NodeId, usize> = order
-            .iter()
-            .enumerate()
-            .map(|(i, id)| (*id, i))
-            .collect();
+        let pos: HashMap<&NodeId, usize> =
+            order.iter().enumerate().map(|(i, id)| (*id, i)).collect();
 
         assert!(pos[&NodeId::new("a")] < pos[&NodeId::new("b")]);
         assert!(pos[&NodeId::new("a")] < pos[&NodeId::new("c")]);

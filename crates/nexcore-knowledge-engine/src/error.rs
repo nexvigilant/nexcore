@@ -1,6 +1,6 @@
 //! Knowledge engine error types.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Knowledge engine errors.
 #[derive(Debug, Error)]

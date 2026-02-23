@@ -2,12 +2,13 @@
 //!
 //! Hunt down issues in your skill ecosystem!
 
-use nexcore_error::{Context, Result};
 use console::style;
 use indicatif::{ProgressBar, ProgressStyle};
+use nexcore_error::{Context, Result};
+use nexcore_fs::dirs;
+use nexcore_fs::walk::WalkDir;
 use skill_hunter::*;
 use std::path::Path;
-use walkdir::WalkDir;
 
 fn main() -> Result<()> {
     print_banner();

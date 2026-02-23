@@ -3,6 +3,7 @@
 name = "nexcore-core"
 version = "1.0.0"
 edition = "2021"
+license = "LicenseRef-NexVigilant-Proprietary"
 authors = ["NexVigilant Team"]
 description = "NexVigilant Core Unified PV Execution Kernel"
 
@@ -13,11 +14,9 @@ nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", 
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
-thiserror = "1.0"
 nexcore-id = { version = "0.1.0", path = "../nexcore-id", registry = "nexcore", features = ["serde"] }
 duckdb = { version = "1.4.4", features = ["bundled", "chrono"] }
-utoipa = { version = "5.3", features = ["axum_extras", "chrono", "uuid"] }
-uuid = { version = "1.10.0", features = ["v4", "serde"] }
+utoipa = { version = "5.3", features = ["axum_extras", "chrono"] }
 
 [dev-dependencies]
 tokio = { version = "1.0", features = ["full"] }

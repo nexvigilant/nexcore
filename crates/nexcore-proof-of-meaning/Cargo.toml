@@ -9,10 +9,10 @@ license = "LicenseRef-Proprietary"
 description = "Chemistry-inspired semantic transformation engine — provable regulatory terminology equivalence"
 
 [dependencies]
+nexcore-error = { workspace = true }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
-uuid = { version = "1.10.0", features = ["v4", "serde"] }
-thiserror = { version = "1.0.61" }
+nexcore-id = { workspace = true }
 chrono = { version = "0.4.38", features = ["serde"] }
 ordered-float = { version = "4", features = ["serde"] }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }

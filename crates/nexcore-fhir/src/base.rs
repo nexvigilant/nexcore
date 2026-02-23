@@ -40,9 +40,9 @@ impl CodeableConcept {
     /// Find the first coding matching a given system URI.
     #[must_use]
     pub fn coding_for_system(&self, system: &str) -> Option<&Coding> {
-        self.coding.iter().find(|c| {
-            c.system.as_deref() == Some(system)
-        })
+        self.coding
+            .iter()
+            .find(|c| c.system.as_deref() == Some(system))
     }
 
     /// Get display text: first coding display, or text fallback.
@@ -73,9 +73,9 @@ impl Reference {
     /// Extract the resource type from the reference string (e.g. "Patient/123" → "Patient").
     #[must_use]
     pub fn resource_type(&self) -> Option<&str> {
-        self.type_.as_deref().or_else(|| {
-            self.reference.as_deref().and_then(|r| r.split('/').next())
-        })
+        self.type_
+            .as_deref()
+            .or_else(|| self.reference.as_deref().and_then(|r| r.split('/').next()))
     }
 }
 

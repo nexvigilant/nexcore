@@ -19,8 +19,8 @@ pub mod filtration;
 pub mod persistence;
 pub mod simplex;
 
-pub use betti::{betti_numbers, BettiNumbers};
+pub use betti::{BettiNumbers, betti_numbers};
 pub use diagram::{PersistenceDiagram, PersistencePoint};
-pub use filtration::{vietoris_rips, DistanceMatrix};
+pub use filtration::{DistanceMatrix, vietoris_rips};
 pub use persistence::compute_persistence;
 pub use simplex::{Simplex, SimplicialComplex};

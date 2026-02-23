@@ -1,7 +1,7 @@
 //! AI model client implementations.
 
-use nexcore_error::{Result, nexerror};
 use async_trait::async_trait;
+use nexcore_error::{Result, nexerror};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;

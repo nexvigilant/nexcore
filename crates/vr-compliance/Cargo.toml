@@ -12,10 +12,8 @@ vr-core = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 chrono = { workspace = true }
-uuid = { workspace = true }
-thiserror = { workspace = true }
+nexcore-id = { workspace = true }
 sha2 = { workspace = true }
-hex = { workspace = true }
 
 [lints]
 workspace = true

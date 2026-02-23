@@ -53,9 +53,7 @@ pub fn pk_auc(params: PvPkAucParams) -> Result<CallToolResult, McpError> {
 
         let area = match method {
             "log-linear" | "log_linear"
-                if conc[i] > 0.0
-                    && conc[i - 1] > 0.0
-                    && (conc[i] - conc[i - 1]).abs() > 1e-15 =>
+                if conc[i] > 0.0 && conc[i - 1] > 0.0 && (conc[i] - conc[i - 1]).abs() > 1e-15 =>
             {
                 // Log-linear trapezoidal: area = (C1 - C2) × dt / ln(C1/C2)
                 (conc[i - 1] - conc[i]) * dt / (conc[i - 1] / conc[i]).ln()
@@ -249,9 +247,7 @@ pub fn pk_ionization(params: PvPkIonizationParams) -> Result<CallToolResult, Mcp
 /// Models saturable metabolism (e.g. phenytoin, ethanol, aspirin at high doses).
 /// When [S] << Km: first-order (rate ∝ [S]).
 /// When [S] >> Km: zero-order (rate ≈ Vmax, capacity-limited).
-pub fn pk_michaelis_menten(
-    params: PvPkMichaelisMentenParams,
-) -> Result<CallToolResult, McpError> {
+pub fn pk_michaelis_menten(params: PvPkMichaelisMentenParams) -> Result<CallToolResult, McpError> {
     if params.km <= 0.0 {
         return Err(McpError::invalid_params("Km must be > 0", None));
     }

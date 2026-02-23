@@ -5,7 +5,7 @@
 //! ## Tier: T2-C (∂ + → + ∅ + Σ)
 //! Errors are boundary violations that cause failure.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors that can occur in the vigilance subsystem.
 ///

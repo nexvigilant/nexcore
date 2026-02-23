@@ -36,7 +36,9 @@ impl GitMonitor {
             .await?;
 
         if !output.status.success() {
-            return Err(nexcore_error::nexerror!("Not a git repository or git error"));
+            return Err(nexcore_error::nexerror!(
+                "Not a git repository or git error"
+            ));
         }
 
         let timestamp_str = String::from_utf8_lossy(&output.stdout).trim().to_string();

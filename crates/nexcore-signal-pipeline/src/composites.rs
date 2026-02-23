@@ -99,12 +99,11 @@ pub fn composite_inventory() -> Vec<CompositeDescriptor> {
             0.85,
         )
         .with_primitives(vec![
-            LexPrimitiva::Mapping,     // mu: raw -> standardized
-            LexPrimitiva::Existence,   // exists: NexId creation
-            LexPrimitiva::Location,    // lambda: source + MedDRA codes
-            LexPrimitiva::Product,     // x: conjunctive struct
+            LexPrimitiva::Mapping,   // mu: raw -> standardized
+            LexPrimitiva::Existence, // exists: NexId creation
+            LexPrimitiva::Location,  // lambda: source + MedDRA codes
+            LexPrimitiva::Product,   // x: conjunctive struct
         ]),
-
         CompositeDescriptor::new(
             "ValidationReport",
             Tier::T2Composite,
@@ -114,11 +113,10 @@ pub fn composite_inventory() -> Vec<CompositeDescriptor> {
             0.88,
         )
         .with_primitives(vec![
-            LexPrimitiva::Comparison,  // kappa: check predicates
-            LexPrimitiva::Sequence,    // sigma: ordered check list
-            LexPrimitiva::Product,     // x: conjunctive struct
+            LexPrimitiva::Comparison, // kappa: check predicates
+            LexPrimitiva::Sequence,   // sigma: ordered check list
+            LexPrimitiva::Product,    // x: conjunctive struct
         ]),
-
         CompositeDescriptor::new(
             "SignalMetrics",
             Tier::T2Composite,
@@ -128,12 +126,11 @@ pub fn composite_inventory() -> Vec<CompositeDescriptor> {
             0.85,
         )
         .with_primitives(vec![
-            LexPrimitiva::Quantity,    // N: PRR, ROR, IC, EBGM, chi-sq
-            LexPrimitiva::Mapping,     // mu: table -> metrics
-            LexPrimitiva::Comparison,  // kappa: strength classification
-            LexPrimitiva::Product,     // x: conjunctive struct
+            LexPrimitiva::Quantity,   // N: PRR, ROR, IC, EBGM, chi-sq
+            LexPrimitiva::Mapping,    // mu: table -> metrics
+            LexPrimitiva::Comparison, // kappa: strength classification
+            LexPrimitiva::Product,    // x: conjunctive struct
         ]),
-
         CompositeDescriptor::new(
             "ContingencyTable",
             Tier::T2Composite,
@@ -143,12 +140,11 @@ pub fn composite_inventory() -> Vec<CompositeDescriptor> {
             0.92,
         )
         .with_primitives(vec![
-            LexPrimitiva::Quantity,    // N: cell counts (a, b, c, d)
-            LexPrimitiva::Product,     // x: 4-cell structure
-            LexPrimitiva::Mapping,     // mu: cell position -> count
-            LexPrimitiva::Boundary,    // partial: exposed/unexposed boundary
+            LexPrimitiva::Quantity, // N: cell counts (a, b, c, d)
+            LexPrimitiva::Product,  // x: 4-cell structure
+            LexPrimitiva::Mapping,  // mu: cell position -> count
+            LexPrimitiva::Boundary, // partial: exposed/unexposed boundary
         ]),
-
         CompositeDescriptor::new(
             "ThresholdConfig",
             Tier::T2Composite,
@@ -158,11 +154,10 @@ pub fn composite_inventory() -> Vec<CompositeDescriptor> {
             0.88,
         )
         .with_primitives(vec![
-            LexPrimitiva::Boundary,    // partial: threshold boundaries
-            LexPrimitiva::Quantity,    // N: numeric threshold values
-            LexPrimitiva::Product,     // x: conjunctive struct
+            LexPrimitiva::Boundary, // partial: threshold boundaries
+            LexPrimitiva::Quantity, // N: numeric threshold values
+            LexPrimitiva::Product,  // x: conjunctive struct
         ]),
-
         // ---- T3: Domain-specific composites ----
         CompositeDescriptor::new(
             "RawReport",
@@ -173,14 +168,13 @@ pub fn composite_inventory() -> Vec<CompositeDescriptor> {
             0.60,
         )
         .with_primitives(vec![
-            LexPrimitiva::Existence,       // exists: report identity
-            LexPrimitiva::Sequence,        // sigma: lists of drugs/events
-            LexPrimitiva::Location,        // lambda: ReportSource origin
-            LexPrimitiva::Persistence,     // pi: metadata blob
-            LexPrimitiva::Product,         // x: conjunctive struct
-            LexPrimitiva::Frequency,       // nu: report date (temporal)
+            LexPrimitiva::Existence,   // exists: report identity
+            LexPrimitiva::Sequence,    // sigma: lists of drugs/events
+            LexPrimitiva::Location,    // lambda: ReportSource origin
+            LexPrimitiva::Persistence, // pi: metadata blob
+            LexPrimitiva::Product,     // x: conjunctive struct
+            LexPrimitiva::Frequency,   // nu: report date (temporal)
         ]),
-
         CompositeDescriptor::new(
             "DetectionResult",
             Tier::T3DomainSpecific,
@@ -190,14 +184,13 @@ pub fn composite_inventory() -> Vec<CompositeDescriptor> {
             0.55,
         )
         .with_primitives(vec![
-            LexPrimitiva::Quantity,        // N: PRR, ROR, IC, EBGM, chi-sq
-            LexPrimitiva::Comparison,      // kappa: strength classification
-            LexPrimitiva::State,           // varsigma: detection snapshot
-            LexPrimitiva::Product,         // x: conjunctive struct
-            LexPrimitiva::Existence,       // exists: pair identity
-            LexPrimitiva::Frequency,       // nu: detected_at timestamp
+            LexPrimitiva::Quantity,   // N: PRR, ROR, IC, EBGM, chi-sq
+            LexPrimitiva::Comparison, // kappa: strength classification
+            LexPrimitiva::State,      // varsigma: detection snapshot
+            LexPrimitiva::Product,    // x: conjunctive struct
+            LexPrimitiva::Existence,  // exists: pair identity
+            LexPrimitiva::Frequency,  // nu: detected_at timestamp
         ]),
-
         CompositeDescriptor::new(
             "Alert",
             Tier::T3DomainSpecific,
@@ -207,14 +200,13 @@ pub fn composite_inventory() -> Vec<CompositeDescriptor> {
             0.50,
         )
         .with_primitives(vec![
-            LexPrimitiva::State,           // varsigma: AlertState lifecycle
-            LexPrimitiva::Existence,       // exists: NexId
-            LexPrimitiva::Recursion,       // rho: contains DetectionResult (nested composite)
-            LexPrimitiva::Sequence,        // sigma: notes list
-            LexPrimitiva::Frequency,       // nu: created_at, updated_at
-            LexPrimitiva::Product,         // x: conjunctive struct
+            LexPrimitiva::State,     // varsigma: AlertState lifecycle
+            LexPrimitiva::Existence, // exists: NexId
+            LexPrimitiva::Recursion, // rho: contains DetectionResult (nested composite)
+            LexPrimitiva::Sequence,  // sigma: notes list
+            LexPrimitiva::Frequency, // nu: created_at, updated_at
+            LexPrimitiva::Product,   // x: conjunctive struct
         ]),
-
         CompositeDescriptor::new(
             "DrugEventPair",
             Tier::T3DomainSpecific,
@@ -224,8 +216,8 @@ pub fn composite_inventory() -> Vec<CompositeDescriptor> {
             0.65,
         )
         .with_primitives(vec![
-            LexPrimitiva::Existence,       // exists: named entity
-            LexPrimitiva::Product,         // x: (drug, event) tuple
+            LexPrimitiva::Existence, // exists: named entity
+            LexPrimitiva::Product,   // x: (drug, event) tuple
         ]),
     ]
 }
@@ -344,10 +336,8 @@ mod tests {
         let t2c = composites_by_tier(Tier::T2Composite);
         let t3 = composites_by_tier(Tier::T3DomainSpecific);
 
-        let avg_t2c: f64 =
-            t2c.iter().map(|c| c.transfer_potential).sum::<f64>() / t2c.len() as f64;
-        let avg_t3: f64 =
-            t3.iter().map(|c| c.transfer_potential).sum::<f64>() / t3.len() as f64;
+        let avg_t2c: f64 = t2c.iter().map(|c| c.transfer_potential).sum::<f64>() / t2c.len() as f64;
+        let avg_t3: f64 = t3.iter().map(|c| c.transfer_potential).sum::<f64>() / t3.len() as f64;
 
         assert!(
             avg_t2c > avg_t3,
@@ -419,11 +409,11 @@ mod tests {
     fn field_counts_match_core_types() {
         // Verify field counts match the actual struct definitions in core.rs.
         let checks = [
-            ("ContingencyTable", 4),     // a, b, c, d
-            ("DrugEventPair", 2),        // drug, event
-            ("ValidationReport", 3),     // pair, passed, checks
-            ("Alert", 6),                // id, detection, state, created_at, updated_at, notes
-            ("DetectionResult", 9),      // pair, table, prr, ror, ic, ebgm, chi_square, strength, detected_at
+            ("ContingencyTable", 4), // a, b, c, d
+            ("DrugEventPair", 2),    // drug, event
+            ("ValidationReport", 3), // pair, passed, checks
+            ("Alert", 6),            // id, detection, state, created_at, updated_at, notes
+            ("DetectionResult", 9), // pair, table, prr, ror, ic, ebgm, chi_square, strength, detected_at
         ];
         for &(name, expected) in &checks {
             let c = composite_by_name(name);

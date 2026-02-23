@@ -10,7 +10,7 @@ pub type Result<T> = std::result::Result<T, AlgovigilanceError>;
 ///
 /// Tier: T2-C (cross-domain composite — aggregates IO, Brain, Vigilance errors)
 /// Grounds to: T1::Recursion (enum variant dispatch)
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum AlgovigilanceError {
     /// File system I/O failure
     #[error("IO error: {0}")]

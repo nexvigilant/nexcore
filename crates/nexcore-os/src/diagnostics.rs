@@ -126,6 +126,18 @@ pub struct DiagnosticSnapshot {
     pub services_running: usize,
     pub services_failed: usize,
     pub services_total: usize,
+    /// Energy charge (Atkinson EC, 0.0-1.0).
+    pub energy_charge: f64,
+    /// Current metabolic regime label.
+    pub energy_regime: String,
+    /// Available energy tokens (tATP).
+    pub energy_t_atp: u64,
+    /// Productive energy spent (tADP).
+    pub energy_t_adp: u64,
+    /// Wasted energy (tAMP).
+    pub energy_t_amp: u64,
+    /// Waste ratio (0.0-1.0).
+    pub energy_waste_ratio: f64,
 }
 
 impl DiagnosticSnapshot {
@@ -175,7 +187,11 @@ impl DiagnosticSnapshot {
 
 impl fmt::Display for DiagnosticSnapshot {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "=== NexCore OS Diagnostic Snapshot (tick {}) ===", self.tick)?;
+        writeln!(
+            f,
+            "=== NexCore OS Diagnostic Snapshot (tick {}) ===",
+            self.tick
+        )?;
         writeln!(f, "System Health: {}", self.system_health)?;
         writeln!(f, "Security:     {}", self.security_level)?;
         writeln!(f, "Trust Score:  {:.3}", self.trust_score)?;
@@ -198,6 +214,16 @@ impl fmt::Display for DiagnosticSnapshot {
             f,
             "Journal:      {} entries, {} errors, {} total recorded",
             self.journal_entries, self.journal_errors, self.journal_total_recorded
+        )?;
+        writeln!(
+            f,
+            "Energy:       EC={:.2} [{}] tATP={} tADP={} tAMP={} waste={:.0}%",
+            self.energy_charge,
+            self.energy_regime,
+            self.energy_t_atp,
+            self.energy_t_adp,
+            self.energy_t_amp,
+            self.energy_waste_ratio * 100.0,
         )?;
         writeln!(f, "--- Service Detail ---")?;
         for svc in &self.services {
@@ -254,18 +280,14 @@ mod tests {
 
     #[test]
     fn system_health_security_red_always_critical() {
-        let services = vec![
-            ServiceHealth::from_state("a", ServiceState::Running, 1),
-        ];
+        let services = vec![ServiceHealth::from_state("a", ServiceState::Running, 1)];
         let health = DiagnosticSnapshot::compute_system_health(SecurityLevel::Red, &services);
         assert_eq!(health, HealthStatus::Critical);
     }
 
     #[test]
     fn system_health_security_orange_degrades_ok() {
-        let services = vec![
-            ServiceHealth::from_state("a", ServiceState::Running, 1),
-        ];
+        let services = vec![ServiceHealth::from_state("a", ServiceState::Running, 1)];
         let health = DiagnosticSnapshot::compute_system_health(SecurityLevel::Orange, &services);
         assert_eq!(health, HealthStatus::Degraded);
     }
@@ -286,9 +308,11 @@ mod tests {
         let snapshot = DiagnosticSnapshot {
             tick: 42,
             system_health: HealthStatus::Ok,
-            services: vec![
-                ServiceHealth::from_state("guardian", ServiceState::Running, 10),
-            ],
+            services: vec![ServiceHealth::from_state(
+                "guardian",
+                ServiceState::Running,
+                10,
+            )],
             security_level: SecurityLevel::Green,
             trust_score: 0.85,
             active_threats: 0,
@@ -302,10 +326,18 @@ mod tests {
             services_running: 11,
             services_failed: 0,
             services_total: 11,
+            energy_charge: 0.95,
+            energy_regime: "Anabolic (invest)".to_string(),
+            energy_t_atp: 95_000,
+            energy_t_adp: 5_000,
+            energy_t_amp: 0,
+            energy_waste_ratio: 0.0,
         };
         let display = format!("{snapshot}");
         assert!(display.contains("tick 42"));
         assert!(display.contains("OK"));
         assert!(display.contains("guardian"));
+        assert!(display.contains("EC=0.95"));
+        assert!(display.contains("Anabolic"));
     }
 }

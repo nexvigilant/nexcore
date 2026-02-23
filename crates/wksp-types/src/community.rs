@@ -1,7 +1,7 @@
 //! Community types — posts, circles, messages, members
 
-use serde::{Deserialize, Serialize};
 use crate::common::Timestamp;
+use serde::{Deserialize, Serialize};
 
 /// Community post
 #[derive(Debug, Clone, Serialize, Deserialize)]

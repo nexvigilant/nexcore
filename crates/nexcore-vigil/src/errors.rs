@@ -1,5 +1,5 @@
 use crate::models::ExecutorType;
-use thiserror::Error;
+use nexcore_error::Error;
 
 #[derive(Error, Debug)]
 pub enum VigilError {

@@ -25,7 +25,7 @@ use crate::guardian::response::{amplifier_config, ceiling_limits};
 /// Errors from configuration loading.
 ///
 /// Tier: T2-P (Sum type over T1 strings)
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum ConfigError {
     /// Failed to read configuration file
     #[error("Failed to read config file: {0}")]

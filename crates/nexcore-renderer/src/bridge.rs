@@ -80,8 +80,8 @@ impl NexCoreBridge {
     /// Create a new bridge to the default API endpoint.
     #[must_use]
     pub fn new() -> Self {
-        let base_url = std::env::var("NEXCORE_API_URL")
-            .unwrap_or_else(|_| DEFAULT_API_BASE.to_string());
+        let base_url =
+            std::env::var("NEXCORE_API_URL").unwrap_or_else(|_| DEFAULT_API_BASE.to_string());
         Self {
             base_url,
             client: build_client(),

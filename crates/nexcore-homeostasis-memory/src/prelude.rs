@@ -10,4 +10,6 @@ pub use crate::store::{MemoryConfig, MemoryError, MemoryStats, MemoryStore, Simi
 
 pub use crate::composites::{CompositeDescriptor, composite_inventory};
 pub use crate::primitives::{CratePrimitiveManifest, manifest};
-pub use crate::transfer::{TransferMapping, transfer_confidence, transfer_mappings, transfers_for_type};
+pub use crate::transfer::{
+    TransferMapping, transfer_confidence, transfer_mappings, transfers_for_type,
+};

@@ -292,8 +292,7 @@ mod tests {
     #[test]
     fn all_domains_represented() {
         let mappings = transfer_mappings();
-        let domains: std::collections::HashSet<&str> =
-            mappings.iter().map(|m| m.domain).collect();
+        let domains: std::collections::HashSet<&str> = mappings.iter().map(|m| m.domain).collect();
 
         assert!(domains.contains("Biology"));
         assert!(domains.contains("Cloud"));

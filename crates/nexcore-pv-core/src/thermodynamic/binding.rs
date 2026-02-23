@@ -9,7 +9,7 @@
 //! Safety Implication: Off-target binding occurs when DeltaG is favorable for
 //! non-intended targets; selectivity = Delta_DeltaG between targets.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Gas constant in J/(mol*K).
 pub const R_J_MOL_K: f64 = 8.314;

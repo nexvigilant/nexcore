@@ -14,11 +14,11 @@ categories = ["data-structures", "algorithms"]
 # Intellectual Property of Matthew Alexander Campion, PharmD
 
 [dependencies]
+nexcore-error = { workspace = true }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 chrono = { version = "0.4.38", features = ["serde"] }
-thiserror = { version = "1.0.61" }
 nexcore-transcriptase = { version = "1.0.0", path = "../nexcore-transcriptase", registry = "nexcore" }
 
 [lints.rust]

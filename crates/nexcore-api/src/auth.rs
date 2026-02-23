@@ -116,7 +116,10 @@ async fn validate_guardian_key(key: &str) -> bool {
             match store.check_rate_limit(&user_id) {
                 Ok(true) => true,
                 Ok(false) => {
-                    tracing::warn!(user_id = user_id.as_str(), "Guardian API rate limit exceeded");
+                    tracing::warn!(
+                        user_id = user_id.as_str(),
+                        "Guardian API rate limit exceeded"
+                    );
                     false
                 }
                 Err(e) => {

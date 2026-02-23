@@ -337,7 +337,11 @@ pub fn compute_genus(chi: i64, components: usize, boundary_loops: usize) -> i64 
 /// assert_eq!(compute_betti_numbers(0, 1, true), (1, 2, 1));
 /// ```
 #[must_use]
-pub fn compute_betti_numbers(chi: i64, components: usize, is_closed: bool) -> (usize, usize, usize) {
+pub fn compute_betti_numbers(
+    chi: i64,
+    components: usize,
+    is_closed: bool,
+) -> (usize, usize, usize) {
     let b0 = components;
     let b2 = if is_closed { components } else { 0_usize };
     // β₁ = β₀ + β₂ − χ  (Euler–Poincaré)
@@ -721,9 +725,7 @@ pub fn mean_curvature(mesh: &TriangleMesh, vertex: usize, conn: &MeshConnectivit
 ///     assert_eq!(curvatures.len(), 3);
 /// }
 /// ```
-pub fn compute_all_curvatures(
-    mesh: &TriangleMesh,
-) -> Result<Vec<VertexCurvature>, TopologyError> {
+pub fn compute_all_curvatures(mesh: &TriangleMesh) -> Result<Vec<VertexCurvature>, TopologyError> {
     let conn = build_connectivity(mesh)?;
     let mut result = Vec::with_capacity(mesh.vertex_count());
 
@@ -773,7 +775,10 @@ pub fn compute_all_curvatures(
 /// }
 /// ```
 #[must_use]
-pub fn verify_gauss_bonnet(mesh: &TriangleMesh, curvatures: &[VertexCurvature]) -> GaussBonnetResult {
+pub fn verify_gauss_bonnet(
+    mesh: &TriangleMesh,
+    curvatures: &[VertexCurvature],
+) -> GaussBonnetResult {
     let total_gaussian_curvature: f64 = curvatures.iter().map(|c| c.gaussian).sum();
     let chi = euler_characteristic(mesh);
     let expected_value = 2.0 * std::f64::consts::PI * chi as f64;
@@ -961,14 +966,23 @@ mod tests {
         ];
         // 6 faces × 2 triangles = 12 triangles total.
         let triangles = vec![
-            [0, 1, 2], [0, 2, 3], // bottom  (z=0)
-            [4, 6, 5], [4, 7, 6], // top     (z=1)
-            [0, 1, 5], [0, 5, 4], // front   (y=0)
-            [2, 3, 7], [2, 7, 6], // back    (y=1)
-            [0, 3, 7], [0, 7, 4], // left    (x=0)
-            [1, 2, 6], [1, 6, 5], // right   (x=1)
+            [0, 1, 2],
+            [0, 2, 3], // bottom  (z=0)
+            [4, 6, 5],
+            [4, 7, 6], // top     (z=1)
+            [0, 1, 5],
+            [0, 5, 4], // front   (y=0)
+            [2, 3, 7],
+            [2, 7, 6], // back    (y=1)
+            [0, 3, 7],
+            [0, 7, 4], // left    (x=0)
+            [1, 2, 6],
+            [1, 6, 5], // right   (x=1)
         ];
-        let mesh = TriangleMesh { vertices, triangles };
+        let mesh = TriangleMesh {
+            vertices,
+            triangles,
+        };
         assert_eq!(euler_characteristic(&mesh), 2);
     }
 
@@ -1016,7 +1030,10 @@ mod tests {
             triangles: vec![[0, 1, 2]],
         };
         let result = build_connectivity(&mesh);
-        assert!(result.is_ok(), "expected Ok from build_connectivity for single triangle");
+        assert!(
+            result.is_ok(),
+            "expected Ok from build_connectivity for single triangle"
+        );
         if let Ok(conn) = result {
             assert_eq!(conn.components.len(), 1);
             for vi in 0..3 {
@@ -1089,8 +1106,8 @@ mod tests {
         let r = 1.0_f64;
         let mesh = TriangleMesh {
             vertices: vec![
-                [0.0, 0.0, h],                            // 0 — apex
-                [r, 0.0, 0.0],                            // 1
+                [0.0, 0.0, h],                           // 0 — apex
+                [r, 0.0, 0.0],                           // 1
                 [r * (-0.5_f64), r * 0.866_f64, 0.0],    // 2
                 [r * (-0.5_f64), r * (-0.866_f64), 0.0], // 3
             ],
@@ -1100,7 +1117,10 @@ mod tests {
         assert!(result.is_ok(), "expected Ok for cone mesh");
         if let Ok(conn) = result {
             let k = gaussian_curvature(&mesh, 0, &conn);
-            assert!(k > 0.0, "cone tip should have positive Gaussian curvature, got {k}");
+            assert!(
+                k > 0.0,
+                "cone tip should have positive Gaussian curvature, got {k}"
+            );
         }
     }
 
@@ -1117,9 +1137,7 @@ mod tests {
             assert!(
                 gb.passes,
                 "tetrahedron should satisfy Gauss–Bonnet: ΣK={:.4}, expected={:.4}, err={:.4}",
-                gb.total_gaussian_curvature,
-                gb.expected_value,
-                gb.relative_error
+                gb.total_gaussian_curvature, gb.expected_value, gb.relative_error
             );
             let four_pi = 4.0 * std::f64::consts::PI;
             assert!(
@@ -1215,7 +1233,10 @@ mod tests {
         let v = [3.0, 4.0, 0.0];
         let n = normalize(&v);
         let len = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
-        assert!((len - 1.0).abs() < 1e-12, "normalized vector should have length 1");
+        assert!(
+            (len - 1.0).abs() < 1e-12,
+            "normalized vector should have length 1"
+        );
     }
 
     #[test]

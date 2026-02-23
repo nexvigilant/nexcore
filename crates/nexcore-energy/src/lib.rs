@@ -380,8 +380,11 @@ impl TokenPool {
         if total == 0 {
             return 1.0;
         }
-        #[allow(clippy::cast_precision_loss)] // Token counts may exceed f64 mantissa; acceptable for ratio computation
-        { ADP_WEIGHT.mul_add(self.t_adp as f64, self.t_atp as f64) / total as f64 }
+        #[allow(clippy::cast_precision_loss)]
+        // Token counts may exceed f64 mantissa; acceptable for ratio computation
+        {
+            ADP_WEIGHT.mul_add(self.t_adp as f64, self.t_atp as f64) / total as f64
+        }
     }
 
     /// Current metabolic regime.
@@ -399,7 +402,9 @@ impl TokenPool {
             return 0.0;
         }
         #[allow(clippy::cast_precision_loss)] // Token count ratio; exact precision not critical
-        { total_value / self.t_adp as f64 }
+        {
+            total_value / self.t_adp as f64
+        }
     }
 
     /// Waste ratio: fraction of total spend that was wasted.
@@ -410,7 +415,9 @@ impl TokenPool {
             return 0.0;
         }
         #[allow(clippy::cast_precision_loss)] // Token count ratio; exact precision not critical
-        { self.t_amp as f64 / spent as f64 }
+        {
+            self.t_amp as f64 / spent as f64
+        }
     }
 
     /// Fraction of budget consumed.
@@ -421,7 +428,9 @@ impl TokenPool {
             return 1.0;
         }
         #[allow(clippy::cast_precision_loss)] // Token count ratio; exact precision not critical
-        { 1.0 - (self.t_atp as f64 / total as f64) }
+        {
+            1.0 - (self.t_atp as f64 / total as f64)
+        }
     }
 
     /// Estimate remaining operations at current metabolic rate.
@@ -489,8 +498,11 @@ impl Operation {
         if self.estimated_cost == 0 {
             return f64::MAX;
         }
-        #[allow(clippy::cast_precision_loss)] // Token cost is u64; precision loss acceptable for ratio
-        { self.estimated_value / self.estimated_cost as f64 }
+        #[allow(clippy::cast_precision_loss)]
+        // Token cost is u64; precision loss acceptable for ratio
+        {
+            self.estimated_value / self.estimated_cost as f64
+        }
     }
 }
 
@@ -605,8 +617,11 @@ impl RecyclingRate {
     /// Estimate tokens recoverable from tADP pool.
     #[must_use]
     pub fn recoverable(&self, t_adp: u64) -> u64 {
-        #[allow(clippy::cast_precision_loss, clippy::cast_sign_loss)] // Rates are [0,1] so result is non-negative; precision loss acceptable
-        { (t_adp as f64 * self.combined()) as u64 }
+        #[allow(clippy::cast_precision_loss, clippy::cast_sign_loss)]
+        // Rates are [0,1] so result is non-negative; precision loss acceptable
+        {
+            (t_adp as f64 * self.combined()) as u64
+        }
     }
 }
 

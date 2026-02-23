@@ -3,8 +3,8 @@
 //! Prevents Google from detecting automated browser.
 //! Grounding: ∂(Boundary) + ν(Frequency) — boundary evasion at detection frequency.
 
-use chromiumoxide::page::Page;
 use crate::error::NotebookLmError;
+use chromiumoxide::page::Page;
 
 /// Chrome launch arguments for stealth operation.
 ///

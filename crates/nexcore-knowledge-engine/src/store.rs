@@ -2,6 +2,7 @@
 //!
 //! Packs stored at `~/.claude/brain/knowledge_packs/<name>/v<N>/pack.json`.
 
+use nexcore_fs::dirs;
 use std::path::{Path, PathBuf};
 
 use crate::error::{KnowledgeEngineError, Result};
@@ -33,7 +34,7 @@ impl KnowledgeStore {
 
     /// Create a temporary store (for testing).
     pub fn temp() -> Result<Self> {
-        let dir = std::env::temp_dir().join(format!("ke-{}", uuid::Uuid::new_v4()));
+        let dir = std::env::temp_dir().join(format!("ke-{}", nexcore_id::NexId::v4()));
         std::fs::create_dir_all(&dir)?;
         Ok(Self { root: dir })
     }

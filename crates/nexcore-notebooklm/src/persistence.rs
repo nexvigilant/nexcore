@@ -4,6 +4,7 @@
 //! Grounding: π(Persistence) + ∂(Boundary) — durable storage with atomic boundaries.
 
 use crate::error::NotebookLmError;
+use nexcore_fs::dirs;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -11,9 +12,8 @@ use std::path::{Path, PathBuf};
 ///
 /// Location: `~/.claude/data/notebooklm/`
 pub fn data_dir() -> Result<PathBuf, NotebookLmError> {
-    let home = dirs::home_dir().ok_or_else(|| {
-        NotebookLmError::Other("cannot determine home directory".to_string())
-    })?;
+    let home = dirs::home_dir()
+        .ok_or_else(|| NotebookLmError::Other("cannot determine home directory".to_string()))?;
     let dir = home.join(".claude").join("data").join("notebooklm");
     if !dir.exists() {
         fs::create_dir_all(&dir)?;
@@ -22,7 +22,9 @@ pub fn data_dir() -> Result<PathBuf, NotebookLmError> {
 }
 
 /// Read and deserialize JSON from a file. Returns default `T` if file doesn't exist.
-pub fn read_json<T: serde::de::DeserializeOwned + Default>(path: &Path) -> Result<T, NotebookLmError> {
+pub fn read_json<T: serde::de::DeserializeOwned + Default>(
+    path: &Path,
+) -> Result<T, NotebookLmError> {
     if !path.exists() {
         return Ok(T::default());
     }
@@ -95,8 +97,9 @@ mod tests {
     #[test]
     fn test_atomic_write_and_read() {
         let tmp = std::env::temp_dir().join("nlm_test_atomic.json");
-        let data: HashMap<String, String> =
-            [("key".to_string(), "value".to_string())].into_iter().collect();
+        let data: HashMap<String, String> = [("key".to_string(), "value".to_string())]
+            .into_iter()
+            .collect();
 
         let write_result = write_json(&tmp, &data);
         assert!(write_result.is_ok());

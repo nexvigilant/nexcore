@@ -23,8 +23,8 @@
 //! | Work output W | Resolved cases | Processed requests |
 //! | Enthalpy flow ṁh | Inter-agency transfers | Message passing |
 
+use nexcore_error::Error;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
 /// Errors for energy balance calculations.
 #[derive(Debug, Error, PartialEq, Clone)]

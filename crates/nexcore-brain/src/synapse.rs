@@ -27,6 +27,7 @@ use crate::BrainError;
 use crate::error::Result;
 use crate::implicit::Pattern;
 use chrono::{DateTime, Utc};
+use nexcore_fs::dirs;
 use nexcore_synapse::{
     Amplitude, AmplitudeConfig, ConsolidationStatus, LearningSignal, Synapse, SynapseBank,
 };

@@ -237,7 +237,8 @@ impl LoopGainMonitor {
 
     /// Record one hop in the cascade chain.
     pub fn record_hop(&mut self, source: &str, amplification: f64) {
-        self.chain_amplifications.push((source.to_owned(), amplification));
+        self.chain_amplifications
+            .push((source.to_owned(), amplification));
     }
 
     /// Check whether the cumulative loop gain exceeds the threshold.

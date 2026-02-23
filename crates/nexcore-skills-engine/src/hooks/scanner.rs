@@ -8,9 +8,9 @@
 use super::policy::PolicyFile;
 use super::staleness::{StalenessResult, StalenessSummary, check_staleness};
 use super::validation::{ValidationResult, validate_file};
+use nexcore_fs::walk::WalkDir;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-use walkdir::WalkDir;
 
 /// Results from scanning a directory
 #[derive(Debug, Serialize, Deserialize, Clone)]

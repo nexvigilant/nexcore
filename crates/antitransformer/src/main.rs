@@ -16,8 +16,8 @@
 //! [{"id": "h1", "verdict": "human", "probability": 0.12, "confidence": 0.76, "features": {...}}]
 //! ```
 
-use nexcore_error::{Context, Result};
 use clap::{Parser, Subcommand};
+use nexcore_error::{Context, Result};
 use std::io::{self, BufRead, Write};
 use tracing::{error, info};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};

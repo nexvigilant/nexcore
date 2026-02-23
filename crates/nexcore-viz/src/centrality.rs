@@ -306,10 +306,7 @@ pub fn eigenvector_centrality(graph: &GraphSpec, max_iter: usize) -> HashMap<Str
         }
 
         // Normalise by max so we don't overflow.
-        let max_val = new_scores
-            .iter()
-            .copied()
-            .fold(f64::NEG_INFINITY, f64::max);
+        let max_val = new_scores.iter().copied().fold(f64::NEG_INFINITY, f64::max);
         if max_val > f64::EPSILON {
             for s in new_scores.iter_mut() {
                 *s /= max_val;
@@ -330,10 +327,7 @@ pub fn eigenvector_centrality(graph: &GraphSpec, max_iter: usize) -> HashMap<Str
     }
 
     // Final max-normalise.
-    let max_val = scores
-        .iter()
-        .copied()
-        .fold(0.0_f64, f64::max);
+    let max_val = scores.iter().copied().fold(0.0_f64, f64::max);
 
     graph
         .node_ids
@@ -407,13 +401,7 @@ mod tests {
     /// Star graph: one hub connected to 4 leaves.
     fn star() -> GraphSpec {
         GraphSpec {
-            node_ids: vec![
-                "hub".into(),
-                "a".into(),
-                "b".into(),
-                "c".into(),
-                "d".into(),
-            ],
+            node_ids: vec!["hub".into(), "a".into(), "b".into(), "c".into(), "d".into()],
             edges: vec![
                 ("hub".into(), "a".into()),
                 ("hub".into(), "b".into()),
@@ -491,10 +479,7 @@ mod tests {
     fn degree_centrality_all_values_in_unit_interval() {
         let dc = degree_centrality(&path5());
         for (_, v) in &dc {
-            assert!(
-                *v >= 0.0 && *v <= 1.0,
-                "DC value {v} out of [0, 1]"
-            );
+            assert!(*v >= 0.0 && *v <= 1.0, "DC value {v} out of [0, 1]");
         }
     }
 
@@ -557,7 +542,10 @@ mod tests {
         let g = path5();
         let bc = betweenness_centrality(&g);
         for id in &g.node_ids {
-            assert!(bc.contains_key(id), "node {id} missing from betweenness result");
+            assert!(
+                bc.contains_key(id),
+                "node {id} missing from betweenness result"
+            );
         }
     }
 
@@ -654,7 +642,10 @@ mod tests {
     fn eigenvector_centrality_non_negative() {
         let ec = eigenvector_centrality(&star(), 200);
         for (_, v) in &ec {
-            assert!(*v >= 0.0, "eigenvector centrality must be non-negative, got {v}");
+            assert!(
+                *v >= 0.0,
+                "eigenvector centrality must be non-negative, got {v}"
+            );
         }
     }
 

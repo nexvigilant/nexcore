@@ -2,11 +2,11 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use chrono::{DateTime, Utc};
+use nexcore_id::NexId;
 use nexcore_vigilance::guardian::homeostasis::evaluate_pv_risk;
 use nexcore_vigilance::guardian::RiskContext;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-use uuid::Uuid;
 
 pub mod grounding;
 pub mod persistence;
@@ -16,7 +16,8 @@ pub mod persistence;
 /// Grounds to: T2-C Composite Patterns (PRR/ROR/EBGM metrics + risk assessment)
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct SignalAnalysisResult {
-    pub id: Uuid,
+    #[schema(value_type = String)]
+    pub id: NexId,
     pub drug_name: String,
     pub event_name: String,
     pub timestamp: DateTime<Utc>,
@@ -55,7 +56,7 @@ impl SignalAnalysisResult {
         let (score, actions) = evaluate_pv_risk(&context);
 
         Self {
-            id: Uuid::new_v4(),
+            id: NexId::v4(),
             drug_name: drug.to_string(),
             event_name: event.to_string(),
             timestamp: Utc::now(),

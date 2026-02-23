@@ -6,8 +6,8 @@
 //! Every step produces an auditable intermediate.
 //! The chain of intermediates IS the proof.
 
+use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 use crate::chromatography::{Column, SeparationQuality};
 use crate::distillation::Distiller;
@@ -48,7 +48,7 @@ pub enum StepVerification {
 /// The complete proof trail for transforming an expression into canonical form.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProofTrail {
-    pub id: Uuid,
+    pub id: NexId,
     pub input_expression: String,
     pub steps: Vec<ProofStep>,
     /// Is the entire trail valid?
@@ -60,7 +60,7 @@ pub struct ProofTrail {
 /// The complete proof that two expressions are (or aren't) equivalent.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SemanticEquivalenceProof {
-    pub id: Uuid,
+    pub id: NexId,
     pub trail_a: ProofTrail,
     pub trail_b: ProofTrail,
     pub equivalence: EquivalenceProof,
@@ -241,7 +241,7 @@ impl ProofPipeline {
         steps.push(titration_step);
 
         ProofTrail {
-            id: Uuid::new_v4(),
+            id: NexId::v4(),
             input_expression: expression.to_string(),
             steps,
             trail_valid: all_valid,
@@ -262,7 +262,7 @@ impl ProofPipeline {
         let proof_valid = trail_a.trail_valid && trail_b.trail_valid;
 
         SemanticEquivalenceProof {
-            id: Uuid::new_v4(),
+            id: NexId::v4(),
             trail_a,
             trail_b,
             equivalence,

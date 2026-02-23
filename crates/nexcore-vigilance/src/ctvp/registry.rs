@@ -3,10 +3,10 @@
 use super::capability::{Capability, CapabilityTracker};
 use super::config::CtvpConfig;
 use super::phases::ValidationSummary;
+use nexcore_error::Error;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use thiserror::Error;
 
 /// Registry errors
 #[derive(Debug, Error)]

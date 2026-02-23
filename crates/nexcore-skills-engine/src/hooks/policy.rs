@@ -4,11 +4,12 @@
 //! Policies are loaded from YAML files and define placement rules, staleness
 //! thresholds, and forbidden zones.
 
+use nexcore_error::Error;
+use nexcore_fs::dirs;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use thiserror::Error;
 
 /// Errors that can occur when loading or applying policies
 #[derive(Error, Debug)]
@@ -20,7 +21,7 @@ pub enum PolicyError {
     #[error("Failed to parse policy YAML: {0}")]
     ParseError(#[from] serde_yaml::Error),
     /// Policy file not found
-    #[error("Policy file not found: {0}")]
+    #[error("Policy file not found: {0:?}")]
     NotFound(PathBuf),
     /// Invalid policy configuration
     #[error("Invalid policy configuration: {0}")]

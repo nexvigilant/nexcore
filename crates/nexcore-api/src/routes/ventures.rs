@@ -87,7 +87,7 @@ pub async fn submit_inquiry(
     Json(req): Json<PartnershipRequest>,
 ) -> Result<Json<PartnershipInquiry>, crate::routes::common::ApiError> {
     let inquiry = PartnershipInquiry {
-        id: uuid::Uuid::new_v4().to_string(),
+        id: nexcore_id::NexId::v4().to_string(),
         name: req.name,
         email: req.email,
         organization: req.organization,

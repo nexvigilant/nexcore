@@ -3,13 +3,14 @@
 name = "counter-awareness"
 version = "1.0.0"
 edition = "2024"
+license = "LicenseRef-NexVigilant-Proprietary"
 rust-version = "1.85"
 description = "Detection/counter-detection matrix formalization for multi-spectral awareness resistance"
 
 [dependencies]
+nexcore-error = { workspace = true }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
-thiserror = { version = "1.0.61" }
 
 [lints.rust]
 async_fn_in_trait = "allow"

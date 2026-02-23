@@ -28,22 +28,34 @@ fn add_t1_primitives(text: &str, prims: &mut Vec<ExtractedPrimitive>) {
         prims.push(ExtractedPrimitive::t1("Sequence (σ)", "Ordered iteration"));
     }
     if text.contains("map") || text.contains("lookup") || text.contains("key") {
-        prims.push(ExtractedPrimitive::t1("Mapping (μ)", "Key-value association"));
+        prims.push(ExtractedPrimitive::t1(
+            "Mapping (μ)",
+            "Key-value association",
+        ));
     }
     if text.contains("state") || text.contains("mutate") || text.contains("update") {
         prims.push(ExtractedPrimitive::t1("State (ς)", "State mutation"));
     }
     if text.contains("recursive") || text.contains("tree") || text.contains("traverse") {
-        prims.push(ExtractedPrimitive::t1("Recursion (ρ)", "Recursive structure"));
+        prims.push(ExtractedPrimitive::t1(
+            "Recursion (ρ)",
+            "Recursive structure",
+        ));
     }
     if text.contains("filter") || text.contains("guard") || text.contains("validate") {
-        prims.push(ExtractedPrimitive::t1("Existence (∃)", "Validation/filtering"));
+        prims.push(ExtractedPrimitive::t1(
+            "Existence (∃)",
+            "Validation/filtering",
+        ));
     }
 }
 
 fn add_t2p_primitives(text: &str, prims: &mut Vec<ExtractedPrimitive>) {
     if text.contains("exit code") || text.contains("allow") || text.contains("block") {
-        prims.push(ExtractedPrimitive::t2p("DecisionGate", "Hook decision pattern"));
+        prims.push(ExtractedPrimitive::t2p(
+            "DecisionGate",
+            "Hook decision pattern",
+        ));
     }
     if text.contains("timeout") || text.contains("limit") || text.contains("threshold") {
         prims.push(ExtractedPrimitive::t2p("Threshold", "Limit enforcement"));
@@ -61,9 +73,15 @@ fn add_t2c_primitives(text: &str, prims: &mut Vec<ExtractedPrimitive>) {
 
 fn add_t3_primitives(text: &str, prims: &mut Vec<ExtractedPrimitive>) {
     if text.contains("pretooluse") || text.contains("posttooluse") {
-        prims.push(ExtractedPrimitive::t3("ToolInterceptor", "Tool lifecycle interception"));
+        prims.push(ExtractedPrimitive::t3(
+            "ToolInterceptor",
+            "Tool lifecycle interception",
+        ));
     }
     if text.contains("sessionstart") || text.contains("stop") {
-        prims.push(ExtractedPrimitive::t3("SessionLifecycle", "Session boundary handling"));
+        prims.push(ExtractedPrimitive::t3(
+            "SessionLifecycle",
+            "Session boundary handling",
+        ));
     }
 }

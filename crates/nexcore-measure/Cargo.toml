@@ -13,13 +13,13 @@ name = "nexcore-measure"
 path = "bin/nexcore_measure.rs"
 
 [dependencies]
+nexcore-error = { workspace = true }
 nexcore-constants = { version = "1.0.0", path = "../nexcore-constants", registry = "nexcore" }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
-thiserror = { version = "1.0.61" }
 toml = { version = "0.8.15" }
-walkdir = { version = "2.5.0" }
+nexcore-fs = { workspace = true }
 flate2 = { version = "1.0.30" }
 chrono = { version = "0.4.38", features = ["serde"] }
 clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }

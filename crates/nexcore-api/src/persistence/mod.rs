@@ -169,7 +169,10 @@ impl Persistence {
         }
     }
 
-    pub async fn save_enrollment(&self, enrollment: &EnrollmentRecord) -> nexcore_error::Result<()> {
+    pub async fn save_enrollment(
+        &self,
+        enrollment: &EnrollmentRecord,
+    ) -> nexcore_error::Result<()> {
         match self {
             Self::Firestore(f) => f.save_enrollment(enrollment).await,
             Self::Mock(m) => m.save_enrollment(enrollment).await,
@@ -197,14 +200,20 @@ impl Persistence {
         }
     }
 
-    pub async fn save_membership(&self, membership: &MembershipRecord) -> nexcore_error::Result<()> {
+    pub async fn save_membership(
+        &self,
+        membership: &MembershipRecord,
+    ) -> nexcore_error::Result<()> {
         match self {
             Self::Firestore(f) => f.save_membership(membership).await,
             Self::Mock(m) => m.save_membership(membership).await,
         }
     }
 
-    pub async fn list_memberships(&self, user_id: &str) -> nexcore_error::Result<Vec<MembershipRecord>> {
+    pub async fn list_memberships(
+        &self,
+        user_id: &str,
+    ) -> nexcore_error::Result<Vec<MembershipRecord>> {
         match self {
             Self::Firestore(f) => f.list_memberships(user_id).await,
             Self::Mock(m) => m.list_memberships(user_id).await,

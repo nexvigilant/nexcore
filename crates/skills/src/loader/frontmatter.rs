@@ -1,7 +1,7 @@
 //! SKILL.md frontmatter parsing
 
+use nexcore_error::Error;
 use serde::Deserialize;
-use thiserror::Error;
 
 /// Frontmatter parsing errors
 #[derive(Debug, Error)]

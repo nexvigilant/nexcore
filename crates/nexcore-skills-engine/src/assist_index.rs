@@ -7,10 +7,10 @@
 use std::collections::HashMap;
 use std::path::Path;
 
+use nexcore_fs::walk::WalkDir;
 use rayon::prelude::*;
 use regex::RegexBuilder;
 use serde::{Deserialize, Serialize};
-use walkdir::WalkDir;
 
 use crate::foundation::skill_metadata::parse_frontmatter;
 

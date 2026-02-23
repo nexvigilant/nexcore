@@ -182,8 +182,8 @@ impl OpenFdaClient {
             if let Some(entry) = cache.get(&url) {
                 if entry.is_fresh() {
                     tracing::debug!(url = %url, "openFDA cache hit (fresh)");
-                    let response: OpenFdaResponse<T> = serde_json::from_str(&entry.body)
-                        .map_err(OpenFdaError::ParseError)?;
+                    let response: OpenFdaResponse<T> =
+                        serde_json::from_str(&entry.body).map_err(OpenFdaError::ParseError)?;
                     return Ok(response);
                 }
             }
@@ -203,8 +203,8 @@ impl OpenFdaClient {
                             .num_seconds(),
                         "openFDA API failed — serving stale cache (V33 contingency)"
                     );
-                    let response: OpenFdaResponse<T> = serde_json::from_str(&entry.body)
-                        .map_err(OpenFdaError::ParseError)?;
+                    let response: OpenFdaResponse<T> =
+                        serde_json::from_str(&entry.body).map_err(OpenFdaError::ParseError)?;
                     return Ok(response);
                 }
                 return Err(nexcore_error::NexError::from(api_err));
@@ -358,8 +358,7 @@ mod tests {
 
     #[test]
     fn build_url_with_api_key() {
-        let client =
-            OpenFdaClient::with_api_key("test_key_abc").unwrap_or_else(|e| panic!("{e}"));
+        let client = OpenFdaClient::with_api_key("test_key_abc").unwrap_or_else(|e| panic!("{e}"));
         let params = QueryParams::default();
         let url = client.build_url("/drug/event.json", &params);
         assert!(url.contains("api_key=test_key_abc"));

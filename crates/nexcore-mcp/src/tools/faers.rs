@@ -9,13 +9,13 @@ use crate::params::{
 use nexcore_vigilance::pv::{
     ContingencyTable, SignalCriteria, calculate_chi_square, calculate_prr, calculate_ror,
 };
-use once_cell::sync::Lazy;
 use reqwest::Client;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 use serde::Deserialize;
 use serde_json::json;
 use std::collections::HashSet;
+use std::sync::LazyLock;
 
 /// OpenFDA API base URL
 const OPENFDA_BASE_URL: &str = "https://api.fda.gov/drug/event.json";
@@ -23,7 +23,7 @@ const OPENFDA_BASE_URL: &str = "https://api.fda.gov/drug/event.json";
 /// Lazy-initialized HTTP client for OpenFDA API
 /// Reused across all tool calls to avoid 500-600µs client creation overhead per call.
 /// Performance improvement: ~10x faster than creating new client each call.
-static HTTP_CLIENT: Lazy<Client> = Lazy::new(|| {
+static HTTP_CLIENT: LazyLock<Client> = LazyLock::new(|| {
     Client::builder()
         .timeout(std::time::Duration::from_secs(30))
         .pool_max_idle_per_host(200)

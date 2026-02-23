@@ -10,7 +10,7 @@
 //! - **ends**: Consumed by caller
 
 /// Errors that can occur during aggregation operations.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum AggregateError {
     /// Empty input where at least one element is required.
     #[error("empty input: {context}")]

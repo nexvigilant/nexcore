@@ -608,11 +608,7 @@ pub fn mantel_haenszel(params: EpiMantelHaenszelParams) -> Result<CallToolResult
                 let r2 = (-qb - sqrt_disc) / (2.0 * qa);
                 let lo = (n1 + m1 - t).max(0.0);
                 let hi = n1.min(m1);
-                if r1 >= lo && r1 <= hi {
-                    r1
-                } else {
-                    r2
-                }
+                if r1 >= lo && r1 <= hi { r1 } else { r2 }
             }
         };
 

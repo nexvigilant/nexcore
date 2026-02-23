@@ -66,7 +66,7 @@ mod tests {
         let a = element::Atom::new("adverse", element::ElementClass::Modifier, 0.35);
         let b = element::Atom::new("event", element::ElementClass::ObservationType, 0.25);
         let compound = element::Compound {
-            id: uuid::Uuid::new_v4(),
+            id: nexcore_id::NexId::v4(),
             atoms: vec![a, b],
             bonds: vec![],
             vector: vec![ordered_float::OrderedFloat(0.0); element::VECTOR_DIM],
@@ -86,7 +86,7 @@ mod tests {
         let mut vec = vec![ordered_float::OrderedFloat(0.0); element::VECTOR_DIM];
         vec[0] = ordered_float::OrderedFloat(1.0);
         let compound = element::Compound {
-            id: uuid::Uuid::new_v4(),
+            id: nexcore_id::NexId::v4(),
             atoms: vec![a],
             bonds: vec![],
             vector: vec,
@@ -371,18 +371,18 @@ mod tests {
     #[test]
     fn spectral_distance_identical() {
         let s1 = spectrum::Spectrum {
-            atom_id: uuid::Uuid::new_v4(),
+            atom_id: nexcore_id::NexId::v4(),
             lines: vec![spectrum::SpectralLine {
-                probe_id: uuid::Uuid::new_v4(),
+                probe_id: nexcore_id::NexId::v4(),
                 absorption: ordered_float::OrderedFloat(0.8),
                 line_width: ordered_float::OrderedFloat(0.1),
             }],
             recorded_at: chrono::Utc::now(),
         };
         let s2 = spectrum::Spectrum {
-            atom_id: uuid::Uuid::new_v4(),
+            atom_id: nexcore_id::NexId::v4(),
             lines: vec![spectrum::SpectralLine {
-                probe_id: uuid::Uuid::new_v4(),
+                probe_id: nexcore_id::NexId::v4(),
                 absorption: ordered_float::OrderedFloat(0.8),
                 line_width: ordered_float::OrderedFloat(0.1),
             }],
@@ -400,14 +400,14 @@ mod tests {
     #[test]
     fn spectral_distance_different_lengths() {
         let s1 = spectrum::Spectrum {
-            atom_id: uuid::Uuid::new_v4(),
+            atom_id: nexcore_id::NexId::v4(),
             lines: vec![],
             recorded_at: chrono::Utc::now(),
         };
         let s2 = spectrum::Spectrum {
-            atom_id: uuid::Uuid::new_v4(),
+            atom_id: nexcore_id::NexId::v4(),
             lines: vec![spectrum::SpectralLine {
-                probe_id: uuid::Uuid::new_v4(),
+                probe_id: nexcore_id::NexId::v4(),
                 absorption: ordered_float::OrderedFloat(0.5),
                 line_width: ordered_float::OrderedFloat(0.2),
             }],

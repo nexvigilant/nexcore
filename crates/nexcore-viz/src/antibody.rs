@@ -303,14 +303,29 @@ pub fn classify_chain(chain: &Chain, _atoms: &[Atom]) -> IgChainType {
     // Look for characteristic residues near the C-terminus of the constant
     // domain (roughly positions 205–214 in Kabat numbering).
     // Kappa has CYS at position 214; lambda is defined by the absence.
-    let has_c_terminal_cys = chain.residues.iter().rev().take(20).any(|r| r.name == "CYS");
+    let has_c_terminal_cys = chain
+        .residues
+        .iter()
+        .rev()
+        .take(20)
+        .any(|r| r.name == "CYS");
 
     // Additionally, check for a kappa-marker residue name pattern: kappa
     // light chains typically have THR near the very C-terminus.
-    let has_c_terminal_thr = chain.residues.iter().rev().take(10).any(|r| r.name == "THR");
+    let has_c_terminal_thr = chain
+        .residues
+        .iter()
+        .rev()
+        .take(10)
+        .any(|r| r.name == "THR");
 
     // Lambda light chains carry a SER at their penultimate constant position.
-    let has_c_terminal_ser = chain.residues.iter().rev().take(10).any(|r| r.name == "SER");
+    let has_c_terminal_ser = chain
+        .residues
+        .iter()
+        .rev()
+        .take(10)
+        .any(|r| r.name == "SER");
 
     if has_c_terminal_cys && has_c_terminal_thr && !has_c_terminal_ser {
         IgChainType::LightKappa
@@ -356,10 +371,9 @@ pub fn identify_domains(chain: &Chain, chain_type: IgChainType) -> Vec<DomainReg
             (IgDomain::CH2, 244, 360),
             (IgDomain::CH3, 361, 476),
         ],
-        IgChainType::LightKappa | IgChainType::LightLambda => &[
-            (IgDomain::VL, 1, 107),
-            (IgDomain::CL, 108, 214),
-        ],
+        IgChainType::LightKappa | IgChainType::LightLambda => {
+            &[(IgDomain::VL, 1, 107), (IgDomain::CL, 108, 214)]
+        }
         IgChainType::Unknown => &[],
     };
 
@@ -411,11 +425,7 @@ pub fn identify_domains(chain: &Chain, chain_type: IgChainType) -> Vec<DomainReg
 /// Each CDR is represented as a [`CdrLoop`] with the one-letter sequence
 /// extracted from the residue names present in the chain.
 #[must_use]
-pub fn locate_cdrs_kabat(
-    chain: &Chain,
-    chain_type: IgChainType,
-    _atoms: &[Atom],
-) -> Vec<CdrLoop> {
+pub fn locate_cdrs_kabat(chain: &Chain, chain_type: IgChainType, _atoms: &[Atom]) -> Vec<CdrLoop> {
     // (CdrId, start_seq, end_seq)
     let cdr_windows: &[(CdrId, i32, i32)] = match chain_type {
         IgChainType::Heavy => &[
@@ -507,9 +517,7 @@ pub fn detect_disulfide_bonds(mol: &Molecule, max_distance: f64) -> Vec<(usize, 
             let idx_b = sg_indices[j];
 
             // Both indices are valid by construction (collected from enumeration).
-            if let (Some(atom_a), Some(atom_b)) =
-                (mol.atoms.get(idx_a), mol.atoms.get(idx_b))
-            {
+            if let (Some(atom_a), Some(atom_b)) = (mol.atoms.get(idx_a), mol.atoms.get(idx_b)) {
                 if atom_a.distance_to(atom_b) <= max_distance {
                     bonds.push((idx_a, idx_b));
                 }
@@ -562,19 +570,13 @@ pub fn map_fragments(
 
         let fab_heavy_domains: Vec<DomainRegion> = domains
             .iter()
-            .filter(|d| {
-                d.chain_id == heavy_id
-                    && matches!(d.domain, IgDomain::VH | IgDomain::CH1)
-            })
+            .filter(|d| d.chain_id == heavy_id && matches!(d.domain, IgDomain::VH | IgDomain::CH1))
             .cloned()
             .collect();
 
         let fab_light_domains: Vec<DomainRegion> = domains
             .iter()
-            .filter(|d| {
-                d.chain_id == light_id
-                    && matches!(d.domain, IgDomain::VL | IgDomain::CL)
-            })
+            .filter(|d| d.chain_id == light_id && matches!(d.domain, IgDomain::VL | IgDomain::CL))
             .cloned()
             .collect();
 
@@ -593,9 +595,7 @@ pub fn map_fragments(
     // Build Hinge fragment — hinge regions from all heavy chains.
     let hinge_domains: Vec<DomainRegion> = domains
         .iter()
-        .filter(|d| {
-            heavy_chains.contains(&d.chain_id) && d.domain == IgDomain::Hinge
-        })
+        .filter(|d| heavy_chains.contains(&d.chain_id) && d.domain == IgDomain::Hinge)
         .cloned()
         .collect();
 
@@ -611,8 +611,7 @@ pub fn map_fragments(
     let fc_domains: Vec<DomainRegion> = domains
         .iter()
         .filter(|d| {
-            heavy_chains.contains(&d.chain_id)
-                && matches!(d.domain, IgDomain::CH2 | IgDomain::CH3)
+            heavy_chains.contains(&d.chain_id) && matches!(d.domain, IgDomain::CH2 | IgDomain::CH3)
         })
         .cloned()
         .collect();
@@ -873,7 +872,11 @@ mod tests {
         assert!(h1.is_some(), "CDR-H1 not found");
 
         let h1 = h1.unwrap_or_else(|| unreachable!());
-        assert!(h1.start_residue >= 26, "H1 starts too early: {}", h1.start_residue);
+        assert!(
+            h1.start_residue >= 26,
+            "H1 starts too early: {}",
+            h1.start_residue
+        );
         assert!(h1.end_residue <= 35, "H1 ends too late: {}", h1.end_residue);
         assert!(h1.length > 0, "H1 must have residues");
     }
@@ -892,7 +895,11 @@ mod tests {
         assert!(l1.is_some(), "CDR-L1 not found");
 
         let l1 = l1.unwrap_or_else(|| unreachable!());
-        assert!(l1.start_residue >= 24, "L1 starts too early: {}", l1.start_residue);
+        assert!(
+            l1.start_residue >= 24,
+            "L1 starts too early: {}",
+            l1.start_residue
+        );
         assert!(l1.end_residue <= 34, "L1 ends too late: {}", l1.end_residue);
         assert!(l1.length > 0, "L1 must have residues");
     }
@@ -909,7 +916,12 @@ mod tests {
         mol.atoms.push(cys_sg_atom(2, [2.0, 0.0, 0.0], 'A', 95));
 
         let bonds = detect_disulfide_bonds(&mol, 2.2);
-        assert_eq!(bonds.len(), 1, "expected one disulfide bond, got {}", bonds.len());
+        assert_eq!(
+            bonds.len(),
+            1,
+            "expected one disulfide bond, got {}",
+            bonds.len()
+        );
         assert_eq!(bonds[0], (0, 1));
     }
 
@@ -945,23 +957,107 @@ mod tests {
         // Provide representative domain regions for both heavy chains and both lights.
         let domains = vec![
             // Heavy H — Fab portion
-            DomainRegion { domain: IgDomain::VH,    chain_id: 'H', start_residue: 1,   end_residue: 113, residue_count: 113 },
-            DomainRegion { domain: IgDomain::CH1,   chain_id: 'H', start_residue: 114, end_residue: 223, residue_count: 110 },
-            DomainRegion { domain: IgDomain::Hinge, chain_id: 'H', start_residue: 224, end_residue: 243, residue_count: 20  },
-            DomainRegion { domain: IgDomain::CH2,   chain_id: 'H', start_residue: 244, end_residue: 360, residue_count: 117 },
-            DomainRegion { domain: IgDomain::CH3,   chain_id: 'H', start_residue: 361, end_residue: 476, residue_count: 116 },
+            DomainRegion {
+                domain: IgDomain::VH,
+                chain_id: 'H',
+                start_residue: 1,
+                end_residue: 113,
+                residue_count: 113,
+            },
+            DomainRegion {
+                domain: IgDomain::CH1,
+                chain_id: 'H',
+                start_residue: 114,
+                end_residue: 223,
+                residue_count: 110,
+            },
+            DomainRegion {
+                domain: IgDomain::Hinge,
+                chain_id: 'H',
+                start_residue: 224,
+                end_residue: 243,
+                residue_count: 20,
+            },
+            DomainRegion {
+                domain: IgDomain::CH2,
+                chain_id: 'H',
+                start_residue: 244,
+                end_residue: 360,
+                residue_count: 117,
+            },
+            DomainRegion {
+                domain: IgDomain::CH3,
+                chain_id: 'H',
+                start_residue: 361,
+                end_residue: 476,
+                residue_count: 116,
+            },
             // Heavy I — same structure
-            DomainRegion { domain: IgDomain::VH,    chain_id: 'I', start_residue: 1,   end_residue: 113, residue_count: 113 },
-            DomainRegion { domain: IgDomain::CH1,   chain_id: 'I', start_residue: 114, end_residue: 223, residue_count: 110 },
-            DomainRegion { domain: IgDomain::Hinge, chain_id: 'I', start_residue: 224, end_residue: 243, residue_count: 20  },
-            DomainRegion { domain: IgDomain::CH2,   chain_id: 'I', start_residue: 244, end_residue: 360, residue_count: 117 },
-            DomainRegion { domain: IgDomain::CH3,   chain_id: 'I', start_residue: 361, end_residue: 476, residue_count: 116 },
+            DomainRegion {
+                domain: IgDomain::VH,
+                chain_id: 'I',
+                start_residue: 1,
+                end_residue: 113,
+                residue_count: 113,
+            },
+            DomainRegion {
+                domain: IgDomain::CH1,
+                chain_id: 'I',
+                start_residue: 114,
+                end_residue: 223,
+                residue_count: 110,
+            },
+            DomainRegion {
+                domain: IgDomain::Hinge,
+                chain_id: 'I',
+                start_residue: 224,
+                end_residue: 243,
+                residue_count: 20,
+            },
+            DomainRegion {
+                domain: IgDomain::CH2,
+                chain_id: 'I',
+                start_residue: 244,
+                end_residue: 360,
+                residue_count: 117,
+            },
+            DomainRegion {
+                domain: IgDomain::CH3,
+                chain_id: 'I',
+                start_residue: 361,
+                end_residue: 476,
+                residue_count: 116,
+            },
             // Light L — Fab portion
-            DomainRegion { domain: IgDomain::VL, chain_id: 'L', start_residue: 1,   end_residue: 107, residue_count: 107 },
-            DomainRegion { domain: IgDomain::CL, chain_id: 'L', start_residue: 108, end_residue: 214, residue_count: 107 },
+            DomainRegion {
+                domain: IgDomain::VL,
+                chain_id: 'L',
+                start_residue: 1,
+                end_residue: 107,
+                residue_count: 107,
+            },
+            DomainRegion {
+                domain: IgDomain::CL,
+                chain_id: 'L',
+                start_residue: 108,
+                end_residue: 214,
+                residue_count: 107,
+            },
             // Light M
-            DomainRegion { domain: IgDomain::VL, chain_id: 'M', start_residue: 1,   end_residue: 107, residue_count: 107 },
-            DomainRegion { domain: IgDomain::CL, chain_id: 'M', start_residue: 108, end_residue: 214, residue_count: 107 },
+            DomainRegion {
+                domain: IgDomain::VL,
+                chain_id: 'M',
+                start_residue: 1,
+                end_residue: 107,
+                residue_count: 107,
+            },
+            DomainRegion {
+                domain: IgDomain::CL,
+                chain_id: 'M',
+                start_residue: 108,
+                end_residue: 214,
+                residue_count: 107,
+            },
         ];
 
         let fragments = map_fragments(&chain_types, &domains);
@@ -979,7 +1075,10 @@ mod tests {
             .filter(|f| f.fragment_type == FragmentType::Hinge)
             .count();
 
-        assert_eq!(fab_count, 2, "expected 2 Fab fragments (one per heavy-light pair)");
+        assert_eq!(
+            fab_count, 2,
+            "expected 2 Fab fragments (one per heavy-light pair)"
+        );
         assert_eq!(fc_count, 1, "expected 1 Fc fragment");
         assert_eq!(hinge_count, 1, "expected 1 Hinge fragment");
     }

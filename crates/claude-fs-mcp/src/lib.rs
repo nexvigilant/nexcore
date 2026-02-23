@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 
 use flate2::Compression;
 use flate2::write::GzEncoder;
+use nexcore_fs::walk::WalkDir;
 use rmcp::handler::server::router::tool::ToolRouter;
 use rmcp::handler::server::tool::ToolCallContext;
 use rmcp::handler::server::wrapper::Parameters;
@@ -20,12 +21,11 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tokio::fs;
 use tokio::io::AsyncWriteExt;
-use walkdir::WalkDir;
 
 const CLAUDE_ROOT: &str = "/home/matthew/.claude";
 const BACKUP_DIR: &str = "/home/matthew/.claude/backup/sessions";
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum FsError {
     #[error("path escapes claude root: {0}")]
     PathEscape(String),

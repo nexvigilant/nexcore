@@ -17,6 +17,7 @@ name = "orchestrator-cli"
 path = "bin/orchestrator_cli.rs"
 
 [dependencies]
+nexcore-error = { workspace = true }
 # Workspace (always)
 nexcore-build-gate = { version = "1.0.0", path = "../nexcore-build-gate", registry = "nexcore" }
 nexcore-measure = { version = "1.0.0", path = "../nexcore-measure", registry = "nexcore" }
@@ -24,11 +25,9 @@ nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", 
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 chrono = { version = "0.4.38", features = ["serde"] }
-thiserror = { version = "1.0.61" }
 tracing = { version = "0.1.40" }
 sha2 = { version = "0.10.8" }
-hex = { version = "0.4.3" }
-walkdir = { version = "2.5.0" }
+nexcore-fs = { workspace = true }
 clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
 
 # SSR-only (optional, workspace)

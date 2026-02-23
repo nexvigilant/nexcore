@@ -106,15 +106,13 @@ pub use crate::grammar::{
 
 // ── Molecular weight ─────────────────────────────────────────────────────────
 
-pub use crate::molecular_weight::{
-    AtomicMass, MolecularFormula, MolecularWeight, TransferClass,
-};
+pub use crate::molecular_weight::{AtomicMass, MolecularFormula, MolecularWeight, TransferClass};
 
 // ── Semantic grounding path ──────────────────────────────────────────────────
 
 pub use crate::semantic_path::{
-    GroundingType, SemanticGroundingPath, SemanticRelation, SemanticStep,
-    anti_triviality_argument, grounding_type, semantic_paths, validate_all_semantic_grounding,
+    GroundingType, SemanticGroundingPath, SemanticRelation, SemanticStep, anti_triviality_argument,
+    grounding_type, semantic_paths, validate_all_semantic_grounding,
 };
 
 // ── Synthesizer ──────────────────────────────────────────────────────────────

@@ -8,7 +8,7 @@ description = "Skill verification infrastructure for Claude Code skills"
 license = "MIT"
 
 [dependencies]
-thiserror = "2.0"
+nexcore-error = { workspace = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.9"

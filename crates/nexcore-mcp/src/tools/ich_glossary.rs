@@ -8,11 +8,11 @@ use nexcore_vigilance::pv::regulatory::ich_glossary::{
     Guideline, IchCategory, TOTAL_TERM_COUNT, Term, all_terms, autocomplete, glossary_metadata,
     lookup_guideline, lookup_term, search_terms,
 };
-use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // STATIC CACHES FOR PERFORMANCE
@@ -20,8 +20,8 @@ use std::collections::HashMap;
 
 /// Cache for ich_lookup formatted results. Maps term name → formatted output.
 /// Initialized with capacity for all 894+ terms.
-static ICH_TERM_CACHE: Lazy<RwLock<HashMap<String, String>>> =
-    Lazy::new(|| RwLock::new(HashMap::with_capacity(894)));
+static ICH_TERM_CACHE: LazyLock<RwLock<HashMap<String, String>>> =
+    LazyLock::new(|| RwLock::new(HashMap::with_capacity(894)));
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TOOL: ich_lookup

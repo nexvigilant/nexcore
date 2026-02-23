@@ -55,8 +55,14 @@ impl VolumeBounds {
 
     pub fn pack(&self, buffer: &mut Vec<f32>) {
         buffer.extend_from_slice(&[
-            self.min_extents[0], self.min_extents[1], self.min_extents[2], 0.0,
-            self.max_extents[0], self.max_extents[1], self.max_extents[2], 0.0,
+            self.min_extents[0],
+            self.min_extents[1],
+            self.min_extents[2],
+            0.0,
+            self.max_extents[0],
+            self.max_extents[1],
+            self.max_extents[2],
+            0.0,
         ]);
     }
 }

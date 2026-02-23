@@ -14,12 +14,12 @@
 
 use crate::codegen::{self, codegen_tools};
 use crate::executor::{Executor, ExecutorError};
+use nexcore_error::Error;
 use prima_mcp::compile;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value as JsonValue, json};
 use std::collections::HashMap;
 use std::io::{BufRead, Write};
-use thiserror::Error;
 
 /// Server errors.
 #[derive(Debug, Error)]

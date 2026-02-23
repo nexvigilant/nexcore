@@ -5,10 +5,10 @@
 use std::path::PathBuf;
 
 /// Vault error hierarchy.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum VaultError {
     /// I/O error with path context.
-    #[error("I/O error at {path}: {source}")]
+    #[error("I/O error at {path:?}: {source}")]
     Io {
         /// Path involved in the error.
         path: PathBuf,
@@ -41,11 +41,11 @@ pub enum VaultError {
     NotFound(String),
 
     /// Vault already exists (on init).
-    #[error("vault already exists at {0}")]
+    #[error("vault already exists at {0:?}")]
     AlreadyExists(PathBuf),
 
     /// Vault does not exist (on open).
-    #[error("vault not found at {0}")]
+    #[error("vault not found at {0:?}")]
     VaultNotFound(PathBuf),
 
     /// Password required but not provided.

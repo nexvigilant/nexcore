@@ -50,13 +50,12 @@ pub mod guardian;
 // | Persistence   | π + ∃ + ς            | State crash recovery     |
 // | Shutdown      | σ + ∝ + ∅            | Irreversible teardown    |
 
-
 pub mod app_clearance;
 pub mod audio;
 pub mod boot;
-pub mod config;
 pub mod brain_bridge;
 pub mod composites;
+pub mod config;
 pub mod diagnostics;
 pub mod error;
 pub mod grounding;
@@ -82,8 +81,13 @@ pub use app_clearance::{
 };
 pub use audio::{AudioManager, AudioState};
 pub use boot::BootSequence;
+pub use config::{SystemConfig, TrustOsConfig, hill_curve_backoff_ms};
+pub use diagnostics::{DiagnosticSnapshot, HealthStatus, ServiceHealth};
 pub use error::OsError;
 pub use ipc::EventBus;
+pub use journal::{
+    Field, FieldValue, JournalEntry, JournalFilter, Keywords, OsJournal, Severity, Subsystem,
+};
 pub use kernel::NexCoreOs;
 pub use network::{NetworkManager, NetworkState};
 pub use persistence::{OsStateSnapshot, StatePersistence};
@@ -98,10 +102,5 @@ pub use security::{
 pub use service::{Service, ServiceId, ServiceState};
 pub use user::{
     AccountStatus, AuthError, Session, UserId, UserManager, UserRecord, UserRole, UserSummary,
-};
-pub use config::{SystemConfig, TrustOsConfig, hill_curve_backoff_ms};
-pub use diagnostics::{DiagnosticSnapshot, HealthStatus, ServiceHealth};
-pub use journal::{
-    Field, FieldValue, JournalEntry, JournalFilter, Keywords, OsJournal, Severity, Subsystem,
 };
 pub use vault::{OsVault, SecretCategory, SecretInfo, VaultState};

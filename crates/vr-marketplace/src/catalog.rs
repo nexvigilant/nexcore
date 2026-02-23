@@ -4,20 +4,20 @@
 //! with pricing, turnaround, and specification details. Tenants browse the
 //! catalog to find and order services.
 
+use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use vr_core::{Currency, Money, ProviderId, VrError};
 
 /// Unique identifier for a catalog entry.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct CatalogEntryId(Uuid);
+pub struct CatalogEntryId(NexId);
 
 impl CatalogEntryId {
     /// Create a new random catalog entry ID.
     #[must_use]
     pub fn new() -> Self {
-        Self(Uuid::new_v4())
+        Self(NexId::v4())
     }
 }
 

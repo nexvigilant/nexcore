@@ -9,7 +9,7 @@
 //!
 //! **PV Application**: Baseline stability - reporting rates resist random fluctuation.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors for buffer calculations.
 #[derive(Debug, Error, PartialEq, Clone)]

@@ -2,6 +2,7 @@
 
 pub mod academy;
 pub mod benefit_risk;
+pub mod billing;
 pub mod brain;
 pub mod circles;
 pub mod common;
@@ -10,7 +11,6 @@ pub mod core;
 pub mod core_api;
 pub mod delegation;
 pub mod foundation;
-pub mod billing;
 pub mod guardian;
 pub mod guardian_product;
 pub mod guardian_ws;

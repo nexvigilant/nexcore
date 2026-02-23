@@ -75,7 +75,7 @@ impl SkillRegistry {
     pub fn scan(&mut self, dir: &Path) -> Result<usize, String> {
         let mut count = 0;
 
-        for entry in walkdir::WalkDir::new(dir)
+        for entry in nexcore_fs::walk::WalkDir::new(dir)
             .follow_links(true)
             .into_iter()
             .filter_map(Result::ok)

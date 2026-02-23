@@ -13,9 +13,9 @@ name = "nexcore_compliance"
 path = "src/lib.rs"
 
 [dependencies]
+nexcore-error = { workspace = true }
 # Workspace dependencies
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
-thiserror = { version = "1.0.61" }
 tracing = { version = "0.1.40" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }

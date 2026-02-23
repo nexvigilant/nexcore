@@ -276,7 +276,10 @@ mod tests {
     fn test_adverse_event_to_signal_extracts_meddra() {
         let ae = make_test_ae();
         let signal = adverse_event_to_signal(&ae);
-        assert_eq!(signal.meddra_term.preferred_term, "Gastrointestinal haemorrhage");
+        assert_eq!(
+            signal.meddra_term.preferred_term,
+            "Gastrointestinal haemorrhage"
+        );
         assert_eq!(signal.meddra_term.code.as_deref(), Some("10019211"));
         assert!(signal.meddra_term.is_coded);
     }

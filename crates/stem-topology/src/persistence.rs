@@ -145,7 +145,7 @@ fn xor_columns(a: &mut Vec<usize>, b: &[usize]) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::filtration::{vietoris_rips, DistanceMatrix};
+    use crate::filtration::{DistanceMatrix, vietoris_rips};
 
     fn triangle_complex() -> SimplicialComplex {
         let dm = DistanceMatrix::new(vec![

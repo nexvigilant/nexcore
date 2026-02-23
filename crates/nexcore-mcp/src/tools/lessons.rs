@@ -9,6 +9,7 @@ use crate::params::{
     LessonAddParams, LessonByContextParams, LessonByTagParams, LessonGetParams, LessonSearchParams,
 };
 use chrono::{DateTime, Utc};
+use nexcore_fs::dirs;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 use serde::{Deserialize, Serialize};

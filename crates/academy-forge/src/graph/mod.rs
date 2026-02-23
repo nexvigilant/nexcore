@@ -104,8 +104,7 @@ pub fn build_graph(
 
     // Step 4: Fuzzy similarity detection (optional)
     if include_fuzzy {
-        let fuzzy_edges =
-            detect_fuzzy_overlaps(&all_alos, &alo_pathway_map, similarity_threshold);
+        let fuzzy_edges = detect_fuzzy_overlaps(&all_alos, &alo_pathway_map, similarity_threshold);
         all_edges.extend(fuzzy_edges);
     }
 
@@ -190,10 +189,7 @@ fn validate_dag_acyclicity(
 
 /// Select the canonical ALO from a set of overlapping ALOs.
 /// Prefers: highest Bloom level, then longest content.
-fn select_canonical(
-    alo_ids: &[String],
-    all_alos: &[crate::ir::AtomicLearningObject],
-) -> String {
+fn select_canonical(alo_ids: &[String], all_alos: &[crate::ir::AtomicLearningObject]) -> String {
     let mut best_id = alo_ids.first().cloned().unwrap_or_default();
     let mut best_bloom = 0u8;
     let mut best_content_len = 0usize;
@@ -259,8 +255,14 @@ fn detect_fuzzy_overlaps(
 
 /// Simple word-level Jaccard similarity between two strings.
 fn jaccard_similarity(a: &str, b: &str) -> f32 {
-    let set_a: HashSet<&str> = a.split_whitespace().map(|w| w.trim_matches(|c: char| !c.is_alphanumeric())).collect();
-    let set_b: HashSet<&str> = b.split_whitespace().map(|w| w.trim_matches(|c: char| !c.is_alphanumeric())).collect();
+    let set_a: HashSet<&str> = a
+        .split_whitespace()
+        .map(|w| w.trim_matches(|c: char| !c.is_alphanumeric()))
+        .collect();
+    let set_b: HashSet<&str> = b
+        .split_whitespace()
+        .map(|w| w.trim_matches(|c: char| !c.is_alphanumeric()))
+        .collect();
 
     let intersection = set_a.intersection(&set_b).count();
     let union = set_a.union(&set_b).count();
@@ -373,10 +375,7 @@ fn count_connected_components(
 }
 
 /// Compute graph diameter (longest shortest-path via BFS, Prereq edges only).
-fn compute_diameter(
-    alos: &[crate::ir::AtomicLearningObject],
-    edges: &[AloEdge],
-) -> usize {
+fn compute_diameter(alos: &[crate::ir::AtomicLearningObject], edges: &[AloEdge]) -> usize {
     // Build adjacency for Prereq edges only
     let mut adj: HashMap<&str, Vec<&str>> = HashMap::new();
     for alo in alos {

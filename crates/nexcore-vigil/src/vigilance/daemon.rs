@@ -16,6 +16,7 @@ use crate::vigilance::event::WatchEvent;
 use crate::vigilance::ledger::{LedgerEntryType, VigilanceLedger};
 use crate::vigilance::vigil_config::VigilConfig;
 use crate::vigilance::watcher::{WatchSource, Watcher};
+use nexcore_codec::hex;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;

@@ -15,7 +15,7 @@ use crate::types::{BatchUpdateResponse, Page, Presentation};
 const SLIDES_BASE: &str = "https://slides.googleapis.com/v1/presentations";
 
 /// Errors from the Vids/Slides API client.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum ClientError {
     #[error("auth error: {0}")]
     Auth(#[from] crate::auth::AuthError),

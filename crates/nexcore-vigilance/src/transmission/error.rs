@@ -3,8 +3,8 @@
 //! Provides structured error types for consistent error handling
 //! throughout workflow orchestration.
 
+use nexcore_error::Error;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
 /// Result type alias for transmission operations.
 pub type TransmissionResult<T> = Result<T, TransmissionError>;

@@ -1,5 +1,6 @@
 use crate::models::Interaction;
 use nexcore_error::{Context, Result};
+use nexcore_fs::walk::WalkDir;
 use qdrant_client::Qdrant;
 use qdrant_client::qdrant::{
     CreateCollectionBuilder, Distance, GetPointsBuilder, PointStruct, UpsertPointsBuilder,
@@ -10,7 +11,6 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tracing::{error, info, warn};
-use walkdir::WalkDir;
 
 const COLLECTION_NAME: &str = "ksb_knowledge";
 

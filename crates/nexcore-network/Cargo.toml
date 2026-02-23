@@ -12,9 +12,9 @@ keywords = ["networking", "dns", "firewall", "routing", "os"]
 categories = ["network-programming", "os"]
 
 [dependencies]
+nexcore-error = { workspace = true }
 serde = { version = "1.0.204", features = ["derive"] }
 chrono = { version = "0.4.38", features = ["serde"] }
-thiserror = { version = "1.0.61" }
 
 [lints.rust]
 async_fn_in_trait = "allow"

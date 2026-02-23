@@ -9,8 +9,8 @@ authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "Molecular primitives for Prima language - SMILES parsing, 3D geometry, reaction modeling"
 
 [dependencies]
+nexcore-error = { workspace = true }
 lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore", package = "nexcore-lex-primitiva" }
-thiserror = { version = "1.0.61" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 

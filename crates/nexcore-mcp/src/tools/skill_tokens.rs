@@ -3,6 +3,7 @@
 //! Analyzes token usage in skill files to optimize context window consumption.
 //! Provides file-level metrics, total estimates, and recommendations.
 
+use nexcore_fs::dirs;
 use std::path::Path;
 
 use rmcp::ErrorData as McpError;

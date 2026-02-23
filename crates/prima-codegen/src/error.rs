@@ -5,7 +5,7 @@
 //!
 //! ## Tier: T2-P (∂ + Σ)
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Code generation error.
 #[derive(Error, Debug)]

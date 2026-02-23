@@ -9,12 +9,13 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use core::fmt;
+use nexcore_codec::hex;
+use nexcore_fs::walk::WalkDir;
 use sha2::{Digest, Sha256};
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
-use walkdir::WalkDir;
 
 pub use fs2::FileExt;
 

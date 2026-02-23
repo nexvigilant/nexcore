@@ -30,7 +30,7 @@ pub fn error_type(params: RustDevErrorTypeParams) -> Result<CallToolResult, McpE
     let mut code = String::with_capacity(1024);
 
     if params.use_thiserror {
-        code.push_str("use thiserror::Error;\n\n");
+        code.push_str("use nexcore_error::Error;\n\n");
         code.push_str("#[derive(Debug, Error)]\n");
     } else {
         code.push_str("use std::fmt;\n\n");
@@ -49,10 +49,7 @@ pub fn error_type(params: RustDevErrorTypeParams) -> Result<CallToolResult, McpE
         if variant.fields.is_empty() && variant.from.is_none() {
             code.push_str(&format!("    {},\n\n", variant.name));
         } else {
-            let has_named = variant
-                .fields
-                .iter()
-                .any(|f| f.contains(':'));
+            let has_named = variant.fields.iter().any(|f| f.contains(':'));
 
             if has_named {
                 // Struct variant
@@ -101,9 +98,7 @@ pub fn error_type(params: RustDevErrorTypeParams) -> Result<CallToolResult, McpE
             ));
         }
         code.push_str("        }\n    }\n}\n");
-        code.push_str(&format!(
-            "\nimpl std::error::Error for {type_name} {{}}\n"
-        ));
+        code.push_str(&format!("\nimpl std::error::Error for {type_name} {{}}\n"));
     }
 
     // Result type alias
@@ -134,11 +129,34 @@ struct TraitBlockers;
 impl TraitBlockers {
     /// Types that block Copy (heap-allocated or dynamically sized).
     const NON_COPY: &[&str] = &[
-        "String", "Vec", "Box", "Rc", "Arc", "HashMap", "HashSet", "BTreeMap",
-        "BTreeSet", "VecDeque", "LinkedList", "BinaryHeap", "Cow", "PathBuf",
-        "OsString", "CString", "Mutex", "RwLock", "Cell", "RefCell",
-        "Receiver", "Sender", "JoinHandle", "File", "TcpStream", "UdpSocket",
-        "Pin", "ManuallyDrop",
+        "String",
+        "Vec",
+        "Box",
+        "Rc",
+        "Arc",
+        "HashMap",
+        "HashSet",
+        "BTreeMap",
+        "BTreeSet",
+        "VecDeque",
+        "LinkedList",
+        "BinaryHeap",
+        "Cow",
+        "PathBuf",
+        "OsString",
+        "CString",
+        "Mutex",
+        "RwLock",
+        "Cell",
+        "RefCell",
+        "Receiver",
+        "Sender",
+        "JoinHandle",
+        "File",
+        "TcpStream",
+        "UdpSocket",
+        "Pin",
+        "ManuallyDrop",
     ];
 
     /// Types that block Eq (IEEE 754 NaN != NaN).
@@ -152,7 +170,12 @@ impl TraitBlockers {
 
     /// Types that block Default (no sensible default).
     const NON_DEFAULT: &[&str] = &[
-        "File", "TcpStream", "UdpSocket", "JoinHandle", "Receiver", "Sender",
+        "File",
+        "TcpStream",
+        "UdpSocket",
+        "JoinHandle",
+        "Receiver",
+        "Sender",
     ];
 }
 
@@ -201,11 +224,7 @@ fn extract_field_types(src: &str) -> Vec<String> {
 fn contains_blocker(type_str: &str, blockers: &[&str]) -> Option<String> {
     for blocker in blockers {
         // Check base type name (before any generics)
-        let base = type_str
-            .split('<')
-            .next()
-            .unwrap_or(type_str)
-            .trim();
+        let base = type_str.split('<').next().unwrap_or(type_str).trim();
         if base == *blocker || base.ends_with(&format!("::{blocker}")) {
             return Some(type_str.to_string());
         }
@@ -264,7 +283,17 @@ pub fn derive_advisor(params: RustDevDeriveAdvisorParams) -> Result<CallToolResu
     }
 
     // Recommended order: idiomatic Rust ordering
-    let priority_order = ["Debug", "Clone", "Copy", "PartialEq", "Eq", "Hash", "PartialOrd", "Ord", "Default"];
+    let priority_order = [
+        "Debug",
+        "Clone",
+        "Copy",
+        "PartialEq",
+        "Eq",
+        "Hash",
+        "PartialOrd",
+        "Ord",
+        "Default",
+    ];
     let mut recommended: Vec<String> = Vec::new();
     for p in &priority_order {
         if safe.contains(&p.to_string()) {
@@ -731,9 +760,7 @@ fn extract_error_code(msg: &str) -> Option<&str> {
         let candidate = &search[pos..];
         if candidate.len() >= 5 {
             let code = &candidate[..5];
-            if code.starts_with('E')
-                && code[1..].chars().all(|c| c.is_ascii_digit())
-            {
+            if code.starts_with('E') && code[1..].chars().all(|c| c.is_ascii_digit()) {
                 return Some(code);
             }
         }
@@ -747,13 +774,52 @@ fn match_by_keywords(msg: &str) -> Option<&'static BorrowErrorInfo> {
     let lower = msg.to_lowercase();
 
     let keyword_map: &[(&[&str], &str)] = &[
-        (&["moved value", "use of moved", "value used here after move", "after move"], "E0382"),
+        (
+            &[
+                "moved value",
+                "use of moved",
+                "value used here after move",
+                "after move",
+            ],
+            "E0382",
+        ),
         (&["move out of", "cannot move out"], "E0507"),
-        (&["does not live long enough", "borrowed value does not live long enough"], "E0597"),
-        (&["cannot borrow", "as mutable", "as immutable", "also borrowed as"], "E0502"),
-        (&["second mutable borrow", "cannot borrow", "mutably more than once"], "E0499"),
-        (&["returns a reference", "return a reference to", "returns a value referencing data"], "E0515"),
-        (&["closure may outlive", "may outlive borrowed value"], "E0373"),
+        (
+            &[
+                "does not live long enough",
+                "borrowed value does not live long enough",
+            ],
+            "E0597",
+        ),
+        (
+            &[
+                "cannot borrow",
+                "as mutable",
+                "as immutable",
+                "also borrowed as",
+            ],
+            "E0502",
+        ),
+        (
+            &[
+                "second mutable borrow",
+                "cannot borrow",
+                "mutably more than once",
+            ],
+            "E0499",
+        ),
+        (
+            &[
+                "returns a reference",
+                "return a reference to",
+                "returns a value referencing data",
+            ],
+            "E0515",
+        ),
+        (
+            &["closure may outlive", "may outlive borrowed value"],
+            "E0373",
+        ),
         (&["cannot assign", "while it is borrowed"], "E0506"),
         (&["missing lifetime"], "E0106"),
         (&["not mutable", "cannot borrow immutable"], "E0596"),
@@ -879,9 +945,7 @@ const CLIPPY_LINTS: &[ClippyLintInfo] = &[
         group: "restriction",
         explanation: "Calling `.clone()` on `&Rc<T>` or `&Arc<T>` is misleading \u{2014} it bumps the refcount, not deep-cloning data.",
         why: "Use `Rc::clone(&x)` / `Arc::clone(&x)` to make it explicit.",
-        fixes: &[
-            "Replace `x.clone()` with `Rc::clone(&x)` or `Arc::clone(&x)`",
-        ],
+        fixes: &["Replace `x.clone()` with `Rc::clone(&x)` or `Arc::clone(&x)`"],
         default_level: "allow",
     },
     ClippyLintInfo {
@@ -889,9 +953,7 @@ const CLIPPY_LINTS: &[ClippyLintInfo] = &[
         group: "style",
         explanation: "Explicit `return` at the end of a function is redundant \u{2014} the last expression is the return value.",
         why: "Idiomatic Rust uses expression-based returns. `return` is for early exits only.",
-        fixes: &[
-            "Remove `return` keyword and trailing semicolon: `return x;` \u{2192} `x`",
-        ],
+        fixes: &["Remove `return` keyword and trailing semicolon: `return x;` \u{2192} `x`"],
         default_level: "warn",
     },
     ClippyLintInfo {
@@ -967,9 +1029,7 @@ const CLIPPY_LINTS: &[ClippyLintInfo] = &[
         group: "pedantic",
         explanation: "A public function returns `Result` but the doc comment doesn't have an `# Errors` section.",
         why: "Callers need to know what errors can occur and when.",
-        fixes: &[
-            "Add `# Errors` section to the doc comment listing error conditions",
-        ],
+        fixes: &["Add `# Errors` section to the doc comment listing error conditions"],
         default_level: "allow",
     },
     ClippyLintInfo {
@@ -1064,9 +1124,7 @@ const CLIPPY_LINTS: &[ClippyLintInfo] = &[
         group: "complexity",
         explanation: "Explicit dereference (`*x`) where auto-deref would handle it automatically.",
         why: "Rust's deref coercion handles this. The explicit `*` adds noise.",
-        fixes: &[
-            "Remove the explicit `*` \u{2014} let auto-deref handle it",
-        ],
+        fixes: &["Remove the explicit `*` \u{2014} let auto-deref handle it"],
         default_level: "warn",
     },
 ];
@@ -1084,13 +1142,15 @@ fn normalize_lint_name(name: &str) -> String {
 fn extract_lint_from_message(msg: &str) -> Option<String> {
     if let Some(start) = msg.find("clippy::") {
         let after = &msg[start + 8..];
-        let end = after.find(|c: char| !c.is_alphanumeric() && c != '_')
+        let end = after
+            .find(|c: char| !c.is_alphanumeric() && c != '_')
             .unwrap_or(after.len());
         return Some(after[..end].to_string());
     }
     if let Some(start) = msg.find("-D clippy::") {
         let after = &msg[start + 11..];
-        let end = after.find(|c: char| !c.is_alphanumeric() && c != '_')
+        let end = after
+            .find(|c: char| !c.is_alphanumeric() && c != '_')
             .unwrap_or(after.len());
         return Some(after[..end].to_string());
     }
@@ -1104,12 +1164,20 @@ pub fn clippy_explain(params: RustDevClippyExplainParams) -> Result<CallToolResu
     let normalized = normalize_lint_name(&lint_name);
 
     // The "panic" lint is stored as "panic_lint" to avoid hook false-positives
-    let lookup = if normalized == "panic" { "panic_lint".to_string() } else { normalized.clone() };
+    let lookup = if normalized == "panic" {
+        "panic_lint".to_string()
+    } else {
+        normalized.clone()
+    };
     let info = CLIPPY_LINTS.iter().find(|l| l.name == lookup);
 
     let result = match info {
         Some(lint) => {
-            let display_name = if lint.name == "panic_lint" { "panic" } else { lint.name };
+            let display_name = if lint.name == "panic_lint" {
+                "panic"
+            } else {
+                lint.name
+            };
             json!({
                 "success": true,
                 "lint": format!("clippy::{display_name}"),
@@ -1184,7 +1252,8 @@ pub fn rustc_explain(params: RustDevRustcExplainParams) -> Result<CallToolResult
             if out.status.success() && !stdout.is_empty() {
                 let explanation = stdout.trim().to_string();
 
-                let summary = explanation.lines()
+                let summary = explanation
+                    .lines()
                     .find(|l| !l.trim().is_empty())
                     .unwrap_or("No summary available")
                     .to_string();
@@ -1253,10 +1322,18 @@ fn classify_audited_block(content: &str) -> (&'static str, &'static str) {
     if lower.contains("from_raw") || lower.contains("into_raw") {
         return ("raw-pointer-conversion", "high");
     }
-    if lower.contains("*const") || lower.contains("*mut") || lower.contains("as *") || lower.contains(".offset(") {
+    if lower.contains("*const")
+        || lower.contains("*mut")
+        || lower.contains("as *")
+        || lower.contains(".offset(")
+    {
         return ("raw-pointer", "high");
     }
-    if lower.contains("extern") || lower.contains("ffi") || lower.contains("libc") || lower.contains("c_void") {
+    if lower.contains("extern")
+        || lower.contains("ffi")
+        || lower.contains("libc")
+        || lower.contains("c_void")
+    {
         return ("ffi", "medium");
     }
     if lower.contains("union") {
@@ -1265,7 +1342,10 @@ fn classify_audited_block(content: &str) -> (&'static str, &'static str) {
     if lower.contains("static mut") || lower.contains("global") {
         return ("mutable-static", "high");
     }
-    if lower.contains("from_raw_parts") || lower.contains("from_utf8_unchecked") || lower.contains("get_unchecked") {
+    if lower.contains("from_raw_parts")
+        || lower.contains("from_utf8_unchecked")
+        || lower.contains("get_unchecked")
+    {
         return ("unchecked-operation", "high");
     }
     if lower.contains("pin") || lower.contains("unpin") {
@@ -1338,14 +1418,17 @@ pub fn unsafe_audit(params: RustDevUnsafeAuditParams) -> Result<CallToolResult, 
         i += 1;
     }
 
-    let block_json: Vec<serde_json::Value> = blocks.iter().map(|b| {
-        json!({
-            "line": b.line,
-            "category": b.category,
-            "severity": b.severity,
-            "code": b.context,
+    let block_json: Vec<serde_json::Value> = blocks
+        .iter()
+        .map(|b| {
+            json!({
+                "line": b.line,
+                "category": b.category,
+                "severity": b.severity,
+                "code": b.context,
+            })
         })
-    }).collect();
+        .collect();
 
     let severity_counts = {
         let (mut critical, mut high, mut medium) = (0usize, 0usize, 0usize);
@@ -1364,7 +1447,8 @@ pub fn unsafe_audit(params: RustDevUnsafeAuditParams) -> Result<CallToolResult, 
         for b in &blocks {
             *counts.entry(b.category).or_insert(0usize) += 1;
         }
-        let map: serde_json::Map<String, serde_json::Value> = counts.into_iter()
+        let map: serde_json::Map<String, serde_json::Value> = counts
+            .into_iter()
             .map(|(k, v)| (k.to_string(), json!(v)))
             .collect();
         serde_json::Value::Object(map)
@@ -1373,13 +1457,19 @@ pub fn unsafe_audit(params: RustDevUnsafeAuditParams) -> Result<CallToolResult, 
     let verdict = if blocks.is_empty() {
         format!("CLEAN \u{2014} no {AUDIT_KW} blocks found")
     } else if has_forbid {
-        format!("CONFLICT \u{2014} {AUDIT_KW} blocks exist but #![forbid] is set (will not compile)")
+        format!(
+            "CONFLICT \u{2014} {AUDIT_KW} blocks exist but #![forbid] is set (will not compile)"
+        )
     } else if blocks.iter().any(|b| b.severity == "critical") {
         format!("REVIEW REQUIRED \u{2014} critical {AUDIT_KW} usage (transmute) detected")
     } else if blocks.len() > 5 {
-        format!("HIGH EXPOSURE \u{2014} more than 5 {AUDIT_KW} blocks; consider isolating into a dedicated module")
+        format!(
+            "HIGH EXPOSURE \u{2014} more than 5 {AUDIT_KW} blocks; consider isolating into a dedicated module"
+        )
     } else {
-        format!("MODERATE \u{2014} {AUDIT_KW} usage present; ensure each block has a SAFETY comment")
+        format!(
+            "MODERATE \u{2014} {AUDIT_KW} usage present; ensure each block has a SAFETY comment"
+        )
     };
 
     let result = json!({
@@ -1624,7 +1714,8 @@ pub fn cargo_miri(params: RustDevCargoMiriParams) -> Result<CallToolResult, McpE
                 || combined.contains("error: Undefined")
                 || combined.contains("Miri detected");
 
-            let test_count = combined.lines()
+            let test_count = combined
+                .lines()
                 .filter(|l| l.contains("test result:"))
                 .count();
 
@@ -1855,7 +1946,8 @@ pub fn edition_migrate(params: RustDevEditionMigrateParams) -> Result<CallToolRe
         }
     }
 
-    let breaking_count = all_changes.iter()
+    let breaking_count = all_changes
+        .iter()
         .filter(|c| c.get("breaking").and_then(|b| b.as_bool()).unwrap_or(false))
         .count();
 
@@ -2002,15 +2094,18 @@ pub fn invocations(params: RustDevInvocationsParams) -> Result<CallToolResult, M
         )]));
     }
 
-    let tool_json: Vec<serde_json::Value> = tools.iter().map(|t| {
-        json!({
-            "name": t.name,
-            "batch": t.batch,
-            "category": t.category,
-            "description": t.description,
-            "book_chapters": t.book_chapters,
+    let tool_json: Vec<serde_json::Value> = tools
+        .iter()
+        .map(|t| {
+            json!({
+                "name": t.name,
+                "batch": t.batch,
+                "category": t.category,
+                "description": t.description,
+                "book_chapters": t.book_chapters,
+            })
         })
-    }).collect();
+        .collect();
 
     let categories: std::collections::HashMap<&str, usize> = {
         let mut map = std::collections::HashMap::new();

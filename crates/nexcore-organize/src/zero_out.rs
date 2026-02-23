@@ -8,6 +8,7 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+use nexcore_codec::hex;
 use sha2::{Digest, Sha256};
 
 use crate::error::{OrganizeError, OrganizeResult};
@@ -93,7 +94,7 @@ fn find_empty_dirs(root: &Path) -> OrganizeResult<Vec<PathBuf>> {
         return Ok(empty);
     }
 
-    let walker = walkdir::WalkDir::new(root)
+    let walker = nexcore_fs::walk::WalkDir::new(root)
         .min_depth(1)
         .contents_first(true);
 
@@ -130,7 +131,7 @@ fn find_duplicates(root: &Path) -> OrganizeResult<Vec<DuplicateGroup>> {
 
     let mut hash_map: HashMap<String, Vec<(PathBuf, u64)>> = HashMap::new();
 
-    let walker = walkdir::WalkDir::new(root).min_depth(1);
+    let walker = nexcore_fs::walk::WalkDir::new(root).min_depth(1);
 
     for entry in walker {
         let entry = entry?;

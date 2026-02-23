@@ -1,6 +1,6 @@
 //! Error types for signal detection algorithms.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors that can occur during signal detection.
 #[derive(Debug, Error)]

@@ -47,9 +47,7 @@
 //! assert!(result.is_some());
 //! ```
 
-use crate::force_field::{
-    ForceFieldConfig, ForceFieldError, compute_energy, compute_forces,
-};
+use crate::force_field::{ForceFieldConfig, ForceFieldError, compute_energy, compute_forces};
 use crate::molecular::Molecule;
 use serde::{Deserialize, Serialize};
 
@@ -73,7 +71,10 @@ impl std::fmt::Display for DynamicsError {
         match self {
             Self::ForceField(e) => write!(f, "force field error: {e}"),
             Self::InvalidTimestep { timestep } => {
-                write!(f, "invalid timestep {timestep}: must be positive and finite")
+                write!(
+                    f,
+                    "invalid timestep {timestep}: must be positive and finite"
+                )
             }
             Self::EmptyMolecule => write!(f, "molecule has no atoms"),
         }
@@ -198,7 +199,9 @@ impl Xorshift64 {
     /// Create a new PRNG with the given nonzero seed.
     /// If `seed` is zero, uses 1 to avoid the degenerate zero state.
     fn new(seed: u64) -> Self {
-        Self { state: if seed == 0 { 1 } else { seed } }
+        Self {
+            state: if seed == 0 { 1 } else { seed },
+        }
     }
 
     /// Advance the state and return the next pseudo-random `u64`.
@@ -375,10 +378,7 @@ pub fn berendsen_thermostat(state: &mut SimulationState, target_temp: f64, coupl
 
     // Kinetic energy and temperature scale by lambda²
     state.kinetic_energy *= lambda_sq;
-    state.temperature = compute_temperature(
-        state.kinetic_energy,
-        state.positions.len(),
-    );
+    state.temperature = compute_temperature(state.kinetic_energy, state.positions.len());
 }
 
 // ============================================================================
@@ -487,17 +487,23 @@ pub fn run_simulation(
         return Err(DynamicsError::EmptyMolecule);
     }
     if !config.timestep.is_finite() || config.timestep <= 0.0 {
-        return Err(DynamicsError::InvalidTimestep { timestep: config.timestep });
+        return Err(DynamicsError::InvalidTimestep {
+            timestep: config.timestep,
+        });
     }
 
     let n = mol.atoms.len();
     let dt = config.timestep;
 
     // Build mass array from element atomic masses
-    let masses: Vec<f64> = mol.atoms.iter().map(|a| {
-        let m = a.element.atomic_mass();
-        if m < 0.001 { 12.0 } else { m } // fallback to carbon mass for unknown
-    }).collect();
+    let masses: Vec<f64> = mol
+        .atoms
+        .iter()
+        .map(|a| {
+            let m = a.element.atomic_mass();
+            if m < 0.001 { 12.0 } else { m } // fallback to carbon mass for unknown
+        })
+        .collect();
 
     // Initialize velocities from Maxwell-Boltzmann at target temperature
     let velocities = initialize_velocities(n, config.temperature, &masses);
@@ -593,8 +599,16 @@ mod tests {
         mol.atoms.push(Atom::new(1, Element::O, [0.0, 0.0, 0.0]));
         mol.atoms.push(Atom::new(2, Element::H, [0.96, 0.0, 0.0]));
         mol.atoms.push(Atom::new(3, Element::H, [-0.24, 0.93, 0.0]));
-        mol.bonds.push(Bond { atom1: 0, atom2: 1, order: BondOrder::Single });
-        mol.bonds.push(Bond { atom1: 0, atom2: 2, order: BondOrder::Single });
+        mol.bonds.push(Bond {
+            atom1: 0,
+            atom2: 1,
+            order: BondOrder::Single,
+        });
+        mol.bonds.push(Bond {
+            atom1: 0,
+            atom2: 2,
+            order: BondOrder::Single,
+        });
         mol
     }
 
@@ -666,7 +680,10 @@ mod tests {
         let masses = masses_water();
         let velocities = vec![[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 0.01]];
         let ke = compute_kinetic_energy(&velocities, &masses);
-        assert!(ke > 0.0, "kinetic energy must be positive for moving atoms: {ke}");
+        assert!(
+            ke > 0.0,
+            "kinetic energy must be positive for moving atoms: {ke}"
+        );
         assert!(ke.is_finite(), "kinetic energy must be finite: {ke}");
     }
 
@@ -693,7 +710,10 @@ mod tests {
         let temp_before = compute_temperature(ke, 3);
 
         // Sanity: confirm this velocity gives T >> 300 K
-        assert!(temp_before > 300.0, "test setup: temp should be >300 K, got {temp_before:.1}");
+        assert!(
+            temp_before > 300.0,
+            "test setup: temp should be >300 K, got {temp_before:.1}"
+        );
 
         let mut state = SimulationState {
             positions: vec![[0.0; 3]; 3],
@@ -729,9 +749,15 @@ mod tests {
         let ff_config = ForceFieldConfig::default();
         match run_simulation(&mut mol, &config, &ff_config) {
             Ok(result) => {
-                assert!(!result.frames.is_empty(), "simulation should produce frames");
+                assert!(
+                    !result.frames.is_empty(),
+                    "simulation should produce frames"
+                );
                 assert_eq!(result.total_steps, config.total_steps);
-                assert!(result.final_energy.is_finite(), "final energy must be finite");
+                assert!(
+                    result.final_energy.is_finite(),
+                    "final energy must be finite"
+                );
             }
             Err(e) => panic!("simulation failed unexpectedly: {e}"),
         }
@@ -749,7 +775,10 @@ mod tests {
     #[test]
     fn run_simulation_invalid_timestep_errors() {
         let mut mol = water();
-        let config = DynamicsConfig { timestep: -1.0, ..short_config() };
+        let config = DynamicsConfig {
+            timestep: -1.0,
+            ..short_config()
+        };
         let ff_config = ForceFieldConfig::default();
         let result = run_simulation(&mut mol, &config, &ff_config);
         assert!(
@@ -762,7 +791,13 @@ mod tests {
     fn dynamics_error_display() {
         let e = DynamicsError::InvalidTimestep { timestep: -0.5 };
         let s = e.to_string();
-        assert!(s.contains("-0.5"), "display should mention the bad timestep");
-        assert!(s.contains("positive"), "display should explain the constraint");
+        assert!(
+            s.contains("-0.5"),
+            "display should mention the bad timestep"
+        );
+        assert!(
+            s.contains("positive"),
+            "display should explain the constraint"
+        );
     }
 }

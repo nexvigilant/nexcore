@@ -225,7 +225,9 @@ impl PopulationController {
             utilization: if self.max_population > 0 {
                 // Precision loss acceptable: population counts are small
                 #[allow(clippy::cast_precision_loss)]
-                { self.population.len() as f64 / self.max_population as f64 }
+                {
+                    self.population.len() as f64 / self.max_population as f64
+                }
             } else {
                 1.0
             },

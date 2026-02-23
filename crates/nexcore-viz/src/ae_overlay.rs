@@ -309,9 +309,18 @@ pub fn default_config() -> OverlayConfig {
 pub fn default_color_scale() -> ColorScale {
     ColorScale {
         stops: vec![
-            ColorStop { position: 0.0, color: "#22c55e".into() }, // green-500
-            ColorStop { position: 0.5, color: "#eab308".into() }, // yellow-500
-            ColorStop { position: 1.0, color: "#ef4444".into() }, // red-500
+            ColorStop {
+                position: 0.0,
+                color: "#22c55e".into(),
+            }, // green-500
+            ColorStop {
+                position: 0.5,
+                color: "#eab308".into(),
+            }, // yellow-500
+            ColorStop {
+                position: 1.0,
+                color: "#ef4444".into(),
+            }, // red-500
         ],
     }
 }
@@ -401,9 +410,7 @@ fn normalize_percentile(values: &[f64]) -> Vec<f64> {
         .enumerate()
         .map(|(i, v)| (v, i))
         .collect();
-    indexed.sort_by(|a, b| {
-        a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal)
-    });
+    indexed.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
 
     let mut result = vec![0.0_f64; n];
     let denom = (n - 1) as f64;
@@ -601,11 +608,8 @@ pub fn compute_heatmap(
     for node in &drug_nodes {
         for signal in &node.signals {
             if let Some(score) = extract_score(signal, config.score_field) {
-                let is_sig = signal_exceeds_threshold(
-                    signal,
-                    config.score_field,
-                    config.signal_threshold,
-                );
+                let is_sig =
+                    signal_exceeds_threshold(signal, config.score_field, config.signal_threshold);
                 raw_entries.push((
                     node.id.clone(),
                     signal.ae_name.clone(),
@@ -639,20 +643,22 @@ pub fn compute_heatmap(
     let cells: Vec<HeatmapCell> = raw_entries
         .iter()
         .zip(normalised.iter())
-        .map(|((drug_id, ae_name, raw_score, is_signal, _case_count), &norm)| {
-            // Clamp to [0,1] for color/opacity (ZScore can exceed this range)
-            let display_norm = norm.clamp(0.0, 1.0);
-            let color = interpolate_color(&config.color_scale, display_norm);
-            HeatmapCell {
-                drug_id: drug_id.clone(),
-                ae_name: ae_name.clone(),
-                raw_score: *raw_score,
-                normalized: norm,
-                color,
-                opacity: display_norm,
-                is_signal: *is_signal,
-            }
-        })
+        .map(
+            |((drug_id, ae_name, raw_score, is_signal, _case_count), &norm)| {
+                // Clamp to [0,1] for color/opacity (ZScore can exceed this range)
+                let display_norm = norm.clamp(0.0, 1.0);
+                let color = interpolate_color(&config.color_scale, display_norm);
+                HeatmapCell {
+                    drug_id: drug_id.clone(),
+                    ae_name: ae_name.clone(),
+                    raw_score: *raw_score,
+                    normalized: norm,
+                    color,
+                    opacity: display_norm,
+                    is_signal: *is_signal,
+                }
+            },
+        )
         .collect();
 
     Ok(AeHeatmap {
@@ -667,11 +673,7 @@ pub fn compute_heatmap(
 /// Return `true` when `signal` exceeds `threshold` for the chosen `field`.
 ///
 /// When the field is absent on the signal, the cell is not considered a signal.
-fn signal_exceeds_threshold(
-    signal: &SignalScore,
-    field: ScoreField,
-    threshold: f64,
-) -> bool {
+fn signal_exceeds_threshold(signal: &SignalScore, field: ScoreField, threshold: f64) -> bool {
     extract_score(signal, field).is_some_and(|v| v >= threshold)
 }
 
@@ -710,9 +712,7 @@ pub fn rank_ae_for_drug(signals: &[SignalScore], field: ScoreField) -> Vec<Ranke
         .collect();
 
     // Sort descending by score (NaN-safe)
-    scored.sort_by(|a, b| {
-        b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal)
-    });
+    scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
     scored
         .into_iter()
@@ -1131,13 +1131,19 @@ mod tests {
     #[test]
     fn interpolate_color_clamps_below_zero() {
         let scale = default_color_scale();
-        assert_eq!(interpolate_color(&scale, -1.0), interpolate_color(&scale, 0.0));
+        assert_eq!(
+            interpolate_color(&scale, -1.0),
+            interpolate_color(&scale, 0.0)
+        );
     }
 
     #[test]
     fn interpolate_color_clamps_above_one() {
         let scale = default_color_scale();
-        assert_eq!(interpolate_color(&scale, 2.0), interpolate_color(&scale, 1.0));
+        assert_eq!(
+            interpolate_color(&scale, 2.0),
+            interpolate_color(&scale, 1.0)
+        );
     }
 
     #[test]
@@ -1149,7 +1155,10 @@ mod tests {
     #[test]
     fn interpolate_color_single_stop_returns_stop_color() {
         let scale = ColorScale {
-            stops: vec![ColorStop { position: 0.0, color: "#ff0000".into() }],
+            stops: vec![ColorStop {
+                position: 0.0,
+                color: "#ff0000".into(),
+            }],
         };
         assert_eq!(interpolate_color(&scale, 0.5), "#ff0000");
     }
@@ -1172,19 +1181,28 @@ mod tests {
 
     #[test]
     fn compute_heatmap_empty_nodes_returns_error() {
-        assert_eq!(compute_heatmap(&[], &default_config()), Err(OverlayError::EmptyInput));
+        assert_eq!(
+            compute_heatmap(&[], &default_config()),
+            Err(OverlayError::EmptyInput)
+        );
     }
 
     #[test]
     fn compute_heatmap_only_ae_nodes_returns_no_signals() {
         let nodes = vec![make_ae_node("ae1"), make_ae_node("ae2")];
-        assert_eq!(compute_heatmap(&nodes, &default_config()), Err(OverlayError::NoSignals));
+        assert_eq!(
+            compute_heatmap(&nodes, &default_config()),
+            Err(OverlayError::NoSignals)
+        );
     }
 
     #[test]
     fn compute_heatmap_drug_with_no_signals_returns_no_signals() {
         let nodes = vec![make_drug("aspirin", vec![])];
-        assert_eq!(compute_heatmap(&nodes, &default_config()), Err(OverlayError::NoSignals));
+        assert_eq!(
+            compute_heatmap(&nodes, &default_config()),
+            Err(OverlayError::NoSignals)
+        );
     }
 
     #[test]
@@ -1202,7 +1220,10 @@ mod tests {
     #[test]
     fn compute_heatmap_min_max_scores() {
         let nodes = vec![
-            make_drug("drugA", vec![signal("Nausea", 1.5), signal("Headache", 4.0)]),
+            make_drug(
+                "drugA",
+                vec![signal("Nausea", 1.5), signal("Headache", 4.0)],
+            ),
             make_drug("drugB", vec![signal("Nausea", 2.5)]),
         ];
         let result = compute_heatmap(&nodes, &default_config());
@@ -1248,7 +1269,10 @@ mod tests {
 
     #[test]
     fn compute_heatmap_cell_colors_are_valid_hex() {
-        let nodes = vec![make_drug("d1", vec![signal("Nausea", 2.0), signal("Headache", 4.5)])];
+        let nodes = vec![make_drug(
+            "d1",
+            vec![signal("Nausea", 2.0), signal("Headache", 4.5)],
+        )];
         let result = compute_heatmap(&nodes, &default_config());
         assert!(result.is_ok());
         if let Ok(hm) = result {

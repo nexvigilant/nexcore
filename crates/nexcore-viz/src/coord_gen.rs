@@ -91,9 +91,15 @@ impl std::fmt::Display for CoordGenError {
                 write!(f, "bond references invalid atom indices ({a}, {b})")
             }
             Self::EmbeddingFailed => {
-                write!(f, "3D embedding failed: could not extract three non-zero eigenvalues")
+                write!(
+                    f,
+                    "3D embedding failed: could not extract three non-zero eigenvalues"
+                )
             }
-            Self::ConvergenceFailure { iterations, final_stress } => write!(
+            Self::ConvergenceFailure {
+                iterations,
+                final_stress,
+            } => write!(
                 f,
                 "refinement did not converge after {iterations} steps; final stress = {final_stress:.6}"
             ),
@@ -799,11 +805,8 @@ pub fn generate_coordinates(
     }
 
     // Stage 1: build bounds.
-    let mut bounds = build_distance_bounds_with_config(
-        &molecule.atoms,
-        &molecule.bonds,
-        config.vdw_scale,
-    )?;
+    let mut bounds =
+        build_distance_bounds_with_config(&molecule.atoms, &molecule.bonds, config.vdw_scale)?;
 
     // Stage 2: triangle smoothing.
     triangle_smooth(&mut bounds);
@@ -863,7 +866,11 @@ mod tests {
         let mut mol = Molecule::new("Diatomic");
         mol.atoms.push(Atom::new(1, Element::C, [0.0, 0.0, 0.0]));
         mol.atoms.push(Atom::new(2, Element::C, [0.0, 0.0, 0.0]));
-        mol.bonds.push(Bond { atom1: 0, atom2: 1, order: BondOrder::Single });
+        mol.bonds.push(Bond {
+            atom1: 0,
+            atom2: 1,
+            order: BondOrder::Single,
+        });
         mol
     }
 
@@ -872,8 +879,16 @@ mod tests {
         mol.atoms.push(Atom::new(1, Element::O, [0.0, 0.0, 0.0]));
         mol.atoms.push(Atom::new(2, Element::H, [0.0, 0.0, 0.0]));
         mol.atoms.push(Atom::new(3, Element::H, [0.0, 0.0, 0.0]));
-        mol.bonds.push(Bond { atom1: 0, atom2: 1, order: BondOrder::Single });
-        mol.bonds.push(Bond { atom1: 0, atom2: 2, order: BondOrder::Single });
+        mol.bonds.push(Bond {
+            atom1: 0,
+            atom2: 1,
+            order: BondOrder::Single,
+        });
+        mol.bonds.push(Bond {
+            atom1: 0,
+            atom2: 2,
+            order: BondOrder::Single,
+        });
         mol
     }
 
@@ -883,8 +898,16 @@ mod tests {
         mol.atoms.push(Atom::new(1, Element::C, [0.0, 0.0, 0.0]));
         mol.atoms.push(Atom::new(2, Element::C, [0.0, 0.0, 0.0]));
         mol.atoms.push(Atom::new(3, Element::C, [0.0, 0.0, 0.0]));
-        mol.bonds.push(Bond { atom1: 0, atom2: 1, order: BondOrder::Single });
-        mol.bonds.push(Bond { atom1: 1, atom2: 2, order: BondOrder::Single });
+        mol.bonds.push(Bond {
+            atom1: 0,
+            atom2: 1,
+            order: BondOrder::Single,
+        });
+        mol.bonds.push(Bond {
+            atom1: 1,
+            atom2: 2,
+            order: BondOrder::Single,
+        });
         mol
     }
 
@@ -907,7 +930,11 @@ mod tests {
             Atom::new(1, Element::C, [0.0, 0.0, 0.0]),
             Atom::new(2, Element::C, [0.0, 0.0, 0.0]),
         ];
-        let bonds = vec![Bond { atom1: 0, atom2: 1, order: BondOrder::Single }];
+        let bonds = vec![Bond {
+            atom1: 0,
+            atom2: 1,
+            order: BondOrder::Single,
+        }];
         let bounds = build_distance_bounds(&atoms, &bonds);
         assert!(bounds.is_ok());
         let b = bounds.unwrap_or_else(|_| DistanceBounds::new(0));
@@ -972,7 +999,11 @@ mod tests {
     #[test]
     fn bounds_invalid_bond_returns_error() {
         let atoms = vec![Atom::new(1, Element::C, [0.0, 0.0, 0.0])];
-        let bonds = vec![Bond { atom1: 0, atom2: 5, order: BondOrder::Single }];
+        let bonds = vec![Bond {
+            atom1: 0,
+            atom2: 5,
+            order: BondOrder::Single,
+        }];
         let result = build_distance_bounds(&atoms, &bonds);
         assert!(matches!(result, Err(CoordGenError::InvalidBond(0, 5))));
     }
@@ -1130,11 +1161,7 @@ mod tests {
     fn embed_equilateral_triangle() {
         // An equilateral triangle with side 2.0 — all three pairwise distances equal.
         let d = 2.0_f64;
-        let distances = vec![
-            vec![0.0, d, d],
-            vec![d, 0.0, d],
-            vec![d, d, 0.0],
-        ];
+        let distances = vec![vec![0.0, d, d], vec![d, 0.0, d], vec![d, d, 0.0]];
         let Ok(coords) = embed_3d(&distances) else {
             return; // embedding may fail on degenerate machines; skip rather than fail
         };
@@ -1223,7 +1250,10 @@ mod tests {
         let mol = water_mol();
         let config = CoordGenConfig::default();
         let result = generate_coordinates(&mol, &config);
-        assert!(result.is_ok(), "generate_coordinates should succeed for water");
+        assert!(
+            result.is_ok(),
+            "generate_coordinates should succeed for water"
+        );
         let Ok(r) = result else { return };
         assert_eq!(r.coordinates.len(), 3);
     }
@@ -1265,7 +1295,10 @@ mod tests {
         let mol = disconnected_mol();
         let config = CoordGenConfig::default();
         let result = generate_coordinates(&mol, &config);
-        assert!(result.is_ok(), "disconnected atoms should still produce coordinates");
+        assert!(
+            result.is_ok(),
+            "disconnected atoms should still produce coordinates"
+        );
     }
 
     // -------------------------------------------------------------------------
@@ -1277,13 +1310,12 @@ mod tests {
         // Equilateral triangle — near-exact known distance.
         let d = 1.0_f64;
         let coords = vec![[0.0_f64, 0.0, 0.0], [d, 0.0, 0.0], [0.5, 0.866, 0.0]];
-        let target: Vec<Vec<f64>> = vec![
-            vec![0.0, d, d],
-            vec![d, 0.0, d],
-            vec![d, d, 0.0],
-        ];
+        let target: Vec<Vec<f64>> = vec![vec![0.0, d, d], vec![d, 0.0, d], vec![d, d, 0.0]];
         let stress = compute_stress(&coords, &target);
-        assert!(stress < 0.01, "stress for near-perfect triangle = {stress:.6}");
+        assert!(
+            stress < 0.01,
+            "stress for near-perfect triangle = {stress:.6}"
+        );
     }
 
     #[test]
@@ -1335,7 +1367,10 @@ mod tests {
         let e = CoordGenError::EmbeddingFailed;
         assert!(e.to_string().contains("embedding failed"));
 
-        let e = CoordGenError::ConvergenceFailure { iterations: 300, final_stress: 0.55 };
+        let e = CoordGenError::ConvergenceFailure {
+            iterations: 300,
+            final_stress: 0.55,
+        };
         let s = e.to_string();
         assert!(s.contains("300") && s.contains("0.55"));
     }

@@ -19,13 +19,13 @@
 use crate::params::{
     ObservabilityFreshnessParams, ObservabilityQueryParams, ObservabilityRecordLatencyParams,
 };
-use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 // ============================================================================
 // State
@@ -66,8 +66,8 @@ struct ObservabilityState {
     freshness: HashMap<String, FreshnessRecord>,
 }
 
-static STATE: Lazy<RwLock<ObservabilityState>> =
-    Lazy::new(|| RwLock::new(ObservabilityState::default()));
+static STATE: LazyLock<RwLock<ObservabilityState>> =
+    LazyLock::new(|| RwLock::new(ObservabilityState::default()));
 
 /// Compute percentile from sorted values.
 fn percentile(sorted: &[f64], p: f64) -> f64 {

@@ -7,8 +7,8 @@
 //! - `viz_protein_structure` — protein structural metrics and geometry
 //! - `viz_topology_analysis` — mesh topological invariants and curvature
 
-use rmcp::model::CallToolResult;
 use rmcp::ErrorData as McpError;
+use rmcp::model::CallToolResult;
 
 use crate::params::{
     VizAntibodyStructureParams, VizInteractionMapParams, VizProjectionParams,
@@ -41,11 +41,8 @@ fn parse_json<T: serde::de::DeserializeOwned>(raw: &str, label: &str) -> Result<
 /// Analyze antibody/immunoglobulin topology: chain classification, domain
 /// identification (VH/VL/CH1-3/CL/Hinge), CDR loop location (Kabat),
 /// Fab/Fc fragment mapping, and disulfide bond detection.
-pub fn antibody_structure(
-    params: VizAntibodyStructureParams,
-) -> Result<CallToolResult, McpError> {
-    let mol: nexcore_viz::molecular::Molecule =
-        parse_json(&params.molecule_json, "molecule")?;
+pub fn antibody_structure(params: VizAntibodyStructureParams) -> Result<CallToolResult, McpError> {
+    let mol: nexcore_viz::molecular::Molecule = parse_json(&params.molecule_json, "molecule")?;
 
     let topology = nexcore_viz::antibody::analyze_antibody(&mol);
 
@@ -60,11 +57,8 @@ pub fn antibody_structure(
 /// bridges, hydrophobic contacts, pi-stacking, cation-pi, halogen bonds,
 /// and metal coordination. Returns counts, energies, and individual
 /// interaction details.
-pub fn interaction_map(
-    params: VizInteractionMapParams,
-) -> Result<CallToolResult, McpError> {
-    let mol: nexcore_viz::molecular::Molecule =
-        parse_json(&params.molecule_json, "molecule")?;
+pub fn interaction_map(params: VizInteractionMapParams) -> Result<CallToolResult, McpError> {
+    let mol: nexcore_viz::molecular::Molecule = parse_json(&params.molecule_json, "molecule")?;
 
     let mut cutoffs = nexcore_viz::interaction::InteractionCutoffs::default();
 
@@ -116,15 +110,10 @@ pub fn projection(params: VizProjectionParams) -> Result<CallToolResult, McpErro
         "stereographic" => nexcore_viz::projection::ProjectionMethod::Stereographic,
         "perspective" => {
             let fd = params.focal_distance.unwrap_or(3.0);
-            nexcore_viz::projection::ProjectionMethod::Perspective {
-                focal_distance: fd,
-            }
+            nexcore_viz::projection::ProjectionMethod::Perspective { focal_distance: fd }
         }
         "orthographic" => {
-            let axes_str = params
-                .axes
-                .as_deref()
-                .unwrap_or("[0, 1, 2]");
+            let axes_str = params.axes.as_deref().unwrap_or("[0, 1, 2]");
             let axes_vec: Vec<usize> = parse_json(axes_str, "axes")?;
             if axes_vec.len() < 3 {
                 return Err(McpError::invalid_params(
@@ -138,7 +127,9 @@ pub fn projection(params: VizProjectionParams) -> Result<CallToolResult, McpErro
         }
         other => {
             return Err(McpError::invalid_params(
-                format!("unknown projection method: {other}. Use: stereographic, perspective, orthographic"),
+                format!(
+                    "unknown projection method: {other}. Use: stereographic, perspective, orthographic"
+                ),
                 None,
             ));
         }
@@ -178,16 +169,18 @@ pub fn projection(params: VizProjectionParams) -> Result<CallToolResult, McpErro
                 }
                 other => {
                     return Err(McpError::invalid_params(
-                        format!("unknown surface: {other}. Use: tesseract, hypersphere, klein_bottle, clifford_torus"),
+                        format!(
+                            "unknown surface: {other}. Use: tesseract, hypersphere, klein_bottle, clifford_torus"
+                        ),
                         None,
                     ));
                 }
             };
 
-            let mesh =
-                nexcore_viz::projection::project_surface(&surface, segments, &method).map_err(
-                    |e| McpError::invalid_params(format!("surface projection error: {e}"), None),
-                )?;
+            let mesh = nexcore_viz::projection::project_surface(&surface, segments, &method)
+                .map_err(|e| {
+                    McpError::invalid_params(format!("surface projection error: {e}"), None)
+                })?;
 
             json_success(&mesh)
         }
@@ -205,11 +198,8 @@ pub fn projection(params: VizProjectionParams) -> Result<CallToolResult, McpErro
 /// Compute protein structural metrics: backbone extraction, phi/psi dihedral
 /// angles, Ramachandran classification, secondary structure assignment,
 /// contact map, hydrogen bonds, radius of gyration, and aggregate metrics.
-pub fn protein_structure(
-    params: VizProteinStructureParams,
-) -> Result<CallToolResult, McpError> {
-    let mol: nexcore_viz::molecular::Molecule =
-        parse_json(&params.molecule_json, "molecule")?;
+pub fn protein_structure(params: VizProteinStructureParams) -> Result<CallToolResult, McpError> {
+    let mol: nexcore_viz::molecular::Molecule = parse_json(&params.molecule_json, "molecule")?;
 
     let contact_threshold = params.contact_threshold.unwrap_or(8.0);
     let hbond_cutoff = params.hbond_cutoff.unwrap_or(3.5);
@@ -260,9 +250,7 @@ pub fn protein_structure(
 /// Compute topological invariants (Euler characteristic, genus, Betti numbers),
 /// per-vertex Gaussian and mean curvatures, and verify the Gauss–Bonnet
 /// theorem on a triangle mesh.
-pub fn topology_analysis(
-    params: VizTopologyAnalysisParams,
-) -> Result<CallToolResult, McpError> {
+pub fn topology_analysis(params: VizTopologyAnalysisParams) -> Result<CallToolResult, McpError> {
     let vertices: Vec<[f64; 3]> = parse_json(&params.vertices, "vertices")?;
     let triangles: Vec<[usize; 3]> = parse_json(&params.triangles, "triangles")?;
 
@@ -288,8 +276,7 @@ pub fn topology_analysis(
             .map_err(|e| McpError::invalid_params(format!("curvature error: {e}"), None))?;
 
         if verify_gb {
-            let gb_result =
-                nexcore_viz::topology::verify_gauss_bonnet(&mesh, &curvatures);
+            let gb_result = nexcore_viz::topology::verify_gauss_bonnet(&mesh, &curvatures);
             result["gauss_bonnet"] = serde_json::json!(gb_result);
         }
 

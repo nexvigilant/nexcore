@@ -42,7 +42,7 @@ use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use thiserror::Error;
+use nexcore_error::Error;
 
 use crate::spatial::{Distance, Neighborhood};
 

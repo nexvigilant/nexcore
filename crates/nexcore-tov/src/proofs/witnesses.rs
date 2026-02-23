@@ -44,7 +44,7 @@
 //! ```
 
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
+use nexcore_error::Error;
 
 // ============================================================================
 // ERROR TYPE

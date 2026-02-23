@@ -2,7 +2,7 @@
 //!
 //! Error types for lexer, parser, and runtime.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// PVDSL Error
 #[derive(Error, Debug)]

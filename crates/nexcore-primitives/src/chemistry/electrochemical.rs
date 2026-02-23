@@ -13,7 +13,7 @@
 //! **Bond Application**: Bond activation threshold shifts based on
 //! current system load (more bonds = harder to activate new ones).
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Faraday constant (C/mol)
 pub const FARADAY: f64 = 96_485.0;

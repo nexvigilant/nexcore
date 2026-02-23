@@ -8,7 +8,7 @@ use polars::prelude::*;
 use std::path::Path;
 
 /// Errors specific to the Disney Loop pipeline.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum DisneyError {
     #[error("polars error: {0}")]
     Polars(#[from] PolarsError),

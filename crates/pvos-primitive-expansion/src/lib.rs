@@ -96,7 +96,10 @@ async fn retry_request(
                     "Rate limited (429), backing off"
                 );
                 tokio::time::sleep(Duration::from_secs(backoff)).await;
-                last_error = Some(nexcore_error::nexerror!("Rate limited after {} retries", retry + 1));
+                last_error = Some(nexcore_error::nexerror!(
+                    "Rate limited after {} retries",
+                    retry + 1
+                ));
             }
             Ok(resp) if resp.status().is_server_error() => {
                 let status = resp.status();
@@ -124,11 +127,15 @@ async fn retry_request(
             }
         }
     }
-    Err(last_error
-        .unwrap_or_else(|| nexcore_error::nexerror!("Request failed after {} retries", max_retries)))
+    Err(last_error.unwrap_or_else(|| {
+        nexcore_error::nexerror!("Request failed after {} retries", max_retries)
+    }))
 }
 /// Extract nested data using a simple JSONPath-like notation.
-fn extract_json_path(json: &serde_json::Value, path: &str) -> nexcore_error::Result<serde_json::Value> {
+fn extract_json_path(
+    json: &serde_json::Value,
+    path: &str,
+) -> nexcore_error::Result<serde_json::Value> {
     let mut current = json.clone();
     for segment in path.trim_start_matches("$.").split('.') {
         if let Some(idx) = segment.find('[') {
@@ -142,10 +149,9 @@ fn extract_json_path(json: &serde_json::Value, path: &str) -> nexcore_error::Res
             }
             if bracket_content == "*" {
             } else if let Ok(index) = bracket_content.parse::<usize>() {
-                current = current
-                    .get(index)
-                    .cloned()
-                    .ok_or_else(|| nexcore_error::nexerror!("Array index {} out of bounds", index))?;
+                current = current.get(index).cloned().ok_or_else(|| {
+                    nexcore_error::nexerror!("Array index {} out of bounds", index)
+                })?;
             }
         } else {
             current = current

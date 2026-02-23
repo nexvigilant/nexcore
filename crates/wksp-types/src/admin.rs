@@ -1,7 +1,7 @@
 //! Admin types — dashboard stats, content pipeline, leads
 
-use serde::{Deserialize, Serialize};
 use crate::common::Timestamp;
+use serde::{Deserialize, Serialize};
 
 /// Admin dashboard summary statistics
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

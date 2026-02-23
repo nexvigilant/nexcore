@@ -6,9 +6,9 @@
 use std::path::{Path, PathBuf};
 
 use chrono::Utc;
+use nexcore_fs::walk::WalkDir;
 use rusqlite::Connection;
 use serde_json::Value as JsonValue;
-use walkdir::WalkDir;
 
 use crate::agents::{self, AgentRow};
 use crate::audit::{self, AuditRow};

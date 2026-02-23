@@ -8,7 +8,7 @@
 //! generation, substructure matching, watchlist screening, and ring/aromaticity
 //! analysis.
 
-use nexcore_chemivigilance::pipeline::{generate_safety_brief, ChemivigilanceConfig};
+use nexcore_chemivigilance::pipeline::{ChemivigilanceConfig, generate_safety_brief};
 use nexcore_chemivigilance::watchlist::{check_ich_m7_flag, check_watchlist};
 use nexcore_metabolite::predict::predict_from_smiles as metabolite_predict_from_smiles;
 use nexcore_molcore::arom::detect_aromaticity;
@@ -122,10 +122,7 @@ pub fn chem_fingerprint(params: ChemFingerprintParams) -> Result<CallToolResult,
     let fp = morgan_fingerprint(&graph, radius, nbits);
 
     // Collect the indices of set bits (capped at 256 for response size).
-    let set_bits: Vec<usize> = (0..fp.size)
-        .filter(|&i| fp.get(i))
-        .take(256)
-        .collect();
+    let set_bits: Vec<usize> = (0..fp.size).filter(|&i| fp.get(i)).take(256).collect();
 
     json_result(serde_json::json!({
         "smiles": params.smiles,

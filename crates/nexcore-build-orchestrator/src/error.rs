@@ -9,10 +9,10 @@
 use std::path::PathBuf;
 
 /// Tier: T2-C (Σ + ∂ + σ + λ, dominant Σ)
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum BuildOrcError {
     /// I/O operation failed
-    #[error("I/O error at {path}: {source}")]
+    #[error("I/O error at {path:?}: {source}")]
     Io {
         path: PathBuf,
         source: std::io::Error,

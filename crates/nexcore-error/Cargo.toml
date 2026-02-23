@@ -11,12 +11,13 @@ keywords = ["error", "result", "no-std"]
 categories = ["no-std", "rust-patterns"]
 
 [dependencies]
-# Zero external dependencies - supply chain sovereignty
 # Replaces: thiserror, anyhow
+nexcore-error-derive = { path = "../nexcore-error-derive", optional = true }
 
 [features]
-default = ["std"]
+default = ["std", "derive"]
 std = []
+derive = ["dep:nexcore-error-derive"]
 
 [lints.rust]
 unsafe_code = "forbid"

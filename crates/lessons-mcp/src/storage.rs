@@ -26,6 +26,8 @@ pub fn load() -> LessonsDb {
 
 pub fn save(db: &LessonsDb) {
     let path = data_path();
-    let Ok(content) = serde_json::to_string_pretty(db) else { return };
+    let Ok(content) = serde_json::to_string_pretty(db) else {
+        return;
+    };
     fs::write(path, content).ok();
 }

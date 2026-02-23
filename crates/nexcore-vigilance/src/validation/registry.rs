@@ -1,7 +1,7 @@
 //! Domain validator registry
 
 use super::domain::{DomainValidator, GenericDomainValidator, SkillDomainValidator};
-use glob::Pattern;
+use nexcore_fs::glob::Pattern;
 use std::path::Path;
 
 /// Domain definition with detection patterns

@@ -334,7 +334,10 @@ mod tests {
         assert_eq!(entry.goals.len(), 1);
         assert!(entry.goals[0].met);
         assert_eq!(entry.kpi_contributions.len(), 1);
-        assert_eq!(entry.kpi_contributions[0].strategic_kpi, "P95 review latency");
+        assert_eq!(
+            entry.kpi_contributions[0].strategic_kpi,
+            "P95 review latency"
+        );
     }
 
     /// A [`TeamReport`] carries the [`DeliveryStatus`] set by the

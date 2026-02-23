@@ -175,7 +175,7 @@ pub async fn provision_tenant(
     (
         axum::http::StatusCode::CREATED,
         Json(ProvisionResponse {
-            tenant_id: uuid::Uuid::new_v4().to_string(),
+            tenant_id: nexcore_id::NexId::v4().to_string(),
             org_name: req.org_name,
             tier: tier_display_name(tier).to_string(),
             state: "trial".to_string(),

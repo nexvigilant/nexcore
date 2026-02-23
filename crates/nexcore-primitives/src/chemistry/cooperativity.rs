@@ -12,7 +12,7 @@
 //!
 //! **Bond Application**: Multiple low-energy bonds cascade to trigger action.
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors for cooperativity calculations.
 #[derive(Debug, Error, PartialEq, Clone)]

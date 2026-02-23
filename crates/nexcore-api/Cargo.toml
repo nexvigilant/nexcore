@@ -25,10 +25,9 @@ nexcore-mesh = { workspace = true }
 signal = { workspace = true }
 vr-tenant = { workspace = true }
 vr-core = { workspace = true }
-base64 = { workspace = true }
 hmac = { workspace = true }
 sha2 = { workspace = true }
-hex = { workspace = true }
+nexcore-codec = { workspace = true }
 
 # HTTP server
 axum = { workspace = true }
@@ -61,10 +60,10 @@ rusqlite = { workspace = true }
 
 # Utilities
 chrono = { workspace = true }
-dirs = { workspace = true }
+nexcore-fs = { workspace = true }
 nexcore-id = { workspace = true }
 shellexpand = "3.1"
-uuid = { workspace = true }
+
 
 [dev-dependencies]
 tempfile = { workspace = true }

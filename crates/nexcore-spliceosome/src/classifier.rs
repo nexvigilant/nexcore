@@ -46,9 +46,22 @@ impl TaskClassifier {
                 // Explore signals
                 ClassifierRule {
                     keywords: vec![
-                        "read", "search", "find", "look", "explore", "understand",
-                        "analyze", "investigate", "scan", "check", "examine", "review",
-                        "what is", "how does", "where is", "list",
+                        "read",
+                        "search",
+                        "find",
+                        "look",
+                        "explore",
+                        "understand",
+                        "analyze",
+                        "investigate",
+                        "scan",
+                        "check",
+                        "examine",
+                        "review",
+                        "what is",
+                        "how does",
+                        "where is",
+                        "list",
                     ],
                     category: TaskCategory::Explore,
                     weight: 1.0,
@@ -56,9 +69,23 @@ impl TaskClassifier {
                 // Mutate signals
                 ClassifierRule {
                     keywords: vec![
-                        "write", "create", "build", "implement", "add", "fix", "edit",
-                        "modify", "update", "change", "refactor", "rename", "delete",
-                        "remove", "replace", "generate", "code",
+                        "write",
+                        "create",
+                        "build",
+                        "implement",
+                        "add",
+                        "fix",
+                        "edit",
+                        "modify",
+                        "update",
+                        "change",
+                        "refactor",
+                        "rename",
+                        "delete",
+                        "remove",
+                        "replace",
+                        "generate",
+                        "code",
                     ],
                     category: TaskCategory::Mutate,
                     weight: 1.0,
@@ -66,8 +93,16 @@ impl TaskClassifier {
                 // Orchestrate signals
                 ClassifierRule {
                     keywords: vec![
-                        "team", "parallel", "coordinate", "spawn", "delegate",
-                        "orchestrate", "pipeline", "workflow", "batch", "multi",
+                        "team",
+                        "parallel",
+                        "coordinate",
+                        "spawn",
+                        "delegate",
+                        "orchestrate",
+                        "pipeline",
+                        "workflow",
+                        "batch",
+                        "multi",
                     ],
                     category: TaskCategory::Orchestrate,
                     weight: 1.2,
@@ -75,9 +110,19 @@ impl TaskClassifier {
                 // Compute signals
                 ClassifierRule {
                     keywords: vec![
-                        "calculate", "compute", "signal", "detect", "prr", "ror",
-                        "faers", "disproportionality", "statistics", "measure",
-                        "score", "evaluate", "benchmark",
+                        "calculate",
+                        "compute",
+                        "signal",
+                        "detect",
+                        "prr",
+                        "ror",
+                        "faers",
+                        "disproportionality",
+                        "statistics",
+                        "measure",
+                        "score",
+                        "evaluate",
+                        "benchmark",
                     ],
                     category: TaskCategory::Compute,
                     weight: 1.1,
@@ -85,8 +130,8 @@ impl TaskClassifier {
                 // Verify signals
                 ClassifierRule {
                     keywords: vec![
-                        "test", "verify", "validate", "assert", "check", "lint",
-                        "clippy", "build", "compile", "ci", "gate",
+                        "test", "verify", "validate", "assert", "check", "lint", "clippy", "build",
+                        "compile", "ci", "gate",
                     ],
                     category: TaskCategory::Verify,
                     weight: 1.0,
@@ -94,8 +139,16 @@ impl TaskClassifier {
                 // Browse signals
                 ClassifierRule {
                     keywords: vec![
-                        "browser", "chrome", "navigate", "click", "screenshot",
-                        "page", "tab", "website", "url", "dom",
+                        "browser",
+                        "chrome",
+                        "navigate",
+                        "click",
+                        "screenshot",
+                        "page",
+                        "tab",
+                        "website",
+                        "url",
+                        "dom",
                     ],
                     category: TaskCategory::Browse,
                     weight: 1.3,
@@ -158,37 +211,55 @@ mod tests {
     #[test]
     fn test_explore_classification() {
         let c = TaskClassifier::new();
-        assert_eq!(c.classify("read the file and understand the architecture"), TaskCategory::Explore);
+        assert_eq!(
+            c.classify("read the file and understand the architecture"),
+            TaskCategory::Explore
+        );
     }
 
     #[test]
     fn test_mutate_classification() {
         let c = TaskClassifier::new();
-        assert_eq!(c.classify("implement a new feature and add tests"), TaskCategory::Mutate);
+        assert_eq!(
+            c.classify("implement a new feature and add tests"),
+            TaskCategory::Mutate
+        );
     }
 
     #[test]
     fn test_compute_classification() {
         let c = TaskClassifier::new();
-        assert_eq!(c.classify("calculate PRR and ROR for the drug signal"), TaskCategory::Compute);
+        assert_eq!(
+            c.classify("calculate PRR and ROR for the drug signal"),
+            TaskCategory::Compute
+        );
     }
 
     #[test]
     fn test_orchestrate_classification() {
         let c = TaskClassifier::new();
-        assert_eq!(c.classify("spawn a team to coordinate parallel batch fixes"), TaskCategory::Orchestrate);
+        assert_eq!(
+            c.classify("spawn a team to coordinate parallel batch fixes"),
+            TaskCategory::Orchestrate
+        );
     }
 
     #[test]
     fn test_verify_classification() {
         let c = TaskClassifier::new();
-        assert_eq!(c.classify("run tests and validate the build passes lint"), TaskCategory::Verify);
+        assert_eq!(
+            c.classify("run tests and validate the build passes lint"),
+            TaskCategory::Verify
+        );
     }
 
     #[test]
     fn test_browse_classification() {
         let c = TaskClassifier::new();
-        assert_eq!(c.classify("navigate to the website and take a screenshot"), TaskCategory::Browse);
+        assert_eq!(
+            c.classify("navigate to the website and take a screenshot"),
+            TaskCategory::Browse
+        );
     }
 
     #[test]

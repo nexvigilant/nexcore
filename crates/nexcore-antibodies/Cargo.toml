@@ -9,13 +9,13 @@ license = "LicenseRef-Proprietary"
 description = "Adaptive immune layer for targeted threat recognition and neutralization. Complements nexcore-immunity (innate) with learned epitope-paratope binding."
 
 [dependencies]
+nexcore-error = { workspace = true }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
-thiserror = { version = "1.0.61" }
 tracing = { version = "0.1.40" }
 chrono = { version = "0.4.38", features = ["serde"] }
-uuid = { version = "1.10.0", features = ["v4", "serde"] }
+nexcore-id = { workspace = true }
 dashmap = { version = "6.0.1" }
 
 [dev-dependencies]

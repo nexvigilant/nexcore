@@ -12,6 +12,8 @@
 use axum::{extract::Request, middleware::Next, response::Response};
 use chrono::{DateTime, Utc};
 use hmac::{Hmac, Mac};
+use nexcore_codec::hex;
+use nexcore_fs::dirs;
 use serde::Serialize;
 use sha2::Sha256;
 use std::path::PathBuf;
@@ -96,7 +98,9 @@ fn record_api_audit(record: ApiAuditRecord) {
     if let Some(tx) = API_AUDIT_SENDER.get() {
         // send returns Err only if receiver is dropped — benign
         #[allow(unused_results)]
-        { tx.send(record); }
+        {
+            tx.send(record);
+        }
     }
 }
 

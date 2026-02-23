@@ -147,10 +147,7 @@ pub fn shortest_path_to_ksb(
 }
 
 /// Compute the capability surface: which ALOs are now unlocked given completed set.
-pub fn capability_surface(
-    graph: &LearningGraph,
-    completed: &HashSet<String>,
-) -> CapabilitySurface {
+pub fn capability_surface(graph: &LearningGraph, completed: &HashSet<String>) -> CapabilitySurface {
     // Build prereq map: ALO → set of prereq ALO IDs
     let mut prereq_map: HashMap<&str, HashSet<&str>> = HashMap::new();
     for node in &graph.nodes {
@@ -173,7 +170,10 @@ pub fn capability_surface(
             continue; // Already done
         }
 
-        let prereqs = prereq_map.get(node.id.as_str()).cloned().unwrap_or_default();
+        let prereqs = prereq_map
+            .get(node.id.as_str())
+            .cloned()
+            .unwrap_or_default();
         let all_prereqs_met = prereqs.iter().all(|p| completed.contains(*p));
 
         if all_prereqs_met {

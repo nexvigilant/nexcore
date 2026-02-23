@@ -272,10 +272,12 @@ mod tests {
         assert_eq!(state.runs[0].status, RunStatus::Aborted);
         assert!(state.runs[0].completed.is_some());
         // Abort records a checkpoint
-        assert!(state.runs[0]
-            .checkpoints
-            .iter()
-            .any(|c| c.name == "nmd_abort"));
+        assert!(
+            state.runs[0]
+                .checkpoints
+                .iter()
+                .any(|c| c.name == "nmd_abort")
+        );
     }
 
     #[test]

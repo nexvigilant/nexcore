@@ -12,9 +12,9 @@ categories = ["science"]
 publish = true
 
 [dependencies]
+nexcore-error = { workspace = true }
 stem-core = { version = "0.1.0", path = "../stem-core", registry = "nexcore" }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
-thiserror = { version = "1.0.61" }
 serde = { version = "1.0.204", features = ["derive"] }
 
 [dev-dependencies]

@@ -60,10 +60,10 @@ pub mod predictive;
 pub mod preemptive;
 pub mod reactive;
 
-pub mod transfer;
-pub mod primitives;
 pub mod composites;
 pub mod prelude;
+pub mod primitives;
+pub mod transfer;
 
 // Re-export key types at crate root for convenience.
 pub use types::{

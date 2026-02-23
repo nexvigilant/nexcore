@@ -7,9 +7,9 @@
 //!
 //! ## Tier: T2-P (μ + κ)
 
+use nexcore_error::Error;
 use prima::value::{Value, ValueData};
 use serde_json::Value as JsonValue;
-use thiserror::Error;
 
 /// Serialization errors.
 #[derive(Debug, Error)]

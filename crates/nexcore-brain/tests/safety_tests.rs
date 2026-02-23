@@ -11,6 +11,7 @@
 //! 4. **Resource Exhaustion** - Large content, many sessions
 //! 5. **Recovery** - Index rebuild, session recovery
 
+use nexcore_codec::hex;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
@@ -18,10 +19,10 @@ use std::sync::{Arc, Barrier};
 use std::thread;
 use tempfile::TempDir;
 
-use nexcore_error::{Result, nexerror};
 use nexcore_brain::{
     Artifact, ArtifactMetadata, ArtifactType, BrainError, Correction, Pattern, Preference,
 };
+use nexcore_error::{Result, nexerror};
 
 // ============================================================================
 // Test Infrastructure

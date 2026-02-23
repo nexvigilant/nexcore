@@ -2,9 +2,9 @@
 //!
 //! 8-level safety hierarchy from molecular to regulatory scale.
 
-use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 /// Safety level in the pharmacovigilance hierarchy.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -66,123 +66,127 @@ pub struct SafetyLevelMetadata {
 }
 
 /// Static metadata for all safety levels.
-pub static LEVEL_METADATA: Lazy<HashMap<SafetyLevel, SafetyLevelMetadata>> = Lazy::new(|| {
-    let mut m = HashMap::new();
+pub static LEVEL_METADATA: LazyLock<HashMap<SafetyLevel, SafetyLevelMetadata>> =
+    LazyLock::new(|| {
+        let mut m = HashMap::new();
 
-    m.insert(
-        SafetyLevel::Molecular,
-        SafetyLevelMetadata {
-            level: SafetyLevel::Molecular,
-            name: "Molecular".to_string(),
-            scope: "Single drug-target binding event; conformational change".to_string(),
-            time_scale_min: "ps".to_string(),
-            time_scale_max: "μs".to_string(),
-            system_units_min: 1,
-            system_units_max: 10,
-            example_phenomena: vec!["Receptor binding".into(), "Enzyme inhibition".into()],
-        },
-    );
+        m.insert(
+            SafetyLevel::Molecular,
+            SafetyLevelMetadata {
+                level: SafetyLevel::Molecular,
+                name: "Molecular".to_string(),
+                scope: "Single drug-target binding event; conformational change".to_string(),
+                time_scale_min: "ps".to_string(),
+                time_scale_max: "μs".to_string(),
+                system_units_min: 1,
+                system_units_max: 10,
+                example_phenomena: vec!["Receptor binding".into(), "Enzyme inhibition".into()],
+            },
+        );
 
-    m.insert(
-        SafetyLevel::Cellular,
-        SafetyLevelMetadata {
-            level: SafetyLevel::Cellular,
-            name: "Cellular".to_string(),
-            scope: "Pathway activation; gene expression; organelle response".to_string(),
-            time_scale_min: "s".to_string(),
-            time_scale_max: "min".to_string(),
-            system_units_min: 10,
-            system_units_max: 100,
-            example_phenomena: vec!["Signal transduction".into(), "Apoptosis initiation".into()],
-        },
-    );
+        m.insert(
+            SafetyLevel::Cellular,
+            SafetyLevelMetadata {
+                level: SafetyLevel::Cellular,
+                name: "Cellular".to_string(),
+                scope: "Pathway activation; gene expression; organelle response".to_string(),
+                time_scale_min: "s".to_string(),
+                time_scale_max: "min".to_string(),
+                system_units_min: 10,
+                system_units_max: 100,
+                example_phenomena: vec![
+                    "Signal transduction".into(),
+                    "Apoptosis initiation".into(),
+                ],
+            },
+        );
 
-    m.insert(
-        SafetyLevel::Tissue,
-        SafetyLevelMetadata {
-            level: SafetyLevel::Tissue,
-            name: "Tissue".to_string(),
-            scope: "Local tissue effects; inflammation; cell death".to_string(),
-            time_scale_min: "min".to_string(),
-            time_scale_max: "hr".to_string(),
-            system_units_min: 100,
-            system_units_max: 1000,
-            example_phenomena: vec!["Inflammatory response".into(), "Necrosis".into()],
-        },
-    );
+        m.insert(
+            SafetyLevel::Tissue,
+            SafetyLevelMetadata {
+                level: SafetyLevel::Tissue,
+                name: "Tissue".to_string(),
+                scope: "Local tissue effects; inflammation; cell death".to_string(),
+                time_scale_min: "min".to_string(),
+                time_scale_max: "hr".to_string(),
+                system_units_min: 100,
+                system_units_max: 1000,
+                example_phenomena: vec!["Inflammatory response".into(), "Necrosis".into()],
+            },
+        );
 
-    m.insert(
-        SafetyLevel::Organ,
-        SafetyLevelMetadata {
-            level: SafetyLevel::Organ,
-            name: "Organ".to_string(),
-            scope: "Organ function impairment; hepatotoxicity; nephrotoxicity".to_string(),
-            time_scale_min: "hr".to_string(),
-            time_scale_max: "days".to_string(),
-            system_units_min: 1000,
-            system_units_max: 10000,
-            example_phenomena: vec!["Hepatotoxicity".into(), "Nephrotoxicity".into()],
-        },
-    );
+        m.insert(
+            SafetyLevel::Organ,
+            SafetyLevelMetadata {
+                level: SafetyLevel::Organ,
+                name: "Organ".to_string(),
+                scope: "Organ function impairment; hepatotoxicity; nephrotoxicity".to_string(),
+                time_scale_min: "hr".to_string(),
+                time_scale_max: "days".to_string(),
+                system_units_min: 1000,
+                system_units_max: 10000,
+                example_phenomena: vec!["Hepatotoxicity".into(), "Nephrotoxicity".into()],
+            },
+        );
 
-    m.insert(
-        SafetyLevel::System,
-        SafetyLevelMetadata {
-            level: SafetyLevel::System,
-            name: "System".to_string(),
-            scope: "Multi-organ system effects; cardiovascular; CNS".to_string(),
-            time_scale_min: "days".to_string(),
-            time_scale_max: "wks".to_string(),
-            system_units_min: 10000,
-            system_units_max: 100000,
-            example_phenomena: vec!["Multi-organ dysfunction".into()],
-        },
-    );
+        m.insert(
+            SafetyLevel::System,
+            SafetyLevelMetadata {
+                level: SafetyLevel::System,
+                name: "System".to_string(),
+                scope: "Multi-organ system effects; cardiovascular; CNS".to_string(),
+                time_scale_min: "days".to_string(),
+                time_scale_max: "wks".to_string(),
+                system_units_min: 10000,
+                system_units_max: 100000,
+                example_phenomena: vec!["Multi-organ dysfunction".into()],
+            },
+        );
 
-    m.insert(
-        SafetyLevel::Clinical,
-        SafetyLevelMetadata {
-            level: SafetyLevel::Clinical,
-            name: "Clinical".to_string(),
-            scope: "Observable adverse event; patient symptoms".to_string(),
-            time_scale_min: "wks".to_string(),
-            time_scale_max: "mos".to_string(),
-            system_units_min: 100000,
-            system_units_max: 1000000,
-            example_phenomena: vec!["Reported adverse event".into(), "Hospitalization".into()],
-        },
-    );
+        m.insert(
+            SafetyLevel::Clinical,
+            SafetyLevelMetadata {
+                level: SafetyLevel::Clinical,
+                name: "Clinical".to_string(),
+                scope: "Observable adverse event; patient symptoms".to_string(),
+                time_scale_min: "wks".to_string(),
+                time_scale_max: "mos".to_string(),
+                system_units_min: 100000,
+                system_units_max: 1000000,
+                example_phenomena: vec!["Reported adverse event".into(), "Hospitalization".into()],
+            },
+        );
 
-    m.insert(
-        SafetyLevel::Epidemiological,
-        SafetyLevelMetadata {
-            level: SafetyLevel::Epidemiological,
-            name: "Epidemiological".to_string(),
-            scope: "Population-level incidence; risk factor identification".to_string(),
-            time_scale_min: "mos".to_string(),
-            time_scale_max: "yrs".to_string(),
-            system_units_min: 1000000,
-            system_units_max: 10000000,
-            example_phenomena: vec!["Safety signal detection".into()],
-        },
-    );
+        m.insert(
+            SafetyLevel::Epidemiological,
+            SafetyLevelMetadata {
+                level: SafetyLevel::Epidemiological,
+                name: "Epidemiological".to_string(),
+                scope: "Population-level incidence; risk factor identification".to_string(),
+                time_scale_min: "mos".to_string(),
+                time_scale_max: "yrs".to_string(),
+                system_units_min: 1000000,
+                system_units_max: 10000000,
+                example_phenomena: vec!["Safety signal detection".into()],
+            },
+        );
 
-    m.insert(
-        SafetyLevel::Regulatory,
-        SafetyLevelMetadata {
-            level: SafetyLevel::Regulatory,
-            name: "Regulatory".to_string(),
-            scope: "Label changes; REMS; withdrawal; class-wide effects".to_string(),
-            time_scale_min: "yrs".to_string(),
-            time_scale_max: "decades".to_string(),
-            system_units_min: 10000000,
-            system_units_max: 100000000,
-            example_phenomena: vec!["Market withdrawal".into(), "Black box warning".into()],
-        },
-    );
+        m.insert(
+            SafetyLevel::Regulatory,
+            SafetyLevelMetadata {
+                level: SafetyLevel::Regulatory,
+                name: "Regulatory".to_string(),
+                scope: "Label changes; REMS; withdrawal; class-wide effects".to_string(),
+                time_scale_min: "yrs".to_string(),
+                time_scale_max: "decades".to_string(),
+                system_units_min: 10000000,
+                system_units_max: 100000000,
+                example_phenomena: vec!["Market withdrawal".into(), "Black box warning".into()],
+            },
+        );
 
-    m
-});
+        m
+    });
 
 /// Tree of Vigilance hierarchy level.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]

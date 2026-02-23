@@ -107,9 +107,9 @@ async fn run_daemon(config: Config) -> nexcore_error::Result<()> {
                 tracing::info!(model = %model, project = %project, "Initializing Gemini via Vertex AI");
                 Box::new(GeminiClient::vertex(project, model))
             } else {
-                let key = config
-                    .gemini_api_key
-                    .ok_or_else(|| nexcore_error::nexerror!("GEMINI_API_KEY or GCLOUD_PROJECT required"))?;
+                let key = config.gemini_api_key.ok_or_else(|| {
+                    nexcore_error::nexerror!("GEMINI_API_KEY or GCLOUD_PROJECT required")
+                })?;
                 tracing::info!(model = %model, "Initializing Gemini via API key");
                 Box::new(GeminiClient::new(key, model))
             }

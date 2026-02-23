@@ -110,10 +110,7 @@ mod tests {
 
     #[test]
     fn prelude_imports_severity() {
-        assert!(matches!(
-            SeverityLevel::Mild1,
-            SeverityLevel::Mild1
-        ));
+        assert!(matches!(SeverityLevel::Mild1, SeverityLevel::Mild1));
     }
 
     #[test]

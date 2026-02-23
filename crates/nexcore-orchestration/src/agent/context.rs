@@ -4,6 +4,7 @@
 
 use std::path::{Path, PathBuf};
 
+use nexcore_codec::hex;
 use sha2::{Digest, Sha256};
 
 use crate::error::{OrcError, OrcResult};

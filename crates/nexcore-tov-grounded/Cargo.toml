@@ -12,8 +12,8 @@ description = "Grounded Theory of Vigilance primitives"
 tokio = { version = "1.47", features = ["full"] }
 
 [dependencies]
+nexcore-error = { workspace = true }
 serde = { version = "1.0.204", features = ["derive"] }
-thiserror = "2.0"
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 
 [lints.rust]

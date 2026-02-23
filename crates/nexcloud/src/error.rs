@@ -7,7 +7,7 @@ use std::path::PathBuf;
 /// Tier: T2-C (∂ Boundary + ∅ Void + ς State)
 /// Boundary violations (bad config, missing files), void results (spawn failures),
 /// and state transitions (shutdown) all converge here.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum NexCloudError {
     #[error("manifest parse error: {0}")]
     ManifestParse(String),
@@ -15,7 +15,7 @@ pub enum NexCloudError {
     #[error("manifest validation: {0}")]
     ManifestValidation(String),
 
-    #[error("binary not found: {path}")]
+    #[error("binary not found: {path:?}")]
     BinaryNotFound { path: PathBuf },
 
     #[error("process spawn failed for '{name}': {reason}")]
@@ -70,7 +70,7 @@ mod tests {
         let e = NexCloudError::BinaryNotFound {
             path: PathBuf::from("/bin/nope"),
         };
-        assert!(format!("{e}").contains("/bin/nope"));
+        assert!(format!("{e}").contains("bin/nope"));
     }
 
     #[test]

@@ -587,7 +587,7 @@ impl Axiom1Verification {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// Errors related to system decomposition.
-#[derive(Debug, Clone, thiserror::Error)]
+#[derive(Debug, Clone, nexcore_error::Error)]
 pub enum DecompositionError {
     /// Duplicate element ID in element set.
     #[error("Duplicate element ID: {0}")]

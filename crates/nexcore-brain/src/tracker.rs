@@ -4,6 +4,7 @@
 //! and version management independent of git.
 
 use chrono::{DateTime, Utc};
+use nexcore_codec::hex;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;

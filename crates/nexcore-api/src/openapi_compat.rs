@@ -171,10 +171,7 @@ fn rewrite_any_of_null(map: &mut Map<String, Value>) {
         return;
     }
 
-    let non_null_variants: Vec<Value> = any_of
-        .into_iter()
-        .filter(|v| !is_null_schema(v))
-        .collect();
+    let non_null_variants: Vec<Value> = any_of.into_iter().filter(|v| !is_null_schema(v)).collect();
 
     map.insert("nullable".to_owned(), Value::Bool(true));
 
@@ -292,7 +289,9 @@ mod tests {
                 ]
             }
         }));
-        let any_of = out["schema"]["anyOf"].as_array().expect("anyOf should remain");
+        let any_of = out["schema"]["anyOf"]
+            .as_array()
+            .expect("anyOf should remain");
         assert_eq!(any_of.len(), 2, "null variant should be removed");
         assert_eq!(out["schema"]["nullable"], true);
     }
@@ -308,7 +307,9 @@ mod tests {
                 ]
             }
         }));
-        let any_of = out["schema"]["anyOf"].as_array().expect("anyOf should remain");
+        let any_of = out["schema"]["anyOf"]
+            .as_array()
+            .expect("anyOf should remain");
         assert_eq!(any_of.len(), 2);
         assert!(out["schema"].get("nullable").is_none());
     }

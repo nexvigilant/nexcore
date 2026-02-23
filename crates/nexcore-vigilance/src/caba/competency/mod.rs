@@ -501,7 +501,7 @@ pub struct CoreCompetency {
 }
 
 /// Error type for competency operations.
-#[derive(Debug, Clone, thiserror::Error)]
+#[derive(Debug, Clone, nexcore_error::Error)]
 pub enum CompetencyError {
     /// Missing required KSB requirement
     #[error("Missing requirement: {0}")]

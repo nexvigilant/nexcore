@@ -137,8 +137,7 @@ impl SmgComplex {
         let mut actions = Vec::new();
 
         // SMG5: Always abort on degradation
-        let contributing_channels: Vec<UpfChannel> =
-            anomalies.iter().map(|a| a.channel).collect();
+        let contributing_channels: Vec<UpfChannel> = anomalies.iter().map(|a| a.channel).collect();
         let reasons: Vec<String> = anomalies.iter().map(|a| a.description.clone()).collect();
         let reason = reasons.join("; ");
 
@@ -148,10 +147,7 @@ impl SmgComplex {
         });
 
         // SMG6: Flag source if any anomaly exceeds severity threshold
-        let max_severity = anomalies
-            .iter()
-            .map(|a| a.severity)
-            .fold(0.0f32, f32::max);
+        let max_severity = anomalies.iter().map(|a| a.severity).fold(0.0f32, f32::max);
 
         if max_severity >= self.config.flag_source_severity {
             let source_id = self
@@ -232,7 +228,11 @@ mod tests {
             anomalies: vec![make_anomaly(UpfChannel::Upf1, 0.8)],
         };
         let actions = smg.process_verdict(&verdict);
-        assert!(actions.iter().any(|a| matches!(a, SmgAction::AbortPipeline { .. })));
+        assert!(
+            actions
+                .iter()
+                .any(|a| matches!(a, SmgAction::AbortPipeline { .. }))
+        );
     }
 
     #[test]
@@ -243,7 +243,9 @@ mod tests {
             anomalies: vec![make_anomaly(UpfChannel::Upf2, 0.9)],
         };
         let actions = smg.process_verdict(&verdict);
-        let flag = actions.iter().find(|a| matches!(a, SmgAction::FlagSource { .. }));
+        let flag = actions
+            .iter()
+            .find(|a| matches!(a, SmgAction::FlagSource { .. }));
         assert!(flag.is_some());
         if let Some(SmgAction::FlagSource { source_id, .. }) = flag {
             assert_eq!(source_id, "task-123");
@@ -257,7 +259,11 @@ mod tests {
             anomalies: vec![make_anomaly(UpfChannel::Upf3, 0.3)], // Below 0.7 threshold
         };
         let actions = smg.process_verdict(&verdict);
-        assert!(!actions.iter().any(|a| matches!(a, SmgAction::FlagSource { .. })));
+        assert!(
+            !actions
+                .iter()
+                .any(|a| matches!(a, SmgAction::FlagSource { .. }))
+        );
     }
 
     #[test]
@@ -267,7 +273,11 @@ mod tests {
             anomalies: vec![make_anomaly(UpfChannel::Upf1, 0.5)],
         };
         let actions = smg.process_verdict(&verdict);
-        assert!(actions.iter().any(|a| matches!(a, SmgAction::AdaptiveUpdate { .. })));
+        assert!(
+            actions
+                .iter()
+                .any(|a| matches!(a, SmgAction::AdaptiveUpdate { .. }))
+        );
     }
 
     #[test]
@@ -281,7 +291,11 @@ mod tests {
             anomalies: vec![make_anomaly(UpfChannel::Upf1, 0.5)],
         };
         let actions = smg.process_verdict(&verdict);
-        assert!(!actions.iter().any(|a| matches!(a, SmgAction::AdaptiveUpdate { .. })));
+        assert!(
+            !actions
+                .iter()
+                .any(|a| matches!(a, SmgAction::AdaptiveUpdate { .. }))
+        );
     }
 
     #[test]
@@ -295,7 +309,11 @@ mod tests {
             ],
         };
         let actions = smg.process_verdict(&verdict);
-        if let Some(SmgAction::AbortPipeline { contributing_channels, .. }) = actions.first() {
+        if let Some(SmgAction::AbortPipeline {
+            contributing_channels,
+            ..
+        }) = actions.first()
+        {
             assert_eq!(contributing_channels.len(), 3);
         } else {
             panic!("Expected AbortPipeline as first action");

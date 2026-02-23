@@ -13,7 +13,6 @@ use std::collections::HashMap;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 // ── Custom serde for HashMap<(String,String), u64> ──────────────────
 // JSON requires string keys. We join tuple keys as "a\x1Fb" (unit separator).

@@ -536,20 +536,14 @@ pub fn detect_hydrogen_bonds(mol: &Molecule, cutoffs: &InteractionCutoffs) -> Ve
                 let mut best_angle = 0.0_f64;
                 for &h_idx in h_atoms {
                     if let Some(h_atom) = atoms.get(h_idx) {
-                        let ang = angle_between(
-                            &donor.position,
-                            &h_atom.position,
-                            &acceptor.position,
-                        );
+                        let ang =
+                            angle_between(&donor.position, &h_atom.position, &acceptor.position);
                         if ang > best_angle {
                             best_angle = ang;
                         }
                     }
                 }
-                (
-                    Some(best_angle),
-                    best_angle >= cutoffs.hbond_angle_min,
-                )
+                (Some(best_angle), best_angle >= cutoffs.hbond_angle_min)
             };
 
             if !angle_ok {
@@ -815,8 +809,7 @@ pub fn detect_cation_pi(mol: &Molecule, cutoffs: &InteractionCutoffs) -> Vec<Int
             }
 
             let ring_rep = ring.atom_indices.first().copied().unwrap_or(0);
-            let energy =
-                -3.0 * (1.0 - d / cutoffs.cation_pi_distance).clamp(0.0, 1.0);
+            let energy = -3.0 * (1.0 - d / cutoffs.cation_pi_distance).clamp(0.0, 1.0);
             let confidence = (1.0 - d / cutoffs.cation_pi_distance).clamp(0.0, 1.0);
 
             result.push(Interaction {
@@ -881,8 +874,7 @@ pub fn detect_halogen_bonds(mol: &Molecule, cutoffs: &InteractionCutoffs) -> Vec
                 continue;
             }
 
-            let energy =
-                -1.5 * (1.0 - d / cutoffs.halogen_bond_distance).clamp(0.0, 1.0);
+            let energy = -1.5 * (1.0 - d / cutoffs.halogen_bond_distance).clamp(0.0, 1.0);
             let confidence = (1.0 - d / cutoffs.halogen_bond_distance).clamp(0.0, 1.0);
 
             result.push(Interaction {
@@ -918,10 +910,7 @@ pub fn detect_halogen_bonds(mol: &Molecule, cutoffs: &InteractionCutoffs) -> Vec
 /// assert!(!coords.is_empty());
 /// ```
 #[must_use]
-pub fn detect_metal_coordination(
-    mol: &Molecule,
-    cutoffs: &InteractionCutoffs,
-) -> Vec<Interaction> {
+pub fn detect_metal_coordination(mol: &Molecule, cutoffs: &InteractionCutoffs) -> Vec<Interaction> {
     let mut result = Vec::new();
     let atoms = &mol.atoms;
     let n = atoms.len();
@@ -950,8 +939,7 @@ pub fn detect_metal_coordination(
                 continue;
             }
 
-            let energy =
-                -10.0 * (1.0 - d / cutoffs.metal_coord_distance).clamp(0.0, 1.0);
+            let energy = -10.0 * (1.0 - d / cutoffs.metal_coord_distance).clamp(0.0, 1.0);
             let confidence = (1.0 - d / cutoffs.metal_coord_distance).clamp(0.0, 1.0);
 
             result.push(Interaction {
@@ -1082,7 +1070,9 @@ mod tests {
         // Expect at least one H-bond (both directions N→O and O→N may be found).
         assert!(!hbonds.is_empty(), "expected at least one H-bond");
         assert!(
-            hbonds.iter().any(|ix| ix.interaction_type == InteractionType::HydrogenBond),
+            hbonds
+                .iter()
+                .any(|ix| ix.interaction_type == InteractionType::HydrogenBond),
             "wrong interaction type"
         );
     }
@@ -1142,7 +1132,10 @@ mod tests {
         let mol = bare_mol(vec![c1, c2]);
         let cutoffs = InteractionCutoffs::default();
         let contacts = detect_hydrophobic_contacts(&mol, &cutoffs);
-        assert!(contacts.is_empty(), "sequential residue contacts should be excluded");
+        assert!(
+            contacts.is_empty(),
+            "sequential residue contacts should be excluded"
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -1170,7 +1163,10 @@ mod tests {
         let cutoffs = InteractionCutoffs::default();
         let coords = detect_metal_coordination(&mol, &cutoffs);
         assert!(!coords.is_empty(), "expected a metal coordination bond");
-        assert_eq!(coords[0].interaction_type, InteractionType::MetalCoordination);
+        assert_eq!(
+            coords[0].interaction_type,
+            InteractionType::MetalCoordination
+        );
         assert!((coords[0].distance - 2.5).abs() < 1e-10);
     }
 
@@ -1198,11 +1194,20 @@ mod tests {
         // H-bonds: N(0)↔O(1) and O(1)↔N(0), so >= 1 pair detected bidirectionally.
         assert!(summary.hbond_count >= 1, "hbond_count should be >= 1");
         // Salt bridge: pos(2)↔neg(3) at 3.0 Å.
-        assert!(summary.salt_bridge_count >= 1, "salt_bridge_count should be >= 1");
+        assert!(
+            summary.salt_bridge_count >= 1,
+            "salt_bridge_count should be >= 1"
+        );
         // Metal coord: Zn(4)↔N(5) at 2.5 Å.
-        assert!(summary.metal_coord_count >= 1, "metal_coord_count should be >= 1");
+        assert!(
+            summary.metal_coord_count >= 1,
+            "metal_coord_count should be >= 1"
+        );
         // Total energy must be negative (all interactions are favorable).
-        assert!(summary.total_energy < 0.0, "total_energy should be negative");
+        assert!(
+            summary.total_energy < 0.0,
+            "total_energy should be negative"
+        );
         // Count consistency.
         assert_eq!(
             summary.hbond_count
@@ -1239,7 +1244,10 @@ mod tests {
         let mol = bare_mol(vec![cl, o]);
         let cutoffs = InteractionCutoffs::default();
         let halbonds = detect_halogen_bonds(&mol, &cutoffs);
-        assert!(halbonds.is_empty(), "halogen bond at 4 Å should not be detected (cutoff 3.5)");
+        assert!(
+            halbonds.is_empty(),
+            "halogen bond at 4 Å should not be detected (cutoff 3.5)"
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -1285,7 +1293,11 @@ mod tests {
         let mut atoms: Vec<Atom> = (0..6)
             .map(|k| {
                 let angle = std::f64::consts::FRAC_PI_3 * k as f64;
-                Atom::new((k + 1) as u32, Element::C, [r * angle.cos(), r * angle.sin(), 0.0])
+                Atom::new(
+                    (k + 1) as u32,
+                    Element::C,
+                    [r * angle.cos(), r * angle.sin(), 0.0],
+                )
             })
             .collect();
         // Ring 2: z=4.0 plane
@@ -1329,10 +1341,18 @@ mod tests {
 
         let rings = detect_rings(&mol);
         // Expect two rings to be found.
-        assert_eq!(rings.len(), 2, "should detect exactly two aromatic rings, found {}", rings.len());
+        assert_eq!(
+            rings.len(),
+            2,
+            "should detect exactly two aromatic rings, found {}",
+            rings.len()
+        );
 
         let cutoffs = InteractionCutoffs::default();
         let pi_interactions = detect_pi_stacking(&mol, &cutoffs);
-        assert!(!pi_interactions.is_empty(), "expected pi-stacking between two parallel rings");
+        assert!(
+            !pi_interactions.is_empty(),
+            "expected pi-stacking between two parallel rings"
+        );
     }
 }

@@ -32,8 +32,8 @@
 //! assert!(amplified <= 100.0);
 //! ```
 
+use nexcore_error::Error;
 use std::collections::HashMap;
-use thiserror::Error;
 
 // =============================================================================
 // Error type

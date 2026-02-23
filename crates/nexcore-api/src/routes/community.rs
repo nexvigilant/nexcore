@@ -101,7 +101,7 @@ pub async fn create_post(
     Json(req): Json<CreatePostRequest>,
 ) -> Result<Json<Post>, crate::routes::common::ApiError> {
     let post = Post {
-        id: uuid::Uuid::new_v4().to_string(),
+        id: nexcore_id::NexId::v4().to_string(),
         author: req.author,
         role: req.role,
         content: req.content,

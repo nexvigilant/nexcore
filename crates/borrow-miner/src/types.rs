@@ -189,11 +189,17 @@ impl OreType {
     /// Roll random ore: Iron 40%, Copper 30%, Silver 18%, Gold 10%, Platinum 2%
     pub fn roll() -> Self {
         let roll = random() * 100.0;
-        if roll < 2.0 { Self::Platinum }
-        else if roll < 12.0 { Self::Gold }
-        else if roll < 30.0 { Self::Silver }
-        else if roll < 60.0 { Self::Copper }
-        else { Self::Iron }
+        if roll < 2.0 {
+            Self::Platinum
+        } else if roll < 12.0 {
+            Self::Gold
+        } else if roll < 30.0 {
+            Self::Silver
+        } else if roll < 60.0 {
+            Self::Copper
+        } else {
+            Self::Iron
+        }
     }
 
     pub fn is_rare(&self) -> bool {

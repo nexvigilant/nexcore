@@ -13,7 +13,7 @@
 //! **Bond Application**: Too many pending bonds interfere with each other,
 //! reducing effective throughput (Ki = interference constant).
 
-use thiserror::Error;
+use nexcore_error::Error;
 
 /// Errors for inhibition calculations.
 #[derive(Debug, Error, PartialEq, Clone)]

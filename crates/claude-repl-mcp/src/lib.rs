@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 use tokio::io::AsyncReadExt;
 use tokio::process::Command;
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, nexcore_error::Error)]
 pub enum BridgeError {
     #[error("claude cli not found at {0}")]
     MissingClaudeCli(String),

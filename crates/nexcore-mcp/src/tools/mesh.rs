@@ -17,13 +17,13 @@ use nexcore_vigilance::pv::coding::mesh::{
     MeshDescriptor, MeshDescriptorBrief, MeshTreePath, PrimitiveTier, TreeDirection,
     TreeNavigationResult,
 };
-use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use reqwest::Client;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 use serde::Deserialize;
 use std::collections::HashMap;
+use std::sync::LazyLock;
 use std::time::Duration;
 
 use crate::params::{
@@ -36,7 +36,7 @@ use crate::params::{
 // ============================================================================
 
 /// Lazy-initialized HTTP client for NLM MESH API
-static MESH_HTTP_CLIENT: Lazy<Client> = Lazy::new(|| {
+static MESH_HTTP_CLIENT: LazyLock<Client> = LazyLock::new(|| {
     Client::builder()
         .timeout(Duration::from_secs(30))
         .pool_max_idle_per_host(50)
@@ -46,8 +46,8 @@ static MESH_HTTP_CLIENT: Lazy<Client> = Lazy::new(|| {
 });
 
 /// Cache for MESH descriptor lookups
-static DESCRIPTOR_CACHE: Lazy<RwLock<HashMap<String, MeshDescriptor>>> =
-    Lazy::new(|| RwLock::new(HashMap::with_capacity(1000)));
+static DESCRIPTOR_CACHE: LazyLock<RwLock<HashMap<String, MeshDescriptor>>> =
+    LazyLock::new(|| RwLock::new(HashMap::with_capacity(1000)));
 
 const MESH_REST_BASE: &str = "https://id.nlm.nih.gov/mesh";
 const MESH_SPARQL: &str = "https://id.nlm.nih.gov/mesh/sparql";

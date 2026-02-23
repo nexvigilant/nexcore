@@ -9,9 +9,9 @@ license = "LicenseRef-Proprietary"
 description = "Generic stdio proxy with hot-reload — protocol-agnostic child process management"
 
 [dependencies]
+nexcore-error = { workspace = true }
 tokio = { version = "1.38.0", features = ["full"] }
 tracing = { version = "0.1.40" }
-thiserror = { version = "1.0.61" }
 notify = { version = "8.2.0" }
 
 [dev-dependencies]

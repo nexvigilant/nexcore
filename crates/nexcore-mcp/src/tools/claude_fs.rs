@@ -13,10 +13,10 @@ use crate::params::{
     ClaudeFsDeleteParams, ClaudeFsDiffParams, ClaudeFsListParams, ClaudeFsReadParams,
     ClaudeFsSearchParams, ClaudeFsStatParams, ClaudeFsTailParams, ClaudeFsWriteParams,
 };
+use nexcore_fs::walk::WalkDir;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content, ErrorCode};
 use serde_json::json;
-use walkdir::WalkDir;
 
 const CLAUDE_ROOT: &str = "/home/matthew/.claude";
 const BACKUP_DIR: &str = "/home/matthew/.claude/backup/sessions";

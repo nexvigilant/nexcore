@@ -75,7 +75,7 @@ pub async fn ingest_event(
     Json(req): Json<IngestEventRequest>,
 ) -> Result<impl IntoResponse, ApiError> {
     let record = TelemetryEventRecord {
-        id: uuid::Uuid::new_v4().to_string(),
+        id: nexcore_id::NexId::v4().to_string(),
         event_type: req.event_type,
         user_id: req.user_id,
         metadata: req.metadata,

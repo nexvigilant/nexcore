@@ -85,7 +85,10 @@ impl EventBus {
                 Subsystem::Ipc,
                 "call",
                 Severity::Debug,
-                format!("IPC call to {}::{}", call.target_service, call.request.method),
+                format!(
+                    "IPC call to {}::{}",
+                    call.target_service, call.request.method
+                ),
             )
             .with_keywords(Keywords::IPC)
             .with_str("caller", format!("{}", call.caller))
@@ -101,8 +104,18 @@ impl EventBus {
     }
 
     /// Fulfill a pending call with a response.
-    pub fn resolve_call(&mut self, call_id: &str, response: ServiceResponse, journal: &mut OsJournal, tick: u64) {
-        let severity = if response.success { Severity::Debug } else { Severity::Warning };
+    pub fn resolve_call(
+        &mut self,
+        call_id: &str,
+        response: ServiceResponse,
+        journal: &mut OsJournal,
+        tick: u64,
+    ) {
+        let severity = if response.success {
+            Severity::Debug
+        } else {
+            Severity::Warning
+        };
         journal.record(
             JournalEntry::new(
                 Subsystem::Ipc,
@@ -177,7 +190,7 @@ impl EventBus {
     pub fn pending(&self) -> usize {
         self.queue.len()
     }
-    
+
     /// Number of pending service calls.
     pub fn pending_calls(&self) -> usize {
         self.pending_calls.len()
@@ -281,36 +294,36 @@ mod tests {
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].name, "shutdown");
     }
-    
+
     #[test]
     fn service_call_routing() {
         let mut bus = EventBus::new("test");
         let mut journal = OsJournal::with_config(1024, 256, Severity::Debug);
-        
+
         let req = ServiceRequest::new("ping", serde_json::json!({}));
         let call = ServiceCall::new(CallerIdentity::System, "network", req)
             .with_token(CapabilityToken::new("super-secret-token"));
-            
+
         let call_id = call.id.clone();
-        
+
         // Dispatch call
         assert!(bus.call(call, &mut journal, 1));
         assert_eq!(bus.pending_calls(), 1);
-        
+
         // Drain calls
         let mut calls = bus.drain_calls();
         assert_eq!(calls.len(), 1);
         let received_call = calls.remove(0);
         assert_eq!(received_call.target_service, "network");
-        
+
         // Resolve response
         let resp = ServiceResponse::success(serde_json::json!({ "pong": true }));
         bus.resolve_call(&call_id, resp, &mut journal, 2);
-        
+
         // Retrieve response
         let retrieved = bus.get_response(&call_id).unwrap();
         assert!(retrieved.success);
-        
+
         // Journal verification
         assert_eq!(journal.total_recorded(), 2);
     }

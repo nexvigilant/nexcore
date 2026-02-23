@@ -526,23 +526,23 @@ mod tests {
         assert_eq!(comp.dominant, Some(LexPrimitiva::Recursion));
     }
 
-    // T3 tier tests
+    // T2Composite tier tests
 
     #[test]
     fn surface_is_t3() {
-        assert_eq!(Surface::tier(), Tier::T3DomainSpecific);
+        assert_eq!(Surface::tier(), Tier::T2Composite);
         assert_eq!(Surface::dominant_primitive(), Some(LexPrimitiva::Boundary));
     }
 
     #[test]
     fn compositor_is_t3() {
-        assert_eq!(Compositor::tier(), Tier::T3DomainSpecific);
+        assert_eq!(Compositor::tier(), Tier::T2Composite);
         assert_eq!(Compositor::dominant_primitive(), Some(LexPrimitiva::Sum));
     }
 
     #[test]
     fn tiling_engine_is_t3() {
-        assert_eq!(TilingEngine::tier(), Tier::T3DomainSpecific);
+        assert_eq!(TilingEngine::tier(), Tier::T2Composite);
         assert_eq!(
             TilingEngine::dominant_primitive(),
             Some(LexPrimitiva::Recursion)
@@ -551,7 +551,7 @@ mod tests {
 
     #[test]
     fn render_pipeline_is_t3() {
-        assert_eq!(RenderPipeline::tier(), Tier::T3DomainSpecific);
+        assert_eq!(RenderPipeline::tier(), Tier::T2Composite);
         assert_eq!(
             RenderPipeline::dominant_primitive(),
             Some(LexPrimitiva::Mapping)

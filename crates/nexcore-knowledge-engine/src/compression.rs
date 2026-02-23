@@ -197,7 +197,7 @@ impl StructuralCompressor {
     /// Stage 2: Token Jaccard dedup — collapse near-duplicate sentences.
     fn apply_dedup(&self, text: &str) -> String {
         let sentences: Vec<&str> = text
-            .split(|c| c == '.' || c == '!' || c == '?')
+            .split(['.', '!', '?'])
             .map(|s| s.trim())
             .filter(|s| !s.is_empty())
             .collect();

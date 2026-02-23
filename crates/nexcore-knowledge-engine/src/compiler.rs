@@ -84,9 +84,8 @@ impl KnowledgeCompiler {
                 timestamp: raw.timestamp,
             };
 
-            match ingest::ingest(compressed_raw) {
-                Ok(frag) => fragments.push(frag),
-                Err(_) => continue, // Skip empty/invalid
+            if let Ok(frag) = ingest::ingest(compressed_raw) {
+                fragments.push(frag);
             }
         }
 

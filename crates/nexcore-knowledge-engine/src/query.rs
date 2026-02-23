@@ -61,9 +61,8 @@ impl QueryEngine {
             let indices = self.store.list_packs()?;
             let mut packs = Vec::new();
             for idx in &indices {
-                match self.store.load_latest(&idx.name) {
-                    Ok(p) => packs.push(p),
-                    Err(_) => continue,
+                if let Ok(p) = self.store.load_latest(&idx.name) {
+                    packs.push(p);
                 }
             }
             packs

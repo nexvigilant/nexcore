@@ -83,7 +83,7 @@ impl CompendiousScorer {
     pub fn readability(text: &str) -> f64 {
         let words: Vec<&str> = text.split_whitespace().collect();
         let sentences = text
-            .matches(|c| c == '.' || c == '!' || c == '?')
+            .matches(['.', '!', '?'])
             .count()
             .max(1);
         let avg_words_per_sentence = words.len() as f64 / sentences as f64;

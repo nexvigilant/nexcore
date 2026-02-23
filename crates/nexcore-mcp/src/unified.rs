@@ -2535,6 +2535,18 @@ async fn dispatch_inner(
         }
         "jeopardy_compound_velocity" => typed(params, tools::jeopardy::jeopardy_compound_velocity),
 
+        // ── Audio (Sample Conversion & Spec) ───────────────────────────────
+        "audio_spec_compute" => typed(params, tools::audio::audio_spec_compute),
+        "audio_spec_presets" => typed(params, tools::audio::audio_spec_presets),
+        "audio_format_info" => typed(params, tools::audio::audio_format_info),
+        "audio_rate_info" => typed(params, tools::audio::audio_rate_info),
+        "audio_convert_sample" => typed(params, tools::audio::audio_convert_sample),
+        "audio_resample" => typed(params, tools::audio::audio_resample),
+        "audio_codec_catalog" => typed(params, tools::audio::audio_codec_catalog),
+        "audio_device_capabilities" => typed(params, tools::audio::audio_device_capabilities),
+        "audio_mixer_pan" => typed(params, tools::audio::audio_mixer_pan),
+        "audio_stream_transitions" => typed(params, tools::audio::audio_stream_transitions),
+
         // ====================================================================
         _ => Err(McpError::invalid_params(
             format!("Unknown command: {command}. Use command='help' for catalog."),
@@ -2970,6 +2982,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "harm_taxonomy": ["harm_classify", "harm_definition", "harm_catalog", "harm_exhaustiveness", "harm_axiom_connection", "harm_axiom_catalog", "harm_combinations", "harm_manifestation_derive"],
             "antibodies": ["antibody_compute_affinity", "antibody_classify_response", "antibody_ig_info", "antibody_ig_catalog"],
             "jeopardy": ["jeopardy_clue_values", "jeopardy_categories", "jeopardy_score_board", "jeopardy_should_buzz", "jeopardy_optimal_dd_wager", "jeopardy_optimal_final_wager", "jeopardy_board_control_value", "jeopardy_compound_velocity"],
+            "audio": ["audio_spec_compute", "audio_spec_presets", "audio_format_info", "audio_rate_info", "audio_convert_sample", "audio_resample", "audio_codec_catalog", "audio_device_capabilities", "audio_mixer_pan", "audio_stream_transitions"],
         }
     });
 

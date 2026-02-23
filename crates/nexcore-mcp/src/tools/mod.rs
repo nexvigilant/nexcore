@@ -505,3 +505,6 @@ pub mod antibodies;
 
 // Jeopardy: game theory strategy engine (wagers, buzz, selection, compound velocity)
 pub mod jeopardy;
+
+// Audio: sample conversion, spec computation, codec catalog, pan law, stream states
+pub mod audio;

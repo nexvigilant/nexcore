@@ -35,9 +35,12 @@
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+pub mod adversarial;
+pub mod convergence;
 pub mod error;
 pub mod explicit;
 pub mod grounding;
+pub mod inverse;
 pub mod l_functions;
 pub mod riemann_siegel;
 pub mod special;
@@ -45,8 +48,11 @@ pub mod statistics;
 pub mod zeros;
 pub mod zeta;
 
+pub use adversarial::{CounterexampleCandidate, ExclusionAnalysis, analyze_exclusions};
+pub use convergence::{ConvergenceAnalysis, analyze_convergence};
 pub use error::ZetaError;
 pub use explicit::{convergence_series, explicit_psi, explicit_psi_comparison};
+pub use inverse::{JacobiReconstruction, OperatorStructure, reconstruct_jacobi};
 pub use l_functions::DirichletCharacter;
 pub use statistics::{GueComparison, compare_to_gue};
 pub use zeros::{RhVerification, ZetaZero};

@@ -2481,6 +2481,14 @@ async fn dispatch_inner(
 
         // ====================================================================
         // Unknown command
+        // ── Statemind (DNA Pipeline) ──────────────────────────────────────
+        "statemind_analyze_word" => typed(params, tools::statemind::statemind_analyze_word),
+        "statemind_constellation" => typed(params, tools::statemind::statemind_constellation),
+
+        // ── Reason (Causal Inference) ────────────────────────────────────
+        "reason_infer" => typed(params, tools::reason::reason_infer),
+        "reason_counterfactual" => typed(params, tools::reason::reason_counterfactual),
+
         // ====================================================================
         _ => Err(McpError::invalid_params(
             format!("Unknown command: {command}. Use command='help' for catalog."),
@@ -2910,6 +2918,8 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "pharma_rd": ["pharma_taxonomy_summary", "pharma_lookup_transfer", "pharma_transfer_matrix", "pharma_strongest_transfers", "pharma_weakest_transfers", "pharma_symbol_coverage", "pharma_pipeline_stage", "pharma_classify_generators"],
             "combinatorics": ["comb_catalan", "comb_catalan_table", "comb_cycle_decomposition", "comb_min_transpositions", "comb_derangement", "comb_derangement_probability", "comb_grid_paths", "comb_binomial", "comb_multinomial", "comb_josephus", "comb_elimination_order", "comb_linear_extensions"],
             "tov_grounded": ["tov_grounded_signal_strength", "tov_grounded_safety_margin", "tov_grounded_stability_shell", "tov_grounded_harm_type", "tov_grounded_meta_vigilance", "tov_grounded_eka_intelligence", "tov_grounded_magic_numbers"],
+            "statemind": ["statemind_analyze_word", "statemind_constellation"],
+            "reason": ["reason_infer", "reason_counterfactual"],
         }
     });
 

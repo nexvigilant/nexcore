@@ -463,3 +463,11 @@ pub use combinatorics::*;
 // Theory of Vigilance (Grounded): signal strength, safety margin, stability shells
 pub mod tov_grounded;
 pub use tov_grounded::*;
+
+// Statemind: DNA pipeline word analysis and constellation resonance
+pub mod statemind;
+pub use statemind::*;
+
+// Reason: causal DAG construction, inference, counterfactual evaluation
+pub mod reason;
+pub use reason::*;

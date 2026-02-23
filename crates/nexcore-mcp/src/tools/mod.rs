@@ -487,3 +487,9 @@ pub mod combinatorics;
 
 // Theory of Vigilance (Grounded): signal strength, safety margin, stability shells, harm types
 pub mod tov_grounded;
+
+// Statemind: DNA chemistry word analysis and constellation resonance
+pub mod statemind;
+
+// Reason: causal DAG inference and counterfactual evaluation
+pub mod reason;

@@ -185,6 +185,7 @@ nexcore-renderer = { path = "crates/nexcore-renderer" }
 nexcore-rh-proofs = { path = "crates/nexcore-rh-proofs" }
 nexcore-reproductive = { path = "crates/nexcore-reproductive" }
 nexcore-respiratory = { path = "crates/nexcore-respiratory" }
+nexcore-retrocasting = { path = "crates/nexcore-retrocasting" }
 nexcore-ribosome = { path = "crates/nexcore-ribosome" }
 nexcore-sentinel = { path = "crates/nexcore-sentinel" }
 nexcore-signal-fence = { path = "crates/nexcore-signal-fence" }

@@ -466,3 +466,9 @@ pub mod openfda;
 
 // Compound Registry: 3-layer chemical compound resolution (Cache → PubChem → ChEMBL)
 pub mod compound_registry;
+
+// FHIR R4: HL7 resource parsing, AdverseEvent→SignalInput conversion, validation
+pub mod fhir;
+
+// Retrocasting: signal-to-structure linking, clustering, alert correlation, ML features
+pub mod retrocasting;

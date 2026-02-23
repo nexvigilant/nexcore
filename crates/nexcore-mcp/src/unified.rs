@@ -2409,6 +2409,24 @@ async fn dispatch_inner(
         "compound_cache_get" => typed(params, tools::compound_registry::compound_cache_get),
         "compound_cache_count" => typed(params, tools::compound_registry::compound_cache_count),
 
+        // ── FHIR R4 ─────────────────────────────────────────────────────
+        "fhir_adverse_event_to_signal" => typed(params, tools::fhir::fhir_adverse_event_to_signal),
+        "fhir_batch_to_signals" => typed(params, tools::fhir::fhir_batch_to_signals),
+        "fhir_parse_bundle" => typed(params, tools::fhir::fhir_parse_bundle),
+        "fhir_validate_resource" => typed(params, tools::fhir::fhir_validate_resource),
+
+        // ── Retrocasting ─────────────────────────────────────────────────
+        "retro_structural_similarity" => {
+            typed(params, tools::retrocasting::retro_structural_similarity)
+        }
+        "retro_signal_significance" => {
+            typed(params, tools::retrocasting::retro_signal_significance)
+        }
+        "retro_cluster_signals" => typed(params, tools::retrocasting::retro_cluster_signals),
+        "retro_correlate_alerts" => typed(params, tools::retrocasting::retro_correlate_alerts),
+        "retro_extract_features" => typed(params, tools::retrocasting::retro_extract_features),
+        "retro_dataset_stats" => typed(params, tools::retrocasting::retro_dataset_stats),
+
         // ====================================================================
         // Unknown command
         // ====================================================================
@@ -2833,6 +2851,8 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "preemptive_pv": ["preemptive_reactive", "preemptive_gibbs", "preemptive_trajectory", "preemptive_severity", "preemptive_noise", "preemptive_predictive", "preemptive_evaluate", "preemptive_intervention", "preemptive_required_strength", "preemptive_omega_table"],
             "openfda": ["openfda_drug_events", "openfda_drug_labels", "openfda_drug_recalls", "openfda_drug_ndc", "openfda_drugs_at_fda", "openfda_device_events", "openfda_device_recalls", "openfda_food_recalls", "openfda_food_events", "openfda_substances", "openfda_fan_out"],
             "compound_registry": ["compound_resolve", "compound_resolve_batch", "compound_cache_search", "compound_cache_get", "compound_cache_count"],
+            "fhir": ["fhir_adverse_event_to_signal", "fhir_batch_to_signals", "fhir_parse_bundle", "fhir_validate_resource"],
+            "retrocasting": ["retro_structural_similarity", "retro_signal_significance", "retro_cluster_signals", "retro_correlate_alerts", "retro_extract_features", "retro_dataset_stats"],
         }
     });
 

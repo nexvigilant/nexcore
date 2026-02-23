@@ -435,3 +435,11 @@ pub use openfda::*;
 // Compound Registry: chemical compound resolution and caching
 pub mod compound_registry;
 pub use compound_registry::*;
+
+// FHIR R4: pharmacovigilance-focused HL7 resource parsing and signal extraction
+pub mod fhir;
+pub use fhir::*;
+
+// Retrocasting: retrospective signal-to-structure analysis and ML training
+pub mod retrocasting;
+pub use retrocasting::*;

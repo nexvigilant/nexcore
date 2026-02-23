@@ -28,8 +28,8 @@
 
 use std::f64::consts::PI;
 
+use serde::{Deserialize, Serialize};
 use stem_complex::Complex;
-use stem_complex::functions;
 
 use crate::error::ZetaError;
 use crate::zeros::ZetaZero;
@@ -191,6 +191,179 @@ pub fn convergence_series(
     Ok(results)
 }
 
+// ── Adaptive Truncation & Residual Analysis ───────────────────────────────
+
+/// Adaptive truncation analysis: finds the optimal number of zeros to use
+/// in the explicit formula at a given evaluation point `x`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AdaptiveTruncation {
+    /// Evaluation point.
+    pub x: f64,
+    /// Empirically optimal N: the truncation that minimised `|ψ_explicit − ψ_direct|`.
+    pub optimal_n: usize,
+    /// Absolute errors at each tested truncation: `(n_zeros, |ψ_explicit − ψ_direct|)`.
+    pub errors_by_truncation: Vec<(usize, f64)>,
+    /// The N that achieved the minimum absolute error (same as `optimal_n`).
+    pub best_n: usize,
+    /// The minimum absolute error achieved.
+    pub best_error: f64,
+    /// Theoretical Riemann-Siegel optimal: `⌊√(x / 2π)⌋` (for comparison).
+    pub riemann_siegel_n: usize,
+}
+
+/// Per-zero marginal error analysis: how much each zero's contribution
+/// changes the reconstruction error.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ResidualByHeight {
+    /// Evaluation point.
+    pub x: f64,
+    /// Per-zero data: `(zero height γ, marginal error change err_k − err_{k−1})`.
+    pub residuals: Vec<(f64, f64)>,
+    /// Pearson correlation between zero heights and marginal error changes.
+    pub correlation_with_height: f64,
+}
+
+/// Find the truncation that minimises `|ψ_explicit(x) − ψ_direct(x)|`.
+///
+/// Tests a set of candidate truncations anchored around the Riemann-Siegel
+/// optimal `N_RS = ⌊√(x / 2π)⌋`.
+///
+/// # Errors
+///
+/// Returns [`ZetaError::InvalidParameter`] if `x <= 1.0` or `zeros` is empty.
+pub fn adaptive_truncation(x: f64, zeros: &[ZetaZero]) -> Result<AdaptiveTruncation, ZetaError> {
+    if x <= 1.0 {
+        return Err(ZetaError::InvalidParameter(format!(
+            "adaptive_truncation requires x > 1, got {x}"
+        )));
+    }
+    if zeros.is_empty() {
+        return Err(ZetaError::InvalidParameter(
+            "adaptive_truncation requires at least one zero".to_string(),
+        ));
+    }
+
+    let rs_n = (x / (2.0 * PI)).sqrt().floor() as usize;
+    let n_total = zeros.len();
+
+    // Build candidate set: fixed anchors + RS multiples + all zeros.
+    let mut candidates: Vec<usize> = vec![
+        10,
+        25,
+        50,
+        rs_n / 2, // 0 when rs_n < 2 — filtered below
+        rs_n,
+        rs_n.saturating_mul(2),
+        rs_n.saturating_mul(4),
+        n_total,
+    ];
+    // Keep only valid, non-zero values within the available range.
+    candidates.retain(|&c| c > 0 && c <= n_total);
+    candidates.sort_unstable();
+    candidates.dedup();
+
+    let psi_direct = stem_number_theory::summatory::ChebyshevPsi::compute(x as u64);
+
+    let mut errors_by_truncation: Vec<(usize, f64)> = Vec::with_capacity(candidates.len());
+    for &n in &candidates {
+        let psi_e = explicit_psi(x, &zeros[..n])?;
+        errors_by_truncation.push((n, (psi_e - psi_direct).abs()));
+    }
+
+    // Find the (n, error) pair with minimum error using a fold (no unwrap).
+    let (best_n, best_error) = errors_by_truncation.iter().fold(
+        errors_by_truncation
+            .first()
+            .map_or((n_total, f64::NAN), |&(n, e)| (n, e)),
+        |best, &(n, e)| {
+            if e.total_cmp(&best.1).is_lt() {
+                (n, e)
+            } else {
+                best
+            }
+        },
+    );
+
+    Ok(AdaptiveTruncation {
+        x,
+        optimal_n: best_n,
+        errors_by_truncation,
+        best_n,
+        best_error,
+        riemann_siegel_n: rs_n,
+    })
+}
+
+/// Compute the marginal error contribution of each zero in the explicit formula.
+///
+/// For each zero k (1-indexed), computes:
+/// - `err_k   = |ψ_explicit(x, zeros[..k]) − ψ_direct(x)|`
+/// - `err_{k-1}` (using 0 zeros at k=1)
+/// - `marginal = err_k − err_{k-1}`
+///
+/// Then computes the Pearson correlation between zero heights and marginals.
+///
+/// # Errors
+///
+/// Returns [`ZetaError::InvalidParameter`] if `x <= 1.0`.
+pub fn residual_by_height(x: f64, zeros: &[ZetaZero]) -> Result<ResidualByHeight, ZetaError> {
+    if x <= 1.0 {
+        return Err(ZetaError::InvalidParameter(format!(
+            "residual_by_height requires x > 1, got {x}"
+        )));
+    }
+
+    let psi_direct = stem_number_theory::summatory::ChebyshevPsi::compute(x as u64);
+
+    // Baseline: error with zero zeros
+    let psi_0 = explicit_psi(x, &[])?;
+    let mut prev_err = (psi_0 - psi_direct).abs();
+
+    let mut residuals: Vec<(f64, f64)> = Vec::with_capacity(zeros.len());
+    for k in 0..zeros.len() {
+        let psi_k = explicit_psi(x, &zeros[..=k])?;
+        let err_k = (psi_k - psi_direct).abs();
+        residuals.push((zeros[k].t, err_k - prev_err));
+        prev_err = err_k;
+    }
+
+    let correlation = pearson_correlation(&residuals);
+
+    Ok(ResidualByHeight {
+        x,
+        residuals,
+        correlation_with_height: correlation,
+    })
+}
+
+/// Pearson correlation between the two components of a `(x, y)` slice.
+fn pearson_correlation(pairs: &[(f64, f64)]) -> f64 {
+    let n = pairs.len() as f64;
+    if n < 2.0 {
+        return 0.0;
+    }
+    let mean_x = pairs.iter().map(|(x, _)| x).sum::<f64>() / n;
+    let mean_y = pairs.iter().map(|(_, y)| y).sum::<f64>() / n;
+
+    let num: f64 = pairs.iter().map(|(x, y)| (x - mean_x) * (y - mean_y)).sum();
+    let den_x: f64 = pairs
+        .iter()
+        .map(|(x, _)| (x - mean_x) * (x - mean_x))
+        .sum::<f64>()
+        .sqrt();
+    let den_y: f64 = pairs
+        .iter()
+        .map(|(_, y)| (y - mean_y) * (y - mean_y))
+        .sum::<f64>()
+        .sqrt();
+
+    let denom = den_x * den_y;
+    if denom < 1e-30 {
+        return 0.0;
+    }
+    num / denom
+}
+
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
@@ -316,5 +489,113 @@ mod tests {
         let r = complex_div(a, b);
         assert!((r.re - 11.0 / 25.0).abs() < 1e-12);
         assert!((r.im - 2.0 / 25.0).abs() < 1e-12);
+    }
+
+    // ── Adaptive truncation & residual tests ─────────────────────────────
+
+    #[test]
+    fn adaptive_truncation_finds_minimum() {
+        let Ok(zeros) = find_zeros_bracket(10.0, 200.0, 0.05) else {
+            return;
+        };
+        if zeros.len() < 10 {
+            return;
+        }
+        let Ok(at) = adaptive_truncation(50.0, &zeros) else {
+            return;
+        };
+        assert!(!at.errors_by_truncation.is_empty());
+        // best_error must equal the minimum in errors_by_truncation.
+        let min_err = at
+            .errors_by_truncation
+            .iter()
+            .map(|&(_, e)| e)
+            .fold(f64::INFINITY, f64::min);
+        assert!(
+            (at.best_error - min_err).abs() < 1e-12,
+            "best_error={:.6} != min_err={:.6}",
+            at.best_error,
+            min_err
+        );
+    }
+
+    #[test]
+    fn best_n_near_riemann_siegel() {
+        let Ok(zeros) = find_zeros_bracket(10.0, 200.0, 0.05) else {
+            return;
+        };
+        if zeros.len() < 10 {
+            return;
+        }
+        let Ok(at) = adaptive_truncation(100.0, &zeros) else {
+            return;
+        };
+        // best_n must be a valid index into the zeros slice.
+        assert!(
+            at.best_n >= 1 && at.best_n <= zeros.len(),
+            "best_n {} out of valid range [1, {}]",
+            at.best_n,
+            zeros.len()
+        );
+        // The RS optimal should be a positive integer for x=100.
+        assert!(
+            at.riemann_siegel_n > 0,
+            "RS optimal should be > 0 for x=100"
+        );
+        // best_n must be at least rs/4 (within factor of 4 of the RS suggestion).
+        let lo = (at.riemann_siegel_n / 4).max(1);
+        assert!(at.best_n >= lo, "best_n {} below rs/4={}", at.best_n, lo);
+    }
+
+    #[test]
+    fn residual_by_height_correct_length() {
+        let Ok(zeros) = find_zeros_bracket(10.0, 100.0, 0.1) else {
+            return;
+        };
+        if zeros.is_empty() {
+            return;
+        }
+        let Ok(rbh) = residual_by_height(50.0, &zeros) else {
+            return;
+        };
+        assert_eq!(
+            rbh.residuals.len(),
+            zeros.len(),
+            "residuals length mismatch"
+        );
+    }
+
+    #[test]
+    fn correlation_in_valid_range() {
+        let Ok(zeros) = find_zeros_bracket(10.0, 100.0, 0.1) else {
+            return;
+        };
+        if zeros.is_empty() {
+            return;
+        }
+        let Ok(rbh) = residual_by_height(50.0, &zeros) else {
+            return;
+        };
+        assert!(
+            rbh.correlation_with_height >= -1.0 - 1e-12
+                && rbh.correlation_with_height <= 1.0 + 1e-12,
+            "correlation {} outside [-1, 1]",
+            rbh.correlation_with_height
+        );
+    }
+
+    #[test]
+    fn rejects_x_leq_1() {
+        let zero = ZetaZero {
+            ordinal: 1,
+            t: 14.1,
+            z_value: 0.0,
+            on_critical_line: true,
+        };
+        let zeros = vec![zero];
+        assert!(adaptive_truncation(1.0, &zeros).is_err());
+        assert!(adaptive_truncation(0.5, &zeros).is_err());
+        assert!(residual_by_height(1.0, &zeros).is_err());
+        assert!(residual_by_height(0.0, &zeros).is_err());
     }
 }

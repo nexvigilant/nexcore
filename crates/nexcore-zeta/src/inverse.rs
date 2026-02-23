@@ -322,6 +322,8 @@ fn analyze_structure(diag: &[f64], off_diag: &[f64], eigenvalues: &[f64]) -> Ope
 
 /// Fit log(|seq[k]|) ~ β·log(k) to estimate the growth exponent.
 /// Returns β via least-squares linear regression on the log-log data.
+// n·Σx² − (Σx)² is the standard OLS denominator; not a copy-paste error.
+#[allow(clippy::suspicious_operation_groupings)]
 fn fit_growth_exponent(seq: &[f64]) -> f64 {
     // Skip k=0 (log(0) undefined), use k=1..n
     let points: Vec<(f64, f64)> = seq

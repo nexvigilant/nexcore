@@ -84,6 +84,7 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 // Infrastructure (leaf modules first)
+pub mod math;
 pub mod metrics;
 pub mod scale;
 pub mod svg;
@@ -128,9 +129,11 @@ pub mod dynamics;
 pub mod force_field;
 pub mod gpu_layout;
 pub mod hypergraph;
+pub mod instancing;
 pub mod lod;
 pub mod minimizer;
 pub mod particle;
+pub mod transfer_lut;
 
 // Phase 4: Nervous system — distance geometry coordinate generation
 pub mod coord_gen;

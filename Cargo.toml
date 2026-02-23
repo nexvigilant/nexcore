@@ -22,10 +22,7 @@ license = "LicenseRef-Proprietary"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [workspace.dependencies]
-# External Dependencies (sorted alphabetically)
-android-activity = { version = "0.6", features = ["native-activity"] }
 anyhow = "1.0.86"
-async-trait = "0.1.81"
 axum = { version = "0.8.0", features = ["macros", "ws"] }
 base64 = "0.22.1"
 burn = { version = "0.20", default-features = false, features = ["ndarray", "autodiff", "std"] }
@@ -36,47 +33,21 @@ bytes = "1.6.1"
 # candle-transformers = "0.9"
 chrono = { version = "0.4.38", features = ["serde"] }
 clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
-colored = "3.0.0"
-# console_error_panic_hook = { version = "0.1" }
-criterion = { version = "0.5", features = ["html_reports"] }
-csv = "1.3.0"
-darling = "0.20.10"
-dashmap = "6.0.1"
-directories = "5.0.1"
 dirs = "5.0.1"
 flate2 = "1.0.30"
 futures = "0.3.30"
 glob = "0.3.1"
-gloo-net = { version = "0.6" }
-gloo-storage = { version = "0.3" }
 hex = "0.4.3"
-hf-hub = { version = "0.4", default-features = false, features = ["ureq"] }
-http = "1.1.0"
 http-body-util = "0.1.2"
-indexmap = "2.2.6"
-js-sys = { version = "0.3" }
 jsonwebtoken = "9"
-# leptos = { version = "0.7" }
-# leptos_axum = { version = "0.7" }
-# leptos_meta = { version = "0.7" }
-# leptos_router = { version = "0.7" }
-ndk = "0.9"
-nix = { version = "0.29", features = ["signal", "process", "fs", "mount", "reboot", "hostname"] }
-notify = "8.2.0"
 once_cell = "1.19.0"
-ordered-float = { version = "4", features = ["serde"] }
 phf = { version = "0.11.2", features = ["macros"] }
-polars = { version = "0.44", features = ["lazy", "csv", "json"] }
-pprof = { version = "0.14", features = ["flamegraph", "criterion"] }
-proc-macro2 = "1.0.86"
 proptest = "1.6.0"
 quote = "1.0.36"
 rand = "0.9.0"
-rayon = "1.10.0"
 regex = "1.10.5"
 reqwest = { version = "0.12.5", features = ["json"] }
 rusqlite = { version = "0.32", features = ["bundled", "serde_json"] }
-rustyline = "14"
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.120"
 serde_yaml = "0.9.34"
@@ -89,37 +60,21 @@ tar = "0.4.41"
 tempfile = "3.10.1"
 thiserror = "1.0.61"
 tokio = { version = "1.38.0", features = ["full"] }
-tokio-stream = "0.1.15"
-tokenizers = "0.22"
 toml = "0.8.15"
-toml_edit = "0.22.16"
 tower = { version = "0.4.13", features = ["full"] }
 tower-http = { version = "0.5.2", features = ["cors", "trace", "compression-full"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-typenum = "1.17.0"
-url = "2.5.2"
 urlencoding = "2.1.3"
 utoipa = { version = "5.3", features = ["axum_extras", "chrono", "uuid"] }
 uuid = { version = "1.10.0", features = ["v4", "serde"] }
 walkdir = "2.5.0"
-# wasm-bindgen = { version = "0.2" }
-# wasm-bindgen-futures = { version = "0.4" }
-web-sys = { version = "0.3" }
-
-# Internal Workspace Dependencies (Platforms)
-platforms = { path = "crates/platforms" }
-platforms-api-client = { path = "crates/platforms-api-client" }
-platforms-components = { path = "crates/platforms-components" }
-platforms-core = { path = "crates/platforms-core" }
-platforms-types = { path = "crates/platforms-types" }
 
 # Internal Workspace Dependencies (Prima)
 prima = { path = "crates/prima" }
 prima-academy = { path = "crates/prima-academy" }
 prima-chem = { path = "crates/prima-chem" }
 prima-codegen = { path = "crates/prima-codegen" }
-prima-mcp = { path = "crates/prima-mcp" }
 prima-mcp-server = { path = "crates/prima-mcp-server" }
 prima-pipeline = { path = "crates/prima-pipeline" }
 
@@ -130,8 +85,6 @@ core-true = { path = "crates/core-true" }
 counter-awareness = { path = "crates/counter-awareness" }
 disney-loop = { path = "crates/disney-loop" }
 grounded = { path = "crates/grounded" }
-lex-primitiva = { path = "crates/nexcore-lex-primitiva", package = "nexcore-lex-primitiva" }
-mcp-relay = { path = "crates/mcp-relay" }
 nexcloud = { path = "crates/nexcloud" }
 nexcore-aggregate = { path = "crates/nexcore-aggregate" }
 nexcore-algovigilance = { path = "crates/nexcore-algovigilance" }
@@ -141,7 +94,6 @@ nexcore-api = { path = "crates/nexcore-api" }
 nexcore-audio = { path = "crates/nexcore-audio" }
 nexcore-brain = { path = "crates/nexcore-brain" }
 nexcore-browser = { path = "crates/nexcore-browser" }
-nexcore-build-gate = { path = "crates/nexcore-build-gate" }
 nexcore-caesura = { path = "crates/nexcore-caesura" }
 nexcore-cardiovascular = { path = "crates/nexcore-cardiovascular" }
 nexcore-ccp = { path = "crates/nexcore-ccp" }
@@ -152,7 +104,6 @@ nexcore-compilation-space = { path = "crates/nexcore-compilation-space" }
 nexcore-compliance = { path = "crates/nexcore-compliance" }
 nexcore-compositor = { path = "crates/nexcore-compositor" }
 nexcore-config = { path = "crates/nexcore-config" }
-nexcore-constants = { path = "crates/nexcore-constants" }
 nexcore-cognition = { path = "crates/nexcore-cognition" }
 nexcore-cortex = { path = "crates/nexcore-cortex" }
 nexcore-ctvp = { path = "crates/nexcore-ctvp" }
@@ -175,7 +126,6 @@ nexcore-ghost = { path = "crates/nexcore-ghost" }
 nexcore-grammar-lab = { path = "crates/nexcore-grammar-lab" }
 nexcore-guardian-engine = { path = "crates/nexcore-guardian-engine" }
 nexcore-harm-taxonomy = { path = "crates/nexcore-harm-taxonomy" }
-nexcore-hook-lib = { path = "crates/nexcore-hook-lib" }
 # nexcore-hooks — REMOVED 2026-02-22 (dead crate, see ~/.claude/hooks/archive/AUDIT-2026-02-22.md)
 nexcore-hormones = { path = "crates/nexcore-hormones" }
 nexcore-id = { path = "crates/nexcore-id", features = ["serde"] }
@@ -190,7 +140,6 @@ nexcore-laboratory = { path = "crates/nexcore-laboratory" }
 nexcore-labs = { path = "crates/nexcore-labs" }
 nexcore-lex-primitiva = { path = "crates/nexcore-lex-primitiva" }
 nexcore-lymphatic = { path = "crates/nexcore-lymphatic" }
-nexcore-mcp = { path = "crates/nexcore-mcp" }
 nexcore-mcp-hot = { path = "crates/nexcore-mcp-hot" }
 nexcore-measure = { path = "crates/nexcore-measure" }
 nexcore-mesh = { path = "crates/nexcore-mesh" }
@@ -198,9 +147,6 @@ nexcore-model-checker = { path = "crates/nexcore-model-checker" }
 nexcore-muscular = { path = "crates/nexcore-muscular" }
 nexcore-nervous = { path = "crates/nexcore-nervous" }
 nexcore-notebooklm = { path = "crates/nexcore-notebooklm" }
-nexcore-network = { path = "crates/nexcore-network" }
-nexcore-nvrepl = { path = "crates/nexcore-guardian-cli" }
-nexcore-openfda = { path = "crates/nexcore-openfda" }
 nexcore-orchestration = { path = "crates/nexcore-orchestration" }
 nexcore-oracle = { path = "crates/nexcore-oracle" }
 nexcore-organize = { path = "crates/nexcore-organize" }
@@ -212,8 +158,6 @@ nexcore-pharma-rd = { path = "crates/nexcore-pharma-rd" }
 nexcore-pharmacovigilance = { path = "crates/nexcore-pharmacovigilance" }
 nexcore-pharos = { path = "crates/nexcore-pharos" }
 nexcore-phenotype = { path = "crates/nexcore-phenotype" }
-nexcore-preemptive-pv = { path = "crates/nexcore-preemptive-pv" }
-nexcore-prima = { path = "crates/nexcore-prima" }
 nexcore-primitive-scanner = { path = "crates/nexcore-primitive-scanner" }
 nexcore-primitives = { path = "crates/nexcore-primitives" }
 nexcore-proof-of-meaning = { path = "crates/nexcore-proof-of-meaning" }
@@ -226,15 +170,12 @@ nexcore-reproductive = { path = "crates/nexcore-reproductive" }
 nexcore-respiratory = { path = "crates/nexcore-respiratory" }
 nexcore-ribosome = { path = "crates/nexcore-ribosome" }
 nexcore-sentinel = { path = "crates/nexcore-sentinel" }
-nexcore-shell = { path = "crates/nexcore-shell" }
 nexcore-signal-fence = { path = "crates/nexcore-signal-fence" }
 nexcore-signal-theory = { path = "crates/nexcore-signal-theory" }
 nexcore-signal-types = { path = "crates/nexcore-signal-types" }
 nexcore-skeletal = { path = "crates/nexcore-skeletal" }
 nexcore-skill-compiler = { path = "crates/nexcore-skill-compiler" }
 nexcore-skill-exec = { path = "crates/nexcore-skill-exec" }
-nexcore-skill-verify = { path = "crates/nexcore-skill-verify" }
-nexcore-skills-engine = { path = "crates/nexcore-skills-engine" }
 nexcore-social = { path = "crates/nexcore-social" }
 nexcore-sop-anatomy = { path = "crates/nexcore-sop-anatomy" }
 nexcore-softrender = { path = "crates/nexcore-softrender" }
@@ -242,7 +183,6 @@ nexcore-state-os = { path = "crates/nexcore-state-os" }
 nexcore-state-theory = { path = "crates/nexcore-state-theory" }
 nexcore-stoichiometry = { path = "crates/nexcore-stoichiometry" }
 nexcore-statemind = { path = "crates/nexcore-statemind" }
-nexcore-stdio-proxy = { path = "crates/nexcore-stdio-proxy" }
 nexcore-synapse = { path = "crates/nexcore-synapse" }
 nexcore-synth = { path = "crates/nexcore-synth" }
 nexcore-telemetry-core = { path = "crates/nexcore-telemetry-core" }
@@ -264,15 +204,12 @@ pvos-primitive-expansion = { path = "crates/pvos-primitive-expansion" }
 # Package renamed to nexcore-signal-pipeline, consumers import as `signal`
 signal = { path = "crates/nexcore-signal-pipeline", package = "nexcore-signal-pipeline" }
 skills = { path = "crates/skills" }
-vr-compliance = { path = "crates/vr-compliance" }
 vr-core = { path = "crates/vr-core" }
 vr-tenant = { path = "crates/vr-tenant" }
 
 # Internal Workspace Dependencies (Stem)
 stem = { path = "crates/stem" }
-stem-core = { path = "crates/stem-core" }
 stem-math = { path = "crates/stem-math" }
-stem-topology = { path = "crates/stem-topology" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

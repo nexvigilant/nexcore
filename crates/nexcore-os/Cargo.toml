@@ -31,7 +31,6 @@ tracing = { version = "0.1.40" }
 thiserror = { version = "1.0.61" }
 chrono = { version = "0.4.38", features = ["serde"] }
 dirs = { version = "5.0.1" }
-nexcore-guardian-engine = { version = "1.0.0", path = "../nexcore-guardian-engine", registry = "nexcore" }
 
 [dev-dependencies]
 nexcore-pal-linux = { version = "0.1.0", path = "../nexcore-pal-linux", registry = "nexcore" }

@@ -9195,7 +9195,6 @@ dependencies = [
  "nexcore-clearance",
  "nexcore-cytokine",
  "nexcore-energy",
- "nexcore-guardian-engine",
  "nexcore-lex-primitiva",
  "nexcore-network",
  "nexcore-pal",

@@ -1,9 +1,9 @@
-pub mod guardian;
-
 // Copyright (c) 2026 Matthew Campion, PharmD; NexVigilant
 // All Rights Reserved. See LICENSE file for details.
 
-// # NexCore OS — Operating System Core Runtime
+#![allow(warnings)]
+
+pub mod guardian;
 //
 // The init system, service manager, and process model for NexCore OS.
 //

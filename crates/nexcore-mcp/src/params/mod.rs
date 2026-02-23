@@ -407,3 +407,7 @@ pub use notebooklm::*;
 // Cloud Intelligence (17 tools — query, infrastructure, reasoning)
 pub mod cloud;
 pub use cloud::*;
+
+// Rust Development (error types, derive advisor, match gen, borrow explain)
+pub mod rust_dev;
+pub use rust_dev::*;

@@ -1,6 +1,6 @@
 //! Cloud status endpoint response types.
 //!
-//! Bridges nexcore-cloud primitives (HealthCheck, ResourcePool, Metering)
+//! Bridges nexcloud primitives (HealthCheck, ResourcePool, Metering)
 //! into the NexCloud runtime for the `/.nexcloud/status` HTTP endpoint.
 //!
 //! ## Tier Classification
@@ -11,7 +11,7 @@
 //! - `ResourceSnapshot`: T2-C (N Quantity + Σ Sum)
 
 use crate::supervisor::registry::{ProcessState, ServiceRecord};
-use nexcore_cloud::{HealthCheck, Metering, ResourcePool};
+use crate::{HealthCheck, Metering, ResourcePool};
 use serde::Serialize;
 
 /// Overall platform health derived from service states.
@@ -57,7 +57,7 @@ pub struct ServiceStatus {
     pub started_at: Option<String>,
     /// Last successful health check (ISO 8601).
     pub last_health: Option<String>,
-    /// Health check primitive from nexcore-cloud.
+    /// Health check primitive from nexcloud.
     pub health_check: HealthCheck,
 }
 

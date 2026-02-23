@@ -90,7 +90,7 @@ impl App {
             brain_panel: BrainViewerPanel::new(),
             guardian_panel: GuardianMonitorPanel::new(),
             mcp_panel: McpExplorerPanel::new(),
-            cloud_panel: CloudDashboardPanel::new("http://localhost:8080"),
+            cloud_panel: CloudDashboardPanel::default(),
             bridge: NexCoreBridge::new(),
             frame_bridge: crate::debug_server::start(),
             scroll_state: ScrollState::new(),

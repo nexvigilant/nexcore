@@ -213,6 +213,7 @@ impl UpfComplex {
     ///
     /// Checks that the current phase_id matches the marker at the
     /// observation's checkpoint index.
+    #[allow(clippy::unused_self)] // method kept as instance method for API consistency
     fn check_phase_order(
         &self,
         observation: &CheckpointObservation,
@@ -220,7 +221,9 @@ impl UpfComplex {
     ) -> Option<UpfAnomaly> {
         let expected_marker = markers.get(observation.checkpoint_index)?;
 
-        if observation.phase_id != expected_marker.phase_id {
+        if observation.phase_id == expected_marker.phase_id {
+            None
+        } else {
             // Out-of-order is less severe than unknown phase
             let exists_elsewhere = markers
                 .iter()
@@ -236,8 +239,6 @@ impl UpfComplex {
                 ),
                 severity,
             })
-        } else {
-            None
         }
     }
 
@@ -269,7 +270,8 @@ impl UpfComplex {
         let drift = if union == 0 {
             0.0
         } else {
-            1.0 - (intersection as f32 / union as f32)
+            #[allow(clippy::cast_precision_loss)] // set sizes are small enough for f32
+            { 1.0 - (intersection as f32 / union as f32) }
         };
 
         if drift > self.config.tool_drift_threshold {
@@ -293,6 +295,7 @@ impl UpfComplex {
     ///
     /// Verifies that the ratio of grounding signals to total calls
     /// meets the marker's grounding confidence threshold.
+    #[allow(clippy::unused_self)] // method kept as instance method for API consistency
     fn check_grounding(
         &self,
         observation: &CheckpointObservation,
@@ -304,6 +307,7 @@ impl UpfComplex {
             return None;
         }
 
+        #[allow(clippy::cast_precision_loss)] // u32 values within f32 range for ratio calculation
         let grounding_ratio =
             observation.grounding_signals as f32 / observation.total_calls as f32;
         let required = marker.grounding_confidence_threshold;

@@ -23,7 +23,7 @@
 //! - **Post-mortem**: Capture final state, logs, metrics before termination
 //! - **Cleanup**: Release resources, notify dependents
 
-use crate::{Cytokine, CytokineFamily, ThreatLevel};
+use crate::Cytokine;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -156,11 +156,11 @@ impl ApoptosisController {
     pub fn advance(&mut self) -> Option<ShutdownPhase> {
         let now = Utc::now();
         let next = match self.phase {
-            ShutdownPhase::Alive => return None, // Must call initiate() first
+            // Must call initiate() first
+            ShutdownPhase::Alive | ShutdownPhase::Dead => return None,
             ShutdownPhase::Initiated => ShutdownPhase::Executing,
             ShutdownPhase::Executing => ShutdownPhase::Dismantling,
             ShutdownPhase::Dismantling => ShutdownPhase::Dead,
-            ShutdownPhase::Dead => return None,
         };
 
         self.phase = next;
@@ -170,12 +170,10 @@ impl ApoptosisController {
 
     /// Check if the grace period has elapsed.
     pub fn grace_period_elapsed(&self) -> bool {
-        if let Some(initiated) = self.initiated_at {
+        self.initiated_at.is_some_and(|initiated| {
             let elapsed = Utc::now().signed_duration_since(initiated).num_seconds();
             elapsed >= i64::from(self.grace_period_secs)
-        } else {
-            false
-        }
+        })
     }
 
     /// Force immediate death (skip remaining phases).
@@ -199,8 +197,7 @@ impl ApoptosisController {
             cause: self
                 .trigger
                 .as_ref()
-                .map(|t| format!("{}: {}", t.family, t.name))
-                .unwrap_or_else(|| "unknown".to_string()),
+                .map_or_else(|| "unknown".to_string(), |t| format!("{}: {}", t.family, t.name)),
             initiated_at: self.initiated_at.unwrap_or(now),
             completed_at: Some(now),
             final_phase: ShutdownPhase::Dead,
@@ -235,6 +232,7 @@ impl ApoptosisController {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::CytokineFamily;
 
     #[test]
     fn test_shutdown_phase_lifecycle() {

@@ -32,12 +32,14 @@
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+pub mod composites;
 pub mod display;
 pub mod haptics;
 pub mod input;
 pub mod network;
 pub mod platform;
 pub mod power;
+pub mod prelude;
 pub mod storage;
 
 // Re-export the main type

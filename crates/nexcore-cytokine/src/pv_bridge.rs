@@ -67,8 +67,7 @@ impl PvSignalType {
             Self::ThresholdExceeded => CytokineFamily::IfnGamma,
             Self::CausalityAssessed => CytokineFamily::TgfBeta,
             Self::DriftDetected => CytokineFamily::Il6,
-            Self::BatchCompleted => CytokineFamily::Il10,
-            Self::SignalRefuted => CytokineFamily::Il10,
+            Self::BatchCompleted | Self::SignalRefuted => CytokineFamily::Il10,
         }
     }
 
@@ -76,8 +75,7 @@ impl PvSignalType {
     #[must_use]
     pub const fn default_scope(&self) -> Scope {
         match self {
-            Self::ThresholdExceeded => Scope::Systemic,
-            Self::DriftDetected => Scope::Systemic,
+            Self::ThresholdExceeded | Self::DriftDetected => Scope::Systemic,
             Self::SignalDetected | Self::CausalityAssessed => Scope::Endocrine,
             Self::BatchCompleted | Self::SignalRefuted => Scope::Paracrine,
         }
@@ -249,7 +247,7 @@ pub fn pv_to_cytokine(signal_type: PvSignalType, metrics: &PvSignalMetrics) -> C
 
 /// Pre-built cascade patterns for PV signal escalation.
 pub mod pv_cascades {
-    use super::*;
+    use super::{CascadeResponse, CascadeRule, CytokineFamily, ReceptorFilter, Scope, ThreatLevel};
 
     /// Signal detection cascade: IL-1 (alarm) → IFN-γ (amplify for review).
     ///
@@ -383,6 +381,8 @@ pub fn drift_signal(drift_score: f64, threshold: f64) -> Cytokine {
 /// Create a cytokine for batch completion.
 #[must_use]
 pub fn batch_complete(algorithms_run: u64, signals_found: u64) -> Cytokine {
+    // Precision loss acceptable: signal counts are small enough for f64
+    #[allow(clippy::cast_precision_loss)]
     let metrics = PvSignalMetrics::new("BatchScreen", signals_found as f64, 0.0)
         .with_case_count(algorithms_run);
     pv_to_cytokine(PvSignalType::BatchCompleted, &metrics)

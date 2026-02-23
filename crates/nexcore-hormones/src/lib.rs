@@ -157,7 +157,7 @@ pub enum HormoneType {
 
 impl HormoneType {
     /// All hormone types
-    pub const ALL: [HormoneType; 6] = [
+    pub const ALL: [Self; 6] = [
         Self::Cortisol,
         Self::Dopamine,
         Self::Serotonin,
@@ -318,7 +318,7 @@ impl EndocrineState {
     pub fn mood_score(&self) -> f64 {
         let positive = self.dopamine.value() + self.serotonin.value() + self.oxytocin.value();
         let negative = self.cortisol.value() + self.adrenaline.value();
-        (positive - negative + 2.0) / 5.0
+        ((positive - negative + 2.0) / 5.0).clamp(0.0, 1.0)
     }
 
     /// Get risk tolerance
@@ -430,79 +430,80 @@ impl Stimulus {
     /// Apply this stimulus to the endocrine state
     pub fn apply(&self, state: &mut EndocrineState) {
         match self {
-            Stimulus::ErrorEncountered { severity } => {
+            Self::ErrorEncountered { severity } => {
                 state.cortisol = state.cortisol.increase(*severity * 0.2);
             }
-            Stimulus::DeadlinePressure { urgency } => {
+            Self::DeadlinePressure { urgency } => {
                 state.cortisol = state.cortisol.increase(*urgency * 0.15);
                 state.adrenaline = state.adrenaline.increase(*urgency * 0.1);
             }
-            Stimulus::UncertaintyDetected { confidence_gap } => {
+            Self::UncertaintyDetected { confidence_gap } => {
                 state.cortisol = state.cortisol.increase(*confidence_gap * 0.1);
             }
-            Stimulus::TaskCompleted { complexity } => {
+            Self::TaskCompleted { complexity } => {
                 state.dopamine = state.dopamine.increase(*complexity * 0.15);
                 state.cortisol = state.cortisol.decrease(*complexity * 0.05);
             }
-            Stimulus::PositiveFeedback { intensity } => {
+            Self::PositiveFeedback { intensity } => {
                 state.dopamine = state.dopamine.increase(*intensity * 0.2);
                 state.oxytocin = state.oxytocin.increase(*intensity * 0.1);
             }
-            Stimulus::PatternSuccess { reuse_count } => {
-                let boost = (*reuse_count as f64 * 0.05).min(0.2);
+            Self::PatternSuccess { reuse_count } => {
+                let boost = (f64::from(*reuse_count) * 0.05).min(0.2);
                 state.dopamine = state.dopamine.increase(boost);
             }
-            Stimulus::ConsistentSession { variance } => {
+            Self::ConsistentSession { variance } => {
                 let stability = 1.0 - variance;
                 state.serotonin = state.serotonin.increase(stability * 0.1);
             }
-            Stimulus::PredictableOutcome { accuracy } => {
+            Self::PredictableOutcome { accuracy } => {
                 state.serotonin = state.serotonin.increase(*accuracy * 0.1);
             }
-            Stimulus::CriticalError { recoverable } => {
+            Self::CriticalError { recoverable } => {
                 state.adrenaline = state.adrenaline.increase(0.4);
                 if !recoverable {
                     state.cortisol = state.cortisol.increase(0.3);
                 }
             }
-            Stimulus::TimeConstraint { remaining_pct } => {
+            Self::TimeConstraint { remaining_pct } => {
                 if *remaining_pct < 0.2 {
                     state.adrenaline = state.adrenaline.increase(0.3);
                     state.melatonin = state.melatonin.increase(0.2);
                 }
             }
-            Stimulus::HighStakesDecision { impact } => {
+            Self::HighStakesDecision { impact } => {
                 state.adrenaline = state.adrenaline.increase(*impact * 0.2);
             }
-            Stimulus::PartnershipReinforced { signal } => {
+            Self::PartnershipReinforced { signal } => {
                 state.oxytocin = state.oxytocin.increase(*signal * 0.15);
             }
-            Stimulus::MutualSuccess { shared_win } => {
+            Self::MutualSuccess { shared_win } => {
                 if *shared_win {
                     state.oxytocin = state.oxytocin.increase(0.1);
                     state.dopamine = state.dopamine.increase(0.1);
                 }
             }
-            Stimulus::TransparentCommunication { clarity } => {
+            Self::TransparentCommunication { clarity } => {
                 state.oxytocin = state.oxytocin.increase(*clarity * 0.05);
             }
-            Stimulus::SessionDuration { minutes } => {
+            Self::SessionDuration { minutes } => {
                 if *minutes > 60 {
+                    #[allow(clippy::cast_precision_loss)] // u64 subtraction result fits in f64
                     let fatigue = ((*minutes - 60) as f64 / 120.0).min(0.5);
                     state.melatonin = state.melatonin.increase(fatigue);
                 }
             }
-            Stimulus::ContextUtilization { pct } => {
+            Self::ContextUtilization { pct } => {
                 if *pct > 0.7 {
                     state.melatonin = state.melatonin.increase((*pct - 0.7) * 0.5);
                 }
             }
-            Stimulus::CompletionSignal { tasks_done } => {
+            Self::CompletionSignal { tasks_done } => {
                 if *tasks_done > 0 {
                     state.melatonin = state.melatonin.increase(0.1);
                 }
             }
-            Stimulus::PlanetaryAlignment {
+            Self::PlanetaryAlignment {
                 distance_au,
                 days_since_opposition,
             } => {
@@ -513,9 +514,9 @@ impl Stimulus {
                 // Recursion phase (Cycle component)
                 // 780 day period. Peak at 0 and 780.
                 let cycle_phase =
-                    ((*days_since_opposition % 780) as f64 / 780.0 * 2.0 * core::f64::consts::PI)
+                    (f64::from(*days_since_opposition % 780) / 780.0 * 2.0 * core::f64::consts::PI)
                         .cos();
-                let recursive_boost = (cycle_phase + 1.0) / 2.0;
+                let recursive_boost = f64::midpoint(cycle_phase, 1.0);
 
                 // Forge effects
                 state.dopamine = state.dopamine.increase(proximity * 0.1);
@@ -882,9 +883,9 @@ impl From<&EndocrineState> for BehavioralModifiers {
     fn from(state: &EndocrineState) -> Self {
         Self {
             risk_tolerance: state.risk_tolerance(),
-            validation_depth: 0.5 + (state.cortisol.value() - 0.5) * 0.5,
+            validation_depth: (state.cortisol.value() - 0.5).mul_add(0.5, 0.5),
             exploration_rate: state.dopamine.value(),
-            verbosity: 0.5 + (state.oxytocin.value() - 0.5) * 0.3,
+            verbosity: (state.oxytocin.value() - 0.5).mul_add(0.3, 0.5),
             crisis_mode: state.is_crisis_mode(),
             partnership_mode: state.is_trusted_partnership(),
             rest_recommended: state.should_rest(),

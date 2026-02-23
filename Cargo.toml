@@ -6,6 +6,9 @@ members = [
 ]
 exclude = [
     "crates/nexcore-claude-hooks",
+    "crates/nexcore-hooks",
+    "crates/word-spectroscopy",
+    "crates/nexcore-bridge-mcp",
 ]
 resolver = "2"
 
@@ -28,13 +31,13 @@ base64 = "0.22.1"
 burn = { version = "0.20", default-features = false, features = ["ndarray", "autodiff", "std"] }
 burn-ndarray = { version = "0.20", features = ["std"] }
 bytes = "1.6.1"
-candle-core = "0.9"
-candle-nn = "0.9"
-candle-transformers = "0.9"
+# candle-core = "0.9"
+# candle-nn = "0.9"
+# candle-transformers = "0.9"
 chrono = { version = "0.4.38", features = ["serde"] }
 clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
 colored = "3.0.0"
-console_error_panic_hook = { version = "0.1" }
+# console_error_panic_hook = { version = "0.1" }
 criterion = { version = "0.5", features = ["html_reports"] }
 csv = "1.3.0"
 darling = "0.20.10"
@@ -53,18 +56,16 @@ http-body-util = "0.1.2"
 indexmap = "2.2.6"
 js-sys = { version = "0.3" }
 jsonwebtoken = "9"
-lazy_static = "1.5.0"
-leptos = { version = "0.7" }
-leptos_axum = { version = "0.7" }
-leptos_meta = { version = "0.7" }
-leptos_router = { version = "0.7" }
+# leptos = { version = "0.7" }
+# leptos_axum = { version = "0.7" }
+# leptos_meta = { version = "0.7" }
+# leptos_router = { version = "0.7" }
 ndk = "0.9"
 nix = { version = "0.29", features = ["signal", "process", "fs", "mount", "reboot", "hostname"] }
 notify = "8.2.0"
 once_cell = "1.19.0"
 ordered-float = { version = "4", features = ["serde"] }
 phf = { version = "0.11.2", features = ["macros"] }
-plotters = { version = "0.3", default-features = false, features = ["svg_backend", "line_series", "area_series"] }
 polars = { version = "0.44", features = ["lazy", "csv", "json"] }
 pprof = { version = "0.14", features = ["flamegraph", "criterion"] }
 proc-macro2 = "1.0.86"
@@ -81,8 +82,8 @@ serde_json = "1.0.120"
 serde_yaml = "0.9.34"
 sha2 = "0.10.8"
 hmac = "0.12.1"
-slint = "1.9"
-slint-build = "1.9"
+# slint = "1.9"
+# slint-build = "1.9"
 syn = { version = "2.0.71", features = ["full"] }
 tar = "0.4.41"
 tempfile = "3.10.1"
@@ -102,8 +103,8 @@ urlencoding = "2.1.3"
 utoipa = { version = "5.3", features = ["axum_extras", "chrono", "uuid"] }
 uuid = { version = "1.10.0", features = ["v4", "serde"] }
 walkdir = "2.5.0"
-wasm-bindgen = { version = "0.2" }
-wasm-bindgen-futures = { version = "0.4" }
+# wasm-bindgen = { version = "0.2" }
+# wasm-bindgen-futures = { version = "0.4" }
 web-sys = { version = "0.3" }
 
 # Internal Workspace Dependencies (Platforms)
@@ -146,7 +147,6 @@ nexcore-cardiovascular = { path = "crates/nexcore-cardiovascular" }
 nexcore-ccp = { path = "crates/nexcore-ccp" }
 nexcore-circulatory = { path = "crates/nexcore-circulatory" }
 nexcore-clearance = { path = "crates/nexcore-clearance" }
-nexcore-cloud = { path = "crates/nexcore-cloud" }
 nexcore-combinatorics = { path = "crates/nexcore-combinatorics" }
 nexcore-compilation-space = { path = "crates/nexcore-compilation-space" }
 nexcore-compliance = { path = "crates/nexcore-compliance" }
@@ -176,7 +176,7 @@ nexcore-grammar-lab = { path = "crates/nexcore-grammar-lab" }
 nexcore-guardian-engine = { path = "crates/nexcore-guardian-engine" }
 nexcore-harm-taxonomy = { path = "crates/nexcore-harm-taxonomy" }
 nexcore-hook-lib = { path = "crates/nexcore-hook-lib" }
-nexcore-hooks = { path = "crates/nexcore-hooks" }
+# nexcore-hooks — REMOVED 2026-02-22 (dead crate, see ~/.claude/hooks/archive/AUDIT-2026-02-22.md)
 nexcore-hormones = { path = "crates/nexcore-hormones" }
 nexcore-id = { path = "crates/nexcore-id", features = ["serde"] }
 nexcore-immunity = { path = "crates/nexcore-immunity" }
@@ -197,6 +197,7 @@ nexcore-mesh = { path = "crates/nexcore-mesh" }
 nexcore-model-checker = { path = "crates/nexcore-model-checker" }
 nexcore-muscular = { path = "crates/nexcore-muscular" }
 nexcore-nervous = { path = "crates/nexcore-nervous" }
+nexcore-notebooklm = { path = "crates/nexcore-notebooklm" }
 nexcore-network = { path = "crates/nexcore-network" }
 nexcore-nvrepl = { path = "crates/nexcore-guardian-cli" }
 nexcore-openfda = { path = "crates/nexcore-openfda" }
@@ -323,7 +324,7 @@ collapsible_if = "allow"
 needless_for_each = "allow"
 single_char_pattern = "allow"
 cast_possible_wrap = "allow"
-# once_cell → LazyLock migration (deferred — 36 sites in nexcore-hooks)
+# once_cell → LazyLock migration (deferred)
 type_complexity = "allow"
 useless_format = "allow"
 suboptimal_flops = "allow"

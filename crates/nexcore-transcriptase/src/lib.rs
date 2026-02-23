@@ -120,21 +120,20 @@ fn infer_named(json: &serde_json::Value, name: Option<String>) -> Schema {
             false_count: usize::from(!*b),
         },
         Value::Number(n) => {
-            if let Some(i) = n.as_i64() {
-                SchemaKind::Int {
+            n.as_i64().map_or_else(
+                || {
+                    n.as_f64().map_or(SchemaKind::Mixed, |f| SchemaKind::Float {
+                        min: f,
+                        max: f,
+                        sum: f,
+                    })
+                },
+                |i| SchemaKind::Int {
                     min: i,
                     max: i,
                     sum: i,
-                }
-            } else if let Some(f) = n.as_f64() {
-                SchemaKind::Float {
-                    min: f,
-                    max: f,
-                    sum: f,
-                }
-            } else {
-                SchemaKind::Mixed
-            }
+                },
+            )
         }
         Value::String(s) => SchemaKind::Str {
             min_len: s.len(),
@@ -190,6 +189,7 @@ pub fn merge(a: &Schema, b: &Schema) -> Schema {
     }
 }
 
+#[allow(clippy::too_many_lines)] // Complex match on all SchemaKind combinations requires exhaustive arms
 fn merge_kinds(a: &SchemaKind, b: &SchemaKind) -> SchemaKind {
     match (a, b) {
         (SchemaKind::Null, SchemaKind::Null) => SchemaKind::Null,
@@ -290,16 +290,13 @@ fn merge_kinds(a: &SchemaKind, b: &SchemaKind) -> SchemaKind {
             SchemaKind::Record(merged)
         }
 
-        // Int + Float → Float (widening)
-        (SchemaKind::Int { min, max, sum }, SchemaKind::Float { .. }) => SchemaKind::Float {
-            min: *min as f64,
-            max: *max as f64,
-            sum: *sum as f64,
-        },
-        (SchemaKind::Float { .. }, SchemaKind::Int { min, max, sum }) => SchemaKind::Float {
-            min: *min as f64,
-            max: *max as f64,
-            sum: *sum as f64,
+        // Int + Float → Float (widening), order-independent
+        #[allow(clippy::cast_precision_loss)] // i64→f64 precision loss acceptable for range tracking
+        (SchemaKind::Int { min: imin, max: imax, sum: isum }, SchemaKind::Float { min: fmin, max: fmax, sum: fsum })
+        | (SchemaKind::Float { min: fmin, max: fmax, sum: fsum }, SchemaKind::Int { min: imin, max: imax, sum: isum }) => SchemaKind::Float {
+            min: fmin.min(*imin as f64),
+            max: fmax.max(*imax as f64),
+            sum: fsum + *isum as f64,
         },
 
         _ => SchemaKind::Mixed,
@@ -354,6 +351,7 @@ pub fn synthesize_violations(schema: &Schema) -> Vec<SchemaViolation> {
     violations
 }
 
+#[allow(clippy::too_many_lines)] // Violation synthesis requires per-variant generation; extracting helpers would hurt readability
 fn synthesize_inner(schema: &Schema, violations: &mut Vec<SchemaViolation>, prefix: &str) {
     let path = match &schema.name {
         Some(n) if prefix.is_empty() => n.clone(),
@@ -444,7 +442,7 @@ fn synthesize_inner(schema: &Schema, violations: &mut Vec<SchemaViolation>, pref
             synthesize_inner(element, violations, &format!("{path}[]"));
         }
         SchemaKind::Record(fields) => {
-            for (_, field_schema) in fields {
+            for field_schema in fields.values() {
                 synthesize_inner(field_schema, violations, &path);
             }
         }
@@ -492,8 +490,7 @@ pub fn generate(schema: &Schema) -> serde_json::Value {
         SchemaKind::Float { min, max, .. } => {
             let mid = (min + max) / 2.0;
             serde_json::Number::from_f64(mid)
-                .map(Value::Number)
-                .unwrap_or(Value::Null)
+                .map_or(Value::Null, Value::Number)
         }
 
         SchemaKind::Str {
@@ -539,19 +536,15 @@ pub enum Fidelity {
 /// Check JSON round-trip fidelity: serialize → deserialize → compare.
 pub fn check_fidelity(original: &serde_json::Value) -> Fidelity {
     let serialized = serde_json::to_string(original);
-    match serialized {
-        Ok(s) => match serde_json::from_str::<serde_json::Value>(&s) {
-            Ok(roundtripped) => {
-                if *original == roundtripped {
-                    Fidelity::Exact
-                } else {
-                    Fidelity::Approximate
-                }
+    serialized.map_or(Fidelity::Failed, |s| {
+        serde_json::from_str::<serde_json::Value>(&s).map_or(Fidelity::Failed, |roundtripped| {
+            if *original == roundtripped {
+                Fidelity::Exact
+            } else {
+                Fidelity::Approximate
             }
-            Err(_) => Fidelity::Failed,
-        },
-        Err(_) => Fidelity::Failed,
-    }
+        })
+    })
 }
 
 impl std::fmt::Display for Fidelity {
@@ -719,7 +712,7 @@ impl Engine {
         let schema = self
             .merged
             .clone()
-            .unwrap_or(Schema::new(None, SchemaKind::Null));
+            .unwrap_or_else(|| Schema::new(None, SchemaKind::Null));
 
         let violations = if self.config.synthesize_violations {
             let v = synthesize_violations(&schema);

@@ -9,6 +9,7 @@ description = "Incident memory and response playbooks for the Homeostasis Machin
 
 [dependencies]
 nexcore-homeostasis-primitives = { path = "../nexcore-homeostasis-primitives" }
+nexcore-lex-primitiva = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }

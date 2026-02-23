@@ -445,3 +445,6 @@ pub mod notebooklm;
 
 // Cloud Intelligence (35-type taxonomy → 17 MCP tools)
 pub mod cloud;
+
+// Rust Development (error types, derive advisor, match gen, borrow explain)
+pub mod rust_dev;

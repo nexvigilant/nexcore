@@ -270,7 +270,9 @@ impl StallDetector {
 ///
 /// Uses x = 0, 1, 2, ... as indices.
 /// Formula: slope = (n*Sum_xy - Sum_x*Sum_y) / (n*Sum_x2 - (Sum_x)^2)
+#[allow(clippy::similar_names)] // sum_x, sum_y, sum_xy are standard regression variable names
 fn linear_regression_slope(values: &[f64]) -> f64 {
+    #[allow(clippy::cast_precision_loss)] // Acceptable: regression on small observation windows
     let n = values.len() as f64;
     if n < 2.0 {
         return 0.0;
@@ -282,6 +284,7 @@ fn linear_regression_slope(values: &[f64]) -> f64 {
     let mut sum_x2: f64 = 0.0;
 
     for (i, &y) in values.iter().enumerate() {
+        #[allow(clippy::cast_precision_loss)] // Index values are small
         let x = i as f64;
         sum_x += x;
         sum_y += y;
@@ -289,12 +292,13 @@ fn linear_regression_slope(values: &[f64]) -> f64 {
         sum_x2 += x * x;
     }
 
-    let denom = n * sum_x2 - sum_x * sum_x;
+    #[allow(clippy::suspicious_operation_groupings)] // Correct linear regression formula: n*Σx² - (Σx)²
+    let denom = n.mul_add(sum_x2, -(sum_x * sum_x));
     if denom.abs() < f64::EPSILON {
         return 0.0;
     }
 
-    (n * sum_xy - sum_x * sum_y) / denom
+    n.mul_add(sum_xy, -(sum_x * sum_y)) / denom
 }
 
 #[cfg(test)]

@@ -1,4 +1,4 @@
-//! Cloud Intelligence — 17 MCP tools activating nexcore-cloud's 35-type taxonomy.
+//! Cloud Intelligence — 17 MCP tools activating nexcloud's 35-type taxonomy.
 //!
 //! Phase 1: Core Query + Analysis (8 tools)
 //! Phase 2: Infrastructure Awareness (4 tools)
@@ -6,7 +6,7 @@
 //!
 //! Tier: T2-C (μ+→+∂+N — mapping, causality, boundary, quantity)
 
-use nexcore_cloud::prelude::*;
+use nexcloud::prelude::*;
 use nexcore_lex_primitiva::molecular_weight::MolecularFormula;
 use nexcore_lex_primitiva::primitiva::{LexPrimitiva, PrimitiveComposition};
 use nexcore_lex_primitiva::tier::Tier;
@@ -253,7 +253,7 @@ fn cloud_state_mode(type_name: &str) -> Option<&'static str> {
 pub fn transfer_confidence(
     p: params::CloudTransferConfidenceParams,
 ) -> Result<CallToolResult, McpError> {
-    let conf = nexcore_cloud::transfer::transfer_confidence(&p.cloud_type, &p.domain);
+    let conf = nexcloud::transfer::transfer_confidence(&p.cloud_type, &p.domain);
     let mappings = transfers_for_type(&p.cloud_type);
     let mapping = mappings
         .iter()
@@ -573,32 +573,28 @@ pub fn dominant_shift(
 pub async fn infra_status(
     p: params::CloudInfraStatusParams,
 ) -> Result<CallToolResult, McpError> {
-    let project_flag = match &p.project {
-        Some(proj) => format!("--project={}", proj),
-        None => String::new(),
-    };
+    let mut cmd = tokio::process::Command::new("gcloud");
+    cmd.args(["compute", "instances", "list", "--format=json"]);
+    if let Some(proj) = &p.project {
+        cmd.arg("--project").arg(proj);
+    }
 
-    let cmd = if project_flag.is_empty() {
-        "gcloud compute instances list --format=json 2>/dev/null".to_string()
-    } else {
-        format!(
-            "gcloud compute instances list {} --format=json 2>/dev/null",
-            project_flag
+    let output = cmd.output().await.map_err(|e| {
+        McpError::new(
+            ErrorCode(500),
+            format!("Failed to run gcloud: {e}"),
+            None,
         )
-    };
+    })?;
 
-    let output = tokio::process::Command::new("sh")
-        .arg("-c")
-        .arg(&cmd)
-        .output()
-        .await
-        .map_err(|e| {
-            McpError::new(
-                ErrorCode(500),
-                format!("Failed to run gcloud: {e}"),
-                None,
-            )
-        })?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Ok(CallToolResult::error(vec![Content::text(format!(
+            "gcloud failed (exit {}): {}",
+            output.status.code().unwrap_or(-1),
+            stderr.trim()
+        ))]));
+    }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let instances: Vec<serde_json::Value> =
@@ -651,35 +647,30 @@ pub async fn infra_status(
 pub async fn infra_map(
     p: params::CloudInfraMapParams,
 ) -> Result<CallToolResult, McpError> {
-    let zone_flag = match &p.zone {
-        Some(z) => format!("--zone={}", z),
-        None => String::new(),
-    };
+    let mut cmd = tokio::process::Command::new("gcloud");
+    cmd.args(["compute", "instances", "describe"]);
+    cmd.arg(&p.instance);
+    cmd.arg("--format=json");
+    if let Some(z) = &p.zone {
+        cmd.arg("--zone").arg(z);
+    }
 
-    let cmd = if zone_flag.is_empty() {
-        format!(
-            "gcloud compute instances describe {} --format=json 2>/dev/null",
-            p.instance
+    let output = cmd.output().await.map_err(|e| {
+        McpError::new(
+            ErrorCode(500),
+            format!("Failed to run gcloud: {e}"),
+            None,
         )
-    } else {
-        format!(
-            "gcloud compute instances describe {} {} --format=json 2>/dev/null",
-            p.instance, zone_flag
-        )
-    };
+    })?;
 
-    let output = tokio::process::Command::new("sh")
-        .arg("-c")
-        .arg(&cmd)
-        .output()
-        .await
-        .map_err(|e| {
-            McpError::new(
-                ErrorCode(500),
-                format!("Failed to run gcloud: {e}"),
-                None,
-            )
-        })?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Ok(CallToolResult::error(vec![Content::text(format!(
+            "gcloud failed (exit {}): {}",
+            output.status.code().unwrap_or(-1),
+            stderr.trim()
+        ))]));
+    }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let inst: serde_json::Value =
@@ -754,6 +745,16 @@ pub fn capacity_project(
         return Err(McpError::new(
             ErrorCode(400),
             "total_capacity must be positive",
+            None,
+        ));
+    }
+    if !p.current_utilization.is_finite()
+        || p.current_utilization < 0.0
+        || p.current_utilization > 1.0
+    {
+        return Err(McpError::new(
+            ErrorCode(400),
+            "current_utilization must be between 0.0 and 1.0",
             None,
         ));
     }
@@ -905,7 +906,8 @@ pub fn transfer_chain(
 ) -> Result<CallToolResult, McpError> {
     // Validate start type exists
     require_composition(&p.start_type)?;
-    let max_hops = p.max_hops.min(5);
+    // BFS currently implements up to 2-hop chains; cap max_hops accordingly
+    let max_hops = p.max_hops.min(2);
     let confidence_floor = 0.50;
 
     let all_mappings = transfer_mappings();
@@ -1093,6 +1095,13 @@ pub fn architecture_advisor(
 pub fn anomaly_detect(
     p: params::CloudAnomalyDetectParams,
 ) -> Result<CallToolResult, McpError> {
+    if p.observed_primitives.is_empty() {
+        return Err(McpError::new(
+            ErrorCode(400),
+            "observed_primitives must not be empty",
+            None,
+        ));
+    }
     let expected_comp = require_composition(&p.type_name)?;
     let observed = parse_primitive_list(&p.observed_primitives)?;
 

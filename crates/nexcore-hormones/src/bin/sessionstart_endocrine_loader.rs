@@ -13,8 +13,11 @@ fn main() {
     }
 
     let modifiers = BehavioralModifiers::from(&state);
+    #[allow(clippy::cast_sign_loss)] // values are clamped to 0.0..=1.0, always non-negative
     let mood_pct = (state.mood_score() * 100.0) as u32;
+    #[allow(clippy::cast_sign_loss)] // values are clamped to 0.0..=1.0, always non-negative
     let risk_pct = (modifiers.risk_tolerance * 100.0) as u32;
+    #[allow(clippy::cast_sign_loss)] // values are clamped to 0.0..=1.0, always non-negative
     let oxytocin_pct = (state.oxytocin.value() * 100.0) as u32;
 
     let mut status_lines = vec![
@@ -24,6 +27,7 @@ fn main() {
 
     for hormone in HormoneType::ALL {
         let level = state.get(hormone);
+        #[allow(clippy::cast_sign_loss)] // values are clamped to 0.0..=1.0, always non-negative
         let pct = (level.value() * 100.0) as u32;
         let bar = level_bar(level.value());
         status_lines.push(format!("{}: {} {}%", hormone.name(), bar, pct));
@@ -31,8 +35,7 @@ fn main() {
 
     status_lines.push("───────────────────────────────────────".to_string());
     status_lines.push(format!(
-        "Mood Score: {}% | Risk Tolerance: {}%",
-        mood_pct, risk_pct
+        "Mood Score: {mood_pct}% | Risk Tolerance: {risk_pct}%",
     ));
     status_lines.push(format!(
         "Partnership Trust: {}% | Sessions: {}",
@@ -60,6 +63,7 @@ fn main() {
 }
 
 fn level_bar(value: f64) -> String {
+    #[allow(clippy::cast_sign_loss)] // value is clamped to 0.0..=1.0, always non-negative
     let filled = (value * 10.0) as usize;
     let empty = 10 - filled;
     format!("[{}{}]", "█".repeat(filled), "░".repeat(empty))

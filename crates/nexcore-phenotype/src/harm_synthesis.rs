@@ -73,29 +73,29 @@ pub enum HarmScenario {
 
 impl HarmScenario {
     /// All available harm scenarios.
-    pub const ALL: &[HarmScenario] = &[
-        HarmScenario::SeverityDowngrade,
-        HarmScenario::MissingSeriousness,
-        HarmScenario::DrugMisattribution,
-        HarmScenario::CaseCountDeflation,
-        HarmScenario::DuplicateInjection,
-        HarmScenario::NarrativeTruncation,
-        HarmScenario::TemporalShift,
-        HarmScenario::OutcomeMasking,
+    pub const ALL: &[Self] = &[
+        Self::SeverityDowngrade,
+        Self::MissingSeriousness,
+        Self::DrugMisattribution,
+        Self::CaseCountDeflation,
+        Self::DuplicateInjection,
+        Self::NarrativeTruncation,
+        Self::TemporalShift,
+        Self::OutcomeMasking,
     ];
 
     /// Which drift types this scenario should trigger in the ribosome.
     #[must_use]
     pub fn expected_drift_types(self) -> Vec<DriftType> {
         match self {
-            Self::SeverityDowngrade => vec![DriftType::TypeMismatch],
+            Self::SeverityDowngrade
+            | Self::DrugMisattribution
+            | Self::TemporalShift
+            | Self::OutcomeMasking => vec![DriftType::TypeMismatch],
             Self::MissingSeriousness => vec![DriftType::MissingField],
-            Self::DrugMisattribution => vec![DriftType::TypeMismatch],
-            Self::CaseCountDeflation => vec![DriftType::RangeExpansion],
+            Self::CaseCountDeflation => vec![DriftType::RangeContraction],
             Self::DuplicateInjection => vec![DriftType::ExtraField, DriftType::ArraySizeChange],
             Self::NarrativeTruncation => vec![DriftType::LengthChange],
-            Self::TemporalShift => vec![DriftType::TypeMismatch],
-            Self::OutcomeMasking => vec![DriftType::TypeMismatch],
         }
     }
 
@@ -105,13 +105,9 @@ impl HarmScenario {
     pub const fn safety_impact(&self) -> u8 {
         match self {
             Self::OutcomeMasking => 5,
-            Self::SeverityDowngrade => 4,
-            Self::MissingSeriousness => 4,
-            Self::DrugMisattribution => 4,
-            Self::CaseCountDeflation => 3,
-            Self::TemporalShift => 3,
-            Self::DuplicateInjection => 2,
-            Self::NarrativeTruncation => 2,
+            Self::SeverityDowngrade | Self::MissingSeriousness | Self::DrugMisattribution => 4,
+            Self::CaseCountDeflation | Self::TemporalShift => 3,
+            Self::DuplicateInjection | Self::NarrativeTruncation => 2,
         }
     }
 

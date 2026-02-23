@@ -51,8 +51,7 @@ impl PvContractCategory {
     #[must_use]
     pub const fn drift_threshold(&self) -> f64 {
         match self {
-            Self::Drug => 0.20,
-            Self::Indication => 0.20,
+            Self::Drug | Self::Indication => 0.20,
             Self::AdverseEvent => 0.10,
         }
     }
@@ -75,8 +74,7 @@ impl PvContractCategory {
     pub const fn severity_override(&self, drift_type: DriftType) -> Option<DriftSeverity> {
         match (self, drift_type) {
             // AE records: type changes and missing fields are always critical
-            (Self::AdverseEvent, DriftType::TypeMismatch) => Some(DriftSeverity::Critical),
-            (Self::AdverseEvent, DriftType::MissingField) => Some(DriftSeverity::Critical),
+            (Self::AdverseEvent, DriftType::TypeMismatch | DriftType::MissingField) => Some(DriftSeverity::Critical),
             // Drug records: type changes are at least Warning
             (Self::Drug, DriftType::TypeMismatch) => Some(DriftSeverity::Warning),
             // All other combinations: use default severity

@@ -6,47 +6,6 @@
 use rmcp::schemars::{self, JsonSchema};
 use rmcp::serde::{Deserialize, Serialize};
 
-/// Parameters for querying hooks by event type
-#[derive(Debug, Deserialize, JsonSchema)]
-#[serde(crate = "rmcp::serde")]
-pub struct HooksForEventParams {
-    /// Event type (e.g., "SessionStart", "PreToolUse:Edit|Write")
-    pub event: String,
-}
-
-/// Parameters for querying hooks by deployment tier
-#[derive(Debug, Deserialize, JsonSchema)]
-#[serde(crate = "rmcp::serde")]
-pub struct HooksForTierParams {
-    /// Deployment tier: "dev", "review", or "deploy"
-    pub tier: String,
-}
-
-/// Parameters for listing nested hooks in a compound hook molecule
-#[derive(Debug, Deserialize, JsonSchema)]
-#[serde(crate = "rmcp::serde")]
-pub struct HookListNestedParams {
-    /// Parent hook name
-    pub parent: String,
-}
-
-/// Parameters for hook metrics summary
-#[derive(Debug, Deserialize, JsonSchema)]
-#[serde(crate = "rmcp::serde")]
-pub struct HookMetricsSummaryParams {
-    /// Placeholder
-    #[serde(default)]
-    pub _placeholder: Option<bool>,
-}
-
-/// Parameters for hook metrics filtered by event type
-#[derive(Debug, Deserialize, JsonSchema)]
-#[serde(crate = "rmcp::serde")]
-pub struct HookMetricsByEventParams {
-    /// Event type to filter by
-    pub event: String,
-}
-
 // ============================================================================
 // Unified Dispatcher Parameters
 // ============================================================================

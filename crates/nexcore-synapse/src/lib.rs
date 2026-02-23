@@ -233,7 +233,7 @@ impl SaturationKinetics {
     /// Formula: Vmax × n / (Km + n)
     #[must_use]
     pub fn saturate(&self, observation_count: u32) -> Amplitude {
-        let n = observation_count as f64;
+        let n = f64::from(observation_count);
         if n <= 0.0 {
             return Amplitude::ZERO;
         }
@@ -246,7 +246,7 @@ impl SaturationKinetics {
     /// d/dn [Vmax × n / (Km + n)] = Vmax × Km / (Km + n)²
     #[must_use]
     pub fn gradient(&self, observation_count: u32) -> f64 {
-        let n = observation_count as f64;
+        let n = f64::from(observation_count);
         let denominator = self.k_m + n;
         self.v_max * self.k_m / (denominator * denominator)
     }
@@ -419,6 +419,7 @@ impl Synapse {
     /// ```
     pub fn observe(&mut self, signal: LearningSignal) {
         // Calculate elapsed time for decay
+        #[allow(clippy::cast_precision_loss)] // Elapsed seconds are typically small; exact precision not needed for decay
         let elapsed = (signal.observed_at - self.last_observed)
             .num_seconds()
             .max(0) as f64;
@@ -455,6 +456,7 @@ impl Synapse {
     /// Get current amplitude with decay applied.
     #[must_use]
     pub fn current_amplitude(&self) -> Amplitude {
+        #[allow(clippy::cast_precision_loss)] // Elapsed seconds are typically small; exact precision not needed for decay
         let elapsed = (Utc::now() - self.last_observed).num_seconds().max(0) as f64;
         self.amplitude.decay(elapsed, self.config.half_life_seconds)
     }

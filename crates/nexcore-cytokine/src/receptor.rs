@@ -15,20 +15,15 @@ use std::sync::Arc;
 ///
 /// # Tier: T2-P
 /// Grounds to: N (quantity)
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Affinity {
     /// Low affinity - only binds strong signals
     Low = 1,
     /// Medium affinity - binds moderate signals
+    #[default]
     Medium = 2,
     /// High affinity - binds even weak signals
     High = 3,
-}
-
-impl Default for Affinity {
-    fn default() -> Self {
-        Self::Medium
-    }
 }
 
 /// Filter for which signals a receptor accepts
@@ -64,18 +59,21 @@ impl ReceptorFilter {
     }
 
     /// Add minimum severity filter
+    #[must_use]
     pub fn with_min_severity(mut self, severity: ThreatLevel) -> Self {
         self.min_severity = Some(severity);
         self
     }
 
     /// Add scope filter
+    #[must_use]
     pub fn with_scope(mut self, scope: Scope) -> Self {
         self.scopes.push(scope);
         self
     }
 
     /// Add name filter
+    #[must_use]
     pub fn with_name(mut self, name: impl Into<String>) -> Self {
         self.names.push(name.into());
         self
@@ -89,10 +87,10 @@ impl ReceptorFilter {
         }
 
         // Severity filter
-        if let Some(min_sev) = self.min_severity {
-            if signal.severity < min_sev {
-                return false;
-            }
+        if let Some(min_sev) = self.min_severity
+            && signal.severity < min_sev
+        {
+            return false;
         }
 
         // Scope filter
@@ -174,6 +172,7 @@ impl FnReceptor {
     }
 
     /// Set the affinity
+    #[must_use]
     pub fn with_affinity(mut self, affinity: Affinity) -> Self {
         self.affinity = affinity;
         self

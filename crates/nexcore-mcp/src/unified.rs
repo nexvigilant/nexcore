@@ -1490,6 +1490,22 @@ async fn dispatch_inner(
         "cargo_tree" => typed(params, tools::cargo::cargo_tree),
 
         // ====================================================================
+        // Rust Development — Error types, derives, match gen, borrow explain (4)
+        // ====================================================================
+        "rust_dev_error_type" => typed(params, tools::rust_dev::error_type),
+        "rust_dev_derive_advisor" => typed(params, tools::rust_dev::derive_advisor),
+        "rust_dev_match_generate" => typed(params, tools::rust_dev::match_generate),
+        "rust_dev_borrow_explain" => typed(params, tools::rust_dev::borrow_explain),
+        "rust_dev_clippy_explain" => typed(params, tools::rust_dev::clippy_explain),
+        "rust_dev_rustc_explain" => typed(params, tools::rust_dev::rustc_explain),
+        "rust_dev_unsafe_audit" => typed(params, tools::rust_dev::unsafe_audit),
+        "rust_dev_cargo_expand" => typed(params, tools::rust_dev::cargo_expand),
+        "rust_dev_cargo_bloat" => typed(params, tools::rust_dev::cargo_bloat),
+        "rust_dev_cargo_miri" => typed(params, tools::rust_dev::cargo_miri),
+        "rust_dev_edition_migrate" => typed(params, tools::rust_dev::edition_migrate),
+        "rust_dev_invocations" => typed(params, tools::rust_dev::invocations),
+
+        // ====================================================================
         // SQI — Skill Quality Index (2)
         // ====================================================================
         "sqi_score" => typed(params, tools::sqi::sqi_score),
@@ -2515,6 +2531,7 @@ fn help_catalog_json() -> serde_json::Value {
             "algovigilance": ["algovigil_dedup_pair", "algovigil_dedup_batch", "algovigil_triage_decay", "algovigil_triage_reinforce", "algovigil_triage_queue", "algovigil_status"],
             "edit_distance": ["edit_distance_compute", "edit_distance_similarity", "edit_distance_traceback", "edit_distance_transfer", "edit_distance_batch"],
             "cargo": ["cargo_check", "cargo_build", "cargo_test", "cargo_clippy", "cargo_fmt", "cargo_tree"],
+            "rust_dev": ["rust_dev_error_type", "rust_dev_derive_advisor", "rust_dev_match_generate", "rust_dev_borrow_explain", "rust_dev_clippy_explain", "rust_dev_rustc_explain", "rust_dev_unsafe_audit", "rust_dev_cargo_expand", "rust_dev_cargo_bloat", "rust_dev_cargo_miri", "rust_dev_edition_migrate", "rust_dev_invocations"],
             "validation": ["validation_run", "validation_check", "validation_domains", "validation_classify_tests"],
             "compliance": ["compliance_check_exclusion", "compliance_assess", "compliance_catalog_ich", "compliance_sec_filings", "compliance_sec_pharma"],
             "watchtower": ["watchtower_sessions_list", "watchtower_active_sessions", "watchtower_analyze", "watchtower_telemetry_stats", "watchtower_recent", "watchtower_symbol_audit", "watchtower_gemini_stats", "watchtower_gemini_recent", "watchtower_unified"],

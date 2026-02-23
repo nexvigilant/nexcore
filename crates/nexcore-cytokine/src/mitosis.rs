@@ -101,6 +101,7 @@ impl PopulationController {
     }
 
     /// Set maximum generation depth.
+    #[must_use]
     pub fn with_max_generation(mut self, max: u32) -> Self {
         self.max_generation = max;
         self
@@ -183,16 +184,11 @@ impl PopulationController {
         let mut chain = Vec::new();
         let mut current = cell_id;
 
-        loop {
-            match self.population.iter().find(|c| c.cell_id == current) {
-                Some(record) => {
-                    chain.push(record);
-                    match &record.parent_id {
-                        Some(parent) => current = parent,
-                        None => break, // Root cell
-                    }
-                }
-                None => break, // Parent no longer alive
+        while let Some(record) = self.population.iter().find(|c| c.cell_id == current) {
+            chain.push(record);
+            match &record.parent_id {
+                Some(parent) => current = parent,
+                None => break, // Root cell
             }
         }
 
@@ -227,7 +223,9 @@ impl PopulationController {
             current_size: self.population.len(),
             max_population: self.max_population,
             utilization: if self.max_population > 0 {
-                self.population.len() as f64 / self.max_population as f64
+                // Precision loss acceptable: population counts are small
+                #[allow(clippy::cast_precision_loss)]
+                { self.population.len() as f64 / self.max_population as f64 }
             } else {
                 1.0
             },

@@ -98,7 +98,7 @@ pub use types::{
 
 /// Prelude for common imports.
 pub mod prelude {
-    //! Common imports for immunity system usage.
+    // Common imports for immunity system usage.
     pub use crate::error::{ImmunityError, ImmunityResult};
     pub use crate::loader::{load_default_registry, load_from_str, load_registry};
     pub use crate::scanner::ImmunityScanner;

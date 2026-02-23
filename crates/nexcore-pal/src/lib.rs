@@ -46,9 +46,18 @@
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
+pub mod composites;
 pub mod error;
+pub mod prelude;
 pub mod traits;
 pub mod types;
+
+#[cfg(feature = "grounding")]
+pub mod grounding;
+#[cfg(feature = "grounding")]
+pub mod primitives;
+#[cfg(feature = "grounding")]
+pub mod transfer;
 
 // Re-export commonly used items at crate root
 pub use error::PalError;

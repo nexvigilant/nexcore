@@ -54,17 +54,25 @@
 pub mod app_clearance;
 pub mod audio;
 pub mod boot;
+pub mod config;
 pub mod brain_bridge;
+pub mod composites;
+pub mod diagnostics;
 pub mod error;
+pub mod grounding;
 pub mod guardian_bridge;
 pub mod ipc;
+pub mod journal;
 pub mod kernel;
 pub mod network;
 pub mod persistence;
+pub mod prelude;
+pub mod primitives;
 pub mod repl;
 pub mod secure_boot;
 pub mod security;
 pub mod service;
+pub mod transfer;
 pub mod user;
 pub mod vault;
 
@@ -90,5 +98,10 @@ pub use security::{
 pub use service::{Service, ServiceId, ServiceState};
 pub use user::{
     AccountStatus, AuthError, Session, UserId, UserManager, UserRecord, UserRole, UserSummary,
+};
+pub use config::{SystemConfig, TrustOsConfig, hill_curve_backoff_ms};
+pub use diagnostics::{DiagnosticSnapshot, HealthStatus, ServiceHealth};
+pub use journal::{
+    Field, FieldValue, JournalEntry, JournalFilter, Keywords, OsJournal, Severity, Subsystem,
 };
 pub use vault::{OsVault, SecretCategory, SecretInfo, VaultState};

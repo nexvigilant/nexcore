@@ -17,10 +17,10 @@ pub const DEFAULT_REGISTRY_PATH: &str = "~/.claude/immunity/antibodies.yaml";
 
 /// Expand tilde in path.
 fn expand_tilde(path: &str) -> String {
-    if path.starts_with("~/") {
-        if let Some(home) = std::env::var_os("HOME") {
-            return path.replacen("~", home.to_string_lossy().as_ref(), 1);
-        }
+    if path.starts_with("~/")
+        && let Some(home) = std::env::var_os("HOME")
+    {
+        return path.replacen('~', home.to_string_lossy().as_ref(), 1);
     }
     path.to_string()
 }

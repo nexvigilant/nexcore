@@ -46,11 +46,13 @@
 // ── Modules ──────────────────────────────────────────────────────────
 
 pub mod certificate;
+pub mod composites;
 pub mod connection;
 pub mod dns;
 pub mod firewall;
 pub mod interface;
 pub mod monitor;
+pub mod prelude;
 pub mod route;
 
 // ── Re-exports: interface ────────────────────────────────────────────

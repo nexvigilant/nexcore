@@ -27,9 +27,48 @@ macro_rules! nexerror {
     ($fmt:literal, $($arg:tt)*) => { $crate::NexError::new(format!($fmt, $($arg)*)) };
 }
 
+/// Return early with an error.
+#[macro_export]
+macro_rules! bail {
+    ($msg:literal) => {
+        return core::result::Result::Err($crate::NexError::new($msg).into())
+    };
+    ($err:expr) => {
+        return core::result::Result::Err($crate::NexError::from($err).into())
+    };
+    ($fmt:literal, $($arg:tt)*) => {
+        return core::result::Result::Err($crate::NexError::new(format!($fmt, $($arg)*)).into())
+    };
+}
+
+/// Return early with an error if a condition is not satisfied.
+#[macro_export]
+macro_rules! ensure {
+    ($cond:expr $(,)?) => {
+        if !($cond) {
+            return core::result::Result::Err($crate::NexError::new(concat!("Condition failed: `", stringify!($cond), "`")).into());
+        }
+    };
+    ($cond:expr, $msg:literal $(,)?) => {
+        if !($cond) {
+            return core::result::Result::Err($crate::NexError::new($msg).into());
+        }
+    };
+    ($cond:expr, $err:expr $(,)?) => {
+        if !($cond) {
+            return core::result::Result::Err($crate::NexError::from($err).into());
+        }
+    };
+    ($cond:expr, $fmt:literal, $($arg:tt)*) => {
+        if !($cond) {
+            return core::result::Result::Err($crate::NexError::new(format!($fmt, $($arg)*)).into());
+        }
+    };
+}
+
 /// Commonly used items for glob import.
 pub mod prelude {
-    pub use crate::{Context, NexError, Result, nexerror};
+    pub use crate::{Context, NexError, Result, nexerror, bail, ensure};
 }
 
 #[cfg(test)]

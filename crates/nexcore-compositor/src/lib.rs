@@ -42,13 +42,18 @@
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+pub mod composites;
 pub mod compositor;
 pub mod decoration;
+pub mod grounding;
 pub mod input;
 pub mod mode;
+pub mod prelude;
+pub mod primitives;
 pub mod render;
 pub mod surface;
 pub mod tiling;
+pub mod transfer;
 
 // Re-export main types
 pub use compositor::Compositor;

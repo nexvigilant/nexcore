@@ -35,6 +35,7 @@
 //! - `--ticks`: Run for N ticks then exit (for testing; 0 = infinite)
 
 #![forbid(unsafe_code)]
+#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use nexcore_os::NexCoreOs;
 use nexcore_pal::{FormFactor, Platform};

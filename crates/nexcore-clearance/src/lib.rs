@@ -39,14 +39,18 @@
 
 pub mod access;
 pub mod audit;
+pub mod composites;
 pub mod config;
 pub mod error;
 pub mod gate;
 pub mod grounding;
 pub mod level;
 pub mod policy;
+pub mod prelude;
+pub mod primitives;
 pub mod priority;
 pub mod tag;
+pub mod transfer;
 pub mod validator;
 
 // ── Public Re-exports ───────────────────────────────────────────────

@@ -75,7 +75,7 @@ impl Cytokine {
     /// expectations need refinement for a task category.
     ///
     /// Family: TGF-beta (regulation), Scope: Paracrine, Severity: Medium
-    pub fn nmd_adaptive_update(category: impl Into<String>, update: serde_json::Value) -> Self {
+    pub fn nmd_adaptive_update(category: impl Into<String>, update: &serde_json::Value) -> Self {
         let category_str = category.into();
         Self::new(CytokineFamily::TgfBeta, "nmd_adaptive_update")
             .with_severity(ThreatLevel::Medium)
@@ -122,7 +122,7 @@ mod tests {
     #[test]
     fn test_nmd_adaptive_update_signal() {
         let update = serde_json::json!({"new_threshold": 0.8});
-        let signal = Cytokine::nmd_adaptive_update("Compute", update);
+        let signal = Cytokine::nmd_adaptive_update("Compute", &update);
         assert_eq!(signal.family, CytokineFamily::TgfBeta);
         assert_eq!(signal.severity, ThreatLevel::Medium);
         assert_eq!(signal.scope, Scope::Paracrine);
@@ -134,7 +134,7 @@ mod tests {
     fn test_nmd_signals_are_cascadable() {
         let abort = Cytokine::nmd_abort("test");
         let flag = Cytokine::nmd_flag_source("src", "test");
-        let update = Cytokine::nmd_adaptive_update("cat", serde_json::json!({}));
+        let update = Cytokine::nmd_adaptive_update("cat", &serde_json::json!({}));
         assert!(abort.cascadable);
         assert!(flag.cascadable);
         assert!(update.cascadable);

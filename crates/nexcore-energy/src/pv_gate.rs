@@ -117,8 +117,7 @@ impl SignalReviewDepth {
     pub const fn min_prr_threshold(&self) -> f64 {
         match self {
             Self::Basic => 3.0,       // Only strong signals in crisis
-            Self::Standard => 2.0,    // Standard threshold
-            Self::Full => 2.0,        // Standard threshold
+            Self::Standard | Self::Full => 2.0, // Standard threshold
             Self::Comprehensive => 1.5, // More sensitive when budget allows
         }
     }

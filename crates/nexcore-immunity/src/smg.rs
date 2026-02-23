@@ -143,7 +143,7 @@ impl SmgComplex {
         let reason = reasons.join("; ");
 
         actions.push(SmgAction::AbortPipeline {
-            reason: reason.clone(),
+            reason,
             contributing_channels,
         });
 

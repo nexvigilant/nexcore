@@ -179,9 +179,8 @@ impl NmdAdaptiveEngine {
 
         let max_severity = details
             .get("max_severity")
-            .and_then(|v| v.as_f64())
-            .map(|v| v as f32)
-            .unwrap_or(0.0);
+            .and_then(serde_json::Value::as_f64)
+            .map_or(0.0, |v| v as f32);
 
         let channels = extract_channels(details);
 
@@ -215,7 +214,10 @@ impl NmdAdaptiveEngine {
             .iter()
             .filter(|e| e.category == *category)
             .fold((0.0f32, 0u32), |(s, c), e| (s + e.max_severity, c + 1));
-        stats.avg_severity = if count > 0 { sum / count as f32 } else { 0.0 };
+        #[allow(clippy::cast_precision_loss)] // count is small enough for f32
+        {
+            stats.avg_severity = if count > 0 { sum / count as f32 } else { 0.0 };
+        }
 
         // Track channel hit counts
         for ch in &channels {
@@ -234,7 +236,7 @@ impl NmdAdaptiveEngine {
                 category,
                 self.degradation_rate(category) * 100.0
             ),
-            evidence_weight: -(max_severity as f64),
+            evidence_weight: -f64::from(max_severity),
         });
 
         // 2. Record trust event (degradation = the system caught something)
@@ -258,7 +260,8 @@ impl NmdAdaptiveEngine {
             if s.total_runs == 0 {
                 0.0
             } else {
-                s.degradation_count as f32 / s.total_runs as f32
+                #[allow(clippy::cast_precision_loss)] // u32 values within f32 range for rate calculations
+                { s.degradation_count as f32 / s.total_runs as f32 }
             }
         })
     }
@@ -301,6 +304,7 @@ impl NmdAdaptiveEngine {
         if let Some((dominant_channel, &count)) =
             stats.channel_hits.iter().max_by_key(|&(_, c)| *c)
         {
+            #[allow(clippy::cast_precision_loss)] // u32 values within f32 range for rate calculations
             let channel_rate = count as f32 / stats.degradation_count as f32;
 
             // If one channel accounts for >50% of failures, recommend tightening
@@ -336,6 +340,7 @@ impl NmdAdaptiveEngine {
                             category,
                             deg_rate * 100.0,
                         ),
+                        #[allow(clippy::cast_precision_loss)] // u32 within f32 range
                         confidence: channel_rate * (1.0 - 1.0 / stats.total_runs as f32),
                     });
                 }

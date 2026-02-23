@@ -80,8 +80,10 @@ impl NexCoreBridge {
     /// Create a new bridge to the default API endpoint.
     #[must_use]
     pub fn new() -> Self {
+        let base_url = std::env::var("NEXCORE_API_URL")
+            .unwrap_or_else(|_| DEFAULT_API_BASE.to_string());
         Self {
-            base_url: DEFAULT_API_BASE.to_string(),
+            base_url,
             client: build_client(),
         }
     }
@@ -526,6 +528,12 @@ mod tests {
     fn test_custom_base_url() {
         let bridge = NexCoreBridge::with_base_url("http://example.com:8080");
         assert_eq!(bridge.base_url, "http://example.com:8080");
+    }
+
+    #[test]
+    fn test_bridge_with_base_url_overrides() {
+        let bridge = NexCoreBridge::with_base_url("http://custom:9999");
+        assert_eq!(bridge.base_url, "http://custom:9999");
     }
 
     #[test]

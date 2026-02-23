@@ -1,0 +1,25 @@
+# Example nexcloud manifest with nexbrowser as a managed service.
+#
+# nexcloud injects PORT={svc.port} into each service's environment
+# automatically via ProcessTask::spawn(). Additional env vars are
+# merged from the [env] table below.
+
+[[service]]
+name = "api"
+binary = "./target/release/nexcore-api"
+port = 3030
+health = "/health"
+restart = "on-failure"
+max_restarts = 5
+backoff_ms = 2000
+
+[[service]]
+name = "nexbrowser"
+binary = "./target/release/nexbrowser"
+port = 9333
+health = "/health"
+restart = "on-failure"
+max_restarts = 5
+backoff_ms = 2000
+depends_on = ["api"]
+env = { NEXCORE_API_URL = "http://localhost:3030", NEXCLOUD_URL = "http://localhost:8080" }

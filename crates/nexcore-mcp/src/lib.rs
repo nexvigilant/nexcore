@@ -2932,67 +2932,6 @@ impl NexCoreMcpServer {
     }
 
     // ========================================================================
-    // Hooks Tools (3) - Hook Registry API
-    // ========================================================================
-
-    #[tool(
-        description = "Get hook registry statistics. Returns total hooks, counts by tier (dev/review/deploy), and counts by event type. Provides structured overview of the hook system."
-    )]
-    async fn hooks_stats(&self) -> Result<CallToolResult, McpError> {
-        tools::hooks::stats()
-    }
-
-    #[tool(
-        description = "Get hooks for a specific event type. Returns list of hooks that trigger on the given event (e.g., 'SessionStart', 'PreToolUse:Edit|Write'). Each hook includes name, tiers, timeout, and description."
-    )]
-    async fn hooks_for_event(
-        &self,
-        Parameters(params): Parameters<params::hooks::HooksForEventParams>,
-    ) -> Result<CallToolResult, McpError> {
-        tools::hooks::for_event(params)
-    }
-
-    #[tool(
-        description = "Get hooks for a specific deployment tier. Returns hooks active in the given tier: 'dev' (11 fast hooks), 'review' (33 quality hooks), or 'deploy' (76 full validation hooks). Use this to understand which hooks run in different environments."
-    )]
-    async fn hooks_for_tier(
-        &self,
-        Parameters(params): Parameters<params::hooks::HooksForTierParams>,
-    ) -> Result<CallToolResult, McpError> {
-        tools::hooks::for_tier(params)
-    }
-
-    #[tool(
-        description = "List nested hooks for a compound hook (hook molecule). Returns molecular formula, nested hooks, bond strengths, and stability status. Use to inspect compound hook architecture."
-    )]
-    async fn hook_list_nested(
-        &self,
-        Parameters(params): Parameters<params::hooks::HookListNestedParams>,
-    ) -> Result<CallToolResult, McpError> {
-        tools::hooks::list_nested(params)
-    }
-
-    #[tool(
-        description = "Get aggregate hook execution metrics summary. Returns total executions, block/warn counts, per-hook timing (p50/p95/p99), event distribution, and slowest hooks. Use to monitor hook performance and block rates."
-    )]
-    async fn hooks_metrics_summary(
-        &self,
-        Parameters(params): Parameters<params::hooks::HookMetricsSummaryParams>,
-    ) -> Result<CallToolResult, McpError> {
-        tools::hooks::metrics_summary(params)
-    }
-
-    #[tool(
-        description = "Get hook execution metrics filtered by event type. Returns per-hook statistics only for the specified event (e.g., PreToolUse, SessionStart). Use to analyze hook behavior for specific lifecycle events."
-    )]
-    async fn hooks_metrics_by_event(
-        &self,
-        Parameters(params): Parameters<params::hooks::HookMetricsByEventParams>,
-    ) -> Result<CallToolResult, McpError> {
-        tools::hooks::metrics_by_event(params)
-    }
-
-    // ========================================================================
     // Immunity Tools (6) - Antipattern Detection and Self-Regulation
     // ========================================================================
 

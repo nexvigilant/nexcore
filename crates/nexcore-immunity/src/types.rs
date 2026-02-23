@@ -413,19 +413,20 @@ impl AntibodyRegistry {
     /// The threshold is nudged toward FPR==FNR equilibrium on each call,
     /// then adjusted by the threat-level bias, and finally clamped to [0.3, 0.95].
     pub fn tune_sensitivity(&mut self, threat_level: ThreatLevel) {
-        let (total_fp, total_fn, total_apps) = self.antibodies.iter().fold(
-            (0u32, 0u32, 0u32),
-            |(fp, fn_, apps), ab| {
-                (
-                    fp + ab.false_positives,
-                    fn_ + ab.false_negatives,
-                    apps + ab.applications,
-                )
-            },
-        );
-        let total = total_apps.max(1) as f64;
-        let fpr = total_fp as f64 / total;
-        let fnr = total_fn as f64 / total;
+        let (false_positive_total, false_negative_total, total_apps) =
+            self.antibodies.iter().fold(
+                (0u32, 0u32, 0u32),
+                |(fp, fn_, apps), ab| {
+                    (
+                        fp + ab.false_positives,
+                        fn_ + ab.false_negatives,
+                        apps + ab.applications,
+                    )
+                },
+            );
+        let total = f64::from(total_apps.max(1));
+        let fpr = f64::from(false_positive_total) / total;
+        let fnr = f64::from(false_negative_total) / total;
 
         // Threat-level adjustment: higher threat → lower threshold (more sensitive).
         let adjustment = match threat_level {
@@ -540,7 +541,7 @@ impl Antibody {
         if total == 0 {
             return 0.0;
         }
-        self.false_positives as f64 / total as f64
+        f64::from(self.false_positives) / f64::from(total)
     }
 
     /// Compute the false negative rate for this antibody.
@@ -553,7 +554,7 @@ impl Antibody {
         if total == 0 {
             return 0.0;
         }
-        self.false_negatives as f64 / total as f64
+        f64::from(self.false_negatives) / f64::from(total)
     }
 
     /// Diagnose the autoimmune status of this antibody.
@@ -598,7 +599,7 @@ impl ScanMetrics {
         if self.total_scanned == 0 {
             return 0.0;
         }
-        self.false_positives as f64 / self.total_scanned as f64
+        f64::from(self.false_positives) / f64::from(self.total_scanned)
     }
 }
 
@@ -620,8 +621,8 @@ impl AntibodyRegistry {
 
         for antibody in &self.antibodies {
             let diag = antibody.diagnose_autoimmune();
-            total_applications += (antibody.applications + antibody.false_positives) as u64;
-            total_false_positives += antibody.false_positives as u64;
+            total_applications += u64::from(antibody.applications + antibody.false_positives);
+            total_false_positives += u64::from(antibody.false_positives);
 
             match diag.status {
                 AutoimmuneStatus::Autoimmune => autoimmune_count += 1,
@@ -635,7 +636,8 @@ impl AntibodyRegistry {
         let system_false_positive_rate = if total_applications == 0 {
             0.0
         } else {
-            total_false_positives as f64 / total_applications as f64
+            #[allow(clippy::cast_precision_loss)] // u64 values won't exceed f64 mantissa in practice
+            { total_false_positives as f64 / total_applications as f64 }
         };
 
         AutoimmuneReport {

@@ -46,13 +46,18 @@
 pub mod ai_partner;
 pub mod app;
 pub mod command_palette;
+pub mod composites;
+pub mod grounding;
 pub mod input;
 pub mod launcher;
 pub mod layout;
 pub mod login;
 pub mod notification;
+pub mod prelude;
+pub mod primitives;
 pub mod shell;
 pub mod status_bar;
+pub mod transfer;
 
 // Re-export main types
 pub use ai_partner::{

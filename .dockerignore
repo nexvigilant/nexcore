@@ -10,7 +10,7 @@ target/
 .vscode/
 *.swp
 
-# Large/unnecessary crates (nexcore-vigil needed by nexcore-api)
+# Large crates not needed for API build
 crates/nexcore-hooks/
 crates/nexcore-control-center/
 crates/nexcore-tov-proofs/
@@ -26,9 +26,26 @@ crates/nexcore-skill-verify/
 *.profraw
 *.profdata
 
-# Archive
+# Non-Rust directories (not needed for API build)
 archive/
 archived/
+studio/
+data/
+dna/
+ksb/
+kellnr/
+kellnr-archive/
+docs/
+notebooks/
+prototypes/
+scripts/
+tools/
+.build-orchestrator/
+
+# Re-include crate subdirs falsely matched by above patterns
+!crates/**/ksb/
+!crates/**/data/
+!crates/**/docs/
 
 # Secrets
 .env

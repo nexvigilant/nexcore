@@ -247,9 +247,10 @@ fn compute_drift_score(baseline: &Schema, observed: &Schema) -> f64 {
     let range_score = range_drift_score(&baseline.kind, &observed.kind);
     let structure_score = structure_drift_score(&baseline.kind, &observed.kind);
 
-    let raw = (type_score * TYPE_WEIGHT)
-        + (range_score * RANGE_WEIGHT)
-        + (structure_score * STRUCTURE_WEIGHT);
+    let raw = structure_score.mul_add(
+        STRUCTURE_WEIGHT,
+        type_score.mul_add(TYPE_WEIGHT, range_score * RANGE_WEIGHT),
+    );
 
     raw.clamp(0.0, 1.0)
 }
@@ -279,6 +280,7 @@ fn type_drift_score(baseline: &SchemaKind, observed: &SchemaKind) -> f64 {
 }
 
 /// Range drift: how much have numeric/string ranges shifted?
+#[allow(clippy::cast_precision_loss)] // Acceptable: range differences are typically small; exact precision not required for drift scoring
 fn range_drift_score(baseline: &SchemaKind, observed: &SchemaKind) -> f64 {
     match (baseline, observed) {
         (
@@ -327,7 +329,9 @@ fn range_drift_score(baseline: &SchemaKind, observed: &SchemaKind) -> f64 {
                 ..
             },
         ) => {
+            #[allow(clippy::cast_precision_loss)] // String lengths are small; exact precision not needed
             let base_range = (*b_max - *b_min).max(1) as f64;
+            #[allow(clippy::cast_precision_loss)]
             let obs_range = (*o_max - *o_min).max(1) as f64;
             ((obs_range - base_range).abs() / base_range).min(1.0)
         }
@@ -339,6 +343,7 @@ fn range_drift_score(baseline: &SchemaKind, observed: &SchemaKind) -> f64 {
 
 /// Structure drift: field additions/removals in records, array size changes,
 /// and recursive drift within shared fields.
+#[allow(clippy::cast_precision_loss)] // Field counts and array sizes are small; exact precision not required for drift scoring
 fn structure_drift_score(baseline: &SchemaKind, observed: &SchemaKind) -> f64 {
     match (baseline, observed) {
         (SchemaKind::Record(b_fields), SchemaKind::Record(o_fields)) => {
@@ -399,6 +404,7 @@ fn structure_drift_score(baseline: &SchemaKind, observed: &SchemaKind) -> f64 {
 }
 
 /// Collect per-field drift violations between baseline and observed schemas.
+#[allow(clippy::too_many_lines)] // Exhaustive match on all SchemaKind pairs requires many arms; splitting would hurt readability
 fn collect_drift_violations(
     baseline: &Schema,
     observed: &Schema,
@@ -437,16 +443,17 @@ fn collect_drift_violations(
                 ..
             },
         ) => {
-            if o_min < b_min || o_max > b_max {
+            let expanded = o_min < b_min || o_max > b_max;
+            let contracted = o_min > b_min || o_max < b_max;
+            if expanded {
                 violations.push(SchemaDrift {
-                    field: path.clone(),
+                    field: path,
                     drift_type: DriftType::RangeExpansion,
                     expected: format!("[{b_min}, {b_max}]"),
                     observed: format!("[{o_min}, {o_max}]"),
                     severity: DriftSeverity::Warning,
                 });
-            }
-            if o_min > b_min || o_max < b_max {
+            } else if contracted {
                 violations.push(SchemaDrift {
                     field: path,
                     drift_type: DriftType::RangeContraction,
@@ -469,16 +476,17 @@ fn collect_drift_violations(
                 ..
             },
         ) => {
-            if o_min < b_min || o_max > b_max {
+            let expanded = o_min < b_min || o_max > b_max;
+            let contracted = o_min > b_min || o_max < b_max;
+            if expanded {
                 violations.push(SchemaDrift {
-                    field: path.clone(),
+                    field: path,
                     drift_type: DriftType::RangeExpansion,
                     expected: format!("[{b_min}, {b_max}]"),
                     observed: format!("[{o_min}, {o_max}]"),
                     severity: DriftSeverity::Warning,
                 });
-            }
-            if o_min > b_min || o_max < b_max {
+            } else if contracted {
                 violations.push(SchemaDrift {
                     field: path,
                     drift_type: DriftType::RangeContraction,
@@ -782,7 +790,7 @@ impl Ribosome {
                         contract_id: contract_id.clone(),
                         drift_score: result.drift_score,
                         violations: result.violations,
-                        confidence: 1.0 - (result.drift_score * 0.2),
+                        confidence: result.drift_score.mul_add(-0.2, 1.0),
                     });
                 }
             }

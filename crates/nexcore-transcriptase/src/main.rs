@@ -20,6 +20,7 @@ use std::io::Read;
 #[command(
     about = "Bidirectional data-to-schema pipeline with fidelity verification and violation synthesis"
 )]
+#[allow(clippy::struct_excessive_bools)] // CLI flags are naturally boolean; clap requires bool fields
 struct Args {
     /// Input file (reads from stdin if omitted).
     file: Option<String>,
@@ -98,15 +99,14 @@ fn main() -> std::result::Result<(), TranscriptaseError> {
 }
 
 fn read_input(args: &Args) -> Result<String, TranscriptaseError> {
-    match &args.file {
-        Some(path) => std::fs::read_to_string(path).map_err(TranscriptaseError::Io),
-        None => {
-            let mut buf = String::new();
-            std::io::stdin()
-                .read_to_string(&mut buf)
-                .map_err(TranscriptaseError::Io)?;
-            Ok(buf)
-        }
+    if let Some(path) = &args.file {
+        std::fs::read_to_string(path).map_err(TranscriptaseError::Io)
+    } else {
+        let mut buf = String::new();
+        std::io::stdin()
+            .read_to_string(&mut buf)
+            .map_err(TranscriptaseError::Io)?;
+        Ok(buf)
     }
 }
 
@@ -152,6 +152,7 @@ fn print_schema(schema: &nexcore_transcriptase::Schema, indent: usize) {
             println!("{pad}{name}: bool (true:{true_count} false:{false_count})");
         }
         nexcore_transcriptase::SchemaKind::Int { min, max, sum } => {
+            #[allow(clippy::cast_precision_loss)] // Acceptable for display-only average computation
             let avg = if schema.observations > 0 {
                 *sum as f64 / schema.observations as f64
             } else {
@@ -163,6 +164,7 @@ fn print_schema(schema: &nexcore_transcriptase::Schema, indent: usize) {
             );
         }
         nexcore_transcriptase::SchemaKind::Float { min, max, sum } => {
+            #[allow(clippy::cast_precision_loss)] // Acceptable for display-only average computation
             let avg = if schema.observations > 0 {
                 *sum / schema.observations as f64
             } else {
@@ -190,7 +192,7 @@ fn print_schema(schema: &nexcore_transcriptase::Schema, indent: usize) {
         }
         nexcore_transcriptase::SchemaKind::Record(fields) => {
             println!("{pad}{name}: record ({} fields)", fields.len());
-            for (_, field_schema) in fields {
+            for field_schema in fields.values() {
                 print_schema(field_schema, indent + 1);
             }
         }

@@ -46,9 +46,11 @@
 
 pub mod buffer;
 pub mod codec;
+pub mod composites;
 pub mod device;
 pub mod error;
 pub mod mixer;
+pub mod prelude;
 pub mod sample;
 pub mod stream;
 

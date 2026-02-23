@@ -37,6 +37,12 @@ pub mod store;
 pub mod threshold;
 pub mod validate;
 
+// Structural modules
+pub mod composites;
+pub mod prelude;
+pub mod primitives;
+pub mod transfer;
+
 // Re-export commonly used items
 pub use orchestrate::Pipeline;
 pub use relay::{core_detection_chain, pv_pipeline_chain};

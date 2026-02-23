@@ -21,9 +21,9 @@ FROM chef AS cacher
 # Disable sccache + upgrade Rust (deps need 1.88+, image ships 1.85)
 ENV RUSTC_WRAPPER=""
 RUN rustup update stable && rustup default stable
-# System deps for cpal (ALSA) — needed during dep compilation
+# System deps: ALSA (cpal), C++ compiler (libduckdb-sys)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libasound2-dev pkg-config clang \
+    libasound2-dev pkg-config clang g++ \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
@@ -32,9 +32,9 @@ RUN cargo chef cook --release --recipe-path recipe.json
 FROM chef AS builder
 ENV RUSTC_WRAPPER=""
 RUN rustup update stable && rustup default stable
-# System deps for nexcore-vigil (cpal needs ALSA headers)
+# System deps: ALSA (cpal), C++ compiler (libduckdb-sys)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libasound2-dev pkg-config clang \
+    libasound2-dev pkg-config clang g++ \
     && rm -rf /var/lib/apt/lists/*
 COPY . .
 # Strip local-only build config (mold linker, sccache) but keep registry

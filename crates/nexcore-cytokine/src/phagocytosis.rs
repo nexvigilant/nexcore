@@ -133,6 +133,7 @@ impl Phagocyte {
     }
 
     /// Set maximum concurrent digestion load.
+    #[must_use]
     pub fn with_max_load(mut self, max_load: usize) -> Self {
         self.max_load = max_load;
         self
@@ -144,6 +145,7 @@ impl Phagocyte {
     }
 
     /// Register a pattern receptor (builder pattern).
+    #[must_use]
     pub fn with_receptor(mut self, receptor: PatternReceptor) -> Self {
         self.patterns.push(receptor);
         self
@@ -152,7 +154,7 @@ impl Phagocyte {
     /// Detect threats in content by matching against registered patterns.
     ///
     /// Returns list of matches with their classifications.
-    pub fn detect(&self, content: &str, location: &str) -> Vec<(String, ThreatClass, u8)> {
+    pub fn detect(&self, content: &str, _location: &str) -> Vec<(String, ThreatClass, u8)> {
         self.patterns
             .iter()
             .filter(|p| content.contains(&p.pattern))
@@ -251,7 +253,9 @@ impl Phagocyte {
         if self.max_load == 0 {
             return 1.0;
         }
-        self.digesting.len() as f64 / self.max_load as f64
+        // Precision loss acceptable: digestion counts are small
+        #[allow(clippy::cast_precision_loss)]
+        { self.digesting.len() as f64 / self.max_load as f64 }
     }
 
     /// Get lifetime statistics.
@@ -296,7 +300,7 @@ pub struct PhagocyteStats {
 
 /// Pre-built pattern receptors for common code threats.
 pub mod receptors {
-    use super::*;
+    use super::{PatternReceptor, ThreatClass};
 
     /// Safety receptors: detect unwrap, expect, panic, unsafe.
     pub fn safety() -> Vec<PatternReceptor> {

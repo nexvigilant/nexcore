@@ -40,8 +40,12 @@
 #![warn(missing_docs)]
 
 pub mod adaptive_thresholds;
+pub mod composites;
 pub mod grounding;
+pub mod prelude;
+pub mod primitives;
 pub mod pv_gate;
+pub mod transfer;
 
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -209,11 +213,9 @@ impl EnergySystem {
     #[must_use]
     pub const fn for_strategy(strategy: Strategy) -> Self {
         match strategy {
-            Strategy::HaikuCacheFirst => Self::Phosphocreatine,
-            Strategy::Haiku => Self::Glycolytic,
-            Strategy::Sonnet => Self::Glycolytic,
+            Strategy::HaikuCacheFirst | Strategy::Checkpoint => Self::Phosphocreatine, // no energy spent
+            Strategy::Haiku | Strategy::Sonnet => Self::Glycolytic,
             Strategy::Opus => Self::Oxidative,
-            Strategy::Checkpoint => Self::Phosphocreatine, // no energy spent
         }
     }
 
@@ -297,7 +299,7 @@ impl fmt::Display for WasteClass {
 
 /// The three token pools: ATP (available), ADP (productive spend), AMP (waste).
 ///
-/// Tier: T2-C (N + varsigma + proportional -- Quantity + State + Proportion)
+/// Tier: T2-C (N + varsigma + ∝ -- Quantity + State + Irreversibility)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TokenPool {
     /// Tokens remaining (available for work).
@@ -378,7 +380,8 @@ impl TokenPool {
         if total == 0 {
             return 1.0;
         }
-        (self.t_atp as f64 + ADP_WEIGHT * self.t_adp as f64) / total as f64
+        #[allow(clippy::cast_precision_loss)] // Token counts may exceed f64 mantissa; acceptable for ratio computation
+        { ADP_WEIGHT.mul_add(self.t_adp as f64, self.t_atp as f64) / total as f64 }
     }
 
     /// Current metabolic regime.
@@ -395,7 +398,8 @@ impl TokenPool {
         if self.t_adp == 0 {
             return 0.0;
         }
-        total_value / self.t_adp as f64
+        #[allow(clippy::cast_precision_loss)] // Token count ratio; exact precision not critical
+        { total_value / self.t_adp as f64 }
     }
 
     /// Waste ratio: fraction of total spend that was wasted.
@@ -405,7 +409,8 @@ impl TokenPool {
         if spent == 0 {
             return 0.0;
         }
-        self.t_amp as f64 / spent as f64
+        #[allow(clippy::cast_precision_loss)] // Token count ratio; exact precision not critical
+        { self.t_amp as f64 / spent as f64 }
     }
 
     /// Fraction of budget consumed.
@@ -415,7 +420,8 @@ impl TokenPool {
         if total == 0 {
             return 1.0;
         }
-        1.0 - (self.t_atp as f64 / total as f64)
+        #[allow(clippy::cast_precision_loss)] // Token count ratio; exact precision not critical
+        { 1.0 - (self.t_atp as f64 / total as f64) }
     }
 
     /// Estimate remaining operations at current metabolic rate.
@@ -452,7 +458,7 @@ impl fmt::Display for TokenPool {
 
 /// An operation being considered, with estimated cost and value.
 ///
-/// Tier: T2-C (N + proportional -- Quantity + Proportion)
+/// Tier: T2-C (N + ∝ -- Quantity + Irreversibility)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Operation {
     /// Human-readable label.
@@ -483,7 +489,8 @@ impl Operation {
         if self.estimated_cost == 0 {
             return f64::MAX;
         }
-        self.estimated_value / self.estimated_cost as f64
+        #[allow(clippy::cast_precision_loss)] // Token cost is u64; precision loss acceptable for ratio
+        { self.estimated_value / self.estimated_cost as f64 }
     }
 }
 
@@ -567,7 +574,7 @@ impl OperationBuilder {
 ///
 /// R = compression_ratio x cache_hit_rate x pattern_reuse_rate
 ///
-/// Tier: T2-C (proportional + proportional + proportional)
+/// Tier: T2-C (∝ + ∝ + ∝ -- Irreversibility x3)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecyclingRate {
     /// How much context compression reduces future token cost [0, 1].
@@ -598,7 +605,8 @@ impl RecyclingRate {
     /// Estimate tokens recoverable from tADP pool.
     #[must_use]
     pub fn recoverable(&self, t_adp: u64) -> u64 {
-        (t_adp as f64 * self.combined()) as u64
+        #[allow(clippy::cast_precision_loss, clippy::cast_sign_loss)] // Rates are [0,1] so result is non-negative; precision loss acceptable
+        { (t_adp as f64 * self.combined()) as u64 }
     }
 }
 
@@ -651,7 +659,7 @@ impl fmt::Display for EnergyState {
 /// This is the **central regulation enzyme** — like phosphofructokinase
 /// in glycolysis, it's the rate-limiting step that controls everything.
 ///
-/// Tier: T2-C (kappa + proportional + partial -- Comparison + Proportion + Boundary)
+/// Tier: T2-C (kappa + ∝ + partial -- Comparison + Irreversibility + Boundary)
 #[must_use]
 pub fn decide(pool: &TokenPool, operation: &Operation) -> Strategy {
     let ec = pool.energy_charge();

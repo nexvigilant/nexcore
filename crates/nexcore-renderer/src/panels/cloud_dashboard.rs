@@ -74,7 +74,9 @@ impl CloudDashboardPanel {
 
 impl Default for CloudDashboardPanel {
     fn default() -> Self {
-        Self::new("http://localhost:8080")
+        let url = std::env::var("NEXCLOUD_URL")
+            .unwrap_or_else(|_| "http://localhost:8080".to_string());
+        Self::new(url)
     }
 }
 
@@ -297,6 +299,13 @@ mod tests {
     fn test_cloud_url() {
         let panel = CloudDashboardPanel::new("http://custom:9090");
         assert_eq!(panel.cloud_url(), "http://custom:9090");
+    }
+
+    #[test]
+    fn test_default_cloud_url_fallback() {
+        // Without NEXCLOUD_URL env var set, should use localhost:8080
+        let panel = CloudDashboardPanel::default();
+        assert_eq!(panel.cloud_url(), "http://localhost:8080");
     }
 
     #[test]

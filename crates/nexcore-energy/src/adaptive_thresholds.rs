@@ -45,7 +45,7 @@ pub const MAX_DENSITY_FACTOR: f64 = 2.0;
 // ─── Threshold Policy ────────────────────────────────────────────────────────
 
 /// How thresholds adapt to runtime conditions.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 pub enum ThresholdPolicy {
     /// Fixed threshold — no adaptation.
     Fixed,
@@ -54,14 +54,11 @@ pub enum ThresholdPolicy {
     /// Adapts based on signal density only.
     DensityAdaptive,
     /// Full adaptation: energy + density combined.
+    #[default]
     FullAdaptive,
 }
 
-impl Default for ThresholdPolicy {
-    fn default() -> Self {
-        Self::FullAdaptive
-    }
-}
+// Default derived below via #[default] on FullAdaptive variant
 
 impl fmt::Display for ThresholdPolicy {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -153,7 +150,8 @@ impl SignalHistory {
             self.outcomes[..self.position].iter().filter(|&&s| s).count()
         };
 
-        signal_count as f64 / count as f64
+        #[allow(clippy::cast_precision_loss)] // Signal counts in window are small (max DEFAULT_HISTORY_WINDOW=100)
+        { signal_count as f64 / count as f64 }
     }
 
     /// Reset all history.
@@ -201,7 +199,7 @@ pub fn energy_factor_from_ec(ec: f64) -> f64 {
 #[must_use]
 pub fn density_factor(history: &SignalHistory) -> f64 {
     let rate = history.density_rate();
-    let factor = 1.0 + (rate * DENSITY_SCALING * 10.0);
+    let factor = (rate * DENSITY_SCALING).mul_add(10.0, 1.0);
     factor.min(MAX_DENSITY_FACTOR)
 }
 

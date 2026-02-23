@@ -88,6 +88,7 @@ impl Gradient {
     }
 
     /// Set tropism (attractant vs repellent).
+    #[must_use]
     pub fn with_tropism(mut self, tropism: Tropism) -> Self {
         self.tropism = tropism;
         self
@@ -103,7 +104,7 @@ impl Gradient {
         if self.distance <= 0.0 {
             return self.concentration;
         }
-        self.concentration / (1.0 + self.distance * self.distance)
+        self.concentration / self.distance.mul_add(self.distance, 1.0)
     }
 
     /// Compute the directional pull (strength * tropism direction).
@@ -136,6 +137,7 @@ impl GradientField {
     }
 
     /// Add a gradient sample (builder pattern).
+    #[must_use]
     pub fn with_gradient(mut self, gradient: Gradient) -> Self {
         self.samples.push(gradient);
         self
@@ -176,10 +178,11 @@ impl GradientField {
     ///
     /// Positive value = net attraction; Negative = net repulsion.
     pub fn net_pull(&self) -> f64 {
-        self.samples.iter().map(|g| g.directional_pull()).sum()
+        self.samples.iter().map(Gradient::directional_pull).sum()
     }
 
     /// Filter field to only include a specific cytokine family.
+    #[must_use]
     pub fn filter_family(&self, family: CytokineFamily) -> Self {
         Self {
             samples: self

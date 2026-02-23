@@ -20,21 +20,50 @@ use antitransformer::pipeline::{self, AnalysisConfig};
 use nexcore_lex_primitiva::prelude::*;
 use nexcore_transcriptase as transcriptase;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
+use core::fmt;
 
 pub mod grounding;
 
 /// Errors during self-synthesis operations.
-#[derive(Debug, Error)]
+#[derive(Debug)]
 pub enum SynthError {
-    #[error("Statistical analysis failed: {0}")]
     Analysis(String),
-    #[error("Schema synthesis failed: {0}")]
-    Transcription(#[from] transcriptase::TranscriptaseError),
-    #[error("Reverse synthesis failed: {0}")]
-    Synthesis(#[from] SynthesisError),
-    #[error("Insufficient novelty detected (score: {0})")]
+    Transcription(transcriptase::TranscriptaseError),
+    Synthesis(SynthesisError),
     LowNovelty(f64),
+}
+
+impl fmt::Display for SynthError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Analysis(msg) => write!(f, "Statistical analysis failed: {}", msg),
+            Self::Transcription(err) => write!(f, "Schema synthesis failed: {}", err),
+            Self::Synthesis(err) => write!(f, "Reverse synthesis failed: {}", err),
+            Self::LowNovelty(score) => write!(f, "Insufficient novelty detected (score: {})", score),
+        }
+    }
+}
+
+impl std::error::Error for SynthError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Transcription(err) => Some(err),
+            Self::Synthesis(err) => Some(err),
+            _ => None,
+        }
+    }
+}
+
+impl From<transcriptase::TranscriptaseError> for SynthError {
+    fn from(err: transcriptase::TranscriptaseError) -> Self {
+        Self::Transcription(err)
+    }
+}
+
+impl From<SynthesisError> for SynthError {
+    fn from(err: SynthesisError) -> Self {
+        Self::Synthesis(err)
+    }
 }
 
 /// A newly synthesized primitive candidate.

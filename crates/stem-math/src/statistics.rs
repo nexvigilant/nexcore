@@ -47,7 +47,7 @@ const ACKLAM_A: [f64; 6] = [
     -3.969_683_028_665_376e1,
     2.209_460_984_245_205e2,
     -2.759_285_104_469_687e2,
-    1.383_577_518_672_690e2,
+    1.383_577_518_672_69e2,
     -3.066_479_806_614_716e1,
     2.506_628_277_459_239e0,
 ];
@@ -385,7 +385,7 @@ pub fn confidence_interval_proportion(
     n: usize,
     confidence_level: f64,
 ) -> Option<ConfidenceInterval> {
-    if p_hat < 0.0 || p_hat > 1.0 || n == 0 {
+    if !(0.0..=1.0).contains(&p_hat) || n == 0 {
         return None;
     }
     if confidence_level <= 0.0 || confidence_level >= 1.0 {
@@ -740,10 +740,10 @@ pub fn ln_gamma(z: f64) -> Option<f64> {
     // Lanczos coefficients (g=7, n=9)
     const G: f64 = 7.0;
     const COEFF: [f64; 9] = [
-        0.999_999_999_999_809_93,
+        0.999_999_999_999_809_9,
         676.520_368_121_885_1,
-        -1259.139_216_722_402_9,
-        771.323_428_777_653_08,
+        -1_259.139_216_722_402_9,
+        771.323_428_777_653_1,
         -176.615_029_162_140_6,
         12.507_343_278_686_905,
         -0.138_571_095_265_720_12,
@@ -860,7 +860,7 @@ fn gamma_q_cf(a: f64, x: f64) -> Option<f64> {
 /// For x > (a+1)/(a+b+2), computes 1 - I_{1-x}(b,a).
 #[must_use]
 pub fn regularized_beta(x: f64, a: f64, b: f64) -> Option<f64> {
-    if x < 0.0 || x > 1.0 || a <= 0.0 || b <= 0.0 {
+    if !(0.0..=1.0).contains(&x) || a <= 0.0 || b <= 0.0 {
         return None;
     }
     if x == 0.0 {

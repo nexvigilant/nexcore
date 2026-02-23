@@ -965,6 +965,49 @@ impl StateKernel {
         &mut self.mapper
     }
 
+    /// Look up a transition ID by name from a given state.
+    ///
+    /// Useful for setting up temporal schedules or irreversibility rules
+    /// that require a `TransitionId`.
+    pub fn find_transition_id(
+        &self,
+        machine_id: MachineId,
+        from_state: StateId,
+        action: &str,
+    ) -> Result<TransitionId, KernelError> {
+        let runtime = self
+            .machines
+            .get(&machine_id)
+            .ok_or(KernelError::MachineNotFound(machine_id))?;
+        runtime
+            .transitions
+            .find_transition(from_state, action)
+            .map(|t| t.id)
+            .ok_or_else(|| {
+                KernelError::NoAvailableTransition(alloc::format!(
+                    "No transition '{}' from state {}",
+                    action,
+                    from_state
+                ))
+            })
+    }
+
+    /// Look up a state ID by name.
+    pub fn find_state_id(
+        &self,
+        machine_id: MachineId,
+        name: &str,
+    ) -> Result<StateId, KernelError> {
+        let runtime = self
+            .machines
+            .get(&machine_id)
+            .ok_or(KernelError::MachineNotFound(machine_id))?;
+        runtime
+            .states
+            .id_of(name)
+            .ok_or_else(|| KernelError::StateNotFound(0))
+    }
+
     // ═══════════════════════════════════════════════════════════
     // LAYER 5 + 7: METRICS & RECURSION ACCESSORS
     // ═══════════════════════════════════════════════════════════

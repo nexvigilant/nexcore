@@ -17,6 +17,12 @@ fn nexcore_root() -> PathBuf {
 }
 
 fn normalize_crate_name(name: &str) -> String {
+    // Check if the name as-is exists first (handles `signal`, `prima`, `antitransformer`, etc.)
+    let as_is = nexcore_root().join("crates").join(name);
+    if as_is.is_dir() {
+        return name.to_string();
+    }
+    // Otherwise try with nexcore- prefix
     if name.starts_with("nexcore-") {
         name.to_string()
     } else {

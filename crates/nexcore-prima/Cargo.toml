@@ -1,10 +1,10 @@
 
 [package]
 name = "nexcore-prima"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.85"
-description = "Prima (πρίμα) - A primitive-first programming language grounded in Lex Primitiva"
+description = "Thin re-export wrapper for prima — the canonical Prima language implementation"
 license = "LicenseRef-Proprietary"
 authors = ["Matthew Alexander Campion, PharmD <matt@nexvigilant.com>"]
 keywords = ["language", "primitives", "interpreter", "type-theory", "grounding"]
@@ -13,51 +13,20 @@ categories = ["compilers", "development-tools"]
 # Copyright © 2026 NexVigilant LLC. All Rights Reserved.
 # Intellectual Property of Matthew Alexander Campion, PharmD
 #
-# The language:
-# - File extension: .σ (sigma - sequence of statements)
-# - Binary name: prima (from Lex Primitiva - first principles)
-# - All constructs ground to {0, 1} through the 15 primitives
+# NOTE: This crate is a thin wrapper. The canonical implementation lives in `prima`.
+# New consumers should depend on `prima` directly.
+
+autobins = false
 
 [lib]
 path = "src/lib.rs"
 
-[[bin]]
-name = "prima"
-path = "src/bin/prima.rs"
-
 [dependencies]
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
-clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
-thiserror = { version = "1.0.61" }
-chrono = { version = "0.4.38", features = ["serde"] }
-serde = { version = "1.0.204", features = ["derive"] }
-serde_json = { version = "1.0.120" }
-rustyline = "14"
-
-[dev-dependencies]
-proptest = { version = "1.6.0" }
+prima = { version = "0.1.0", path = "../prima" }
 
 [lints.rust]
-async_fn_in_trait = "allow"
 dead_code = "allow"
 unused_imports = "allow"
-unused_variables = "allow"
-unused_mut = "allow"
-unused_assignments = "allow"
-unused_must_use = "allow"
 
 [lints.clippy]
 all = "allow"
-pedantic = "allow"
-nursery = "allow"
-cargo = "allow"
-map_unwrap_or = "allow"
-manual_map = "allow"
-option_map_or_none = "allow"
-derivable_impls = "allow"
-unwrap_used = "allow"
-expect_used = "allow"
-panic = "allow"
-todo = "allow"
-unimplemented = "allow"
-unreachable = "allow"

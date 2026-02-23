@@ -85,52 +85,7 @@ pub mod vocabulary;
 pub mod weighted;
 
 /// Prelude for convenient imports.
-pub mod prelude {
-    pub use crate::bedrock::BedrockAtom;
-    pub use crate::complexity::{
-        ComplexityClass, MINIMAL_SET, comparison_report, derivation_complexity,
-        practical_minimality_argument,
-    };
-    pub use crate::composition::{
-        CompositionAlgebra, CompositionBuilder, CompositionOp, CompositionResult, CompositionScore,
-        SemanticValidation,
-    };
-    pub use crate::compound::{BasisSnapshot, CompoundTracker, ProjectionResult};
-    pub use crate::compound_detector::{
-        Bottleneck, ComponentAnalysis, CompoundDetector, DetectionResult, GrowthPhase,
-    };
-    pub use crate::constants::{ALPHA_SIGNIFICANCE, K_BOLTZMANN, MathConstant, PHI, Trichotomy};
-    pub use crate::dossier::{Dossier, DossierGenerator, DossierSubject};
-    pub use crate::external_grounding::{
-        ExternalAuthority, GroundingStrength, external_authorities, grounding_strength,
-        is_externally_grounded,
-    };
-    pub use crate::extraction::{ExtractedPrimitive, ExtractionResult, PrimitiveExtractor};
-    pub use crate::grammar::{
-        CompressionMetrics, Interaction, InteractionGraph, InteractionType, Pattern,
-        PatternRegistry,
-    };
-    pub use crate::graph::{DependencyGraph, GroundingTrace, MathFoundation};
-    pub use crate::grounding::GroundsTo;
-    pub use crate::molecular_weight::{
-        AtomicMass, MolecularFormula, MolecularWeight, TransferClass,
-    };
-    pub use crate::primitiva::{LexPrimitiva, PrimitiveComposition};
-    pub use crate::semantic_path::{
-        GroundingType, SemanticGroundingPath, SemanticRelation, SemanticStep,
-        anti_triviality_argument, grounding_type, semantic_paths, validate_all_semantic_grounding,
-    };
-    pub use crate::state_mode::StateMode;
-    pub use crate::symbols::*;
-    pub use crate::synthesizer::{
-        CompletionSuggestion, PatternMatch, RevSynthesizer, SynthesisError, SynthesisOpts,
-        SynthesisResult,
-    };
-    pub use crate::tier::Tier;
-    pub use crate::transfer::{Domain, TransferCalculator, TransferResult};
-    pub use crate::validate::{PrimitivaValidator, ValidationReport, validate_system};
-    pub use crate::weighted::{WeightedBuilder, WeightedComposition};
-}
+pub mod prelude;
 
 // Re-export main types at crate root
 pub use bedrock::BedrockAtom;

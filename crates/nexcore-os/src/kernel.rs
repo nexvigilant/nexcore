@@ -21,17 +21,25 @@
 //! - N Quantity: Audio sample values, buffer sizes
 
 use nexcore_pal::{Input, Platform};
-use nexcore_state_os::{MachineBuilder, StateKernel};
+use nexcore_state_os::{IrreversibilityLevel, MachineBuilder, StateKernel};
+use nexcore_trust::{Evidence, TrustEngine};
 
 use crate::app_clearance::{AppClearanceGate, AppManifest, ClearanceResult};
 use crate::audio::AudioManager;
 use crate::boot::BootSequence;
+use crate::config::SystemConfig;
+use crate::diagnostics::{DiagnosticSnapshot, HealthStatus, ServiceHealth};
 use crate::error::OsError;
 use crate::ipc::EventBus;
+use crate::journal::{JournalEntry, Keywords, OsJournal, Severity, Subsystem};
 use crate::network::NetworkManager;
 use crate::persistence::StatePersistence;
 use crate::secure_boot::{BootPolicy, BootStage, SecureBootChain};
-use crate::security::{SecurityMonitor, SecurityResponse, ThreatPattern, ThreatSeverity};
+use nexcore_guardian_engine::homeostasis::{HomeostasisLoop, RuleBasedEngine};
+use nexcore_guardian_engine::sensing::{SignalSource, ThreatLevel, ThreatSignal};
+use nexcore_guardian_engine::OriginatorType;
+use nexcore_guardian_engine::RiskContext;
+use nexcore_guardian_engine::ThreatPattern;
 use crate::service::{ServiceManager, ServicePriority, ServiceState};
 use crate::user::UserManager;
 use crate::vault::OsVault;
@@ -84,8 +92,16 @@ pub struct NexCoreOs<P: Platform> {
     audio: AudioManager,
     /// User manager (authentication, sessions, accounts).
     users: UserManager,
+    /// Energy token pool (ATP/ADP metabolic tracking).
+    energy: nexcore_energy::TokenPool,
     /// Guardian bridge (homeostasis file integration).
     guardian: crate::guardian_bridge::GuardianBridge,
+    /// Bayesian trust engine — feeds STOS guard gates (Layer 4).
+    trust: TrustEngine,
+    /// System configuration (boot config, service definitions, trust thresholds).
+    config: SystemConfig,
+    /// Structured OS event journal (typed entries, severity-controlled retention).
+    journal: OsJournal,
     /// OS lifecycle state.
     state: OsState,
     /// Event loop iteration counter.
@@ -111,6 +127,18 @@ impl<P: Platform> NexCoreOs<P> {
     /// 3. System services start (measure services)
     /// 4. Shell launch (measure shell)
     pub fn boot_with_policy(platform: P, policy: BootPolicy) -> Result<Self, OsError> {
+        Self::boot_with_config(platform, policy, SystemConfig::default())
+    }
+
+    /// Boot the OS with explicit configuration.
+    ///
+    /// Allows overriding default service definitions, trust thresholds,
+    /// and security parameters.
+    pub fn boot_with_config(
+        platform: P,
+        policy: BootPolicy,
+        config: SystemConfig,
+    ) -> Result<Self, OsError> {
         // Determine vault data directory from platform
         let vault_data_dir = std::path::Path::new(platform.data_dir()).join("vault");
         let vault = OsVault::new(vault_data_dir);
@@ -129,12 +157,16 @@ impl<P: Platform> NexCoreOs<P> {
             boot: BootSequence::new(),
             secure_boot: SecureBootChain::new(policy),
             users: UserManager::new(),
+            energy: nexcore_energy::TokenPool::new(config.energy.initial_budget),
             guardian: crate::guardian_bridge::GuardianBridge::new().unwrap_or_default(),
+            trust: TrustEngine::new(),
+            config,
+            journal: OsJournal::new(),
             state: OsState::Booting,
             tick_count: 0,
         };
 
-        // Register core services before booting
+        // Register services from config
         os.register_core_services();
 
         // Phase 1: PAL init — measure platform identity
@@ -145,16 +177,27 @@ impl<P: Platform> NexCoreOs<P> {
             format!("PAL: {}", os.platform.name()),
         );
         os.ipc.emit_boot_event("PalInit");
+        os.journal.record(
+            JournalEntry::new(Subsystem::Boot, "pal", Severity::Info, "PAL initialized")
+                .with_keywords(Keywords::BOOT | Keywords::LIFECYCLE)
+                .with_str("platform", os.platform.name()),
+            0,
+        );
 
-        // Phase 2: STOS kernel boot + service state machines
+        // Phase 2: STOS kernel boot + service state machines + trust engine
         os.boot.boot_kernel()?;
         os.wire_stos_machines();
         os.secure_boot.measure(
             BootStage::Init,
-            b"stos-state-kernel",
-            "STOS state kernel initialized",
+            b"stos-state-kernel-trust",
+            "STOS state kernel + trust engine initialized",
         );
         os.ipc.emit_boot_event("KernelBoot");
+        os.journal.record(
+            JournalEntry::new(Subsystem::Boot, "stos", Severity::Info, "STOS kernel + trust engine initialized")
+                .with_keywords(Keywords::BOOT | Keywords::LIFECYCLE | Keywords::TRUST),
+            0,
+        );
 
         // Phase 2.5: Initialize network subsystem
         os.network.initialize();
@@ -179,6 +222,12 @@ impl<P: Platform> NexCoreOs<P> {
             format!("Services: {service_manifest}"),
         );
         os.ipc.emit_boot_event("ServicesStarting");
+        os.journal.record(
+            JournalEntry::new(Subsystem::Boot, "services", Severity::Info, "Services starting")
+                .with_keywords(Keywords::BOOT | Keywords::LIFECYCLE)
+                .with_u64("service_count", os.services.count() as u64),
+            0,
+        );
 
         // Phase 4: Shell launch
         os.boot.launch_shell()?;
@@ -189,39 +238,40 @@ impl<P: Platform> NexCoreOs<P> {
         // Verify boot chain before declaring Running
         let verification = os.secure_boot.verify_chain();
         if !verification.should_proceed() {
+            os.journal.record(
+                JournalEntry::new(Subsystem::Boot, "secure_boot", Severity::Fatal, "Chain integrity violation — boot halted")
+                    .with_keywords(Keywords::BOOT | Keywords::SECURITY | Keywords::ERROR),
+                0,
+            );
             return Err(OsError::Boot(crate::error::BootError::SecureBootFailed(
                 "Chain integrity violation — boot halted by policy".to_string(),
             )));
         }
 
+        os.journal.record(
+            JournalEntry::new(Subsystem::Boot, "complete", Severity::Notice, "Boot complete — system running")
+                .with_keywords(Keywords::BOOT | Keywords::LIFECYCLE)
+                .with_f64("trust_score", os.trust.score()),
+            0,
+        );
         os.state = OsState::Running;
         Ok(os)
     }
 
-    /// Register the core system services.
+    /// Register services from SystemConfig.
+    ///
+    /// Config-driven: service definitions come from `SystemConfig::services`
+    /// instead of being hardcoded. Default config produces the same 11 services.
     fn register_core_services(&mut self) {
-        // Critical (boot first)
-        self.services
-            .register("stos-runtime", ServicePriority::Critical);
-        self.services
-            .register("clearance", ServicePriority::Critical);
-        self.services.register("vault", ServicePriority::Critical);
-        self.services
-            .register("user-auth", ServicePriority::Critical);
-
-        // Core (boot second)
-        self.services.register("guardian", ServicePriority::Core);
-        self.services.register("network", ServicePriority::Core);
-        self.services.register("audio", ServicePriority::Core);
-        self.services.register("energy", ServicePriority::Core);
-
-        // Standard (boot third)
-        self.services.register("brain", ServicePriority::Standard);
-        self.services
-            .register("cytokine-bus", ServicePriority::Standard);
-
-        // User (boot last)
-        self.services.register("shell", ServicePriority::User);
+        for svc_def in &self.config.services {
+            let priority = match svc_def.priority.as_str() {
+                "critical" => ServicePriority::Critical,
+                "core" => ServicePriority::Core,
+                "standard" => ServicePriority::Standard,
+                _ => ServicePriority::User,
+            };
+            self.services.register(&svc_def.name, priority);
+        }
     }
 
     /// Wire STOS state machines for each registered service.
@@ -231,7 +281,11 @@ impl<P: Platform> NexCoreOs<P> {
     ///                                             → Stopping(4) → Stopped(5)
     ///                                                              → Failed(6)
     ///
-    /// Wires: Layer 1 (ς), Layer 2 (→), Layer 3 (∂), Layer 14 (∝)
+    /// Activates STOS Layers:
+    /// - Layer 1 (ς State): State registration
+    /// - Layer 2 (→ Causality): Transition definitions
+    /// - Layer 3 (∂ Boundary): Initial/terminal states
+    /// - Layer 4 (κ Guards): Trust-gated "start" transitions
     fn wire_stos_machines(&mut self) {
         let service_ids: Vec<_> = self
             .services
@@ -273,6 +327,34 @@ impl<P: Platform> NexCoreOs<P> {
                 if let Some(svc) = self.services.get_mut(*svc_id) {
                     svc.machine_id = Some(machine_id);
                 }
+
+                // Layer 4 (κ Guards): Register trust gate on "start" transition.
+                // Services need trust score >= threshold to start.
+                // Non-fatal: guard failure during boot is logged, not blocking.
+                if let Err(e) = self.stos.register_guard(machine_id, "trust_gate", "trust_ok") {
+                    tracing::warn!("Failed to register trust guard for {name}: {e:?}");
+                }
+
+                // Layer 12 (ν Temporal): Set startup timeout.
+                // If a service stays in "starting" for >30 ticks without reaching
+                // "running", the fail_starting transition fires automatically.
+                if let Ok(starting_id) = self.stos.find_state_id(machine_id, "starting") {
+                    if let Ok(fail_tid) =
+                        self.stos
+                            .find_transition_id(machine_id, starting_id, "fail_starting")
+                    {
+                        self.stos
+                            .scheduler_mut()
+                            .set_timeout(machine_id, 30, fail_tid);
+                    }
+                }
+
+                // Layer 14 (∝ Irreversibility): Mark "stopped" as absorbing
+                // when in security lockdown. During normal operation, stopped
+                // services can restart. During lockdown, absorbing state prevents
+                // any transitions out of "stopped".
+                // (Absorbing activation happens in process_security_responses
+                //  when Lockdown fires — here we just register the capability.)
             }
         }
     }
@@ -301,6 +383,21 @@ impl<P: Platform> NexCoreOs<P> {
         self.ipc
             .emit_service_event(&name, &format!("{from_state:?}"), &format!("{new_state:?}"));
 
+        // Journal: record service state transition
+        let severity = if new_state == ServiceState::Failed {
+            Severity::Error
+        } else {
+            Severity::Info
+        };
+        self.journal.record(
+            JournalEntry::new(Subsystem::Service, "transition", severity, format!("{name}: {from_state:?} -> {new_state:?}"))
+                .with_keywords(Keywords::LIFECYCLE | Keywords::STATE_CHANGE)
+                .with_str("service", &name)
+                .with_str("from", &format!("{from_state:?}"))
+                .with_str("to", &format!("{new_state:?}")),
+            self.tick_count,
+        );
+
         Ok(())
     }
 
@@ -308,6 +405,11 @@ impl<P: Platform> NexCoreOs<P> {
     ///
     /// In a real OS, this would be the main scheduler loop.
     /// Returns `false` when the OS should shut down.
+    ///
+    /// Activates STOS Layers per tick:
+    /// - Layer 5 (N Metrics): State visit counts via transitions
+    /// - Layer 11 (Σ Aggregate): Fleet-wide stats available via `aggregate_stats()`
+    /// - Layer 12 (ν Temporal): Scheduled transitions + timeouts
     pub fn tick(&mut self) -> bool {
         if self.state != OsState::Running {
             return false;
@@ -315,7 +417,8 @@ impl<P: Platform> NexCoreOs<P> {
 
         self.tick_count += 1;
 
-        // Tick the STOS kernel (process state machines + temporal scheduler)
+        // Layer 12 (ν Temporal): Tick the STOS kernel — executes scheduled
+        // transitions and processes timeouts.
         let tick_result = self.stos.tick(1);
 
         // Record STOS tick results in IPC for observability
@@ -352,6 +455,22 @@ impl<P: Platform> NexCoreOs<P> {
         // Phase 2: Process pending security responses
         self.process_security_responses();
 
+        // ── Trust Recovery ─────────────────────────────────────────
+        // Record positive evidence for clean ticks at configured interval.
+        // Trust degrades on threats (see report_threat), recovers here.
+        if self.tick_count % self.config.trust.recovery_interval == 0 {
+            self.trust
+                .record(Evidence::Positive(self.config.trust.recovery_weight));
+        }
+
+        // ── Metabolic Regulation (Energy) ──────────────────────────
+        let current_regime = self.energy.regime();
+        if current_regime == nexcore_energy::Regime::Crisis {
+            self.degrade_services(crate::service::ServicePriority::Core);
+        } else if current_regime == nexcore_energy::Regime::Catabolic {
+            self.degrade_services(crate::service::ServicePriority::Standard);
+        }
+
         // Drain IPC events (dispatch to subscribers in future)
         let _events = self.ipc.drain();
 
@@ -386,11 +505,26 @@ impl<P: Platform> NexCoreOs<P> {
                     self.degrade_services(crate::service::ServicePriority::Standard);
                 }
                 SecurityResponse::Lockdown => {
+                    // Journal: lockdown is a critical event
+                    self.journal.record(
+                        JournalEntry::new(Subsystem::Security, "lockdown", Severity::Critical, "Security lockdown activated — RED")
+                            .with_keywords(Keywords::SECURITY | Keywords::LIFECYCLE | Keywords::STATE_CHANGE)
+                            .with_u64("pamp_count", self.security.pamp_count() as u64)
+                            .with_u64("damp_count", self.security.damp_count() as u64)
+                            .with_f64("trust_score", self.trust.score()),
+                        self.tick_count,
+                    );
+
                     // Lock the vault on security lockdown
                     if self.vault.is_operational() {
                         self.vault.lock();
                     }
                     self.degrade_services(crate::service::ServicePriority::Core);
+
+                    // Layer 14 (∝ Irreversibility): Mark stopped states as
+                    // absorbing so services cannot restart during lockdown.
+                    self.activate_lockdown_absorbing();
+
                     self.emit_lockdown_event();
                 }
             }
@@ -411,6 +545,42 @@ impl<P: Platform> NexCoreOs<P> {
             if let Some(svc) = self.services.get_mut(*id) {
                 if svc.transition(ServiceState::Degraded).is_ok() {
                     self.ipc.emit_service_event(name, "Running", "Degraded");
+                }
+            }
+        }
+    }
+
+    /// Activate STOS absorbing states on all service machines during lockdown.
+    ///
+    /// Layer 14 (∝ Irreversibility): Once in lockdown, "stopped" and "failed"
+    /// states become absorbing — no service can restart until the OS reboots.
+    fn activate_lockdown_absorbing(&mut self) {
+        let machines: Vec<_> = self
+            .services
+            .startup_order()
+            .iter()
+            .filter_map(|s| s.machine_id)
+            .collect();
+
+        for machine_id in machines {
+            // Mark "stopped" as permanent absorbing state
+            if let Ok(stopped_id) = self.stos.find_state_id(machine_id, "stopped") {
+                if let Err(e) = self.stos.register_absorbing_state(
+                    machine_id,
+                    stopped_id,
+                    IrreversibilityLevel::Permanent,
+                ) {
+                    tracing::warn!("Failed to set absorbing state for machine {machine_id}: {e:?}");
+                }
+            }
+            // Mark "failed" as permanent absorbing state
+            if let Ok(failed_id) = self.stos.find_state_id(machine_id, "failed") {
+                if let Err(e) = self.stos.register_absorbing_state(
+                    machine_id,
+                    failed_id,
+                    IrreversibilityLevel::Permanent,
+                ) {
+                    tracing::warn!("Failed to set absorbing state for machine {machine_id}: {e:?}");
                 }
             }
         }
@@ -555,7 +725,8 @@ impl<P: Platform> NexCoreOs<P> {
 
     /// Record a security threat at the OS level.
     ///
-    /// Convenience method that records and emits an IPC event.
+    /// Records the threat, degrades trust proportionally to severity,
+    /// and emits an IPC event.
     pub fn report_threat(
         &mut self,
         severity: ThreatSeverity,
@@ -564,6 +735,37 @@ impl<P: Platform> NexCoreOs<P> {
     ) {
         let desc: String = description.into();
         self.security.record_threat(severity, &desc, source_service);
+
+        // Degrade trust proportionally to threat severity.
+        // Higher severity = heavier negative evidence.
+        let severity_weight = match severity {
+            ThreatSeverity::Info => 0.0,
+            ThreatSeverity::Low => 0.5,
+            ThreatSeverity::Medium => 1.0,
+            ThreatSeverity::High => 2.0,
+            ThreatSeverity::Critical => 5.0,
+        };
+        if severity_weight > 0.0 {
+            self.trust
+                .record(Evidence::Negative(severity_weight * self.config.trust.threat_weight));
+        }
+
+        // Journal: record threat with structured fields
+        let journal_severity = match severity {
+            ThreatSeverity::Info => Severity::Info,
+            ThreatSeverity::Low => Severity::Notice,
+            ThreatSeverity::Medium => Severity::Warning,
+            ThreatSeverity::High => Severity::Error,
+            ThreatSeverity::Critical => Severity::Critical,
+        };
+        self.journal.record(
+            JournalEntry::new(Subsystem::Security, "threat", journal_severity, &desc)
+                .with_keywords(Keywords::SECURITY | Keywords::ERROR)
+                .with_str("severity", &format!("{severity:?}"))
+                .with_f64("trust_score", self.trust.score())
+                .with_str("security_level", &format!("{}", self.security.level())),
+            self.tick_count,
+        );
 
         // Emit threat event on IPC bus
         let signal = nexcore_cytokine::Cytokine::new(
@@ -577,6 +779,7 @@ impl<P: Platform> NexCoreOs<P> {
             "severity": format!("{severity:?}"),
             "description": desc,
             "security_level": format!("{}", self.security.level()),
+            "trust_score": self.trust.score(),
         }));
         self.ipc.emit(signal);
     }
@@ -679,6 +882,16 @@ impl<P: Platform> NexCoreOs<P> {
         &mut self.users
     }
 
+    /// Get the energy token pool.
+    pub fn energy(&self) -> &nexcore_energy::TokenPool {
+        &self.energy
+    }
+
+    /// Get a mutable reference to the energy token pool.
+    pub fn energy_mut(&mut self) -> &mut nexcore_energy::TokenPool {
+        &mut self.energy
+    }
+
     /// Create the initial device owner account.
     ///
     /// Called during first boot (device setup). Emits IPC event.
@@ -765,9 +978,117 @@ impl<P: Platform> NexCoreOs<P> {
         Ok(())
     }
 
+    /// Get the trust engine.
+    pub fn trust(&self) -> &TrustEngine {
+        &self.trust
+    }
+
+    /// Get a mutable reference to the trust engine.
+    pub fn trust_mut(&mut self) -> &mut TrustEngine {
+        &mut self.trust
+    }
+
+    /// Get the system trust score (0.0-1.0).
+    ///
+    /// Convenience method — equivalent to `self.trust().score()`.
+    pub fn trust_score(&self) -> f64 {
+        self.trust.score()
+    }
+
+    /// Get the system configuration.
+    pub fn config(&self) -> &SystemConfig {
+        &self.config
+    }
+
+    /// Get STOS aggregate stats across all service machines.
+    ///
+    /// Layer 11 (Σ Aggregate): fleet-wide service health.
+    pub fn aggregate_stats(&self) -> nexcore_state_os::AggregateStats {
+        self.stos.aggregate_stats()
+    }
+
+    /// Get STOS metrics for a specific service's state machine.
+    ///
+    /// Layer 5 (N Metrics): per-service state visit counts and transition history.
+    pub fn service_metrics(
+        &self,
+        service_id: crate::service::ServiceId,
+    ) -> Option<&nexcore_state_os::MachineMetrics> {
+        let svc = self.services.get(service_id)?;
+        let machine_id = svc.machine_id?;
+        self.stos.metrics(machine_id).ok()
+    }
+
+    /// Check whether trust score meets the service start threshold.
+    ///
+    /// Layer 4 (κ Guards): trust gate evaluation.
+    pub fn trust_allows_start(&self) -> bool {
+        self.trust.score() >= self.config.trust.start_threshold
+    }
+
     /// Get the event loop tick count.
     pub fn tick_count(&self) -> u64 {
         self.tick_count
+    }
+
+    /// Get the structured OS journal.
+    pub fn journal(&self) -> &OsJournal {
+        &self.journal
+    }
+
+    /// Get a mutable reference to the OS journal.
+    pub fn journal_mut(&mut self) -> &mut OsJournal {
+        &mut self.journal
+    }
+
+    /// Capture a diagnostic snapshot of the full system state.
+    ///
+    /// Provides a point-in-time view of all subsystems for debugging,
+    /// health monitoring, and incident response. Inspired by Fuchsia Inspect
+    /// and Apple sysdiagnose.
+    pub fn diagnostic_snapshot(&self) -> DiagnosticSnapshot {
+        // Collect per-service health
+        let services: Vec<ServiceHealth> = self
+            .services
+            .startup_order()
+            .iter()
+            .map(|svc| {
+                let transitions = svc.machine_id
+                    .and_then(|mid| self.stos.metrics(mid).ok())
+                    .map_or(0, |m| m.executions);
+                ServiceHealth::from_state(&svc.name, svc.state, transitions)
+            })
+            .collect();
+
+        let services_running = services.iter().filter(|s| s.health == HealthStatus::Ok).count();
+        let services_failed = services.iter().filter(|s| s.health == HealthStatus::Critical).count();
+        let services_total = services.len();
+
+        let system_health = DiagnosticSnapshot::compute_system_health(
+            self.security.level(),
+            &services,
+        );
+
+        let stats = self.stos.aggregate_stats();
+
+        DiagnosticSnapshot {
+            tick: self.tick_count,
+            system_health,
+            services,
+            security_level: self.security.level(),
+            trust_score: self.trust.score(),
+            active_threats: self.security.active_threats().len(),
+            stos_machines: stats.total_machines,
+            stos_total_transitions: stats.total_transitions,
+            ipc_pending: self.ipc.pending(),
+            ipc_total_emitted: self.ipc.total_emitted(),
+            journal_entries: self.journal.len(),
+            journal_errors: self.journal.error_count(),
+            journal_total_recorded: self.journal.total_recorded(),
+            services_running,
+            services_failed,
+            services_total,
+        }
     }
 
     /// Get the Guardian bridge.
@@ -1449,7 +1770,7 @@ mod tests {
 
         // Build expected measurements matching what boot() will produce
         let pal_expected = crate::secure_boot::Measurement::from_data(platform_name.as_bytes());
-        let init_expected = crate::secure_boot::Measurement::from_data(b"stos-state-kernel");
+        let init_expected = crate::secure_boot::Measurement::from_data(b"stos-state-kernel-trust");
         let shell_expected = crate::secure_boot::Measurement::from_data(b"nexcore-shell");
 
         let mut result =
@@ -1735,6 +2056,421 @@ mod tests {
             let s = os.audio().summary();
             assert!(s.contains("Audio"));
             assert!(s.contains("Ready"));
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // Phase 1: STOS Layer Integration Tests
+    // ═══════════════════════════════════════════════════════════
+
+    #[test]
+    fn trust_engine_initializes_with_positive_score() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let os = NexCoreOs::boot(platform);
+        assert!(os.is_ok());
+        if let Ok(os) = os {
+            // TrustEngine starts with prior_alpha=2, prior_beta=2 -> score ~0.5
+            assert!(os.trust_score() > 0.0, "Trust must be positive at boot");
+            assert!(
+                os.trust_allows_start(),
+                "Trust must exceed start threshold (0.3) at boot"
+            );
+        }
+    }
+
+    #[test]
+    fn trust_degrades_on_threat() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+        if let Ok(mut os) = result {
+            let initial = os.trust_score();
+            os.report_threat(
+                crate::security::ThreatSeverity::High,
+                "test-threat",
+                None,
+            );
+            assert!(
+                os.trust_score() < initial,
+                "Trust should decrease after threat: was {initial}, now {}",
+                os.trust_score()
+            );
+        }
+    }
+
+    #[test]
+    fn trust_recovers_on_clean_ticks() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+        if let Ok(mut os) = result {
+            // Degrade trust first
+            os.report_threat(
+                crate::security::ThreatSeverity::High,
+                "test-degradation",
+                None,
+            );
+            let degraded = os.trust_score();
+
+            // Run ticks past recovery_interval (default 10)
+            for _ in 0..15 {
+                os.tick();
+            }
+            assert!(
+                os.trust_score() > degraded,
+                "Trust should recover over clean ticks: was {degraded}, now {}",
+                os.trust_score()
+            );
+        }
+    }
+
+    #[test]
+    fn config_driven_registration_produces_11_services() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let os = NexCoreOs::boot(platform);
+        assert!(os.is_ok());
+        if let Ok(os) = os {
+            assert_eq!(
+                os.services().count(),
+                11,
+                "Default config should register 11 services"
+            );
+        }
+    }
+
+    #[test]
+    fn custom_config_changes_service_count() {
+        use crate::config::{ServiceDef, SystemConfig};
+
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let mut config = SystemConfig::default();
+        config.services.push(ServiceDef {
+            name: "test-extra".to_string(),
+            priority: "user".to_string(),
+            auto_start: true,
+            max_restarts: 3,
+        });
+
+        let os = NexCoreOs::boot_with_config(
+            platform,
+            crate::secure_boot::BootPolicy::Permissive,
+            config,
+        );
+        assert!(os.is_ok());
+        if let Ok(os) = os {
+            assert_eq!(
+                os.services().count(),
+                12,
+                "Custom config with extra service should register 12"
+            );
+        }
+    }
+
+    #[test]
+    fn aggregate_stats_available_after_boot() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let os = NexCoreOs::boot(platform);
+        assert!(os.is_ok());
+        if let Ok(os) = os {
+            let stats = os.aggregate_stats();
+            // Should have machines registered (one per service)
+            assert!(
+                stats.total_machines > 0,
+                "Aggregate stats should show registered machines"
+            );
+        }
+    }
+
+    #[test]
+    fn service_metrics_track_state_visits() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+        if let Ok(os) = result {
+            // Get metrics for the first service
+            let first_svc = os
+                .services()
+                .startup_order()
+                .first()
+                .map(|s| s.id);
+            if let Some(svc_id) = first_svc {
+                let metrics = os.service_metrics(svc_id);
+                assert!(
+                    metrics.is_some(),
+                    "Service should have STOS metrics available"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn stos_temporal_tick_advances_scheduler() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+        if let Ok(mut os) = result {
+            let before = os.stos().scheduler().time();
+            os.tick();
+            let after = os.stos().scheduler().time();
+            assert!(
+                after > before,
+                "STOS scheduler time should advance on tick: before={before}, after={after}"
+            );
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // JOURNAL + DIAGNOSTICS INTEGRATION TESTS (Phase 2 Telemetry)
+    // ═══════════════════════════════════════════════════════════
+
+    #[test]
+    fn journal_populated_after_boot() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+
+        if let Ok(os) = result {
+            // Boot should emit multiple journal entries (PAL, STOS, Services, Complete)
+            assert!(
+                os.journal().total_recorded() >= 4,
+                "Boot should emit at least 4 journal entries, got {}",
+                os.journal().total_recorded()
+            );
+        }
+    }
+
+    #[test]
+    fn journal_boot_entries_have_boot_keyword() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+
+        if let Ok(os) = result {
+            let filter = crate::journal::JournalFilter::new()
+                .keywords(crate::journal::Keywords::BOOT);
+            let boot_entries = os.journal().query(&filter);
+            assert!(
+                boot_entries.len() >= 4,
+                "Should have at least 4 BOOT-tagged entries, got {}",
+                boot_entries.len()
+            );
+        }
+    }
+
+    #[test]
+    fn journal_records_threat() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+
+        if let Ok(mut os) = result {
+            let before = os.journal().total_recorded();
+            os.report_threat(
+                crate::security::ThreatSeverity::Medium,
+                "test threat",
+                None,
+            );
+            assert!(
+                os.journal().total_recorded() > before,
+                "Journal should record threat events"
+            );
+
+            // Threat should be in security subsystem
+            let filter = crate::journal::JournalFilter::new()
+                .subsystem(crate::journal::Subsystem::Security);
+            let security_entries = os.journal().query(&filter);
+            assert!(!security_entries.is_empty(), "Should have security entries");
+        }
+    }
+
+    #[test]
+    fn journal_threat_in_error_buffer() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+
+        if let Ok(mut os) = result {
+            // High threat -> Error severity -> should appear in error buffer
+            os.report_threat(
+                crate::security::ThreatSeverity::High,
+                "high severity threat",
+                None,
+            );
+            assert!(
+                os.journal().error_count() > 0,
+                "High severity threat should appear in error buffer"
+            );
+        }
+    }
+
+    #[test]
+    fn diagnostic_snapshot_reflects_running_system() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+
+        if let Ok(os) = result {
+            let snapshot = os.diagnostic_snapshot();
+
+            assert_eq!(snapshot.services_total, 11);
+            assert_eq!(snapshot.security_level, crate::security::SecurityLevel::Green);
+            assert!(snapshot.trust_score > 0.0);
+            assert!(snapshot.journal_entries > 0);
+            assert_eq!(snapshot.active_threats, 0);
+            assert!(snapshot.stos_machines > 0);
+        }
+    }
+
+    #[test]
+    fn diagnostic_snapshot_health_ok_on_clean_boot() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+
+        if let Ok(os) = result {
+            let snapshot = os.diagnostic_snapshot();
+            // Clean boot should not be Critical or Unhealthy
+            assert_ne!(
+                snapshot.system_health,
+                crate::diagnostics::HealthStatus::Critical
+            );
+            assert_ne!(
+                snapshot.system_health,
+                crate::diagnostics::HealthStatus::Unhealthy
+            );
+        }
+    }
+
+    #[test]
+    fn diagnostic_snapshot_after_lockdown_is_critical() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+
+        if let Ok(mut os) = result {
+            // Trigger Red lockdown
+            let pattern = crate::security::ThreatPattern::External(
+                crate::security::Pamp::PrivilegeEscalation {
+                    actor: "exploit".to_string(),
+                    target_level: "root".to_string(),
+                },
+            );
+            os.report_pattern(&pattern);
+            os.tick();
+
+            let snapshot = os.diagnostic_snapshot();
+            assert_eq!(
+                snapshot.system_health,
+                crate::diagnostics::HealthStatus::Critical
+            );
+            assert_eq!(
+                snapshot.security_level,
+                crate::security::SecurityLevel::Red
+            );
+        }
+    }
+
+    #[test]
+    fn diagnostic_snapshot_display_contains_key_info() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+
+        if let Ok(os) = result {
+            let snapshot = os.diagnostic_snapshot();
+            let display = format!("{snapshot}");
+
+            assert!(display.contains("NexCore OS Diagnostic Snapshot"));
+            assert!(display.contains("System Health"));
+            assert!(display.contains("guardian"));
+        }
+    }
+
+    #[test]
+    fn journal_lockdown_entry_is_critical() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+
+        if let Ok(mut os) = result {
+            // Trigger lockdown
+            let pattern = crate::security::ThreatPattern::External(
+                crate::security::Pamp::PrivilegeEscalation {
+                    actor: "test".to_string(),
+                    target_level: "root".to_string(),
+                },
+            );
+            os.report_pattern(&pattern);
+            os.tick();
+
+            // Check error buffer for lockdown entry
+            let errors = os.journal().errors();
+            let lockdown_entry = errors.iter().find(|e| {
+                e.category == "lockdown"
+            });
+            assert!(
+                lockdown_entry.is_some(),
+                "Lockdown should produce a critical journal entry in error buffer"
+            );
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // ENERGY INTEGRATION TESTS
+    // ═══════════════════════════════════════════════════════════
+
+    #[test]
+    fn energy_initialized_from_config() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let config = SystemConfig::default();
+        let result = NexCoreOs::boot_with_config(platform, crate::secure_boot::BootPolicy::Permissive, config.clone());
+        assert!(result.is_ok());
+
+        if let Ok(os) = result {
+            assert_eq!(os.energy().t_atp, config.energy.initial_budget);
+            assert_eq!(os.energy().regime(), nexcore_energy::Regime::Anabolic);
+        }
+    }
+
+    #[test]
+    fn energy_catabolic_regime_degrades_services() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+
+        if let Ok(mut os) = result {
+            // Drain energy to Catabolic regime (EC < 0.70)
+            let total = os.energy().total();
+            os.energy_mut().spend_waste(total / 2); // 50% waste => EC = 0.5 => Catabolic
+
+            // Tick processes the regime change
+            os.tick();
+
+            // Standard services should be degraded
+            let startup_order = os.services().startup_order();
+            let standard_degraded = startup_order.iter().find(|s| s.priority == crate::service::ServicePriority::Standard && s.state == ServiceState::Degraded);
+            assert!(standard_degraded.is_some(), "Standard services should be degraded in Catabolic regime");
+        }
+    }
+
+    #[test]
+    fn energy_crisis_regime_degrades_core_services() {
+        let platform = LinuxPlatform::virtual_platform(FormFactor::Desktop);
+        let result = NexCoreOs::boot(platform);
+        assert!(result.is_ok());
+
+        if let Ok(mut os) = result {
+            // Drain energy to Crisis regime (EC < 0.50)
+            let total = os.energy().total();
+            os.energy_mut().spend_waste((total as f64 * 0.8) as u64); // 80% waste => EC = 0.2 => Crisis
+
+            // Tick processes the regime change
+            os.tick();
+
+            // Core services should be degraded
+            let startup_order = os.services().startup_order();
+            let core_degraded = startup_order.iter().find(|s| s.priority == crate::service::ServicePriority::Core && s.state == ServiceState::Degraded);
+            assert!(core_degraded.is_some(), "Core services should be degraded in Crisis regime");
         }
     }
 }

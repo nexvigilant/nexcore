@@ -100,7 +100,7 @@ impl GroundsTo for WasteClass {
 // Numeric pool types -- N (Quantity) dominant
 // ---------------------------------------------------------------------------
 
-/// TokenPool: T2-C (N + varsigma + partial + proportional), dominant N
+/// TokenPool: T2-C (N + varsigma + partial + ∝), dominant N
 ///
 /// The three-pool energy model: tATP (available), tADP (productive spend),
 /// tAMP (waste). Conservation law: tATP + tADP + tAMP = constant.
@@ -114,7 +114,7 @@ impl GroundsTo for TokenPool {
             LexPrimitiva::Quantity,        // N -- three numeric pools (tATP, tADP, tAMP)
             LexPrimitiva::State,           // varsigma -- mutable pool state
             LexPrimitiva::Boundary,        // partial -- spend capped at available
-            LexPrimitiva::Irreversibility, // proportional -- degrade is one-way ADP->AMP
+            LexPrimitiva::Irreversibility, // ∝ -- degrade is one-way ADP->AMP
         ])
         .with_dominant(LexPrimitiva::Quantity, 0.80)
         .with_state_mode(StateMode::Mutable)
@@ -125,7 +125,7 @@ impl GroundsTo for TokenPool {
     }
 }
 
-/// RecyclingRate: T2-P (N + proportional + mu), dominant N
+/// RecyclingRate: T2-P (N + ∝ + mu), dominant N
 ///
 /// Token recycling metrics: compression_ratio, cache_hit_rate, pattern_reuse_rate.
 /// R = compression x cache x reuse. ATP Synthase analog.
@@ -136,7 +136,7 @@ impl GroundsTo for RecyclingRate {
     fn primitive_composition() -> PrimitiveComposition {
         PrimitiveComposition::new(vec![
             LexPrimitiva::Quantity,        // N -- three f64 rates, combined product
-            LexPrimitiva::Irreversibility, // proportional -- recovery direction
+            LexPrimitiva::Irreversibility, // ∝ -- recovery direction
             LexPrimitiva::Mapping,         // mu -- rates -> recoverable tokens
         ])
         .with_dominant(LexPrimitiva::Quantity, 0.85)
@@ -196,7 +196,7 @@ impl GroundsTo for OperationBuilder {
 // Domain state -- T3 composite
 // ---------------------------------------------------------------------------
 
-/// EnergyState: T3 (varsigma + N + kappa + mu + partial + proportional), dominant varsigma
+/// EnergyState: T3 (varsigma + N + kappa + mu + partial + ∝), dominant varsigma
 ///
 /// Complete energy state snapshot for monitoring and decision-making.
 /// Composes TokenPool, Regime, Strategy, EnergySystem, and derived metrics.
@@ -211,7 +211,7 @@ impl GroundsTo for EnergyState {
             LexPrimitiva::Comparison,      // kappa -- regime classification
             LexPrimitiva::Mapping,         // mu -- strategy recommendation
             LexPrimitiva::Boundary,        // partial -- regime thresholds
-            LexPrimitiva::Irreversibility, // proportional -- waste is irreversible
+            LexPrimitiva::Irreversibility, // ∝ -- waste is irreversible
         ])
         .with_dominant(LexPrimitiva::State, 0.80)
         .with_state_mode(StateMode::Mutable)

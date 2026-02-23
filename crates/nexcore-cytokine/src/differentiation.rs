@@ -130,6 +130,7 @@ impl DifferentiableCell {
     }
 
     /// Add available differentiation paths.
+    #[must_use]
     pub fn with_paths(mut self, paths: Vec<Specialization>) -> Self {
         self.available_paths = paths;
         self
@@ -204,7 +205,7 @@ pub enum DifferentiationError {
 
 /// Pre-built differentiation trees for common agent types.
 pub mod lineages {
-    use super::*;
+    use super::{Potency, Specialization};
 
     /// Immune cell lineage: Stem → {T-cell, B-cell, Macrophage}.
     pub fn immune_cells() -> Vec<Specialization> {

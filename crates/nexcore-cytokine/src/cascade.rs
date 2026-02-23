@@ -69,24 +69,28 @@ impl CascadeResponse {
     }
 
     /// Set severity
+    #[must_use]
     pub fn with_severity(mut self, severity: ThreatLevel) -> Self {
         self.severity = Some(severity);
         self
     }
 
     /// Set scope
+    #[must_use]
     pub fn with_scope(mut self, scope: Scope) -> Self {
         self.scope = Some(scope);
         self
     }
 
     /// Set amplification factor
+    #[must_use]
     pub fn amplified(mut self, factor: u8) -> Self {
         self.amplification = factor.max(1);
         self
     }
 
     /// Set delay
+    #[must_use]
     pub fn delayed(mut self, ms: u32) -> Self {
         self.delay_ms = ms;
         self
@@ -135,18 +139,21 @@ impl CascadeRule {
     }
 
     /// Add a response to this rule
+    #[must_use]
     pub fn with_response(mut self, response: CascadeResponse) -> Self {
         self.responses.push(response);
         self
     }
 
     /// Set max cascade depth
+    #[must_use]
     pub fn with_max_depth(mut self, depth: u8) -> Self {
         self.max_depth = depth;
         self
     }
 
     /// Deactivate the rule
+    #[must_use]
     pub fn deactivate(mut self) -> Self {
         self.active = false;
         self
@@ -273,7 +280,7 @@ impl LoopGainMonitor {
 
 /// Pre-defined cascade patterns based on biological immune responses
 pub mod patterns {
-    use super::*;
+    use super::{CascadeResponse, CascadeRule, CytokineFamily, ReceptorFilter, Scope, ThreatLevel};
 
     /// Inflammatory cascade: IL-1 → IL-6 + TNF-α
     ///

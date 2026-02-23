@@ -5613,7 +5613,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.18",
- "ureq 2.12.1",
+ "ureq",
  "windows-sys 0.60.2",
 ]
 
@@ -7861,7 +7861,7 @@ dependencies = [
  "http-body-util",
  "hyper",
  "hyper-util",
- "nexcore-cloud",
+ "nexcore-lex-primitiva",
  "nix 0.29.0",
  "reqwest 0.12.28",
  "rustls",
@@ -8011,23 +8011,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "nexcore-bridge-mcp"
-version = "1.0.0"
-dependencies = [
- "anyhow",
- "clap",
- "reqwest 0.12.28",
- "rmcp",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "url",
-]
-
-[[package]]
 name = "nexcore-browser"
 version = "0.1.0"
 dependencies = [
@@ -8153,15 +8136,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "nexcore-cloud"
-version = "0.1.0"
-dependencies = [
- "nexcore-lex-primitiva",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "nexcore-cognition"
 version = "0.1.0"
 dependencies = [
@@ -8276,7 +8250,6 @@ dependencies = [
  "candle-transformers",
  "dirs 5.0.1",
  "hf-hub",
- "nexcore-cloud",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
@@ -8619,6 +8592,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "nexcore-homeostasis-primitives",
+ "nexcore-lex-primitiva",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
@@ -8662,27 +8636,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
-]
-
-[[package]]
-name = "nexcore-hooks"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "dirs 6.0.0",
- "nexcore-hormones",
- "nexcore-id",
- "once_cell",
- "proptest",
- "regex",
- "serde",
- "serde_json",
- "serde_yaml",
- "tempfile",
- "thiserror 2.0.18",
- "toml 0.9.12+spec-1.1.0",
- "tracing",
- "ureq 3.2.0",
 ]
 
 [[package]]
@@ -8888,7 +8841,6 @@ dependencies = [
  "nexcore-chemivigilance",
  "nexcore-circulatory",
  "nexcore-clearance",
- "nexcore-cloud",
  "nexcore-cognition",
  "nexcore-combinatorics",
  "nexcore-compilation-space",
@@ -8917,7 +8869,6 @@ dependencies = [
  "nexcore-grammar-lab",
  "nexcore-guardian-engine",
  "nexcore-harm-taxonomy",
- "nexcore-hooks",
  "nexcore-hormones",
  "nexcore-immunity",
  "nexcore-insight",
@@ -8938,6 +8889,7 @@ dependencies = [
  "nexcore-molcore",
  "nexcore-muscular",
  "nexcore-nervous",
+ "nexcore-notebooklm",
  "nexcore-oracle",
  "nexcore-orchestration",
  "nexcore-organize",
@@ -8947,8 +8899,6 @@ dependencies = [
  "nexcore-pharmacovigilance",
  "nexcore-pharos",
  "nexcore-phenotype",
- "nexcore-preemptive-pv",
- "nexcore-prima",
  "nexcore-primitive-scanner",
  "nexcore-primitives",
  "nexcore-proof-of-meaning",
@@ -9136,6 +9086,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexcore-notebooklm"
+version = "0.1.0"
+dependencies = [
+ "chromiumoxide",
+ "chrono",
+ "dirs 5.0.1",
+ "futures",
+ "parking_lot",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "nexcore-nvrepl"
 version = "1.0.0"
 dependencies = [
@@ -9228,11 +9195,13 @@ dependencies = [
  "nexcore-clearance",
  "nexcore-cytokine",
  "nexcore-energy",
+ "nexcore-guardian-engine",
  "nexcore-lex-primitiva",
  "nexcore-network",
  "nexcore-pal",
  "nexcore-pal-linux",
  "nexcore-state-os",
+ "nexcore-trust",
  "nexcore-vault",
  "serde",
  "serde_json",
@@ -9338,16 +9307,9 @@ dependencies = [
 
 [[package]]
 name = "nexcore-prima"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
- "chrono",
- "clap",
- "nexcore-lex-primitiva",
- "proptest",
- "rustyline 14.0.0",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
+ "prima",
 ]
 
 [[package]]
@@ -9396,6 +9358,7 @@ dependencies = [
  "chrono",
  "nexcore-constants",
  "nexcore-lex-primitiva",
+ "nexcore-preemptive-pv",
  "nexcore-signal-types",
  "nexcore-tov",
  "once_cell",
@@ -9834,14 +9797,13 @@ name = "nexcore-synth"
 version = "0.1.0"
 dependencies = [
  "antitransformer",
- "anyhow",
  "chrono",
+ "nexcore-error",
  "nexcore-id",
  "nexcore-lex-primitiva",
  "nexcore-transcriptase",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tracing",
 ]
 
@@ -14123,22 +14085,9 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
 name = "signal"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
- "anyhow",
- "axum 0.8.8",
- "bytes",
- "chrono",
- "http-body-util",
- "nexcore-id",
- "nexcore-lex-primitiva",
- "phf",
- "serde",
- "serde_json",
- "stem-math",
- "thiserror 1.0.69",
- "tokio",
- "tower 0.4.13",
+ "nexcore-signal-pipeline",
 ]
 
 [[package]]
@@ -16366,35 +16315,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ureq"
-version = "3.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fdc97a28575b85cfedf2a7e7d3cc64b3e11bd8ac766666318003abbacc7a21fc"
-dependencies = [
- "base64 0.22.1",
- "flate2",
- "log",
- "percent-encoding",
- "rustls",
- "rustls-pki-types",
- "ureq-proto",
- "utf-8",
- "webpki-roots 1.0.6",
-]
-
-[[package]]
-name = "ureq-proto"
-version = "0.5.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d81f9efa9df032be5934a46a068815a10a042b494b6a58cb0a1a97bb5467ed6f"
-dependencies = [
- "base64 0.22.1",
- "http",
- "httparse",
- "log",
-]
-
-[[package]]
 name = "url"
 version = "2.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -18236,17 +18156,6 @@ dependencies = [
  "serde",
  "serde_json",
  "uuid",
-]
-
-[[package]]
-name = "word-spectroscopy"
-version = "1.0.0"
-dependencies = [
- "clap",
- "nexcore-laboratory",
- "nexcore-lex-primitiva",
- "serde",
- "serde_json",
 ]
 
 [[package]]

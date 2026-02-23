@@ -97,6 +97,7 @@ impl ImmunityScanner {
     }
 
     /// Check if antibody applies to a given file type.
+    #[allow(clippy::unused_self)] // method kept as instance method for API consistency
     fn applies_to_file(&self, compiled: &CompiledAntibody, file_path: Option<&str>) -> bool {
         // If no file globs defined, applies to all
         if compiled.file_globs.is_empty() {
@@ -113,6 +114,7 @@ impl ImmunityScanner {
     }
 
     /// Check if content has an exception that prevents matching.
+    #[allow(clippy::unused_self)] // method kept as instance method for API consistency
     fn has_exception(&self, compiled: &CompiledAntibody, content: &str) -> bool {
         compiled
             .exception_patterns
@@ -219,7 +221,7 @@ impl ImmunityScanner {
                         threat_type: compiled.antibody.threat_type,
                         severity: compiled.antibody.severity,
                         location: None,
-                        matched_content: format!("Error pattern matched: {}", pattern),
+                        matched_content: format!("Error pattern matched: {pattern}"),
                         confidence: compiled.antibody.confidence,
                         response: compiled.antibody.response.strategy,
                     });

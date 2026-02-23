@@ -86,15 +86,20 @@ impl FrameBridge {
 /// The server runs on a background thread listening on `127.0.0.1:9333`.
 /// Returns `None` if the port is already in use (non-fatal).
 pub fn start() -> Option<Arc<FrameBridge>> {
-    let listener = match TcpListener::bind(("127.0.0.1", DEBUG_PORT)) {
+    let port = std::env::var("PORT")
+        .ok()
+        .and_then(|v| v.parse::<u16>().ok())
+        .unwrap_or(DEBUG_PORT);
+
+    let listener = match TcpListener::bind(("127.0.0.1", port)) {
         Ok(l) => l,
         Err(e) => {
-            tracing::warn!("Debug server failed to bind port {DEBUG_PORT}: {e}");
+            tracing::warn!("Debug server failed to bind port {port}: {e}");
             return None;
         }
     };
 
-    tracing::info!("Debug server listening on http://localhost:{DEBUG_PORT}/");
+    tracing::info!("Debug server listening on http://localhost:{port}/");
 
     let bridge = Arc::new(FrameBridge::new());
     let bridge_clone = Arc::clone(&bridge);
@@ -302,6 +307,11 @@ mod tests {
         let mut out = Vec::new();
         base64_encode(b"Ma", &mut out);
         assert_eq!(String::from_utf8_lossy(&out), "TWE=");
+    }
+
+    #[test]
+    fn test_debug_port_default() {
+        assert_eq!(DEBUG_PORT, 9333);
     }
 
     #[test]

@@ -5,6 +5,8 @@
 
 pub mod cipher;
 
+pub mod composites;
+
 pub mod config;
 
 pub mod error;
@@ -15,6 +17,12 @@ pub mod kdf;
 
 pub mod persistence;
 
+pub mod prelude;
+
+pub mod primitives;
+
 pub mod store;
+
+pub mod transfer;
 
 pub mod types;

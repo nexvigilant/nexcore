@@ -46,9 +46,12 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 #![warn(missing_docs)]
 
+pub mod composites;
 pub mod grounding;
 pub mod neurotransmitter;
+pub mod primitives;
 pub mod pv_bridge;
+pub mod transfer;
 
 mod apoptosis;
 mod bus;
@@ -80,42 +83,4 @@ pub use receptor::*;
 pub use types::*;
 
 /// Prelude for common imports
-pub mod prelude {
-    pub use crate::{
-        ApoptosisController,
-        CascadeRule,
-        ChemotacticAgent,
-        // Core signaling
-        Cytokine,
-        CytokineBus,
-        CytokineFamily,
-        DifferentiableCell,
-        Emitter,
-        EndocyticReceptor,
-        ExocyticEmitter,
-        // Biology primitives
-        Gradient,
-        GradientField,
-        InternalizationPolicy,
-        MembraneGate,
-        Phagocyte,
-        PopulationController,
-        PopulationHealth,
-        PostMortem,
-        Potency,
-        QuorumResult,
-        QuorumSensor,
-        Receptor,
-        Scope,
-        ShutdownPhase,
-        SignalBundle,
-        SpawnResult,
-        Specialization,
-        ThreatClass,
-        ThreatDigest,
-        ThreatLevel,
-        Tropism,
-        Vesicle,
-        VesiclePool,
-    };
-}
+pub mod prelude;

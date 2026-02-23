@@ -23,7 +23,7 @@
 //! - **Processing cascade**: Internalized signals trigger internal state changes
 //! - **Receptor recycling**: After processing, capacity is restored
 
-use crate::{CascadeResponse, Cytokine, CytokineFamily, ThreatLevel};
+use crate::{Cytokine, CytokineFamily, ThreatLevel};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
@@ -76,6 +76,7 @@ impl InternalizationPolicy {
     }
 
     /// Set minimum severity.
+    #[must_use]
     pub fn with_min_severity(mut self, severity: ThreatLevel) -> Self {
         self.min_severity = severity;
         self
@@ -167,8 +168,7 @@ impl Vesicle {
         self.state = match self.state {
             VesicleState::EarlyEndosome => VesicleState::LateEndosome,
             VesicleState::LateEndosome => VesicleState::Lysosome,
-            VesicleState::Lysosome => VesicleState::Recycled,
-            VesicleState::Recycled => VesicleState::Recycled,
+            VesicleState::Lysosome | VesicleState::Recycled => VesicleState::Recycled,
         };
         self.processing_depth += 1;
     }
@@ -249,6 +249,7 @@ impl VesiclePool {
     }
 
     /// Set the internalization policy.
+    #[must_use]
     pub fn with_policy(mut self, policy: InternalizationPolicy) -> Self {
         self.policy = policy;
         self
@@ -289,7 +290,7 @@ impl VesiclePool {
     pub fn process_step(&mut self) -> Vec<Cytokine> {
         let mut responses = Vec::new();
 
-        for vesicle in self.vesicles.iter_mut() {
+        for vesicle in &mut self.vesicles {
             if vesicle.is_recycled() {
                 continue;
             }
@@ -315,7 +316,7 @@ impl VesiclePool {
         let before = self.vesicles.len();
 
         // Advance any Lysosome vesicles to Recycled before removing
-        for vesicle in self.vesicles.iter_mut() {
+        for vesicle in &mut self.vesicles {
             if vesicle.state == VesicleState::Lysosome {
                 vesicle.advance();
             }
@@ -344,7 +345,11 @@ impl VesiclePool {
         if self.capacity == 0 {
             return 1.0;
         }
-        self.vesicles.len() as f64 / self.capacity as f64
+        // Precision loss acceptable: vesicle counts are small
+        #[allow(clippy::cast_precision_loss)]
+        {
+            self.vesicles.len() as f64 / self.capacity as f64
+        }
     }
 
     /// Check if the pool is at capacity.
@@ -398,7 +403,7 @@ impl VesiclePool {
             .collect();
 
         // Mark all processed vesicles as recycled
-        for vesicle in self.vesicles.iter_mut() {
+        for vesicle in &mut self.vesicles {
             if vesicle.is_processed() {
                 vesicle.state = VesicleState::Recycled;
             }
@@ -517,6 +522,7 @@ impl SimpleEndocyticReceptor {
     }
 
     /// Set the internalization policy.
+    #[must_use]
     pub fn with_policy(mut self, policy: InternalizationPolicy) -> Self {
         self.pool = self.pool.with_policy(policy);
         self

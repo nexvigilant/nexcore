@@ -128,6 +128,12 @@ pub mod thermodynamic;
 pub mod thresholds;
 pub mod types;
 
+// Structural modules: prelude, cross-domain transfer, T1 primitive inventory, T2/T3 composites
+pub mod composites;
+pub mod prelude;
+pub mod primitives;
+pub mod transfer;
+
 pub use classification::{
     SeverityAssessment, SeverityCategory, SeverityCriteria, SeverityLevel, assess_severity,
     batch_severity_score, full_assessment,
@@ -165,3 +171,7 @@ pub use icsr::{
 };
 pub use thresholds::{ContextualThreshold, SignalCriteria, ThresholdRegistry};
 pub use types::{CompleteSignalResult, ContingencyTable, SignalResult};
+
+// Preemptive PV — three-tier signal detection (Reactive → Predictive → Preemptive).
+// Re-exported from nexcore-preemptive-pv for unified access through pv-core.
+pub use nexcore_preemptive_pv as preemptive_pv;

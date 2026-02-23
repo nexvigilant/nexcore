@@ -24,7 +24,7 @@
 //!
 //! ## Primitive Grounding: ∂(Boundary) + ν(Frequency) + ς(State)
 
-use crate::co_translational::{UpfAnomaly, UpfVerdict};
+use crate::co_translational::UpfVerdict;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -145,7 +145,7 @@ impl ThymicGate {
     pub fn is_graduated(&self, category: &str) -> bool {
         self.observations
             .get(category)
-            .map_or(false, |obs| obs.graduated)
+            .is_some_and(|obs| obs.graduated)
     }
 
     /// Get observation state for a category.
@@ -170,7 +170,8 @@ impl ThymicGate {
             if obs.runs_observed == 0 {
                 0.0
             } else {
-                obs.suppressed_degrades as f32 / obs.runs_observed as f32
+                #[allow(clippy::cast_precision_loss)] // u32 values within f32 mantissa range for practical use
+                { obs.suppressed_degrades as f32 / obs.runs_observed as f32 }
             }
         })
     }
@@ -193,7 +194,7 @@ impl ThymicGate {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::co_translational::UpfChannel;
+    use crate::co_translational::{UpfAnomaly, UpfChannel};
 
     fn make_anomalies() -> Vec<UpfAnomaly> {
         vec![UpfAnomaly {

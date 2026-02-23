@@ -1,53 +1,24 @@
 
 [package]
 name = "signal"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "LicenseRef-Proprietary"
 repository = "https://github.com/nexvigilant/nexcore"
 rust-version = "1.85"
-description = "Unified signal detection pipeline: ingest, normalize, detect, threshold, store, alert, report, stats, orchestrate"
+description = "Thin re-export wrapper for nexcore-signal-pipeline — the canonical signal detection pipeline"
+
+# NOTE: This crate is a thin wrapper. The canonical implementation lives in
+# nexcore-signal-pipeline. New consumers should depend on that crate directly.
+
+autobins = false
+
+[lib]
+path = "src/lib.rs"
 
 [dependencies]
-serde = { version = "1.0.204", features = ["derive"] }
-serde_json = { version = "1.0.120" }
-chrono = { version = "0.4.38", features = ["serde"] }
-nexcore-id = { version = "0.1.0", path = "../nexcore-id", registry = "nexcore", features = ["serde"] }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
-stem-math = { version = "0.1.0", path = "../stem-math", registry = "nexcore" }
-axum = { version = "0.8.0", features = ["macros"] }
-tokio = { version = "1.38.0", features = ["full"] }
-bytes = { version = "1.6.1" }
-thiserror = { version = "1.0.61" }
-anyhow = { version = "1.0.86" }
-phf = { version = "0.11.2", features = ["macros"] }
+nexcore-signal-pipeline = { version = "1.0.0", path = "../nexcore-signal-pipeline" }
 
-[dev-dependencies]
-tower = { version = "0.4.13", features = ["full"] }
-http-body-util = { version = "0.1.2" }
-
-[lints.rust]
-async_fn_in_trait = "allow"
-dead_code = "allow"
-unused_imports = "allow"
-unused_variables = "allow"
-unused_mut = "allow"
-unused_assignments = "allow"
-unused_must_use = "allow"
-
-[lints.clippy]
-all = "allow"
-pedantic = "allow"
-nursery = "allow"
-cargo = "allow"
-map_unwrap_or = "allow"
-manual_map = "allow"
-option_map_or_none = "allow"
-derivable_impls = "allow"
-unwrap_used = "allow"
-expect_used = "allow"
-panic = "allow"
-todo = "allow"
-unimplemented = "allow"
-unreachable = "allow"
+[lints]
+workspace = true

@@ -103,6 +103,7 @@ Claude Code ←stdio→ nexcore-mcp (direct binary)
 ├── studio/             # Separate: Next.js portal (see studio/CLAUDE.md)
 ├── scripts/            # Build/audit scripts
 ├── docs/               # Documentation
+│   └── sops/           # All SOPs (OPS/, QA/, DEV/, DEV-BIO/, SEC/, SPECIALIZED/)
 ├── kellnr/             # Crate registry (docker-compose)
 ├── data/, dna/, ksb/   # Reference data
 └── .build-orchestrator/ # DAG state

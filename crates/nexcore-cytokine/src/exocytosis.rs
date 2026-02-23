@@ -23,7 +23,7 @@
 //! - **Release**: Atomic emission of the entire bundle
 //! - **Acknowledgment**: Track which bundles were received
 
-use crate::{Cytokine, CytokineFamily};
+use crate::Cytokine;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -77,6 +77,7 @@ impl SignalBundle {
     }
 
     /// Set the target recipient.
+    #[must_use]
     pub fn with_target(mut self, target: impl Into<String>) -> Self {
         self.target = Some(target.into());
         self
@@ -88,6 +89,7 @@ impl SignalBundle {
     }
 
     /// Add a signal (builder pattern).
+    #[must_use]
     pub fn with_signal(mut self, signal: Cytokine) -> Self {
         self.signals.push(signal);
         self
@@ -239,10 +241,8 @@ impl ExocyticEmitter {
             self.total_bundles_released + self.pending.len() as u64 + 1
         );
         self.pending.push(SignalBundle::new(bundle_id));
-        self.pending.last_mut().unwrap_or_else(|| {
-            // Safety: we just pushed, so last_mut is always Some
-            unreachable!()
-        })
+        let idx = self.pending.len() - 1;
+        &mut self.pending[idx]
     }
 
     /// Release all docked bundles (gate check performed per bundle).

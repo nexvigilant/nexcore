@@ -22,6 +22,7 @@ nexcore-tov = { version = "1.0.0", path = "../nexcore-tov", registry = "nexcore"
 nexcore-constants = { version = "1.0.0", path = "../nexcore-constants", registry = "nexcore" }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 nexcore-signal-types = { version = "1.0.0", path = "../nexcore-signal-types", registry = "nexcore" }
+nexcore-preemptive-pv = { version = "1.0.0", path = "../nexcore-preemptive-pv", registry = "nexcore" }
 signal = { version = "1.0.0", path = "../signal", registry = "nexcore" }
 phf = { version = "0.11.2", features = ["macros"] }
 once_cell = { version = "1.19.0" }

@@ -35,7 +35,6 @@
 pub mod grounding;
 pub mod harm_synthesis;
 
-use std::collections::BTreeMap;
 use std::fmt;
 
 use nexcore_ribosome::DriftType;
@@ -65,27 +64,26 @@ pub enum Mutation {
 
 impl Mutation {
     /// All available mutation types.
-    pub const ALL: &[Mutation] = &[
-        Mutation::TypeMismatch,
-        Mutation::AddField,
-        Mutation::RemoveField,
-        Mutation::RangeExpand,
-        Mutation::LengthChange,
-        Mutation::ArrayResize,
-        Mutation::StructureSwap,
+    pub const ALL: &[Self] = &[
+        Self::TypeMismatch,
+        Self::AddField,
+        Self::RemoveField,
+        Self::RangeExpand,
+        Self::LengthChange,
+        Self::ArrayResize,
+        Self::StructureSwap,
     ];
 
     /// Which drift types this mutation is expected to trigger.
     #[must_use]
     pub fn expected_drift_types(self) -> Vec<DriftType> {
         match self {
-            Self::TypeMismatch => vec![DriftType::TypeMismatch],
+            Self::TypeMismatch | Self::StructureSwap => vec![DriftType::TypeMismatch],
             Self::AddField => vec![DriftType::ExtraField],
             Self::RemoveField => vec![DriftType::MissingField],
             Self::RangeExpand => vec![DriftType::RangeExpansion],
             Self::LengthChange => vec![DriftType::LengthChange],
             Self::ArrayResize => vec![DriftType::ArraySizeChange],
-            Self::StructureSwap => vec![DriftType::TypeMismatch],
         }
     }
 }
@@ -354,7 +352,7 @@ fn generate_normal(kind: &SchemaKind) -> serde_json::Value {
         SchemaKind::Str {
             min_len, max_len, ..
         } => {
-            let len = (*min_len + *max_len) / 2;
+            let len = usize::midpoint(*min_len, *max_len);
             let s: String = (0..len.max(1)).map(|_| 'a').collect();
             serde_json::Value::String(s)
         }
@@ -363,7 +361,7 @@ fn generate_normal(kind: &SchemaKind) -> serde_json::Value {
             min_len,
             max_len,
         } => {
-            let len = (*min_len + *max_len) / 2;
+            let len = usize::midpoint(*min_len, *max_len);
             let items: Vec<serde_json::Value> = (0..len.max(1))
                 .map(|_| generate_normal(&element.kind))
                 .collect();

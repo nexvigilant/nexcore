@@ -23,7 +23,6 @@ nexcore-brain = { workspace = true }
 nexcore-oracle = { workspace = true }
 nexcore-db = { workspace = true }
 nexcore-synapse = { workspace = true }
-nexcore-hooks = { workspace = true }
 nexcore-config = { workspace = true }
 nexcore-skill-exec = { workspace = true }
 nexcore-skill-compiler = { workspace = true }
@@ -81,7 +80,6 @@ nexcore-tov-proofs = { workspace = true }
 # PV Core (signal algorithms, causality, medical coding, pharmacokinetics)
 nexcore-pv-core = { workspace = true }
 nexcore-pharmacovigilance = { workspace = true }
-nexcore-preemptive-pv = { workspace = true }
 nexcore-harm-taxonomy = { workspace = true }
 pvos-primitive-expansion = { workspace = true }
 # Platform/orchestration/security domain crates
@@ -91,7 +89,6 @@ nexcore-statemind = { workspace = true }
 nexcore-stoichiometry = { workspace = true }
 nexcore-model-checker = { workspace = true }
 nexcore-combinatorics = { workspace = true }
-nexcore-cloud = { workspace = true }
 nexcloud = { workspace = true }
 # Remaining domain wiring wave (excluding blocked nexcore-api)
 core-true = { workspace = true }
@@ -185,6 +182,9 @@ quick-xml = "0.37"
 # Re-export from nexcore-browser for shared state with Vigil/Guardian
 nexcore-browser = { workspace = true }
 
+# NotebookLM integration (library, sessions, browser-automated research queries)
+nexcore-notebooklm = { workspace = true }
+
 # Visual primitives (shape/color pattern matching)
 nexcore-renderer = { workspace = true }
 
@@ -197,7 +197,6 @@ nexcore-value-mining = { workspace = true }
 # Prima language (primitive-first programming)
 prima = { workspace = true }
 prima-codegen = { workspace = true }
-nexcore-prima = { workspace = true }
 prima-chem = { workspace = true }
 prima-pipeline = { workspace = true }
 prima-academy = { workspace = true }

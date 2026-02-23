@@ -114,12 +114,14 @@ impl QuorumSensor {
     }
 
     /// Set the quorum threshold (fraction of population needed).
+    #[must_use]
     pub fn with_threshold(mut self, threshold: f64) -> Self {
         self.threshold = threshold.clamp(0.0, 1.0);
         self
     }
 
     /// Set minimum confidence for a vote to count.
+    #[must_use]
     pub fn with_min_confidence(mut self, min_confidence: f64) -> Self {
         self.min_confidence = min_confidence.clamp(0.0, 1.0);
         self
@@ -156,12 +158,16 @@ impl QuorumSensor {
         let population = qualifying_votes.len();
         let positive: Vec<_> = qualifying_votes.iter().filter(|v| v.detected).collect();
 
+        // Precision loss acceptable: vote counts are small
+        #[allow(clippy::cast_precision_loss)]
         let density = if population > 0 {
             positive.len() as f64 / population as f64
         } else {
             0.0
         };
 
+        // Precision loss acceptable: vote counts are small
+        #[allow(clippy::cast_precision_loss)]
         let weighted_confidence = if positive.is_empty() {
             0.0
         } else {
@@ -239,7 +245,9 @@ impl PopulationHealth {
             return 0.0;
         }
         let responsive = self.reports.iter().filter(|r| r.responsive).count();
-        responsive as f64 / self.reports.len() as f64
+        // Precision loss acceptable: report counts are small
+        #[allow(clippy::cast_precision_loss)]
+        { responsive as f64 / self.reports.len() as f64 }
     }
 
     /// Mean health across all responsive members.
@@ -250,7 +258,9 @@ impl PopulationHealth {
             return 0.0;
         }
 
-        responsive.iter().map(|r| r.health).sum::<f64>() / responsive.len() as f64
+        // Precision loss acceptable: report counts are small
+        #[allow(clippy::cast_precision_loss)]
+        { responsive.iter().map(|r| r.health).sum::<f64>() / responsive.len() as f64 }
     }
 
     /// Check if population health is above a threshold.

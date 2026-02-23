@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 /// Complete signal analysis with all algorithms.
 ///
-/// # Tier: T3
+/// # Tier: T2-C (composed from T1: Existence + Quantity + Comparison + Product)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompleteSignalResult {
     /// PRR result

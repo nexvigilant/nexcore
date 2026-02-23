@@ -67,7 +67,7 @@ impl fmt::Display for CytokineFamily {
             Self::IfnGamma => write!(f, "IFN-γ"),
             Self::TgfBeta => write!(f, "TGF-β"),
             Self::Csf => write!(f, "CSF"),
-            Self::Custom(id) => write!(f, "Custom-{}", id),
+            Self::Custom(id) => write!(f, "Custom-{id}"),
         }
     }
 }
@@ -106,7 +106,7 @@ impl CytokineFamily {
 ///
 /// # Tier: T2-P
 /// Grounds to: N (quantity)
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ThreatLevel {
     /// Trace level - minimal signal
@@ -114,6 +114,7 @@ pub enum ThreatLevel {
     /// Low - background noise
     Low = 1,
     /// Medium - notable
+    #[default]
     Medium = 2,
     /// High - requires attention
     High = 3,
@@ -124,12 +125,6 @@ pub enum ThreatLevel {
 /// Backward-compatible alias.
 #[deprecated(note = "use ThreatLevel — F2 equivocation fix")]
 pub type Severity = ThreatLevel;
-
-impl Default for ThreatLevel {
-    fn default() -> Self {
-        Self::Medium
-    }
-}
 
 impl fmt::Display for ThreatLevel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -147,23 +142,18 @@ impl fmt::Display for ThreatLevel {
 ///
 /// # Tier: T2-P
 /// Grounds to: λ (location)
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Scope {
     /// Autocrine: Signal affects only the sender
     Autocrine,
     /// Paracrine: Signal affects nearby components (same file/module)
+    #[default]
     Paracrine,
     /// Endocrine: Signal affects distant components (cross-module)
     Endocrine,
     /// Systemic: Signal affects entire system (session-wide)
     Systemic,
-}
-
-impl Default for Scope {
-    fn default() -> Self {
-        Self::Paracrine
-    }
 }
 
 impl fmt::Display for Scope {
@@ -236,42 +226,49 @@ impl Cytokine {
     }
 
     /// Set severity
+    #[must_use]
     pub fn with_severity(mut self, severity: ThreatLevel) -> Self {
         self.severity = severity;
         self
     }
 
     /// Set scope
+    #[must_use]
     pub fn with_scope(mut self, scope: Scope) -> Self {
         self.scope = scope;
         self
     }
 
     /// Set payload
+    #[must_use]
     pub fn with_payload(mut self, payload: serde_json::Value) -> Self {
         self.payload = payload;
         self
     }
 
     /// Set source
+    #[must_use]
     pub fn with_source(mut self, source: impl Into<String>) -> Self {
         self.source = Some(source.into());
         self
     }
 
     /// Set target
+    #[must_use]
     pub fn with_target(mut self, target: impl Into<String>) -> Self {
         self.target = Some(target.into());
         self
     }
 
     /// Set TTL
+    #[must_use]
     pub fn with_ttl(mut self, secs: u32) -> Self {
         self.ttl_secs = secs;
         self
     }
 
     /// Disable cascade triggering
+    #[must_use]
     pub fn no_cascade(mut self) -> Self {
         self.cascadable = false;
         self
@@ -324,7 +321,7 @@ fn uuid_v4_simple() -> String {
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_nanos())
         .unwrap_or(0);
-    format!("{:016x}", now)
+    format!("{now:016x}")
 }
 
 #[cfg(test)]

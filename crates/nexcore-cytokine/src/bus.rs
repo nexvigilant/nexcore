@@ -7,7 +7,7 @@
 //! - Broadcast → ρ (recursion) - one signal to many
 
 use crate::{
-    CascadeRule, Cytokine, CytokineFamily, EmitError, EmitResult, Emitter, Receptor, Scope,
+    CascadeRule, Cytokine, CytokineFamily, EmitResult, Emitter, Receptor, Scope,
     ThreatLevel,
 };
 use std::collections::HashMap;
@@ -146,12 +146,14 @@ impl CytokineBus {
         }
 
         // Deliver to receptors
-        let receptors = self.receptors.read().await;
-        for receptor in receptors.iter() {
-            if receptor.accepts(&signal) {
-                receptor.on_signal(signal.clone()).await;
-                let mut stats = self.stats.write().await;
-                stats.signals_delivered += 1;
+        {
+            let receptors = self.receptors.read().await;
+            for receptor in receptors.iter() {
+                if receptor.accepts(&signal) {
+                    receptor.on_signal(signal.clone()).await;
+                    let mut stats = self.stats.write().await;
+                    stats.signals_delivered += 1;
+                }
             }
         }
 

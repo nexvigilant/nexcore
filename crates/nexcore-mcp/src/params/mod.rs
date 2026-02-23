@@ -483,3 +483,7 @@ pub use harm_taxonomy::*;
 // Antibodies: adaptive immune recognition (affinity, Ig class, response classification)
 pub mod antibodies;
 pub use antibodies::*;
+
+// Jeopardy: game theory strategy engine (wagers, buzz decisions, compound velocity)
+pub mod jeopardy;
+pub use jeopardy::*;

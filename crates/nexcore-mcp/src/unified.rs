@@ -2521,6 +2521,20 @@ async fn dispatch_inner(
         "antibody_ig_info" => typed(params, tools::antibodies::antibody_ig_info),
         "antibody_ig_catalog" => typed(params, tools::antibodies::antibody_ig_catalog),
 
+        // ── Jeopardy (Game Theory Strategy) ────────────────────────────────
+        "jeopardy_clue_values" => typed(params, tools::jeopardy::jeopardy_clue_values),
+        "jeopardy_categories" => typed(params, tools::jeopardy::jeopardy_categories),
+        "jeopardy_score_board" => typed(params, tools::jeopardy::jeopardy_score_board),
+        "jeopardy_should_buzz" => typed(params, tools::jeopardy::jeopardy_should_buzz),
+        "jeopardy_optimal_dd_wager" => typed(params, tools::jeopardy::jeopardy_optimal_dd_wager),
+        "jeopardy_optimal_final_wager" => {
+            typed(params, tools::jeopardy::jeopardy_optimal_final_wager)
+        }
+        "jeopardy_board_control_value" => {
+            typed(params, tools::jeopardy::jeopardy_board_control_value)
+        }
+        "jeopardy_compound_velocity" => typed(params, tools::jeopardy::jeopardy_compound_velocity),
+
         // ====================================================================
         _ => Err(McpError::invalid_params(
             format!("Unknown command: {command}. Use command='help' for catalog."),
@@ -2955,6 +2969,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "word": ["word_analyze", "word_popcount", "word_hamming_distance", "word_parity", "word_rotate", "word_log2", "word_isqrt", "word_binary_gcd", "word_bit_test", "word_align_up"],
             "harm_taxonomy": ["harm_classify", "harm_definition", "harm_catalog", "harm_exhaustiveness", "harm_axiom_connection", "harm_axiom_catalog", "harm_combinations", "harm_manifestation_derive"],
             "antibodies": ["antibody_compute_affinity", "antibody_classify_response", "antibody_ig_info", "antibody_ig_catalog"],
+            "jeopardy": ["jeopardy_clue_values", "jeopardy_categories", "jeopardy_score_board", "jeopardy_should_buzz", "jeopardy_optimal_dd_wager", "jeopardy_optimal_final_wager", "jeopardy_board_control_value", "jeopardy_compound_velocity"],
         }
     });
 

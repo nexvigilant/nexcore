@@ -475,3 +475,11 @@ pub use reason::*;
 // Word: binary word trait algebra (popcount, rotation, GCD, alignment)
 pub mod word;
 pub use word::*;
+
+// Harm Taxonomy: ToV §9 harm classification (types A-I, conservation laws, axiom connections)
+pub mod harm_taxonomy;
+pub use harm_taxonomy::*;
+
+// Antibodies: adaptive immune recognition (affinity, Ig class, response classification)
+pub mod antibodies;
+pub use antibodies::*;

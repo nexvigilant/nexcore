@@ -496,3 +496,9 @@ pub mod reason;
 
 // Word: binary word trait algebra (popcount, hamming, rotation, GCD, alignment)
 pub mod word;
+
+// Harm Taxonomy: ToV §9 harm classification (types A-I, laws, axioms)
+pub mod harm_taxonomy;
+
+// Antibodies: adaptive immune recognition (affinity, Ig class)
+pub mod antibodies;

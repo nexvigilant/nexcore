@@ -2501,6 +2501,26 @@ async fn dispatch_inner(
         "word_bit_test" => typed(params, tools::word::word_bit_test),
         "word_align_up" => typed(params, tools::word::word_align_up),
 
+        // ── Harm Taxonomy (ToV §9) ───────────────────────────────────────
+        "harm_classify" => typed(params, tools::harm_taxonomy::harm_classify),
+        "harm_definition" => typed(params, tools::harm_taxonomy::harm_definition),
+        "harm_catalog" => typed(params, tools::harm_taxonomy::harm_catalog),
+        "harm_exhaustiveness" => typed(params, tools::harm_taxonomy::harm_exhaustiveness),
+        "harm_axiom_connection" => typed(params, tools::harm_taxonomy::harm_axiom_connection),
+        "harm_axiom_catalog" => typed(params, tools::harm_taxonomy::harm_axiom_catalog),
+        "harm_combinations" => typed(params, tools::harm_taxonomy::harm_combinations),
+        "harm_manifestation_derive" => {
+            typed(params, tools::harm_taxonomy::harm_manifestation_derive)
+        }
+
+        // ── Antibodies (Adaptive Immune) ──────────────────────────────────
+        "antibody_compute_affinity" => typed(params, tools::antibodies::antibody_compute_affinity),
+        "antibody_classify_response" => {
+            typed(params, tools::antibodies::antibody_classify_response)
+        }
+        "antibody_ig_info" => typed(params, tools::antibodies::antibody_ig_info),
+        "antibody_ig_catalog" => typed(params, tools::antibodies::antibody_ig_catalog),
+
         // ====================================================================
         _ => Err(McpError::invalid_params(
             format!("Unknown command: {command}. Use command='help' for catalog."),
@@ -2933,6 +2953,8 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "statemind": ["statemind_analyze_word", "statemind_constellation"],
             "reason": ["reason_infer", "reason_counterfactual"],
             "word": ["word_analyze", "word_popcount", "word_hamming_distance", "word_parity", "word_rotate", "word_log2", "word_isqrt", "word_binary_gcd", "word_bit_test", "word_align_up"],
+            "harm_taxonomy": ["harm_classify", "harm_definition", "harm_catalog", "harm_exhaustiveness", "harm_axiom_connection", "harm_axiom_catalog", "harm_combinations", "harm_manifestation_derive"],
+            "antibodies": ["antibody_compute_affinity", "antibody_classify_response", "antibody_ig_info", "antibody_ig_catalog"],
         }
     });
 

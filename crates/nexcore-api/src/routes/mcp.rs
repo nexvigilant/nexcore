@@ -286,6 +286,297 @@ const ALLOWED_TOOLS: &[&str] = &[
     "cloud_architecture_advisor",
     "cloud_anomaly_detect",
     "cloud_transfer_matrix",
+    // ── NEW ADDITIONS (2026-02-23 gateway expansion) ──────────
+    // Aggregate (data processing)
+    "aggregate_fold",
+    "aggregate_tree_fold",
+    "aggregate_rank",
+    "aggregate_percentile",
+    "aggregate_outliers",
+    // Benefit-Risk (QBRI)
+    "pv_qbri_compute",
+    "pv_qbri_derive",
+    "pv_qbri_equation",
+    // Chemistry (missing thermodynamics)
+    "chemistry_first_law_closed",
+    "chemistry_first_law_open",
+    // Cloud (missing status)
+    "cloud_infra_status",
+    "cloud_infra_map",
+    // Combinatorics (pure math)
+    "comb_catalan",
+    "comb_catalan_table",
+    "comb_cycle_decomposition",
+    "comb_min_transpositions",
+    "comb_derangement",
+    "comb_derangement_probability",
+    "comb_grid_paths",
+    "comb_binomial",
+    "comb_multinomial",
+    "comb_josephus",
+    "comb_elimination_order",
+    "comb_linear_extensions",
+    // Compendious (text density analysis)
+    "compendious_score_text",
+    "compendious_compress_text",
+    "compendious_compare_texts",
+    "compendious_analyze_patterns",
+    "compendious_get_domain_target",
+    // Compliance (missing regulatory)
+    "compliance_catalog_ich",
+    "compliance_sec_filings",
+    "compliance_sec_pharma",
+    // FDA Credibility Assessment
+    "fda_define_cou",
+    "fda_assess_risk",
+    "fda_create_plan",
+    "fda_validate_evidence",
+    "fda_decide_adequacy",
+    "fda_calculate_score",
+    "fda_metrics_summary",
+    "fda_evidence_distribution",
+    "fda_risk_distribution",
+    "fda_drift_trend",
+    "fda_rating_thresholds",
+    // FDA Guidance (missing status)
+    "fda_guidance_status",
+    // FHIR (clinical data parsing)
+    "fhir_adverse_event_to_signal",
+    "fhir_batch_to_signals",
+    "fhir_parse_bundle",
+    "fhir_validate_resource",
+    // Lex Primitiva (type taxonomy)
+    "lex_primitiva_list",
+    "lex_primitiva_get",
+    "lex_primitiva_tier",
+    "lex_primitiva_composition",
+    "lex_primitiva_reverse_compose",
+    "lex_primitiva_reverse_lookup",
+    "lex_primitiva_molecular_weight",
+    "lex_primitiva_dominant_shift",
+    "lex_primitiva_state_mode",
+    "lex_primitiva_audit",
+    "lex_primitiva_synth",
+    // Molecular (computation)
+    "molecular_translate_codon",
+    "molecular_translate_mrna",
+    "molecular_central_dogma",
+    "molecular_adme_phase",
+    // Molecular Weight
+    "mw_compute",
+    "mw_periodic_table",
+    "mw_compare",
+    "mw_predict_transfer",
+    // OpenFDA (read-only API queries)
+    "openfda_drug_events",
+    "openfda_drug_labels",
+    "openfda_drug_recalls",
+    "openfda_drug_ndc",
+    "openfda_drugs_at_fda",
+    "openfda_device_events",
+    "openfda_device_recalls",
+    "openfda_food_recalls",
+    "openfda_food_events",
+    "openfda_substances",
+    "openfda_fan_out",
+    // Pharma R&D (read-only taxonomy)
+    "pharma_taxonomy_summary",
+    "pharma_lookup_transfer",
+    "pharma_transfer_matrix",
+    "pharma_strongest_transfers",
+    "pharma_weakest_transfers",
+    "pharma_symbol_coverage",
+    "pharma_pipeline_stage",
+    "pharma_classify_generators",
+    // Polymer (computation)
+    "polymer_compose",
+    "polymer_validate",
+    "polymer_analyze",
+    // Preemptive PV (predictive safety)
+    "preemptive_reactive",
+    "preemptive_gibbs",
+    "preemptive_trajectory",
+    "preemptive_severity",
+    "preemptive_noise",
+    "preemptive_predictive",
+    "preemptive_evaluate",
+    "preemptive_intervention",
+    "preemptive_required_strength",
+    "preemptive_omega_table",
+    // PV (missing signal methods)
+    "pv_signal_cooperative",
+    "pv_signal_strength",
+    // PV Axioms (KSB/regulation lookup)
+    "pv_axioms_ksb_lookup",
+    "pv_axioms_regulation_search",
+    "pv_axioms_traceability_chain",
+    "pv_axioms_domain_dashboard",
+    "pv_axioms_query",
+    // PV DSL (domain-specific language)
+    "pvdsl_compile",
+    "pvdsl_execute",
+    "pvdsl_eval",
+    "pvdsl_functions",
+    // PV Embeddings (semantic similarity)
+    "pv_embedding_similarity",
+    "pv_embedding_get",
+    "pv_embedding_stats",
+    // Reason (inference)
+    "reason_infer",
+    "reason_counterfactual",
+    // Retrocasting (retrospective analysis)
+    "retro_structural_similarity",
+    "retro_signal_significance",
+    "retro_cluster_signals",
+    "retro_correlate_alerts",
+    "retro_extract_features",
+    "retro_dataset_stats",
+    // Security Posture (compliance scoring)
+    "security_posture_assess",
+    "security_threat_readiness",
+    "security_compliance_gap",
+    // Signal Pipeline (full compute)
+    "pipeline_compute_all",
+    "pipeline_batch_compute",
+    "pipeline_detect",
+    "pipeline_validate",
+    "pipeline_thresholds",
+    "pipeline_report",
+    "pipeline_relay_chain",
+    "pipeline_transfer",
+    "pipeline_primitives",
+    // Signal Theory (axiomatic)
+    "signal_theory_axioms",
+    "signal_theory_theorems",
+    "signal_theory_detect",
+    "signal_theory_decision_matrix",
+    "signal_theory_conservation_check",
+    "signal_theory_pipeline",
+    "signal_theory_cascade",
+    "signal_theory_parallel",
+    // Stoichiometry (missing)
+    "stoichiometry_is_balanced",
+    "stoichiometry_prove",
+    "stoichiometry_is_isomer",
+    // Topology (graph computation)
+    "topo_vietoris_rips",
+    "topo_persistence",
+    "topo_betti",
+    "graph_centrality",
+    "graph_components",
+    "graph_shortest_path",
+    // ToV Grounded (safety analysis)
+    "tov_grounded_signal_strength",
+    "tov_grounded_safety_margin",
+    "tov_grounded_stability_shell",
+    "tov_grounded_harm_type",
+    "tov_grounded_meta_vigilance",
+    "tov_grounded_eka_intelligence",
+    "tov_grounded_magic_numbers",
+    // Value Mining (economic signal detection)
+    "value_signal_types",
+    "value_signal_detect",
+    "value_baseline_create",
+    "value_pv_mapping",
+    // Visualization (Observatory — 31 tools)
+    "viz_stem_taxonomy",
+    "viz_type_composition",
+    "viz_method_loop",
+    "viz_confidence_chain",
+    "viz_bounds",
+    "viz_dag",
+    "viz_molecular_info",
+    "viz_surface_mesh",
+    "viz_spectral_analysis",
+    "viz_community_detect",
+    "viz_centrality",
+    "viz_vdag_overlay",
+    "viz_antibody_structure",
+    "viz_interaction_map",
+    "viz_projection",
+    "viz_protein_structure",
+    "viz_topology_analysis",
+    "viz_dynamics_step",
+    "viz_force_field_energy",
+    "viz_gpu_layout",
+    "viz_hypergraph",
+    "viz_lod_select",
+    "viz_minimize_energy",
+    "viz_particle_preset",
+    "viz_ae_overlay",
+    "viz_coord_gen",
+    "viz_bipartite_layout",
+    "viz_manifold_sample",
+    "viz_string_modes",
+    "viz_render_pipeline",
+    "viz_orbital_density",
+    // Wolfram (external computation)
+    "wolfram_query",
+    "wolfram_short_answer",
+    "wolfram_spoken_answer",
+    "wolfram_calculate",
+    "wolfram_step_by_step",
+    "wolfram_plot",
+    "wolfram_convert",
+    "wolfram_chemistry",
+    "wolfram_physics",
+    "wolfram_astronomy",
+    "wolfram_statistics",
+    "wolfram_data_lookup",
+    "wolfram_query_with_assumption",
+    "wolfram_query_filtered",
+    "wolfram_image_result",
+    "wolfram_datetime",
+    "wolfram_nutrition",
+    "wolfram_finance",
+    "wolfram_linguistics",
+    // Measure (quality metrics)
+    "measure_crate",
+    "measure_workspace",
+    "measure_entropy",
+    "measure_graph",
+    "measure_drift",
+    "measure_compare",
+    "measure_stats",
+    "quality_gradient",
+    // Visual (shape/color analysis)
+    "visual_shape_classify",
+    "visual_color_analyze",
+    "visual_shape_list",
+    // Zeta (pure math)
+    "zeta_compute",
+    "zeta_find_zeros",
+    "zeta_verify_rh",
+    "zeta_embedded_zeros",
+    "zeta_lmfdb_parse",
+    "zeta_telescope_run",
+    "zeta_batch_run",
+    "zeta_scaling_fit",
+    "zeta_scaling_predict",
+    "zeta_cayley",
+    "zeta_operator_hunt",
+    "zeta_operator_candidate",
+    "zeta_gue_compare",
+    // Docs (read-only Claude docs)
+    "docs_claude_list_pages",
+    "docs_claude_get_page",
+    "docs_claude_search_docs",
+    "docs_claude_get_docs_index",
+    // Telemetry Intelligence (read-only)
+    "telemetry_sources_list",
+    "telemetry_source_analyze",
+    "telemetry_governance_crossref",
+    "telemetry_snapshot_evolution",
+    "telemetry_intel_report",
+    "telemetry_recent",
+    // Watchtower (read-only session analysis)
+    "watchtower_sessions_list",
+    "watchtower_active_sessions",
+    "watchtower_analyze",
+    "watchtower_telemetry_stats",
+    "watchtower_recent",
+    "watchtower_symbol_audit",
+    "watchtower_unified",
 ];
 
 // ── Telemetry ─────────────────────────────────
@@ -439,11 +730,52 @@ mod tests {
     }
 
     #[test]
+    fn test_new_allowed_tools() {
+        // 2026-02-23 expansion: spot-check each new domain
+        assert!(is_tool_allowed("pv_qbri_compute"));
+        assert!(is_tool_allowed("openfda_drug_events"));
+        assert!(is_tool_allowed("viz_centrality"));
+        assert!(is_tool_allowed("topo_betti"));
+        assert!(is_tool_allowed("wolfram_calculate"));
+        assert!(is_tool_allowed("pipeline_compute_all"));
+        assert!(is_tool_allowed("signal_theory_axioms"));
+        assert!(is_tool_allowed("preemptive_predictive"));
+        assert!(is_tool_allowed("fda_calculate_score"));
+        assert!(is_tool_allowed("fhir_parse_bundle"));
+        assert!(is_tool_allowed("lex_primitiva_list"));
+        assert!(is_tool_allowed("comb_binomial"));
+        assert!(is_tool_allowed("zeta_compute"));
+        assert!(is_tool_allowed("retro_cluster_signals"));
+        assert!(is_tool_allowed("pv_axioms_ksb_lookup"));
+        assert!(is_tool_allowed("pvdsl_compile"));
+        assert!(is_tool_allowed("tov_grounded_harm_type"));
+        assert!(is_tool_allowed("watchtower_analyze"));
+        assert!(is_tool_allowed("telemetry_sources_list"));
+        assert!(is_tool_allowed("chemistry_first_law_closed"));
+    }
+
+    #[test]
     fn test_blocked_tools() {
         assert!(!is_tool_allowed("gcloud_run_command"));
         assert!(!is_tool_allowed("gcloud_secrets_versions_access"));
         assert!(!is_tool_allowed("guardian_reset"));
         assert!(!is_tool_allowed("brain_session_create"));
         assert!(!is_tool_allowed("vigil_emit_event"));
+        // Mutation/admin tools remain blocked
+        assert!(!is_tool_allowed("cytokine_emit"));
+        assert!(!is_tool_allowed("user_create"));
+        assert!(!is_tool_allowed("claude_fs_write"));
+        assert!(!is_tool_allowed("mcp_lock"));
+        assert!(!is_tool_allowed("faers_etl_run"));
+    }
+
+    #[test]
+    fn test_allowlist_size() {
+        // Verify expansion: was 265, now ~475+
+        assert!(
+            ALLOWED_TOOLS.len() > 450,
+            "Expected 450+ allowed tools, got {}",
+            ALLOWED_TOOLS.len()
+        );
     }
 }

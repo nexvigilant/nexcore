@@ -6,6 +6,7 @@ pub mod audit;
 pub mod auth;
 pub mod core_types;
 pub mod mcp_bridge;
+pub mod metering;
 pub mod openapi_compat;
 pub mod persistence;
 pub mod routes;
@@ -23,8 +24,8 @@ use axum::{
 };
 use serde::Deserialize;
 use std::net::SocketAddr;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, OnceLock};
 use tower_http::{compression::CompressionLayer, cors::CorsLayer, trace::TraceLayer};
 use utoipa::OpenApi;
 use utoipa_scalar::{Scalar, Servable};
@@ -76,6 +77,7 @@ pub fn build_app(state: ApiState) -> Router {
         .nest("/api/v1", api_routes)
         .with_state(state)
         .layer(TraceLayer::new_for_http())
+        .layer(middleware::from_fn(response_headers_layer))
         .layer(middleware::from_fn(audit::audit_layer))
         .layer(CompressionLayer::new())
         .layer(axum::extract::DefaultBodyLimit::max(2 * 1024 * 1024))
@@ -133,6 +135,8 @@ fn setup_api_routes(state: ApiState) -> Router<ApiState> {
         .nest("/benchmarks", routes::benchmarks::router())
         .nest("/career", routes::career::router())
         .nest("/faers", routes::faers::router())
+        .nest("/regulatory", routes::regulatory_intelligence::router())
+        .nest("/icsr", routes::icsr::router())
         .nest("/graph-layout", routes::graph_layout::router())
         .nest("/learning", routes::learning::router())
         .nest("/marketplace", routes::marketplace::router())
@@ -143,6 +147,7 @@ fn setup_api_routes(state: ApiState) -> Router<ApiState> {
             "/guardian/ws/bridge",
             get(routes::guardian_ws::ws_bridge_handler),
         )
+        .layer(middleware::from_fn(metering::metering_layer))
         .layer(middleware::from_fn(auth::require_api_key))
         // Billing routes outside auth — checkout is pre-auth, webhook uses Stripe signature
         .nest("/billing", routes::billing::router())
@@ -203,6 +208,33 @@ async fn rate_limit_middleware(
         )
             .into_response()
     }
+}
+
+// ── Response Headers ─────────────────────────
+
+/// Middleware that adds standard NexVigilant response headers to every response.
+///
+/// - `X-NexVigilant-Version`: API version (from `NEXVIGILANT_VERSION` env or `"1.0.0"`)
+/// - `X-Request-Id`: Unique request identifier for tracing
+async fn response_headers_layer(req: Request<Body>, next: Next) -> Response {
+    let request_id = nexcore_id::NexId::v4().to_string();
+    let mut response = next.run(req).await;
+
+    let headers = response.headers_mut();
+
+    static VERSION: OnceLock<String> = OnceLock::new();
+    let version = VERSION.get_or_init(|| {
+        std::env::var("NEXVIGILANT_VERSION").unwrap_or_else(|_| "1.0.0".to_string())
+    });
+
+    if let Ok(v) = axum::http::HeaderValue::from_str(version) {
+        headers.insert("x-nexvigilant-version", v);
+    }
+    if let Ok(v) = axum::http::HeaderValue::from_str(&request_id) {
+        headers.insert("x-request-id", v);
+    }
+
+    response
 }
 
 // ── OpenAPI spec endpoint ──────────────────
@@ -283,6 +315,7 @@ async fn openapi_json_handler(Query(params): Query<OpenApiQuery>) -> Response {
         routes::pv::seriousness,
         routes::pv::expectedness,
         routes::pv::combined,
+        routes::pv::ucas,
         routes::vigilance::safety_margin,
         routes::vigilance::risk_score,
         routes::vigilance::harm_types,
@@ -338,6 +371,8 @@ async fn openapi_json_handler(Query(params): Query<OpenApiQuery>) -> Response {
         routes::signal::thresholds,
         routes::reporting::generate_report,
         routes::reporting::list_reports,
+        routes::reporting::timeline,
+        routes::reporting::reportability,
         routes::benefit_risk::qbri_compute,
         routes::mesh::mesh_health,
         routes::mesh::mesh_topology,
@@ -390,6 +425,14 @@ async fn openapi_json_handler(Query(params): Query<OpenApiQuery>) -> Response {
         routes::faers::drug_events,
         routes::faers::signal_check,
         routes::faers::signal_graph,
+        // Regulatory Intelligence (FDA Guidance + ICH Glossary)
+        routes::regulatory_intelligence::guidance_search,
+        routes::regulatory_intelligence::guidance_get,
+        routes::regulatory_intelligence::ich_glossary_search,
+        routes::regulatory_intelligence::ich_glossary_lookup,
+        // ICSR (Individual Case Safety Report)
+        routes::icsr::icsr_build,
+        routes::icsr::icsr_validate,
         // Graph Layout
         routes::graph_layout::converge_layout,
         // Learning
@@ -560,6 +603,18 @@ async fn openapi_json_handler(Query(params): Query<OpenApiQuery>) -> Response {
         routes::benefit_risk::ThresholdInfo,
         routes::benefit_risk::DecisionBoundaries,
         routes::benefit_risk::VariableDescriptions,
+        // QBR types
+        routes::benefit_risk::QbrContingencyTable,
+        routes::benefit_risk::QbrMeasured,
+        routes::benefit_risk::QbrHillCurveParams,
+        routes::benefit_risk::QbrIntegrationBounds,
+        routes::benefit_risk::QbrComputeRequest,
+        routes::benefit_risk::QbrComputeResponse,
+        routes::benefit_risk::QbrMethodDetailsResponse,
+        routes::benefit_risk::QbrSimpleRequest,
+        routes::benefit_risk::QbrSimpleResponse,
+        routes::benefit_risk::QbrTherapeuticWindowRequest,
+        routes::benefit_risk::QbrTherapeuticWindowResponse,
         routes::mesh::MeshHealthResponse,
         routes::mesh::TopologyNode,
         routes::mesh::TopologyEdge,
@@ -610,7 +665,7 @@ async fn openapi_json_handler(Query(params): Query<OpenApiQuery>) -> Response {
         (name = "pvdsl", description = "PVDSL - Pharmacovigilance Domain-Specific Language compiler and runtime"),
         (name = "signal", description = "Signal detection pipeline - detect, batch, and threshold endpoints using signal-* crates"),
         (name = "reporting", description = "Automated safety report generation"),
-        (name = "benefit-risk", description = "QBRI benefit-risk assessment - compute index, derive thresholds, regulatory decisions"),
+        (name = "benefit-risk", description = "Benefit-risk assessment - QBRI (expert-judgment) and QBR (statistical-evidence, 4 forms)"),
         (name = "core", description = "Core PV-OS high-level operations"),
         (name = "mesh", description = "Mesh networking - topology simulation, route quality, grounding coverage"),
         (name = "SOS", description = "State Operating System - 15-layer state machine runtime"),
@@ -620,6 +675,8 @@ async fn openapi_json_handler(Query(params): Query<OpenApiQuery>) -> Response {
         (name = "benchmarks", description = "Performance benchmarks and platform aggregates"),
         (name = "career", description = "Career pathways - role transitions and progression"),
         (name = "faers", description = "FDA Adverse Event Reporting System - search, drug events, signal detection"),
+        (name = "regulatory-intelligence", description = "Regulatory Intelligence - FDA Guidance Documents (2,794+) and ICH/CIOMS pharmacovigilance glossary (904 terms)"),
+        (name = "icsr", description = "ICSR - E2B(R3) Individual Case Safety Report construction and validation"),
         (name = "graph-layout", description = "Graph visualization - force-directed layout convergence"),
         (name = "learning", description = "Learning DAG resolution and progress tracking"),
         (name = "marketplace", description = "Expert marketplace - search, recommend, engage"),

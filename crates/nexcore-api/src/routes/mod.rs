@@ -55,3 +55,8 @@ pub mod mcp;
 pub mod telemetry;
 // Tenant (multi-tenant isolation, tenant management)
 pub mod tenant;
+
+// Regulatory Intelligence (FDA Guidance Documents + ICH/CIOMS glossary)
+pub mod regulatory_intelligence;
+// ICSR (Individual Case Safety Report construction + validation)
+pub mod icsr;

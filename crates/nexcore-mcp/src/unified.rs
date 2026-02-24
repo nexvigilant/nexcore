@@ -209,6 +209,13 @@ async fn dispatch_inner(
         "pv_qbri_equation" => tools::benefit_risk::qbri_equation(),
 
         // ====================================================================
+        // Benefit-Risk QBR Tools (3) — Statistical-Evidence Engine
+        // ====================================================================
+        "qbr_compute" => typed(params, tools::benefit_risk::qbr_compute),
+        "qbr_simple" => typed(params, tools::benefit_risk::qbr_simple),
+        "qbr_therapeutic_window" => typed(params, tools::benefit_risk::qbr_therapeutic_window),
+
+        // ====================================================================
         // Signal Pipeline Tools (3)
         // ====================================================================
         "signal_detect" => typed(params, tools::signal::signal_detect),
@@ -2825,7 +2832,7 @@ fn help_catalog_json() -> serde_json::Value {
             "foundation": ["foundation_levenshtein", "foundation_levenshtein_bounded", "foundation_fuzzy_search", "foundation_sha256", "foundation_yaml_parse", "foundation_graph_topsort", "foundation_graph_levels", "foundation_fsrs_review", "foundation_concept_grep", "foundation_domain_distance", "foundation_flywheel_velocity", "foundation_token_ratio", "foundation_spectral_overlap"],
             "topology": ["topo_vietoris_rips", "topo_persistence", "topo_betti", "graph_centrality", "graph_components", "graph_shortest_path"],
             "pv": ["pv_signal_complete", "pv_signal_prr", "pv_signal_ror", "pv_signal_ic", "pv_signal_ebgm", "pv_chi_square", "pv_signal_cooperative", "pv_naranjo_quick", "pv_who_umc_quick", "pv_signal_strength"],
-            "benefit_risk": ["pv_qbri_compute", "pv_qbri_derive", "pv_qbri_equation"],
+            "benefit_risk": ["pv_qbri_compute", "pv_qbri_derive", "pv_qbri_equation", "qbr_compute", "qbr_simple", "qbr_therapeutic_window"],
             "signal": ["signal_detect", "signal_batch", "signal_thresholds"],
             "vigilance": ["vigilance_safety_margin", "vigilance_risk_score", "vigilance_harm_types", "vigilance_map_to_tov", "pv_signal_chart"],
             "guardian": ["guardian_homeostasis_tick", "guardian_evaluate_pv", "guardian_status", "guardian_reset", "guardian_inject_signal", "guardian_sensors_list", "guardian_actuators_list", "guardian_history", "guardian_originator_classify", "guardian_ceiling_for_originator", "guardian_space3d_compute"],
@@ -2905,7 +2912,7 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "foundation": ["foundation_levenshtein", "foundation_levenshtein_bounded", "foundation_fuzzy_search", "foundation_sha256", "foundation_yaml_parse", "foundation_graph_topsort", "foundation_graph_levels", "foundation_fsrs_review", "foundation_concept_grep", "foundation_domain_distance", "foundation_flywheel_velocity", "foundation_token_ratio", "foundation_spectral_overlap"],
             "topology": ["topo_vietoris_rips", "topo_persistence", "topo_betti", "graph_centrality", "graph_components", "graph_shortest_path"],
             "pv": ["pv_signal_complete", "pv_signal_prr", "pv_signal_ror", "pv_signal_ic", "pv_signal_ebgm", "pv_chi_square", "pv_signal_cooperative", "pv_naranjo_quick", "pv_who_umc_quick", "pv_signal_strength"],
-            "benefit_risk": ["pv_qbri_compute", "pv_qbri_derive", "pv_qbri_equation"],
+            "benefit_risk": ["pv_qbri_compute", "pv_qbri_derive", "pv_qbri_equation", "qbr_compute", "qbr_simple", "qbr_therapeutic_window"],
             "signal": ["signal_detect", "signal_batch", "signal_thresholds"],
             "pvdsl": ["pvdsl_compile", "pvdsl_execute", "pvdsl_eval", "pvdsl_functions"],
             "mcp_lock": ["mcp_lock", "mcp_unlock", "mcp_lock_status"],

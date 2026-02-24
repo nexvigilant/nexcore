@@ -47,6 +47,7 @@ impl IntoResponse for ApiError {
             "FORBIDDEN" => StatusCode::FORBIDDEN,
             "CONFLICT" => StatusCode::CONFLICT,
             "RATE_LIMIT_EXCEEDED" => StatusCode::TOO_MANY_REQUESTS,
+            "COMPUTATION_ERROR" => StatusCode::UNPROCESSABLE_ENTITY,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
         (status, Json(self)).into_response()

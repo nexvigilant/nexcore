@@ -245,3 +245,116 @@ pub struct QbriDeriveParams {
 fn default_use_synthetic() -> bool {
     true
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// QBR — Quantitative Benefit-Risk (Statistical Evidence) Parameters
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Contingency table for QBR signal detection
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct QbrTableParam {
+    /// Drug + Event count (cell a)
+    pub a: u64,
+    /// Drug + No-Event count (cell b)
+    pub b: u64,
+    /// No-Drug + Event count (cell c)
+    pub c: u64,
+    /// No-Drug + No-Event count (cell d)
+    pub d: u64,
+}
+
+/// A value with confidence for QBR weighted forms
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct QbrWeightParam {
+    /// The weight value
+    pub value: f64,
+    /// Confidence in the weight (0.0-1.0)
+    pub confidence: f64,
+}
+
+/// Hill curve parameters for dose-response modeling
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct QbrHillParam {
+    /// Half-saturation constant (EC50/TC50). Must be positive.
+    pub k_half: f64,
+    /// Hill coefficient (cooperativity). Must be positive.
+    pub n_hill: f64,
+}
+
+/// Integration bounds for therapeutic window computation
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct QbrBoundsParam {
+    /// Lower dose bound (inclusive). Must be non-negative.
+    pub dose_min: f64,
+    /// Upper dose bound (inclusive). Must be > dose_min.
+    pub dose_max: f64,
+    /// Number of Simpson's rule intervals (must be even)
+    #[serde(default = "default_qbr_intervals")]
+    pub intervals: usize,
+}
+
+fn default_qbr_intervals() -> usize {
+    1000
+}
+
+fn default_qbr_method() -> String {
+    "ebgm".to_string()
+}
+
+/// Parameters for full QBR computation (all 4 forms)
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct QbrComputeParams {
+    /// Benefit outcome contingency tables
+    pub benefit_tables: Vec<QbrTableParam>,
+    /// Risk outcome contingency tables
+    pub risk_tables: Vec<QbrTableParam>,
+    /// Benefit weights for composite form (Form 3)
+    #[serde(default)]
+    pub benefit_weights: Option<Vec<QbrWeightParam>>,
+    /// Risk weights for composite form (Form 3)
+    #[serde(default)]
+    pub risk_weights: Option<Vec<QbrWeightParam>>,
+    /// Efficacy Hill curve parameters (for Form 4)
+    #[serde(default)]
+    pub hill_efficacy: Option<QbrHillParam>,
+    /// Toxicity Hill curve parameters (for Form 4)
+    #[serde(default)]
+    pub hill_toxicity: Option<QbrHillParam>,
+    /// Integration bounds for therapeutic window
+    #[serde(default)]
+    pub integration_bounds: Option<QbrBoundsParam>,
+    /// Signal detection method: prr, ror, ic, ebgm (default: ebgm)
+    #[serde(default = "default_qbr_method")]
+    pub method: String,
+}
+
+/// Parameters for simple QBR computation (single table pair)
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct QbrSimpleParams {
+    /// Benefit outcome contingency table
+    pub benefit_table: QbrTableParam,
+    /// Risk outcome contingency table
+    pub risk_table: QbrTableParam,
+    /// Signal detection method: prr, ror, ic, ebgm (default: ebgm)
+    #[serde(default = "default_qbr_method")]
+    pub method: String,
+}
+
+/// Parameters for therapeutic window computation
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct QbrTherapeuticWindowParams {
+    /// Efficacy Hill curve parameters
+    pub efficacy: QbrHillParam,
+    /// Toxicity Hill curve parameters
+    pub toxicity: QbrHillParam,
+    /// Integration bounds (defaults to dose 0.1-100.0, 1000 intervals)
+    #[serde(default)]
+    pub bounds: Option<QbrBoundsParam>,
+}

@@ -593,6 +593,75 @@ pub fn router() -> axum::Router<crate::ApiState> {
         .route("/seriousness", post(seriousness))
         .route("/expectedness", post(expectedness))
         .route("/combined", post(combined))
+        .route("/ucas", post(ucas))
+}
+
+// --- UCAS types ---
+
+/// UCAS criterion response value
+///
+/// Serialises as `"yes"`, `"no"`, or `"unknown"` to match the domain type.
+#[derive(Debug, Deserialize, ToSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum UcasCriterionDto {
+    /// Criterion is met
+    Yes,
+    /// Criterion is not met
+    No,
+    /// Insufficient information to determine
+    Unknown,
+}
+
+/// Universal Causality Assessment Scale (UCAS) request — ToV §36
+///
+/// Eight domain-agnostic criteria adapted from WHO-UMC and Naranjo.
+/// Each field accepts `"yes"`, `"no"`, or `"unknown"`.
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct UcasRequest {
+    /// Temporal relationship: harm occurred after exposure with plausible latency
+    pub temporal: UcasCriterionDto,
+    /// Dechallenge: harm improved when intervention was removed
+    pub dechallenge: UcasCriterionDto,
+    /// Rechallenge: harm recurred when intervention was reintroduced
+    pub rechallenge: UcasCriterionDto,
+    /// Mechanistic plausibility: a known biological mechanism exists
+    pub mechanistic_plausibility: UcasCriterionDto,
+    /// Alternative explanations: other plausible causes are present
+    pub alternative_explanations: UcasCriterionDto,
+    /// Dose-response: a relationship between dose intensity and severity exists
+    pub dose_response: UcasCriterionDto,
+    /// Prior evidence: this association has been previously reported
+    pub prior_evidence: UcasCriterionDto,
+    /// Specificity: harm is characteristic of this intervention class
+    pub specificity: UcasCriterionDto,
+}
+
+/// Per-criterion score breakdown entry
+#[derive(Debug, Serialize, ToSchema)]
+pub struct UcasBreakdownEntry {
+    /// Criterion name
+    pub name: String,
+    /// Response given
+    pub response: String,
+    /// Points awarded for this criterion
+    pub score: i32,
+    /// Maximum points possible for this criterion
+    pub max_points: i32,
+}
+
+/// UCAS causality assessment response
+#[derive(Debug, Serialize, ToSchema)]
+pub struct UcasResponse {
+    /// Total UCAS score (-3 to +14)
+    pub score: i32,
+    /// Causality category (Certain, Probable, Possible, Unlikely, Unassessable)
+    pub category: String,
+    /// Recognition component R for ToV signal equation S = U × R × T
+    pub recognition_r: f64,
+    /// Per-criterion score breakdown (8 entries)
+    pub breakdown: Vec<UcasBreakdownEntry>,
+    /// Assessment confidence (0.0–1.0)
+    pub confidence: f64,
 }
 
 /// Calculate complete signal detection (PRR, ROR, IC, EBGM, Chi-square)
@@ -1115,6 +1184,79 @@ pub async fn naranjo_full(Json(req): Json<NaranjoFullRequest>) -> ApiResult<Nara
         category: format!("{}", result.category),
         interpretation: interpretation.to_string(),
         question_scores: result.question_scores,
+    }))
+}
+
+/// Universal Causality Assessment Scale (UCAS) — ToV §36
+///
+/// Domain-agnostic causality assessment across 8 evidence dimensions.
+/// Scores range from -3 (all negative) to +14 (all positive).  The
+/// `recognition_r` field integrates directly with the ToV signal
+/// equation S = U × R × T via a sigmoid function.
+///
+/// Scoring table:
+///
+/// | Criterion           | Yes | Unknown | No  |
+/// |---------------------|-----|---------|-----|
+/// | Temporal            | +2  | 0       | -1  |
+/// | Dechallenge         | +2  | 0       | 0   |
+/// | Rechallenge         | +3  | 0       | 0   |
+/// | Mechanism           | +2  | 0       | 0   |
+/// | Alternatives (inv.) | -2  | 0       | +1  |
+/// | Dose-Response       | +2  | 0       | 0   |
+/// | Prior Evidence      | +1  | 0       | 0   |
+/// | Specificity         | +1  | 0       | 0   |
+#[utoipa::path(
+    post,
+    path = "/api/v1/pv/ucas",
+    tag = "pv",
+    request_body = UcasRequest,
+    responses(
+        (status = 200, description = "UCAS causality assessed", body = UcasResponse),
+        (status = 400, description = "Invalid input", body = super::common::ApiError)
+    )
+)]
+pub async fn ucas(Json(req): Json<UcasRequest>) -> ApiResult<UcasResponse> {
+    use nexcore_pv_core::causality::{CriterionResponse, UcasInput, calculate_ucas};
+
+    let map = |dto: &UcasCriterionDto| -> CriterionResponse {
+        match dto {
+            UcasCriterionDto::Yes => CriterionResponse::Yes,
+            UcasCriterionDto::No => CriterionResponse::No,
+            UcasCriterionDto::Unknown => CriterionResponse::Unknown,
+        }
+    };
+
+    let input = UcasInput {
+        temporal_relationship: map(&req.temporal),
+        dechallenge: map(&req.dechallenge),
+        rechallenge: map(&req.rechallenge),
+        mechanistic_plausibility: map(&req.mechanistic_plausibility),
+        alternative_explanations: map(&req.alternative_explanations),
+        dose_response: map(&req.dose_response),
+        prior_evidence: map(&req.prior_evidence),
+        specificity: map(&req.specificity),
+    };
+
+    let result = calculate_ucas(&input);
+
+    let breakdown = result
+        .breakdown
+        .iter()
+        .map(|b| UcasBreakdownEntry {
+            name: b.name.clone(),
+            response: format!("{:?}", b.response).to_lowercase(),
+            score: b.score.value(),
+            max_points: b.max_points,
+        })
+        .collect();
+
+    Ok(Json(UcasResponse {
+        score: result.score.value(),
+        category: result.category.to_string(),
+        recognition_r: result.recognition_r,
+        breakdown,
+        confidence: result.confidence,
     }))
 }
 

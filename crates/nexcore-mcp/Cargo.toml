@@ -87,6 +87,9 @@ nexcore-tov-grounded = { workspace = true }
 nexcore-tov-proofs = { workspace = true }
 # PV Core (signal algorithms, causality, medical coding, pharmacokinetics)
 nexcore-pv-core = { workspace = true }
+# QBR (Quantitative Benefit-Risk — 4-form statistical evidence engine)
+nexcore-qbr = { workspace = true }
+nexcore-constants = { workspace = true }
 nexcore-pharmacovigilance = { workspace = true }
 nexcore-harm-taxonomy = { workspace = true }
 pvos-primitive-expansion = { workspace = true }

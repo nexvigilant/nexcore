@@ -7906,13 +7906,16 @@ dependencies = [
  "futures",
  "hmac",
  "nexcore-codec",
+ "nexcore-constants",
  "nexcore-error",
+ "nexcore-fda-guidance",
  "nexcore-fs",
  "nexcore-id",
  "nexcore-mcp",
  "nexcore-mesh",
  "nexcore-primitives",
  "nexcore-pv-core",
+ "nexcore-qbr",
  "nexcore-signal-pipeline",
  "nexcore-skill-exec",
  "nexcore-state-os",
@@ -8830,6 +8833,7 @@ dependencies = [
  "nexcore-compositor",
  "nexcore-compound-registry",
  "nexcore-config",
+ "nexcore-constants",
  "nexcore-cortex",
  "nexcore-ctvp",
  "nexcore-cytokine",
@@ -8893,6 +8897,7 @@ dependencies = [
  "nexcore-pv-core",
  "nexcore-pvdsl",
  "nexcore-pvos",
+ "nexcore-qbr",
  "nexcore-qsar",
  "nexcore-reason",
  "nexcore-registry",
@@ -9408,6 +9413,18 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+]
+
+[[package]]
+name = "nexcore-qbr"
+version = "1.0.0"
+dependencies = [
+ "nexcore-constants",
+ "nexcore-error",
+ "nexcore-lex-primitiva",
+ "nexcore-primitives",
+ "nexcore-pv-core",
+ "serde",
 ]
 
 [[package]]

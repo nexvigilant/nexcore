@@ -112,6 +112,7 @@ nexcore-compilation-space = { path = "crates/nexcore-compilation-space" }
 nexcore-compliance = { path = "crates/nexcore-compliance" }
 nexcore-compositor = { path = "crates/nexcore-compositor" }
 nexcore-compound-registry = { path = "crates/nexcore-compound-registry" }
+nexcore-constants = { path = "crates/nexcore-constants" }
 nexcore-config = { path = "crates/nexcore-config" }
 nexcore-cognition = { path = "crates/nexcore-cognition" }
 nexcore-cortex = { path = "crates/nexcore-cortex" }
@@ -131,6 +132,7 @@ nexcore-engram = { path = "crates/nexcore-engram" }
 nexcore-error = { path = "crates/nexcore-error" }
 nexcore-error-derive = { path = "crates/nexcore-error-derive" }
 nexcore-faers-etl = { path = "crates/nexcore-faers-etl" }
+nexcore-fda-guidance = { path = "crates/nexcore-fda-guidance" }
 nexcore-fhir = { path = "crates/nexcore-fhir" }
 nexcore-firebase = { path = "crates/nexcore-firebase" }
 nexcore-forge-strategy = { path = "crates/nexcore-forge-strategy" }
@@ -181,6 +183,7 @@ nexcore-proof-of-meaning = { path = "crates/nexcore-proof-of-meaning" }
 nexcore-pv-core = { path = "crates/nexcore-pv-core" }
 nexcore-pvdsl = { path = "crates/nexcore-pvdsl" }
 nexcore-pvos = { path = "crates/nexcore-pvos" }
+nexcore-qbr = { path = "crates/nexcore-qbr" }
 nexcore-registry = { path = "crates/nexcore-registry" }
 nexcore-renderer = { path = "crates/nexcore-renderer" }
 nexcore-rh-proofs = { path = "crates/nexcore-rh-proofs" }
@@ -320,10 +323,7 @@ manual_midpoint = "allow"
 needless_range_loop = "allow"
 explicit_iter_loop = "allow"
 unreadable_literal = "allow"
-redundant_continue = "allow"
 trait_duplication_in_bounds = "allow"
-repeat_vec = "allow"
-sort_unstable = "allow"
 cargo_common_metadata = "allow"
 # Pre-existing across workspace — allow to unblock validate-seq
 needless_collect = "allow"

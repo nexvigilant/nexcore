@@ -163,7 +163,7 @@ pub async fn get_summary(
     }))
 }
 
-pub fn telemetry_routes() -> axum::Router<ApiState> {
+pub fn router() -> axum::Router<ApiState> {
     axum::Router::new()
         .route("/events", post(ingest_event).get(list_events))
         .route("/summary", get(get_summary))

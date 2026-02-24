@@ -25,6 +25,7 @@
 
 pub mod codec;
 pub mod error;
+pub mod grounding;
 mod proofs;
 
 /// Reverse complement: reverse the strand and swap A↔T, G↔C.

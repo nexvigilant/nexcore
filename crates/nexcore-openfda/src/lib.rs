@@ -49,6 +49,7 @@
 pub mod client;
 pub mod endpoints;
 pub mod error;
+pub mod grounding;
 pub mod search;
 pub mod types;
 

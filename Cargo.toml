@@ -154,6 +154,7 @@ nexcore-laboratory = { path = "crates/nexcore-laboratory" }
 nexcore-labs = { path = "crates/nexcore-labs" }
 nexcore-lex-primitiva = { path = "crates/nexcore-lex-primitiva" }
 nexcore-lymphatic = { path = "crates/nexcore-lymphatic" }
+nexcore-mcp = { path = "crates/nexcore-mcp" }
 nexcore-mcp-hot = { path = "crates/nexcore-mcp-hot" }
 nexcore-measure = { path = "crates/nexcore-measure" }
 nexcore-mesh = { path = "crates/nexcore-mesh" }

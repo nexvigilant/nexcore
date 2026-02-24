@@ -12,6 +12,16 @@ use crate::persistence::firestore::{FirestorePersistence, MockPersistence};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
+/// Record representing a telemetry event
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TelemetryEventRecord {
+    pub id: String,
+    pub event_type: String,
+    pub user_id: String,
+    pub metadata: serde_json::Value,
+    pub timestamp: String,
+}
+
 /// Record representing a persisted report
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReportRecord {
@@ -245,6 +255,23 @@ impl Persistence {
         match self {
             Self::Firestore(f) => f.list_ksb_domains().await,
             Self::Mock(m) => m.list_ksb_domains().await,
+        }
+    }
+
+    pub async fn save_telemetry_event(
+        &self,
+        event: &TelemetryEventRecord,
+    ) -> nexcore_error::Result<()> {
+        match self {
+            Self::Firestore(f) => f.save_telemetry_event(event).await,
+            Self::Mock(m) => m.save_telemetry_event(event).await,
+        }
+    }
+
+    pub async fn list_telemetry_events(&self) -> nexcore_error::Result<Vec<TelemetryEventRecord>> {
+        match self {
+            Self::Firestore(f) => f.list_telemetry_events().await,
+            Self::Mock(m) => m.list_telemetry_events().await,
         }
     }
 }

@@ -18,4 +18,7 @@
 #![deny(clippy::unwrap_used)]
 #![deny(clippy::expect_used)]
 
+// NOTE: grounding.rs exists but impls live in canonical prima crate
+// (orphan rules prevent implementing GroundsTo on re-exported foreign types here)
+
 pub use prima::*;

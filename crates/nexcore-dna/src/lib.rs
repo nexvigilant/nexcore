@@ -78,6 +78,29 @@ pub mod types;
 pub mod vm;
 pub mod voxel;
 
+// Sequence alignment (pairwise, global, local)
+pub mod alignment;
+// Bio operations (sequence analysis, molecular biology)
+pub mod bio;
+// Dynamics (population dynamics, evolutionary simulations)
+pub mod dynamics;
+// Evolutionary algorithms and genetic programming
+pub mod evolution;
+// FAERS bridge (DNA encoding ↔ FAERS integration)
+pub mod faers_bridge;
+// Gene therapy (vector design, delivery systems)
+pub mod gene_therapy;
+// NCBI (ESearch, ESummary, EFetch, ELink — PubMed/Gene/Protein)
+pub mod ncbi;
+// Optimizer (sequence optimization, codon optimization)
+pub mod optimizer;
+// Profiler (execution profiling, performance analysis)
+pub mod profiler;
+// Proof reporter (verification report generation)
+pub mod proof_reporter;
+// Protocol v2 (next-gen DNA protocol encoding)
+pub mod protocol_v2;
+
 #[cfg(test)]
 mod bench;
 

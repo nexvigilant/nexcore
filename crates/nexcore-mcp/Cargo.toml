@@ -125,6 +125,10 @@ nexcore-reason = { path = "../nexcore-reason" }
 nexcore-pvos = { workspace = true }
 # Skill Ecosystem Registry (compliance, ToV monitoring, promotion)
 nexcore-registry = { workspace = true }
+# Build Orchestrator (CI/CD pipeline management)
+nexcore-build-orchestrator = { workspace = true }
+# Skills Engine (advanced SQI, maturity, KSB, ecosystem, dependency graph, gap analysis)
+nexcore-skills-engine = { workspace = true }
 
 # Chemivigilance Platform (7 new crates — SMILES, descriptors, alerts, QSAR, metabolites, SafetyBrief)
 nexcore-molcore = { path = "../nexcore-molcore" }
@@ -136,7 +140,6 @@ nexcore-chemivigilance = { path = "../nexcore-chemivigilance" }
 # MCP server framework
 rmcp = { version = "0.14", features = ["server", "transport-io"] }
 
-nexcore-api = { workspace = true }
 # Async runtime
 tokio = { workspace = true }
 

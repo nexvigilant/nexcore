@@ -23,8 +23,7 @@ pub async fn call_tool(
         .await
         .map_err(|e| nexcore_error::nexerror!("MCP dispatch error: {e:?}"))?;
 
-    let value =
-        serde_json::to_value(&result).context("failed to serialize CallToolResult")?;
+    let value = serde_json::to_value(&result).context("failed to serialize CallToolResult")?;
 
     let elapsed = start.elapsed();
     tracing::debug!(

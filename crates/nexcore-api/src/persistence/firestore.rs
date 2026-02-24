@@ -2,7 +2,7 @@
 
 use crate::persistence::{
     CircleRecord, EnrollmentRecord, InquiryRecord, KsbDomainRecord, MembershipRecord,
-    MessageRecord, PostRecord, ReportRecord,
+    MessageRecord, PostRecord, ReportRecord, TelemetryEventRecord,
 };
 use serde_json::json;
 
@@ -278,6 +278,35 @@ impl FirestorePersistence {
         Ok(results)
     }
 
+    pub async fn save_telemetry_event(
+        &self,
+        event: &TelemetryEventRecord,
+    ) -> nexcore_error::Result<()> {
+        let url = self.url("telemetry_events", Some(&event.id));
+        let body = serde_json::json!({
+            "fields": {
+                "id": { "stringValue": event.id },
+                "event_type": { "stringValue": event.event_type },
+                "user_id": { "stringValue": event.user_id },
+                "metadata": { "stringValue": event.metadata.to_string() },
+                "timestamp": { "stringValue": event.timestamp },
+            }
+        });
+        self.patch(&url, &body).await
+    }
+
+    pub async fn list_telemetry_events(&self) -> nexcore_error::Result<Vec<TelemetryEventRecord>> {
+        let url = self.url("telemetry_events", None);
+        let documents = self.get_list(&url).await?;
+        let mut results = Vec::new();
+        for doc in documents {
+            if let Ok(record) = parse_telemetry_event_doc(&doc) {
+                results.push(record);
+            }
+        }
+        Ok(results)
+    }
+
     async fn patch(&self, url: &str, body: &serde_json::Value) -> nexcore_error::Result<()> {
         let mut req = self.http.patch(url).json(body);
         if let Some(ref key) = self.api_key {
@@ -465,6 +494,23 @@ fn parse_ksb_domain_doc(doc: &serde_json::Value) -> nexcore_error::Result<KsbDom
     })
 }
 
+fn parse_telemetry_event_doc(
+    doc: &serde_json::Value,
+) -> nexcore_error::Result<TelemetryEventRecord> {
+    let fields = doc
+        .get("fields")
+        .ok_or_else(|| nexcore_error::nexerror!("Missing fields"))?;
+    let metadata_str = get_string(fields, "metadata");
+    let metadata = serde_json::from_str(&metadata_str).unwrap_or(serde_json::Value::Null);
+    Ok(TelemetryEventRecord {
+        id: get_string(fields, "id"),
+        event_type: get_string(fields, "event_type"),
+        user_id: get_string(fields, "user_id"),
+        metadata,
+        timestamp: get_string(fields, "timestamp"),
+    })
+}
+
 fn get_string(fields: &serde_json::Value, key: &str) -> String {
     fields
         .get(key)
@@ -502,6 +548,7 @@ pub struct MockPersistence {
     memberships: std::sync::Arc<std::sync::Mutex<Vec<MembershipRecord>>>,
     messages: std::sync::Arc<std::sync::Mutex<Vec<MessageRecord>>>,
     ksb_domains: std::sync::Arc<std::sync::Mutex<Vec<KsbDomainRecord>>>,
+    telemetry_events: std::sync::Arc<std::sync::Mutex<Vec<TelemetryEventRecord>>>,
 }
 
 impl MockPersistence {
@@ -515,6 +562,7 @@ impl MockPersistence {
             memberships: std::sync::Arc::new(std::sync::Mutex::new(Vec::new())),
             messages: std::sync::Arc::new(std::sync::Mutex::new(Vec::new())),
             ksb_domains: std::sync::Arc::new(std::sync::Mutex::new(Vec::new())),
+            telemetry_events: std::sync::Arc::new(std::sync::Mutex::new(Vec::new())),
         }
     }
 
@@ -682,6 +730,26 @@ impl MockPersistence {
             .lock()
             .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
         Ok(domains.clone())
+    }
+
+    pub async fn save_telemetry_event(
+        &self,
+        event: &TelemetryEventRecord,
+    ) -> nexcore_error::Result<()> {
+        let mut events = self
+            .telemetry_events
+            .lock()
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
+        events.push(event.clone());
+        Ok(())
+    }
+
+    pub async fn list_telemetry_events(&self) -> nexcore_error::Result<Vec<TelemetryEventRecord>> {
+        let events = self
+            .telemetry_events
+            .lock()
+            .map_err(|_| nexcore_error::nexerror!("Lock poisoned"))?;
+        Ok(events.clone())
     }
 }
 

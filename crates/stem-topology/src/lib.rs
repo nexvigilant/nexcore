@@ -16,6 +16,7 @@
 pub mod betti;
 pub mod diagram;
 pub mod filtration;
+pub mod grounding;
 pub mod persistence;
 pub mod simplex;
 

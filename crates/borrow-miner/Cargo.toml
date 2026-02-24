@@ -8,6 +8,7 @@ license = "LicenseRef-NexVigilant-Proprietary"
 description = "Borrow Miner — PV signal detection educational game logic"
 
 [dependencies]
+nexcore-lex-primitiva = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 

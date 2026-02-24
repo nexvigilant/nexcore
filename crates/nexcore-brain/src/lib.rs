@@ -76,6 +76,7 @@ pub mod pipeline;
 pub mod recovery;
 pub mod session;
 pub mod synapse;
+pub mod tombstone;
 pub mod tracker;
 
 /// Insight trait adapter — makes Brain a first-class InsightEngine implementor.

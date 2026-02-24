@@ -22,6 +22,7 @@ nexcore-primitives = { workspace = true }
 nexcore-skill-exec = { workspace = true }
 nexcore-state-os = { workspace = true }
 nexcore-mesh = { workspace = true }
+nexcore-mcp = { workspace = true }
 signal = { workspace = true }
 vr-tenant = { workspace = true }
 vr-core = { workspace = true }

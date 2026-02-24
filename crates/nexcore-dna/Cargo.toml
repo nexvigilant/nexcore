@@ -10,6 +10,11 @@ description = "DNA-based computation: nucleotide types, data storage, biological
 
 [dependencies]
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+reqwest = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true }
 
 [[bin]]
 name = "dna"

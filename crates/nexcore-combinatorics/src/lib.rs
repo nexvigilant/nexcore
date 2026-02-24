@@ -21,6 +21,7 @@ pub mod catalan;
 pub mod cycle;
 pub mod derangement;
 pub mod grid_paths;
+pub mod grounding;
 pub mod josephus;
 pub mod linear_extensions;
 

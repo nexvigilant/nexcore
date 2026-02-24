@@ -1329,6 +1329,7 @@ dependencies = [
 name = "borrow-miner"
 version = "1.0.0"
 dependencies = [
+ "nexcore-lex-primitiva",
  "serde",
  "serde_json",
 ]
@@ -7908,6 +7909,7 @@ dependencies = [
  "nexcore-error",
  "nexcore-fs",
  "nexcore-id",
+ "nexcore-mcp",
  "nexcore-mesh",
  "nexcore-primitives",
  "nexcore-pv-core",
@@ -7947,6 +7949,7 @@ name = "nexcore-bicone"
 version = "0.1.0"
 dependencies = [
  "nexcore-error",
+ "nexcore-lex-primitiva",
  "serde",
  "serde_json",
 ]
@@ -8113,6 +8116,7 @@ dependencies = [
 name = "nexcore-combinatorics"
 version = "0.1.0"
 dependencies = [
+ "nexcore-lex-primitiva",
  "serde",
  "serde_json",
 ]
@@ -8293,6 +8297,11 @@ name = "nexcore-dna"
 version = "1.0.0"
 dependencies = [
  "nexcore-lex-primitiva",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -8436,6 +8445,7 @@ name = "nexcore-fhir"
 version = "1.0.0"
 dependencies = [
  "chrono",
+ "nexcore-lex-primitiva",
  "serde",
  "serde_json",
 ]
@@ -8444,6 +8454,7 @@ dependencies = [
 name = "nexcore-firebase"
 version = "1.0.0"
 dependencies = [
+ "nexcore-lex-primitiva",
  "reqwest 0.12.28",
  "serde",
  "serde_json",
@@ -8802,10 +8813,10 @@ dependencies = [
  "nexcore-algovigilance",
  "nexcore-anatomy",
  "nexcore-antibodies",
- "nexcore-api",
  "nexcore-audio",
  "nexcore-brain",
  "nexcore-browser",
+ "nexcore-build-orchestrator",
  "nexcore-caesura",
  "nexcore-cardiovascular",
  "nexcore-ccp",
@@ -8898,6 +8909,7 @@ dependencies = [
  "nexcore-skeletal",
  "nexcore-skill-compiler",
  "nexcore-skill-exec",
+ "nexcore-skills-engine",
  "nexcore-social",
  "nexcore-softrender",
  "nexcore-sop-anatomy",
@@ -9105,6 +9117,7 @@ version = "1.0.0"
 dependencies = [
  "chrono",
  "nexcore-error",
+ "nexcore-lex-primitiva",
  "reqwest 0.12.28",
  "serde",
  "serde_json",
@@ -9311,6 +9324,7 @@ name = "nexcore-prima"
 version = "0.2.0"
 dependencies = [
  "nexcore-error",
+ "nexcore-lex-primitiva",
  "prima",
 ]
 
@@ -10261,6 +10275,9 @@ dependencies = [
 [[package]]
 name = "nucli"
 version = "1.0.0"
+dependencies = [
+ "nexcore-lex-primitiva",
+]
 
 [[package]]
 name = "num"
@@ -14078,6 +14095,7 @@ name = "signal"
 version = "1.1.0"
 dependencies = [
  "nexcore-error",
+ "nexcore-lex-primitiva",
  "nexcore-signal-pipeline",
 ]
 
@@ -14799,6 +14817,7 @@ dependencies = [
 name = "stem-topology"
 version = "1.0.0"
 dependencies = [
+ "nexcore-lex-primitiva",
  "serde",
  "serde_json",
 ]
@@ -15980,6 +15999,7 @@ version = "1.0.0"
 dependencies = [
  "clap",
  "nexcore-error",
+ "nexcore-lex-primitiva",
  "polars",
  "proptest",
  "serde",

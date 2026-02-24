@@ -670,8 +670,7 @@ pub fn lyapunov_analysis(system: &dyn DiscreteSystem) -> LyapunovResult {
     }
 
     // Stable if: V(0) = 0 (equilibrium) and Delta_V < 0 for all s >= 1
-    let stable = (values[0].abs() < f64::EPSILON)
-        && deltas.iter().skip(1).all(|&d| d < 0.0);
+    let stable = (values[0].abs() < f64::EPSILON) && deltas.iter().skip(1).all(|&d| d < 0.0);
 
     LyapunovResult {
         values,
@@ -744,9 +743,7 @@ pub fn observability(system: &dyn DiscreteSystem) -> ObservabilityResult {
     let n = system.state_count();
 
     // Compute outputs for all states
-    let outputs: Vec<SystemOutput> = (0..n)
-        .map(|s| system.output(RiskState::new(s)))
-        .collect();
+    let outputs: Vec<SystemOutput> = (0..n).map(|s| system.output(RiskState::new(s))).collect();
 
     // Group states by output equivalence
     // Two outputs are equivalent if alert, action, and severity match
@@ -760,7 +757,8 @@ pub fn observability(system: &dyn DiscreteSystem) -> ObservabilityResult {
             let representative = class[0];
             if outputs[s].alert == outputs[representative].alert
                 && outputs[s].action == outputs[representative].action
-                && (outputs[s].amplified_severity - outputs[representative].amplified_severity).abs()
+                && (outputs[s].amplified_severity - outputs[representative].amplified_severity)
+                    .abs()
                     < f64::EPSILON
             {
                 partition[s] = class_idx;
@@ -855,9 +853,7 @@ pub fn phase_portrait(system: &dyn DiscreteSystem) -> PhasePortrait {
             let traj = trace_trajectory(system, RiskState::new(s), input);
 
             // Track fixed points (cycle_length == 1 means terminal is a fixed point)
-            if traj.cycle_length == 1
-                && !fixed_points_set.contains(&traj.terminal)
-            {
+            if traj.cycle_length == 1 && !fixed_points_set.contains(&traj.terminal) {
                 fixed_points_set.push(traj.terminal);
             }
 
@@ -1013,10 +1009,7 @@ mod tests {
 
     #[test]
     fn system_input_indices_distinct() {
-        assert_ne!(
-            SystemInput::Signal.index(),
-            SystemInput::NoSignal.index()
-        );
+        assert_ne!(SystemInput::Signal.index(), SystemInput::NoSignal.index());
     }
 
     #[test]

@@ -8,7 +8,7 @@ use std::sync::{LazyLock, Mutex};
 
 use axum::{
     Json, Router,
-    extract::{Path, State},
+    extract::Path,
     routing::{get, post},
 };
 use serde::{Deserialize, Serialize};
@@ -16,6 +16,7 @@ use utoipa::ToSchema;
 
 use super::common::ApiError;
 use crate::mcp_bridge;
+use nexcore_mcp::NexCoreMcpServer;
 
 // ── Allowlist ────────────────────────────────
 // Read-only computation, FAERS search, PV signals, kellnr compute,
@@ -343,7 +344,6 @@ pub fn router() -> Router<crate::ApiState> {
     )
 )]
 async fn call_mcp_tool(
-    State(state): State<crate::ApiState>,
     Path(tool_name): Path<String>,
     Json(body): Json<McpCallRequest>,
 ) -> Result<Json<McpToolResponse>, ApiError> {
@@ -362,7 +362,8 @@ async fn call_mcp_tool(
     }
 
     // Dispatch in-process
-    let result = mcp_bridge::call_tool(&tool_name, body.params, &state.mcp_server)
+    let server = NexCoreMcpServer::new();
+    let result = mcp_bridge::call_tool(&tool_name, body.params, &server)
         .await
         .map_err(|e| ApiError {
             code: "MCP_ERROR".to_string(),

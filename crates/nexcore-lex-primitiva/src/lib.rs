@@ -59,6 +59,7 @@ pub mod bedrock;
 pub mod cli;
 pub mod complexity;
 pub mod composition;
+pub mod composition_proofs;
 pub mod compound;
 pub mod compound_detector;
 pub mod constants;

@@ -21,20 +21,20 @@ use std::fmt;
 /// Deterministic xorshift64 pseudo-random number generator.
 ///
 /// Tier: T2-P (σ Sequence + ς State)
-struct Rng {
+pub struct Rng {
     state: u64,
 }
 
 impl Rng {
     /// Create with a non-zero seed.
-    fn new(seed: u64) -> Self {
+    pub fn new(seed: u64) -> Self {
         Self {
             state: if seed == 0 { 1 } else { seed },
         }
     }
 
     /// Next u64 via xorshift64.
-    fn next_u64(&mut self) -> u64 {
+    pub fn next_u64(&mut self) -> u64 {
         let mut x = self.state;
         x ^= x << 13;
         x ^= x >> 7;
@@ -44,12 +44,12 @@ impl Rng {
     }
 
     /// Uniform float in [0.0, 1.0).
-    fn next_f64(&mut self) -> f64 {
+    pub fn next_f64(&mut self) -> f64 {
         (self.next_u64() >> 11) as f64 / ((1u64 << 53) as f64)
     }
 
     /// Uniform usize in [0, max). Returns 0 if max == 0.
-    fn next_usize(&mut self, max: usize) -> usize {
+    pub fn next_usize(&mut self, max: usize) -> usize {
         if max == 0 {
             return 0;
         }
@@ -57,7 +57,7 @@ impl Rng {
     }
 
     /// Random lowercase ASCII letter.
-    fn next_char(&mut self) -> u8 {
+    pub fn next_char(&mut self) -> u8 {
         b'a' + (self.next_u64() % 26) as u8
     }
 }

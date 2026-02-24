@@ -9,6 +9,7 @@ repository.workspace = true
 description = "Nucleotide text encoder: bijective byte↔DNA mapping with exhaustive proofs."
 
 [dependencies]
+nexcore-lex-primitiva = { workspace = true }
 
 [[bin]]
 name = "nucli"

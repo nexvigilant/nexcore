@@ -29,10 +29,9 @@
 pub mod element;
 pub mod error;
 pub mod geometry;
+pub mod reaction;
+pub mod smiles;
 pub mod types;
-// TODO: Implement these modules
-// pub mod smiles;
-// pub mod reaction;
 
 pub mod prelude {
     pub use crate::element::{Element, PERIODIC_TABLE};

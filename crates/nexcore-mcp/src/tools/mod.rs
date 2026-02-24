@@ -517,3 +517,12 @@ pub mod pharmacovigilance;
 
 // Vault (AES-256-GCM encryption, PBKDF2 key derivation, salt generation)
 pub mod vault;
+
+// Build Orchestrator (CI/CD pipeline: dry-run, stages, workspace, history, metrics)
+pub mod build_orchestrator;
+
+// Skills Engine (advanced SQI, maturity, KSB verify, ecosystem, dependency graph, gap analysis, evolution)
+pub mod skills_engine;
+
+// NCBI (National Center for Biotechnology Information — PubMed, Gene, Protein search)
+pub mod ncbi;

@@ -2600,6 +2600,44 @@ async fn dispatch_inner(
         "vault_generate_salt" => typed(params, tools::vault::vault_generate_salt),
         "vault_config_sample" => typed(params, tools::vault::vault_config_sample),
 
+        // ── Build Orchestrator (CI/CD pipeline management) ────────────────
+        "build_orchestrator_dry_run" => typed(
+            params,
+            tools::build_orchestrator::build_orchestrator_dry_run,
+        ),
+        "build_orchestrator_stages" => {
+            typed(params, tools::build_orchestrator::build_orchestrator_stages)
+        }
+        "build_orchestrator_workspace" => typed(
+            params,
+            tools::build_orchestrator::build_orchestrator_workspace,
+        ),
+        "build_orchestrator_history" => typed(
+            params,
+            tools::build_orchestrator::build_orchestrator_history,
+        ),
+        "build_orchestrator_metrics" => typed(
+            params,
+            tools::build_orchestrator::build_orchestrator_metrics,
+        ),
+
+        // ── Skills Engine (advanced skill analysis) ───────────────────────
+        "skill_quality_index" => typed(params, tools::skills_engine::skill_quality_index),
+        "skill_maturity" => typed(params, tools::skills_engine::skill_maturity),
+        "skill_ksb_verify" => typed(params, tools::skills_engine::skill_ksb_verify),
+        "skill_ecosystem_score" => typed(params, tools::skills_engine::skill_ecosystem_score),
+        "skill_dependency_graph" => typed(params, tools::skills_engine::skill_dependency_graph),
+        "skill_gap_analysis" => typed(params, tools::skills_engine::skill_gap_analysis),
+        "skill_evolution_track" => typed(params, tools::skills_engine::skill_evolution_track),
+
+        // ── NCBI (National Center for Biotechnology Information) ───────────
+        "ncbi_esearch" => typed_async(params, tools::ncbi::esearch).await,
+        "ncbi_esummary" => typed_async(params, tools::ncbi::esummary).await,
+        "ncbi_efetch" => typed_async(params, tools::ncbi::efetch).await,
+        "ncbi_elink" => typed_async(params, tools::ncbi::elink).await,
+        "ncbi_search_and_fetch" => typed_async(params, tools::ncbi::search_and_fetch).await,
+        "ncbi_search_and_summarize" => typed_async(params, tools::ncbi::search_and_summarize).await,
+
         // ====================================================================
         _ => Err(McpError::invalid_params(
             format!("Unknown command: {command}. Use command='help' for catalog."),
@@ -3039,6 +3077,9 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "compilation_space": ["compilation_point_compare", "compilation_point_summary", "compilation_point_presets", "compilation_catalog_lookup", "compilation_chain_validate", "compilation_chain_presets", "compilation_axes_catalog", "compilation_abstraction_levels", "compilation_distance"],
             "pharmacovigilance": ["pv_taxonomy_summary", "pv_taxonomy_primitive", "pv_taxonomy_composite", "pv_taxonomy_concept", "pv_taxonomy_chomsky", "pv_taxonomy_who_pillars", "pv_taxonomy_transfer", "pv_taxonomy_transfer_matrix", "pv_taxonomy_lex_symbols"],
             "vault": ["vault_derive_key", "vault_encrypt", "vault_decrypt", "vault_generate_salt", "vault_config_sample"],
+            "build_orchestrator": ["build_orchestrator_dry_run", "build_orchestrator_stages", "build_orchestrator_workspace", "build_orchestrator_history", "build_orchestrator_metrics"],
+            "skills_engine": ["skill_quality_index", "skill_maturity", "skill_ksb_verify", "skill_ecosystem_score", "skill_dependency_graph", "skill_gap_analysis", "skill_evolution_track"],
+            "ncbi": ["ncbi_esearch", "ncbi_esummary", "ncbi_efetch", "ncbi_elink", "ncbi_search_and_fetch", "ncbi_search_and_summarize"],
         }
     });
 

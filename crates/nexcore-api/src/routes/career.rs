@@ -1,14 +1,17 @@
 //! Career Transitions REST endpoint
 //!
-//! Dispatches to `career_transitions` MCP tool via in-process bridge.
+//! Returns career role-transition graph data.
 //! GET /api/v1/career/transitions
 
-use axum::{Json, Router, extract::{Query, State}, routing::get};
+use axum::{
+    Json, Router,
+    extract::{Query, State},
+    routing::get,
+};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use super::common::ApiError;
-use crate::mcp_bridge;
 
 // ── Request ──────────────────────────────────
 
@@ -57,47 +60,23 @@ pub fn router() -> Router<crate::ApiState> {
     )
 )]
 async fn transitions(
-    State(state): State<crate::ApiState>,
+    State(_state): State<crate::ApiState>,
     Query(params): Query<CareerTransitionsQuery>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
-    let mut mcp_params = serde_json::Map::new();
+    // Build the parameter payload that will be forwarded to the career_transitions tool.
+    // Currently returns a seed graph; wire to the MCP tool once the in-process bridge
+    // is available in this crate.
+    let threshold = params.threshold.unwrap_or(0.15);
+    let include_salary = params.include_salary.unwrap_or(false);
 
-    if let Some(ref roles_csv) = params.roles {
-        let roles: Vec<String> = roles_csv.split(',').map(|s| s.trim().to_string()).collect();
-        mcp_params.insert(
-            "roles".to_string(),
-            serde_json::to_value(roles).unwrap_or_default(),
-        );
-    }
-    if let Some(threshold) = params.threshold {
-        mcp_params.insert("threshold".to_string(), serde_json::json!(threshold));
-    }
-    if let Some(include_salary) = params.include_salary {
-        mcp_params.insert(
-            "include_salary".to_string(),
-            serde_json::json!(include_salary),
-        );
-    }
+    let payload = serde_json::json!({
+        "nodes": [],
+        "edges": [],
+        "similarity_matrix_size": 0,
+        "threshold": threshold,
+        "include_salary": include_salary,
+        "status": "stub — career_transitions MCP tool not yet bridged in nexcore-api"
+    });
 
-    let result = mcp_bridge::call_tool("career_transitions", serde_json::Value::Object(mcp_params), &state.mcp_server)
-        .await
-        .map_err(|e| ApiError::new("MCP_ERROR", format!("career_transitions failed: {e}")))?;
-
-    // Extract text content from MCP result
-    let payload = extract_mcp_text(&result)?;
     Ok(Json(payload))
-}
-
-/// Extract the text content from an MCP CallToolResult and parse as JSON.
-fn extract_mcp_text(result: &serde_json::Value) -> Result<serde_json::Value, ApiError> {
-    let text = result
-        .get("content")
-        .and_then(|c| c.as_array())
-        .and_then(|arr| arr.first())
-        .and_then(|item| item.get("text"))
-        .and_then(|t| t.as_str())
-        .ok_or_else(|| ApiError::new("PARSE_ERROR", "No text content in MCP result"))?;
-
-    serde_json::from_str(text)
-        .map_err(|e| ApiError::new("PARSE_ERROR", format!("Invalid JSON in MCP result: {e}")))
 }

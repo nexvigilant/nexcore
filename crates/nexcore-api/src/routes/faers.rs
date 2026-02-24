@@ -619,7 +619,10 @@ pub async fn signal_graph(
     }
 
     let data: OpenFdaCountResponse = response.json().await.map_err(|e| {
-        ApiError::new("PARSE_ERROR", format!("Failed to parse openFDA response: {e}"))
+        ApiError::new(
+            "PARSE_ERROR",
+            format!("Failed to parse openFDA response: {e}"),
+        )
     })?;
 
     let raw_events = data.results.unwrap_or_default();

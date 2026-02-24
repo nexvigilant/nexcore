@@ -5,6 +5,7 @@
 pub mod audit;
 pub mod auth;
 pub mod core_types;
+pub mod mcp_bridge;
 pub mod openapi_compat;
 pub mod persistence;
 pub mod routes;
@@ -126,6 +127,18 @@ fn setup_api_routes(state: ApiState) -> Router<ApiState> {
         .nest("/sos", routes::sos::router())
         .nest("/mesh", routes::mesh::router())
         .nest("/guardian-product", routes::guardian_product::router())
+        .nest("/compliance", routes::compliance::router())
+        .nest("/ml", routes::platform_ml::router())
+        .nest("/admin", routes::admin::router())
+        .nest("/benchmarks", routes::benchmarks::router())
+        .nest("/career", routes::career::router())
+        .nest("/faers", routes::faers::router())
+        .nest("/graph-layout", routes::graph_layout::router())
+        .nest("/learning", routes::learning::router())
+        .nest("/marketplace", routes::marketplace::router())
+        .nest("/mcp", routes::mcp::router())
+        .nest("/telemetry", routes::telemetry::router())
+        .nest("/tenant", routes::tenant::router())
         .route(
             "/guardian/ws/bridge",
             get(routes::guardian_ws::ws_bridge_handler),
@@ -341,6 +354,62 @@ async fn openapi_json_handler(Query(params): Query<OpenApiQuery>) -> Response {
         routes::sos::get_history,
         routes::sos::validate_spec,
         routes::sos::list_machines,
+        // Compliance
+        routes::compliance::record_audit_event,
+        routes::compliance::query_audit_trail,
+        routes::compliance::list_gdpr_requests,
+        routes::compliance::create_gdpr_request,
+        routes::compliance::get_consent_records,
+        routes::compliance::update_consent,
+        routes::compliance::screen_export,
+        routes::compliance::get_soc2_scorecard,
+        // Platform ML
+        routes::platform_ml::predict,
+        routes::platform_ml::list_models,
+        routes::platform_ml::get_model_benchmark,
+        routes::platform_ml::trigger_training,
+        routes::platform_ml::get_training_status,
+        routes::platform_ml::get_al_suggestions,
+        routes::platform_ml::get_aggregation_stats,
+        // Admin
+        routes::admin::list_users,
+        routes::admin::get_user,
+        routes::admin::update_user_role,
+        routes::admin::get_stats,
+        routes::admin::list_content,
+        routes::admin::delete_content,
+        routes::admin::list_flagged_posts,
+        routes::admin::moderate_post,
+        // Benchmarks
+        routes::benchmarks::get_benchmarks,
+        routes::benchmarks::get_platform_aggregates,
+        // Career
+        routes::career::transitions,
+        // FAERS
+        routes::faers::search,
+        routes::faers::drug_events,
+        routes::faers::signal_check,
+        routes::faers::signal_graph,
+        // Graph Layout
+        routes::graph_layout::converge_layout,
+        // Learning
+        routes::learning::resolve_dag,
+        // Marketplace
+        routes::marketplace::search_experts,
+        routes::marketplace::recommend_experts,
+        routes::marketplace::create_engagement,
+        // MCP Bridge
+        routes::mcp::call_mcp_tool,
+        routes::mcp::get_usage_stats,
+        // Telemetry
+        routes::telemetry::ingest_event,
+        routes::telemetry::list_events,
+        routes::telemetry::get_summary,
+        // Tenant
+        routes::tenant::get_current_tenant,
+        routes::tenant::get_tenant_limits,
+        routes::tenant::list_tiers,
+        routes::tenant::provision_tenant,
     ),
     components(schemas(
         routes::core_api::AnalyzeRequest,
@@ -545,6 +614,18 @@ async fn openapi_json_handler(Query(params): Query<OpenApiQuery>) -> Response {
         (name = "core", description = "Core PV-OS high-level operations"),
         (name = "mesh", description = "Mesh networking - topology simulation, route quality, grounding coverage"),
         (name = "SOS", description = "State Operating System - 15-layer state machine runtime"),
+        (name = "compliance", description = "Compliance infrastructure - audit trails, GDPR, export controls, SOC 2"),
+        (name = "ml", description = "Platform ML engine - model catalog, inference, training, active learning"),
+        (name = "admin", description = "Administration - user management, content moderation, system stats"),
+        (name = "benchmarks", description = "Performance benchmarks and platform aggregates"),
+        (name = "career", description = "Career pathways - role transitions and progression"),
+        (name = "faers", description = "FDA Adverse Event Reporting System - search, drug events, signal detection"),
+        (name = "graph-layout", description = "Graph visualization - force-directed layout convergence"),
+        (name = "learning", description = "Learning DAG resolution and progress tracking"),
+        (name = "marketplace", description = "Expert marketplace - search, recommend, engage"),
+        (name = "mcp-bridge", description = "Model Context Protocol bridge - in-process tool execution"),
+        (name = "telemetry", description = "System telemetry - event ingestion, querying, summaries"),
+        (name = "tenant", description = "Multi-tenant management - provisioning, limits, tiers"),
     )
 )]
 pub struct ApiDoc;

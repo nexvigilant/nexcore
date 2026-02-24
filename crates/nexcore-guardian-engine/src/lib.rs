@@ -51,6 +51,9 @@ pub mod sensing;
 pub mod space3d;
 pub mod spatial_bridge;
 
+/// Convergence analysis — multi-signal consensus and threshold crystallization.
+pub mod convergence;
+
 #[cfg(feature = "insight")]
 pub mod insight_adapter;
 

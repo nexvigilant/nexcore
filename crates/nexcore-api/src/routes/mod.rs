@@ -28,3 +28,30 @@ pub mod ventures;
 pub mod vigil;
 pub mod vigil_sys;
 pub mod vigilance;
+
+// Compliance (audit trails, GDPR, export controls, SOC 2)
+pub mod compliance;
+
+// Platform ML (model catalog, inference, training, active learning, aggregation)
+pub mod platform_ml;
+
+// Admin (user management, system configuration, audit)
+pub mod admin;
+// Benchmarks (performance metrics, regression tracking)
+pub mod benchmarks;
+// Career (career pathways, progression tracking)
+pub mod career;
+// FAERS (FDA Adverse Event Reporting System queries)
+pub mod faers;
+// Graph Layout (node/edge visualization, force-directed layouts)
+pub mod graph_layout;
+// Learning (learning paths, progress tracking, assessments)
+pub mod learning;
+// Marketplace (skill marketplace, listings, transactions)
+pub mod marketplace;
+// MCP (Model Context Protocol bridge — in-process tool execution)
+pub mod mcp;
+// Telemetry (system metrics, usage analytics, performance monitoring)
+pub mod telemetry;
+// Tenant (multi-tenant isolation, tenant management)
+pub mod tenant;

@@ -8,6 +8,7 @@ license.workspace = true
 description = "Topological Data Analysis (TDA) for pharmacovigilance signal detection"
 
 [dependencies]
+nexcore-lex-primitiva = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 

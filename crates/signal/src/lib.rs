@@ -14,4 +14,7 @@
 
 #![forbid(unsafe_code)]
 
+// NOTE: grounding.rs exists but impls live in canonical nexcore-signal-pipeline crate
+// (orphan rules prevent implementing GroundsTo on re-exported foreign types here)
+
 pub use nexcore_signal_pipeline::*;

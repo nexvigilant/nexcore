@@ -3,7 +3,8 @@
 //! Dispatches to `learning_dag_resolve` MCP tool via in-process bridge.
 //! GET /api/v1/learning/dag
 
-use axum::{Json, Router, extract::{Query, State}, routing::get};
+use axum::{Json, Router, extract::Query, routing::get};
+use nexcore_mcp::NexCoreMcpServer;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
@@ -55,7 +56,6 @@ pub fn router() -> Router<crate::ApiState> {
     )
 )]
 async fn resolve_dag(
-    State(state): State<crate::ApiState>,
     Query(params): Query<LearningDagQuery>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
     if params.pathway_id.trim().is_empty() {
@@ -74,10 +74,11 @@ async fn resolve_dag(
         mcp_params.insert("user_id".to_string(), serde_json::json!(user_id));
     }
 
+    let server = NexCoreMcpServer::new();
     let result = mcp_bridge::call_tool(
         "learning_dag_resolve",
         serde_json::Value::Object(mcp_params),
-        &state.mcp_server,
+        &server,
     )
     .await
     .map_err(|e| ApiError::new("MCP_ERROR", format!("learning_dag_resolve failed: {e}")))?;

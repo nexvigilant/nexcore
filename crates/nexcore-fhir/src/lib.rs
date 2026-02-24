@@ -39,6 +39,9 @@ pub mod resources;
 /// FHIR AdverseEvent → NexVigilant signal detection adapter.
 pub mod adapter;
 
+/// T1 primitive grounding for FHIR resource types.
+pub mod grounding;
+
 // Convenience re-exports
 pub use adapter::{SignalInput, adverse_event_to_signal, adverse_events_to_signals};
 pub use base::{

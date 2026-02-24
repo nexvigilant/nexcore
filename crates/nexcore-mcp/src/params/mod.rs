@@ -503,3 +503,15 @@ pub use pharmacovigilance::*;
 // Vault (AES-256-GCM encryption, PBKDF2 key derivation)
 pub mod vault;
 pub use vault::*;
+
+// Build Orchestrator (CI/CD pipeline management)
+pub mod build_orchestrator;
+pub use build_orchestrator::*;
+
+// Skills Engine (advanced skill analysis and quality metrics)
+pub mod skills_engine;
+pub use skills_engine::*;
+
+// NCBI (National Center for Biotechnology Information — ESearch, ESummary, EFetch, ELink)
+pub mod ncbi;
+pub use ncbi::*;

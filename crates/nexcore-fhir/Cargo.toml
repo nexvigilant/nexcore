@@ -10,5 +10,6 @@ description = "Focused FHIR R4 types for pharmacovigilance — AdverseEvent, Pat
 
 [dependencies]
 chrono = { workspace = true, features = ["serde"] }
+nexcore-lex-primitiva = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }

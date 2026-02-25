@@ -22,7 +22,8 @@
 // AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
 // Re-generate with: python scripts/generate_rust_glossary.py
 
-#![allow(clippy::too_many_lines)] // Generated code
+#![allow(clippy::too_many_lines, clippy::too_many_arguments)] // Generated code
+#![allow(clippy::unreadable_literal)] // Generated constants
 
 /// A pharmacovigilance glossary term with its definition and metadata.
 #[derive(Debug, Clone, PartialEq, Eq)]

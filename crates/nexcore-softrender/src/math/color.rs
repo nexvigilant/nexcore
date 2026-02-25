@@ -7,6 +7,7 @@
 // ============================================================================
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub struct Color {
     pub r: f64,
     pub g: f64,

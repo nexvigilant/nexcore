@@ -34,7 +34,17 @@
 //! | `RESPIRATORY.rhythm` | `Rhythm` | Regulate breathing rate based on demand |
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::as_conversions,
+    clippy::arithmetic_side_effects,
+    reason = "Respiratory model is intentionally explicit and uses bounded operational metrics"
+)]
 
 pub mod claude_code;
 pub mod grounding;

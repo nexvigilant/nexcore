@@ -5,6 +5,7 @@
 use crate::math::{Color, Vec2, Vec3};
 
 #[derive(Debug, Clone, Copy)]
+#[non_exhaustive]
 pub struct Vertex {
     pub position: Vec3,
     pub color: Color,

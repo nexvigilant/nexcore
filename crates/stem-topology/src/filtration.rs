@@ -60,11 +60,13 @@ pub fn vietoris_rips(
     }
 
     // 1-simplices (edges)
-    for i in 0..n {
-        for j in (i + 1)..n {
-            let d = dm.distance(i, j);
-            if d <= max_filtration {
-                complex.add_simplex(Simplex::new(vec![i, j], d));
+    if max_dim >= 1 {
+        for i in 0..n {
+            for j in (i + 1)..n {
+                let d = dm.distance(i, j);
+                if d <= max_filtration {
+                    complex.add_simplex(Simplex::new(vec![i, j], d));
+                }
             }
         }
     }

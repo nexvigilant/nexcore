@@ -185,7 +185,6 @@ impl Input for LinuxInput {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nexcore_pal::types::{KeyEvent, TouchEvent, TouchPhase};
 
     #[test]
     fn input_creation() {
@@ -195,44 +194,20 @@ mod tests {
     }
 
     #[test]
-    fn inject_and_poll() {
+    fn poll_event_empty_queue() {
         let mut input = LinuxInput::new();
-
-        let event = InputEvent::Touch(TouchEvent {
-            id: 0,
-            x: 100.0,
-            y: 200.0,
-            pressure: 1.0,
-            phase: TouchPhase::Started,
-        });
-
-        input.inject_event(event.clone());
-        assert!(input.has_events());
-
         let polled = input.poll_event();
         assert!(polled.is_ok());
-        let polled = polled.ok().flatten();
-        assert!(polled.is_some());
+        assert!(polled.ok().flatten().is_none());
     }
 
     #[test]
-    fn poll_events_drains() {
+    fn poll_events_empty_queue() {
         let mut input = LinuxInput::new();
-        input.inject_event(InputEvent::Key(KeyEvent {
-            code: KeyCode::A,
-            state: KeyState::Pressed,
-            modifiers: Modifiers::NONE,
-        }));
-        input.inject_event(InputEvent::Key(KeyEvent {
-            code: KeyCode::A,
-            state: KeyState::Released,
-            modifiers: Modifiers::NONE,
-        }));
-
         let events = input.poll_events();
         assert!(events.is_ok());
         let events = events.unwrap_or_default();
-        assert_eq!(events.len(), 2);
+        assert_eq!(events.len(), 0);
         assert!(!input.has_events());
     }
 

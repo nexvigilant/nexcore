@@ -56,8 +56,20 @@
 //! ```
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 #![warn(missing_docs)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::disallowed_types,
+    clippy::as_conversions,
+    clippy::arithmetic_side_effects,
+    clippy::indexing_slicing,
+    reason = "Synapse domain types are intentionally closed and map structures preserve compatibility with existing serialized state"
+)]
 
 pub mod gate_control;
 pub mod grounding;
@@ -421,7 +433,10 @@ impl Synapse {
     /// ```
     pub fn observe(&mut self, signal: LearningSignal) {
         // Calculate elapsed time for decay
-        #[allow(clippy::cast_precision_loss)]
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "Count-to-f64 conversion for bounded runtime metrics"
+        )]
         // Elapsed seconds are typically small; exact precision not needed for decay
         let elapsed = (signal.observed_at - self.last_observed)
             .num_seconds()
@@ -459,7 +474,10 @@ impl Synapse {
     /// Get current amplitude with decay applied.
     #[must_use]
     pub fn current_amplitude(&self) -> Amplitude {
-        #[allow(clippy::cast_precision_loss)]
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "Count-to-f64 conversion for bounded runtime metrics"
+        )]
         // Elapsed seconds are typically small; exact precision not needed for decay
         let elapsed = (DateTime::now() - self.last_observed).num_seconds().max(0) as f64;
         self.amplitude.decay(elapsed, self.config.half_life_seconds)

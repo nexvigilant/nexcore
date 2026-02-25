@@ -28,10 +28,20 @@
 //! 2. **Gödel**: Mathematics cannot prove its own consistency
 //! 3. **Shannon**: Proof compression has irreducible loss
 
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-#![deny(clippy::panic)]
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
+#![cfg_attr(not(test), deny(clippy::expect_used))]
+#![cfg_attr(not(test), deny(clippy::panic))]
 #![forbid(unsafe_code)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::disallowed_types,
+    clippy::indexing_slicing,
+    clippy::as_conversions,
+    clippy::arithmetic_side_effects,
+    clippy::many_single_char_names,
+    reason = "Math algorithms preserve canonical variable naming and explicit numeric/index operations for readability"
+)]
 
 pub mod distributions;
 pub mod graph;

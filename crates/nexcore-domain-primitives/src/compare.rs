@@ -6,6 +6,7 @@ use crate::taxonomy::{DomainTaxonomy, Tier};
 
 /// Result of comparing two taxonomies.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct TaxonomyComparison {
     /// Names of the two taxonomies compared.
     pub taxonomy_a: String,
@@ -22,6 +23,7 @@ pub struct TaxonomyComparison {
 
 /// A primitive found in both taxonomies.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct SharedPrimitive {
     pub name: String,
     pub tier_a: Tier,

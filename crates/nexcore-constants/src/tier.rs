@@ -45,7 +45,12 @@ impl fmt::Display for Tier {
 /// Convert Tier to numeric value (Codex I: QUANTIFY).
 impl From<Tier> for u8 {
     fn from(tier: Tier) -> u8 {
-        tier as u8
+        match tier {
+            Tier::T1Universal => 1,
+            Tier::T2Primitive => 2,
+            Tier::T2Composite => 3,
+            Tier::T3DomainSpecific => 4,
+        }
     }
 }
 

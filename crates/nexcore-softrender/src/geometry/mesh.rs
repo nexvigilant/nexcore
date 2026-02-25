@@ -6,6 +6,7 @@
 use super::vertex::Vertex;
 
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct Triangle {
     pub v0: Vertex,
     pub v1: Vertex,
@@ -19,6 +20,7 @@ impl Triangle {
 }
 
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct Mesh {
     pub triangles: Vec<Triangle>,
 }

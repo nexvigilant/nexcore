@@ -47,6 +47,7 @@ fn cached_home() -> &'static Path {
 ///
 /// The bathroom door indicator — visible without touching the handle.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum Occupancy {
     /// Lock is free — resource available for writing.
     Vacant,
@@ -95,6 +96,7 @@ impl fmt::Display for Occupancy {
 
 /// Error during lock operations.
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum LockError {
     /// Lock is already held by another holder.
     AlreadyOccupied {
@@ -131,7 +133,7 @@ impl std::error::Error for LockError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Io(e) => Some(e),
-            _ => None,
+            Self::AlreadyOccupied { .. } | Self::AlreadyVacant | Self::NotYourLock { .. } => None,
         }
     }
 }
@@ -408,7 +410,7 @@ impl BathroomLock {
         {
             Ok(mut file) => {
                 if let Err(e) = file.write_all(holder.as_bytes()) {
-                    let _ = fs::remove_file(&self.lock_path);
+                    drop(fs::remove_file(&self.lock_path));
                     return Err(LockError::Io(e));
                 }
                 Ok(())
@@ -429,6 +431,7 @@ impl fmt::Debug for BathroomLock {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("BathroomLock")
             .field("target", &self.target)
+            .field("lock_path", &self.lock_path)
             .field("occupancy", &self.peek())
             .finish()
     }
@@ -468,7 +471,7 @@ impl OccupiedGuard<'_> {
 impl Drop for OccupiedGuard<'_> {
     fn drop(&mut self) {
         if !self.released {
-            let _ = self.lock.release(&self.holder);
+            drop(self.lock.release(&self.holder));
         }
     }
 }

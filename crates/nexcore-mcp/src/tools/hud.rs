@@ -1033,9 +1033,7 @@ mod tests {
         // Use unique ID to avoid test interference
         let unique_id = format!(
             "persist-test-{}",
-            nexcore_chrono::DateTime::now()
-                .timestamp_nanos_opt()
-                .unwrap_or(0)
+            nexcore_chrono::DateTime::now().timestamp_micros()
         );
         let content = "content persisted across calls";
 
@@ -1073,9 +1071,7 @@ mod tests {
     fn test_ssa_version_increments_across_calls() {
         let unique_id = format!(
             "version-test-{}",
-            nexcore_chrono::DateTime::now()
-                .timestamp_nanos_opt()
-                .unwrap_or(0)
+            nexcore_chrono::DateTime::now().timestamp_micros()
         );
         let artifact_name = format!("{}.state", unique_id);
 

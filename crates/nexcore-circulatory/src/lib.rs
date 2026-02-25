@@ -31,7 +31,17 @@
 //! perfusion = deferred tool loading, Frank-Starling = MCP_TIMEOUT scaling.
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::as_conversions,
+    clippy::arithmetic_side_effects,
+    reason = "Circulatory domain types are intentionally closed and use bounded transport metrics"
+)]
 
 pub mod claude_code;
 pub mod grounding;

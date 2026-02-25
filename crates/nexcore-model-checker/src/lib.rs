@@ -58,7 +58,10 @@
 //! | `Witness` | T2-P | N | N κ |
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 
 pub mod ctl;
 pub mod grounding;

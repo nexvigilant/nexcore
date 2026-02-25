@@ -44,7 +44,19 @@
 //! - `DigestiveError`: T2-P (partial + Sigma) — pipeline errors
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::as_conversions,
+    clippy::arithmetic_side_effects,
+    clippy::self_only_used_in_recursion,
+    clippy::too_long_first_doc_paragraph,
+    reason = "Digestive-system ontology uses explicit closed schemas and recursive extraction logic for pedagogical clarity"
+)]
 
 pub mod claude_code;
 pub mod grounding;

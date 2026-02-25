@@ -4,11 +4,12 @@
 #![doc = "Assess state → reject regression → search for novelty → arrive at new state."]
 #![forbid(unsafe_code)]
 
-use nexcore_dataframe::{Agg, Column, DataFrame, DataFrameError, Scalar};
+use nexcore_dataframe::{Agg, Column, DataFrame, DataFrameError};
 use std::path::Path;
 
 /// Errors specific to the Disney Loop pipeline.
 #[derive(Debug, nexcore_error::Error)]
+#[non_exhaustive]
 pub enum DisneyError {
     #[error("dataframe error: {0}")]
     DataFrame(#[from] DataFrameError),
@@ -56,6 +57,7 @@ pub fn transform_curiosity_search(df: DataFrame) -> Result<DataFrame> {
 ///
 /// Writes the transformed state to a JSON file. The old state is gone;
 /// the new state is all that remains. Forward only.
+#[allow(clippy::as_conversions, reason = "DataFrame height fits in u64")]
 pub fn sink_new_state(df: DataFrame, output_path: &Path) -> Result<u64> {
     tracing::info!(
         stage = "new-state",

@@ -20,6 +20,7 @@ use crate::graph::DependencyGraph;
 ///
 /// Tier: T2-P (κ + ∂)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum CriticalityTier {
     /// Critical: high fan-in, breaking changes cascade widely.
     Critical = 3,
@@ -48,6 +49,7 @@ impl CriticalityTier {
 ///
 /// Tier: T2-C (N + κ + μ + ∂)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct CriticalityScore {
     /// Crate name.
     pub name: String,
@@ -69,6 +71,7 @@ pub struct CriticalityScore {
 ///
 /// Tier: T3 (N + κ + μ + Σ + ∂ + σ)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct WorkspaceMetrics {
     /// Per-crate criticality scores, sorted by score descending.
     pub criticality: Vec<CriticalityScore>,
@@ -98,6 +101,7 @@ pub struct WorkspaceMetrics {
 ///
 /// A crate is Critical if fan_in_ratio >= critical_threshold, etc.
 #[derive(Debug, Clone, Copy)]
+#[non_exhaustive]
 pub struct CriticalityThresholds {
     /// Fan-in ratio threshold for Critical tier (default: 0.10 = 10% of workspace).
     pub critical: f64,

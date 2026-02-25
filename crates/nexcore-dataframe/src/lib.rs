@@ -21,10 +21,14 @@
 //! - Select: `df.select(&["col1", "col2"])`, `df.drop_columns(&["col"])`
 //! - Aggregate: `col.sum()`, `col.mean()`, `col.min()`, `col.max()`, `col.median()`
 //! - GroupBy: `df.group_by(&["col"])?.agg(&[Agg::Sum("val".into())])`
+//! - Join: `df.join(&other, &["key"], JoinType::Inner)` (inner/left/right/outer/semi/anti)
 //! - I/O: `DataFrame::from_json(s)`, `df.to_json()`, `df.to_json_file(path)`
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 
 // Core types
 pub mod column;
@@ -38,6 +42,7 @@ pub mod agg;
 pub mod counter;
 pub mod filter;
 pub mod group;
+pub mod join;
 pub mod select;
 pub mod sort;
 
@@ -50,6 +55,7 @@ pub use counter::Counter;
 pub use dataframe::DataFrame;
 pub use error::DataFrameError;
 pub use group::Agg;
+pub use join::JoinType;
 pub use scalar::Scalar;
 pub use schema::Schema;
 
@@ -60,6 +66,7 @@ pub mod prelude {
     pub use crate::dataframe::DataFrame;
     pub use crate::error::DataFrameError;
     pub use crate::group::Agg;
+    pub use crate::join::JoinType;
     pub use crate::scalar::Scalar;
     pub use crate::schema::Schema;
 }

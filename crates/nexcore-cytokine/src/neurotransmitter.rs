@@ -220,7 +220,10 @@ impl HookNeuralProfile {
             return 0.0;
         }
         // Precision loss acceptable: hook counts fit well within f64 mantissa
-        #[allow(clippy::cast_precision_loss)]
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "Count-to-f64 conversion for bounded runtime metrics"
+        )]
         {
             self.gaba_count as f64 / total as f64
         }
@@ -234,7 +237,10 @@ impl HookNeuralProfile {
             return 0.0;
         }
         // Precision loss acceptable: hook counts fit well within f64 mantissa
-        #[allow(clippy::cast_precision_loss)]
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "Count-to-f64 conversion for bounded runtime metrics"
+        )]
         {
             self.ach_count as f64 / total as f64
         }

@@ -10,6 +10,7 @@ use core::ops::{Add, Div, Mul, Neg, Sub};
 // ============================================================================
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub struct Vec2 {
     pub x: f64,
     pub y: f64,
@@ -102,6 +103,7 @@ impl Neg for Vec2 {
 // ============================================================================
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
@@ -225,6 +227,7 @@ impl Neg for Vec3 {
 // ============================================================================
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub struct Vec4 {
     pub x: f64,
     pub y: f64,

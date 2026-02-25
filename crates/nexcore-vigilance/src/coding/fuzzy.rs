@@ -8,6 +8,8 @@
 //! - Levenshtein: O(n*m) time, O(min(n,m)) space (optimized single-row)
 //! - Jaro-Winkler: O(n*m) time, O(n+m) space
 
+#![allow(clippy::unreadable_literal)] // Fixture term IDs mirror MedDRA source values.
+
 use std::cmp::min;
 
 /// Calculate Levenshtein (edit) distance between two strings.

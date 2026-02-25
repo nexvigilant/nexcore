@@ -11,7 +11,10 @@
 //! - **Void (∅)**: `Unknown` variant representing unclassifiable path absence.
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 
 use std::fmt;
 use std::fs;
@@ -26,6 +29,7 @@ use std::path::{Path, PathBuf};
 /// Tier: T3 (domain-specific to NexCore ecosystem)
 /// Grounds to: T1 Mapping (path attributes → category)
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ContentType {
     /// NexCore skill directory (has SKILL.md)
     Skill { name: String },
@@ -71,6 +75,7 @@ impl fmt::Display for ContentType {
 ///
 /// Tier: T2-C (composes State + Mapping)
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct ClassifiedEntry {
     /// Path to the entry
     pub path: PathBuf,
@@ -88,6 +93,7 @@ pub struct ClassifiedEntry {
 ///
 /// Tier: T2-P (cross-domain: any triage system has actions)
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum SuggestedAction {
     /// Move into NexCore ecosystem (~/.claude/skills/, ~/nexcore/, etc.)
     Migrate { destination: String },
@@ -130,10 +136,10 @@ pub fn classify(path: &Path) -> ContentType {
     // Directory classification
     if path.is_dir() {
         if path.join("SKILL.md").exists() {
-            return ContentType::Skill { name: name.clone() };
+            return ContentType::Skill { name };
         }
         if path.join("Cargo.toml").exists() {
-            return ContentType::RustProject { name: name.clone() };
+            return ContentType::RustProject { name };
         }
         if lower.contains("faers") {
             let quarter = lower
@@ -166,7 +172,7 @@ pub fn classify(path: &Path) -> ContentType {
                 return ContentType::Documentation;
             }
             "rs" | "toml" => {
-                return ContentType::RustProject { name: name.clone() };
+                return ContentType::RustProject { name };
             }
             "skill" => {
                 return ContentType::Skill { name };
@@ -219,6 +225,7 @@ pub fn suggest_action(content_type: &ContentType, path: &Path) -> SuggestedActio
 ///
 /// Tier: T2-C (State + Aggregation)
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct ScanReport {
     /// Classified entries
     pub entries: Vec<ClassifiedEntry>,
@@ -278,6 +285,7 @@ impl ScanReport {
     /// Count entries by content type.
     ///
     /// Aggregation: Sequence + Mapping → counts
+    #[allow(clippy::arithmetic_side_effects, reason = "incrementing counts")]
     pub fn summary(&self) -> Vec<(String, usize)> {
         let mut counts: std::collections::BTreeMap<String, usize> =
             std::collections::BTreeMap::new();
@@ -336,6 +344,7 @@ impl ScanReport {
 }
 
 /// Calculate total size of a directory (Recursion primitive).
+#[allow(clippy::arithmetic_side_effects, reason = "size accumulations")]
 fn dir_size(path: &Path) -> std::io::Result<u64> {
     let mut total = 0u64;
     if path.is_dir() {
@@ -353,6 +362,10 @@ fn dir_size(path: &Path) -> std::io::Result<u64> {
 }
 
 /// Format bytes as human-readable string.
+#[allow(
+    clippy::as_conversions,
+    reason = "safe conversion from u64 to f64 for formatting"
+)]
 fn format_bytes(bytes: u64) -> String {
     const KB: u64 = 1024;
     const MB: u64 = 1024 * KB;

@@ -5,6 +5,7 @@
 use crate::math::{Mat3, Mat4, Vec2, Vec3};
 
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct Viewport {
     pub width: u32,
     pub height: u32,

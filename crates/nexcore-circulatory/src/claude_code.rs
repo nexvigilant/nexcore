@@ -27,7 +27,10 @@
 //! - **Project** (organ-level): Tools scoped to a project workspace
 //! - **User** (systemic circulation): Tools available across all projects
 
-#![allow(dead_code)]
+#![allow(
+    dead_code,
+    reason = "Transport model includes reference structures that are not yet invoked in all runtime paths"
+)]
 
 use serde::{Deserialize, Serialize};
 

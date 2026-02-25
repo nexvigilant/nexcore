@@ -14,7 +14,10 @@
 //! | Grid paths | #253 Bank Holiday | σ+N+∂ |
 //! | Linear extensions | #279+#253 combined | σ+∂+N+μ |
 
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 #![forbid(unsafe_code)]
 
 pub mod catalan;

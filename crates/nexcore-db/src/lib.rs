@@ -30,7 +30,24 @@
 //! ```
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::disallowed_types,
+    clippy::iter_over_hash_type,
+    clippy::arithmetic_side_effects,
+    clippy::as_conversions,
+    clippy::indexing_slicing,
+    clippy::wildcard_enum_match_arm,
+    clippy::shadow_unrelated,
+    clippy::too_many_arguments,
+    clippy::map_err_ignore,
+    reason = "Migration and persistence layers prioritize backward-compatible schema ingestion over style-only lint constraints"
+)]
 
 pub mod artifacts;
 pub mod decisions;

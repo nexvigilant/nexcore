@@ -92,7 +92,10 @@ impl Storage for LinuxStorage {
             let stat = statvfs(self.root.as_str()).map_err(|_| StorageError::IoError)?;
             // Use `as u64` for portability: identity on x86_64 (already u64),
             // widening on armv7 (u32 → u64).
-            #[allow(clippy::unnecessary_cast)]
+            #[allow(
+                clippy::unnecessary_cast,
+                reason = "Cross-arch portability for statvfs numeric types"
+            )]
             let avail = stat.blocks_available() as u64 * stat.fragment_size() as u64;
             Ok(avail)
         }
@@ -109,7 +112,10 @@ impl Storage for LinuxStorage {
             let stat = statvfs(self.root.as_str()).map_err(|_| StorageError::IoError)?;
             // Use `as u64` for portability: identity on x86_64 (already u64),
             // widening on armv7 (u32 → u64).
-            #[allow(clippy::unnecessary_cast)]
+            #[allow(
+                clippy::unnecessary_cast,
+                reason = "Cross-arch portability for statvfs numeric types"
+            )]
             let total = stat.blocks() as u64 * stat.fragment_size() as u64;
             Ok(total)
         }

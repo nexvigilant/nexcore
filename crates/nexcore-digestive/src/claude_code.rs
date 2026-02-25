@@ -24,7 +24,10 @@
 //! the error is emitted as output — there is no retry from the trigger stage.
 //! Peristalsis only moves one direction.
 
-#![allow(dead_code)]
+#![allow(
+    dead_code,
+    reason = "Digestive-system model includes reference types not yet consumed by runtime paths"
+)]
 
 use serde::{Deserialize, Serialize};
 

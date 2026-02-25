@@ -286,11 +286,7 @@ fn scaffold_pipeline_extract_scaffold_validate() {
     let domain = analysis.domain.as_ref().expect("domain should be present");
 
     // Step 2: Generate scaffold
-    let params = academy_forge::ScaffoldParams {
-        pathway_id: "tov-99".to_string(),
-        title: "Pipeline Test Pathway".to_string(),
-        domain: "vigilance".to_string(),
-    };
+    let params = academy_forge::ScaffoldParams::new("tov-99", "Pipeline Test Pathway", "vigilance");
     let scaffold = academy_forge::scaffold(domain, &params);
 
     // Step 3: Verify scaffold is valid JSON with expected structure
@@ -395,11 +391,7 @@ fn compile_tov_01_generates_typescript_files() {
     let tmp = tempfile::TempDir::new().unwrap();
     let output_dir = tmp.path().to_path_buf();
 
-    let params = academy_forge::CompileParams {
-        input_path,
-        output_dir: output_dir.clone(),
-        overwrite: true,
-    };
+    let params = academy_forge::CompileParams::new(input_path, output_dir.clone(), true);
 
     let result = academy_forge::compile_pathway(&params).expect("compile should succeed");
 

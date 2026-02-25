@@ -113,6 +113,7 @@ impl GridConfig {
             FormFactor::Watch => Self::watch(),
             FormFactor::Phone => Self::phone(),
             FormFactor::Desktop => Self::desktop(),
+            _ => Self::desktop(),
         }
     }
 
@@ -177,6 +178,7 @@ impl AppLauncher {
         let default_view = match form_factor {
             FormFactor::Watch => LauncherView::List,
             FormFactor::Phone | FormFactor::Desktop => LauncherView::Grid,
+            _ => LauncherView::Grid,
         };
 
         Self {

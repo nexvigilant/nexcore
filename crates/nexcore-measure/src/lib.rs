@@ -30,7 +30,19 @@
 //! ```
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::many_single_char_names,
+    clippy::suspicious_operation_groupings,
+    clippy::as_conversions,
+    clippy::arithmetic_side_effects,
+    reason = "Measurement/statistics routines use canonical formulas and notation from standard literature"
+)]
 
 pub mod bridge;
 pub mod collect;

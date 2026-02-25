@@ -4,6 +4,7 @@ use std::io::Write;
 use std::net::IpAddr;
 use std::sync::Arc;
 
+use nexcore_chrono::{DateTime, Duration};
 use nexcore_sentinel::config::SentinelConfig;
 use nexcore_sentinel::engine::Engine;
 use nexcore_sentinel::firewall::{FirewallOp, MockFirewall};
@@ -203,11 +204,11 @@ fn state_persistence_round_trip() {
     config.ban_time_secs = 86400; // 24 hours
 
     // Build state directly: create a ban record with current time
-    let now = chrono::Utc::now();
+    let now = DateTime::now();
     let ban = nexcore_sentinel::types::BanRecord {
         ip: parse_ip("10.0.0.99"),
         banned_at: now,
-        expires_at: now + chrono::Duration::seconds(86400),
+        expires_at: now + Duration::seconds(86400),
         failure_count: 3,
     };
     let state = nexcore_sentinel::types::SentinelState {

@@ -7,6 +7,7 @@ use crate::transfer::{DomainTransfer, TransferScore};
 
 /// Tier classification for extracted primitives.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum Tier {
     /// Universal — appears identically in all domains.
     T1,
@@ -54,6 +55,7 @@ impl std::fmt::Display for Tier {
 
 /// A single extracted primitive.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Primitive {
     /// Short kebab-case identifier (e.g., "sensor-fusion").
     pub name: String,
@@ -94,6 +96,7 @@ impl Primitive {
 
 /// Complete extraction result for a domain.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct DomainTaxonomy {
     /// Name of the source domain (e.g., "Golden Dome").
     pub name: String,
@@ -205,6 +208,7 @@ impl DomainTaxonomy {
 
 /// Recursive decomposition tree node.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct DecompositionNode {
     pub name: String,
     pub tier: Tier,

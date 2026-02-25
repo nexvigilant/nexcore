@@ -78,9 +78,9 @@ fn lib_rs_template(
 //! | T3   | {t3}     | Domain-specific |
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-#![deny(clippy::panic)]
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
+#![cfg_attr(not(test), deny(clippy::expect_used))]
+#![cfg_attr(not(test), deny(clippy::panic))]
 
 pub mod composites;
 pub mod grounding;
@@ -370,7 +370,7 @@ pub fn scaffold_crate(params: CrateDevScaffoldParams) -> Result<CallToolResult, 
         ],
         "quality_checklist": {
             "forbid_unsafe": "#![forbid(unsafe_code)] in lib.rs",
-            "deny_unwrap": "#![deny(clippy::unwrap_used)] in lib.rs",
+            "deny_unwrap": "#![cfg_attr(not(test), deny(clippy::unwrap_used))] in lib.rs",
             "all_grounded": "impl GroundsTo for every type",
             "transfers_complete": "3 per T1/T2-P type (PV, Biology, Economics)",
             "serde_roundtrip": "one test per type",
@@ -417,8 +417,8 @@ pub fn audit_crate(params: CrateDevAuditParams) -> Result<CallToolResult, McpErr
         let content = std::fs::read_to_string(&lib_rs).unwrap_or_default();
         let has_forbid_unsafe = content.contains("forbid(unsafe_code)");
         // Check deny/forbid context — handles both individual and combined attributes:
-        //   #![deny(clippy::unwrap_used)]  (individual)
-        //   #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]  (combined)
+        //   #![cfg_attr(not(test), deny(clippy::unwrap_used))]  (individual)
+        //   #![cfg_attr(not(test), deny(clippy::unwrap_used, clippy::expect_used, clippy::panic))]  (combined)
         let has_deny = content.contains("deny(") || content.contains("forbid(");
         let has_deny_unwrap = has_deny && content.contains("clippy::unwrap_used");
         let has_deny_expect = has_deny && content.contains("clippy::expect_used");

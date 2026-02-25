@@ -177,6 +177,10 @@ impl InputRouter {
 
     /// Route a keyboard event to the focused surface.
     pub fn route_keyboard(&self, _event: &InputEvent, focused: Option<SurfaceId>) -> InputTarget {
+        self.route_focused_surface(focused)
+    }
+
+    fn route_focused_surface(&self, focused: Option<SurfaceId>) -> InputTarget {
         focused.map_or(InputTarget::Desktop, InputTarget::Surface)
     }
 
@@ -311,26 +315,16 @@ mod tests {
     #[test]
     fn route_keyboard_to_focused() {
         let router = InputRouter::new();
-        let event = InputEvent::Key(nexcore_pal::KeyEvent {
-            code: nexcore_pal::KeyCode::A,
-            state: nexcore_pal::KeyState::Pressed,
-            modifiers: nexcore_pal::Modifiers::NONE,
-        });
 
-        let target = router.route_keyboard(&event, Some(SurfaceId::new(5)));
+        let target = router.route_focused_surface(Some(SurfaceId::new(5)));
         assert!(matches!(target, InputTarget::Surface(id) if id == SurfaceId::new(5)));
     }
 
     #[test]
     fn route_keyboard_no_focus() {
         let router = InputRouter::new();
-        let event = InputEvent::Key(nexcore_pal::KeyEvent {
-            code: nexcore_pal::KeyCode::A,
-            state: nexcore_pal::KeyState::Pressed,
-            modifiers: nexcore_pal::Modifiers::NONE,
-        });
 
-        let target = router.route_keyboard(&event, None);
+        let target = router.route_focused_surface(None);
         assert!(matches!(target, InputTarget::Desktop));
     }
 

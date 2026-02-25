@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 /// Ord: T1 > T2P > T2C > T3 (higher = more universal)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord)]
 #[serde(rename_all = "snake_case")]
+#[non_exhaustive]
 pub enum PrimitiveTier {
     /// T3: Domain-specific (1 domain only)
     #[serde(rename = "T3")]
@@ -73,6 +74,7 @@ impl std::fmt::Display for PrimitiveTier {
 ///
 /// Tier: T2-C (Cross-domain - NLP, documentation, testing)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct TermDefinition {
     /// The term being analyzed.
     pub term: String,
@@ -133,6 +135,7 @@ impl TermDefinition {
 /// Tier: T2-C (Cross-domain composite)
 /// Grounds to: T1 (String, f64, Vec) + T2-P (classification)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Primitive {
     /// Unique identifier (e.g., "PRIM-UNIV-0001").
     pub id: String,

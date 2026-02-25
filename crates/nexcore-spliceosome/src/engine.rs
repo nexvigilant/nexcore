@@ -22,7 +22,7 @@
 //! ribosome crates. It operates in a cognitively independent domain.
 //! This breaks the circularity of asking the LLM to detect its own errors.
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::classifier::TaskClassifier;
 use crate::error::{Result, SpliceosomeError};
@@ -47,7 +47,7 @@ const GENERATOR_VERSION: &str = "spliceosome-v1.0.0";
 #[derive(Debug, Clone)]
 pub struct Spliceosome {
     classifier: TaskClassifier,
-    templates: HashMap<TaskCategory, Vec<EjcMarker>>,
+    templates: BTreeMap<TaskCategory, Vec<EjcMarker>>,
 }
 
 impl Default for Spliceosome {
@@ -68,7 +68,7 @@ impl Spliceosome {
 
     /// Create with custom templates (for testing or domain-specific configs).
     #[must_use]
-    pub fn with_templates(templates: HashMap<TaskCategory, Vec<EjcMarker>>) -> Self {
+    pub fn with_templates(templates: BTreeMap<TaskCategory, Vec<EjcMarker>>) -> Self {
         Self {
             classifier: TaskClassifier::new(),
             templates,
@@ -117,7 +117,7 @@ impl Spliceosome {
 
     /// Get templates for inspection.
     #[must_use]
-    pub fn templates(&self) -> &HashMap<TaskCategory, Vec<EjcMarker>> {
+    pub fn templates(&self) -> &BTreeMap<TaskCategory, Vec<EjcMarker>> {
         &self.templates
     }
 

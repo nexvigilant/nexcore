@@ -27,7 +27,20 @@
 //! | classify | ∂ Boundary, → Causality |
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::arithmetic_side_effects,
+    clippy::as_conversions,
+    clippy::indexing_slicing,
+    clippy::disallowed_types,
+    clippy::iter_over_hash_type,
+    reason = "Detection feature pipeline uses explicit statistical structs and bounded numeric transforms"
+)]
 
 pub mod aggregation;
 pub mod burstiness;

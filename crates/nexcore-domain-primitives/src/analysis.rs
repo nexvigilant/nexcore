@@ -74,6 +74,7 @@ pub fn topological_sort(tax: &DomainTaxonomy) -> Result<Vec<&str>, CycleError> {
 
 /// Error when a cycle is detected in the dependency graph.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct CycleError {
     pub sorted_count: usize,
     pub total: usize,
@@ -143,6 +144,7 @@ pub fn critical_paths(tax: &DomainTaxonomy) -> Vec<Vec<&str>> {
 /// Bottleneck analysis: primitives ranked by fan-out (most dependents first).
 /// These are the primitives that, if understood, unlock the most downstream knowledge.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Bottleneck {
     pub name: String,
     pub tier: Tier,

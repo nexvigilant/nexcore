@@ -1,10 +1,10 @@
 use crate_converter::{InternalDepResolver, convert_cargo_toml};
 use pretty_assertions::assert_eq;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// A test resolver that returns pre-configured versions for internal crates.
 struct TestResolver {
-    versions: HashMap<String, String>,
+    versions: BTreeMap<String, String>,
 }
 
 impl TestResolver {

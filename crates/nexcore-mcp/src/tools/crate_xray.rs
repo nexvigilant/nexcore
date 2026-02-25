@@ -219,8 +219,8 @@ fn analyze_safety(src_dir: &Path) -> SafetyInfo {
     let lib_content = std::fs::read_to_string(src_dir.join("lib.rs")).unwrap_or_default();
 
     // Check deny/forbid context — handles both individual and combined attributes:
-    //   #![deny(clippy::unwrap_used)]  (individual)
-    //   #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]  (combined)
+    //   #![cfg_attr(not(test), deny(clippy::unwrap_used))]  (individual)
+    //   #![cfg_attr(not(test), deny(clippy::unwrap_used, clippy::expect_used, clippy::panic))]  (combined)
     let has_deny = lib_content.contains("deny(") || lib_content.contains("forbid(");
     let mut info = SafetyInfo {
         forbid_unsafe: lib_content.contains("forbid(unsafe_code)"),
@@ -588,7 +588,10 @@ pub fn trial(params: CrateXrayTrialParams) -> Result<CallToolResult, McpError> {
                 "todo_markers": safety.todo_count,
             },
             "remediation": if !all_denials {
-                "Add #![forbid(unsafe_code)] #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)] to lib.rs"
+                "Add #![forbid(unsafe_code)] #![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)] to lib.rs"
             } else if !no_violations {
                 "Replace .unwrap()/.expect()/panic!() with Result returns or .unwrap_or_default()"
             } else {
@@ -833,7 +836,10 @@ pub fn goals(params: CrateXrayGoalsParams) -> Result<CallToolResult, McpError> {
     if !safety.deny_unwrap || !safety.deny_expect || !safety.deny_panic {
         dev_goals.push(json!({
             "priority": "P0-BLOCKING",
-            "goal": "Add #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)] to lib.rs",
+            "goal": "Add #![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)] to lib.rs",
             "impact": "Catches panic paths at compile time",
             "effort": "trivial",
             "ctvp_phase": 1,

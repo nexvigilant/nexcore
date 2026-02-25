@@ -21,7 +21,11 @@
 //! | Timestamp | Sequence + Quantity | σ + N |
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, missing_docs)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![deny(missing_docs)]
 
 pub mod error;
 pub mod grounding;

@@ -192,15 +192,17 @@ impl TaskClassifier {
         let total: f32 = scores.iter().map(|(_, s)| s).sum();
 
         // Check for mixed: if top two both >30% of total
-        if scores.len() >= 2 {
-            let top_pct = scores[0].1 / total;
-            let second_pct = scores[1].1 / total;
+        if let (Some((_, top_score)), Some((_, second_score))) = (scores.first(), scores.get(1)) {
+            let top_pct = *top_score / total;
+            let second_pct = *second_score / total;
             if top_pct < 0.5 && second_pct > 0.3 {
                 return TaskCategory::Mixed;
             }
         }
 
-        scores[0].0
+        scores
+            .first()
+            .map_or(TaskCategory::Mixed, |(category, _)| *category)
     }
 }
 

@@ -29,7 +29,17 @@
 //! new content. The `DrainageResult.passive` field is always `true`.
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::as_conversions,
+    clippy::arithmetic_side_effects,
+    reason = "Lymphatic output-channel model intentionally uses fixed-domain transport structs and simple bounded metrics"
+)]
 
 pub mod grounding;
 

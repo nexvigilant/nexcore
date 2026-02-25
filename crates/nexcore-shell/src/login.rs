@@ -115,6 +115,7 @@ impl AuthMethod {
             FormFactor::Watch => Self::Pin4,
             FormFactor::Phone => Self::Pin6,
             FormFactor::Desktop => Self::Password,
+            _ => Self::Password,
         }
     }
 
@@ -461,6 +462,7 @@ impl LoginLayout {
             FormFactor::Watch => Self::watch(),
             FormFactor::Phone => Self::phone(),
             FormFactor::Desktop => Self::desktop(),
+            _ => Self::desktop(),
         }
     }
 

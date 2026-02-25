@@ -37,7 +37,10 @@
 //! | `training` | T3 | Σ + π + σ + → | Sum of persisted sequences mapped to labels |
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 
 pub mod cluster;
 pub mod correlate;

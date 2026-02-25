@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 /// Extraction context.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ExtractionContext {
     /// Domain name.
     pub domain: String,
@@ -14,6 +15,7 @@ pub struct ExtractionContext {
 
 /// Source mode for extraction.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum SourceMode {
     /// Full corpus provided.
     Full,
@@ -28,6 +30,7 @@ pub enum SourceMode {
 
 /// Extraction result.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ExtractionResult {
     /// Domain extracted from.
     pub domain: String,

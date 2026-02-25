@@ -1,5 +1,8 @@
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 #![doc = "NexCloud: Rust-native cloud platform — 35-type taxonomy + process supervisor + reverse proxy."]
 #![doc = ""]
 #![doc = "Tier: T3 (full domain platform)"]

@@ -34,7 +34,10 @@
 //! `WordOps` = all six combined via blanket impl.
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 
 pub mod arithmetic;
 pub mod error;

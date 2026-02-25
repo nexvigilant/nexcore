@@ -26,9 +26,14 @@
 //! Copyright (c) 2026 NexVigilant LLC. All Rights Reserved.
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-#![deny(clippy::panic)]
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
+#![cfg_attr(not(test), deny(clippy::expect_used))]
+#![cfg_attr(not(test), deny(clippy::panic))]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    reason = "FHIR resource DTOs intentionally track a closed, PV-focused subset of R4 fields"
+)]
 
 /// FHIR R4 base data types (Coding, CodeableConcept, Reference, etc.).
 pub mod base;

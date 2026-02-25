@@ -82,13 +82,12 @@ fn main() {
     rasterize_mesh(&mut fb, &rr3);
 
     // === Section 6: Barycentric color interpolation (RGB triangle) ===
-    let tri_mesh = Mesh {
-        triangles: vec![Triangle::new(
-            Vertex::colored(620.0, 260.0, Color::RED),
-            Vertex::colored(780.0, 260.0, Color::GREEN),
-            Vertex::colored(700.0, 340.0, Color::BLUE),
-        )],
-    };
+    let mut tri_mesh = Mesh::new();
+    tri_mesh.push(Triangle::new(
+        Vertex::colored(620.0, 260.0, Color::RED),
+        Vertex::colored(780.0, 260.0, Color::GREEN),
+        Vertex::colored(700.0, 340.0, Color::BLUE),
+    ));
     rasterize_mesh(&mut fb, &tri_mesh);
 
     // === Section 7: Transformed shapes (bottom) ===

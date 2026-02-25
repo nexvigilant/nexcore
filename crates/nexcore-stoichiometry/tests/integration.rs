@@ -5,6 +5,7 @@
 //! sister detection, and mass state analysis.
 
 use nexcore_stoichiometry::prelude::*;
+use nexcore_stoichiometry::{LexPrimitiva, balance::Balancer, equation::BalanceProof};
 
 /// Encode a builtin term, verify it balances, decode it back, verify the
 /// Jeopardy question contains the original term name.

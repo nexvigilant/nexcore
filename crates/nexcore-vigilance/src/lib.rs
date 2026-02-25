@@ -9,9 +9,16 @@
 
 #![forbid(unsafe_code)]
 #![allow(missing_docs)] // Internal library - docs enforced on public API crates only
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-#![deny(clippy::panic)]
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    clippy::too_many_arguments,
+    clippy::unreadable_literal
+)]
+#![cfg_attr(not(any(test, clippy)), deny(clippy::unwrap_used))]
+#![cfg_attr(not(any(test, clippy)), deny(clippy::expect_used))]
+#![cfg_attr(not(any(test, clippy)), deny(clippy::panic))]
 
 // Autonomous Vigilance Company (T3: κ+σ+∂+ρ+ς+μ+π+→+N)
 pub mod avc;

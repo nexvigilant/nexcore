@@ -45,7 +45,10 @@
 //! | `SchemaGuidedSplitter` | exploratory | T2-C | comparison | transcriptase × dtree |
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 #![allow(
     dead_code,
     reason = "exploration crate — types are defined for documentation and future use"

@@ -9,11 +9,6 @@ use tower::util::ServiceExt;
 
 #[tokio::test]
 async fn test_reporting_flow() -> nexcore_error::Result<()> {
-    // Environment setup
-    unsafe {
-        std::env::set_var("RATE_LIMIT_RPS", "1000");
-    }
-
     let persistence = Arc::new(Persistence::Mock(MockPersistence::new()));
     let skill_state = nexcore_api::routes::skills::SkillAppState::default();
     let state = ApiState {

@@ -66,7 +66,19 @@
 //!   compilation errors, test failures, or structural issues.
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, missing_docs)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, missing_docs)
+)]
+#![allow(
+    clippy::allow_attributes_without_reason,
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::disallowed_types,
+    clippy::arithmetic_side_effects,
+    clippy::as_conversions,
+    reason = "Immunity models prioritize explicit biological mappings and compatibility with persisted registry data"
+)]
 
 pub mod adaptive;
 pub mod co_translational;

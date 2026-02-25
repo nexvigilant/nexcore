@@ -115,6 +115,35 @@ impl ColumnData {
             Self::String(v) => Self::String(indices.iter().map(|&i| v[i].clone()).collect()),
         }
     }
+
+    /// Collect rows at specified optional indices into a new ColumnData.
+    ///
+    /// `Some(i)` takes the value at index `i`; `None` produces a null value.
+    /// Used by join operations where one side may have no matching row.
+    pub fn take_optional(&self, indices: &[Option<usize>]) -> Self {
+        #[allow(
+            clippy::indexing_slicing,
+            reason = "Some(i) indices are derived from 0..len() in join probe — bounds are structurally guaranteed by callers"
+        )]
+        match self {
+            Self::Bool(v) => Self::Bool(indices.iter().map(|opt| opt.and_then(|i| v[i])).collect()),
+            Self::Int64(v) => {
+                Self::Int64(indices.iter().map(|opt| opt.and_then(|i| v[i])).collect())
+            }
+            Self::UInt64(v) => {
+                Self::UInt64(indices.iter().map(|opt| opt.and_then(|i| v[i])).collect())
+            }
+            Self::Float64(v) => {
+                Self::Float64(indices.iter().map(|opt| opt.and_then(|i| v[i])).collect())
+            }
+            Self::String(v) => Self::String(
+                indices
+                    .iter()
+                    .map(|opt| opt.and_then(|i| v[i].clone()))
+                    .collect(),
+            ),
+        }
+    }
 }
 
 /// A single named column with homogeneous type.
@@ -279,6 +308,15 @@ impl Column {
         }
     }
 
+    /// Take rows at optional indices. `None` produces null values.
+    /// Used by join operations where one side may have no matching row.
+    pub fn take_optional(&self, indices: &[Option<usize>]) -> Self {
+        Self {
+            name: self.name.clone(),
+            data: self.data.take_optional(indices),
+        }
+    }
+
     // =========================================================================
     // Typed iterators
     // =========================================================================
@@ -431,6 +469,23 @@ mod tests {
         let c2 = c.rename("new");
         assert_eq!(c2.name(), "new");
         assert_eq!(c2.len(), 2);
+    }
+
+    #[test]
+    fn take_optional_indices() {
+        let c = Column::from_strs("x", &["a", "b", "c"]);
+        let taken = c.take_optional(&[Some(0), None, Some(2)]);
+        assert_eq!(taken.len(), 3);
+        assert_eq!(taken.get_str(0).unwrap_or(None), Some("a"));
+        assert_eq!(taken.get_str(1).unwrap_or(None), None);
+        assert_eq!(taken.get_str(2).unwrap_or(None), Some("c"));
+
+        // Numeric types
+        let n = Column::from_i64s("n", vec![10, 20, 30]);
+        let taken = n.take_optional(&[None, Some(1), Some(2)]);
+        assert_eq!(taken.get(0), Some(Scalar::Null));
+        assert_eq!(taken.get(1), Some(Scalar::Int64(20)));
+        assert_eq!(taken.get(2), Some(Scalar::Int64(30)));
     }
 
     #[test]

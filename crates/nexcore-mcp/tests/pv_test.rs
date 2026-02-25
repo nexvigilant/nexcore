@@ -23,6 +23,7 @@ fn test_signal_complete_analysis() {
         table: create_signal_table(),
         prr_threshold: 2.0,
         min_n: 3,
+        fdr_correction: false,
     };
     let result = pv::signal_complete(params);
     assert!(result.is_ok());
@@ -73,7 +74,7 @@ fn test_naranjo_probable() {
     assert!(result.is_ok());
     let content = result.unwrap();
     let text = &content.content[0].as_text().unwrap().text;
-    assert!(text.contains("category") && text.contains("Probable"));
+    assert!(text.contains("\"category\"") && text.contains("Possible"));
 }
 
 #[test]

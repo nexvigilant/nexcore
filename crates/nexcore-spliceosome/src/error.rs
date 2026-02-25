@@ -12,6 +12,7 @@ use std::fmt;
 
 /// Errors that can occur during spliceosome operations.
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum SpliceosomeError {
     /// Task specification was empty or unparseable
     EmptyTaskSpec,
@@ -42,7 +43,7 @@ impl std::error::Error for SpliceosomeError {
         match self {
             Self::Io(e) => Some(e),
             Self::Serde(e) => Some(e),
-            _ => None,
+            Self::EmptyTaskSpec | Self::TemplateNotFound(_) | Self::ConfigLoad(_) => None,
         }
     }
 }

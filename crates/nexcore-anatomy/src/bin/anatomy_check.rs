@@ -13,6 +13,13 @@
 //! - `--json`:   Output full report as JSON
 //! - `--quiet`:  Suppress output (exit code only)
 
+#![allow(
+    clippy::print_stdout,
+    clippy::print_stderr,
+    clippy::arithmetic_side_effects,
+    reason = "CLI tool requires stdout/stderr printing and metric calculations"
+)]
+
 use std::process::ExitCode;
 
 use nexcore_anatomy::{
@@ -61,6 +68,7 @@ fn main() -> ExitCode {
             HealthStatus::Healthy => "\u{2714}",  // checkmark
             HealthStatus::Warning => "\u{26a0}",  // warning
             HealthStatus::Critical => "\u{2718}", // cross
+            _ => "?",
         };
         println!("Health: {} {}", health_icon, report.summary.health.label());
         println!("Crates: {}", report.summary.total_crates);
@@ -156,6 +164,7 @@ fn exit_code_for_health(report: &AnatomyReport, strict: bool) -> ExitCode {
             }
         }
         HealthStatus::Critical => ExitCode::FAILURE,
+        _ => ExitCode::FAILURE,
     }
 }
 

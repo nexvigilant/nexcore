@@ -499,6 +499,7 @@ mod tests {
             Tier::T2Primitive => "T2-P",
             Tier::T2Composite => "T2-C",
             Tier::T3DomainSpecific => "T3",
+            _ => "unknown",
         };
         assert_eq!(tier_str, expected, "Type has unexpected tier");
     }

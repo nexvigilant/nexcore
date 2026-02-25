@@ -26,6 +26,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Tier: T1 (irreducible)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum Generator {
     /// σ (Sequence): Ordering, pipelines, iteration.
     Sigma,
@@ -69,6 +70,7 @@ impl Generator {
 ///
 /// Tier: T2-P (κ + N)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum ChomskyLevel {
     /// Type-3: Regular language. Generators: {σ, Σ}.
     /// Finite automaton. Flat pipelines, state machines.
@@ -145,6 +147,7 @@ impl ChomskyLevel {
 ///
 /// Tier: T2-C (μ + κ + N)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct CrateChomskyProfile {
     /// Crate name.
     pub name: String,
@@ -258,6 +261,7 @@ pub fn classify_crate_chomsky(name: &str, dep_names: &[String]) -> CrateChomskyP
 ///
 /// Tier: T3 (μ + κ + N + Σ)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ChomskyReport {
     /// Per-crate profiles.
     pub profiles: Vec<CrateChomskyProfile>,

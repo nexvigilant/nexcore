@@ -1,0 +1,293 @@
+warning: /home/matthew/Projects/nexcore/crates/nexcore-state-os/Cargo.toml: only one of `license` or `license-file` is necessary
+`license` should be used if the package license can be expressed with a standard SPDX expression.
+`license-file` should be used if the package uses a non-standard license.
+See https://doc.rust-lang.org/cargo/reference/manifest.html#the-license-and-license-file-fields for more information.
+warning: /home/matthew/Projects/nexcore/crates/nexcore-state-theory/Cargo.toml: only one of `license` or `license-file` is necessary
+`license` should be used if the package license can be expressed with a standard SPDX expression.
+`license-file` should be used if the package uses a non-standard license.
+See https://doc.rust-lang.org/cargo/reference/manifest.html#the-license-and-license-file-fields for more information.
+   Compiling nexcore-error-derive v1.0.0 (/home/matthew/Projects/nexcore/crates/nexcore-error-derive)
+    Checking nexcore-lex-primitiva v0.1.0 (/home/matthew/Projects/nexcore/crates/nexcore-lex-primitiva)
+    Checking nexcore-fs v0.1.0 (/home/matthew/Projects/nexcore/crates/nexcore-fs)
+    Checking nexcore-id v0.1.0 (/home/matthew/Projects/nexcore/crates/nexcore-id)
+    Checking nexcore-codec v0.1.0 (/home/matthew/Projects/nexcore/crates/nexcore-codec)
+    Checking nexcore-pal v0.1.0 (/home/matthew/Projects/nexcore/crates/nexcore-pal)
+    Checking nexcore-audio v0.1.0 (/home/matthew/Projects/nexcore/crates/nexcore-audio)
+   Compiling stem-derive-core v1.0.0 (/home/matthew/Projects/nexcore/crates/stem-derive-core)
+   Compiling skill-macros-core v1.0.0 (/home/matthew/Projects/nexcore/crates/skill-macros-core)
+    Checking nexcore-anatomy v1.0.0 (/home/matthew/Projects/nexcore/crates/nexcore-anatomy)
+    Checking nexcore-primitive-scanner v1.0.0 (/home/matthew/Projects/nexcore/crates/nexcore-primitive-scanner)
+    Checking nexcore-downloads-scanner v0.1.0 (/home/matthew/Projects/nexcore/crates/nexcore-downloads-scanner)
+    Checking primitive-innovation v1.0.0 (/home/matthew/Projects/nexcore/crates/primitive-innovation)
+    Checking nexcore-softrender v1.0.0 (/home/matthew/Projects/nexcore/crates/nexcore-softrender)
+   Compiling nexcore-watch-app v1.0.0 (/home/matthew/Projects/nexcore/crates/nexcore-watch-app)
+crates/nexcore-primitive-scanner/src/scanner.rs:4:1: error: `allow` attribute without specifying a reason
+crates/nexcore-softrender/src/geometry/shapes.rs:86:5: warning: 5 bindings with single-character names in scope
+crates/stem-derive-core/src/lib.rs:27:6: warning: unnecessary semicolon: help: remove
+crates/stem-derive-core/src/lib.rs:21:9: error: wildcard match will also match any future added variants: help: try: `syn::Data::Enum(_) | syn::Data::Union(_)`
+crates/stem-derive-core/src/lib.rs:14:13: error: wildcard match will also match any future added variants: help: try: `syn::Fields::Named(_) | syn::Fields::Unnamed(_) | syn::Fields::Unit`
+crates/nexcore-primitive-scanner/src/extraction.rs:8:1: error: exported structs should not be exhaustive
+crates/nexcore-primitive-scanner/src/extraction.rs:17:1: error: exported enums should not be exhaustive
+crates/nexcore-primitive-scanner/src/extraction.rs:31:1: error: exported structs should not be exhaustive
+crates/nexcore-primitive-scanner/src/scanner.rs:9:1: error: exported structs should not be exhaustive
+crates/nexcore-primitive-scanner/src/test_card.rs:8:1: error: exported enums should not be exhaustive
+crates/nexcore-primitive-scanner/src/test_card.rs:17:1: error: exported structs should not be exhaustive
+crates/nexcore-primitive-scanner/src/test_card.rs:36:1: error: exported enums should not be exhaustive
+crates/nexcore-primitive-scanner/src/types.rs:14:1: error: exported enums should not be exhaustive
+crates/nexcore-primitive-scanner/src/types.rs:76:1: error: exported structs should not be exhaustive
+crates/nexcore-primitive-scanner/src/types.rs:136:1: error: exported structs should not be exhaustive
+crates/nexcore-downloads-scanner/src/lib.rs:29:1: error: exported enums should not be exhaustive
+crates/nexcore-downloads-scanner/src/lib.rs:74:1: error: exported structs should not be exhaustive
+crates/nexcore-downloads-scanner/src/lib.rs:91:1: error: exported enums should not be exhaustive
+crates/nexcore-downloads-scanner/src/lib.rs:133:51: warning: redundant clone: help: remove this
+crates/nexcore-downloads-scanner/src/lib.rs:136:57: warning: redundant clone: help: remove this
+crates/nexcore-downloads-scanner/src/lib.rs:169:61: warning: redundant clone: help: remove this
+crates/nexcore-downloads-scanner/src/lib.rs:222:1: error: exported structs should not be exhaustive
+crates/nexcore-downloads-scanner/src/lib.rs:285:13: error: arithmetic operation that can potentially result in unexpected side-effects
+warning: `stem-derive-core` (lib) generated 1 warning
+error: could not compile `stem-derive-core` (lib) due to 2 previous errors; 1 warning emitted
+warning: build failed, waiting for other jobs to finish...
+crates/nexcore-downloads-scanner/src/lib.rs:346:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-downloads-scanner/src/lib.rs:348:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-downloads-scanner/src/lib.rs:362:29: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-downloads-scanner/src/lib.rs:362:44: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-downloads-scanner/src/lib.rs:364:29: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-downloads-scanner/src/lib.rs:364:44: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-downloads-scanner/src/lib.rs:366:29: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-downloads-scanner/src/lib.rs:366:44: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/geometry/mesh.rs:9:1: error: exported structs should not be exhaustive
+error: could not compile `nexcore-primitive-scanner` (lib) due to 11 previous errors
+crates/nexcore-softrender/src/geometry/mesh.rs:22:1: error: exported structs should not be exhaustive
+crates/nexcore-softrender/src/geometry/mesh.rs:48:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-softrender/src/geometry/shapes.rs:22:1: warning: this function has too many arguments (8/5)
+crates/nexcore-softrender/src/geometry/shapes.rs:46:44: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/geometry/shapes.rs:49:48: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/geometry/shapes.rs:49:61: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/geometry/shapes.rs:50:48: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/geometry/shapes.rs:50:49: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-softrender/src/geometry/shapes.rs:50:67: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/geometry/shapes.rs:62:1: warning: this function has too many arguments (6/5)
+crates/nexcore-softrender/src/geometry/shapes.rs:85:1: warning: this function has too many arguments (7/5)
+crates/nexcore-softrender/src/geometry/shapes.rs:129:22: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/geometry/shapes.rs:129:33: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/geometry/shapes.rs:130:22: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/geometry/shapes.rs:130:22: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-softrender/src/geometry/shapes.rs:130:39: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/geometry/vertex.rs:8:1: error: exported structs should not be exhaustive
+warning: `nexcore-downloads-scanner` (lib) generated 3 warnings
+error: could not compile `nexcore-downloads-scanner` (lib) due to 13 previous errors; 3 warnings emitted
+crates/nexcore-softrender/src/geometry/vertex.rs:38:5: warning: this function has too many arguments (6/5)
+crates/nexcore-softrender/src/math/color.rs:10:1: error: exported structs should not be exhaustive
+crates/nexcore-softrender/src/math/color.rs:44:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/math/color.rs:45:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/math/color.rs:46:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/math/color.rs:53:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/math/color.rs:54:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/math/color.rs:55:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/math/color.rs:56:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/math/color.rs:62:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/math/color.rs:63:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/math/color.rs:64:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/math/color.rs:65:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/math/color.rs:72:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/math/color.rs:73:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/math/color.rs:74:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/math/color.rs:75:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/math/mat.rs:13:1: error: exported structs should not be exhaustive
+crates/nexcore-softrender/src/math/mat.rs:60:36: error: indexing may panic
+crates/nexcore-softrender/src/math/mat.rs:60:51: error: indexing may panic
+crates/nexcore-softrender/src/math/mat.rs:60:21: error: indexing may panic
+crates/nexcore-softrender/src/math/mat.rs:114:1: error: exported structs should not be exhaustive
+crates/nexcore-pal/src/error.rs:12:1: error: exported enums should not be exhaustive
+crates/nexcore-pal/src/error.rs:33:1: error: exported enums should not be exhaustive
+crates/nexcore-pal/src/error.rs:48:1: error: exported enums should not be exhaustive
+crates/nexcore-pal/src/error.rs:61:1: error: exported enums should not be exhaustive
+crates/nexcore-pal/src/error.rs:80:1: error: exported enums should not be exhaustive
+crates/nexcore-softrender/src/math/mat.rs:161:36: error: indexing may panic
+crates/nexcore-softrender/src/math/mat.rs:161:51: error: indexing may panic
+crates/nexcore-pal/src/error.rs:97:1: error: exported enums should not be exhaustive
+crates/nexcore-softrender/src/math/mat.rs:161:21: error: indexing may panic
+crates/nexcore-pal/src/error.rs:108:1: error: exported enums should not be exhaustive
+crates/nexcore-pal/src/error.rs:119:1: error: exported enums should not be exhaustive
+crates/nexcore-softrender/src/math/mat.rs:172:31: error: indexing may panic
+crates/nexcore-softrender/src/math/mat.rs:172:17: error: indexing may panic
+crates/nexcore-softrender/src/math/transform.rs:105:1: warning: this function has too many arguments (6/5)
+crates/nexcore-pal/src/types.rs:13:1: error: exported structs should not be exhaustive
+crates/nexcore-softrender/src/math/vec.rs:13:1: error: exported structs should not be exhaustive
+crates/nexcore-pal/src/types.rs:28:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-pal/src/types.rs:28:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-pal/src/types.rs:28:29: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-pal/src/types.rs:48:1: error: exported enums should not be exhaustive
+crates/nexcore-softrender/src/math/vec.rs:48:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-pal/src/types.rs:62:1: error: exported enums should not be exhaustive
+crates/nexcore-pal/src/types.rs:88:1: error: exported enums should not be exhaustive
+crates/nexcore-softrender/src/math/vec.rs:105:1: error: exported structs should not be exhaustive
+crates/nexcore-pal/src/types.rs:103:1: error: exported structs should not be exhaustive
+crates/nexcore-pal/src/types.rs:120:1: error: exported enums should not be exhaustive
+crates/nexcore-pal/src/types.rs:135:1: error: exported structs should not be exhaustive
+crates/nexcore-pal/src/types.rs:146:1: error: exported enums should not be exhaustive
+crates/nexcore-pal/src/types.rs:156:1: error: exported enums should not be exhaustive
+crates/nexcore-softrender/src/math/vec.rs:175:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-softrender/src/math/vec.rs:228:1: error: exported structs should not be exhaustive
+crates/nexcore-pal/src/types.rs:266:1: error: exported structs should not be exhaustive
+crates/nexcore-pal/src/types.rs:281:1: error: exported enums should not be exhaustive
+crates/nexcore-pal/src/types.rs:292:1: error: exported structs should not be exhaustive
+crates/nexcore-pal/src/types.rs:303:1: error: exported structs should not be exhaustive
+crates/nexcore-softrender/src/pipeline/fragment.rs:12:1: error: exported structs should not be exhaustive
+crates/nexcore-pal/src/types.rs:338:1: error: exported enums should not be exhaustive
+crates/nexcore-softrender/src/pipeline/fragment.rs:20:1: warning: this function has too many arguments (8/5)
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:8:1: error: exported structs should not be exhaustive
+crates/nexcore-pal/src/types.rs:371:1: error: exported enums should not be exhaustive
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:20:38: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:20:38: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-pal/src/types.rs:409:13: error: wildcard match will also match any future added variants: help: try: `Self::Charging { .. } | Self::Full | Self::AcPower | Self::Unknown`
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:42:23: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:42:23: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:43:13: error: indexing may panic
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:50:23: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:50:23: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:51:44: error: indexing may panic
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:52:13: error: indexing may panic
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:59:23: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:59:23: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:60:34: error: indexing may panic
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:68:44: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:70:24: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:71:24: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:72:24: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:73:24: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:80:44: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:82:24: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:83:24: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:84:24: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:85:24: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:93:22: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:93:27: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:94:32: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:98:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:98:31: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:99:36: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:103:34: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/framebuffer.rs:103:45: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/rasterizer.rs:32:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/rasterizer.rs:33:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/rasterizer.rs:34:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/rasterizer.rs:35:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/rasterizer.rs:48:31: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/rasterizer.rs:48:47: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/rasterizer.rs:70:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/rasterizer.rs:71:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/rasterizer.rs:72:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/rasterizer.rs:73:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/rasterizer.rs:83:31: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/rasterizer.rs:83:47: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/viewport.rs:8:1: error: exported structs should not be exhaustive
+crates/nexcore-softrender/src/pipeline/viewport.rs:21:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/viewport.rs:22:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/viewport.rs:33:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/viewport.rs:34:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/viewport.rs:52:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/viewport.rs:53:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/viewport.rs:70:29: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-softrender/src/pipeline/viewport.rs:70:70: error: using a potentially dangerous silent `as` conversion
+error: could not compile `nexcore-pal` (lib) due to 27 previous errors
+warning: `nexcore-softrender` (lib) generated 7 warnings
+error: could not compile `nexcore-softrender` (lib) due to 107 previous errors; 7 warnings emitted
+crates/nexcore-anatomy/src/blast_radius.rs:14:24: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/blast_radius.rs:14:33: warning: use of a disallowed type `std::collections::HashSet`
+crates/nexcore-anatomy/src/blast_radius.rs:24:1: error: exported structs should not be exhaustive
+crates/nexcore-anatomy/src/blast_radius.rs:49:1: error: exported structs should not be exhaustive
+crates/nexcore-anatomy/src/blast_radius.rs:74:21: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-anatomy/src/blast_radius.rs:77:42: warning: use of a disallowed type `std::collections::HashSet`
+crates/nexcore-anatomy/src/blast_radius.rs:77:26: warning: use of a disallowed type `std::collections::HashSet`
+crates/nexcore-anatomy/src/blast_radius.rs:84:25: warning: usage of `HashSet::insert` after `HashSet::contains`
+crates/nexcore-anatomy/src/blast_radius.rs:95:13: error: indexing may panic
+crates/nexcore-anatomy/src/blast_radius.rs:95:28: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-anatomy/src/blast_radius.rs:100:33: warning: usage of `HashSet::insert` after `HashSet::contains`
+crates/nexcore-anatomy/src/blast_radius.rs:102:56: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-anatomy/src/blast_radius.rs:118:28: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-anatomy/src/blast_radius.rs:156:65: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-anatomy/src/blast_radius.rs:192:10: error: slicing may panic
+crates/nexcore-anatomy/src/chomsky.rs:21:1: warning: use of a disallowed type `std::collections::HashSet`
+crates/nexcore-anatomy/src/chomsky.rs:29:1: error: exported enums should not be exhaustive
+crates/nexcore-anatomy/src/chomsky.rs:72:1: error: exported enums should not be exhaustive
+crates/nexcore-anatomy/src/chomsky.rs:90:41: warning: use of a disallowed type `std::collections::HashSet`
+crates/nexcore-anatomy/src/chomsky.rs:140:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-anatomy/src/chomsky.rs:148:1: error: exported structs should not be exhaustive
+crates/nexcore-anatomy/src/chomsky.rs:174:46: warning: use of a disallowed type `std::collections::HashSet`
+crates/nexcore-anatomy/src/chomsky.rs:174:25: warning: use of a disallowed type `std::collections::HashSet`
+crates/nexcore-anatomy/src/chomsky.rs:261:1: error: exported structs should not be exhaustive
+crates/nexcore-anatomy/src/chomsky.rs:288:26: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-anatomy/src/chomsky.rs:290:19: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-anatomy/src/chomsky.rs:294:26: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/chomsky.rs:296:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-anatomy/src/graph.rs:11:24: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/graph.rs:11:33: warning: use of a disallowed type `std::collections::HashSet`
+crates/nexcore-anatomy/src/graph.rs:19:1: error: exported structs should not be exhaustive
+warning: `stem-derive-core` (lib) generated 1 warning (1 duplicate)
+error: could not compile `stem-derive-core` (lib) due to 2 previous errors; 1 warning emitted
+crates/nexcore-anatomy/src/graph.rs:38:1: error: exported structs should not be exhaustive
+crates/nexcore-anatomy/src/graph.rs:40:16: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/graph.rs:54:32: warning: use of a disallowed type `std::collections::HashSet`
+crates/nexcore-anatomy/src/graph.rs:60:53: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/graph.rs:60:24: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/graph.rs:96:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-anatomy/src/graph.rs:106:53: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/graph.rs:106:28: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/graph.rs:127:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-anatomy/src/graph.rs:133:9: error: iteration over unordered hash-based type
+crates/nexcore-anatomy/src/graph.rs:165:26: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/graph.rs:166:51: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/graph.rs:166:28: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/graph.rs:167:49: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/graph.rs:167:22: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/graph.rs:169:9: error: iteration over unordered hash-based type
+crates/nexcore-anatomy/src/graph.rs:174:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-anatomy/src/graph.rs:192:25: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-anatomy/src/graph.rs:203:29: warning: use of a disallowed type `std::collections::HashSet`
+crates/nexcore-anatomy/src/layer.rs:12:1: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/layer.rs:26:1: error: exported enums should not be exhaustive
+crates/nexcore-anatomy/src/layer.rs:41:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-anatomy/src/layer.rs:60:1: error: exported structs should not be exhaustive
+crates/nexcore-anatomy/src/layer.rs:77:1: error: exported structs should not be exhaustive
+crates/nexcore-anatomy/src/layer.rs:79:22: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/layer.rs:83:23: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/layer.rs:160:31: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/layer.rs:161:56: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/layer.rs:161:31: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/layer.rs:164:9: error: iteration over unordered hash-based type
+crates/nexcore-anatomy/src/layer.rs:167:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-anatomy/src/layer.rs:172:9: error: iteration over unordered hash-based type
+crates/nexcore-anatomy/src/layer.rs:187:35: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-anatomy/src/layer.rs:218:9: warning: used `sort` on primitive type `str`: help: try: `crates.sort_unstable()`
+crates/nexcore-anatomy/src/metrics.rs:13:1: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/metrics.rs:23:1: error: exported enums should not be exhaustive
+crates/nexcore-anatomy/src/metrics.rs:51:1: error: exported structs should not be exhaustive
+crates/nexcore-anatomy/src/metrics.rs:72:1: error: exported structs should not be exhaustive
+crates/nexcore-anatomy/src/metrics.rs:78:22: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/metrics.rs:81:23: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/metrics.rs:84:33: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/metrics.rs:101:1: error: exported structs should not be exhaustive
+crates/nexcore-anatomy/src/metrics.rs:132:25: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-anatomy/src/metrics.rs:139:36: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-anatomy/src/metrics.rs:151:35: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-anatomy/src/metrics.rs:151:60: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-anatomy/src/metrics.rs:173:31: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/metrics.rs:174:9: error: iteration over unordered hash-based type
+crates/nexcore-anatomy/src/metrics.rs:175:34: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-anatomy/src/metrics.rs:175:34: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-anatomy/src/metrics.rs:177:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-anatomy/src/metrics.rs:185:27: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/metrics.rs:189:42: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-anatomy/src/metrics.rs:190:9: error: iteration over unordered hash-based type
+crates/nexcore-anatomy/src/metrics.rs:200:49: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-anatomy/src/metrics.rs:212:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-anatomy/src/metrics.rs:214:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-anatomy/src/metrics.rs:242:10: error: slicing may panic
+crates/nexcore-anatomy/src/report.rs:21:1: error: exported enums should not be exhaustive
+crates/nexcore-anatomy/src/report.rs:46:1: error: exported structs should not be exhaustive
+crates/nexcore-anatomy/src/report.rs:77:1: error: exported structs should not be exhaustive
+crates/nexcore-anatomy/src/report.rs:156:21: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-anatomy/src/report.rs:157:12: error: using a potentially dangerous silent `as` conversion
+warning: `nexcore-anatomy` (lib) generated 51 warnings (12 duplicates)
+error: could not compile `nexcore-anatomy` (lib) due to 55 previous errors; 51 warnings emitted

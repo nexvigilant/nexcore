@@ -5,6 +5,7 @@
 use crate::math::Color;
 
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct Framebuffer {
     pub width: u32,
     pub height: u32,

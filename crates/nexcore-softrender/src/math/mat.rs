@@ -10,6 +10,7 @@ use super::vec::{Vec2, Vec3, Vec4};
 // ============================================================================
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub struct Mat3 {
     /// Row-major: m[row][col]
     pub m: [[f64; 3]; 3],
@@ -111,6 +112,7 @@ impl Mat3 {
 // ============================================================================
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub struct Mat4 {
     /// Row-major: m[row][col]
     pub m: [[f64; 4]; 4],

@@ -10,6 +10,7 @@
 /// Tier: T2-P (N Quantity + ∂ Boundary)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[non_exhaustive]
 pub struct Resolution {
     /// Width in pixels.
     pub width: u32,
@@ -24,6 +25,11 @@ impl Resolution {
     }
 
     /// Total pixel count.
+    #[allow(
+        clippy::arithmetic_side_effects,
+        clippy::as_conversions,
+        reason = "pixel count is safe from overflow"
+    )]
     pub const fn pixel_count(&self) -> u64 {
         self.width as u64 * self.height as u64
     }
@@ -45,6 +51,7 @@ impl Resolution {
 /// Tier: T2-P (∂ Boundary)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[non_exhaustive]
 pub enum DisplayShape {
     /// Rectangular display (phone, desktop).
     Rectangle,
@@ -59,6 +66,7 @@ pub enum DisplayShape {
 /// Tier: T2-P (μ Mapping — pixel encoding scheme)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[non_exhaustive]
 pub enum PixelFormat {
     /// 32-bit RGBA (8 bits per channel).
     Rgba8,
@@ -85,6 +93,7 @@ impl PixelFormat {
 ///
 /// Tier: T2-C (σ Sequence + ∃ Existence + μ Mapping)
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub enum InputEvent {
     /// Touch event (phone, watch).
     Touch(TouchEvent),
@@ -100,6 +109,7 @@ pub enum InputEvent {
 ///
 /// Tier: T2-P (λ Location + σ Sequence)
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub struct TouchEvent {
     /// Touch ID for multi-touch tracking.
     pub id: u32,
@@ -113,10 +123,25 @@ pub struct TouchEvent {
     pub phase: TouchPhase,
 }
 
+impl TouchEvent {
+    /// Create a touch event.
+    #[must_use]
+    pub const fn new(id: u32, x: f32, y: f32, pressure: f32, phase: TouchPhase) -> Self {
+        Self {
+            id,
+            x,
+            y,
+            pressure,
+            phase,
+        }
+    }
+}
+
 /// Touch lifecycle phase.
 ///
 /// Tier: T2-P (ς State)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum TouchPhase {
     /// Finger just touched the screen.
     Started,
@@ -132,6 +157,7 @@ pub enum TouchPhase {
 ///
 /// Tier: T2-P (σ Sequence)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct KeyEvent {
     /// Key code (platform-agnostic).
     pub code: KeyCode,
@@ -141,8 +167,21 @@ pub struct KeyEvent {
     pub modifiers: Modifiers,
 }
 
+impl KeyEvent {
+    /// Create a key event.
+    #[must_use]
+    pub const fn new(code: KeyCode, state: KeyState, modifiers: Modifiers) -> Self {
+        Self {
+            code,
+            state,
+            modifiers,
+        }
+    }
+}
+
 /// Key press/release state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum KeyState {
     Pressed,
     Released,
@@ -153,6 +192,7 @@ pub enum KeyState {
 ///
 /// Tier: T2-P (Σ Sum — enumeration of key identity)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum KeyCode {
     // Letters
     A,
@@ -263,6 +303,7 @@ impl Modifiers {
 ///
 /// Tier: T2-P (λ Location + σ Sequence)
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub struct PointerEvent {
     /// X position in pixels.
     pub x: f32,
@@ -276,8 +317,29 @@ pub struct PointerEvent {
     pub scroll: (f32, f32),
 }
 
+impl PointerEvent {
+    /// Create a pointer event.
+    #[must_use]
+    pub const fn new(
+        x: f32,
+        y: f32,
+        button: Option<PointerButton>,
+        state: Option<KeyState>,
+        scroll: (f32, f32),
+    ) -> Self {
+        Self {
+            x,
+            y,
+            button,
+            state,
+            scroll,
+        }
+    }
+}
+
 /// Mouse/trackpad button.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum PointerButton {
     Left,
     Right,
@@ -289,6 +351,7 @@ pub enum PointerButton {
 ///
 /// Tier: T2-P (N Quantity — rotation delta)
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub struct CrownEvent {
     /// Rotation delta (positive = clockwise).
     pub delta: f32,
@@ -296,10 +359,19 @@ pub struct CrownEvent {
     pub pressed: bool,
 }
 
+impl CrownEvent {
+    /// Create a crown event.
+    #[must_use]
+    pub const fn new(delta: f32, pressed: bool) -> Self {
+        Self { delta, pressed }
+    }
+}
+
 /// Haptic pulse pattern element.
 ///
 /// Tier: T2-P (ν Frequency + N Quantity)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct HapticPulse {
     /// Duration in milliseconds.
     pub duration_ms: u32,
@@ -335,6 +407,7 @@ impl HapticPulse {
 /// Tier: T2-P (∂ Boundary — defines device constraints)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[non_exhaustive]
 pub enum FormFactor {
     /// Smartwatch (small round/square display, touch + crown).
     Watch,
@@ -368,6 +441,7 @@ impl FormFactor {
 /// Tier: T2-P (ς State)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[non_exhaustive]
 pub enum PowerState {
     /// Running on battery.
     Battery {
@@ -406,7 +480,7 @@ impl PowerState {
     pub const fn is_critical(&self) -> bool {
         match self {
             Self::Battery { percent } => *percent < 10,
-            _ => false,
+            Self::Charging { .. } | Self::Full | Self::AcPower | Self::Unknown => false,
         }
     }
 }

@@ -72,9 +72,9 @@ async fn main() -> Result<()> {
     }
 
     let result = if args.mode == "humanize" {
-        run_humanize_pipeline(&args.output).await
+        run_humanize_pipeline(&args.output)
     } else {
-        run_pipeline(&args.output).await
+        run_pipeline(&args.output)
     };
 
     match result {
@@ -94,7 +94,8 @@ async fn main() -> Result<()> {
     }
 }
 
-async fn run_humanize_pipeline(output: &PathBuf) -> Result<PipelineStats> {
+#[allow(clippy::as_conversions, reason = "DataFrame height fits in u64")]
+fn run_humanize_pipeline(output: &std::path::Path) -> Result<PipelineStats> {
     let start = std::time::Instant::now();
     let mut stats = PipelineStats::default();
 
@@ -124,7 +125,8 @@ async fn run_humanize_pipeline(output: &PathBuf) -> Result<PipelineStats> {
     Ok(stats)
 }
 
-async fn run_pipeline(output: &PathBuf) -> Result<PipelineStats> {
+#[allow(clippy::as_conversions, reason = "DataFrame height fits in u64")]
+fn run_pipeline(output: &std::path::Path) -> Result<PipelineStats> {
     let start = std::time::Instant::now();
     let mut stats = PipelineStats::default();
 
@@ -168,13 +170,16 @@ fn read_stdin_json() -> String {
     let lines: Vec<String> = stdin
         .lock()
         .lines()
-        .filter_map(|line| line.ok())
+        .map_while(Result::ok)
         .filter(|line| !line.trim().is_empty())
         .collect();
 
-    if lines.len() == 1 && lines[0].trim().starts_with('[') {
-        lines[0].clone()
-    } else {
-        format!("[{}]", lines.join(","))
+    if lines.len() == 1 {
+        if let Some(first) = lines.first() {
+            if first.trim().starts_with('[') {
+                return first.clone();
+            }
+        }
     }
+    format!("[{}]", lines.join(","))
 }

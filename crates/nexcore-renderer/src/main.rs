@@ -1,7 +1,10 @@
 //! NexBrowser - 100% Rust browser.
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 
 fn main() {
     tracing_subscriber::fmt()

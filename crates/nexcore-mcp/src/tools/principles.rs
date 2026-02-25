@@ -108,7 +108,11 @@ pub fn get_principle(params: PrinciplesGetParams) -> Result<CallToolResult, McpE
                     // Simple substring match
                     if name.to_lowercase().contains(&params.name.to_lowercase()) {
                         let dist = name.len().abs_diff(params.name.len());
-                        if best_match.is_none() || dist < best_match.as_ref().unwrap().1 {
+                        let is_better = best_match
+                            .as_ref()
+                            .map(|(_, best_dist)| dist < *best_dist)
+                            .unwrap_or(true);
+                        if is_better {
                             best_match = Some((name, dist));
                         }
                     }

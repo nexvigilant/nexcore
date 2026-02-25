@@ -23,7 +23,10 @@
 //!
 //! Tier: T3-D (Domain Composite)
 
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 #![forbid(unsafe_code)]
 
 pub mod bayesian;

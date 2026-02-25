@@ -1,11 +1,12 @@
 //! Scanner module - orchestrates primitive extraction.
 
 use crate::extraction::ExtractionResult;
-#[allow(unused_imports)]
+#[allow(unused_imports, reason = "part of public API")]
 use crate::types::{Primitive, PrimitiveTier, TermDefinition};
 
 /// Primitive scanner for automated extraction.
 #[derive(Debug, Default)]
+#[non_exhaustive]
 pub struct Scanner {
     /// Minimum confidence threshold.
     pub min_confidence: f64,

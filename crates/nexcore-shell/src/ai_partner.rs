@@ -834,6 +834,7 @@ impl AiPartner {
             FormFactor::Watch => InputMethod::Voice,
             FormFactor::Phone => InputMethod::TextAndVoice,
             FormFactor::Desktop => InputMethod::KeyboardAndVoice,
+            _ => InputMethod::KeyboardAndVoice,
         }
     }
 }

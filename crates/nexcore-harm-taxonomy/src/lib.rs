@@ -45,9 +45,16 @@
 //! | H | 6-8 | Population-level definition |
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-#![deny(clippy::panic)]
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
+#![cfg_attr(not(test), deny(clippy::expect_used))]
+#![cfg_attr(not(test), deny(clippy::panic))]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::as_conversions,
+    clippy::arithmetic_side_effects,
+    reason = "Harm taxonomy is a closed-domain ontology mapped directly to ToV sections"
+)]
 
 pub mod grounding;
 

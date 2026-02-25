@@ -105,7 +105,8 @@ mod tests {
     fn betti_numbers_empty_diagram() {
         let d = PersistenceDiagram::new();
         let b = betti_numbers(&d, 1.0);
-        assert!(b.numbers.is_empty());
+        assert_eq!(b.at_dim(0), 0);
+        assert!(b.numbers.iter().all(|(_, n)| *n == 0));
     }
 
     #[test]

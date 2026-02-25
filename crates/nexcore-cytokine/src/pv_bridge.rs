@@ -379,7 +379,10 @@ pub fn drift_signal(drift_score: f64, threshold: f64) -> Cytokine {
 #[must_use]
 pub fn batch_complete(algorithms_run: u64, signals_found: u64) -> Cytokine {
     // Precision loss acceptable: signal counts are small enough for f64
-    #[allow(clippy::cast_precision_loss)]
+    #[allow(
+        clippy::cast_precision_loss,
+        reason = "Count-to-f64 conversion for bounded runtime metrics"
+    )]
     let metrics = PvSignalMetrics::new("BatchScreen", signals_found as f64, 0.0)
         .with_case_count(algorithms_run);
     pv_to_cytokine(PvSignalType::BatchCompleted, &metrics)

@@ -145,18 +145,11 @@ mod tests {
     }
 
     fn make_compound(name: &str, smiles: Option<&str>) -> CompoundRecord {
-        CompoundRecord {
-            name: name.to_string(),
-            smiles: smiles.map(|s| s.to_string()),
-            inchi: None,
-            inchi_key: None,
-            cas_number: None,
-            pubchem_cid: None,
-            chembl_id: None,
-            synonyms: vec![],
-            source: ResolutionSource::LocalCache,
-            resolved_at: nexcore_chrono::DateTime::now(),
-        }
+        CompoundRecord::new(
+            name,
+            smiles.map(std::string::ToString::to_string),
+            ResolutionSource::LocalCache,
+        )
     }
 
     #[test]

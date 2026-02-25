@@ -44,7 +44,18 @@
 //! ```
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::as_conversions,
+    clippy::disallowed_types,
+    clippy::arithmetic_side_effects,
+    reason = "OpenFDA client mirrors upstream payloads and preserves compatibility with existing downstream data workflows"
+)]
 
 pub mod client;
 pub mod endpoints;

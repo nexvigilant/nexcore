@@ -295,6 +295,7 @@ impl StatusBarConfig {
             FormFactor::Watch => Self::watch(),
             FormFactor::Phone => Self::phone(),
             FormFactor::Desktop => Self::desktop(),
+            _ => Self::desktop(),
         }
     }
 }

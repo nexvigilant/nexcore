@@ -280,7 +280,10 @@ impl DiagnosticClue {
             return 0.0;
         }
         let sum: f64 = self.causes.iter().map(|c| c.confidence).sum();
-        #[allow(clippy::cast_precision_loss)]
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "Count-to-f64 conversion for bounded runtime metrics"
+        )]
         // cause count is small; precision loss negligible
         let count = self.causes.len() as f64;
         sum / count
@@ -357,7 +360,10 @@ impl DermatomeMap {
     ///
     /// Covers the four canonical layers and key subsystems.
     #[must_use]
-    #[allow(clippy::too_many_lines)]
+    #[allow(
+        clippy::too_many_lines,
+        reason = "Long mapping tables and explicit diagnostic branches improve auditability"
+    )]
     pub fn default_map() -> Self {
         let mut map = Self::new();
 
@@ -572,7 +578,10 @@ impl PainMap {
     /// - `panic!` / `todo!` stubs → legacy debt
     /// - Config path mismatches → configuration drift
     #[must_use]
-    #[allow(clippy::too_many_lines)]
+    #[allow(
+        clippy::too_many_lines,
+        reason = "Long mapping tables and explicit diagnostic branches improve auditability"
+    )]
     pub fn default_pain_map() -> Self {
         let mut map = Self::new();
 
@@ -822,7 +831,11 @@ impl ReferralEngine {
 // ============================================================================
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used, clippy::expect_used)]
+#[allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    reason = "Test-only fixture setup with fixed constants"
+)]
 mod tests {
     use super::*;
 

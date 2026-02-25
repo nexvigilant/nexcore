@@ -23,6 +23,7 @@ use crate::graph::DependencyGraph;
 /// Valid dependency direction: higher layers may depend on lower layers.
 /// Reverse dependencies are violations.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum Layer {
     /// Foundation crates: primitives, constants, math, shared types.
     Foundation = 0,
@@ -57,6 +58,7 @@ impl Layer {
 ///
 /// Tier: T2-C (κ + ∂ + σ + μ)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct BoundaryViolation {
     /// The crate with the reverse dependency.
     pub from_crate: String,
@@ -74,6 +76,7 @@ pub struct BoundaryViolation {
 ///
 /// Tier: T3 (σ + μ + κ + ∂ + Σ + N)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct LayerMap {
     /// Crate name → assigned layer.
     pub assignments: HashMap<String, Layer>,
@@ -215,7 +218,7 @@ impl LayerMap {
             .filter(|(_, l)| **l == layer)
             .map(|(name, _)| name.as_str())
             .collect();
-        crates.sort();
+        crates.sort_unstable();
         crates
     }
 }

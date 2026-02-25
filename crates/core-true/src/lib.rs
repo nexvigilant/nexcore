@@ -14,7 +14,10 @@
 //! 8. Cross-validate: spec (core.true) ↔ impl (nexcore-lex-primitiva)
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 
 use std::collections::{HashMap, HashSet};
 use std::fmt;

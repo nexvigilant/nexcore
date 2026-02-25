@@ -1028,7 +1028,10 @@ pub fn forge_code_generate(params: ForgeCodeGenerateParams) -> Result<CallToolRe
          //! Primitives: {} of 16 collected\n\
          //! Safety keys: {}\n\n\
          #![forbid(unsafe_code)]\n\
-         #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]",
+         #![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]",
             collected.len(),
             if enemies.is_empty() {
                 "none".to_string()

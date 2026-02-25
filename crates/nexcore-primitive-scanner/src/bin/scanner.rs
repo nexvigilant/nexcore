@@ -1,4 +1,5 @@
 //! Primitive Scanner CLI.
+#![allow(clippy::print_stdout, reason = "CLI tool requires stdout printing")]
 
 use clap::{Parser, Subcommand};
 

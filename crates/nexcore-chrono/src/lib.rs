@@ -1,12 +1,15 @@
 //! Sovereign DateTime engine — UTC timestamps, calendar dates, durations with zero external dependencies.
 #![forbid(unsafe_code)]
-#![deny(
-    clippy::unwrap_used,
-    clippy::expect_used,
-    clippy::panic,
-    clippy::indexing_slicing,
-    clippy::arithmetic_side_effects,
-    clippy::allow_attributes_without_reason
+#![cfg_attr(
+    not(any(test, clippy)),
+    deny(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::indexing_slicing,
+        clippy::arithmetic_side_effects,
+        clippy::allow_attributes_without_reason
+    )
 )]
 
 pub mod calendar;

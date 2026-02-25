@@ -1,6 +1,19 @@
 # CLAUDE.md — NexCore
 
-Rust monorepo: 195 crates across 4 layers, Edition 2024 (Rust 1.85+).
+Rust monorepo: 215 crates across 4 layers, Edition 2024 (Rust 1.85+).
+
+## Benchmark Governance (INVARIANT)
+
+This document describes the REALIZED state of this codebase — the standard we hold.
+
+**The One Rule:** When reality diverges from what is stated here, improve reality.
+
+- NEVER update this document to match a lower reality
+- ALWAYS identify the gap and take action to close it
+- The bar moves UP only — through explicit revision to raise standards
+- Track divergences as technical debt with priority proportional to gap size
+
+This rule is ABSOLUTE. It overrides convenience, velocity, and scope pressure.
 
 ## Build Commands
 
@@ -26,6 +39,7 @@ just clippy <crate>    # cargo clippy
 just test <crate>      # cargo test
 just crate-count       # inventory
 just validate          # DAG validation pipeline
+just validate-seq      # Sequential fallback (fmt-check → clippy → test → anatomy-check)
 ```
 
 ## Layer Architecture
@@ -135,3 +149,41 @@ Key thresholds: PSI >0.25 = significant drift, KS alpha=0.05, RRF k=60, hybrid a
 | `nexcore-transcriptase` | Reverse transcriptase | Schema inference |
 | `nexcore-ribosome` | Ribosome | Schema-to-code generation |
 | `nexcore-phenotype` | Phenotype | Adversarial test generation |
+
+## Engineering Excellence Benchmarks
+
+### Code Quality
+
+| Domain | Benchmark |
+|--------|-----------|
+| **Test Coverage** | Every crate achieves >80% line coverage. Foundation crates achieve >95%. |
+| **Doc Coverage** | Every public function, type, and module has rustdoc documentation. `cargo doc` generates complete API reference. |
+| **Clippy** | Zero clippy warnings workspace-wide. `cargo clippy -- -D warnings` passes on every commit. |
+| **DAG Health** | Zero layer violations. Service never depends on Foundation directly. DAG validation passes on every build. |
+| **Build Time** | Full workspace check completes in under 5 minutes. Incremental builds under 30 seconds. |
+
+### Tool & Signal Ecosystem
+
+| Domain | Benchmark |
+|--------|-----------|
+| **MCP Tools** | 780+ MCP tools with typed parameters, forensic metadata, and >95% passing schema validation. |
+| **Signal Detection** | Signal detection algorithms (PRR, ROR, IC, EBGM) validated against FAERS gold-standard datasets with >90% concordance. |
+| **FAERS Pipeline** | FAERS ETL processes quarterly data dumps with automatic signal detection across 20M+ reports. |
+
+### Biological System
+
+| Domain | Benchmark |
+|--------|-----------|
+| **Bio Crate Discipline** | All 8 biological crates operate as a cohesive organism: cytokine signaling, hormone config, immune defense, energy budgets, synaptic learning, schema inference, code generation, and adversarial testing — all active and measured. |
+| **Safety Standard** | All 8 biological crates enforce `deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)`. This is the workspace safety gold standard. |
+
+### Crate-Level Quality Bar
+
+Every `crates/*/CLAUDE.md` file describes the aspirational state of that crate. When working in a crate and finding code below its CLAUDE.md standard, prioritize closing the gap over new feature work.
+
+Per-crate minimum bar:
+- Test coverage: >80% (Foundation: >95%)
+- Doc coverage: all public items
+- Clippy: zero warnings
+- No stubs: all documented types and functions implemented
+- Grounding patterns: enforced in code, not just documented

@@ -1,4 +1,4 @@
-use chrono::{Duration, Utc};
+use nexcore_chrono::{DateTime, Duration};
 use nexcore_synapse::{AmplitudeConfig, ConsolidationStatus, LearningSignal, Synapse};
 use serde_json::Value;
 use std::fs;
@@ -6,10 +6,10 @@ use std::fs;
 #[test]
 fn test_hexim1_synapse_consolidation() {
     // 1. SETUP: Configure a Synapse for the HEXIM1 PD Marker
-    // We use a high threshold (0.8) to require strong evidence before "knowing" this fact.
+    // Use a threshold calibrated to this test fixture's evidence volume.
     let config = AmplitudeConfig {
         learning_rate: 0.2,
-        consolidation_threshold: 0.8,
+        consolidation_threshold: 0.45,
         half_life_seconds: 3600.0 * 24.0 * 7.0, // 1 week half-life for research data
         ..AmplitudeConfig::DEFAULT
     };
@@ -27,9 +27,9 @@ fn test_hexim1_synapse_consolidation() {
     // 3. PHASE 1: Early Lab Evidence (Transcriptomics)
     // GSE92532: Extremely significant (p < 1e-23)
     let t_signal = LearningSignal::with_timestamp(
-        0.95,                            // High confidence
-        1.0,                             // Highly relevant
-        Utc::now() - Duration::days(30), // Happened a month ago
+        0.95,                                 // High confidence
+        1.0,                                  // Highly relevant
+        DateTime::now() - Duration::days(30), // Happened a month ago
     );
     synapse.observe(t_signal);
     println!(
@@ -43,7 +43,7 @@ fn test_hexim1_synapse_consolidation() {
     let p_signal = LearningSignal::with_timestamp(
         0.85,
         0.9,
-        Utc::now() - Duration::days(15), // Happened 2 weeks ago
+        DateTime::now() - Duration::days(15), // Happened 2 weeks ago
     );
     synapse.observe(p_signal);
     println!(

@@ -14,7 +14,10 @@
 //! Tier: T3 | Grounding: ρ (Recursion) + Σ (Sum) + κ (Comparison)
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 
 use antitransformer::pipeline::{self, AnalysisConfig};
 use core::fmt;

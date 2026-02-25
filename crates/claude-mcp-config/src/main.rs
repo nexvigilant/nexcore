@@ -67,7 +67,7 @@ fn main() -> Result<()> {
             let paths = scope_paths(&scope, &claude_path, &global_path, &mirror_claude_path);
             for path in paths {
                 let mut root = load_json(&path)?;
-                let mcp = ensure_object(root.pointer_mut("/mcpServers"));
+                let mcp = ensure_object(root.pointer_mut("/mcpServers"))?;
                 mcp.as_object_mut()
                     .ok_or_else(|| nexerror!("mcpServers is not an object"))?
                     .insert(
@@ -102,7 +102,7 @@ fn main() -> Result<()> {
             }
             for path in paths {
                 let mut root = load_json(&path)?;
-                let perms = ensure_object(root.pointer_mut("/permissions"));
+                let perms = ensure_object(root.pointer_mut("/permissions"))?;
                 let allow = perms
                     .as_object_mut()
                     .ok_or_else(|| nexerror!("permissions is not an object"))?
@@ -154,14 +154,14 @@ fn write_json(path: &PathBuf, value: &Value) -> Result<()> {
     Ok(())
 }
 
-fn ensure_object(node: Option<&mut Value>) -> &mut Value {
+fn ensure_object(node: Option<&mut Value>) -> Result<&mut Value> {
     match node {
         Some(v) => {
             if !v.is_object() {
                 *v = json!({});
             }
-            v
+            Ok(v)
         }
-        None => panic!("invalid JSON path"),
+        None => Err(nexerror!("invalid JSON path")),
     }
 }

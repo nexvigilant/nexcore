@@ -1,4 +1,9 @@
-use std::collections::{HashMap, HashSet, VecDeque};
+#![allow(
+    clippy::too_many_arguments,
+    reason = "Dependency extraction keeps explicit context parameters instead of hidden global state."
+)]
+
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::fs;
 use std::path::Path;
 
@@ -29,7 +34,7 @@ pub fn build_dag(crates_dir: &Path, registry_name: &str) -> Result<Vec<(String, 
     let workspace_internal_deps = if workspace_toml_path.exists() {
         parse_workspace_internal_deps(&workspace_toml_path)?
     } else {
-        HashMap::new()
+        BTreeMap::new()
     };
 
     // Step 2: Scan all crate directories and collect their package names.
@@ -37,8 +42,8 @@ pub fn build_dag(crates_dir: &Path, registry_name: &str) -> Result<Vec<(String, 
 
     // Build a mapping from directory name to package name, and collect all known
     // package names so we can validate dependency references.
-    let mut dir_to_package: HashMap<String, String> = HashMap::new();
-    let mut all_package_names: HashSet<String> = HashSet::new();
+    let mut dir_to_package: BTreeMap<String, String> = BTreeMap::new();
+    let mut all_package_names: BTreeSet<String> = BTreeSet::new();
 
     for dir in &crate_dirs {
         let cargo_path = crates_dir.join(dir).join("Cargo.toml");
@@ -109,8 +114,8 @@ pub fn build_dag(crates_dir: &Path, registry_name: &str) -> Result<Vec<(String, 
 /// Returns an error if a cycle is detected, including the crates involved.
 pub fn topological_sort(crates: &[(String, Vec<String>)]) -> Result<Vec<String>> {
     // Build adjacency list and in-degree map.
-    let mut in_degree: HashMap<&str, usize> = HashMap::new();
-    let mut dependents: HashMap<&str, Vec<&str>> = HashMap::new();
+    let mut in_degree: BTreeMap<&str, usize> = BTreeMap::new();
+    let mut dependents: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
 
     // Initialize all crates with in-degree 0.
     for (name, _) in crates {
@@ -119,7 +124,7 @@ pub fn topological_sort(crates: &[(String, Vec<String>)]) -> Result<Vec<String>>
     }
 
     // Build the set of known crate names for filtering.
-    let known: HashSet<&str> = crates.iter().map(|(name, _)| name.as_str()).collect();
+    let known: BTreeSet<&str> = crates.iter().map(|(name, _)| name.as_str()).collect();
 
     // Populate edges: for each dep, the dependent crate must wait.
     for (name, deps) in crates {
@@ -194,11 +199,11 @@ pub fn topological_sort(crates: &[(String, Vec<String>)]) -> Result<Vec<String>>
 /// Each phase contains crates whose dependencies are all satisfied by
 /// earlier phases. Phase 0 contains crates with no internal dependencies.
 pub fn group_into_phases(crates: &[(String, Vec<String>)]) -> Result<Vec<Vec<String>>> {
-    let known: HashSet<&str> = crates.iter().map(|(name, _)| name.as_str()).collect();
+    let known: BTreeSet<&str> = crates.iter().map(|(name, _)| name.as_str()).collect();
 
     // Build in-degree map and adjacency list (same as topological_sort).
-    let mut in_degree: HashMap<&str, usize> = HashMap::new();
-    let mut dependents: HashMap<&str, Vec<&str>> = HashMap::new();
+    let mut in_degree: BTreeMap<&str, usize> = BTreeMap::new();
+    let mut dependents: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
 
     for (name, _) in crates {
         in_degree.entry(name.as_str()).or_insert(0);
@@ -299,14 +304,14 @@ fn collect_crate_dirs(crates_dir: &Path) -> Result<Vec<String>> {
 ///
 /// If there is no `package` field, the key itself is the package name:
 /// `nexcore-id = { path = "crates/nexcore-id" }` yields `"nexcore-id" -> "nexcore-id"`.
-fn parse_workspace_internal_deps(workspace_toml_path: &Path) -> Result<HashMap<String, String>> {
+fn parse_workspace_internal_deps(workspace_toml_path: &Path) -> Result<BTreeMap<String, String>> {
     let contents = fs::read_to_string(workspace_toml_path)
         .with_context(|| format!("Failed to read {}", workspace_toml_path.display()))?;
     let doc: toml::Value = contents
         .parse()
         .with_context(|| format!("Failed to parse {}", workspace_toml_path.display()))?;
 
-    let mut internal_deps: HashMap<String, String> = HashMap::new();
+    let mut internal_deps: BTreeMap<String, String> = BTreeMap::new();
 
     let ws_deps = match doc
         .get("workspace")
@@ -358,9 +363,9 @@ fn extract_package_name(doc: &toml::Value, dir_name: &str) -> String {
 fn extract_internal_deps(
     doc: &toml::Value,
     registry_name: &str,
-    workspace_internal_deps: &HashMap<String, String>,
-    all_package_names: &HashSet<String>,
-    dir_to_package: &HashMap<String, String>,
+    workspace_internal_deps: &BTreeMap<String, String>,
+    all_package_names: &BTreeSet<String>,
+    dir_to_package: &BTreeMap<String, String>,
 ) -> Vec<String> {
     let mut deps: Vec<String> = Vec::new();
 
@@ -424,9 +429,9 @@ fn resolve_internal_dep(
     key: &str,
     value: &toml::Value,
     registry_name: &str,
-    workspace_internal_deps: &HashMap<String, String>,
-    all_package_names: &HashSet<String>,
-    dir_to_package: &HashMap<String, String>,
+    workspace_internal_deps: &BTreeMap<String, String>,
+    all_package_names: &BTreeSet<String>,
+    dir_to_package: &BTreeMap<String, String>,
 ) -> Option<String> {
     let table = value.as_table()?;
 

@@ -254,7 +254,10 @@ impl Phagocyte {
             return 1.0;
         }
         // Precision loss acceptable: digestion counts are small
-        #[allow(clippy::cast_precision_loss)]
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "Count-to-f64 conversion for bounded runtime metrics"
+        )]
         {
             self.digesting.len() as f64 / self.max_load as f64
         }

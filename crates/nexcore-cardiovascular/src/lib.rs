@@ -31,7 +31,10 @@
 //! - [`grounding`]: Lex Primitiva GroundsTo implementations (25 types)
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 
 pub mod blood;
 pub mod grounding;

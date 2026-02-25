@@ -37,7 +37,24 @@
 //! ```
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::disallowed_types,
+    reason = "Taxonomy representation uses standard collections for graph and registry structures"
+)]
+#![allow(
+    clippy::arithmetic_side_effects,
+    clippy::as_conversions,
+    clippy::indexing_slicing,
+    reason = "Taxonomy domain involves frequent metric calculations, transfer scoring, and indexing"
+)]
+#![allow(
+    clippy::iter_over_hash_type,
+    reason = "Deterministic iteration not required for most aggregate metrics"
+)]
 
 pub mod analysis;
 pub mod compare;

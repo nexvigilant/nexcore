@@ -27,9 +27,13 @@
 //! | T3 | 6+ | 0.4 |
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-#![allow(missing_docs)] // TODO: Add comprehensive docs later
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
+#![cfg_attr(not(test), deny(clippy::expect_used))]
+#![allow(
+    missing_docs,
+    clippy::allow_attributes_without_reason,
+    reason = "Prima language surface is evolving rapidly; full docs are intentionally staged"
+)]
 
 pub mod analyze;
 pub mod ast;

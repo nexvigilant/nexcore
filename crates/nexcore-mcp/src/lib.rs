@@ -24,7 +24,10 @@
 //! | Principles | 3 | Knowledge base search (Dalio, KISS, etc.) |
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 #![allow(missing_docs)]
 // Style issues in newly migrated code - fix in dedicated cleanup pass
 #![allow(clippy::collapsible_if)]

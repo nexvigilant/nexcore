@@ -31,6 +31,12 @@ pub enum DataFrameError {
     /// Index out of bounds.
     IndexOutOfBounds { index: usize, length: usize },
 
+    /// Join key column count mismatch between left and right tables.
+    JoinKeyMismatch {
+        left_count: usize,
+        right_count: usize,
+    },
+
     /// General error with message.
     Other(String),
 }
@@ -61,6 +67,13 @@ impl fmt::Display for DataFrameError {
             Self::IndexOutOfBounds { index, length } => {
                 write!(f, "index {index} out of bounds for length {length}")
             }
+            Self::JoinKeyMismatch {
+                left_count,
+                right_count,
+            } => write!(
+                f,
+                "join key count mismatch: left has {left_count}, right has {right_count}"
+            ),
             Self::Other(msg) => write!(f, "{msg}"),
         }
     }
@@ -76,6 +89,7 @@ impl std::error::Error for DataFrameError {
             | Self::TypeMismatch { .. }
             | Self::Empty
             | Self::IndexOutOfBounds { .. }
+            | Self::JoinKeyMismatch { .. }
             | Self::Other(_) => None,
         }
     }

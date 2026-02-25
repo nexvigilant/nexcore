@@ -4,7 +4,15 @@
 //! Default: ~/Downloads
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::print_stdout,
+    clippy::print_stderr,
+    reason = "CLI tool requires output"
+)]
 
 use nexcore_downloads_scanner::ScanReport;
 use std::path::PathBuf;

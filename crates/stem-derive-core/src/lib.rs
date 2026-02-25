@@ -1,5 +1,8 @@
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 
 use quote::quote;
 use syn::DeriveInput;
@@ -11,20 +14,20 @@ pub fn impl_stem_newtype(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
     match &input.data {
         syn::Data::Struct(s) => match &s.fields {
             syn::Fields::Unnamed(f) if f.unnamed.len() == 1 => {}
-            _ => {
+            syn::Fields::Unnamed(_) | syn::Fields::Named(_) | syn::Fields::Unit => {
                 return Err(syn::Error::new_spanned(
                     name,
                     "requires tuple struct with one field",
                 ))
             }
         },
-        _ => {
+        syn::Data::Enum(_) | syn::Data::Union(_) => {
             return Err(syn::Error::new_spanned(
                 name,
                 "can only be applied to tuple structs",
             ))
         }
-    };
+    }
 
     let mut clamp_min: Option<f64> = None;
     let mut clamp_max: Option<f64> = None;

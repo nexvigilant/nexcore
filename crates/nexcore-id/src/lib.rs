@@ -48,9 +48,9 @@
 // NOTE: unsafe_code is denied (not forbidden) to allow the isolated Windows FFI
 // in fill_random_windows(). All other unsafe code is still rejected.
 #![deny(unsafe_code)]
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-#![deny(clippy::panic)]
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
+#![cfg_attr(not(test), deny(clippy::expect_used))]
+#![cfg_attr(not(test), deny(clippy::panic))]
 
 #[cfg(not(feature = "std"))]
 extern crate alloc;

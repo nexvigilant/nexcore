@@ -1133,7 +1133,10 @@ struct JsonJournalEntry {
     tool: String,
     target: String,
     classification: String,
-    #[allow(dead_code)]
+    #[allow(
+        dead_code,
+        reason = "Field retained for backward-compatible deserialization from older journal entries"
+    )]
     rationale_prompt: Option<bool>,
 }
 

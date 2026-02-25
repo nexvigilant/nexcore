@@ -3,7 +3,17 @@
 //! Persistent state modulators affecting system behavior across sessions.
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::arithmetic_side_effects,
+    clippy::as_conversions,
+    reason = "Hormone model types are intentionally closed and state transitions are explicit"
+)]
 //!
 //! ## Hormone Types
 //!
@@ -270,7 +280,7 @@ impl EndocrineState {
     }
 
     fn storage_path() -> EndocrineResult<PathBuf> {
-        let home = std::env::var("HOME").map_err(|_| EndocrineError::NoHomeDir)?;
+        let home = std::env::var("HOME").map_err(|_err| EndocrineError::NoHomeDir)?;
         Ok(PathBuf::from(home)
             .join(".claude")
             .join("hormones")
@@ -488,7 +498,10 @@ impl Stimulus {
             }
             Self::SessionDuration { minutes } => {
                 if *minutes > 60 {
-                    #[allow(clippy::cast_precision_loss)] // u64 subtraction result fits in f64
+                    #[allow(
+                        clippy::cast_precision_loss,
+                        reason = "Session minute deltas are small and safe to represent in f64"
+                    )]
                     let fatigue = ((*minutes - 60) as f64 / 120.0).min(0.5);
                     state.melatonin = state.melatonin.increase(fatigue);
                 }

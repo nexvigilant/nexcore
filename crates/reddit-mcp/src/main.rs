@@ -1,5 +1,8 @@
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 // Copyright © 2026 NexVigilant LLC. All Rights Reserved.
 // Intellectual Property of Matthew Alexander Campion, PharmD
 

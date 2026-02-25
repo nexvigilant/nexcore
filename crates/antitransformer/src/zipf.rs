@@ -63,7 +63,7 @@ pub fn zipf_analysis(frequencies: &HashMap<String, usize>) -> ZipfResult {
     }
 
     // Linear regression: y = a + b*x (slope b is negative alpha)
-    let denom = n * sum_x2 - sum_x * sum_x;
+    let denom = n.mul_add(sum_x2, -(sum_x * sum_x));
     if denom.abs() < 1e-15 {
         return ZipfResult {
             alpha: 0.0,

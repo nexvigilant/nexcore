@@ -28,10 +28,18 @@
 //! 2. **Gödel**: `Science` implementing itself creates incompleteness
 //! 3. **Shannon**: `Codify` has irreducible information loss
 
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-#![deny(clippy::panic)]
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
+#![cfg_attr(not(test), deny(clippy::expect_used))]
+#![cfg_attr(not(test), deny(clippy::panic))]
 #![forbid(unsafe_code)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::arithmetic_side_effects,
+    clippy::map_err_ignore,
+    clippy::future_not_send,
+    reason = "STEM core machine interfaces prioritize explicit scientific semantics over evolving-public-API lint style"
+)]
 
 pub mod grounding;
 pub mod machine;

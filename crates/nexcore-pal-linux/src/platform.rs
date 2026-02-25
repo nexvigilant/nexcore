@@ -46,6 +46,7 @@ impl LinuxPlatform {
             FormFactor::Watch => format!("linux-{}-watch", std::env::consts::ARCH),
             FormFactor::Phone => format!("linux-{}-phone", std::env::consts::ARCH),
             FormFactor::Desktop => format!("linux-{}-desktop", std::env::consts::ARCH),
+            _ => format!("linux-{}-desktop", std::env::consts::ARCH),
         };
 
         let display = match form_factor {
@@ -58,6 +59,9 @@ impl LinuxPlatform {
                 nexcore_pal::DisplayShape::RoundedRect { corner_radius: 40 },
             ),
             FormFactor::Desktop => LinuxDisplay::probe().unwrap_or_else(|_| {
+                LinuxDisplay::virtual_display(nexcore_pal::Resolution::new(1920, 1080))
+            }),
+            _ => LinuxDisplay::probe().unwrap_or_else(|_| {
                 LinuxDisplay::virtual_display(nexcore_pal::Resolution::new(1920, 1080))
             }),
         };
@@ -83,6 +87,7 @@ impl LinuxPlatform {
             FormFactor::Watch => nexcore_pal::DisplayShape::Circle,
             FormFactor::Phone => nexcore_pal::DisplayShape::RoundedRect { corner_radius: 40 },
             FormFactor::Desktop => nexcore_pal::DisplayShape::Rectangle,
+            _ => nexcore_pal::DisplayShape::Rectangle,
         };
 
         Self {
@@ -104,6 +109,7 @@ impl LinuxPlatform {
             FormFactor::Watch => nexcore_pal::DisplayShape::Circle,
             FormFactor::Phone => nexcore_pal::DisplayShape::RoundedRect { corner_radius: 40 },
             FormFactor::Desktop => nexcore_pal::DisplayShape::Rectangle,
+            _ => nexcore_pal::DisplayShape::Rectangle,
         };
 
         Self {

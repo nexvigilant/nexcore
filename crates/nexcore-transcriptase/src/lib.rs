@@ -25,7 +25,19 @@
 //! ## Tier: T2-C (κ + σ + μ + ∂)
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::arithmetic_side_effects,
+    clippy::as_conversions,
+    clippy::indexing_slicing,
+    clippy::wildcard_enum_match_arm,
+    reason = "Schema inference engine prioritizes explicit deterministic logic over style-only lint constraints"
+)]
 
 pub mod grounding;
 
@@ -187,7 +199,10 @@ pub fn merge(a: &Schema, b: &Schema) -> Schema {
     }
 }
 
-#[allow(clippy::too_many_lines)] // Complex match on all SchemaKind combinations requires exhaustive arms
+#[allow(
+    clippy::too_many_lines,
+    reason = "Exhaustive SchemaKind merge matrix is clearest as one match"
+)]
 fn merge_kinds(a: &SchemaKind, b: &SchemaKind) -> SchemaKind {
     match (a, b) {
         (SchemaKind::Null, SchemaKind::Null) => SchemaKind::Null,
@@ -289,8 +304,10 @@ fn merge_kinds(a: &SchemaKind, b: &SchemaKind) -> SchemaKind {
         }
 
         // Int + Float → Float (widening), order-independent
-        #[allow(clippy::cast_precision_loss)]
-        // i64→f64 precision loss acceptable for range tracking
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "Range tracking intentionally widens i64 into f64 for merged bounds"
+        )]
         (
             SchemaKind::Int {
                 min: imin,
@@ -372,7 +389,10 @@ pub fn synthesize_violations(schema: &Schema) -> Vec<SchemaViolation> {
     violations
 }
 
-#[allow(clippy::too_many_lines)] // Violation synthesis requires per-variant generation; extracting helpers would hurt readability
+#[allow(
+    clippy::too_many_lines,
+    reason = "Violation synthesis is intentionally explicit per variant and boundary rule"
+)]
 fn synthesize_inner(schema: &Schema, violations: &mut Vec<SchemaViolation>, prefix: &str) {
     let path = match &schema.name {
         Some(n) if prefix.is_empty() => n.clone(),

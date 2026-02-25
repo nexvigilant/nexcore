@@ -9,6 +9,7 @@ use core::fmt;
 ///
 /// Tier: T2-P (∂ Boundary — error boundaries between platform layers)
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum PalError {
     /// Display subsystem error.
     Display(DisplayError),
@@ -30,6 +31,7 @@ pub enum PalError {
 ///
 /// Tier: T2-P (∂ Boundary)
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum DisplayError {
     /// No display device found.
     NotFound,
@@ -45,6 +47,7 @@ pub enum DisplayError {
 ///
 /// Tier: T2-P (∂ Boundary)
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum InputError {
     /// No input device found.
     NotFound,
@@ -58,6 +61,7 @@ pub enum InputError {
 ///
 /// Tier: T2-P (∂ Boundary)
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum NetworkError {
     /// No network interface available.
     NoInterface,
@@ -77,6 +81,7 @@ pub enum NetworkError {
 ///
 /// Tier: T2-P (∂ Boundary)
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum StorageError {
     /// Path not found.
     NotFound,
@@ -94,6 +99,7 @@ pub enum StorageError {
 ///
 /// Tier: T2-P (∂ Boundary)
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum HapticsError {
     /// No haptic device available.
     NotAvailable,
@@ -105,6 +111,7 @@ pub enum HapticsError {
 ///
 /// Tier: T2-P (∂ Boundary)
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum PowerError {
     /// Power information unavailable.
     Unavailable,
@@ -116,6 +123,7 @@ pub enum PowerError {
 ///
 /// Tier: T2-P (∂ Boundary)
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum InitError {
     /// Hardware not supported.
     UnsupportedHardware,

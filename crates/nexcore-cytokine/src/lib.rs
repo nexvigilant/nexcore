@@ -43,8 +43,23 @@
 //! ```
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 #![warn(missing_docs)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::as_conversions,
+    clippy::disallowed_types,
+    clippy::arithmetic_side_effects,
+    clippy::too_many_arguments,
+    clippy::let_underscore_must_use,
+    clippy::wildcard_enum_match_arm,
+    clippy::indexing_slicing,
+    reason = "Domain signaling schemas are intentionally stable and use bounded numeric conversions and legacy container shapes"
+)]
 
 pub mod composites;
 pub mod grounding;

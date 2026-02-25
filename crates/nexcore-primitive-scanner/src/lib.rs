@@ -18,8 +18,8 @@
 //! | T3 | Domain-specific | 0.4-0.6 |
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
+#![cfg_attr(not(test), deny(clippy::expect_used))]
 #![warn(missing_docs)]
 
 pub mod extraction;

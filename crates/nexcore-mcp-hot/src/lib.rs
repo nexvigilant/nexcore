@@ -24,7 +24,10 @@
 //! This crate is a thin MCP-specific wrapper around `nexcore-stdio-proxy`.
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 
 pub mod capture;
 pub mod config;

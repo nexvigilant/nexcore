@@ -9,6 +9,7 @@ use crate::math::Color;
 
 /// Fragment: a pixel candidate with interpolated attributes
 #[derive(Debug, Clone, Copy)]
+#[non_exhaustive]
 pub struct Fragment {
     pub x: u32,
     pub y: u32,

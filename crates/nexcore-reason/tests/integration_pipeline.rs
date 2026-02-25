@@ -117,7 +117,7 @@ fn analyst_pipeline_a1_to_a3_with_inference() {
     // Extraction bridge output → A1 input.
     let metric_report = MetricReport {
         source_station: "B3-finish".to_string(),
-        timestamp: chrono::Utc::now(),
+        timestamp: nexcore_chrono::DateTime::now(),
         metrics: vec![
             Metric {
                 name: "cyclomatic_complexity".to_string(),

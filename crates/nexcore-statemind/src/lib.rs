@@ -50,7 +50,10 @@
 //! - **Safety:** ToV d(s) = boundary − (spectral×0.4 + tension×0.3 + AT-richness×0.3)
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 
 pub mod cluster;
 pub mod composition;

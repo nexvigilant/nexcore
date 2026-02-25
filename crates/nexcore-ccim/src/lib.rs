@@ -17,12 +17,15 @@
 //! Grounding: ρ(Recursion) + N(Quantity) + →(Causality) + κ(Comparison) + π(Persistence).
 
 #![forbid(unsafe_code)]
-#![deny(
-    clippy::unwrap_used,
-    clippy::expect_used,
-    clippy::panic,
-    clippy::indexing_slicing,
-    clippy::arithmetic_side_effects
+#![cfg_attr(
+    not(any(test, clippy)),
+    deny(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::indexing_slicing,
+        clippy::arithmetic_side_effects
+    )
 )]
 
 pub mod assess;

@@ -18,6 +18,7 @@ use crate::metrics::WorkspaceMetrics;
 ///
 /// Tier: T2-P (κ + ∂)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum HealthStatus {
     /// All checks pass: no cycles, no violations, density within bounds.
     Healthy,
@@ -43,6 +44,7 @@ impl HealthStatus {
 ///
 /// Tier: T2-C (N + Σ + κ)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ReportSummary {
     /// Total workspace crates analyzed.
     pub total_crates: usize,
@@ -74,6 +76,7 @@ pub struct ReportSummary {
 ///
 /// Tier: T3 (μ + σ + Σ + π + N + κ + ∂)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct AnatomyReport {
     /// Report summary and health status.
     pub summary: ReportSummary,

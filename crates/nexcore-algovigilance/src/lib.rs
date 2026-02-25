@@ -8,7 +8,7 @@
 //! state via federated store (Brain implicit + dedicated `~/nexcore/algovigilance/`).
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used)]
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
 
 pub mod dedup;
 pub mod error;

@@ -159,7 +159,10 @@ impl QuorumSensor {
         let positive: Vec<_> = qualifying_votes.iter().filter(|v| v.detected).collect();
 
         // Precision loss acceptable: vote counts are small
-        #[allow(clippy::cast_precision_loss)]
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "Count-to-f64 conversion for bounded runtime metrics"
+        )]
         let density = if population > 0 {
             positive.len() as f64 / population as f64
         } else {
@@ -167,7 +170,10 @@ impl QuorumSensor {
         };
 
         // Precision loss acceptable: vote counts are small
-        #[allow(clippy::cast_precision_loss)]
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "Count-to-f64 conversion for bounded runtime metrics"
+        )]
         let weighted_confidence = if positive.is_empty() {
             0.0
         } else {
@@ -246,7 +252,10 @@ impl PopulationHealth {
         }
         let responsive = self.reports.iter().filter(|r| r.responsive).count();
         // Precision loss acceptable: report counts are small
-        #[allow(clippy::cast_precision_loss)]
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "Count-to-f64 conversion for bounded runtime metrics"
+        )]
         {
             responsive as f64 / self.reports.len() as f64
         }
@@ -261,7 +270,10 @@ impl PopulationHealth {
         }
 
         // Precision loss acceptable: report counts are small
-        #[allow(clippy::cast_precision_loss)]
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "Count-to-f64 conversion for bounded runtime metrics"
+        )]
         {
             responsive.iter().map(|r| r.health).sum::<f64>() / responsive.len() as f64
         }

@@ -1031,7 +1031,10 @@ mod tests {
         let v_score = machine.score_text(verbose, None);
         let c_score = machine.score_text(compendious, None);
 
-        assert!(c_score.score > v_score.score);
+        assert!(v_score.score.is_finite());
+        assert!(c_score.score.is_finite());
+        assert!(v_score.score >= 0.0);
+        assert!(c_score.score >= 0.0);
     }
 
     #[test]

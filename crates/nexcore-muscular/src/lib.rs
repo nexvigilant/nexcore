@@ -21,7 +21,17 @@
 //! - **Antagonistic Pairs**: Write<->Read, Edit<->Undo, Build<->Clean, Spawn<->Stop
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::arithmetic_side_effects,
+    clippy::as_conversions,
+    reason = "Muscular model uses explicit closed-domain structures and bounded ratio math"
+)]
 
 pub mod grounding;
 

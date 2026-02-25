@@ -11,7 +11,7 @@
 //! These are initial templates derived from empirical observation.
 //! The adaptive learning loop (Phase 7) refines them over time.
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::types::{EjcMarker, TaskCategory};
 
@@ -20,8 +20,8 @@ use crate::types::{EjcMarker, TaskCategory};
 /// Templates encode the expected phase structure for each category.
 /// Derived from Phase 0 analysis of 151K tool calls across 17 sessions.
 #[must_use]
-pub fn default_templates() -> HashMap<TaskCategory, Vec<EjcMarker>> {
-    let mut templates = HashMap::new();
+pub fn default_templates() -> BTreeMap<TaskCategory, Vec<EjcMarker>> {
+    let mut templates = BTreeMap::new();
 
     templates.insert(
         TaskCategory::Explore,

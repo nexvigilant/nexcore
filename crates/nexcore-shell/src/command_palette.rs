@@ -224,6 +224,7 @@ impl CommandPalette {
             FormFactor::Watch => 3,
             FormFactor::Phone => 6,
             FormFactor::Desktop => 10,
+            _ => 10,
         };
 
         let nav_shortcuts = vec![

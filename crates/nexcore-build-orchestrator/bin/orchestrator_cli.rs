@@ -107,12 +107,13 @@ fn cmd_status(workspace: &PathBuf) {
     // Show most recent run
     if let Some(id) = ids.first() {
         if let Ok(state) = store.load(id) {
+            let started = state
+                .started_at
+                .format("%Y-%m-%d %H:%M:%S UTC")
+                .unwrap_or_else(|_| "invalid-timestamp".to_string());
             println!("Last run: {} — {}", state.id, state.status);
             println!("Pipeline: {}", state.definition_name);
-            println!(
-                "Started: {}",
-                state.started_at.format("%Y-%m-%d %H:%M:%S UTC")
-            );
+            println!("Started: {}", started);
             if let Some(d) = state.total_duration {
                 println!("Duration: {}", d.display());
             }
@@ -169,7 +170,10 @@ fn cmd_history(workspace: &PathBuf, limit: usize, status_filter: Option<String>)
             .total_duration
             .map(|d| d.display())
             .unwrap_or_else(|| "-".into());
-        let date = run.started_at.format("%Y-%m-%d %H:%M");
+        let date = run
+            .started_at
+            .format("%Y-%m-%d %H:%M")
+            .unwrap_or_else(|_| "invalid-timestamp".to_string());
         println!(
             "{:<30} {:<12} {:<12} {}",
             run.id,

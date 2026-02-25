@@ -37,9 +37,10 @@ impl Timestamp {
     /// Create from chrono UTC datetime
     pub fn now() -> Self {
         let now = nexcore_chrono::DateTime::now();
+        let micros = now.timestamp_micros().rem_euclid(1_000_000) as u32;
         Self {
             seconds: now.timestamp(),
-            nanoseconds: now.timestamp_subsec_nanos(),
+            nanoseconds: micros * 1_000,
         }
     }
 }

@@ -271,17 +271,12 @@ mod tests {
 
     fn make_structured(drug: &str, smiles: Option<&str>, event: &str) -> StructuredSignal {
         use nexcore_compound_registry::types::{CompoundRecord, ResolutionSource};
-        let compound = smiles.map(|s| CompoundRecord {
-            name: drug.to_string(),
-            smiles: Some(s.to_string()),
-            inchi: None,
-            inchi_key: None,
-            cas_number: None,
-            pubchem_cid: None,
-            chembl_id: None,
-            synonyms: vec![],
-            source: ResolutionSource::Manual,
-            resolved_at: nexcore_chrono::DateTime::now(),
+        let compound = smiles.map(|s| {
+            CompoundRecord::new(
+                drug.to_string(),
+                Some(s.to_string()),
+                ResolutionSource::Manual,
+            )
         });
         StructuredSignal {
             signal: SignalRecord {

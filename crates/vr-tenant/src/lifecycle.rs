@@ -183,17 +183,17 @@ mod tests {
     use vr_core::SubscriptionTier;
 
     fn make_tenant(status: TenantStatus) -> Tenant {
-        Tenant {
-            id: TenantId::new(),
-            name: "Test".into(),
-            slug: "test".into(),
-            tier: SubscriptionTier::Accelerator,
+        Tenant::new(
+            TenantId::new(),
+            "Test".into(),
+            "test".into(),
+            SubscriptionTier::Accelerator,
             status,
-            trial_ends_at: None,
-            settings: serde_json::json!({}),
-            created_at: DateTime::now(),
-            updated_at: DateTime::now(),
-        }
+            None,
+            serde_json::json!({}),
+            DateTime::now(),
+            DateTime::now(),
+        )
     }
 
     #[test]

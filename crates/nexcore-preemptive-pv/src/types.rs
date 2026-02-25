@@ -3,7 +3,10 @@
 //! Defines the fundamental domain types used across all three tiers
 //! of signal detection: Reactive, Predictive, and Preemptive.
 
-#![allow(clippy::doc_markdown)]
+#![allow(
+    clippy::doc_markdown,
+    reason = "Domain abbreviations and product terms are intentional nomenclature"
+)]
 
 use serde::{Deserialize, Serialize};
 

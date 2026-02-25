@@ -24,12 +24,7 @@ fn load_workspace_graph() -> DependencyGraph {
         Err(e) => {
             eprintln!("Skipping live workspace test: {e}");
             // Return empty graph — tests will check for this
-            DependencyGraph {
-                nodes: std::collections::HashMap::new(),
-                cycles: vec![],
-                topo_order: vec![],
-                total_crates: 0,
-            }
+            DependencyGraph::empty()
         }
     }
 }

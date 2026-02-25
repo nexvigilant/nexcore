@@ -12,7 +12,10 @@
 //! | [`breaker`] | [`StormBreaker`] — coordinates all dampeners under one protocol |
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 
 pub mod breaker;
 pub mod detection;

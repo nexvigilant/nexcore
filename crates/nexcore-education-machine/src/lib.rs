@@ -40,9 +40,9 @@
 //! - Verdict: >= 0.85 MASTERED, >= 0.50 DEVELOPING, < 0.50 REMEDIATE
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-#![deny(clippy::panic)]
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
+#![cfg_attr(not(test), deny(clippy::expect_used))]
+#![cfg_attr(not(test), deny(clippy::panic))]
 #![warn(missing_docs)]
 
 pub mod assessment;

@@ -7,7 +7,10 @@
 //! boundary violations, and optionally verifies round-trip fidelity.
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 
 use clap::Parser;
 use nexcore_transcriptase::{Config, DiagnosticLevel, Engine, TranscriptaseError};

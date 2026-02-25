@@ -177,6 +177,36 @@ pub struct DataframeTransformParams {
     pub rename: Option<Vec<DataframeRename>>,
 }
 
+/// Join two DataFrames on key columns.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct DataframeJoinParams {
+    /// Left DataFrame: inline JSON array of row objects.
+    #[serde(default)]
+    pub left_data: Option<Vec<serde_json::Value>>,
+    /// Left DataFrame: path to JSON file.
+    #[serde(default)]
+    pub left_path: Option<String>,
+    /// Right DataFrame: inline JSON array of row objects.
+    #[serde(default)]
+    pub right_data: Option<Vec<serde_json::Value>>,
+    /// Right DataFrame: path to JSON file.
+    #[serde(default)]
+    pub right_path: Option<String>,
+    /// Shared key column names (used when both tables have the same key names).
+    #[serde(default)]
+    pub on: Option<Vec<String>>,
+    /// Left key column names (for asymmetric keys).
+    #[serde(default)]
+    pub left_on: Option<Vec<String>>,
+    /// Right key column names (for asymmetric keys).
+    #[serde(default)]
+    pub right_on: Option<Vec<String>>,
+    /// Join type: "inner" (default), "left", "right", "outer", "semi", "anti".
+    #[serde(default)]
+    pub how: Option<String>,
+}
+
 /// Save a DataFrame to a JSON file.
 #[derive(Debug, Deserialize, JsonSchema)]
 #[serde(crate = "rmcp::serde")]

@@ -346,7 +346,10 @@ impl VesiclePool {
             return 1.0;
         }
         // Precision loss acceptable: vesicle counts are small
-        #[allow(clippy::cast_precision_loss)]
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "Count-to-f64 conversion for bounded runtime metrics"
+        )]
         {
             self.vesicles.len() as f64 / self.capacity as f64
         }

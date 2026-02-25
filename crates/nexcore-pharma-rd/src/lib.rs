@@ -42,7 +42,10 @@
 //! - **∂ (Boundary)**: present in 7/9 stages — a field defined by thresholds
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 
 pub mod chomsky;
 pub mod grounding;

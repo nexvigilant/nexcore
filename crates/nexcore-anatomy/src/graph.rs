@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Tier: T2-C (σ + μ + κ + N)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct CrateNode {
     /// Crate name.
     pub name: String,
@@ -35,6 +36,7 @@ pub struct CrateNode {
 ///
 /// Tier: T3 (σ + μ + κ + ρ + N + ∂)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct DependencyGraph {
     /// All crate nodes indexed by name.
     pub nodes: HashMap<String, CrateNode>,
@@ -47,6 +49,17 @@ pub struct DependencyGraph {
 }
 
 impl DependencyGraph {
+    /// Create an empty dependency graph.
+    #[must_use]
+    pub fn empty() -> Self {
+        Self {
+            nodes: HashMap::new(),
+            cycles: Vec::new(),
+            topo_order: Vec::new(),
+            total_crates: 0,
+        }
+    }
+
     /// Build the dependency graph from cargo metadata.
     ///
     /// Only includes workspace members, not external crates.

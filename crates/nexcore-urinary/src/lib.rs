@@ -12,7 +12,18 @@
 //! - Bladder → Batch collection before disposal
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::as_conversions,
+    clippy::arithmetic_side_effects,
+    clippy::manual_range_contains,
+    reason = "Urinary-system model uses explicit closed DTOs and bounded filtration arithmetic"
+)]
 
 use serde::{Deserialize, Serialize};
 

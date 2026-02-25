@@ -1,5 +1,8 @@
 #![deny(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 //! NexCore Watch App — Pure Rust NativeActivity entry point with Slint UI.
 //!
 //! ## Architecture

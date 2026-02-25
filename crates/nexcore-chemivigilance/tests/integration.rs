@@ -112,7 +112,7 @@ fn test_aspirin_full_pipeline() {
         );
 
         // Timestamp is within a 60-second test window
-        let now = chrono::Utc::now();
+        let now = nexcore_chrono::DateTime::now();
         let age = now.signed_duration_since(brief.generated_at);
         assert!(
             age.num_seconds() >= 0 && age.num_seconds() < 60,

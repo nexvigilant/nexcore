@@ -541,7 +541,7 @@ fn test_session_entry_serialization_complete() {
     #[derive(serde::Serialize, serde::Deserialize, PartialEq, Debug)]
     struct TestSessionEntry {
         id: NexId,
-        created_at: chrono::DateTime<chrono::Utc>,
+        created_at: nexcore_chrono::DateTime,
         project: Option<String>,
         git_commit: Option<String>,
         description: Option<String>,
@@ -549,7 +549,7 @@ fn test_session_entry_serialization_complete() {
 
     let entry = TestSessionEntry {
         id: NexId::v4(),
-        created_at: chrono::Utc::now(),
+        created_at: nexcore_chrono::DateTime::now(),
         project: Some("test-project".into()),
         git_commit: Some("abc123def456".into()),
         description: Some("Test session for property testing".into()),

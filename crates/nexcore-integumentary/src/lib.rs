@@ -30,7 +30,18 @@
 //! infrastructure with full SSA naming and alignment doc references.
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::disallowed_types,
+    clippy::as_conversions,
+    clippy::arithmetic_side_effects,
+    reason = "Integumentary boundary model intentionally uses fixed-domain DTOs and deterministic scoring"
+)]
 
 pub mod claude_code;
 pub mod grounding;

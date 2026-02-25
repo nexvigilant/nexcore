@@ -8,6 +8,7 @@ use std::fmt;
 /// Enumeration of supported signal detection methods.
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum SignalMethod {
     /// Proportional Reporting Ratio
     Prr = 1,

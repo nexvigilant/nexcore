@@ -7,7 +7,17 @@
 //! signaling, and routing infrastructure.
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::as_conversions,
+    clippy::arithmetic_side_effects,
+    reason = "Nervous-system mapping uses closed biological DTOs and bounded ratio/state counters"
+)]
 
 use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};

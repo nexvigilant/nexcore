@@ -3,7 +3,10 @@
 //! Foundation types and traits for the signal detection pipeline.
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 //! Every crate in the `signal-*` family depends on `signal-core`.
 //!
 //! ## Architecture (T1 Primitive Grounding)

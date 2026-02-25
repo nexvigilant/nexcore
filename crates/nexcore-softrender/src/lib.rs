@@ -13,7 +13,21 @@
 //! - `pipeline` — Viewport, rasterizer (edge functions), fragment shading, framebuffer
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::as_conversions,
+    clippy::arithmetic_side_effects,
+    clippy::indexing_slicing,
+    reason = "Software rendering requires frequent pixel/math conversions and low-level indexing for performance"
+)]
+#![allow(
+    clippy::too_many_arguments,
+    clippy::many_single_char_names,
+    reason = "Rendering pipelines and math functions often have many parameters (x, y, z, w, r, g, b, a)"
+)]
 
 pub mod geometry;
 pub mod math;

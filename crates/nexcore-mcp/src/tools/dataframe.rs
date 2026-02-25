@@ -1,16 +1,16 @@
 //! Sovereign DataFrame MCP tools — Phase 5, Directive 006A.
 //!
-//! 8 stateless tools exposing nexcore-dataframe operations.
+//! 9 stateless tools exposing nexcore-dataframe operations.
 //! Every tool accepts inline JSON data or file path, returns JSON result.
 //!
 //! Primitive composition: μ(Mapping) + Σ(Sum) + ∂(Boundary) + N(Quantity)
 
 use crate::params::{
     DataframeAggregateParams, DataframeColumnStatsParams, DataframeConstructParams,
-    DataframeCounterParams, DataframeDescribeParams, DataframeQueryParams, DataframeSaveParams,
-    DataframeTransformParams,
+    DataframeCounterParams, DataframeDescribeParams, DataframeJoinParams, DataframeQueryParams,
+    DataframeSaveParams, DataframeTransformParams,
 };
-use nexcore_dataframe::{Agg, Column, Counter, DataFrame, Scalar};
+use nexcore_dataframe::{Agg, Column, Counter, DataFrame, JoinType, Scalar};
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 use serde_json::json;
@@ -519,5 +519,80 @@ pub fn save(params: DataframeSaveParams) -> Result<CallToolResult, McpError> {
         "rows_written": df.height(),
         "columns": df.width(),
         "path": params.output_path,
+    })))
+}
+
+// =============================================================================
+// 9. dataframe_join
+// =============================================================================
+
+/// Join two DataFrames on key columns.
+/// Supports inner, left, right, outer, semi, and anti joins.
+pub fn join(params: DataframeJoinParams) -> Result<CallToolResult, McpError> {
+    let left_df = load_df(params.left_data, params.left_path)?;
+    let right_df = load_df(params.right_data, params.right_path)?;
+
+    // Parse join type
+    let how = match params.how.as_deref().unwrap_or("inner") {
+        "inner" => JoinType::Inner,
+        "left" => JoinType::Left,
+        "right" => JoinType::Right,
+        "outer" | "full" => JoinType::Outer,
+        "semi" => JoinType::Semi,
+        "anti" => JoinType::Anti,
+        other => {
+            return Err(McpError::invalid_params(
+                format!("Unknown join type '{other}'. Use: inner, left, right, outer, semi, anti"),
+                None,
+            ));
+        }
+    };
+
+    // Determine key columns — either shared `on` or asymmetric `left_on`/`right_on`
+    let result = match (params.on, params.left_on, params.right_on) {
+        (Some(on), None, None) => {
+            if on.is_empty() {
+                return Err(McpError::invalid_params(
+                    "'on' must have at least one column name",
+                    None,
+                ));
+            }
+            let on_refs: Vec<&str> = on.iter().map(|s| s.as_str()).collect();
+            left_df.join(&right_df, &on_refs, how)
+        }
+        (None, Some(l_on), Some(r_on)) => {
+            if l_on.is_empty() || r_on.is_empty() {
+                return Err(McpError::invalid_params(
+                    "'left_on' and 'right_on' must have at least one column name",
+                    None,
+                ));
+            }
+            let l_refs: Vec<&str> = l_on.iter().map(|s| s.as_str()).collect();
+            let r_refs: Vec<&str> = r_on.iter().map(|s| s.as_str()).collect();
+            left_df.join_on(&right_df, &l_refs, &r_refs, how)
+        }
+        (Some(_), Some(_), _) | (Some(_), _, Some(_)) => {
+            return Err(McpError::invalid_params(
+                "Use either 'on' OR 'left_on'/'right_on', not both",
+                None,
+            ));
+        }
+        _ => {
+            return Err(McpError::invalid_params(
+                "Must provide either 'on' or both 'left_on' and 'right_on'",
+                None,
+            ));
+        }
+    };
+
+    let df = result.map_err(|e| McpError::invalid_params(format!("Join error: {e}"), None))?;
+    let rows = df_to_json_rows(&df);
+
+    Ok(text_result(&json!({
+        "height": df.height(),
+        "width": df.width(),
+        "columns": df.column_names(),
+        "join_type": format!("{how:?}"),
+        "rows": rows,
     })))
 }

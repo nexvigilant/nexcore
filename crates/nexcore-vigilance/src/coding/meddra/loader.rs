@@ -10,6 +10,8 @@
 //! - `hlgt_hlt.asc` - HLGT to HLT relationships
 //! - `soc_hlgt.asc` - SOC to HLGT relationships
 
+#![allow(clippy::unreadable_literal)] // Fixture MedDRA codes are copied verbatim in tests.
+
 use super::super::error::CodingError;
 use super::types::{Hlgt, Hlt, Llt, MeddraVersion, Pt, Soc};
 

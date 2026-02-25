@@ -40,6 +40,7 @@ impl CompositorMode {
             FormFactor::Watch => Self::SingleApp,
             FormFactor::Phone => Self::AppStack,
             FormFactor::Desktop => Self::WindowManager,
+            _ => Self::AppStack,
         }
     }
 

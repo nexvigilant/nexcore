@@ -9,9 +9,8 @@
 //! 4. ρ(t+1): New state (humanized text)
 
 use crate::Result;
-use antitransformer::pipeline::{self, AnalysisConfig};
+use antitransformer::pipeline::AnalysisConfig;
 use nexcore_dataframe::{Agg, DataFrame};
-use nexcore_transform::prelude::*;
 
 /// Stage 2: ∂(¬σ⁻¹) — Humanization Gate
 ///
@@ -19,16 +18,12 @@ use nexcore_transform::prelude::*;
 /// into "generated" territory. If probability of being generated is
 /// higher than the original, it's rejected.
 pub fn transform_humanization_gate(df: DataFrame, threshold: f64) -> Result<DataFrame> {
+    let threshold = threshold.clamp(0.0, 1.0);
     tracing::info!(
         stage = "humanization-gate",
         threshold = threshold,
         "Applying anti-regression filter for AI-generated text"
     );
-
-    let config = AnalysisConfig {
-        threshold,
-        window_size: 50,
-    };
 
     // Filter: keep if probability_generated < threshold
     let filtered = df.filter_by("prob_generated", |v| {
@@ -56,6 +51,7 @@ pub fn transform_phrasing_discovery(df: DataFrame) -> Result<DataFrame> {
 }
 
 /// Run a single humanization pass on text.
+#[allow(dead_code, reason = "placeholder for LLM integration")]
 pub fn humanize_text(text: &str) -> String {
     // This would ideally call an LLM to rephrase.
     // For the autonomous loop, we use it as a placeholder for the ∃(ν) phase.

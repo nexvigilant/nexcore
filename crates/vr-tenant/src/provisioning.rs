@@ -204,17 +204,17 @@ mod tests {
 
     #[test]
     fn trial_expiry_check() {
-        let mut tenant = Tenant {
-            id: TenantId::new(),
-            name: "Test".into(),
-            slug: "test".into(),
-            tier: SubscriptionTier::Accelerator,
-            status: TenantStatus::Trial,
-            trial_ends_at: Some(DateTime::now() - Duration::days(1)),
-            settings: serde_json::json!({}),
-            created_at: DateTime::now(),
-            updated_at: DateTime::now(),
-        };
+        let mut tenant = Tenant::new(
+            TenantId::new(),
+            "Test".into(),
+            "test".into(),
+            SubscriptionTier::Accelerator,
+            TenantStatus::Trial,
+            Some(DateTime::now() - Duration::days(1)),
+            serde_json::json!({}),
+            DateTime::now(),
+            DateTime::now(),
+        );
 
         assert!(is_trial_expired(&tenant));
 

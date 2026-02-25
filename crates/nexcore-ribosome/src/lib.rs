@@ -27,7 +27,24 @@
 //! ## Tier: T2-C (κ + σ + μ + ∂ + N)
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::allow_attributes_without_reason,
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::as_conversions,
+    clippy::arithmetic_side_effects,
+    clippy::disallowed_types,
+    clippy::indexing_slicing,
+    clippy::iter_over_hash_type,
+    clippy::wildcard_enum_match_arm,
+    clippy::too_many_arguments,
+    clippy::let_underscore_must_use,
+    reason = "Ribosome contract translation code favors explicit schema math and compatibility with prior persisted contracts"
+)]
 
 pub mod grounding;
 pub mod pv_contracts;

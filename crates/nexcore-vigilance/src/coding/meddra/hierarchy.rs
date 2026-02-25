@@ -1,3 +1,9 @@
+#![allow(
+    clippy::disallowed_types,
+    reason = "Meddra dictionary requires O(1) code/name lookup tables."
+)]
+#![allow(clippy::unreadable_literal)] // MedDRA numeric IDs are canonical fixture values.
+
 //! `MedDRA` hierarchy traversal and lookup.
 //!
 //! Provides efficient traversal up and down the `MedDRA` hierarchy:

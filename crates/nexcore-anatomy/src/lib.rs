@@ -36,7 +36,24 @@
 //! ```
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::disallowed_types,
+    reason = "Anatomy analysis uses standard collections for graph representation"
+)]
+#![allow(
+    clippy::arithmetic_side_effects,
+    clippy::as_conversions,
+    clippy::indexing_slicing,
+    reason = "Static analysis involves frequent metric calculations and indexing"
+)]
+#![allow(
+    clippy::iter_over_hash_type,
+    reason = "Deterministic iteration not required for most graph summary metrics"
+)]
 
 pub mod blast_radius;
 pub mod chomsky;

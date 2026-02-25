@@ -1,0 +1,1605 @@
+warning: /home/matthew/Projects/nexcore/crates/nexcore-state-os/Cargo.toml: only one of `license` or `license-file` is necessary
+`license` should be used if the package license can be expressed with a standard SPDX expression.
+`license-file` should be used if the package uses a non-standard license.
+See https://doc.rust-lang.org/cargo/reference/manifest.html#the-license-and-license-file-fields for more information.
+warning: /home/matthew/Projects/nexcore/crates/nexcore-state-theory/Cargo.toml: only one of `license` or `license-file` is necessary
+`license` should be used if the package license can be expressed with a standard SPDX expression.
+`license-file` should be used if the package uses a non-standard license.
+See https://doc.rust-lang.org/cargo/reference/manifest.html#the-license-and-license-file-fields for more information.
+    Checking nexcore-error v0.1.0 (/home/matthew/Projects/nexcore/crates/nexcore-error)
+    Checking nexcore-constants v1.0.0 (/home/matthew/Projects/nexcore/crates/nexcore-constants)
+    Checking nexcore-signal-types v1.0.0 (/home/matthew/Projects/nexcore/crates/nexcore-signal-types)
+    Checking nexcore-preemptive-pv v1.0.0 (/home/matthew/Projects/nexcore/crates/nexcore-preemptive-pv)
+    Checking nexcore-fhir v1.0.0 (/home/matthew/Projects/nexcore/crates/nexcore-fhir)
+    Checking nexcore-lymphatic v1.0.0 (/home/matthew/Projects/nexcore/crates/nexcore-lymphatic)
+    Checking nexcore-urinary v1.0.0 (/home/matthew/Projects/nexcore/crates/nexcore-urinary)
+    Checking nexcore-respiratory v1.0.0 (/home/matthew/Projects/nexcore/crates/nexcore-respiratory)
+    Checking nexcore-harm-taxonomy v1.0.0 (/home/matthew/Projects/nexcore/crates/nexcore-harm-taxonomy)
+    Checking nexcore-energy v0.1.0 (/home/matthew/Projects/nexcore/crates/nexcore-energy)
+    Checking nexcore-state-theory v0.1.0 (/home/matthew/Projects/nexcore/crates/nexcore-state-theory)
+    Checking nexcore-pal v0.1.0 (/home/matthew/Projects/nexcore/crates/nexcore-pal)
+    Checking nexcore-domain-primitives v0.1.0 (/home/matthew/Projects/nexcore/crates/nexcore-domain-primitives)
+    Checking nexcore-dna v1.0.0 (/home/matthew/Projects/nexcore/crates/nexcore-dna)
+    Checking nexcore-forge-strategy v0.1.0 (/home/matthew/Projects/nexcore/crates/nexcore-forge-strategy)
+   Compiling stem-derive-core v1.0.0 (/home/matthew/Projects/nexcore/crates/stem-derive-core)
+crates/nexcore-preemptive-pv/src/types.rs:6:1: error: `allow` attribute without specifying a reason
+crates/nexcore-signal-types/src/lib.rs:11:1: error: exported enums should not be exhaustive
+crates/nexcore-signal-types/src/lib.rs:50:1: error: exported structs should not be exhaustive
+crates/nexcore-energy/src/adaptive_thresholds.rs:156:9: error: `allow` attribute without specifying a reason
+crates/nexcore-energy/src/lib.rs:383:9: error: `allow` attribute without specifying a reason
+crates/nexcore-energy/src/lib.rs:404:9: error: `allow` attribute without specifying a reason
+crates/nexcore-energy/src/lib.rs:417:9: error: `allow` attribute without specifying a reason
+crates/nexcore-energy/src/lib.rs:430:9: error: `allow` attribute without specifying a reason
+crates/nexcore-energy/src/lib.rs:501:9: error: `allow` attribute without specifying a reason
+crates/nexcore-energy/src/lib.rs:620:9: error: `allow` attribute without specifying a reason
+    Checking nexcore-chrono v0.1.0 (/home/matthew/Projects/nexcore/crates/nexcore-chrono)
+crates/nexcore-lymphatic/src/lib.rs:52:1: error: exported enums should not be exhaustive
+crates/nexcore-respiratory/src/claude_code.rs:44:1: error: exported enums should not be exhaustive
+crates/nexcore-lymphatic/src/lib.rs:86:1: error: exported structs should not be exhaustive
+crates/nexcore-preemptive-pv/src/types.rs:18:1: error: exported enums should not be exhaustive
+error: could not compile `nexcore-signal-types` (lib) due to 2 previous errors
+warning: build failed, waiting for other jobs to finish...
+crates/nexcore-respiratory/src/claude_code.rs:69:1: error: exported structs should not be exhaustive
+crates/nexcore-lymphatic/src/lib.rs:140:1: error: exported structs should not be exhaustive
+crates/nexcore-preemptive-pv/src/types.rs:111:1: error: exported structs should not be exhaustive
+crates/nexcore-respiratory/src/claude_code.rs:92:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/lexicon.rs:313:5: error: `allow` attribute without specifying a reason
+crates/nexcore-state-theory/src/algebra/mod.rs:114:1: error: exported enums should not be exhaustive
+crates/nexcore-preemptive-pv/src/types.rs:144:1: error: exported structs should not be exhaustive
+crates/nexcore-lymphatic/src/lib.rs:173:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/algebra/mod.rs:214:1: error: exported enums should not be exhaustive
+crates/nexcore-preemptive-pv/src/types.rs:187:1: error: exported enums should not be exhaustive
+crates/nexcore-state-theory/src/algebra/mod.rs:302:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-respiratory/src/claude_code.rs:114:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/axioms/mod.rs:59:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/faers_bridge.rs:40:13: warning: 5 bindings with single-character names in scope
+crates/nexcore-state-theory/src/axioms/mod.rs:119:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/gene_therapy.rs:620:48: warning: this sequence of operators looks suspiciously like a bug: help: did you mean: `wt.bases[end_wt - 1] == mut_seq.bases[end_wt - 1]`
+crates/nexcore-lymphatic/src/lib.rs:195:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/axioms/mod.rs:138:1: error: exported structs should not be exhaustive
+crates/nexcore-respiratory/src/claude_code.rs:131:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-respiratory/src/claude_code.rs:131:36: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-respiratory/src/claude_code.rs:155:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/axioms/mod.rs:212:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/axioms/mod.rs:263:1: error: exported enums should not be exhaustive
+crates/nexcore-state-theory/src/axioms/mod.rs:285:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/axioms/mod.rs:320:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-state-theory/src/axioms/mod.rs:359:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/axioms/mod.rs:378:25: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-state-theory/src/axioms/mod.rs:388:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-lymphatic/src/lib.rs:266:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-lymphatic/src/lib.rs:290:1: error: exported enums should not be exhaustive
+crates/nexcore-state-theory/src/axioms/mod.rs:388:38: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-state-theory/src/axioms/mod.rs:413:1: error: exported structs should not be exhaustive
+crates/nexcore-preemptive-pv/src/types.rs:237:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/conservation/mod.rs:52:1: error: exported enums should not be exhaustive
+crates/nexcore-respiratory/src/claude_code.rs:178:32: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-respiratory/src/claude_code.rs:182:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-respiratory/src/claude_code.rs:182:39: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-respiratory/src/claude_code.rs:214:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/conservation/mod.rs:101:1: error: exported structs should not be exhaustive
+crates/nexcore-lymphatic/src/lib.rs:310:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/conservation/mod.rs:117:1: error: exported structs should not be exhaustive
+crates/nexcore-preemptive-pv/src/types.rs:260:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/conservation/mod.rs:152:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/conservation/mod.rs:168:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/conservation/mod.rs:205:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/conservation/mod.rs:237:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/conservation/mod.rs:272:1: error: exported structs should not be exhaustive
+crates/nexcore-preemptive-pv/src/types.rs:279:1: error: exported structs should not be exhaustive
+crates/nexcore-respiratory/src/claude_code.rs:246:1: error: exported structs should not be exhaustive
+crates/nexcore-lymphatic/src/lib.rs:338:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-lymphatic/src/lib.rs:341:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-preemptive-pv/src/types.rs:311:1: error: exported structs should not be exhaustive
+crates/nexcore-lymphatic/src/lib.rs:364:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-lymphatic/src/lib.rs:364:40: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-lymphatic/src/lib.rs:381:1: error: exported enums should not be exhaustive
+crates/nexcore-constants/src/bathroom_lock.rs:50:1: error: exported enums should not be exhaustive
+crates/nexcore-lymphatic/src/lib.rs:413:1: error: exported structs should not be exhaustive
+crates/nexcore-respiratory/src/claude_code.rs:265:38: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-respiratory/src/claude_code.rs:282:1: error: exported structs should not be exhaustive
+crates/nexcore-preemptive-pv/src/trajectory.rs:112:14: error: indexing may panic
+crates/nexcore-preemptive-pv/src/trajectory.rs:112:19: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-preemptive-pv/src/trajectory.rs:112:33: error: indexing may panic
+crates/nexcore-preemptive-pv/src/trajectory.rs:112:38: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-preemptive-pv/src/trajectory.rs:116:6: error: indexing may panic
+crates/nexcore-preemptive-pv/src/trajectory.rs:116:11: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-preemptive-pv/src/trajectory.rs:116:25: error: indexing may panic
+crates/nexcore-preemptive-pv/src/trajectory.rs:116:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-preemptive-pv/src/trajectory.rs:126:15: error: indexing may panic
+crates/nexcore-preemptive-pv/src/trajectory.rs:126:20: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-preemptive-pv/src/trajectory.rs:126:34: error: indexing may panic
+crates/nexcore-preemptive-pv/src/trajectory.rs:126:39: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-preemptive-pv/src/trajectory.rs:127:15: error: indexing may panic
+crates/nexcore-preemptive-pv/src/trajectory.rs:127:20: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-preemptive-pv/src/trajectory.rs:127:34: error: indexing may panic
+crates/nexcore-preemptive-pv/src/trajectory.rs:127:39: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-preemptive-pv/src/trajectory.rs:133:15: error: indexing may panic
+crates/nexcore-preemptive-pv/src/trajectory.rs:133:20: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-preemptive-pv/src/trajectory.rs:133:34: error: indexing may panic
+crates/nexcore-preemptive-pv/src/trajectory.rs:133:39: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-preemptive-pv/src/trajectory.rs:134:15: error: indexing may panic
+crates/nexcore-preemptive-pv/src/trajectory.rs:134:20: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-preemptive-pv/src/trajectory.rs:134:34: error: indexing may panic
+crates/nexcore-preemptive-pv/src/trajectory.rs:134:39: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-state-theory/src/typestate/mod.rs:129:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-preemptive-pv/src/predictive.rs:26:1: error: exported structs should not be exhaustive
+crates/nexcore-constants/src/bathroom_lock.rs:98:1: error: exported enums should not be exhaustive
+crates/nexcore-preemptive-pv/src/predictive.rs:52:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/typestate/mod.rs:225:1: error: exported structs should not be exhaustive
+crates/nexcore-preemptive-pv/src/preemptive.rs:46:1: error: exported structs should not be exhaustive
+crates/nexcore-constants/src/bathroom_lock.rs:134:13: error: wildcard match will also match any future added variants: help: try: `Self::AlreadyOccupied { .. } | Self::AlreadyVacant | Self::NotYourLock { .. }`
+crates/nexcore-preemptive-pv/src/preemptive.rs:81:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/category/mod.rs:69:1: error: exported structs should not be exhaustive
+crates/nexcore-lymphatic/src/lib.rs:483:35: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-lymphatic/src/lib.rs:483:53: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-lymphatic/src/lib.rs:505:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/category/mod.rs:96:1: error: exported structs should not be exhaustive
+crates/nexcore-respiratory/src/claude_code.rs:307:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-respiratory/src/claude_code.rs:307:36: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-state-theory/src/category/mod.rs:100:1: error: exported structs should not be exhaustive
+crates/nexcore-respiratory/src/claude_code.rs:331:1: error: exported structs should not be exhaustive
+crates/nexcore-forge-strategy/src/lib.rs:56:1: error: exported enums should not be exhaustive
+crates/nexcore-preemptive-pv/src/composites.rs:27:1: error: exported structs should not be exhaustive
+crates/nexcore-forge-strategy/src/lib.rs:104:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/category/mod.rs:155:1: error: exported structs should not be exhaustive
+crates/nexcore-forge-strategy/src/lib.rs:223:1: error: exported structs should not be exhaustive
+crates/nexcore-constants/src/bathroom_lock.rs:411:21: error: non-binding `let` on an expression with `#[must_use]` type
+crates/nexcore-state-theory/src/category/mod.rs:226:1: error: exported structs should not be exhaustive
+crates/nexcore-constants/src/bathroom_lock.rs:428:1: warning: manual `Debug` impl does not include all fields
+crates/nexcore-forge-strategy/src/lib.rs:335:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/category/mod.rs:237:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-state-theory/src/category/mod.rs:243:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-constants/src/bathroom_lock.rs:471:13: error: non-binding `let` on an expression with `#[must_use]` type
+crates/nexcore-forge-strategy/src/lib.rs:364:5: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-forge-strategy/src/lib.rs:365:11: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-state-theory/src/category/mod.rs:249:20: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-state-theory/src/category/mod.rs:250:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-state-theory/src/category/mod.rs:293:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/category/mod.rs:304:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-lymphatic/src/lib.rs:531:12: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-lymphatic/src/lib.rs:532:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-preemptive-pv/src/primitives.rs:33:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/category/mod.rs:325:60: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-constants/src/correction.rs:12:1: error: exported structs should not be exhaustive
+crates/nexcore-lymphatic/src/lib.rs:561:29: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-state-theory/src/category/mod.rs:339:1: error: exported structs should not be exhaustive
+crates/nexcore-lymphatic/src/lib.rs:561:56: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-state-theory/src/category/mod.rs:358:1: error: exported structs should not be exhaustive
+crates/nexcore-lymphatic/src/lib.rs:571:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-lymphatic/src/lib.rs:571:36: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-lymphatic/src/lib.rs:586:1: error: exported structs should not be exhaustive
+crates/nexcore-respiratory/src/claude_code.rs:366:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/equivalence/mod.rs:36:1: error: exported structs should not be exhaustive
+crates/nexcore-preemptive-pv/src/primitives.rs:48:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/equivalence/mod.rs:114:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/equivalence/mod.rs:160:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/equivalence/mod.rs:180:22: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-state-theory/src/equivalence/mod.rs:227:1: error: exported structs should not be exhaustive
+crates/nexcore-constants/src/interval.rs:25:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/equivalence/mod.rs:260:1: error: exported structs should not be exhaustive
+crates/nexcore-respiratory/src/claude_code.rs:409:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-respiratory/src/claude_code.rs:412:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-respiratory/src/claude_code.rs:415:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-preemptive-pv/src/primitives.rs:198:19: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-state-theory/src/equivalence/mod.rs:314:1: error: exported enums should not be exhaustive
+crates/nexcore-preemptive-pv/src/transfer.rs:27:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/equivalence/mod.rs:328:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/equivalence/mod.rs:374:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/equivalence/mod.rs:394:9: warning: using `contains()` instead of `iter().any()` is more efficient: help: try: `self.preserved_by.contains(&op)`
+crates/nexcore-state-theory/src/equivalence/mod.rs:404:1: error: exported enums should not be exhaustive
+crates/nexcore-respiratory/src/lib.rs:50:1: error: exported enums should not be exhaustive
+crates/nexcore-state-theory/src/equivalence/mod.rs:433:13: error: wildcard match will also match any future added variants: help: try: `Self::Equivalent | Self::Unknown`
+crates/nexcore-preemptive-pv/src/transfer.rs:168:11: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-respiratory/src/lib.rs:75:1: error: exported enums should not be exhaustive
+crates/nexcore-constants/src/measured.rs:11:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/proofs/mod.rs:219:1: error: exported enums should not be exhaustive
+crates/nexcore-state-theory/src/proofs/mod.rs:232:1: error: exported structs should not be exhaustive
+crates/nexcore-respiratory/src/lib.rs:93:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/proofs/mod.rs:247:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/proofs/mod.rs:312:1: error: exported structs should not be exhaustive
+error: could not compile `nexcore-forge-strategy` (lib) due to 6 previous errors
+crates/nexcore-state-theory/src/proofs/mod.rs:328:1: error: exported structs should not be exhaustive
+crates/nexcore-constants/src/tier.rs:10:1: error: exported enums should not be exhaustive
+crates/nexcore-state-theory/src/proofs/mod.rs:345:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/proofs/mod.rs:356:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-state-theory/src/proofs/mod.rs:366:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/temporal/mod.rs:54:1: error: exported structs should not be exhaustive
+crates/nexcore-respiratory/src/lib.rs:102:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/temporal/mod.rs:98:1: error: exported enums should not be exhaustive
+crates/nexcore-constants/src/tier.rs:48:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-respiratory/src/lib.rs:118:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/temporal/mod.rs:223:1: error: exported enums should not be exhaustive
+crates/nexcore-state-theory/src/temporal/mod.rs:234:1: error: exported enums should not be exhaustive
+crates/nexcore-respiratory/src/lib.rs:130:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/temporal/mod.rs:352:1: error: exported enums should not be exhaustive
+crates/nexcore-state-theory/src/temporal/mod.rs:363:1: error: exported structs should not be exhaustive
+crates/nexcore-respiratory/src/lib.rs:138:1: error: exported structs should not be exhaustive
+error: could not compile `nexcore-preemptive-pv` (lib) due to 43 previous errors
+crates/nexcore-state-theory/src/temporal/mod.rs:427:1: error: exported structs should not be exhaustive
+crates/nexcore-respiratory/src/lib.rs:152:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/theorems/mod.rs:81:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/theorems/mod.rs:131:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/theorems/mod.rs:181:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/theorems/mod.rs:230:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/theorems/mod.rs:273:1: error: exported structs should not be exhaustive
+crates/nexcore-respiratory/src/lib.rs:199:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/theorems/mod.rs:315:1: error: exported structs should not be exhaustive
+crates/nexcore-respiratory/src/lib.rs:220:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-state-theory/src/theorems/mod.rs:338:1: error: exported structs should not be exhaustive
+crates/nexcore-respiratory/src/lib.rs:252:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/theorems/mod.rs:354:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/theorems/mod.rs:374:1: error: exported structs should not be exhaustive
+crates/nexcore-respiratory/src/lib.rs:286:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/theorems/mod.rs:399:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/theorems/mod.rs:420:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/theorems/mod.rs:443:1: error: exported structs should not be exhaustive
+crates/nexcore-state-theory/src/theorems/mod.rs:456:1: error: exported structs should not be exhaustive
+crates/nexcore-energy/src/adaptive_thresholds.rs:49:1: error: exported enums should not be exhaustive
+crates/nexcore-state-theory/src/lib.rs:232:1: error: exported enums should not be exhaustive
+crates/nexcore-energy/src/adaptive_thresholds.rs:113:9: error: indexing may panic
+crates/nexcore-energy/src/adaptive_thresholds.rs:114:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-energy/src/adaptive_thresholds.rs:150:13: error: slicing may panic
+crates/nexcore-energy/src/adaptive_thresholds.rs:159:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-energy/src/adaptive_thresholds.rs:159:35: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-energy/src/adaptive_thresholds.rs:216:1: error: exported structs should not be exhaustive
+error: could not compile `nexcore-lymphatic` (lib) due to 24 previous errors
+crates/nexcore-energy/src/adaptive_thresholds.rs:284:1: error: exported structs should not be exhaustive
+error: could not compile `nexcore-respiratory` (lib) due to 33 previous errors
+crates/nexcore-energy/src/pv_gate.rs:28:1: error: exported enums should not be exhaustive
+crates/nexcore-energy/src/pv_gate.rs:153:1: error: exported structs should not be exhaustive
+warning: `nexcore-constants` (lib) generated 1 warning
+error: could not compile `nexcore-constants` (lib) due to 10 previous errors; 1 warning emitted
+crates/nexcore-energy/src/lib.rs:88:1: error: exported enums should not be exhaustive
+crates/nexcore-energy/src/lib.rs:146:1: error: exported enums should not be exhaustive
+crates/nexcore-energy/src/lib.rs:199:1: error: exported enums should not be exhaustive
+crates/nexcore-energy/src/lib.rs:251:1: error: exported enums should not be exhaustive
+crates/nexcore-energy/src/lib.rs:304:1: error: exported structs should not be exhaustive
+crates/nexcore-energy/src/lib.rs:327:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-energy/src/lib.rs:335:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-energy/src/lib.rs:336:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-energy/src/lib.rs:345:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-energy/src/lib.rs:346:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-energy/src/lib.rs:356:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-energy/src/lib.rs:357:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-energy/src/lib.rs:367:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-energy/src/lib.rs:368:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-energy/src/lib.rs:386:32: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-energy/src/lib.rs:386:51: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-energy/src/lib.rs:386:72: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-energy/src/lib.rs:406:27: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-energy/src/lib.rs:413:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-energy/src/lib.rs:419:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-energy/src/lib.rs:419:33: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-energy/src/lib.rs:432:20: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-energy/src/lib.rs:432:40: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-energy/src/lib.rs:444:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-energy/src/lib.rs:472:1: error: exported structs should not be exhaustive
+crates/nexcore-domain-primitives/src/analysis.rs:3:24: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/analysis.rs:3:33: warning: use of a disallowed type `std::collections::HashSet`
+crates/nexcore-domain-primitives/src/analysis.rs:12:47: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/analysis.rs:12:24: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/analysis.rs:36:44: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/analysis.rs:36:21: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/analysis.rs:42:5: error: iteration over unordered hash-based type
+crates/nexcore-energy/src/lib.rs:504:36: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-domain-primitives/src/analysis.rs:77:1: error: exported structs should not be exhaustive
+crates/nexcore-energy/src/lib.rs:591:1: error: exported structs should not be exhaustive
+crates/nexcore-energy/src/lib.rs:623:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-energy/src/lib.rs:623:14: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-energy/src/lib.rs:636:1: error: exported structs should not be exhaustive
+crates/nexcore-domain-primitives/src/analysis.rs:106:25: warning: use of a disallowed type `std::collections::HashSet`
+crates/nexcore-domain-primitives/src/analysis.rs:111:20: warning: use of a disallowed type `std::collections::HashSet`
+crates/nexcore-domain-primitives/src/analysis.rs:112:17: warning: use of a disallowed type `std::collections::HashSet`
+crates/nexcore-domain-primitives/src/analysis.rs:120:27: error: indexing may panic
+crates/nexcore-domain-primitives/src/analysis.rs:120:32: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-domain-primitives/src/analysis.rs:139:5: warning: consider using `sort_by_key`: help: try: `all_paths.sort_by_key(|b| std::cmp::Reverse(b.len()))`
+crates/nexcore-domain-primitives/src/analysis.rs:146:1: error: exported structs should not be exhaustive
+warning: `nexcore-state-theory` (lib) generated 1 warning
+error: could not compile `nexcore-state-theory` (lib) due to 79 previous errors; 1 warning emitted
+crates/nexcore-domain-primitives/src/analysis.rs:157:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-domain-primitives/src/analysis.rs:164:31: warning: use of a disallowed type `std::collections::HashSet`
+crates/nexcore-domain-primitives/src/analysis.rs:183:21: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-domain-primitives/src/compare.rs:9:1: error: exported structs should not be exhaustive
+crates/nexcore-domain-primitives/src/compare.rs:25:1: error: exported structs should not be exhaustive
+crates/nexcore-domain-primitives/src/compare.rs:35:18: warning: use of a disallowed type `std::collections::HashSet`
+crates/nexcore-domain-primitives/src/compare.rs:37:18: warning: use of a disallowed type `std::collections::HashSet`
+crates/nexcore-domain-primitives/src/compare.rs:67:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-domain-primitives/src/compare.rs:67:31: error: using a potentially dangerous silent `as` conversion
+error: could not compile `nexcore-energy` (lib) due to 47 previous errors
+crates/nexcore-domain-primitives/src/registry.rs:3:1: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/registry.rs:15:17: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/registry.rs:22:25: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/registry.rs:36:25: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/registry.rs:54:9: warning: used `sort` on primitive type `str`: help: try: `names.sort_unstable()`
+crates/nexcore-urinary/src/claude_code.rs:14:1: error: exported structs should not be exhaustive
+crates/nexcore-domain-primitives/src/taxonomy.rs:4:1: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/taxonomy.rs:10:1: error: exported enums should not be exhaustive
+crates/nexcore-domain-primitives/src/taxonomy.rs:57:1: error: exported structs should not be exhaustive
+crates/nexcore-harm-taxonomy/src/lib.rs:69:1: error: exported enums should not be exhaustive
+crates/nexcore-urinary/src/claude_code.rs:41:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-urinary/src/claude_code.rs:41:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-urinary/src/claude_code.rs:41:61: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-urinary/src/claude_code.rs:52:1: error: exported structs should not be exhaustive
+crates/nexcore-domain-primitives/src/taxonomy.rs:97:1: error: exported structs should not be exhaustive
+crates/nexcore-harm-taxonomy/src/lib.rs:113:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-urinary/src/claude_code.rs:91:1: error: exported structs should not be exhaustive
+crates/nexcore-harm-taxonomy/src/lib.rs:150:1: error: exported enums should not be exhaustive
+crates/nexcore-domain-primitives/src/taxonomy.rs:124:34: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/taxonomy.rs:125:26: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/taxonomy.rs:127:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-domain-primitives/src/taxonomy.rs:138:39: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/taxonomy.rs:151:39: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/taxonomy.rs:152:49: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/taxonomy.rs:152:22: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-harm-taxonomy/src/lib.rs:171:1: error: exported enums should not be exhaustive
+crates/nexcore-domain-primitives/src/taxonomy.rs:194:40: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-domain-primitives/src/taxonomy.rs:208:1: error: exported structs should not be exhaustive
+crates/nexcore-urinary/src/claude_code.rs:138:1: error: exported structs should not be exhaustive
+crates/nexcore-harm-taxonomy/src/lib.rs:195:1: error: exported enums should not be exhaustive
+crates/nexcore-harm-taxonomy/src/lib.rs:216:1: error: exported structs should not be exhaustive
+crates/nexcore-domain-primitives/src/taxonomy.rs:220:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-domain-primitives/src/transfer.rs:14:1: error: exported structs should not be exhaustive
+crates/nexcore-urinary/src/claude_code.rs:167:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-urinary/src/claude_code.rs:167:39: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-urinary/src/claude_code.rs:177:1: error: exported structs should not be exhaustive
+crates/nexcore-domain-primitives/src/transfer.rs:72:1: error: exported structs should not be exhaustive
+crates/nexcore-harm-taxonomy/src/lib.rs:330:1: error: exported structs should not be exhaustive
+crates/nexcore-urinary/src/claude_code.rs:211:1: error: exported structs should not be exhaustive
+crates/nexcore-domain-primitives/src/transfer_matrix.rs:10:1: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/transfer_matrix.rs:19:24: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/transfer_matrix.rs:20:17: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/transfer_matrix.rs:44:1: error: exported structs should not be exhaustive
+crates/nexcore-harm-taxonomy/src/lib.rs:359:19: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-harm-taxonomy/src/lib.rs:359:42: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-harm-taxonomy/src/lib.rs:384:1: error: exported enums should not be exhaustive
+crates/nexcore-urinary/src/claude_code.rs:238:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-urinary/src/claude_code.rs:238:40: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-urinary/src/claude_code.rs:249:1: error: exported enums should not be exhaustive
+crates/nexcore-domain-primitives/src/transfer_matrix.rs:55:1: error: exported structs should not be exhaustive
+crates/nexcore-urinary/src/claude_code.rs:268:1: error: exported enums should not be exhaustive
+crates/nexcore-harm-taxonomy/src/lib.rs:553:1: error: exported structs should not be exhaustive
+crates/nexcore-urinary/src/claude_code.rs:286:1: error: exported structs should not be exhaustive
+crates/nexcore-harm-taxonomy/src/lib.rs:655:1: error: exported structs should not be exhaustive
+crates/nexcore-domain-primitives/src/transfer_matrix.rs:74:1: error: exported structs should not be exhaustive
+crates/nexcore-urinary/src/claude_code.rs:305:26: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-urinary/src/claude_code.rs:328:1: error: exported structs should not be exhaustive
+crates/nexcore-harm-taxonomy/src/lib.rs:679:33: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-harm-taxonomy/src/lib.rs:683:43: error: indexing may panic
+crates/nexcore-harm-taxonomy/src/lib.rs:683:61: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-harm-taxonomy/src/lib.rs:689:63: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-domain-primitives/src/transfer_matrix.rs:94:64: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/transfer_matrix.rs:94:25: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-harm-taxonomy/src/lib.rs:690:33: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-harm-taxonomy/src/lib.rs:690:33: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-harm-taxonomy/src/lib.rs:710:1: error: exported enums should not be exhaustive
+crates/nexcore-domain-primitives/src/transfer_matrix.rs:128:23: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-domain-primitives/src/transfer_matrix.rs:187:18: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-domain-primitives/src/transfer_matrix.rs:191:5: error: iteration over unordered hash-based type
+crates/nexcore-domain-primitives/src/transfer_matrix.rs:217:25: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-domain-primitives/src/transfer_matrix.rs:224:26: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-domain-primitives/src/transfer_matrix.rs:261:6: error: slicing may panic
+crates/nexcore-domain-primitives/src/validation.rs:15:1: error: exported structs should not be exhaustive
+crates/nexcore-urinary/src/lib.rs:28:1: error: exported enums should not be exhaustive
+crates/nexcore-harm-taxonomy/src/lib.rs:731:1: error: exported structs should not be exhaustive
+crates/nexcore-urinary/src/lib.rs:48:1: error: exported structs should not be exhaustive
+crates/nexcore-domain-primitives/src/validation.rs:28:1: error: exported structs should not be exhaustive
+crates/nexcore-urinary/src/lib.rs:78:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-urinary/src/lib.rs:81:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-urinary/src/lib.rs:93:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-urinary/src/lib.rs:93:44: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-urinary/src/lib.rs:105:1: error: exported structs should not be exhaustive
+crates/nexcore-domain-primitives/src/validation.rs:77:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-domain-primitives/src/validation.rs:82:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-domain-primitives/src/validation.rs:82:26: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-domain-primitives/src/validation.rs:91:20: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-harm-taxonomy/src/lib.rs:979:1: error: exported enums should not be exhaustive
+crates/nexcore-urinary/src/lib.rs:132:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-urinary/src/lib.rs:132:40: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-urinary/src/lib.rs:144:1: error: exported structs should not be exhaustive
+crates/nexcore-harm-taxonomy/src/lib.rs:1026:1: error: exported structs should not be exhaustive
+crates/nexcore-urinary/src/lib.rs:176:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-urinary/src/lib.rs:176:36: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-urinary/src/lib.rs:188:1: error: exported structs should not be exhaustive
+crates/nexcore-harm-taxonomy/src/lib.rs:1113:1: error: exported structs should not be exhaustive
+crates/nexcore-urinary/src/lib.rs:220:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-urinary/src/lib.rs:220:35: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-urinary/src/lib.rs:232:1: error: exported structs should not be exhaustive
+crates/nexcore-harm-taxonomy/src/lib.rs:1169:1: error: exported structs should not be exhaustive
+crates/nexcore-urinary/src/lib.rs:254:9: warning: manual `RangeInclusive::contains` implementation: help: use: `(0.8..=1.2).contains(&ratio)`
+crates/nexcore-urinary/src/lib.rs:270:1: error: exported structs should not be exhaustive
+crates/nexcore-harm-taxonomy/src/lib.rs:1198:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-harm-taxonomy/src/lib.rs:1202:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-harm-taxonomy/src/lib.rs:1210:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-urinary/src/lib.rs:302:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-urinary/src/lib.rs:302:35: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-urinary/src/lib.rs:323:1: error: exported structs should not be exhaustive
+crates/nexcore-harm-taxonomy/src/lib.rs:1233:22: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-harm-taxonomy/src/lib.rs:1233:42: error: using a potentially dangerous silent `as` conversion
+warning: `nexcore-domain-primitives` (lib) generated 31 warnings
+error: could not compile `nexcore-domain-primitives` (lib) due to 34 previous errors; 31 warnings emitted
+error: could not compile `nexcore-harm-taxonomy` (lib) due to 29 previous errors
+warning: `nexcore-urinary` (lib) generated 1 warning
+error: could not compile `nexcore-urinary` (lib) due to 38 previous errors; 1 warning emitted
+crates/nexcore-fhir/src/base.rs:10:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/base.rs:30:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/base.rs:60:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/base.rs:84:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/base.rs:98:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/base.rs:109:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/base.rs:126:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/base.rs:159:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/base.rs:173:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/base.rs:195:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/base.rs:204:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/resources/adverse_event.rs:13:1: error: exported enums should not be exhaustive
+crates/nexcore-fhir/src/resources/adverse_event.rs:22:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/resources/adverse_event.rs:39:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/resources/adverse_event.rs:53:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/resources/bundle.rs:13:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/resources/bundle.rs:25:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/resources/condition.rs:10:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/resources/encounter.rs:10:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/resources/medication.rs:10:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/resources/medication.rs:24:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/resources/medication.rs:34:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/resources/medication_administration.rs:10:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/resources/medication_administration.rs:28:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/resources/observation.rs:10:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/resources/organization.rs:10:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/resources/patient.rs:12:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/resources/practitioner.rs:10:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/resources/practitioner.rs:41:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/adapter.rs:14:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/adapter.rs:35:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/adapter.rs:46:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/adapter.rs:56:1: error: exported enums should not be exhaustive
+crates/nexcore-fhir/src/adapter.rs:65:1: error: exported structs should not be exhaustive
+crates/nexcore-fhir/src/adapter.rs:72:1: error: exported structs should not be exhaustive
+error: could not compile `nexcore-fhir` (lib) due to 35 previous errors
+crates/nexcore-dna/src/asm.rs:28:1: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/asm.rs:38:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/asm.rs:53:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/asm.rs:79:63: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/asm.rs:103:24: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/asm.rs:113:13: error: indexing into a string may panic if the index is within a UTF-8 character
+crates/nexcore-dna/src/asm.rs:138:20: error: indexing may panic
+crates/nexcore-dna/src/asm.rs:161:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/asm.rs:168:23: error: indexing may panic
+crates/nexcore-dna/src/asm.rs:177:30: error: `map_err(|_|...` wildcard pattern discards the original error
+crates/nexcore-dna/src/asm.rs:192:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/asm.rs:231:14: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/asm.rs:243:51: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/asm.rs:243:26: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/asm.rs:251:20: error: indexing may panic
+crates/nexcore-dna/src/asm.rs:276:25: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/asm.rs:290:29: error: wildcard match will also match any future added variants: help: try: `Token::Mnemonic(_) | Token::Label(_) | Token::Section(_)`
+crates/nexcore-dna/src/asm.rs:283:32: error: indexing may panic
+crates/nexcore-dna/src/asm.rs:308:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/asm.rs:324:56: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/asm.rs:325:46: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/asm.rs:325:21: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/asm.rs:334:13: error: wildcard match will also match any future added variants: help: try: `AsmInstr::Simple(_) | AsmInstr::LitValue(_) | AsmInstr::LitLabel(_)`
+crates/nexcore-dna/src/asm.rs:335:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/asm.rs:342:54: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/asm.rs:342:29: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/asm.rs:358:17: error: wildcard match will also match any future added variants: help: try: `AsmInstr::Simple(_) | AsmInstr::LitValue(_)`
+crates/nexcore-dna/src/asm.rs:355:32: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/asm.rs:356:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/asm.rs:359:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/asm.rs:378:46: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/asm.rs:396:30: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/asm.rs:405:40: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/codon_table.rs:131:9: error: indexing may panic
+crates/nexcore-dna/src/codon_table.rs:131:20: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/codon_table.rs:138:26: error: indexing may panic
+crates/nexcore-dna/src/codon_table.rs:138:37: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/cortex.rs:48:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/cortex.rs:48:42: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/cortex.rs:56:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/cortex.rs:56:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/cortex.rs:56:28: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/cortex.rs:61:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/cortex.rs:61:16: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/cortex.rs:73:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/cortex.rs:88:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/cortex.rs:107:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/cortex.rs:122:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/cortex.rs:151:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/cortex.rs:164:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/cortex.rs:183:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/cortex.rs:196:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/cortex.rs:233:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/cortex.rs:248:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/cortex.rs:400:23: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:401:13: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:402:13: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:403:13: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:404:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/cortex.rs:404:13: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:411:16: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:413:17: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:415:25: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/cortex.rs:415:25: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:417:35: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:418:33: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:419:30: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:421:20: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:439:37: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:468:41: error: slicing may panic
+crates/nexcore-dna/src/cortex.rs:475:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/cortex.rs:499:27: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:499:47: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:503:27: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:586:18: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/cortex.rs:587:21: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:587:53: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:588:23: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:588:43: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:627:22: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/cortex.rs:628:46: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:628:61: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:629:17: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:630:17: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:631:17: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:632:17: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:633:17: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:634:17: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:641:46: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:642:46: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:643:46: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:653:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/cortex.rs:711:24: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:715:12: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:716:24: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:721:6: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:735:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/cortex.rs:737:31: error: slicing may panic
+crates/nexcore-dna/src/cortex.rs:739:35: error: slicing may panic
+crates/nexcore-dna/src/cortex.rs:768:35: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:780:45: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/cortex.rs:828:24: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:830:64: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/cortex.rs:836:24: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:842:32: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:843:33: error: indexing may panic
+crates/nexcore-dna/src/cortex.rs:848:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:27:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/data.rs:145:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:162:22: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:163:34: error: slicing may panic
+crates/nexcore-dna/src/data.rs:163:48: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:174:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:191:22: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:192:34: error: slicing may panic
+crates/nexcore-dna/src/data.rs:192:48: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:201:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:217:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/data.rs:285:12: error: indexing may panic
+crates/nexcore-dna/src/data.rs:301:30: error: slicing may panic
+crates/nexcore-dna/src/data.rs:318:30: error: slicing may panic
+crates/nexcore-dna/src/data.rs:337:22: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/data.rs:340:44: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:357:12: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:362:32: error: indexing may panic
+crates/nexcore-dna/src/data.rs:362:47: error: indexing may panic
+crates/nexcore-dna/src/data.rs:362:53: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:362:66: error: indexing may panic
+crates/nexcore-dna/src/data.rs:362:72: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:366:22: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/data.rs:366:41: error: slicing may panic
+crates/nexcore-dna/src/data.rs:366:47: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:366:59: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:368:27: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:369:12: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:372:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:376:27: error: slicing may panic
+crates/nexcore-dna/src/data.rs:376:46: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:377:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:409:13: error: wildcard match will also match any future added variants: help: try: `DnaType::Array | DnaType::Record | DnaType::Map | DnaType::Frame`
+crates/nexcore-dna/src/data.rs:394:48: error: `map_err(|_|...` wildcard pattern discards the original error
+crates/nexcore-dna/src/data.rs:398:47: error: `map_err(|_|...` wildcard pattern discards the original error
+crates/nexcore-dna/src/data.rs:402:49: error: `map_err(|_|...` wildcard pattern discards the original error
+crates/nexcore-dna/src/data.rs:406:48: error: `map_err(|_|...` wildcard pattern discards the original error
+crates/nexcore-dna/src/data.rs:426:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/data.rs:486:21: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/data.rs:513:32: error: indexing may panic
+crates/nexcore-dna/src/data.rs:513:42: error: indexing may panic
+crates/nexcore-dna/src/data.rs:513:52: error: indexing may panic
+crates/nexcore-dna/src/data.rs:515:21: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/data.rs:515:40: error: slicing may panic
+crates/nexcore-dna/src/data.rs:523:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:556:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/data.rs:624:21: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/data.rs:651:21: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/data.rs:651:40: error: slicing may panic
+crates/nexcore-dna/src/data.rs:659:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:663:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:699:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/data.rs:765:21: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/data.rs:788:21: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/data.rs:788:40: error: slicing may panic
+crates/nexcore-dna/src/data.rs:794:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:796:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:831:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/data.rs:917:25: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/data.rs:918:25: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/data.rs:937:46: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/data.rs:952:25: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/data.rs:952:44: error: slicing may panic
+crates/nexcore-dna/src/data.rs:953:25: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/data.rs:953:44: error: slicing may panic
+crates/nexcore-dna/src/data.rs:961:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:966:27: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/data.rs:966:46: error: slicing may panic
+crates/nexcore-dna/src/data.rs:966:60: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:967:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:968:42: error: slicing may panic
+crates/nexcore-dna/src/data.rs:968:56: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:971:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/data.rs:1009:18: error: slicing may panic
+crates/nexcore-dna/src/disasm.rs:21:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/disasm.rs:67:22: error: indexing may panic
+crates/nexcore-dna/src/disasm.rs:77:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/disasm.rs:85:25: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/disasm.rs:90:25: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/disasm.rs:97:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/disasm.rs:105:1: warning: this function has too many arguments (6/5)
+crates/nexcore-dna/src/disasm.rs:135:19: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/disasm.rs:140:15: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/disasm.rs:140:15: error: indexing may panic
+crates/nexcore-dna/src/disasm.rs:150:19: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/disasm.rs:154:21: error: indexing may panic
+crates/nexcore-dna/src/disasm.rs:158:20: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/error.rs:13:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/gene.rs:32:1: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/gene.rs:48:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/gene.rs:92:12: error: indexing may panic
+crates/nexcore-dna/src/gene.rs:110:24: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene.rs:111:12: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene.rs:114:9: error: indexing may panic
+crates/nexcore-dna/src/gene.rs:115:9: error: indexing may panic
+crates/nexcore-dna/src/gene.rs:115:15: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene.rs:116:9: error: indexing may panic
+crates/nexcore-dna/src/gene.rs:116:15: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene.rs:132:24: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene.rs:133:12: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene.rs:137:31: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene.rs:143:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene.rs:156:24: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene.rs:161:22: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene.rs:162:22: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene.rs:167:24: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene.rs:218:49: error: slicing may panic
+crates/nexcore-dna/src/gene.rs:218:69: error: slicing may panic
+crates/nexcore-dna/src/gene.rs:219:49: error: slicing may panic
+crates/nexcore-dna/src/gene.rs:219:69: error: slicing may panic
+crates/nexcore-dna/src/gene.rs:241:40: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene.rs:261:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/gene.rs:281:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/gene.rs:302:18: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/gene.rs:308:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene.rs:315:22: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene.rs:323:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene.rs:324:17: error: indexing may panic
+crates/nexcore-dna/src/gene.rs:324:29: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene.rs:333:32: error: slicing may panic
+crates/nexcore-dna/src/gene.rs:334:48: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene.rs:449:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/gene.rs:449:21: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/gene.rs:480:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/gene.rs:562:12: error: indexing may panic
+crates/nexcore-dna/src/glyph.rs:38:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/glyph.rs:73:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/glyph.rs:187:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/glyph.rs:204:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/glyph.rs:263:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/glyph.rs:328:14: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/glyph.rs:329:14: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/glyph.rs:332:24: error: indexing may panic
+crates/nexcore-dna/src/glyph.rs:332:40: error: indexing may panic
+crates/nexcore-dna/src/glyph.rs:347:9: error: wildcard match will also match any future added variants: help: try: `other @ Instruction::Halt | other @ Instruction::HaltErr | other @ Instruction::HaltYield | other @ Instruction::Entry | other @ Instruction::Nop | other @ Instruction::Dup | other @ Instruction::Swap | other @ Instruction::Pop | other @ Instruction::Add | other @ Instruction::Sub | other @ Instruction::Mul | other @ Instruction::Div | other @ Instruction::Eq | other @ Instruction::Lt | other @ Instruction::Gt | other @ Instruction::Neq | other @ Instruction::Jmp | other @ Instruction::JmpIf | other @ Instruction::JmpBack | other @ Instruction::Call | other @ Instruction::Ret | other @ Instruction::JmpIfZ | other @ Instruction::Mod | other @ Instruction::Abs | other @ Instruction::Neg | other @ Instruction::Inc | other @ Instruction::Dec | other @ Instruction::Max | other @ Instruction::BitAnd | other @ Instruction::BitOr | other @ Instruction::BitXor | other @ Instruction::BitNot | other @ Instruction::Rot | other @ Instruction::Over | other @ Instruction::Pick | other @ Instruction::Depth | other @ Instruction::Push0 | other @ Instruction::Push1 | other @ Instruction::PushNeg1 | other @ Instruction::Load | other @ Instruction::Store | other @ Instruction::Output | other @ Instruction::Min | other @ Instruction::Pow | other @ Instruction::Sqrt | other @ Instruction::Log2 | other @ Instruction::Sign | other @ Instruction::Clamp | other @ Instruction::Dup2 | other @ Instruction::Cmp | other @ Instruction::MemSize | other @ Instruction::MemClear | other @ Instruction::IfElse | other @ Instruction::Assert | other @ Instruction::Shl | other @ Instruction::Shr | other @ Instruction::And | other @ Instruction::Or | other @ Instruction::PushAcc | other @ Instruction::StoreAcc | other @ Instruction::Peek | other @ Instruction::IsEmpty | other @ Instruction::CntInc | other @ Instruction::CntRead`
+crates/nexcore-dna/src/glyph.rs:374:9: error: indexing may panic
+crates/nexcore-dna/src/isa.rs:25:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/isa.rs:538:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/isa.rs:667:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/isa.rs:669:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/isa.rs:679:25: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/isa.rs:689:33: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/isa.rs:695:29: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/isa.rs:719:41: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/isa.rs:722:38: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/isa.rs:748:53: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/isa.rs:752:23: error: indexing may panic
+crates/nexcore-dna/src/isa.rs:757:33: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/isa.rs:759:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/isa.rs:759:10: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/isa.rs:761:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/lang/ast.rs:16:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/lang/ast.rs:71:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/lang/ast.rs:102:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/lang/codegen.rs:41:1: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/lang/codegen.rs:62:13: error: wildcard match will also match any future added variants: help: try: `Stmt::ExprStmt(_) | Stmt::Assign { .. } | Stmt::FnDef { .. } | Stmt::Return(_)`
+crates/nexcore-dna/src/lang/codegen.rs:55:46: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/codegen.rs:60:18: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/codegen.rs:81:11: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/lang/codegen.rs:87:10: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/lang/codegen.rs:89:16: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/lang/codegen.rs:107:23: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/lang/codegen.rs:115:19: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/lang/codegen.rs:117:18: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/lang/codegen.rs:118:24: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/lang/codegen.rs:124:31: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/lang/codegen.rs:140:9: error: non-binding `let` on an expression with `#[must_use]` type
+crates/nexcore-dna/src/lang/codegen.rs:150:9: error: non-binding `let` on an expression with `#[must_use]` type
+crates/nexcore-dna/src/lang/codegen.rs:156:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/codegen.rs:170:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/codegen.rs:182:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/codegen.rs:194:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/codegen.rs:229:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/codegen.rs:356:9: warning: all if blocks contain the same code at the end
+crates/nexcore-dna/src/lang/codegen.rs:465:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/codegen.rs:468:25: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/lang/codegen.rs:470:41: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/codegen.rs:477:35: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/codegen.rs:498:33: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/lang/codegen.rs:532:24: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/codegen.rs:635:33: error: indexing may panic
+crates/nexcore-dna/src/lang/codegen.rs:640:33: error: indexing may panic
+crates/nexcore-dna/src/lang/codegen.rs:641:33: error: indexing may panic
+crates/nexcore-dna/src/lang/codegen.rs:646:33: error: indexing may panic
+crates/nexcore-dna/src/lang/codegen.rs:647:33: error: indexing may panic
+crates/nexcore-dna/src/lang/codegen.rs:652:33: error: indexing may panic
+crates/nexcore-dna/src/lang/codegen.rs:653:33: error: indexing may panic
+crates/nexcore-dna/src/lang/codegen.rs:658:33: error: indexing may panic
+crates/nexcore-dna/src/lang/codegen.rs:663:33: error: indexing may panic
+crates/nexcore-dna/src/lang/codegen.rs:668:33: error: indexing may panic
+crates/nexcore-dna/src/lang/codegen.rs:669:33: error: indexing may panic
+crates/nexcore-dna/src/lang/codegen.rs:670:33: error: indexing may panic
+crates/nexcore-dna/src/lang/codegen.rs:675:33: error: indexing may panic
+crates/nexcore-dna/src/lang/codegen.rs:724:9: error: non-binding `let` on an expression with `#[must_use]` type
+crates/nexcore-dna/src/lang/codegen.rs:725:9: error: non-binding `let` on an expression with `#[must_use]` type
+crates/nexcore-dna/src/lang/codegen.rs:726:9: error: non-binding `let` on an expression with `#[must_use]` type
+crates/nexcore-dna/src/lang/codegen.rs:731:13: error: non-binding `let` on an expression with `#[must_use]` type
+crates/nexcore-dna/src/lang/codegen.rs:732:13: error: non-binding `let` on an expression with `#[must_use]` type
+crates/nexcore-dna/src/lang/codegen.rs:733:13: error: non-binding `let` on an expression with `#[must_use]` type
+crates/nexcore-dna/src/lang/codegen.rs:737:9: error: non-binding `let` on an expression with `#[must_use]` type
+crates/nexcore-dna/src/lang/codegen.rs:741:13: error: non-binding `let` on an expression with `#[must_use]` type
+crates/nexcore-dna/src/lang/codegen.rs:779:13: error: wildcard match will also match any future added variants: help: try: `Stmt::ExprStmt(_) | Stmt::Let { .. } | Stmt::Assign { .. } | Stmt::If { .. } | Stmt::While { .. } | Stmt::Return(_) | Stmt::For { .. }`
+crates/nexcore-dna/src/lang/codegen.rs:809:13: error: wildcard match will also match any future added variants: help: try: `Stmt::ExprStmt(_) | Stmt::Let { .. } | Stmt::Assign { .. } | Stmt::If { .. } | Stmt::While { .. } | Stmt::Return(_) | Stmt::For { .. }`
+crates/nexcore-dna/src/lang/codegen.rs:826:5: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/lang/codegen.rs:859:13: error: wildcard match will also match any future added variants: help: try: `Stmt::ExprStmt(_) | Stmt::Let { .. } | Stmt::Assign { .. } | Stmt::If { .. } | Stmt::While { .. } | Stmt::Return(_) | Stmt::For { .. }`
+crates/nexcore-dna/src/lang/diagnostic.rs:32:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/lang/diagnostic.rs:95:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/lang/diagnostic.rs:152:28: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/diagnostic.rs:155:9: error: indexing may panic
+crates/nexcore-dna/src/lang/diagnostic.rs:157:24: warning: boolean to int conversion using if: help: replace with from: `usize::from(a_bytes[i - 1] != b_bytes[j - 1])`
+crates/nexcore-dna/src/lang/diagnostic.rs:157:27: error: indexing may panic
+crates/nexcore-dna/src/lang/diagnostic.rs:157:35: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/diagnostic.rs:157:45: error: indexing may panic
+crates/nexcore-dna/src/lang/diagnostic.rs:157:53: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/diagnostic.rs:162:23: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/diagnostic.rs:162:23: error: indexing may panic
+crates/nexcore-dna/src/lang/diagnostic.rs:163:23: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/diagnostic.rs:163:23: error: indexing may panic
+crates/nexcore-dna/src/lang/diagnostic.rs:164:23: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/diagnostic.rs:164:23: error: indexing may panic
+crates/nexcore-dna/src/lang/diagnostic.rs:165:13: error: indexing may panic
+crates/nexcore-dna/src/lang/diagnostic.rs:170:5: error: indexing may panic
+crates/nexcore-dna/src/lang/diagnostic.rs:217:24: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/diagnostic.rs:231:15: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/diagnostic.rs:233:32: error: slicing may panic
+crates/nexcore-dna/src/lang/diagnostic.rs:237:22: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/diagnostic.rs:262:12: error: indexing may panic
+crates/nexcore-dna/src/lang/diagnostic.rs:262:34: error: indexing may panic
+crates/nexcore-dna/src/lang/diagnostic.rs:264:23: error: indexing may panic
+crates/nexcore-dna/src/lang/diagnostic.rs:323:21: error: indexing into a string may panic if the index is within a UTF-8 character
+crates/nexcore-dna/src/lang/diagnostic.rs:323:25: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/diagnostic.rs:325:25: error: indexing into a string may panic if the index is within a UTF-8 character
+crates/nexcore-dna/src/lang/diagnostic.rs:378:17: error: wildcard match will also match any future added variants: help: try: `ErrorCode::InvalidCharacter | ErrorCode::InvalidLiteral | ErrorCode::UnexpectedToken | ErrorCode::ExpectedToken | ErrorCode::ExpectedIdentifier | ErrorCode::UnmatchedParen | ErrorCode::NestedFunction | ErrorCode::Unknown`
+crates/nexcore-dna/src/lang/diagnostic.rs:398:9: error: wildcard match will also match any future added variants: help: try: `DnaError::InvalidBase(_) | DnaError::IncompleteCodon(_) | DnaError::AlreadyRna | DnaError::NoStartCodon | DnaError::StackOverflow(..) | DnaError::StackUnderflow(_) | DnaError::DivisionByZero(_) | DnaError::ExecutionLimit(_) | DnaError::NoEntryPoint | DnaError::InvalidAddress(_) | DnaError::LengthMismatch(..) | DnaError::IndexOutOfBounds(..) | DnaError::UnknownMnemonic(_) | DnaError::UndefinedLabel(_) | DnaError::DuplicateLabel(_) | DnaError::InvalidLiteral(_) | DnaError::IoError(_) | DnaError::GeneNotFound(_) | DnaError::ParityError(_) | DnaError::TypeMismatch { .. } | DnaError::SchemaViolation(_) | DnaError::FieldNotFound(_) | DnaError::InvalidTlv(_) | DnaError::CollectionTypeMismatch`
+crates/nexcore-dna/src/lang/diagnostic.rs:450:52: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/lang/json.rs:39:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/lang/json.rs:59:13: error: wildcard match will also match any future added variants: help: try: `JsonValue::Null | JsonValue::Bool(_) | JsonValue::Int(_) | JsonValue::Str(_) | JsonValue::Array(_)`
+crates/nexcore-dna/src/lang/json.rs:169:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/json.rs:177:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/json.rs:190:54: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/lang/json.rs:190:66: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/lang/json.rs:194:53: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/lang/json.rs:211:62: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/lang/json.rs:235:53: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/lang/json.rs:244:74: error: `map_err(|_|...` wildcard pattern discards the original error
+crates/nexcore-dna/src/lang/json.rs:254:61: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/lang/json.rs:261:36: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/lang/json.rs:270:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/json.rs:274:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/json.rs:280:22: error: `map_err(|_|...` wildcard pattern discards the original error
+crates/nexcore-dna/src/lang/json.rs:279:45: error: slicing may panic
+crates/nexcore-dna/src/lang/json.rs:283:22: error: `map_err(|_|...` wildcard pattern discards the original error
+crates/nexcore-dna/src/lang/json.rs:288:19: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/json.rs:289:40: error: slicing may panic
+crates/nexcore-dna/src/lang/json.rs:308:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/json.rs:316:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/json.rs:319:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/json.rs:337:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/json.rs:350:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/json.rs:353:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/json.rs:694:21: error: wildcard match will also match any future added variants: help: try: `JsonValue::Null | JsonValue::Bool(_) | JsonValue::Int(_) | JsonValue::Array(_) | JsonValue::Object(_)`
+crates/nexcore-dna/src/lang/json.rs:814:33: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/json.rs:844:41: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/json.rs:845:20: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/json.rs:864:42: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/json.rs:865:20: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/lexer.rs:18:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/lang/lexer.rs:226:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/lexer.rs:228:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/lexer.rs:264:22: error: slicing may panic
+crates/nexcore-dna/src/lang/lexer.rs:266:22: error: `map_err(|_|...` wildcard pattern discards the original error
+crates/nexcore-dna/src/lang/lexer.rs:269:22: error: `map_err(|_|...` wildcard pattern discards the original error
+crates/nexcore-dna/src/lang/lexer.rs:283:22: error: slicing may panic
+crates/nexcore-dna/src/lang/lexer.rs:285:22: error: `map_err(|_|...` wildcard pattern discards the original error
+crates/nexcore-dna/src/lang/lexer.rs:469:55: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/lang/optimizer.rs:130:17: error: wildcard match will also match any future added variants: help: try: `Expr::Var(_) | Expr::Not(_) | Expr::BitNot(_) | Expr::BinOp { .. } | Expr::Call { .. }`
+crates/nexcore-dna/src/lang/optimizer.rs:142:17: error: wildcard match will also match any future added variants: help: try: `Expr::Var(_) | Expr::Neg(_) | Expr::BitNot(_) | Expr::BinOp { .. } | Expr::Call { .. }`
+crates/nexcore-dna/src/lang/optimizer.rs:139:43: warning: boolean to int conversion using if: help: replace with from: `i64::from(*n == 0)`
+crates/nexcore-dna/src/lang/optimizer.rs:154:17: error: wildcard match will also match any future added variants: help: try: `Expr::Var(_) | Expr::Neg(_) | Expr::Not(_) | Expr::BinOp { .. } | Expr::Call { .. }`
+crates/nexcore-dna/src/lang/optimizer.rs:219:37: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/optimizer.rs:226:37: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/optimizer.rs:229:27: warning: boolean to int conversion using if: help: replace with from: `i64::from(a == b)`
+crates/nexcore-dna/src/lang/optimizer.rs:230:28: warning: boolean to int conversion using if: help: replace with from: `i64::from(a != b)`
+crates/nexcore-dna/src/lang/optimizer.rs:231:27: warning: boolean to int conversion using if: help: replace with from: `i64::from(a < b)`
+crates/nexcore-dna/src/lang/optimizer.rs:232:27: warning: boolean to int conversion using if: help: replace with from: `i64::from(a > b)`
+crates/nexcore-dna/src/lang/optimizer.rs:233:27: warning: boolean to int conversion using if: help: replace with from: `i64::from(a <= b)`
+crates/nexcore-dna/src/lang/optimizer.rs:234:27: warning: boolean to int conversion using if: help: replace with from: `i64::from(a >= b)`
+crates/nexcore-dna/src/lang/optimizer.rs:238:43: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/lang/optimizer.rs:239:43: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/lang/optimizer.rs:240:28: warning: boolean to int conversion using if: help: replace with from: `i64::from(a != 0 && b != 0)`
+crates/nexcore-dna/src/lang/optimizer.rs:241:27: warning: boolean to int conversion using if: help: replace with from: `i64::from(a != 0 || b != 0)`
+crates/nexcore-dna/src/lang/optimizer.rs:319:9: error: wildcard match will also match any future added variants: help: try: `BinOp::Mod | BinOp::Eq | BinOp::Neq | BinOp::Lt | BinOp::Gt | BinOp::Le | BinOp::Ge | BinOp::And | BinOp::Or`
+crates/nexcore-dna/src/lang/optimizer.rs:347:52: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/lang/parser.rs:57:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/parser.rs:128:13: error: wildcard match will also match any future added variants: help: try: `Token::Int(_) | Token::Plus | Token::Minus | Token::Star | Token::Slash | Token::Percent | Token::EqEq | Token::BangEq | Token::Lt | Token::Gt | Token::LtEq | Token::GtEq | Token::Assign | Token::PlusEq | Token::MinusEq | Token::StarEq | Token::SlashEq | Token::PercentEq | Token::LParen | Token::RParen | Token::Comma | Token::Else | Token::End | Token::Do | Token::And | Token::Or | Token::Not | Token::To | Token::In | Token::True | Token::False | Token::DotDot | Token::Ampersand | Token::Pipe | Token::Caret | Token::Tilde | Token::LtLt | Token::GtGt | Token::Elif | Token::Newline | Token::Eof`
+crates/nexcore-dna/src/lang/parser.rs:139:33: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/parser.rs:160:13: error: wildcard match will also match any future added variants: help: try: `Token::Int(_) | Token::Ident(_) | Token::Plus | Token::Minus | Token::Star | Token::Slash | Token::Percent | Token::EqEq | Token::BangEq | Token::Lt | Token::Gt | Token::LtEq | Token::GtEq | Token::Assign | Token::LParen | Token::RParen | Token::Comma | Token::Let | Token::If | Token::Else | Token::While | Token::Fn | Token::End | Token::Do | Token::And | Token::Or | Token::Not | Token::Return | Token::For | Token::To | Token::In | Token::True | Token::False | Token::DotDot | Token::Ampersand | Token::Pipe | Token::Caret | Token::Tilde | Token::LtLt | Token::GtGt | Token::Elif | Token::Newline | Token::Eof`
+crates/nexcore-dna/src/lang/parser.rs:171:13: error: wildcard match will also match any future added variants: help: try: `other @ Token::Int(_) | other @ Token::Plus | other @ Token::Minus | other @ Token::Star | other @ Token::Slash | other @ Token::Percent | other @ Token::EqEq | other @ Token::BangEq | other @ Token::Lt | other @ Token::Gt | other @ Token::LtEq | other @ Token::GtEq | other @ Token::Assign | other @ Token::PlusEq | other @ Token::MinusEq | other @ Token::StarEq | other @ Token::SlashEq | other @ Token::PercentEq | other @ Token::LParen | other @ Token::RParen | other @ Token::Comma | other @ Token::Let | other @ Token::If | other @ Token::Else | other @ Token::While | other @ Token::Fn | other @ Token::End | other @ Token::Do | other @ Token::And | other @ Token::Or | other @ Token::Not | other @ Token::Return | other @ Token::For | other @ Token::To | other @ Token::In | other @ Token::True | other @ Token::False | other @ Token::DotDot | other @ Token::Ampersand | other @ Token::Pipe | other @ Token::Caret | other @ Token::Tilde | other @ Token::LtLt | other @ Token::GtGt | other @ Token::Elif | other @ Token::Newline | other @ Token::Eof`
+crates/nexcore-dna/src/lang/parser.rs:190:13: error: wildcard match will also match any future added variants: help: try: `other @ Token::Int(_) | other @ Token::Plus | other @ Token::Minus | other @ Token::Star | other @ Token::Slash | other @ Token::Percent | other @ Token::EqEq | other @ Token::BangEq | other @ Token::Lt | other @ Token::Gt | other @ Token::LtEq | other @ Token::GtEq | other @ Token::Assign | other @ Token::PlusEq | other @ Token::MinusEq | other @ Token::StarEq | other @ Token::SlashEq | other @ Token::PercentEq | other @ Token::LParen | other @ Token::RParen | other @ Token::Comma | other @ Token::Let | other @ Token::If | other @ Token::Else | other @ Token::While | other @ Token::Fn | other @ Token::End | other @ Token::Do | other @ Token::And | other @ Token::Or | other @ Token::Not | other @ Token::Return | other @ Token::For | other @ Token::To | other @ Token::In | other @ Token::True | other @ Token::False | other @ Token::DotDot | other @ Token::Ampersand | other @ Token::Pipe | other @ Token::Caret | other @ Token::Tilde | other @ Token::LtLt | other @ Token::GtGt | other @ Token::Elif | other @ Token::Newline | other @ Token::Eof`
+crates/nexcore-dna/src/lang/parser.rs:303:13: error: wildcard match will also match any future added variants: help: try: `other @ Token::Int(_) | other @ Token::Plus | other @ Token::Minus | other @ Token::Star | other @ Token::Slash | other @ Token::Percent | other @ Token::EqEq | other @ Token::BangEq | other @ Token::Lt | other @ Token::Gt | other @ Token::LtEq | other @ Token::GtEq | other @ Token::Assign | other @ Token::PlusEq | other @ Token::MinusEq | other @ Token::StarEq | other @ Token::SlashEq | other @ Token::PercentEq | other @ Token::LParen | other @ Token::RParen | other @ Token::Comma | other @ Token::Let | other @ Token::If | other @ Token::Else | other @ Token::While | other @ Token::Fn | other @ Token::End | other @ Token::Do | other @ Token::And | other @ Token::Or | other @ Token::Not | other @ Token::Return | other @ Token::For | other @ Token::To | other @ Token::In | other @ Token::True | other @ Token::False | other @ Token::DotDot | other @ Token::Ampersand | other @ Token::Pipe | other @ Token::Caret | other @ Token::Tilde | other @ Token::LtLt | other @ Token::GtGt | other @ Token::Elif | other @ Token::Newline | other @ Token::Eof`
+crates/nexcore-dna/src/lang/parser.rs:320:21: error: wildcard match will also match any future added variants: help: try: `other @ Token::Int(_) | other @ Token::Plus | other @ Token::Minus | other @ Token::Star | other @ Token::Slash | other @ Token::Percent | other @ Token::EqEq | other @ Token::BangEq | other @ Token::Lt | other @ Token::Gt | other @ Token::LtEq | other @ Token::GtEq | other @ Token::Assign | other @ Token::PlusEq | other @ Token::MinusEq | other @ Token::StarEq | other @ Token::SlashEq | other @ Token::PercentEq | other @ Token::LParen | other @ Token::RParen | other @ Token::Comma | other @ Token::Let | other @ Token::If | other @ Token::Else | other @ Token::While | other @ Token::Fn | other @ Token::End | other @ Token::Do | other @ Token::And | other @ Token::Or | other @ Token::Not | other @ Token::Return | other @ Token::For | other @ Token::To | other @ Token::In | other @ Token::True | other @ Token::False | other @ Token::DotDot | other @ Token::Ampersand | other @ Token::Pipe | other @ Token::Caret | other @ Token::Tilde | other @ Token::LtLt | other @ Token::GtGt | other @ Token::Elif | other @ Token::Newline | other @ Token::Eof`
+crates/nexcore-dna/src/lang/parser.rs:361:13: error: wildcard match will also match any future added variants: help: try: `other @ Token::Int(_) | other @ Token::Plus | other @ Token::Minus | other @ Token::Star | other @ Token::Slash | other @ Token::Percent | other @ Token::EqEq | other @ Token::BangEq | other @ Token::Lt | other @ Token::Gt | other @ Token::LtEq | other @ Token::GtEq | other @ Token::Assign | other @ Token::PlusEq | other @ Token::MinusEq | other @ Token::StarEq | other @ Token::SlashEq | other @ Token::PercentEq | other @ Token::LParen | other @ Token::RParen | other @ Token::Comma | other @ Token::Let | other @ Token::If | other @ Token::Else | other @ Token::While | other @ Token::Fn | other @ Token::End | other @ Token::Do | other @ Token::And | other @ Token::Or | other @ Token::Not | other @ Token::Return | other @ Token::For | other @ Token::To | other @ Token::In | other @ Token::True | other @ Token::False | other @ Token::DotDot | other @ Token::Ampersand | other @ Token::Pipe | other @ Token::Caret | other @ Token::Tilde | other @ Token::LtLt | other @ Token::GtGt | other @ Token::Elif | other @ Token::Newline | other @ Token::Eof`
+crates/nexcore-dna/src/lang/parser.rs:387:13: error: wildcard match will also match any future added variants: help: try: `other @ Token::Int(_) | other @ Token::Ident(_) | other @ Token::Plus | other @ Token::Minus | other @ Token::Star | other @ Token::Slash | other @ Token::Percent | other @ Token::EqEq | other @ Token::BangEq | other @ Token::Lt | other @ Token::Gt | other @ Token::LtEq | other @ Token::GtEq | other @ Token::PlusEq | other @ Token::MinusEq | other @ Token::StarEq | other @ Token::SlashEq | other @ Token::PercentEq | other @ Token::LParen | other @ Token::RParen | other @ Token::Comma | other @ Token::Let | other @ Token::If | other @ Token::Else | other @ Token::While | other @ Token::Fn | other @ Token::End | other @ Token::Do | other @ Token::And | other @ Token::Or | other @ Token::Not | other @ Token::Return | other @ Token::For | other @ Token::To | other @ Token::True | other @ Token::False | other @ Token::DotDot | other @ Token::Ampersand | other @ Token::Pipe | other @ Token::Caret | other @ Token::Tilde | other @ Token::LtLt | other @ Token::GtGt | other @ Token::Elif | other @ Token::Newline | other @ Token::Eof`
+crates/nexcore-dna/src/lang/parser.rs:450:17: error: wildcard match will also match any future added variants: help: try: `Token::Int(_) | Token::Ident(_) | Token::Assign | Token::PlusEq | Token::MinusEq | Token::StarEq | Token::SlashEq | Token::PercentEq | Token::LParen | Token::RParen | Token::Comma | Token::Let | Token::If | Token::Else | Token::While | Token::Fn | Token::End | Token::Do | Token::Not | Token::Return | Token::For | Token::To | Token::In | Token::True | Token::False | Token::DotDot | Token::Tilde | Token::Elif | Token::Newline | Token::Eof`
+crates/nexcore-dna/src/lang/parser.rs:548:13: error: wildcard match will also match any future added variants: help: try: `other @ Token::Plus | other @ Token::Star | other @ Token::Slash | other @ Token::Percent | other @ Token::EqEq | other @ Token::BangEq | other @ Token::Lt | other @ Token::Gt | other @ Token::LtEq | other @ Token::GtEq | other @ Token::Assign | other @ Token::PlusEq | other @ Token::MinusEq | other @ Token::StarEq | other @ Token::SlashEq | other @ Token::PercentEq | other @ Token::RParen | other @ Token::Comma | other @ Token::Let | other @ Token::If | other @ Token::Else | other @ Token::While | other @ Token::Fn | other @ Token::End | other @ Token::Do | other @ Token::And | other @ Token::Or | other @ Token::Return | other @ Token::For | other @ Token::To | other @ Token::In | other @ Token::DotDot | other @ Token::Ampersand | other @ Token::Pipe | other @ Token::Caret | other @ Token::LtLt | other @ Token::GtGt | other @ Token::Elif | other @ Token::Newline | other @ Token::Eof`
+crates/nexcore-dna/src/lang/parser.rs:520:21: error: wildcard match will also match any future added variants: help: try: `other @ Expr::Var(_) | other @ Expr::Neg(_) | other @ Expr::Not(_) | other @ Expr::BitNot(_) | other @ Expr::BinOp { .. } | other @ Expr::Call { .. }`
+crates/nexcore-dna/src/lang/parser.rs:533:21: error: wildcard match will also match any future added variants: help: try: `other @ Expr::Var(_) | other @ Expr::Neg(_) | other @ Expr::Not(_) | other @ Expr::BitNot(_) | other @ Expr::BinOp { .. } | other @ Expr::Call { .. }`
+crates/nexcore-dna/src/lang/repl.rs:26:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/lang/repl.rs:99:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/repl.rs:140:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/repl.rs:185:56: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/repl.rs:216:23: error: indexing into a string may panic if the index is within a UTF-8 character
+crates/nexcore-dna/src/lang/repl.rs:223:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/repl.rs:224:22: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lang/templates.rs:163:17: error: indexing may panic
+crates/nexcore-dna/src/lang/templates.rs:164:15: error: indexing may panic
+crates/nexcore-dna/src/lang/templates.rs:175:13: error: indexing may panic
+crates/nexcore-dna/src/lang/templates.rs:188:13: error: indexing may panic
+crates/nexcore-dna/src/lang/templates.rs:210:13: error: indexing may panic
+crates/nexcore-dna/src/lang/templates.rs:211:13: error: indexing may panic
+crates/nexcore-dna/src/lang/templates.rs:226:13: error: indexing may panic
+crates/nexcore-dna/src/lang/templates.rs:252:16: error: indexing may panic
+crates/nexcore-dna/src/lang/templates.rs:253:15: error: indexing may panic
+crates/nexcore-dna/src/lang/templates.rs:273:13: error: indexing may panic
+crates/nexcore-dna/src/lang/templates.rs:286:13: error: indexing may panic
+crates/nexcore-dna/src/lang/templates.rs:287:13: error: indexing may panic
+crates/nexcore-dna/src/lang/templates.rs:300:13: error: indexing may panic
+crates/nexcore-dna/src/lang/templates.rs:301:13: error: indexing may panic
+crates/nexcore-dna/src/lang/templates.rs:314:13: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:27:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/lexicon.rs:46:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/lexicon.rs:79:15: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/lexicon.rs:84:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lexicon.rs:84:9: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:84:14: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/lexicon.rs:90:21: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/lexicon.rs:104:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lexicon.rs:105:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lexicon.rs:106:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lexicon.rs:107:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lexicon.rs:154:33: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lexicon.rs:157:9: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:159:24: warning: boolean to int conversion using if: help: replace with from: `usize::from(a_bytes[i - 1] != b_bytes[j - 1])`
+crates/nexcore-dna/src/lexicon.rs:159:27: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:159:35: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lexicon.rs:159:45: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:159:53: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lexicon.rs:164:23: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lexicon.rs:164:24: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:165:22: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lexicon.rs:165:22: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:166:22: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lexicon.rs:166:22: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:164:13: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:171:5: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:183:16: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/lexicon.rs:184:18: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/lexicon.rs:204:33: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lexicon.rs:205:33: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lexicon.rs:209:16: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:209:24: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lexicon.rs:209:34: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:209:42: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lexicon.rs:210:27: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lexicon.rs:210:27: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:210:17: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:212:27: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:212:39: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:212:44: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lexicon.rs:212:17: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:220:5: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:320:13: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:326:22: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/lexicon.rs:327:38: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:327:48: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:328:17: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:329:17: error: indexing may panic
+crates/nexcore-dna/src/lexicon.rs:409:71: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/nexcore_encoding.rs:75:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/nexcore_encoding.rs:185:23: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/ops.rs:53:23: error: indexing may panic
+crates/nexcore-dna/src/ops.rs:53:48: error: indexing may panic
+crates/nexcore-dna/src/ops.rs:53:73: error: indexing may panic
+crates/nexcore-dna/src/ops.rs:59:11: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/ops.rs:61:13: error: indexing may panic
+crates/nexcore-dna/src/ops.rs:62:13: error: indexing may panic
+crates/nexcore-dna/src/ops.rs:62:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/ops.rs:63:13: error: indexing may panic
+crates/nexcore-dna/src/ops.rs:63:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/ops.rs:72:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/ops.rs:85:5: error: indexing may panic
+crates/nexcore-dna/src/ops.rs:126:5: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/ops.rs:126:23: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/program.rs:24:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/pv_theory.rs:44:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/pv_theory.rs:91:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/pv_theory.rs:152:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/pv_theory.rs:227:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/pv_theory.rs:244:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/pv_theory.rs:322:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/pv_theory.rs:391:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/pv_theory.rs:410:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/pv_theory.rs:435:65: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/statemind.rs:31:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/statemind.rs:45:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/statemind.rs:53:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/statemind.rs:68:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/statemind.rs:104:13: error: indexing may panic
+crates/nexcore-dna/src/statemind.rs:104:18: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/statemind.rs:105:13: error: indexing may panic
+crates/nexcore-dna/src/statemind.rs:105:18: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/statemind.rs:106:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/statemind.rs:109:5: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/statemind.rs:109:21: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/statemind.rs:120:5: error: indexing may panic
+crates/nexcore-dna/src/statemind.rs:237:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/statemind.rs:313:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/statemind.rs:360:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/statemind.rs:467:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/storage.rs:17:15: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/storage.rs:20:20: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/storage.rs:47:22: error: slicing may panic
+crates/nexcore-dna/src/storage.rs:48:22: error: slicing may panic
+crates/nexcore-dna/src/storage.rs:49:22: error: slicing may panic
+crates/nexcore-dna/src/storage.rs:50:22: error: slicing may panic
+crates/nexcore-dna/src/storage.rs:52:15: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/storage.rs:58:22: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/storage.rs:59:12: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/storage.rs:62:34: error: slicing may panic
+crates/nexcore-dna/src/storage.rs:62:55: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/storage.rs:76:38: error: `map_err(|_|...` wildcard pattern discards the original error
+crates/nexcore-dna/src/storage.rs:84:29: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/storage.rs:95:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/string_theory.rs:40:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/string_theory.rs:75:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/string_theory.rs:141:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/string_theory.rs:168:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/string_theory.rs:186:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/string_theory.rs:190:26: error: slicing may panic
+crates/nexcore-dna/src/string_theory.rs:192:14: error: slicing may panic
+crates/nexcore-dna/src/string_theory.rs:195:5: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/string_theory.rs:195:22: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/string_theory.rs:217:22: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/string_theory.rs:219:49: error: indexing may panic
+crates/nexcore-dna/src/string_theory.rs:220:24: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/string_theory.rs:221:20: error: indexing may panic
+crates/nexcore-dna/src/string_theory.rs:221:36: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/string_theory.rs:223:20: error: indexing may panic
+crates/nexcore-dna/src/string_theory.rs:223:36: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/string_theory.rs:223:53: error: indexing may panic
+crates/nexcore-dna/src/string_theory.rs:223:69: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/string_theory.rs:227:25: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/string_theory.rs:227:41: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/string_theory.rs:297:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/string_theory.rs:352:21: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/string_theory.rs:353:23: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/string_theory.rs:353:55: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/string_theory.rs:399:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/string_theory.rs:422:24: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/string_theory.rs:426:24: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:40:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/tile.rs:74:13: error: wildcard match will also match any future added variants: help: try: `other @ Instruction::Halt | other @ Instruction::HaltErr | other @ Instruction::HaltYield | other @ Instruction::Entry | other @ Instruction::Nop | other @ Instruction::Dup | other @ Instruction::Swap | other @ Instruction::Pop | other @ Instruction::Add | other @ Instruction::Sub | other @ Instruction::Mul | other @ Instruction::Div | other @ Instruction::Eq | other @ Instruction::Lt | other @ Instruction::Gt | other @ Instruction::Neq | other @ Instruction::Jmp | other @ Instruction::JmpIf | other @ Instruction::JmpBack | other @ Instruction::Call | other @ Instruction::Ret | other @ Instruction::JmpIfZ | other @ Instruction::Mod | other @ Instruction::Abs | other @ Instruction::Neg | other @ Instruction::Inc | other @ Instruction::Dec | other @ Instruction::Max | other @ Instruction::BitAnd | other @ Instruction::BitOr | other @ Instruction::BitXor | other @ Instruction::BitNot | other @ Instruction::Rot | other @ Instruction::Over | other @ Instruction::Pick | other @ Instruction::Depth | other @ Instruction::Push0 | other @ Instruction::Push1 | other @ Instruction::PushNeg1 | other @ Instruction::Load | other @ Instruction::Store | other @ Instruction::Output | other @ Instruction::Min | other @ Instruction::Pow | other @ Instruction::Sqrt | other @ Instruction::Log2 | other @ Instruction::Sign | other @ Instruction::Clamp | other @ Instruction::Dup2 | other @ Instruction::Cmp | other @ Instruction::MemSize | other @ Instruction::MemClear | other @ Instruction::IfElse | other @ Instruction::Assert | other @ Instruction::Shl | other @ Instruction::Shr | other @ Instruction::And | other @ Instruction::Or | other @ Instruction::PushAcc | other @ Instruction::StoreAcc | other @ Instruction::Peek | other @ Instruction::IsEmpty | other @ Instruction::CntInc | other @ Instruction::CntRead`
+crates/nexcore-dna/src/tile.rs:66:25: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:108:19: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/tile.rs:133:18: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:165:28: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/tile.rs:166:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:186:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/tile.rs:209:13: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:222:38: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:239:13: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:249:20: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:250:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/tile.rs:267:27: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:269:31: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:271:25: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:276:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:284:13: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:296:26: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:302:13: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:327:27: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:327:39: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:327:53: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:330:26: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:344:48: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:347:45: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:361:27: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:362:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/tile.rs:363:17: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:364:17: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:364:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/tile.rs:365:17: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:365:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/tile.rs:366:17: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:366:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/tile.rs:378:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/tile.rs:380:24: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:381:24: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:381:28: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/tile.rs:382:24: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:382:28: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/tile.rs:383:24: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:383:28: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/tile.rs:379:17: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:397:20: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:398:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/tile.rs:398:38: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:399:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/tile.rs:406:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:406:28: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:514:27: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:518:31: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:519:46: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:521:21: warning: `if` chain can be rewritten with `match`: help: consider rewriting the `if` chain with `match`: `match row.cmp(&6) {...}`
+crates/nexcore-dna/src/tile.rs:579:23: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:580:23: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:582:38: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:583:41: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:587:17: error: wildcard match will also match any future added variants: help: try: `crate::isa::Instruction::Halt | crate::isa::Instruction::HaltErr | crate::isa::Instruction::HaltYield | crate::isa::Instruction::Entry | crate::isa::Instruction::Nop | crate::isa::Instruction::Dup | crate::isa::Instruction::Swap | crate::isa::Instruction::Pop | crate::isa::Instruction::Add | crate::isa::Instruction::Sub | crate::isa::Instruction::Mul | crate::isa::Instruction::Div | crate::isa::Instruction::Eq | crate::isa::Instruction::Lt | crate::isa::Instruction::Gt | crate::isa::Instruction::Neq | crate::isa::Instruction::Jmp | crate::isa::Instruction::JmpIf | crate::isa::Instruction::JmpBack | crate::isa::Instruction::Call | crate::isa::Instruction::Ret | crate::isa::Instruction::JmpIfZ | crate::isa::Instruction::Mod | crate::isa::Instruction::Abs | crate::isa::Instruction::Neg | crate::isa::Instruction::Inc | crate::isa::Instruction::Dec | crate::isa::Instruction::Max | crate::isa::Instruction::BitAnd | crate::isa::Instruction::BitOr | crate::isa::Instruction::BitXor | crate::isa::Instruction::BitNot | crate::isa::Instruction::Rot | crate::isa::Instruction::Over | crate::isa::Instruction::Pick | crate::isa::Instruction::Depth | crate::isa::Instruction::Push0 | crate::isa::Instruction::Push1 | crate::isa::Instruction::PushNeg1 | crate::isa::Instruction::Load | crate::isa::Instruction::Store | crate::isa::Instruction::Output | crate::isa::Instruction::Min | crate::isa::Instruction::Pow | crate::isa::Instruction::Sqrt | crate::isa::Instruction::Log2 | crate::isa::Instruction::Sign | crate::isa::Instruction::Clamp | crate::isa::Instruction::Dup2 | crate::isa::Instruction::Cmp | crate::isa::Instruction::MemSize | crate::isa::Instruction::MemClear | crate::isa::Instruction::IfElse | crate::isa::Instruction::Assert | crate::isa::Instruction::Shl | crate::isa::Instruction::Shr | crate::isa::Instruction::And | crate::isa::Instruction::Or | crate::isa::Instruction::PushAcc | crate::isa::Instruction::StoreAcc | crate::isa::Instruction::Peek | crate::isa::Instruction::IsEmpty | crate::isa::Instruction::CntInc | crate::isa::Instruction::CntRead`
+crates/nexcore-dna/src/tile.rs:630:26: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:642:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:642:32: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:667:27: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:669:31: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:671:25: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/tile.rs:671:25: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:672:25: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/tile.rs:684:27: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:684:27: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/tile.rs:689:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:689:32: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/tile.rs:691:25: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:696:21: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:699:69: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:710:45: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:714:52: error: indexing may panic
+crates/nexcore-dna/src/tile.rs:751:38: error: indexing into a string may panic if the index is within a UTF-8 character
+crates/nexcore-dna/src/transcode.rs:39:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/transcode.rs:83:17: error: wildcard match will also match any future added variants: help: try: `other @ Instruction::Halt | other @ Instruction::HaltErr | other @ Instruction::HaltYield | other @ Instruction::Entry | other @ Instruction::Nop | other @ Instruction::Dup | other @ Instruction::Swap | other @ Instruction::Pop | other @ Instruction::Add | other @ Instruction::Sub | other @ Instruction::Mul | other @ Instruction::Div | other @ Instruction::Eq | other @ Instruction::Lt | other @ Instruction::Gt | other @ Instruction::Neq | other @ Instruction::Jmp | other @ Instruction::JmpIf | other @ Instruction::JmpBack | other @ Instruction::Call | other @ Instruction::Ret | other @ Instruction::JmpIfZ | other @ Instruction::Mod | other @ Instruction::Abs | other @ Instruction::Neg | other @ Instruction::Inc | other @ Instruction::Dec | other @ Instruction::Max | other @ Instruction::BitAnd | other @ Instruction::BitOr | other @ Instruction::BitXor | other @ Instruction::BitNot | other @ Instruction::Rot | other @ Instruction::Over | other @ Instruction::Pick | other @ Instruction::Depth | other @ Instruction::Push0 | other @ Instruction::Push1 | other @ Instruction::PushNeg1 | other @ Instruction::Load | other @ Instruction::Store | other @ Instruction::Output | other @ Instruction::Min | other @ Instruction::Pow | other @ Instruction::Sqrt | other @ Instruction::Log2 | other @ Instruction::Sign | other @ Instruction::Clamp | other @ Instruction::Dup2 | other @ Instruction::Cmp | other @ Instruction::MemSize | other @ Instruction::MemClear | other @ Instruction::IfElse | other @ Instruction::Assert | other @ Instruction::Shl | other @ Instruction::Shr | other @ Instruction::And | other @ Instruction::Or | other @ Instruction::PushAcc | other @ Instruction::StoreAcc | other @ Instruction::Peek | other @ Instruction::IsEmpty | other @ Instruction::CntInc | other @ Instruction::CntRead`
+crates/nexcore-dna/src/transcode.rs:70:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/transcode.rs:85:35: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/transcode.rs:87:29: error: indexing may panic
+crates/nexcore-dna/src/transcode.rs:94:31: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/transcode.rs:98:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/transcode.rs:98:32: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/transcode.rs:121:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/transcode.rs:132:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/transcode.rs:211:40: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/transcode.rs:222:13: error: wildcard match will also match any future added variants: help: try: `other @ Instruction::Halt | other @ Instruction::HaltErr | other @ Instruction::HaltYield | other @ Instruction::Entry | other @ Instruction::Nop | other @ Instruction::Dup | other @ Instruction::Swap | other @ Instruction::Pop | other @ Instruction::Add | other @ Instruction::Sub | other @ Instruction::Mul | other @ Instruction::Div | other @ Instruction::Eq | other @ Instruction::Lt | other @ Instruction::Gt | other @ Instruction::Neq | other @ Instruction::Jmp | other @ Instruction::JmpIf | other @ Instruction::JmpBack | other @ Instruction::Call | other @ Instruction::Ret | other @ Instruction::JmpIfZ | other @ Instruction::Mod | other @ Instruction::Abs | other @ Instruction::Neg | other @ Instruction::Inc | other @ Instruction::Dec | other @ Instruction::Max | other @ Instruction::BitAnd | other @ Instruction::BitOr | other @ Instruction::BitXor | other @ Instruction::BitNot | other @ Instruction::Rot | other @ Instruction::Over | other @ Instruction::Pick | other @ Instruction::Depth | other @ Instruction::Push0 | other @ Instruction::Push1 | other @ Instruction::PushNeg1 | other @ Instruction::Load | other @ Instruction::Store | other @ Instruction::Output | other @ Instruction::Min | other @ Instruction::Pow | other @ Instruction::Sqrt | other @ Instruction::Log2 | other @ Instruction::Sign | other @ Instruction::Clamp | other @ Instruction::Dup2 | other @ Instruction::Cmp | other @ Instruction::MemSize | other @ Instruction::MemClear | other @ Instruction::IfElse | other @ Instruction::Assert | other @ Instruction::Shl | other @ Instruction::Shr | other @ Instruction::And | other @ Instruction::Or | other @ Instruction::PushAcc | other @ Instruction::StoreAcc | other @ Instruction::Peek | other @ Instruction::IsEmpty | other @ Instruction::CntInc | other @ Instruction::CntRead`
+crates/nexcore-dna/src/transcode.rs:271:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/types.rs:19:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/types.rs:45:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/types.rs:110:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/types.rs:116:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/types.rs:159:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/types.rs:297:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/types.rs:362:32: error: indexing may panic
+crates/nexcore-dna/src/types.rs:362:42: error: indexing may panic
+crates/nexcore-dna/src/types.rs:362:52: error: indexing may panic
+crates/nexcore-dna/src/types.rs:393:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/vm.rs:17:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/vm.rs:47:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/vm.rs:60:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/vm.rs:150:24: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/vm.rs:153:24: error: indexing may panic
+crates/nexcore-dna/src/vm.rs:153:37: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/vm.rs:155:25: error: indexing may panic
+crates/nexcore-dna/src/vm.rs:155:38: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/vm.rs:176:23: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/vm.rs:210:25: error: indexing may panic
+crates/nexcore-dna/src/vm.rs:211:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/vm.rs:215:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/vm.rs:278:27: error: indexing may panic
+crates/nexcore-dna/src/vm.rs:278:38: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/vm.rs:283:25: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/vm.rs:287:27: error: indexing may panic
+crates/nexcore-dna/src/vm.rs:287:38: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/vm.rs:292:29: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/vm.rs:322:27: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/vm.rs:331:27: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/vm.rs:352:28: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/vm.rs:356:27: error: indexing may panic
+crates/nexcore-dna/src/vm.rs:360:28: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/vm.rs:365:17: error: indexing may panic
+crates/nexcore-dna/src/vm.rs:440:36: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/vm.rs:456:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/vm.rs:456:26: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/vm.rs:481:27: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/vm.rs:493:28: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/vm.rs:500:28: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/vm.rs:512:28: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/vm.rs:524:30: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/vm.rs:529:28: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/vm.rs:533:38: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/vm.rs:553:27: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/vm.rs:598:25: error: indexing may panic
+crates/nexcore-dna/src/vm.rs:598:36: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/vm.rs:599:25: error: indexing may panic
+crates/nexcore-dna/src/vm.rs:599:36: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/vm.rs:613:29: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/vm.rs:620:29: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/vm.rs:652:27: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/vm.rs:665:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/vm.rs:669:19: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/vm.rs:669:19: error: indexing may panic
+crates/nexcore-dna/src/vm.rs:679:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/vm.rs:683:25: error: indexing may panic
+crates/nexcore-dna/src/vm.rs:700:9: error: indexing may panic
+crates/nexcore-dna/src/vm.rs:709:12: error: indexing may panic
+crates/nexcore-dna/src/vm.rs:753:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/vm.rs:756:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/voxel.rs:41:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/voxel.rs:60:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/voxel.rs:78:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/voxel.rs:93:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/voxel.rs:106:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/voxel.rs:126:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/voxel.rs:127:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/voxel.rs:128:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/voxel.rs:390:12: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/voxel.rs:391:12: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/voxel.rs:392:12: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/voxel.rs:430:23: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/voxel.rs:432:17: error: indexing may panic
+crates/nexcore-dna/src/voxel.rs:441:19: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/voxel.rs:443:13: error: indexing may panic
+crates/nexcore-dna/src/voxel.rs:472:17: error: indexing may panic
+crates/nexcore-dna/src/voxel.rs:472:23: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/voxel.rs:472:35: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/voxel.rs:493:17: error: indexing may panic
+crates/nexcore-dna/src/voxel.rs:493:23: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/voxel.rs:493:35: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/voxel.rs:514:17: error: indexing may panic
+crates/nexcore-dna/src/voxel.rs:514:23: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/voxel.rs:514:35: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/voxel.rs:526:43: error: indexing may panic
+crates/nexcore-dna/src/voxel.rs:526:63: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/voxel.rs:537:37: error: indexing may panic
+crates/nexcore-dna/src/voxel.rs:537:57: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/voxel.rs:537:13: error: indexing may panic
+crates/nexcore-dna/src/voxel.rs:537:18: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/voxel.rs:548:37: error: indexing may panic
+crates/nexcore-dna/src/voxel.rs:548:57: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/voxel.rs:548:13: error: indexing may panic
+crates/nexcore-dna/src/voxel.rs:548:18: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/voxel.rs:559:37: error: indexing may panic
+crates/nexcore-dna/src/voxel.rs:559:57: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/voxel.rs:559:13: error: indexing may panic
+crates/nexcore-dna/src/voxel.rs:559:18: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/alignment.rs:8:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/alignment.rs:15:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/alignment.rs:38:37: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:38:45: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:44:38: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:44:50: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:44:60: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:44:73: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:50:29: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:50:30: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:51:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:51:26: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:52:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:52:26: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:55:17: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:71:43: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:72:34: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:72:46: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:72:61: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:72:74: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:78:16: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:78:37: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:78:37: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:79:36: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:79:48: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:80:37: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:80:50: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:81:20: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:81:32: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:81:47: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:81:60: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:82:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:84:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:85:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:86:23: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:86:44: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:86:44: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:87:36: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:87:48: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:89:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:92:37: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:92:50: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:93:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:95:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:103:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/alignment.rs:103:34: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/alignment.rs:115:37: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:115:45: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:118:23: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:118:23: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/alignment.rs:118:13: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:121:23: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:121:23: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/alignment.rs:121:13: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:126:38: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:126:50: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:126:60: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:126:73: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:132:27: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:132:28: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:133:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:133:26: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:134:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:134:26: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:132:17: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:147:38: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:147:50: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:147:65: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:147:78: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:153:20: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:153:41: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:153:41: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:154:40: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:154:52: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:155:41: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:155:54: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:156:24: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:156:36: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:156:51: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:156:64: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:157:25: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:159:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:160:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:161:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:166:30: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:166:51: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:166:51: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:167:36: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:167:48: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:169:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:172:37: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:172:50: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:173:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:175:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/alignment.rs:179:20: error: indexing may panic
+crates/nexcore-dna/src/alignment.rs:183:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/alignment.rs:183:34: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/bio.rs:11:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/bio.rs:18:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/bio.rs:48:30: warning: stripping a prefix manually
+crates/nexcore-dna/src/bio.rs:48:31: error: indexing into a string may panic if the index is within a UTF-8 character
+crates/nexcore-dna/src/bio.rs:91:22: error: indexing into a string may panic if the index is within a UTF-8 character
+crates/nexcore-dna/src/dynamics.rs:36:1: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/dynamics.rs:110:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/dynamics.rs:110:27: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/dynamics.rs:119:18: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/dynamics.rs:129:18: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/dynamics.rs:149:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/dynamics.rs:204:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/dynamics.rs:243:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/dynamics.rs:318:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/dynamics.rs:397:13: error: indexing may panic
+crates/nexcore-dna/src/dynamics.rs:399:13: error: indexing may panic
+crates/nexcore-dna/src/dynamics.rs:417:9: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/dynamics.rs:417:52: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/dynamics.rs:437:9: error: indexing may panic
+crates/nexcore-dna/src/dynamics.rs:468:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/dynamics.rs:500:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/dynamics.rs:529:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/dynamics.rs:557:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/dynamics.rs:597:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/dynamics.rs:627:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/dynamics.rs:673:19: error: indexing may panic
+crates/nexcore-dna/src/dynamics.rs:696:9: error: indexing may panic
+crates/nexcore-dna/src/dynamics.rs:701:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/dynamics.rs:708:24: error: indexing may panic
+crates/nexcore-dna/src/dynamics.rs:709:25: error: indexing may panic
+crates/nexcore-dna/src/dynamics.rs:757:34: error: indexing may panic
+crates/nexcore-dna/src/dynamics.rs:758:16: error: indexing may panic
+crates/nexcore-dna/src/dynamics.rs:758:36: error: indexing may panic
+crates/nexcore-dna/src/dynamics.rs:759:20: error: indexing may panic
+crates/nexcore-dna/src/dynamics.rs:759:41: error: indexing may panic
+crates/nexcore-dna/src/dynamics.rs:760:21: error: indexing may panic
+crates/nexcore-dna/src/dynamics.rs:760:53: error: indexing may panic
+crates/nexcore-dna/src/dynamics.rs:764:17: error: indexing may panic
+crates/nexcore-dna/src/dynamics.rs:770:13: error: indexing may panic
+crates/nexcore-dna/src/dynamics.rs:773:13: error: indexing may panic
+crates/nexcore-dna/src/dynamics.rs:773:21: error: indexing may panic
+crates/nexcore-dna/src/dynamics.rs:797:46: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/dynamics.rs:797:22: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/dynamics.rs:808:25: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/dynamics.rs:809:32: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/dynamics.rs:848:47: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/dynamics.rs:881:41: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/dynamics.rs:886:24: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/dynamics.rs:892:43: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/evolution.rs:16:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/evolution.rs:72:32: error: indexing may panic
+crates/nexcore-dna/src/evolution.rs:96:35: error: indexing may panic
+crates/nexcore-dna/src/evolution.rs:172:29: error: indexing may panic
+crates/nexcore-dna/src/evolution.rs:213:25: error: indexing may panic
+crates/nexcore-dna/src/evolution.rs:215:25: error: indexing may panic
+crates/nexcore-dna/src/evolution.rs:234:34: error: slicing may panic
+crates/nexcore-dna/src/evolution.rs:234:44: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/evolution.rs:235:34: error: slicing may panic
+crates/nexcore-dna/src/evolution.rs:235:42: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/evolution.rs:243:35: error: indexing may panic
+crates/nexcore-dna/src/evolution.rs:243:17: error: indexing may panic
+crates/nexcore-dna/src/evolution.rs:249:44: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/evolution.rs:251:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/evolution.rs:252:24: error: indexing may panic
+crates/nexcore-dna/src/faers_bridge.rs:9:1: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/faers_bridge.rs:13:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/faers_bridge.rs:31:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/faers_bridge.rs:40:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/faers_bridge.rs:41:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/faers_bridge.rs:42:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/faers_bridge.rs:43:17: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/faers_bridge.rs:68:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/faers_bridge.rs:76:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/gene_therapy.rs:25:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/gene_therapy.rs:75:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:77:24: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:77:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:78:24: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:78:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:81:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:83:24: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:83:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:84:33: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:84:39: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:85:33: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:85:39: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:86:24: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:86:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:89:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:91:24: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:92:24: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:92:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:93:24: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:93:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:94:24: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:94:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:108:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/gene_therapy.rs:196:48: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:198:35: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:199:33: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:201:51: error: slicing may panic
+crates/nexcore-dna/src/gene_therapy.rs:206:25: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:208:25: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:215:29: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:232:35: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:233:47: error: slicing may panic
+crates/nexcore-dna/src/gene_therapy.rs:239:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:241:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:248:25: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:274:8: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:274:14: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:278:19: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:278:25: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:282:27: error: slicing may panic
+crates/nexcore-dna/src/gene_therapy.rs:293:12: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:293:24: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:293:30: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:294:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:308:28: error: slicing may panic
+crates/nexcore-dna/src/gene_therapy.rs:328:12: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:328:37: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:328:43: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:329:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:332:5: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/gene_therapy.rs:332:22: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/gene_therapy.rs:341:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/gene_therapy.rs:383:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:387:18: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:392:16: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:392:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:392:36: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:393:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:403:27: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:414:40: error: slicing may panic
+crates/nexcore-dna/src/gene_therapy.rs:414:53: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:447:58: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:450:26: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/gene_therapy.rs:452:26: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/gene_therapy.rs:452:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:462:22: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:463:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:463:31: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:463:55: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:464:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:468:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/gene_therapy.rs:468:33: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/gene_therapy.rs:468:48: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/gene_therapy.rs:477:38: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/gene_therapy.rs:487:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/gene_therapy.rs:502:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/gene_therapy.rs:571:25: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:572:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:587:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:589:32: error: slicing may panic
+crates/nexcore-dna/src/gene_therapy.rs:590:34: error: slicing may panic
+crates/nexcore-dna/src/gene_therapy.rs:591:33: error: slicing may panic
+crates/nexcore-dna/src/gene_therapy.rs:593:24: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:613:30: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:613:49: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:614:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:620:48: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:620:57: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:620:72: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:620:86: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:621:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:622:9: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:757:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:765:19: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/gene_therapy.rs:801:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/gene_therapy.rs:866:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/gene_therapy.rs:909:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/gene_therapy.rs:952:23: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:954:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:954:21: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/gene_therapy.rs:954:43: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/gene_therapy.rs:962:22: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/gene_therapy.rs:962:43: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/gene_therapy.rs:996:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/gene_therapy.rs:1017:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/gene_therapy.rs:1075:23: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:1076:8: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:1081:9: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:1082:9: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:1082:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:1083:9: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:1083:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:1087:9: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:1088:9: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:1088:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:1089:9: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:1089:26: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/gene_therapy.rs:1091:5: error: indexing may panic
+crates/nexcore-dna/src/gene_therapy.rs:1091:18: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/ncbi/error.rs:9:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/ncbi/error.rs:52:13: error: wildcard match will also match any future added variants: help: try: `Self::Api { .. } | Self::RateLimited { .. } | Self::InvalidParams(_)`
+crates/nexcore-dna/src/ncbi/types.rs:7:1: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/ncbi/types.rs:11:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/ncbi/types.rs:65:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/ncbi/types.rs:128:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/ncbi/types.rs:179:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/ncbi/types.rs:213:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/ncbi/types.rs:230:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/ncbi/types.rs:236:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/ncbi/types.rs:262:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/ncbi/types.rs:275:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/ncbi/types.rs:281:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/ncbi/types.rs:292:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/ncbi/types.rs:303:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/ncbi/types.rs:317:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/ncbi/types.rs:323:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/ncbi/types.rs:328:15: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/ncbi/types.rs:333:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/ncbi/types.rs:336:16: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/ncbi/types.rs:356:29: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/optimizer.rs:11:1: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/optimizer.rs:15:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/optimizer.rs:121:24: error: indexing may panic
+crates/nexcore-dna/src/optimizer.rs:123:20: error: slicing may panic
+crates/nexcore-dna/src/optimizer.rs:125:17: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/optimizer.rs:151:30: error: indexing may panic
+crates/nexcore-dna/src/profiler.rs:9:1: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/profiler.rs:13:1: error: exported enums should not be exhaustive
+crates/nexcore-dna/src/profiler.rs:38:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/profiler.rs:47:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/profiler.rs:53:20: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/profiler.rs:57:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/profiler.rs:111:30: error: indexing may panic
+crates/nexcore-dna/src/profiler.rs:116:28: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/profiler.rs:126:17: error: indexing may panic
+crates/nexcore-dna/src/profiler.rs:139:40: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/profiler.rs:140:42: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/profiler.rs:141:42: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/profiler.rs:142:41: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/profiler.rs:149:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/profiler.rs:149:13: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/profiler.rs:149:70: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/proof_reporter.rs:7:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/proof_reporter.rs:17:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/proof_reporter.rs:23:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/proof_reporter.rs:53:30: error: indexing may panic
+crates/nexcore-dna/src/proof_reporter.rs:54:37: error: indexing may panic
+crates/nexcore-dna/src/proof_reporter.rs:55:36: error: indexing may panic
+crates/nexcore-dna/src/proof_reporter.rs:56:34: error: indexing may panic
+crates/nexcore-dna/src/proof_reporter.rs:100:20: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/proof_reporter.rs:101:17: warning: calling `push_str()` using a single-character string literal: help: consider using `push` with a character literal: `json.push(',')`
+crates/nexcore-dna/src/proof_reporter.rs:103:13: warning: calling `push_str()` using a single-character string literal: help: consider using `push` with a character literal: `json.push('\n')`
+crates/nexcore-dna/src/proof_reporter.rs:107:9: warning: calling `push_str()` using a single-character string literal: help: consider using `push` with a character literal: `json.push('}')`
+crates/nexcore-dna/src/protocol_v2.rs:11:1: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/protocol_v2.rs:16:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/protocol_v2.rs:45:1: error: exported structs should not be exhaustive
+crates/nexcore-dna/src/protocol_v2.rs:53:5: warning: you should consider adding a `Default` implementation for `ProtocolV2`
+crates/nexcore-dna/src/protocol_v2.rs:95:17: error: use of `println!`
+crates/nexcore-dna/src/protocol_v2.rs:99:21: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/protocol_v2.rs:130:29: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/protocol_v2.rs:130:30: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/protocol_v2.rs:134:13: error: indexing may panic
+crates/nexcore-dna/src/protocol_v2.rs:142:28: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/protocol_v2.rs:142:28: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/protocol_v2.rs:143:28: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/protocol_v2.rs:143:28: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/protocol_v2.rs:144:14: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/protocol_v2.rs:144:15: warning: needless call to `as_bytes`: help: `len()` can be called directly on strings: `algo.len()`
+crates/nexcore-dna/src/protocol_v2.rs:145:28: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/protocol_v2.rs:149:5: warning: this function has too many arguments (8/5)
+crates/nexcore-dna/src/protocol_v2.rs:176:48: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/protocol_v2.rs:176:67: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/protocol_v2.rs:186:69: warning: this call to `clone` can be replaced with `std::slice::from_ref`: help: try: `std::slice::from_ref(seed)`
+crates/nexcore-dna/src/protocol_v2.rs:203:43: error: indexing may panic
+crates/nexcore-dna/src/protocol_v2.rs:203:25: error: indexing may panic
+crates/nexcore-dna/src/protocol_v2.rs:251:51: error: indexing may panic
+crates/nexcore-dna/src/protocol_v2.rs:251:21: error: indexing may panic
+crates/nexcore-dna/src/protocol_v2.rs:272:18: error: usage of the `unreachable!` macro
+crates/nexcore-dna/src/protocol_v2.rs:280:30: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/protocol_v2.rs:280:50: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/protocol_v2.rs:282:13: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/protocol_v2.rs:282:32: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/protocol_v2.rs:305:53: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/protocol_v2.rs:305:25: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/protocol_v2.rs:306:57: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/protocol_v2.rs:306:29: warning: use of a disallowed type `std::collections::HashMap`
+crates/nexcore-dna/src/protocol_v2.rs:327:23: error: indexing may panic
+crates/nexcore-dna/src/protocol_v2.rs:328:26: error: indexing may panic
+crates/nexcore-dna/src/protocol_v2.rs:330:49: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/protocol_v2.rs:333:22: error: indexing may panic
+crates/nexcore-dna/src/protocol_v2.rs:336:71: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/protocol_v2.rs:336:71: error: arithmetic operation that can potentially result in unexpected side-effects
+crates/nexcore-dna/src/protocol_v2.rs:342:56: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/protocol_v2.rs:357:42: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/protocol_v2.rs:364:20: error: indexing may panic
+crates/nexcore-dna/src/protocol_v2.rs:364:60: error: using a potentially dangerous silent `as` conversion
+crates/nexcore-dna/src/protocol_v2.rs:364:60: error: indexing may panic
+warning: `nexcore-dna` (lib) generated 66 warnings (1 duplicate)
+error: could not compile `nexcore-dna` (lib) due to 1126 previous errors; 66 warnings emitted

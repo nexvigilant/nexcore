@@ -21,6 +21,7 @@ use crate::graph::DependencyGraph;
 ///
 /// Tier: T2-C (ρ + N + κ + μ)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct BlastRadius {
     /// The crate being analyzed (the "epicenter").
     pub crate_name: String,
@@ -46,6 +47,7 @@ pub struct BlastRadius {
 ///
 /// Tier: T3 (ρ + N + κ + μ + Σ + ∂)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct BlastRadiusReport {
     /// Per-crate blast radius, sorted by impact_ratio descending.
     pub radii: Vec<BlastRadius>,
@@ -81,8 +83,7 @@ impl BlastRadius {
         // Seed with direct dependents at depth 1
         visited.insert(crate_name);
         for dep in &node.dependents {
-            if !visited.contains(dep.as_str()) {
-                visited.insert(dep.as_str());
+            if visited.insert(dep.as_str()) {
                 queue.push_back((dep.as_str(), 1));
             }
         }
@@ -97,8 +98,7 @@ impl BlastRadius {
             // Follow this crate's dependents (reverse deps)
             if let Some(n) = graph.nodes.get(name) {
                 for dep in &n.dependents {
-                    if !visited.contains(dep.as_str()) {
-                        visited.insert(dep.as_str());
+                    if visited.insert(dep.as_str()) {
                         queue.push_back((dep.as_str(), depth + 1));
                     }
                 }

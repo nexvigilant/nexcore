@@ -11,6 +11,7 @@ const W_CONTEXTUAL: f64 = 0.2;
 
 /// Three-dimensional transfer score between domains.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct TransferScore {
     /// Structural similarity (topology, dependencies, shape) — 0.0 to 1.0
     pub structural: f64,
@@ -47,10 +48,29 @@ impl TransferScore {
             "contextual"
         }
     }
+
+    /// Compositional isomorphism: 1.0 − normalized distance between composition
+    /// trees.  Uses Jaccard (structural) as proxy for tree edit distance.
+    pub fn compositional_isomorphism(&self) -> f64 {
+        self.structural
+    }
+
+    /// Fraction of relationships preserved under translation (functor
+    /// faithfulness).  Uses functional score as proxy.
+    pub fn relational_preservation(&self) -> f64 {
+        self.functional
+    }
+
+    /// All three enhanced metrics > 0.7 — suitable for clinical decision
+    /// support (high-confidence cross-domain transfer).
+    pub fn is_clinical_grade(&self) -> bool {
+        self.structural > 0.7 && self.functional > 0.7 && self.contextual > 0.7
+    }
 }
 
 /// A computed transfer from one primitive to a target domain.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct DomainTransfer {
     /// Name of the primitive being transferred.
     pub primitive_name: String,
@@ -115,5 +135,19 @@ mod tests {
     fn limiting_factor_contextual() {
         let score = TransferScore::new(0.9, 0.9, 0.3);
         assert_eq!(score.limiting_factor(), "contextual");
+    }
+
+    #[test]
+    fn clinical_grade_all_high() {
+        let score = TransferScore::new(0.85, 0.80, 0.75);
+        assert!(score.is_clinical_grade());
+        assert!((score.compositional_isomorphism() - 0.85).abs() < 1e-10);
+        assert!((score.relational_preservation() - 0.80).abs() < 1e-10);
+    }
+
+    #[test]
+    fn clinical_grade_one_low() {
+        let score = TransferScore::new(0.85, 0.60, 0.75);
+        assert!(!score.is_clinical_grade());
     }
 }

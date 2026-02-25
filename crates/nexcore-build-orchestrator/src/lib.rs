@@ -33,7 +33,10 @@
 //! | ∃ Existence | Check if artifacts exist |
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 
 // Core modules (always available)
 pub mod cli;

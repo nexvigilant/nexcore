@@ -4,7 +4,17 @@
 //! and observation compression grounded in Lex Primitiva T1 primitives.
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::arithmetic_side_effects,
+    clippy::print_stderr,
+    reason = "Insight pipeline keeps explicit telemetry diagnostics and stable data-transfer composites"
+)]
 
 pub mod adapters;
 pub mod composites;

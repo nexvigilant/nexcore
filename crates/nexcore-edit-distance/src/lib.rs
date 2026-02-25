@@ -3,7 +3,10 @@
 //! Generic edit distance framework with pluggable operations, cost models, and solvers.
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 //!
 //! ## Configuration Space
 //!

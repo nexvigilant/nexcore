@@ -13,9 +13,14 @@
 //! | [`Correction<T>`] | T2-C | XI (CORRECT) |
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-#![deny(clippy::panic)]
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
+#![cfg_attr(not(test), deny(clippy::expect_used))]
+#![cfg_attr(not(test), deny(clippy::panic))]
+#![allow(
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    reason = "Core primitives are intentionally closed and versioned within this workspace"
+)]
 
 pub mod bathroom_lock;
 pub mod confidence;

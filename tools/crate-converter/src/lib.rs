@@ -1,3 +1,8 @@
+#![allow(
+    clippy::too_many_arguments,
+    reason = "Conversion helpers operate on explicit TOML context tuples for clarity."
+)]
+
 use nexcore_error::{Context, Result, bail};
 use toml_edit::{Array, DocumentMut, Formatted, InlineTable, Item, Table, Value};
 
@@ -103,8 +108,8 @@ struct WorkspaceDep {
 /// Parse workspace.dependencies to build a lookup table.
 fn parse_workspace_deps(
     workspace_doc: &DocumentMut,
-) -> Result<std::collections::HashMap<String, WorkspaceDep>> {
-    let mut deps = std::collections::HashMap::new();
+) -> Result<std::collections::BTreeMap<String, WorkspaceDep>> {
+    let mut deps = std::collections::BTreeMap::new();
 
     let ws_deps = match workspace_doc
         .get("workspace")
@@ -393,7 +398,7 @@ fn inline_package_fields(doc: &mut DocumentMut, ws_package: &Table) -> Result<()
 fn convert_dep_section(
     doc: &mut DocumentMut,
     section: &str,
-    ws_deps: &std::collections::HashMap<String, WorkspaceDep>,
+    ws_deps: &std::collections::BTreeMap<String, WorkspaceDep>,
     registry_name: &str,
     resolver: &dyn InternalDepResolver,
 ) -> Result<()> {
@@ -426,7 +431,7 @@ fn convert_dep_section(
 /// Convert target-specific deps.
 fn convert_target_deps(
     doc: &mut DocumentMut,
-    ws_deps: &std::collections::HashMap<String, WorkspaceDep>,
+    ws_deps: &std::collections::BTreeMap<String, WorkspaceDep>,
     registry_name: &str,
     resolver: &dyn InternalDepResolver,
 ) -> Result<()> {
@@ -482,7 +487,7 @@ fn convert_workspace_dep(
     doc: &mut DocumentMut,
     section: &str,
     dep_name: &str,
-    ws_deps: &std::collections::HashMap<String, WorkspaceDep>,
+    ws_deps: &std::collections::BTreeMap<String, WorkspaceDep>,
     registry_name: &str,
     resolver: &dyn InternalDepResolver,
 ) -> Result<()> {
@@ -501,7 +506,7 @@ fn convert_workspace_dep_in_target(
     target_name: &str,
     section: &str,
     dep_name: &str,
-    ws_deps: &std::collections::HashMap<String, WorkspaceDep>,
+    ws_deps: &std::collections::BTreeMap<String, WorkspaceDep>,
     registry_name: &str,
     resolver: &dyn InternalDepResolver,
 ) -> Result<()> {
@@ -625,7 +630,7 @@ fn convert_path_dep(
     doc: &mut DocumentMut,
     section: &str,
     dep_name: &str,
-    ws_deps: &std::collections::HashMap<String, WorkspaceDep>,
+    ws_deps: &std::collections::BTreeMap<String, WorkspaceDep>,
     registry_name: &str,
     resolver: &dyn InternalDepResolver,
 ) -> Result<()> {
@@ -645,7 +650,7 @@ fn convert_path_dep_in_target(
     target_name: &str,
     section: &str,
     dep_name: &str,
-    ws_deps: &std::collections::HashMap<String, WorkspaceDep>,
+    ws_deps: &std::collections::BTreeMap<String, WorkspaceDep>,
     registry_name: &str,
     resolver: &dyn InternalDepResolver,
 ) -> Result<()> {
@@ -663,7 +668,7 @@ fn convert_path_dep_in_target(
 fn build_path_dep_replacement(
     item: &Item,
     dep_name: &str,
-    _ws_deps: &std::collections::HashMap<String, WorkspaceDep>,
+    _ws_deps: &std::collections::BTreeMap<String, WorkspaceDep>,
     registry_name: &str,
     resolver: &dyn InternalDepResolver,
 ) -> Result<Item> {
@@ -749,7 +754,7 @@ fn extract_string_field(item: &Item, field: &str) -> Option<String> {
 
 /// Merge two feature lists, deduplicating.
 fn merge_features(ws_features: &[String], crate_features: &[String]) -> Vec<String> {
-    let mut seen = std::collections::HashSet::new();
+    let mut seen = std::collections::BTreeSet::new();
     let mut result = Vec::new();
 
     for f in ws_features.iter().chain(crate_features.iter()) {
@@ -829,15 +834,15 @@ pub fn convert_crate_file(
 
 /// A resolver that pre-builds a name->version mapping using the filesystem resolver.
 struct MappingResolver {
-    versions: std::collections::HashMap<String, String>,
+    versions: std::collections::BTreeMap<String, String>,
 }
 
 impl MappingResolver {
     fn new(
-        ws_deps: &std::collections::HashMap<String, WorkspaceDep>,
+        ws_deps: &std::collections::BTreeMap<String, WorkspaceDep>,
         fs_resolver: &FileSystemResolver,
     ) -> Result<Self> {
-        let mut versions = std::collections::HashMap::new();
+        let mut versions = std::collections::BTreeMap::new();
 
         for (name, dep) in ws_deps {
             if dep.is_internal {

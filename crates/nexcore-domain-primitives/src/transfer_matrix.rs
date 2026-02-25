@@ -41,6 +41,7 @@ fn resolve_target(target: &str) -> &str {
 
 /// N×N transfer matrix between all registered taxonomies.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct TransferMatrix {
     /// Domain names in display order.
     pub domains: Vec<String>,
@@ -52,6 +53,7 @@ pub struct TransferMatrix {
 
 /// One directed cell in the transfer matrix (from → to).
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct MatrixCell {
     pub from: String,
     pub to: String,
@@ -71,6 +73,7 @@ pub struct MatrixCell {
 
 /// A cross-domain bridge: primitive appearing in 2+ registered taxonomies.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Bridge {
     /// Primitive name.
     pub name: String,

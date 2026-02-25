@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 /// Result of a single test.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum TestResult {
     /// Test passed.
     Pass,
@@ -14,6 +15,7 @@ pub enum TestResult {
 
 /// Primitive test card output.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct PrimitiveTestCard {
     /// Term being tested.
     pub term: String,
@@ -33,6 +35,7 @@ pub struct PrimitiveTestCard {
 
 /// Verdict from primitive test.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum Verdict {
     /// Term is primitive.
     Primitive,

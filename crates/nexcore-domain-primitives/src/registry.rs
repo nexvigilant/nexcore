@@ -11,6 +11,7 @@ use crate::taxonomy::DomainTaxonomy;
 
 /// Central registry of extracted domain taxonomies.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct TaxonomyRegistry {
     taxonomies: HashMap<String, DomainTaxonomy>,
 }

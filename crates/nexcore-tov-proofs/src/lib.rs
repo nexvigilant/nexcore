@@ -71,7 +71,10 @@
 //! - [`proofs`]: Your custom proofs
 
 #![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 // Deny unsafe code and panic-inducing constructs to maintain proof soundness
 #![deny(unsafe_code)]
 #![allow(dead_code)]

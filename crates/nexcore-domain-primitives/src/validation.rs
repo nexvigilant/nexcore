@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 
 /// Result of decomposing a single KSB to primitives.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct KsbDecomposition {
     /// KSB identifier.
     pub ksb_id: String,
@@ -25,6 +26,7 @@ pub struct KsbDecomposition {
 
 /// Result of the full corpus coverage analysis.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct CoverageResult {
     /// Total KSBs in the corpus.
     pub total_ksbs: usize,

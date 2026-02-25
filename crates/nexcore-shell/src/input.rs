@@ -142,6 +142,7 @@ impl InputProcessor {
             FormFactor::Watch => (30.0, 40.0), // Small screen — short gestures
             FormFactor::Phone => (80.0, 60.0), // Standard mobile gestures
             FormFactor::Desktop => (100.0, 48.0), // Desktop — larger thresholds
+            _ => (100.0, 48.0),                // Unknown form factor: conservative desktop defaults
         };
 
         Self {
@@ -162,6 +163,7 @@ impl InputProcessor {
             InputEvent::Key(key) => Self::process_key(key, focused_app),
             InputEvent::Pointer(ptr) => Self::process_pointer(ptr, focused_app),
             InputEvent::Crown(crown) => self.process_crown(*crown, focused_app),
+            _ => InputAction::None,
         }
     }
 
@@ -190,6 +192,7 @@ impl InputProcessor {
                 self.active_touches.retain(|t| t.id != touch.id);
                 InputAction::None
             }
+            _ => InputAction::None,
         }
     }
 
@@ -233,6 +236,7 @@ impl InputProcessor {
             FormFactor::Desktop => {
                 // Desktop touch — route to app (desktop uses pointer primarily)
             }
+            _ => {}
         }
 
         // No system gesture — route to app
@@ -309,25 +313,15 @@ mod tests {
     use super::*;
 
     fn make_touch(id: u32, x: f32, y: f32, phase: TouchPhase) -> InputEvent {
-        InputEvent::Touch(TouchEvent {
-            id,
-            x,
-            y,
-            pressure: 1.0,
-            phase,
-        })
+        InputEvent::Touch(TouchEvent::new(id, x, y, 1.0, phase))
     }
 
     fn make_key(code: KeyCode, state: KeyState, modifiers: Modifiers) -> InputEvent {
-        InputEvent::Key(KeyEvent {
-            code,
-            state,
-            modifiers,
-        })
+        InputEvent::Key(KeyEvent::new(code, state, modifiers))
     }
 
     fn make_crown(delta: f32, pressed: bool) -> InputEvent {
-        InputEvent::Crown(CrownEvent { delta, pressed })
+        InputEvent::Crown(CrownEvent::new(delta, pressed))
     }
 
     #[test]

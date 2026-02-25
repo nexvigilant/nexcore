@@ -40,6 +40,25 @@ pub struct CompoundRecord {
     pub resolved_at: nexcore_chrono::DateTime,
 }
 
+impl CompoundRecord {
+    /// Create a minimal compound record with optional SMILES and a source tag.
+    #[must_use]
+    pub fn new(name: impl Into<String>, smiles: Option<String>, source: ResolutionSource) -> Self {
+        Self {
+            name: name.into(),
+            smiles,
+            inchi: None,
+            inchi_key: None,
+            cas_number: None,
+            pubchem_cid: None,
+            chembl_id: None,
+            synonyms: Vec::new(),
+            source,
+            resolved_at: nexcore_chrono::DateTime::now(),
+        }
+    }
+}
+
 /// Where a compound record was resolved from.
 ///
 /// ## Tier: T2-P (λ + ∃)

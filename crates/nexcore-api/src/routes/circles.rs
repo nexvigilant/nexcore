@@ -100,6 +100,7 @@ pub struct InviteRequest {
 /// Update member request
 #[derive(Debug, Clone, Deserialize, ToSchema)]
 pub struct UpdateMemberRequest {
+    pub updated_by: Option<String>,
     pub role: Option<String>,
     pub status: Option<String>,
 }
@@ -217,6 +218,13 @@ fn feed_to_api(e: FeedEntryRecord) -> FeedEntry {
 fn parse_enum<T: serde::de::DeserializeOwned + Default>(s: &str) -> T {
     let quoted = format!("\"{}\"", s);
     serde_json::from_str(&quoted).unwrap_or_default()
+}
+
+/// Strict parse that returns an error for invalid values (use on security-critical fields).
+fn try_parse_enum<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, ApiError> {
+    let quoted = format!("\"{}\"", s);
+    serde_json::from_str(&quoted)
+        .map_err(|_| err("VALIDATION_ERROR", format!("Invalid value: {s}")))
 }
 
 /// Require the caller to be a member with at least the given role.
@@ -626,8 +634,8 @@ pub async fn join_circle(
         .map_err(|e| err("INTERNAL_ERROR", e.to_string()))?
         .ok_or_else(|| err("NOT_FOUND", "Circle not found"))?;
 
-    // Check if already a member
-    if let Some(existing) = state
+    // Check if already a member (handles re-join for non-Active members)
+    if let Some(mut existing) = state
         .persistence
         .get_circle_member(&circle_id, &req.user_id)
         .await
@@ -636,6 +644,35 @@ pub async fn join_circle(
         if existing.status == MemberStatus::Active {
             return Err(err("CONFLICT", "Already a member"));
         }
+        if existing.status == MemberStatus::Suspended {
+            return Err(err(
+                "FORBIDDEN",
+                "Membership is suspended — contact a circle lead",
+            ));
+        }
+        // Re-join: reactivate existing record (Left/Invited/Requested)
+        let now = DateTime::now();
+        let (member_status, response_status) = match circle.join_policy {
+            JoinPolicy::Open => (MemberStatus::Active, "rejoined"),
+            JoinPolicy::RequestApproval => (MemberStatus::Requested, "requested"),
+            JoinPolicy::InviteOnly => {
+                return Err(err("FORBIDDEN", "This circle is invite-only"));
+            }
+        };
+        existing.status = member_status.clone();
+        existing.joined_at = now;
+        state
+            .persistence
+            .update_circle_member(&existing)
+            .await
+            .map_err(|e| err("INTERNAL_ERROR", e.to_string()))?;
+        if member_status == MemberStatus::Active {
+            let mut updated_circle = circle;
+            updated_circle.member_count += 1;
+            updated_circle.updated_at = now;
+            update_circle_count_best_effort(&state, &updated_circle).await;
+        }
+        return Ok(Json(serde_json::json!({ "status": response_status })));
     }
 
     let now = DateTime::now();
@@ -702,6 +739,15 @@ pub async fn invite_members(
     Path(circle_id): Path<String>,
     Json(req): Json<InviteRequest>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
+    // Lead+ required to invite
+    require_role(
+        &state.persistence,
+        &circle_id,
+        &req.invited_by,
+        &[CircleRole::Founder, CircleRole::Lead],
+    )
+    .await?;
+
     let now = DateTime::now();
     let mut invited_count = 0u32;
 
@@ -743,6 +789,17 @@ pub async fn update_member(
     Path((circle_id, user_id)): Path<(String, String)>,
     Json(req): Json<UpdateMemberRequest>,
 ) -> Result<Json<CircleMember>, ApiError> {
+    // Lead+ required to modify members
+    if let Some(ref actor) = req.updated_by {
+        require_role(
+            &state.persistence,
+            &circle_id,
+            actor,
+            &[CircleRole::Founder, CircleRole::Lead],
+        )
+        .await?;
+    }
+
     let mut member = state
         .persistence
         .get_circle_member(&circle_id, &user_id)
@@ -753,10 +810,10 @@ pub async fn update_member(
     let was_active = member.status == MemberStatus::Active;
 
     if let Some(role) = req.role {
-        member.role = parse_enum(&role);
+        member.role = try_parse_enum(&role)?;
     }
     if let Some(status) = req.status {
-        member.status = parse_enum(&status);
+        member.status = try_parse_enum(&status)?;
     }
 
     state
@@ -794,7 +851,31 @@ pub async fn update_member(
 pub async fn remove_member(
     State(state): State<ApiState>,
     Path((circle_id, user_id)): Path<(String, String)>,
+    axum::extract::Query(params): axum::extract::Query<std::collections::HashMap<String, String>>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
+    // Verify member exists before removing
+    let existing = state
+        .persistence
+        .get_circle_member(&circle_id, &user_id)
+        .await
+        .map_err(|e| err("INTERNAL_ERROR", e.to_string()))?;
+    if existing.is_none() {
+        return Err(err("NOT_FOUND", "Member not found"));
+    }
+
+    // If actor != target, require Lead+ (removing someone else)
+    if let Some(actor) = params.get("actor") {
+        if actor != &user_id {
+            require_role(
+                &state.persistence,
+                &circle_id,
+                actor,
+                &[CircleRole::Founder, CircleRole::Lead],
+            )
+            .await?;
+        }
+    }
+
     state
         .persistence
         .delete_circle_member(&circle_id, &user_id)

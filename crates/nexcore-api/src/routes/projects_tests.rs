@@ -195,6 +195,7 @@ async fn test_update_project_partial() {
         State(state),
         Path((cid, project.id)),
         Json(UpdateProjectRequest {
+            updated_by: None,
             name: Some("Updated Name".to_string()),
             description: None,
             status: None,
@@ -220,6 +221,7 @@ async fn test_update_project_not_found() {
         State(state),
         Path(("c".to_string(), "nonexistent".to_string())),
         Json(UpdateProjectRequest {
+            updated_by: None,
             name: Some("X".to_string()),
             description: None,
             status: None,
@@ -473,6 +475,7 @@ async fn test_update_deliverable_partial() {
         State(state),
         Path((cid, project.id, deliverable.id)),
         Json(UpdateDeliverableRequest {
+            updated_by: None,
             name: Some("Final Report".to_string()),
             status: Some("in_review".to_string()),
             file_url: None,
@@ -493,6 +496,7 @@ async fn test_update_deliverable_not_found() {
         State(state),
         Path(("c".to_string(), "p".to_string(), "nonexistent".to_string())),
         Json(UpdateDeliverableRequest {
+            updated_by: None,
             name: Some("X".to_string()),
             status: None,
             file_url: None,

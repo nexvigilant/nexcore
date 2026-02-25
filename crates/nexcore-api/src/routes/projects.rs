@@ -62,6 +62,7 @@ pub struct CreateProjectRequest {
 /// Update project request
 #[derive(Debug, Clone, Deserialize, ToSchema)]
 pub struct UpdateProjectRequest {
+    pub updated_by: Option<String>,
     pub name: Option<String>,
     pub description: Option<String>,
     pub status: Option<String>,
@@ -111,6 +112,7 @@ pub struct CreateDeliverableRequest {
 /// Update deliverable request
 #[derive(Debug, Clone, Deserialize, ToSchema)]
 pub struct UpdateDeliverableRequest {
+    pub updated_by: Option<String>,
     pub name: Option<String>,
     pub status: Option<String>,
     pub file_url: Option<String>,
@@ -401,6 +403,19 @@ pub async fn update_project(
         .map_err(|e| err("INTERNAL_ERROR", e.to_string()))?
         .ok_or_else(|| err("NOT_FOUND", "Project not found"))?;
 
+    // Lead+ or project lead required
+    if let Some(ref actor) = req.updated_by {
+        let is_project_lead = record.lead_user_id == *actor;
+        if !is_project_lead
+            && !check_role(&state, &record.circle_id, actor, CircleRole::Lead).await?
+        {
+            return Err(err(
+                "FORBIDDEN",
+                "Requires Lead role or project lead status",
+            ));
+        }
+    }
+
     if let Some(name) = req.name {
         record.name = name;
     }
@@ -557,6 +572,11 @@ pub async fn create_deliverable(
         return Err(err("NOT_FOUND", "Project not found in this circle"));
     }
 
+    // Researcher+ required to create deliverables
+    if !check_role(&state, &circle_id, &req.created_by, CircleRole::Researcher).await? {
+        return Err(err("FORBIDDEN", "Requires Researcher role or higher"));
+    }
+
     let now = DateTime::now();
     let record = DeliverableRecord {
         id: nexcore_id::NexId::v4().to_string(),
@@ -648,6 +668,19 @@ pub async fn update_deliverable(
         .await
         .map_err(|e| err("INTERNAL_ERROR", e.to_string()))?
         .ok_or_else(|| err("NOT_FOUND", "Deliverable not found"))?;
+
+    // Researcher+ or deliverable creator required
+    if let Some(ref actor) = req.updated_by {
+        let is_creator = record.created_by == *actor;
+        if !is_creator
+            && !check_role(&state, &record.circle_id, actor, CircleRole::Researcher).await?
+        {
+            return Err(err(
+                "FORBIDDEN",
+                "Requires Researcher role or deliverable creator",
+            ));
+        }
+    }
 
     if let Some(name) = req.name {
         record.name = name;

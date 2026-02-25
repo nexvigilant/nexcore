@@ -481,6 +481,7 @@ async fn test_update_member_role() {
         State(state),
         Path((circle.id, "user-2".to_string())),
         Json(UpdateMemberRequest {
+            updated_by: None,
             role: Some("reviewer".to_string()),
             status: None,
         }),
@@ -499,6 +500,7 @@ async fn test_update_member_not_found() {
         State(state),
         Path((circle.id, "nonexistent".to_string())),
         Json(UpdateMemberRequest {
+            updated_by: None,
             role: None,
             status: None,
         }),
@@ -524,6 +526,7 @@ async fn test_remove_member_decrements_count() {
     remove_member(
         State(state.clone()),
         Path((circle.id.clone(), "user-2".to_string())),
+        axum::extract::Query(std::collections::HashMap::new()),
     )
     .await
     .expect("remove");

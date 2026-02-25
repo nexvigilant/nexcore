@@ -240,6 +240,9 @@ async fn require_role(
         .await
         .map_err(|e| err("INTERNAL_ERROR", e.to_string()))?
         .ok_or_else(|| err("FORBIDDEN", "Not a member of this circle"))?;
+    if member.status != MemberStatus::Active {
+        return Err(err("FORBIDDEN", "Membership is not active"));
+    }
     if !min_roles.contains(&member.role) {
         return Err(err("FORBIDDEN", "Insufficient role for this action"));
     }

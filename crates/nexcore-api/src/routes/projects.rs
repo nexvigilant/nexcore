@@ -635,8 +635,19 @@ pub async fn create_deliverable(
 )]
 pub async fn list_deliverables(
     State(state): State<ApiState>,
-    Path((_circle_id, project_id)): Path<(String, String)>,
+    Path((circle_id, project_id)): Path<(String, String)>,
 ) -> Result<Json<Vec<Deliverable>>, ApiError> {
+    // Verify project belongs to this circle
+    let project = state
+        .persistence
+        .get_project(&project_id)
+        .await
+        .map_err(|e| err("INTERNAL_ERROR", e.to_string()))?
+        .ok_or_else(|| err("NOT_FOUND", "Project not found"))?;
+    if project.circle_id != circle_id {
+        return Err(err("NOT_FOUND", "Project not found in this circle"));
+    }
+
     let records = state
         .persistence
         .list_deliverables(&project_id)
@@ -659,7 +670,7 @@ pub async fn list_deliverables(
 )]
 pub async fn update_deliverable(
     State(state): State<ApiState>,
-    Path((_circle_id, _project_id, deliverable_id)): Path<(String, String, String)>,
+    Path((circle_id, _project_id, deliverable_id)): Path<(String, String, String)>,
     Json(req): Json<UpdateDeliverableRequest>,
 ) -> Result<Json<Deliverable>, ApiError> {
     let mut record = state
@@ -668,6 +679,11 @@ pub async fn update_deliverable(
         .await
         .map_err(|e| err("INTERNAL_ERROR", e.to_string()))?
         .ok_or_else(|| err("NOT_FOUND", "Deliverable not found"))?;
+
+    // Verify deliverable belongs to this circle
+    if record.circle_id != circle_id {
+        return Err(err("NOT_FOUND", "Deliverable not found in this circle"));
+    }
 
     // Researcher+ or deliverable creator required
     if let Some(ref actor) = req.updated_by {

@@ -56,6 +56,7 @@ impl CompoundingRatio {
 ///
 /// Rates from CCIM model specification (ToV §4.5).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum DepreciationCategory {
     /// Code without recent maintenance: 2% per directive.
     UnmaintainedCode,
@@ -109,6 +110,7 @@ impl DepreciationCategory {
 
 /// A single depreciating asset in the capability portfolio.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct DepreciationEntry {
     /// Description of what is depreciating.
     pub description: String,

@@ -11,6 +11,7 @@ use crate::types::CompoundingRatio;
 
 /// A single point on the capability trajectory.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct TrajectoryPoint {
     /// Directive number (0 = current).
     pub directive: u32,
@@ -20,6 +21,7 @@ pub struct TrajectoryPoint {
 
 /// FIRE (Financial Independence, Retire Early) projection.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct FireProjection {
     /// Current capability units.
     pub current_cu: f64,
@@ -38,6 +40,10 @@ pub struct FireProjection {
 /// When rho is zero, falls back to linear: C(d) = C0 + T*d - W.
 ///
 /// # CALIBRATION: confidence = clamp(1.0 - 1.0 / (observations + 1), 0.05, 0.99)
+#[allow(
+    clippy::too_many_arguments,
+    reason = "CCIM equation requires all terms"
+)]
 pub fn ccim_equation(
     c0: f64,
     rho: CompoundingRatio,
@@ -101,6 +107,10 @@ pub fn rule_of_72(rho: CompoundingRatio, observations: u32) -> Result<Measured<f
 /// Project capability trajectory over N directives.
 ///
 /// Returns a `FireProjection` with trajectory points and FIRE ETA.
+#[allow(
+    clippy::too_many_arguments,
+    reason = "trajectory projection requires all parameters"
+)]
 pub fn trajectory_project(
     current_cu: f64,
     rho: CompoundingRatio,
@@ -110,7 +120,8 @@ pub fn trajectory_project(
     fire_threshold: f64,
     observations: u32,
 ) -> Result<FireProjection, CcimError> {
-    let mut trajectory = Vec::with_capacity(n_directives.saturating_add(1) as usize);
+    let capacity = usize::try_from(n_directives.saturating_add(1)).unwrap_or(usize::MAX);
+    let mut trajectory = Vec::with_capacity(capacity);
     trajectory.push(TrajectoryPoint {
         directive: 0,
         capability_units: current_cu,

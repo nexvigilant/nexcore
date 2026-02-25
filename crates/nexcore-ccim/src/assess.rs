@@ -17,6 +17,7 @@ const CONSERVATION_EPSILON: f64 = 0.001;
 
 /// A single CCIM assessment (balance sheet for one directive).
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct CcimAssessment {
     /// Directive identifier (e.g. "D007", "VDAG-CONSERVATION").
     pub directive: String,
@@ -46,6 +47,7 @@ pub struct CcimAssessment {
 
 /// NCRR (Net Capability Rate of Return) result.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct NcrrResult {
     /// The compounding ratio (rho).
     pub rho: f64,
@@ -59,6 +61,7 @@ pub struct NcrrResult {
 
 /// FIRE progress result.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct FireProgress {
     /// Current capability units.
     pub current_cu: f64,
@@ -149,6 +152,10 @@ pub fn fire_progress(current_cu: f64, fire_threshold: f64, observations: u32) ->
 /// Build a full assessment from raw data.
 ///
 /// Validates conservation invariant and computes derived metrics.
+#[allow(
+    clippy::too_many_arguments,
+    reason = "assessment construction needs all fields"
+)]
 pub fn build_assessment(
     directive: String,
     date: String,

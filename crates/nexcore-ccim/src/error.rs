@@ -63,7 +63,12 @@ impl std::error::Error for CcimError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Io(e) => Some(e),
-            _ => None,
+            Self::StateFileNotFound(_)
+            | Self::ParseError(_)
+            | Self::InvalidRho { .. }
+            | Self::ConservationViolation { .. }
+            | Self::ProjectionOverflow { .. }
+            | Self::Json(_) => None,
         }
     }
 }

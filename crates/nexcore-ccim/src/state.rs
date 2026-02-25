@@ -10,6 +10,7 @@ use crate::error::CcimError;
 
 /// Top-level state file structure matching ccim-assessments.json.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct CcimState {
     /// Schema version (e.g. "1.1.0").
     pub version: String,
@@ -23,6 +24,7 @@ pub struct CcimState {
 
 /// Baseline capability measurement.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct BaselineRecord {
     /// Directive identifier.
     pub directive: String,
@@ -58,6 +60,7 @@ pub struct BaselineRecord {
 
 /// A single assessment entry.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct AssessmentRecord {
     /// Directive identifier.
     pub directive: String,
@@ -108,6 +111,7 @@ pub struct AssessmentRecord {
 
 /// Trial tracking record.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct TrialRecord {
     /// Protocol identifier.
     pub protocol_id: String,
@@ -164,10 +168,10 @@ pub fn current_cu(state: &CcimState) -> f64 {
 /// Count total observations across all assessments.
 #[must_use]
 pub fn total_observations(state: &CcimState) -> u32 {
-    state
-        .trial
-        .as_ref()
-        .map_or(state.assessments.len() as u32, |t| t.observations)
+    state.trial.as_ref().map_or(
+        u32::try_from(state.assessments.len()).unwrap_or(u32::MAX),
+        |t| t.observations,
+    )
 }
 
 #[cfg(test)]

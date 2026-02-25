@@ -536,3 +536,7 @@ pub use dataframe::*;
 // Chrono (sovereign datetime engine — now, parse, format, duration)
 pub mod chrono;
 pub use chrono::*;
+
+// NexChat (AI chat status, config, tool discovery)
+pub mod nexchat;
+pub use nexchat::*;

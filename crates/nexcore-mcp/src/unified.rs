@@ -483,7 +483,7 @@ async fn dispatch_inner(
         }
 
         // ====================================================================
-        // DataFrame Tools (8) — Sovereign Columnar Engine (Directive 006A)
+        // DataFrame Tools (9) — Sovereign Columnar Engine (Directive 006A)
         // ====================================================================
         "dataframe_describe" => typed(params, tools::dataframe::describe),
         "dataframe_query" => typed(params, tools::dataframe::query),
@@ -493,6 +493,7 @@ async fn dispatch_inner(
         "dataframe_construct" => typed(params, tools::dataframe::construct),
         "dataframe_transform" => typed(params, tools::dataframe::transform),
         "dataframe_save" => typed(params, tools::dataframe::save),
+        "dataframe_join" => typed(params, tools::dataframe::join),
 
         // ====================================================================
         // NCBI Entrez Tools (3)
@@ -2323,6 +2324,17 @@ async fn dispatch_inner(
         "chrono_duration" => typed(params, tools::chrono::chrono_duration),
 
         // ====================================================================
+        // NexChat (3) — AI chat status, config, tool listing
+        // ====================================================================
+        "nexchat_status" => typed(params, tools::nexchat::nexchat_status),
+        "nexchat_config" => typed(params, tools::nexchat::nexchat_config),
+        "nexchat_tools" => {
+            let p: params::NexchatToolsParams = serde_json::from_value(params)
+                .map_err(|e| McpError::invalid_params(e.to_string(), None))?;
+            tools::nexchat::nexchat_tools(p, server)
+        }
+
+        // ====================================================================
         // PV Temporal Analysis (3) — TTO, challenge, plausibility
         // ====================================================================
         "temporal_tto" => typed(params, tools::temporal::temporal_tto),
@@ -2988,7 +3000,7 @@ fn unified_catalog_data() -> serde_json::Value {
             "faers": ["faers_search", "faers_drug_events", "faers_signal_check", "faers_disproportionality", "faers_compare_drugs"],
             "faers_analytics": ["faers_outcome_conditioned", "faers_signal_velocity", "faers_seriousness_cascade", "faers_polypharmacy", "faers_reporter_weighted", "faers_geographic_divergence"],
             "faers_etl": ["faers_etl_run", "faers_etl_signals", "faers_etl_known_pairs", "faers_etl_status"],
-            "dataframe": ["dataframe_describe", "dataframe_query", "dataframe_aggregate", "dataframe_counter", "dataframe_column_stats", "dataframe_construct", "dataframe_transform", "dataframe_save"],
+            "dataframe": ["dataframe_describe", "dataframe_query", "dataframe_aggregate", "dataframe_counter", "dataframe_column_stats", "dataframe_construct", "dataframe_transform", "dataframe_save", "dataframe_join"],
             "gcloud": ["gcloud_auth_list", "gcloud_config_list", "gcloud_config_get", "gcloud_config_set", "gcloud_projects_list", "gcloud_projects_describe", "gcloud_projects_get_iam_policy", "gcloud_secrets_list", "gcloud_secrets_versions_access", "gcloud_storage_buckets_list", "gcloud_storage_ls", "gcloud_storage_cp", "gcloud_compute_instances_list", "gcloud_run_services_list", "gcloud_run_services_describe", "gcloud_functions_list", "gcloud_iam_service_accounts_list", "gcloud_logging_read", "gcloud_run_command"],
             "wolfram": ["wolfram_query", "wolfram_short_answer", "wolfram_spoken_answer", "wolfram_calculate", "wolfram_step_by_step", "wolfram_plot", "wolfram_convert", "wolfram_chemistry", "wolfram_physics", "wolfram_astronomy", "wolfram_statistics", "wolfram_data_lookup", "wolfram_query_with_assumption", "wolfram_query_filtered", "wolfram_image_result", "wolfram_datetime", "wolfram_nutrition", "wolfram_finance", "wolfram_linguistics"],
             "principles": ["principles_list", "principles_get", "principles_search"],
@@ -3024,6 +3036,7 @@ fn unified_catalog_data() -> serde_json::Value {
             "pk": ["pk_auc", "pk_clearance", "pk_half_life", "pk_steady_state", "pk_ionization", "pk_michaelis_menten"],
             "causality": ["causality_rucam", "causality_ucas"],
             "chrono": ["chrono_now", "chrono_parse", "chrono_format", "chrono_duration"],
+            "nexchat": ["nexchat_status", "nexchat_config", "nexchat_tools"],
             "temporal": ["temporal_tto", "temporal_challenge", "temporal_plausibility"],
             "knowledge_engine": ["knowledge_engine_compress", "knowledge_engine_compile", "knowledge_engine_query", "knowledge_engine_score", "knowledge_engine_extract_primitives", "knowledge_engine_extract_concepts"],
             "notebooklm": ["nlm_add_notebook", "nlm_list_notebooks", "nlm_get_notebook", "nlm_select_notebook", "nlm_update_notebook", "nlm_remove_notebook", "nlm_search_notebooks", "nlm_get_library_stats", "nlm_list_sessions", "nlm_close_session", "nlm_reset_session", "nlm_get_health", "nlm_setup_auth", "nlm_re_auth", "nlm_ask_question", "nlm_cleanup_data"],

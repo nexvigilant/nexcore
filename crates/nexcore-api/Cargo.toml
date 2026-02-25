@@ -63,6 +63,9 @@ futures = { workspace = true }
 # Database
 rusqlite = { workspace = true }
 
+# Bytes (for SSE stream parsing)
+bytes = { workspace = true }
+
 # Utilities
 nexcore-chrono = { workspace = true }
 nexcore-fs = { workspace = true }

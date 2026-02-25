@@ -70,6 +70,11 @@ pub mod icsr;
 // Terminal (multi-tenant AI-augmented terminal WebSocket)
 pub mod terminal_ws;
 
+// AI Client (sovereign Claude API client — SSE streaming + tool dispatch)
+pub mod ai_client;
+// AI Bridge (zero-wiring MCP tool auto-discovery for Claude tool_use)
+pub mod ai_bridge;
+
 #[cfg(test)]
 mod circles_tests;
 #[cfg(test)]

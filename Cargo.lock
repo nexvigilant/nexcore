@@ -7601,6 +7601,7 @@ name = "nexcore-api"
 version = "1.0.0"
 dependencies = [
  "axum 0.8.8",
+ "bytes",
  "futures",
  "hmac",
  "nexcore-chrono",
@@ -7841,6 +7842,7 @@ dependencies = [
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
+ "stem-number-theory",
 ]
 
 [[package]]
@@ -9102,7 +9104,9 @@ dependencies = [
  "nexcore-chrono",
  "nexcore-constants",
  "nexcore-error",
+ "nexcore-fhir",
  "nexcore-lex-primitiva",
+ "nexcore-openfda",
  "nexcore-preemptive-pv",
  "nexcore-signal-types",
  "nexcore-tov",
@@ -9165,6 +9169,7 @@ dependencies = [
 name = "nexcore-reason"
 version = "1.0.0"
 dependencies = [
+ "nexcore-chrono",
  "nexcore-error",
  "nexcore-foundry",
  "nexcore-lex-primitiva",
@@ -13788,6 +13793,7 @@ dependencies = [
  "nexcore-error",
  "nexcore-lex-primitiva",
  "serde",
+ "stem-complex",
  "stem-core",
 ]
 
@@ -13798,6 +13804,7 @@ dependencies = [
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
+ "stem-complex",
 ]
 
 [[package]]

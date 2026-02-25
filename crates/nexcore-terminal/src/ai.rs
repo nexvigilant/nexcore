@@ -46,6 +46,22 @@ pub struct AiTool {
     pub input_schema: serde_json::Value,
 }
 
+impl AiTool {
+    /// Create a new tool definition.
+    #[must_use]
+    pub fn new(
+        name: impl Into<String>,
+        description: impl Into<String>,
+        input_schema: serde_json::Value,
+    ) -> Self {
+        Self {
+            name: name.into(),
+            description: description.into(),
+            input_schema,
+        }
+    }
+}
+
 /// A tool call requested by the AI.
 #[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -56,6 +72,18 @@ pub struct AiToolCall {
     pub name: String,
     /// Tool input parameters.
     pub input: serde_json::Value,
+}
+
+impl AiToolCall {
+    /// Create a new tool call.
+    #[must_use]
+    pub fn new(id: impl Into<String>, name: impl Into<String>, input: serde_json::Value) -> Self {
+        Self {
+            id: id.into(),
+            name: name.into(),
+            input,
+        }
+    }
 }
 
 /// Response from an AI backend after processing a message.
@@ -70,6 +98,24 @@ pub struct AiResponse {
     pub input_tokens: u64,
     /// Output tokens produced.
     pub output_tokens: u64,
+}
+
+impl AiResponse {
+    /// Create a new AI response.
+    #[must_use]
+    pub fn new(
+        content: impl Into<String>,
+        tool_calls: Vec<AiToolCall>,
+        input_tokens: u64,
+        output_tokens: u64,
+    ) -> Self {
+        Self {
+            content: content.into(),
+            tool_calls,
+            input_tokens,
+            output_tokens,
+        }
+    }
 }
 
 #[cfg(test)]

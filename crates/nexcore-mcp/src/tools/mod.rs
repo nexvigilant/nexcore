@@ -542,3 +542,6 @@ pub mod dataframe;
 
 // Chrono (sovereign datetime engine — now, parse, format, duration)
 pub mod chrono;
+
+// NexChat (AI chat status, config, tool discovery)
+pub mod nexchat;

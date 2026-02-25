@@ -17,6 +17,7 @@
 pub mod ai;
 pub mod audit;
 pub mod config;
+pub mod conversation;
 pub mod formatter;
 pub mod metering;
 pub mod protocol;

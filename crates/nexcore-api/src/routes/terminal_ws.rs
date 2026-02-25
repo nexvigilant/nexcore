@@ -36,6 +36,9 @@ use nexcore_terminal::session::{SessionStatus, TerminalMode, TerminalSession};
 
 use crate::ApiState;
 use crate::mcp_bridge;
+use crate::routes::ai_bridge::{AiMcpBridge, ToolScope};
+use crate::routes::ai_client::{ClaudeClient, ClaudeConfig, StreamEvent};
+use nexcore_terminal::conversation::ConversationContext;
 
 // =============================================================================
 // Shared State
@@ -206,6 +209,15 @@ async fn handle_terminal_socket(mut socket: WebSocket, params: TerminalConnectPa
     // Bidirectional I/O loop
     let mut current_mode = mode;
 
+    // AI conversation state — persists across messages within the session
+    let mut conversation = ConversationContext::new("claude-sonnet-4-6", 200_000);
+    conversation.set_system_prompt(
+        "You are NexChat, an AI assistant integrated into NexVigilant's terminal. \
+         You have access to MCP tools for pharmacovigilance, signal detection, \
+         regulatory intelligence, and data analysis. Use tools when they help \
+         answer the user's question accurately.",
+    );
+
     loop {
         tokio::select! {
             // PTY stdout → WebSocket client
@@ -267,6 +279,7 @@ async fn handle_terminal_socket(mut socket: WebSocket, params: TerminalConnectPa
                                     &term_state,
                                     &session_id,
                                     &mut current_mode,
+                                    &mut conversation,
                                 ).await;
                             }
                             Err(_) => {
@@ -315,17 +328,18 @@ async fn handle_client_message(
     term_state: &TerminalState,
     session_id: &vr_core::ids::TerminalSessionId,
     current_mode: &mut TerminalMode,
+    conversation: &mut ConversationContext,
 ) {
     match msg {
         WsClientMessage::Input { data } => {
             // Route based on current mode
             let routed = route_command(&data, *current_mode);
-            dispatch_routed_command(routed, socket, pty).await;
+            dispatch_routed_command(routed, socket, pty, conversation).await;
         }
         WsClientMessage::Command { command } => {
             // Explicit command — route with prefix detection
             let routed = route_command(&command, *current_mode);
-            dispatch_routed_command(routed, socket, pty).await;
+            dispatch_routed_command(routed, socket, pty, conversation).await;
         }
         WsClientMessage::Resize { cols, rows } => {
             pty.resize(PtySize::new(cols, rows));
@@ -366,6 +380,7 @@ async fn dispatch_routed_command(
     routed: RoutedCommand,
     socket: &mut WebSocket,
     pty: &mut PtyProcess,
+    conversation: &mut ConversationContext,
 ) {
     match routed {
         RoutedCommand::Shell(cmd) => {
@@ -420,20 +435,8 @@ async fn dispatch_routed_command(
             }
         }
         RoutedCommand::Ai { message, .. } => {
-            // AI dispatch — route to Claude backend
-            // For now, return a placeholder; real AI integration in P5
-            let msg = WsServerMessage::Result {
-                source: "ai".to_string(),
-                content: serde_json::json!({
-                    "message": message,
-                    "response": "AI dispatch pending (Phase 5)",
-                }),
-            };
-            if let Ok(json) = serde_json::to_string(&msg) {
-                if socket.send(Message::Text(json.into())).await.is_err() {
-                    tracing::debug!("Terminal WS: client gone during AI result send");
-                }
-            }
+            // AI dispatch — stream Claude response via NexChat
+            dispatch_ai_message(&message, socket, conversation).await;
         }
         RoutedCommand::Control(ctrl) => {
             // Control commands handled in handle_client_message already
@@ -442,6 +445,175 @@ async fn dispatch_routed_command(
         }
         // non_exhaustive: ignore unknown variants
         _ => {}
+    }
+}
+
+// =============================================================================
+// AI Dispatch
+// =============================================================================
+
+/// Stream a Claude response for an AI message, handling tool_use loops.
+///
+/// Grounding: σ(Sequence) + →(Causality) + μ(Mapping) + ∂(Boundary)
+async fn dispatch_ai_message(
+    user_message: &str,
+    socket: &mut WebSocket,
+    conversation: &mut ConversationContext,
+) {
+    // 1. Build client from env
+    let client = match ClaudeConfig::from_env() {
+        Ok(config) => ClaudeClient::new(config),
+        Err(e) => {
+            let err = WsServerMessage::error("AI_CONFIG_ERROR", e.to_string());
+            if let Ok(json) = serde_json::to_string(&err) {
+                if socket.send(Message::Text(json.into())).await.is_err() {
+                    tracing::debug!("Terminal WS: client gone during AI config error");
+                }
+            }
+            return;
+        }
+    };
+
+    // 2. Add user message to conversation
+    conversation.add_user_message(user_message);
+
+    // 3. Auto-discover tools
+    let server = NexCoreMcpServer::new();
+    let bridge = AiMcpBridge::new(&server, ToolScope::All);
+    let tools = bridge.available_tools();
+
+    // 4. Stream response (with tool_use loop, max 5 rounds)
+    let max_tool_rounds = 5;
+    for _round in 0..max_tool_rounds {
+        let (tx, mut rx) = tokio::sync::mpsc::channel(64);
+
+        // Spawn stream task
+        let stream_result = {
+            let stream_future = client.stream(conversation, &tools, tx);
+            stream_future.await
+        };
+
+        // Collect tokens and tool_use events from channel
+        let mut full_text = String::new();
+        let mut tool_calls = Vec::new();
+        let mut stop_reason = String::new();
+
+        while let Some(event) = rx.recv().await {
+            match event {
+                StreamEvent::Token(token) => {
+                    full_text.push_str(&token);
+                    let ai_token = WsServerMessage::AiToken { token, done: false };
+                    if let Ok(json) = serde_json::to_string(&ai_token) {
+                        if socket.send(Message::Text(json.into())).await.is_err() {
+                            tracing::debug!("Terminal WS: client gone during AI token send");
+                            return;
+                        }
+                    }
+                }
+                StreamEvent::ToolUse { id, name, input } => {
+                    tool_calls.push((id, name, input));
+                }
+                StreamEvent::Done {
+                    stop_reason: sr,
+                    input_tokens,
+                    output_tokens,
+                } => {
+                    stop_reason = sr;
+                    tracing::debug!(input_tokens, output_tokens, "Terminal WS: AI stream done");
+                }
+                StreamEvent::Error(msg) => {
+                    let err = WsServerMessage::error("AI_STREAM_ERROR", msg);
+                    if let Ok(json) = serde_json::to_string(&err) {
+                        if socket.send(Message::Text(json.into())).await.is_err() {
+                            tracing::debug!("Terminal WS: client gone during AI error send");
+                        }
+                    }
+                    return;
+                }
+            }
+        }
+
+        // Handle stream-level errors
+        if let Err(e) = stream_result {
+            let err = WsServerMessage::error("AI_REQUEST_ERROR", e.to_string());
+            if let Ok(json) = serde_json::to_string(&err) {
+                if socket.send(Message::Text(json.into())).await.is_err() {
+                    tracing::debug!("Terminal WS: client gone during AI request error");
+                }
+            }
+            return;
+        }
+
+        // 5. If no tool calls, we're done
+        if tool_calls.is_empty() || stop_reason != "tool_use" {
+            // Send final done token
+            let done = WsServerMessage::AiToken {
+                token: String::new(),
+                done: true,
+            };
+            if let Ok(json) = serde_json::to_string(&done) {
+                if socket.send(Message::Text(json.into())).await.is_err() {
+                    tracing::debug!("Terminal WS: client gone during AI done send");
+                }
+            }
+
+            // Record assistant response in conversation
+            if !full_text.is_empty() {
+                conversation.add_assistant_message(full_text);
+            }
+            return;
+        }
+
+        // 6. Tool use loop: dispatch each tool, feed results back
+        let ai_tool_calls: Vec<nexcore_terminal::ai::AiToolCall> = tool_calls
+            .iter()
+            .map(|(id, name, input)| {
+                nexcore_terminal::ai::AiToolCall::new(id.clone(), name.clone(), input.clone())
+            })
+            .collect();
+
+        conversation.add_assistant_tool_calls(full_text.clone(), ai_tool_calls);
+
+        for (id, name, input) in &tool_calls {
+            // Notify client that a tool is being called
+            let tool_status = WsServerMessage::Result {
+                source: format!("ai:tool:{name}"),
+                content: serde_json::json!({
+                    "status": "executing",
+                    "tool": name,
+                    "input": input,
+                }),
+            };
+            if let Ok(json) = serde_json::to_string(&tool_status) {
+                if socket.send(Message::Text(json.into())).await.is_err() {
+                    tracing::debug!("Terminal WS: client gone during tool status send");
+                    return;
+                }
+            }
+
+            // Execute tool
+            let (tool_result, is_error) = match bridge.execute_tool_call(name, input.clone()).await
+            {
+                Ok(result) => (result, false),
+                Err(e) => (format!("Tool error: {e}"), true),
+            };
+
+            // Record tool result in conversation
+            conversation.add_tool_result(id, &tool_result, is_error);
+        }
+
+        // Loop back to stream the next response with tool results
+    }
+
+    // Max rounds exceeded
+    let done = WsServerMessage::AiToken {
+        token: String::new(),
+        done: true,
+    };
+    if let Ok(json) = serde_json::to_string(&done) {
+        if socket.send(Message::Text(json.into())).await.is_err() {
+            tracing::debug!("Terminal WS: client gone during AI max-rounds done send");
+        }
     }
 }
 

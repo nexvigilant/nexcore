@@ -538,3 +538,6 @@ pub mod markov;
 
 // DataFrame (sovereign columnar engine — describe, query, aggregate, counter, stats, construct, transform, save)
 pub mod dataframe;
+
+// Chrono (sovereign datetime engine — now, parse, format, duration)
+pub mod chrono;

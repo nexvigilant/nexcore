@@ -531,3 +531,7 @@ pub use markov::*;
 // DataFrame (sovereign columnar engine — Directive 006A Phase 5)
 pub mod dataframe;
 pub use dataframe::*;
+
+// Chrono (sovereign datetime engine — now, parse, format, duration)
+pub mod chrono;
+pub use chrono::*;

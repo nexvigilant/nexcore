@@ -2315,6 +2315,14 @@ async fn dispatch_inner(
         "causality_ucas" => typed(params, tools::causality::causality_ucas),
 
         // ====================================================================
+        // Chrono (4) — sovereign datetime engine: now, parse, format, duration
+        // ====================================================================
+        "chrono_now" => tools::chrono::chrono_now(),
+        "chrono_parse" => typed(params, tools::chrono::chrono_parse),
+        "chrono_format" => typed(params, tools::chrono::chrono_format),
+        "chrono_duration" => typed(params, tools::chrono::chrono_duration),
+
+        // ====================================================================
         // PV Temporal Analysis (3) — TTO, challenge, plausibility
         // ====================================================================
         "temporal_tto" => typed(params, tools::temporal::temporal_tto),
@@ -3007,6 +3015,7 @@ fn unified_catalog_data() -> serde_json::Value {
             "chemivigilance": ["chem_parse_smiles", "chem_descriptors", "chem_fingerprint", "chem_similarity", "chem_structural_alerts", "chem_predict_toxicity", "chem_predict_metabolites", "chem_predict_degradants", "chem_safety_brief", "chem_substructure", "chem_watchlist", "chem_alert_library", "chem_ring_scan", "chem_aromaticity", "chem_molecular_formula", "chem_predict_mutagenicity", "chem_predict_hepatotoxicity", "chem_predict_cardiotoxicity", "chem_assess_applicability_domain"],
             "pk": ["pk_auc", "pk_clearance", "pk_half_life", "pk_steady_state", "pk_ionization", "pk_michaelis_menten"],
             "causality": ["causality_rucam", "causality_ucas"],
+            "chrono": ["chrono_now", "chrono_parse", "chrono_format", "chrono_duration"],
             "temporal": ["temporal_tto", "temporal_challenge", "temporal_plausibility"],
             "knowledge_engine": ["knowledge_engine_compress", "knowledge_engine_compile", "knowledge_engine_query", "knowledge_engine_score", "knowledge_engine_extract_primitives", "knowledge_engine_extract_concepts"],
             "notebooklm": ["nlm_add_notebook", "nlm_list_notebooks", "nlm_get_notebook", "nlm_select_notebook", "nlm_update_notebook", "nlm_remove_notebook", "nlm_search_notebooks", "nlm_get_library_stats", "nlm_list_sessions", "nlm_close_session", "nlm_reset_session", "nlm_get_health", "nlm_setup_auth", "nlm_re_auth", "nlm_ask_question", "nlm_cleanup_data"],

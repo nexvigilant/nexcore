@@ -262,6 +262,55 @@ pub fn parse_naive_with_format(input: &str, fmt: &str) -> Result<NaiveDateTime, 
                     day = parse_digits(ibytes, ipos, 2, input)? as u32;
                     ipos += 2;
                 }
+                b'e' => {
+                    // Space-padded day: " 4" or "14"
+                    if ipos < ibytes.len() && ibytes[ipos] == b' ' {
+                        ipos += 1;
+                    }
+                    let start = ipos;
+                    while ipos < ibytes.len() && ibytes[ipos].is_ascii_digit() {
+                        ipos += 1;
+                    }
+                    if ipos == start {
+                        return Err(parse_err(input, fmt));
+                    }
+                    let mut d: u32 = 0;
+                    #[allow(
+                        clippy::indexing_slicing,
+                        reason = "start..ipos bounded by ibytes.len() check in while loop"
+                    )]
+                    for &b in &ibytes[start..ipos] {
+                        d = d.saturating_mul(10).saturating_add(u32::from(b - b'0'));
+                    }
+                    day = d;
+                }
+                b'b' => {
+                    // Abbreviated month name
+                    if ipos.saturating_add(3) > ibytes.len() {
+                        return Err(parse_err(input, fmt));
+                    }
+                    #[allow(
+                        clippy::indexing_slicing,
+                        reason = "ipos+3 <= ibytes.len() checked above"
+                    )]
+                    let m = &ibytes[ipos..ipos + 3];
+                    month = match m {
+                        b"Jan" | b"jan" => 1,
+                        b"Feb" | b"feb" => 2,
+                        b"Mar" | b"mar" => 3,
+                        b"Apr" | b"apr" => 4,
+                        b"May" | b"may" => 5,
+                        b"Jun" | b"jun" => 6,
+                        b"Jul" | b"jul" => 7,
+                        b"Aug" | b"aug" => 8,
+                        b"Sep" | b"sep" => 9,
+                        b"Oct" | b"oct" => 10,
+                        b"Nov" | b"nov" => 11,
+                        b"Dec" | b"dec" => 12,
+                        _ => return Err(parse_err(input, fmt)),
+                    };
+                    ipos += 3;
+                }
                 b'H' => {
                     hour = parse_digits(ibytes, ipos, 2, input)? as u32;
                     ipos += 2;

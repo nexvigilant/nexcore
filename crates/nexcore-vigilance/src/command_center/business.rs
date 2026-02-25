@@ -479,7 +479,7 @@ mod tests {
     fn test_transaction_signed_amount() {
         let llc_id = NexId::v4();
         let user_id = NexId::v4();
-        let date = Date::from_ymd_opt(2025, 1, 15).unwrap();
+        let date = Date::from_ymd(2025, 1, 15).unwrap_or_default();
 
         let revenue = Transaction::new(
             llc_id,
@@ -507,7 +507,7 @@ mod tests {
     #[test]
     fn test_kpi_working_capital() {
         let llc_id = NexId::v4();
-        let date = Date::from_ymd_opt(2025, 1, 15).unwrap();
+        let date = Date::from_ymd(2025, 1, 15).unwrap_or_default();
 
         let mut kpi = Kpi::new(llc_id, date);
         kpi.cash_balance = Decimal::from(10000);

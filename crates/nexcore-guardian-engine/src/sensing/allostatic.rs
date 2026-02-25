@@ -28,7 +28,7 @@
 //! - `→` (Causality) — chronic overrides causally degrade calibration
 
 use crate::sensing::{Measured, Sensor, SignalSource, ThreatLevel, ThreatSignal};
-use chrono::{DateTime, Duration, Utc};
+use nexcore_chrono::{DateTime, Duration};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -59,7 +59,7 @@ pub struct OverrideRecord {
     pub hook_name: String,
 
     /// UTC timestamp when the override occurred.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
 
     /// Description of the operation the hook attempted to block.
     pub blocked_operation: String,
@@ -121,7 +121,7 @@ impl AllostaticLoadState {
     ///
     /// Cutoff is `now - window_days`. Records at or after the cutoff are kept.
     pub fn prune_expired(&mut self) {
-        let cutoff = Utc::now() - Duration::days(i64::from(self.window_days));
+        let cutoff = DateTime::now() - Duration::days(i64::from(self.window_days));
         self.overrides.retain(|r| r.timestamp >= cutoff);
     }
 
@@ -427,7 +427,7 @@ mod tests {
     fn make_record(hook: &str, days_ago: i64) -> OverrideRecord {
         OverrideRecord {
             hook_name: hook.to_string(),
-            timestamp: Utc::now() - Duration::days(days_ago),
+            timestamp: DateTime::now() - Duration::days(days_ago),
             blocked_operation: "Write /etc/hosts".to_string(),
             override_reason: "Approved by operator".to_string(),
         }

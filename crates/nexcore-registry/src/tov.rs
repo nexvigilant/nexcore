@@ -177,13 +177,13 @@ pub fn is_safe(conn: &Connection, threshold: f64) -> Result<bool> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     use crate::pool::RegistryPool;
     use crate::skills::{self, SkillRow};
 
     fn make_skill(name: &str) -> SkillRow {
-        let now = Utc::now();
+        let now = DateTime::now();
         SkillRow {
             name: name.to_string(),
             path: format!("/skills/{name}/SKILL.md"),

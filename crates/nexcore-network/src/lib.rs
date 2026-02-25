@@ -75,7 +75,10 @@ pub use firewall::{
 
 /// Backward-compatible re-export.
 #[deprecated(note = "use PacketDisposition — F2 equivocation fix")]
-#[allow(deprecated)]
+#[allow(
+    deprecated,
+    reason = "re-exporting our own deprecated type alias for backward compatibility"
+)]
 pub use firewall::Action;
 
 // ── Re-exports: route ────────────────────────────────────────────────

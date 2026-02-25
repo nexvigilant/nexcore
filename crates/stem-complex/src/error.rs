@@ -5,6 +5,7 @@ use nexcore_error::Error;
 /// Errors that arise from complex number operations.
 ///
 /// Each variant represents a distinct mathematical failure mode.
+#[non_exhaustive]
 #[derive(Debug, Error)]
 pub enum ComplexError {
     /// Division by a complex number with zero magnitude.

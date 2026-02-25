@@ -133,9 +133,9 @@ pub fn watchtower_sessions_list() -> Value {
                 let modified = metadata
                     .and_then(|m| m.modified().ok())
                     .map(|t| {
-                        chrono::DateTime::<chrono::Utc>::from(t)
+                        nexcore_chrono::DateTime::from(t)
                             .format("%Y-%m-%d %H:%M:%S")
-                            .to_string()
+                            .unwrap_or_default()
                     })
                     .unwrap_or_default();
 

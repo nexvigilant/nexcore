@@ -404,7 +404,7 @@ impl WolffsLaw {
     /// Records a correction for the given area. If a correction for that area
     /// already exists, increments its frequency. Otherwise, adds a new correction.
     pub fn record_correction(&mut self, area: &str, text: &str) {
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = nexcore_chrono::DateTime::now().to_rfc3339();
         let existing = self.corrections.iter_mut().find(|c| c.area == area);
         match existing {
             Some(c) => {

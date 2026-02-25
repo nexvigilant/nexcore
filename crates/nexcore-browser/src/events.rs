@@ -3,7 +3,7 @@
 //! Defines the `BrowserEvent` enum that bridges CDP events to Vigil's EventBus.
 //! Events are broadcast via `tokio::sync::broadcast` for fan-out to multiple subscribers.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// Browser events for Vigil integration.
@@ -26,7 +26,7 @@ pub enum BrowserEvent {
         /// Column number in source
         column: Option<u32>,
         /// Timestamp
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
         /// Page ID that emitted this message
         page_id: String,
     },
@@ -42,7 +42,7 @@ pub enum BrowserEvent {
         /// Request ID for correlation
         request_id: String,
         /// Timestamp
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
         /// Page ID
         page_id: String,
     },
@@ -62,7 +62,7 @@ pub enum BrowserEvent {
         /// Request ID
         request_id: String,
         /// Timestamp
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
         /// Page ID
         page_id: String,
     },
@@ -78,7 +78,7 @@ pub enum BrowserEvent {
         /// Page ID
         page_id: String,
         /// Timestamp
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     },
 
     /// Performance violation detected
@@ -92,7 +92,7 @@ pub enum BrowserEvent {
         /// Page ID
         page_id: String,
         /// Timestamp
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     },
 
     /// Browser disconnected
@@ -100,7 +100,7 @@ pub enum BrowserEvent {
         /// Reason for disconnection
         reason: String,
         /// Timestamp
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     },
 
     /// Page crashed
@@ -110,7 +110,7 @@ pub enum BrowserEvent {
         /// Error description
         error: Option<String>,
         /// Timestamp
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     },
 }
 
@@ -165,7 +165,7 @@ impl BrowserEvent {
 
     /// Get timestamp of the event
     #[must_use]
-    pub fn timestamp(&self) -> DateTime<Utc> {
+    pub fn timestamp(&self) -> DateTime {
         match self {
             Self::ConsoleMessage { timestamp, .. }
             | Self::NetworkFailure { timestamp, .. }

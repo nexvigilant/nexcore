@@ -200,7 +200,7 @@ pub fn execute_pipeline(
                         stage_id: result.stage_id.clone(),
                         content: result.stdout,
                         is_stderr: false,
-                        timestamp: chrono::Utc::now(),
+                        timestamp: nexcore_chrono::DateTime::now(),
                     });
                 }
                 if !result.stderr.is_empty() {
@@ -208,7 +208,7 @@ pub fn execute_pipeline(
                         stage_id: result.stage_id.clone(),
                         content: result.stderr,
                         is_stderr: true,
-                        timestamp: chrono::Utc::now(),
+                        timestamp: nexcore_chrono::DateTime::now(),
                     });
                 }
 

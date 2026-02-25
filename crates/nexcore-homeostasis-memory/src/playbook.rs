@@ -13,7 +13,7 @@
 //! | `PlaybookMatch` | κ (Comparison) + N (Quantity) |
 
 use crate::incident::{IncidentSeverity, IncidentSignature};
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_homeostasis_primitives::enums::ActionType;
 use serde::{Deserialize, Serialize};
 
@@ -50,7 +50,7 @@ pub struct Playbook {
     /// Ordered steps to execute.
     pub steps: Vec<PlaybookStep>,
     /// When this playbook was created.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// How many times this playbook has been applied.
     pub application_count: u64,
     /// Success rate across all applications (0.0–1.0).
@@ -78,7 +78,7 @@ impl Playbook {
             trigger_pattern,
             match_threshold: 0.70,
             steps,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             application_count: 0,
             success_rate: 0.0,
             enabled: true,

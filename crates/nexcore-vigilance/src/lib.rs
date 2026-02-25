@@ -19,12 +19,6 @@ pub mod avc;
 // Pharmacovigilance Operating System (T3: μ+σ+κ+∂+ρ+ς+π+→)
 pub mod pvos;
 
-// pub mod academy;
-
-// Betting signal detection (consolidated from NexBet)
-// Cross-domain transfer: PRR→BDI, EBGM→ECS
-// pub mod betting;
-
 // AI clients (consolidated from nexcore-ai)
 pub mod ai;
 
@@ -49,9 +43,6 @@ pub mod learning;
 
 // Google Workspace integrations (consolidated from nexcore-google)
 pub mod google;
-
-// Quiz platform (consolidated from nexcore-quiz)
-// pub mod quiz;
 
 // Guardian compliance domain (consolidated from nexcore-guardian)
 pub mod guardian_domain;
@@ -78,9 +69,6 @@ pub mod validation;
 
 // UI Mapper (consolidated from nexcore-ui-mapper)
 pub mod ui_mapper;
-
-// Crypto operations (consolidated from nexcore-crypto)
-// pub mod crypto;
 
 // Documentation generation (FORGE-generated)
 pub mod docs;

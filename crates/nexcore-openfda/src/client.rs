@@ -27,7 +27,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::de::DeserializeOwned;
 use tokio::sync::RwLock;
 
@@ -104,12 +104,12 @@ impl QueryParams {
 struct CacheEntry {
     /// Raw JSON response body.
     body: String,
-    fetched_at: DateTime<Utc>,
+    fetched_at: DateTime,
 }
 
 impl CacheEntry {
     fn is_fresh(&self) -> bool {
-        Utc::now()
+        DateTime::now()
             .signed_duration_since(self.fetched_at)
             .num_seconds()
             < CACHE_TTL_SECS
@@ -198,7 +198,7 @@ impl OpenFdaClient {
                 if let Some(entry) = cache.get(&url) {
                     tracing::warn!(
                         error = %api_err,
-                        cache_age_secs = Utc::now()
+                        cache_age_secs = DateTime::now()
                             .signed_duration_since(entry.fetched_at)
                             .num_seconds(),
                         "openFDA API failed — serving stale cache (V33 contingency)"
@@ -221,7 +221,7 @@ impl OpenFdaClient {
                 url,
                 CacheEntry {
                     body,
-                    fetched_at: Utc::now(),
+                    fetched_at: DateTime::now(),
                 },
             );
         }

@@ -237,7 +237,12 @@ impl QuantumStateSpace {
 
         for (&id, amp) in &self.amplitudes {
             let prob = amp.probability();
-            if prob > best_prob || (prob == best_prob && best_id.is_none()) {
+            #[allow(
+                clippy::float_cmp,
+                reason = "tie-breaking equality check: both values computed identically from same arithmetic so exact equality is intentional"
+            )]
+            let is_better = prob > best_prob || (prob == best_prob && best_id.is_none());
+            if is_better {
                 best_prob = prob;
                 best_id = Some(id);
             }

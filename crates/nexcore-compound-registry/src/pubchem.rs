@@ -58,9 +58,15 @@ struct PugUrn {
 #[derive(Deserialize)]
 struct PugValue {
     sval: Option<String>,
-    #[allow(dead_code)]
+    #[allow(
+        dead_code,
+        reason = "PubChem PUG REST includes fval in the schema; field reserved for future numeric property extraction"
+    )]
     fval: Option<f64>,
-    #[allow(dead_code)]
+    #[allow(
+        dead_code,
+        reason = "PubChem PUG REST includes ival in the schema; field reserved for future integer property extraction"
+    )]
     ival: Option<i64>,
 }
 
@@ -172,7 +178,7 @@ fn parse_pug_response(name: &str, pug: PugRestResponse) -> RegistryResult<Compou
         chembl_id: None,
         synonyms: Vec::new(),
         source: ResolutionSource::PubChem,
-        resolved_at: chrono::Utc::now(),
+        resolved_at: nexcore_chrono::DateTime::now(),
     })
 }
 

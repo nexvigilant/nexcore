@@ -1,7 +1,7 @@
 use crate::llm::LLMClient;
 use crate::models::{Event, Interaction};
 use async_trait::async_trait;
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 
 pub struct MockLLMClient {
     pub response: String,
@@ -15,7 +15,7 @@ impl LLMClient for MockLLMClient {
             event: event.clone(),
             prompt: "".to_string(),
             response: self.response.clone(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             tokens_used: 10,
             contains_learning: false,
             actions_taken: vec![],

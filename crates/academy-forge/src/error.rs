@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 
 /// Errors that can occur during forge operations.
+#[non_exhaustive]
 #[derive(Debug, nexcore_error::Error)]
 pub enum ForgeError {
     /// Failed to read a file.

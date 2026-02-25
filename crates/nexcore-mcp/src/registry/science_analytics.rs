@@ -1132,6 +1132,14 @@ pub async fn viz_dag(
     tools::viz::dag(params)
 }
 
+#[tool(description = "Compute node confidence for Observatory graph nodes. Returns Measured<f64> with calibration metadata. Sources: chi_squared, signal_strength, severity, relevance_score, structural_certainty.")]
+pub async fn viz_node_confidence(
+    &self,
+    Parameters(params): Parameters<params::viz::VizNodeConfidenceParams>
+) -> Result<CallToolResult, McpError> {
+    tools::viz::node_confidence(params)
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // PRIMITIVE SCANNER
 // ═══════════════════════════════════════════════════════════════════════════

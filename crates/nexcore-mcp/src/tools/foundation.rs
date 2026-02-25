@@ -110,7 +110,7 @@ pub fn sha256(params: Sha256Params) -> Result<CallToolResult, McpError> {
 
 /// Parse YAML to JSON
 pub fn yaml_parse(params: YamlParseParams) -> Result<CallToolResult, McpError> {
-    match serde_yaml::from_str::<serde_json::Value>(&params.content) {
+    match serde_yml::from_str::<serde_json::Value>(&params.content) {
         Ok(value) => Ok(CallToolResult::success(vec![Content::text(
             value.to_string(),
         )])),

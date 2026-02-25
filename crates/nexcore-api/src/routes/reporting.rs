@@ -4,7 +4,7 @@ use crate::ApiState;
 use crate::persistence::ReportRecord;
 use axum::extract::{Json, State};
 use axum::http::HeaderMap;
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
@@ -26,9 +26,9 @@ pub struct ReportRequest {
     /// Type of report
     pub report_type: ReportType,
     /// Optional start date for data inclusion
-    pub start_date: Option<DateTime<Utc>>,
+    pub start_date: Option<DateTime>,
     /// Optional end date for data inclusion
-    pub end_date: Option<DateTime<Utc>>,
+    pub end_date: Option<DateTime>,
 }
 
 /// Generated report response
@@ -36,7 +36,7 @@ pub struct ReportRequest {
 pub struct ReportResponse {
     pub id: String,
     pub report_type: ReportType,
-    pub generated_at: DateTime<Utc>,
+    pub generated_at: DateTime,
     pub content: String,
     pub status: String,
 }
@@ -70,7 +70,7 @@ pub async fn generate_report(
     };
 
     let id = nexcore_id::NexId::v4().to_string();
-    let generated_at = Utc::now();
+    let generated_at = DateTime::now();
     let report_type_str = format!("{:?}", req.report_type);
 
     let record = ReportRecord {
@@ -293,8 +293,8 @@ pub async fn timeline(
 
     // Current date: use today (YYYYMMDD format)
     let current_date = {
-        let now = chrono::Utc::now();
-        format!("{}", now.format("%Y%m%d"))
+        let now = nexcore_chrono::DateTime::now();
+        now.format("%Y%m%d").unwrap_or_default()
     };
 
     let criteria = parse_seriousness_criteria(&req.seriousness_criteria);

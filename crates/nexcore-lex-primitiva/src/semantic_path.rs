@@ -18,7 +18,10 @@
 //!
 //! ## Tier: T1-Universal
 
-#![allow(dead_code)]
+#![allow(
+    dead_code,
+    reason = "module contains proof infrastructure used in tests"
+)]
 
 use crate::primitiva::LexPrimitiva;
 use serde::{Deserialize, Serialize};
@@ -26,6 +29,7 @@ use std::fmt;
 
 /// A semantic relationship between two primitives.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum SemanticRelation {
     /// X requires Y to exist (ontological dependency)
     RequiresExistence,
@@ -61,6 +65,7 @@ impl fmt::Display for SemanticRelation {
 
 /// A single step in a semantic grounding path.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct SemanticStep {
     /// Source primitive
     pub from: LexPrimitiva,
@@ -86,6 +91,7 @@ impl fmt::Display for SemanticStep {
 
 /// A complete semantic grounding path from a primitive to a root constant.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct SemanticGroundingPath {
     /// The primitive being grounded
     pub origin: LexPrimitiva,
@@ -221,7 +227,17 @@ pub fn semantic_paths(primitive: LexPrimitiva) -> Vec<SemanticGroundingPath> {
         LexPrimitiva::Existence => path_existence(),
         LexPrimitiva::Comparison => path_comparison(),
         LexPrimitiva::Void => path_void(),
-        _ => path_default(primitive),
+        LexPrimitiva::Sequence
+        | LexPrimitiva::Mapping
+        | LexPrimitiva::State
+        | LexPrimitiva::Recursion
+        | LexPrimitiva::Boundary
+        | LexPrimitiva::Frequency
+        | LexPrimitiva::Persistence
+        | LexPrimitiva::Location
+        | LexPrimitiva::Irreversibility
+        | LexPrimitiva::Sum
+        | LexPrimitiva::Product => path_default(primitive),
     }]
 }
 
@@ -241,6 +257,7 @@ pub fn validate_all_semantic_grounding() -> Vec<(LexPrimitiva, bool)> {
 
 /// Distinguishes semantic grounding from Gödel encoding.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum GroundingType {
     /// Semantic: Named relationships with justifications
     Semantic,
@@ -260,6 +277,7 @@ pub fn grounding_type(path: &SemanticGroundingPath) -> GroundingType {
 
 /// The anti-triviality argument.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct AntiTrivialityArgument {
     /// The claim being defended
     pub claim: &'static str,

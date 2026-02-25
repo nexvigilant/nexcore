@@ -23,6 +23,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Tier: T2-P (kappa -- Comparison/Classification)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum GrowthPhase {
     /// No snapshots or only one — insufficient data.
     Dormant,
@@ -61,6 +62,7 @@ impl GrowthPhase {
 ///
 /// Tier: T2-P (kappa -- Comparison/Classification)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum Bottleneck {
     /// Basis is small while eta and r are healthy.
     BasisLimited,
@@ -93,6 +95,7 @@ impl Bottleneck {
 ///
 /// Tier: T2-C (varsigma + kappa + proportional -- State + Comparison + Proportion)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ComponentAnalysis {
     /// Raw basis size as f64.
     pub basis_value: f64,
@@ -118,6 +121,7 @@ pub struct ComponentAnalysis {
 ///
 /// Tier: T3 (Full domain detection result)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct DetectionResult {
     /// Detected growth phase.
     pub phase: GrowthPhase,
@@ -144,6 +148,7 @@ pub struct DetectionResult {
 /// Stateless compound growth detector.
 ///
 /// Tier: T3 (Domain-specific detector)
+#[non_exhaustive]
 pub struct CompoundDetector;
 
 /// Normalization ceiling for basis size (50 = excellent basis).
@@ -189,8 +194,8 @@ impl CompoundDetector {
         match velocities.len() {
             0 | 1 => GrowthPhase::Dormant,
             2 | 3 => {
-                let first = velocities[0];
-                let last = velocities[velocities.len() - 1];
+                let first = velocities.first().copied().unwrap_or(0.0);
+                let last = velocities.last().copied().unwrap_or(0.0);
                 if last > first {
                     GrowthPhase::Ignition
                 } else {
@@ -201,19 +206,25 @@ impl CompoundDetector {
                 // Compute pairwise growth rates
                 let rates: Vec<f64> = velocities
                     .windows(2)
-                    .map(|w| if w[0] == 0.0 { 0.0 } else { w[1] / w[0] })
+                    .map(|w| {
+                        let prev = w.first().copied().unwrap_or(0.0);
+                        let next = w.get(1).copied().unwrap_or(0.0);
+                        if prev == 0.0 { 0.0 } else { next / prev }
+                    })
                     .collect();
 
                 // Take last 3 growth rates
                 let n = rates.len();
                 let tail: Vec<f64> = if n >= 3 {
-                    rates[n - 3..].to_vec()
+                    rates.get(n.saturating_sub(3)..).unwrap_or(&rates).to_vec()
                 } else {
-                    rates.clone()
+                    rates
                 };
 
                 // Check if increasing (for acceleration detection)
-                let increasing = tail.windows(2).all(|w| w[1] > w[0]);
+                let increasing = tail
+                    .windows(2)
+                    .all(|w| w.get(1).copied().unwrap_or(0.0) > w.first().copied().unwrap_or(0.0));
 
                 if tail.iter().all(|r| *r > 1.05) && increasing {
                     GrowthPhase::Acceleration
@@ -225,9 +236,9 @@ impl CompoundDetector {
                     GrowthPhase::Decline
                 } else {
                     // Mixed — use median of last 3
-                    let mut sorted = tail.clone();
+                    let mut sorted = tail;
                     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-                    let median = sorted[sorted.len() / 2];
+                    let median = sorted.get(sorted.len() / 2).copied().unwrap_or(0.0);
 
                     if median > 1.05 {
                         GrowthPhase::Acceleration
@@ -260,18 +271,26 @@ impl CompoundDetector {
         ];
 
         // Sort by normalized value ascending
-        components.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+        components.sort_by(|lhs, rhs| {
+            lhs.0
+                .partial_cmp(&rhs.0)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
-        let lowest = components[0].0;
-        let second_lowest = components[1].0;
+        let lowest = components.first().map(|c| c.0).unwrap_or(0.0);
+        let second_lowest = components.get(1).map(|c| c.0).unwrap_or(0.0);
 
-        // If within 10% of second-lowest, balanced
-        if second_lowest > 0.0 && (second_lowest - lowest) / second_lowest <= BALANCED_THRESHOLD {
-            Bottleneck::Balanced
-        } else if lowest == 0.0 && second_lowest == 0.0 {
+        // If within 10% of second-lowest, or both are zero, balanced
+        let is_balanced = (lowest == 0.0 && second_lowest == 0.0)
+            || (second_lowest > 0.0
+                && (second_lowest - lowest) / second_lowest <= BALANCED_THRESHOLD);
+        if is_balanced {
             Bottleneck::Balanced
         } else {
-            components[0].1
+            components
+                .first()
+                .map(|c| c.1)
+                .unwrap_or(Bottleneck::Balanced)
         }
     }
 

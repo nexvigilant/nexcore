@@ -6,7 +6,7 @@ use axum::{
     Json, Router,
     routing::{get, post},
 };
-use chrono::{Duration, Utc};
+use nexcore_chrono::{DateTime, Duration};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
@@ -181,7 +181,7 @@ pub async fn record_audit_event(
             resource_type: req.resource_type,
             resource_id: req.resource_id,
             action: req.action,
-            timestamp: Utc::now().to_rfc3339(),
+            timestamp: DateTime::now().to_rfc3339(),
             details: req.details,
         }),
     )
@@ -201,7 +201,7 @@ pub async fn record_audit_event(
 pub async fn query_audit_trail(tenant: VerifiedTenant) -> Json<AuditQueryResponse> {
     let ctx = tenant.0;
     let tid = ctx.tenant_id().to_string();
-    let now = Utc::now();
+    let now = DateTime::now();
 
     let events = vec![
         AuditEventResponse {
@@ -284,7 +284,7 @@ pub async fn query_audit_trail(tenant: VerifiedTenant) -> Json<AuditQueryRespons
 pub async fn list_gdpr_requests(tenant: VerifiedTenant) -> Json<GdprRequestListResponse> {
     let ctx = tenant.0;
     let tid = ctx.tenant_id().to_string();
-    let now = Utc::now();
+    let now = DateTime::now();
 
     let requests = vec![
         GdprRequestResponse {
@@ -330,7 +330,7 @@ pub async fn create_gdpr_request(
     Json(req): Json<CreateGdprRequestBody>,
 ) -> (axum::http::StatusCode, Json<GdprRequestResponse>) {
     let ctx = tenant.0;
-    let now = Utc::now();
+    let now = DateTime::now();
     let deadline = now + Duration::days(30);
 
     (
@@ -361,7 +361,7 @@ pub async fn create_gdpr_request(
 )]
 pub async fn get_consent_records(tenant: VerifiedTenant) -> Json<ConsentListResponse> {
     let ctx = tenant.0;
-    let now = Utc::now();
+    let now = DateTime::now();
 
     Json(ConsentListResponse {
         tenant_id: ctx.tenant_id().to_string(),
@@ -421,7 +421,7 @@ pub async fn update_consent(
     Json(ConsentUpdateResponse {
         consent_type: req.consent_type,
         granted: req.granted,
-        updated_at: Utc::now().to_rfc3339(),
+        updated_at: DateTime::now().to_rfc3339(),
     })
 }
 
@@ -474,7 +474,7 @@ pub async fn screen_export(
         risk_level,
         cleared,
         flags,
-        screened_at: Utc::now().to_rfc3339(),
+        screened_at: DateTime::now().to_rfc3339(),
         details: "Screened against EAR, CWC Schedule lists, and OFAC sanctions".to_string(),
     })
 }
@@ -544,11 +544,13 @@ pub async fn get_soc2_scorecard(tenant: VerifiedTenant) -> Json<Soc2ScorecardRes
         controls_compliant: controls_met,
         controls_partial: controls_total - controls_met,
         controls_non_compliant: 0,
-        last_audit_date: (Utc::now() - Duration::days(180))
+        last_audit_date: (DateTime::now() - Duration::days(180))
             .format("%Y-%m-%d")
+            .unwrap_or_default()
             .to_string(),
-        next_audit_date: (Utc::now() + Duration::days(185))
+        next_audit_date: (DateTime::now() + Duration::days(185))
             .format("%Y-%m-%d")
+            .unwrap_or_default()
             .to_string(),
     })
 }

@@ -9,12 +9,13 @@ use crate::graph::DependencyGraph;
 use crate::primitiva::{LexPrimitiva, PrimitiveComposition};
 use crate::tier::Tier;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 /// Classification of validation/schema issue severity.
 ///
 /// Tier: T2-P (κ + ∂ — comparison with boundary)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum DiagnosticLevel {
     /// Informational note.
     Info,
@@ -40,6 +41,7 @@ impl std::fmt::Display for DiagnosticLevel {
 
 /// A single validation issue.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ValidationIssue {
     /// Diagnostic level of the issue.
     pub severity: DiagnosticLevel,
@@ -91,6 +93,7 @@ impl ValidationIssue {
 
 /// Result of validation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ValidationReport {
     /// Subject being validated.
     pub subject: String,
@@ -104,6 +107,7 @@ pub struct ValidationReport {
 
 /// Validation statistics.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ValidationStats {
     /// Number of checks run.
     pub checks_run: usize,
@@ -135,10 +139,14 @@ impl ValidationReport {
 
     fn update_stats(&mut self, severity: DiagnosticLevel) {
         match severity {
-            DiagnosticLevel::Info => self.stats.info_count += 1,
-            DiagnosticLevel::Warning => self.stats.warning_count += 1,
+            DiagnosticLevel::Info => {
+                self.stats.info_count = self.stats.info_count.saturating_add(1);
+            }
+            DiagnosticLevel::Warning => {
+                self.stats.warning_count = self.stats.warning_count.saturating_add(1);
+            }
             DiagnosticLevel::Error => {
-                self.stats.error_count += 1;
+                self.stats.error_count = self.stats.error_count.saturating_add(1);
                 self.passed = false;
             }
         }
@@ -146,7 +154,7 @@ impl ValidationReport {
 
     /// Increment checks run.
     pub fn check(&mut self) {
-        self.stats.checks_run += 1;
+        self.stats.checks_run = self.stats.checks_run.saturating_add(1);
     }
 
     /// Get errors only.
@@ -206,15 +214,15 @@ impl ValidationReport {
 
 /// Context for cycle detection traversal.
 struct CycleContext {
-    visited: HashSet<LexPrimitiva>,
-    stack: HashSet<LexPrimitiva>,
+    visited: BTreeSet<LexPrimitiva>,
+    stack: BTreeSet<LexPrimitiva>,
 }
 
 impl CycleContext {
     fn new() -> Self {
         Self {
-            visited: HashSet::new(),
-            stack: HashSet::new(),
+            visited: BTreeSet::new(),
+            stack: BTreeSet::new(),
         }
     }
 
@@ -240,6 +248,7 @@ impl CycleContext {
 
 /// Validator for Lex Primitiva structures.
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct PrimitivaValidator {
     /// Whether to include info-level checks.
     pub include_info: bool,
@@ -310,7 +319,7 @@ impl PrimitivaValidator {
         }
         if self.include_info {
             let issue = ValidationIssue::info("LP-INFO", &format!("Symbol: {}", p.symbol()));
-            report.add_issue(issue.with_context(&p.name()));
+            report.add_issue(issue.with_context(p.name()));
         }
     }
 
@@ -328,11 +337,11 @@ impl PrimitivaValidator {
         &self,
         report: &mut ValidationReport,
         p: LexPrimitiva,
-        constants: &HashSet<&str>,
+        constants: &BTreeSet<&str>,
     ) {
         if constants.is_empty() {
             let issue = ValidationIssue::error("LP-002", "Primitive has no grounding constants");
-            report.add_issue(issue.with_context(&p.name()));
+            report.add_issue(issue.with_context(p.name()));
         }
     }
 
@@ -340,7 +349,7 @@ impl PrimitivaValidator {
         &self,
         report: &mut ValidationReport,
         p: LexPrimitiva,
-        constants: &HashSet<&str>,
+        constants: &BTreeSet<&str>,
     ) {
         let has_root = constants.contains("0") || constants.contains("1");
         if !has_root {
@@ -361,7 +370,7 @@ impl PrimitivaValidator {
                 "LP-004",
                 &format!("Expected 5 atoms, found {}", atoms.len()),
             );
-            report.add_issue(issue.with_context(&p.name()));
+            report.add_issue(issue.with_context(p.name()));
         }
     }
 
@@ -439,7 +448,7 @@ impl PrimitivaValidator {
             let mut ctx = CycleContext::new();
             if has_cycle(p, &mut ctx) {
                 let issue = ValidationIssue::error("SYS-002", "Cycle detected in dependency graph");
-                report.add_issue(issue.with_context(&p.name()));
+                report.add_issue(issue.with_context(p.name()));
             }
         }
     }

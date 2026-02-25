@@ -79,3 +79,36 @@ pub struct VizDagParams {
     #[serde(default)]
     pub title: Option<String>,
 }
+
+/// Parameters for node confidence computation.
+///
+/// Computes `Measured<f64>` confidence for Observatory graph nodes.
+/// Accepts a JSON-encoded `ConfidenceSource` or individual fields.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct VizNodeConfidenceParams {
+    /// Confidence source type: "chi_squared", "signal_strength", "severity",
+    /// "relevance_score", or "structural_certainty"
+    pub source: String,
+    /// Chi-squared statistic (for chi_squared source)
+    #[serde(default)]
+    pub chi_squared: Option<f64>,
+    /// Whether FDR-rejected (for chi_squared source, default: true)
+    #[serde(default)]
+    pub fdr_rejected: Option<bool>,
+    /// PRR value (for signal_strength source)
+    #[serde(default)]
+    pub prr: Option<f64>,
+    /// Whether signal detected (for signal_strength source)
+    #[serde(default)]
+    pub signal_detected: Option<bool>,
+    /// Severity score (for severity source)
+    #[serde(default)]
+    pub severity: Option<f64>,
+    /// Relevance score (for relevance_score source)
+    #[serde(default)]
+    pub score: Option<f64>,
+    /// Whether API-derived (for structural_certainty source)
+    #[serde(default)]
+    pub api_derived: Option<bool>,
+}

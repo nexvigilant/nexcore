@@ -2,7 +2,7 @@
 //!
 //! Corrections record mistakes and their fixes, with application tracking.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// A learned correction from user feedback
@@ -21,8 +21,8 @@ pub struct Correction {
     pub context: Option<String>,
 
     /// When this correction was learned
-    #[serde(default = "Utc::now")]
-    pub learned_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub learned_at: DateTime,
 
     /// Number of times this correction was applied
     #[serde(default)]
@@ -34,8 +34,8 @@ pub struct Correction {
     pub confidence: f64,
 
     /// When this correction was last reinforced (applied or explicitly confirmed).
-    #[serde(default = "Utc::now")]
-    pub updated_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub updated_at: DateTime,
 }
 
 fn default_correction_confidence() -> f64 {
@@ -46,7 +46,7 @@ impl Correction {
     /// Create a new correction
     #[must_use]
     pub fn new(mistake: impl Into<String>, correction: impl Into<String>) -> Self {
-        let now = Utc::now();
+        let now = DateTime::now();
         Self {
             mistake: mistake.into(),
             correction: correction.into(),
@@ -64,7 +64,7 @@ impl Correction {
         // Each application increases confidence asymptotically
         self.confidence =
             1.0 - (0.2 / (f64::from(self.application_count) + 1.0));
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Half-life in days for correction confidence decay.
@@ -76,12 +76,12 @@ impl Correction {
     /// Compute effective confidence with time-based decay.
     #[must_use]
     pub fn effective_confidence(&self) -> f64 {
-        self.effective_confidence_at(Utc::now())
+        self.effective_confidence_at(DateTime::now())
     }
 
     /// Compute effective confidence at a specific point in time.
     #[must_use]
-    pub fn effective_confidence_at(&self, now: DateTime<Utc>) -> f64 {
+    pub fn effective_confidence_at(&self, now: DateTime) -> f64 {
         let elapsed = now.signed_duration_since(self.updated_at);
         let days = elapsed.num_seconds() as f64 / 86_400.0;
         if days <= 0.0 {
@@ -155,7 +155,7 @@ mod tests {
     fn test_correction_half_life_60_days() {
         let mut correction = Correction::new("mistake", "fix");
         correction.confidence = 1.0;
-        let sixty_days = correction.updated_at + chrono::Duration::days(60);
+        let sixty_days = correction.updated_at + nexcore_chrono::Duration::days(60);
         let eff = correction.effective_confidence_at(sixty_days);
         assert!((eff - 0.5).abs() < 0.01, "expected ~0.5, got {eff}");
     }
@@ -169,14 +169,14 @@ mod tests {
     #[test]
     fn test_correction_is_active_very_old() {
         let mut correction = Correction::new("mistake", "fix");
-        correction.updated_at = Utc::now() - chrono::Duration::days(730);
+        correction.updated_at = DateTime::now() - nexcore_chrono::Duration::days(730);
         assert!(!correction.is_active());
     }
 
     #[test]
     fn test_correction_mark_applied_resets_decay() {
         let mut correction = Correction::new("mistake", "fix");
-        correction.updated_at = Utc::now() - chrono::Duration::days(60);
+        correction.updated_at = DateTime::now() - nexcore_chrono::Duration::days(60);
         let decayed = correction.effective_confidence();
         correction.mark_applied();
         let fresh = correction.effective_confidence();

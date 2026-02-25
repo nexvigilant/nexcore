@@ -17,3 +17,6 @@ nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", 
 
 [dev-dependencies]
 tokio = { version = "1.0", features = ["rt-multi-thread", "macros"] }
+
+[lints]
+workspace = true

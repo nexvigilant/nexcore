@@ -1,6 +1,6 @@
 //! Audit domain types: activity logging and tracking.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -52,7 +52,7 @@ pub struct AuditLog {
     pub request_path: Option<String>,
 
     /// Timestamp (when action occurred).
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 }
 
 impl AuditLog {
@@ -71,7 +71,7 @@ impl AuditLog {
             ip_address: None,
             user_agent: None,
             request_path: None,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
         }
     }
 

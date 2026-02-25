@@ -307,7 +307,7 @@ impl ScarringMechanism {
         self.scars.push(Scar {
             incident: incident.to_string(),
             deny_rule,
-            scarred_at: chrono::Utc::now().to_rfc3339(),
+            scarred_at: nexcore_chrono::DateTime::now().to_rfc3339(),
             risk_level,
         });
 

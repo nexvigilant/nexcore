@@ -27,7 +27,7 @@
 use crate::error::{MiningError, MiningResult};
 use crate::signals::SignalDetector;
 use crate::types::{Baseline, SignalType, ValueSignal};
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_social::Post;
 
 /// Sentiment signal detector using PRR algorithm.
@@ -184,12 +184,12 @@ impl SignalDetector for SentimentDetector {
                     .iter()
                     .map(|p| p.created_datetime())
                     .min()
-                    .unwrap_or_else(Utc::now);
+                    .unwrap_or_else(|| DateTime::now());
                 let window_end = relevant_posts
                     .iter()
                     .map(|p| p.created_datetime())
                     .max()
-                    .unwrap_or_else(Utc::now);
+                    .unwrap_or_else(|| DateTime::now());
 
                 let signal = ValueSignal::new(
                     SignalType::Sentiment,
@@ -236,7 +236,7 @@ mod tests {
             author: "testuser".to_string(),
             score: 100,
             num_comments: 50,
-            created_utc: chrono::Utc::now().timestamp() as f64,
+            created_utc: nexcore_chrono::DateTime::now().timestamp() as f64,
             url: "https://reddit.com".to_string(),
             over_18: false,
             upvote_ratio,

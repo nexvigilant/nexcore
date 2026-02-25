@@ -6,7 +6,7 @@
 //! - **Tier**: T3 (System Service)
 //! - **Commandments**: I (Quantify), II (Classify), IX (Measure)
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -56,7 +56,7 @@ pub struct MarketSnapshot {
     pub price_no: Odds,
     pub order_book: OrderBook,
     pub liquidity: f64,
-    pub last_trade_at: DateTime<Utc>,
+    pub last_trade_at: DateTime,
 }
 
 /// Service for ingesting and caching live market data.
@@ -65,7 +65,7 @@ pub struct MarketSnapshot {
 pub struct MarketDataService {
     /// Active snapshots indexed by market ID.
     pub cache: HashMap<MarketId, MarketSnapshot>,
-    pub last_sync: DateTime<Utc>,
+    pub last_sync: DateTime,
 }
 
 impl MarketDataService {
@@ -74,14 +74,14 @@ impl MarketDataService {
     pub fn new() -> Self {
         Self {
             cache: HashMap::new(),
-            last_sync: Utc::now(),
+            last_sync: DateTime::now(),
         }
     }
 
     /// Update a market snapshot.
     pub fn update_market(&mut self, snapshot: MarketSnapshot) {
         self.cache.insert(snapshot.market_id.clone(), snapshot);
-        self.last_sync = Utc::now();
+        self.last_sync = DateTime::now();
     }
 
     /// Get current odds for a market.
@@ -100,7 +100,7 @@ impl MarketDataService {
     /// Check if market data is stale (older than N seconds).
     pub fn is_stale(&self, market_id: &MarketId, max_age_secs: i64) -> bool {
         if let Some(snapshot) = self.cache.get(market_id) {
-            let age = Utc::now() - snapshot.last_trade_at;
+            let age = DateTime::now() - snapshot.last_trade_at;
             return age.num_seconds() > max_age_secs;
         }
         true

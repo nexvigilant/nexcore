@@ -10,16 +10,16 @@
 //! export FAERS_DATA_DIR=/path/to/faers/2024q4
 //!
 //! # Run pipeline
-//! guardian-faers-etl
+//! nexcore-faers-etl
 //!
 //! # Dry run (validate configuration only)
 
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
-//! guardian-faers-etl --dry-run
+//! nexcore-faers-etl --dry-run
 //!
 //! # Verbose output
-//! guardian-faers-etl -vvv
+//! nexcore-faers-etl -vvv
 //! ```
 
 use clap::Parser;
@@ -29,11 +29,10 @@ use tracing::{error, info, instrument, warn};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use nexcore_faers_etl::*;
-use polars::prelude::*;
 
 /// Pipeline CLI arguments.
 #[derive(Parser, Debug)]
-#[command(name = "guardian-faers-etl")]
+#[command(name = "nexcore-faers-etl")]
 #[command(version = "0.1.0")]
 #[command(
     about = "Stream FAERS quarterly ASCII files and generate drug-event contingency tables for signal detection"
@@ -51,8 +50,8 @@ struct Args {
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
 
-    /// Output path for Parquet file.
-    #[arg(long, default_value = "output/drug_event_counts.parquet")]
+    /// Output path for JSON file.
+    #[arg(long, default_value = "output/drug_event_counts.json")]
     output: String,
 
     /// Minimum case count threshold (default: 3 per Evans criteria).
@@ -88,7 +87,7 @@ async fn main() -> Result<()> {
         .init();
 
     info!(
-        pipeline = "guardian-faers-etl",
+        pipeline = "nexcore-faers-etl",
         version = "0.1.0",
         "Starting pipeline"
     );
@@ -148,9 +147,6 @@ async fn run_pipeline(args: &Args) -> Result<PipelineStats> {
         "Ingest complete"
     );
 
-    // Convert to LazyFrame for transforms
-    let df: LazyFrame = df.lazy();
-
     // Stage 2: Normalize names
     info!(
         stage = "normalize-names",
@@ -177,15 +173,14 @@ async fn run_pipeline(args: &Args) -> Result<PipelineStats> {
     let df = transform_filter_minimum_n(df, args.min_cases)
         .context("Transform failed: filter-minimum")?;
 
-    // Stage 5: Sink to Parquet
+    // Stage 5: Sink to JSON
     info!(
-        stage = "parquet-output",
-        sink_type = "Parquet",
+        stage = "json-output",
+        sink_type = "Json",
         path = %args.output,
-        "Writing to Parquet"
+        "Writing to JSON"
     );
-    let written =
-        sink_parquet_output_to(df, &args.output).context("Parquet sink failed: parquet-output")?;
+    let written = sink_output_to(df, &args.output).context("JSON sink failed: json-output")?;
 
     stats.records_written = written.value();
     stats.duration_secs = start.elapsed().as_secs_f64();

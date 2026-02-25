@@ -5,7 +5,7 @@
 
 use std::collections::HashMap;
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{ActivityType, Source};
@@ -20,7 +20,7 @@ pub struct FileAccessPattern {
     /// Number of write/edit operations on this file
     pub write_count: u32,
     /// Timestamp of last access
-    pub last_accessed: DateTime<Utc>,
+    pub last_accessed: DateTime,
 }
 
 impl FileAccessPattern {
@@ -31,7 +31,7 @@ impl FileAccessPattern {
             path,
             read_count: 0,
             write_count: 0,
-            last_accessed: Utc::now(),
+            last_accessed: DateTime::now(),
         }
     }
 
@@ -151,11 +151,11 @@ mod tests {
         Source {
             id: "test-session".to_string(),
             project_hash: "test-hash".to_string(),
-            start_time: Utc::now(),
-            last_updated: Utc::now(),
+            start_time: DateTime::now(),
+            last_updated: DateTime::now(),
             messages: vec![SourceEntry {
                 id: "entry-1".to_string(),
-                timestamp: Utc::now(),
+                timestamp: DateTime::now(),
                 entry_type: EntryType::Assistant,
                 content: String::new(),
                 thoughts: vec![],
@@ -175,7 +175,7 @@ mod tests {
             args,
             result: vec![],
             status: OperationStatus::Success,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             result_display: None,
             display_name: None,
             description: None,
@@ -191,7 +191,7 @@ mod tests {
             args,
             result: vec![],
             status: OperationStatus::Success,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             result_display: None,
             display_name: None,
             description: None,

@@ -477,12 +477,12 @@ pub fn comm_route_message(params: CommRouteMessageParams) -> Result<CallToolResu
     };
 
     let message = nexcore_vigilance::hud::capabilities::Message {
-        id: format!("msg-{}", chrono::Utc::now().timestamp_millis()),
+        id: format!("msg-{}", nexcore_chrono::DateTime::now().timestamp_millis()),
         from: params.from.clone(),
         to: params.to.clone(),
         protocol,
         payload: params.payload.clone(),
-        timestamp: chrono::Utc::now().timestamp_millis(),
+        timestamp: nexcore_chrono::DateTime::now().timestamp_millis(),
         ttl: params.ttl.unwrap_or(60),
     };
 
@@ -490,7 +490,7 @@ pub fn comm_route_message(params: CommRouteMessageParams) -> Result<CallToolResu
     let metrics = &result.value;
 
     let response = json!({
-        "message_id": format!("msg-{}", chrono::Utc::now().timestamp_millis()),
+        "message_id": format!("msg-{}", nexcore_chrono::DateTime::now().timestamp_millis()),
         "from": params.from,
         "to": params.to,
         "protocol": format!("{:?}", protocol),
@@ -530,7 +530,10 @@ pub fn explore_launch_mission(
     };
 
     let manifest = MissionManifest {
-        id: format!("mission-{}", chrono::Utc::now().timestamp_millis()),
+        id: format!(
+            "mission-{}",
+            nexcore_chrono::DateTime::now().timestamp_millis()
+        ),
         target: params.target.clone(),
         objective: params.objective.clone(),
         scope,
@@ -574,7 +577,10 @@ pub fn explore_record_discovery(
     let significance = DiscoveryIndex::new(params.significance.unwrap_or(0.5));
 
     let discovery = Discovery {
-        id: format!("disc-{}", chrono::Utc::now().timestamp_millis()),
+        id: format!(
+            "disc-{}",
+            nexcore_chrono::DateTime::now().timestamp_millis()
+        ),
         finding: params.finding.clone(),
         location: params.location.clone(),
         significance,
@@ -734,7 +740,10 @@ pub fn dot_dispatch_manifest(
 ) -> Result<CallToolResult, McpError> {
     let transport = get_transport().lock();
     let manifest = TransitManifest {
-        manifest_id: format!("manifest-{}", chrono::Utc::now().timestamp_millis()),
+        manifest_id: format!(
+            "manifest-{}",
+            nexcore_chrono::DateTime::now().timestamp_millis()
+        ),
         origin_domain: params.origin.clone(),
         target_domain: params.destination.clone(),
         signal_count: params.signal_count,
@@ -1024,7 +1033,9 @@ mod tests {
         // Use unique ID to avoid test interference
         let unique_id = format!(
             "persist-test-{}",
-            chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0)
+            nexcore_chrono::DateTime::now()
+                .timestamp_nanos_opt()
+                .unwrap_or(0)
         );
         let content = "content persisted across calls";
 
@@ -1062,7 +1073,9 @@ mod tests {
     fn test_ssa_version_increments_across_calls() {
         let unique_id = format!(
             "version-test-{}",
-            chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0)
+            nexcore_chrono::DateTime::now()
+                .timestamp_nanos_opt()
+                .unwrap_or(0)
         );
         let artifact_name = format!("{}.state", unique_id);
 
@@ -1165,7 +1178,7 @@ mod tests {
                             "concurrent-{}-{}-{}",
                             i,
                             j,
-                            chrono::Utc::now().timestamp_millis()
+                            nexcore_chrono::DateTime::now().timestamp_millis()
                         );
                         let params = SsaPersistStateParams {
                             state_id: unique_id,

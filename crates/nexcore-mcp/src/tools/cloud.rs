@@ -309,6 +309,7 @@ pub fn tier_classify(p: params::CloudTierClassifyParams) -> Result<CallToolResul
             Tier::T2Primitive => "Cross-domain primitive (2-3 unique). High transferability.",
             Tier::T2Composite => "Composite type (4-5 unique). Moderate transferability.",
             Tier::T3DomainSpecific => "Domain-specific (6+ unique). Low transferability.",
+            _ => "Unknown tier.",
         },
     });
 

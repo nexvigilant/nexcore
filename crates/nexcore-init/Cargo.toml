@@ -25,22 +25,6 @@ nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", 
 tracing = { version = "0.1.40" }
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 
-[lints.rust]
-unsafe_code = "forbid"
 
-[lints.clippy]
-all = "warn"
-pedantic = "warn"
-nursery = "warn"
-unwrap_used = "deny"
-expect_used = "deny"
-panic = "deny"
-missing_errors_doc = "allow"
-missing_panics_doc = "allow"
-must_use_candidate = "allow"
-module_name_repetitions = "allow"
-doc_markdown = "allow"
-missing_const_for_fn = "allow"
-cast_possible_truncation = "allow"
-option_if_let_else = "allow"
-significant_drop_tightening = "allow"
+[lints]
+workspace = true

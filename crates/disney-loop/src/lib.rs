@@ -4,14 +4,14 @@
 #![doc = "Assess state → reject regression → search for novelty → arrive at new state."]
 #![forbid(unsafe_code)]
 
-use polars::prelude::*;
+use nexcore_dataframe::{Agg, Column, DataFrame, DataFrameError, Scalar};
 use std::path::Path;
 
 /// Errors specific to the Disney Loop pipeline.
 #[derive(Debug, nexcore_error::Error)]
 pub enum DisneyError {
-    #[error("polars error: {0}")]
-    Polars(#[from] PolarsError),
+    #[error("dataframe error: {0}")]
+    DataFrame(#[from] DataFrameError),
 
     #[error("io error: {0}")]
     Io(#[from] std::io::Error),
@@ -31,25 +31,24 @@ pub mod humanize;
 ///
 /// Filters out any records where `direction == "backward"`.
 /// Only forward-moving state survives this gate.
-pub fn transform_anti_regression_gate(df: LazyFrame) -> Result<LazyFrame> {
+pub fn transform_anti_regression_gate(df: DataFrame) -> Result<DataFrame> {
     tracing::info!(
         stage = "anti-regression-gate",
         expression = "direction != 'backward'",
         "Applying filter: reject regression"
     );
-    let filtered = df.filter(col("direction").neq(lit("backward")));
+    let filtered = df.filter_by("direction", |v| v.as_str() != Some("backward"))?;
     Ok(filtered)
 }
 
 /// Stage 3: ∃(ν) — Curiosity Search
 ///
 /// Aggregates novelty by domain: sums `novelty_score` and counts discoveries.
-pub fn transform_curiosity_search(df: LazyFrame) -> Result<LazyFrame> {
+pub fn transform_curiosity_search(df: DataFrame) -> Result<DataFrame> {
     tracing::info!(stage = "curiosity-search", "Aggregating novelty by domain");
-    let aggregated = df.group_by([col("domain")]).agg([
-        col("novelty_score").sum().alias("total_novelty"),
-        col("discovery").count().alias("discoveries"),
-    ]);
+    let aggregated = df
+        .group_by(&["domain"])?
+        .agg(&[Agg::Sum("novelty_score".into()), Agg::Count])?;
     Ok(aggregated)
 }
 
@@ -57,7 +56,7 @@ pub fn transform_curiosity_search(df: LazyFrame) -> Result<LazyFrame> {
 ///
 /// Writes the transformed state to a JSON file. The old state is gone;
 /// the new state is all that remains. Forward only.
-pub fn sink_new_state(df: LazyFrame, output_path: &Path) -> Result<u64> {
+pub fn sink_new_state(df: DataFrame, output_path: &Path) -> Result<u64> {
     tracing::info!(
         stage = "new-state",
         path = %output_path.display(),
@@ -71,13 +70,8 @@ pub fn sink_new_state(df: LazyFrame, output_path: &Path) -> Result<u64> {
         }
     }
 
-    let mut collected = df.collect()?;
-    let rows = collected.height() as u64;
-
-    let mut file = std::fs::File::create(output_path)?;
-    JsonWriter::new(&mut file)
-        .with_json_format(JsonFormat::Json)
-        .finish(&mut collected)?;
+    let rows = df.height() as u64;
+    df.to_json_file(output_path)?;
 
     tracing::info!(records = rows, "State written successfully");
     Ok(rows)
@@ -88,24 +82,33 @@ mod tests {
     use super::*;
     use std::io::Read;
 
-    fn sample_frame() -> LazyFrame {
-        df!(
-            "domain" => ["signals", "signals", "primitives", "primitives", "regression"],
-            "direction" => ["forward", "forward", "forward", "backward", "backward"],
-            "novelty_score" => [10i64, 20, 15, 5, 0],
-            "discovery" => ["prr", "ror", "sigma", "none", "none"]
-        )
+    fn sample_frame() -> DataFrame {
+        DataFrame::new(vec![
+            Column::from_strs(
+                "domain",
+                &[
+                    "signals",
+                    "signals",
+                    "primitives",
+                    "primitives",
+                    "regression",
+                ],
+            ),
+            Column::from_strs(
+                "direction",
+                &["forward", "forward", "forward", "backward", "backward"],
+            ),
+            Column::from_i64s("novelty_score", vec![10, 20, 15, 5, 0]),
+            Column::from_strs("discovery", &["prr", "ror", "sigma", "none", "none"]),
+        ])
         .unwrap_or_else(|_| DataFrame::empty())
-        .lazy()
     }
 
     #[test]
     fn anti_regression_gate_filters_backward() {
         let result = transform_anti_regression_gate(sample_frame());
         assert!(result.is_ok());
-        let collected = result.and_then(|lf| lf.collect().map_err(DisneyError::from));
-        assert!(collected.is_ok());
-        if let Ok(df) = collected {
+        if let Ok(df) = result {
             // Started with 5 rows, 2 are "backward" → 3 remain
             assert_eq!(df.height(), 3);
         }
@@ -118,9 +121,7 @@ mod tests {
         assert!(filtered.is_ok());
         let result = filtered.and_then(transform_curiosity_search);
         assert!(result.is_ok());
-        let collected = result.and_then(|lf| lf.collect().map_err(DisneyError::from));
-        assert!(collected.is_ok());
-        if let Ok(df) = collected {
+        if let Ok(df) = result {
             // After filtering backward: signals(2 rows) + primitives(1 row) = 2 domains
             assert_eq!(df.height(), 2);
         }
@@ -132,13 +133,12 @@ mod tests {
         assert!(dir.is_ok());
         if let Ok(dir) = dir {
             let path = dir.path().join("state_next.json");
-            let input = df!(
-                "domain" => ["signals"],
-                "total_novelty" => [30i64],
-                "discoveries" => [2u32]
-            )
-            .unwrap_or_else(|_| DataFrame::empty())
-            .lazy();
+            let input = DataFrame::new(vec![
+                Column::from_strs("domain", &["signals"]),
+                Column::from_i64s("total_novelty", vec![30]),
+                Column::from_i64s("discoveries", vec![2]),
+            ])
+            .unwrap_or_else(|_| DataFrame::empty());
 
             let result = sink_new_state(input, &path);
             assert!(result.is_ok());
@@ -162,7 +162,7 @@ mod tests {
 
             let result = transform_anti_regression_gate(sample_frame())
                 .and_then(transform_curiosity_search)
-                .and_then(|lf| sink_new_state(lf, &path));
+                .and_then(|df| sink_new_state(df, &path));
 
             assert!(result.is_ok());
             if let Ok(rows) = result {

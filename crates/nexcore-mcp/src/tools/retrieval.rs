@@ -117,19 +117,17 @@ fn save_store(store: &RetrievalStore) -> Result<(), McpError> {
 }
 
 fn now_iso() -> String {
-    chrono::Utc::now().to_rfc3339()
+    nexcore_chrono::DateTime::now().to_rfc3339()
 }
 
-fn parse_iso(s: &str) -> Option<chrono::DateTime<chrono::Utc>> {
-    chrono::DateTime::parse_from_rfc3339(s)
-        .ok()
-        .map(|dt| dt.with_timezone(&chrono::Utc))
+fn parse_iso(s: &str) -> Option<nexcore_chrono::DateTime> {
+    nexcore_chrono::DateTime::parse_from_rfc3339(s).ok()
 }
 
 fn hours_since(iso: &str) -> f64 {
     parse_iso(iso)
         .map(|dt| {
-            let elapsed = chrono::Utc::now().signed_duration_since(dt);
+            let elapsed = nexcore_chrono::DateTime::now().signed_duration_since(dt);
             elapsed.num_minutes() as f64 / 60.0
         })
         .unwrap_or(999.0)

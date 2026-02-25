@@ -4,8 +4,8 @@
 #![forbid(unsafe_code)]
 
 use clap::Parser;
+use nexcore_dataframe::DataFrame;
 use nexcore_error::{Context, Result};
-use polars::prelude::*;
 use std::io::{self, BufRead};
 use std::path::PathBuf;
 use tracing::{error, info};
@@ -102,36 +102,23 @@ async fn run_humanize_pipeline(output: &PathBuf) -> Result<PipelineStats> {
         stage = "state-assessment",
         "Ingesting text for humanization"
     );
-    let stdin = io::stdin();
-    let lines: Vec<String> = stdin
-        .lock()
-        .lines()
-        .filter_map(|line| line.ok())
-        .filter(|line| !line.trim().is_empty())
-        .collect();
+    let json_str = read_stdin_json();
 
-    let json_str = if lines.len() == 1 && lines[0].trim().starts_with('[') {
-        lines[0].clone()
-    } else {
-        format!("[{}]", lines.join(","))
-    };
-
-    let cursor = std::io::Cursor::new(json_str);
-    let df = JsonReader::new(cursor)
-        .finish()
-        .context("Failed to parse JSON from stdin")?;
+    let df = DataFrame::from_json(&json_str).context("Failed to parse JSON from stdin")?;
 
     stats.records_ingested = df.height() as u64;
-    let df = df.lazy();
 
     // Stage 2: ∂(¬σ⁻¹) — Humanization Gate
-    let df = humanize::transform_humanization_gate(df, 0.65)?;
+    let df = humanize::transform_humanization_gate(df, 0.65)
+        .map_err(|e| nexcore_error::nexerror!("{e}"))?;
 
     // Stage 3: ∃(ν) — Phrasing Discovery
-    let df = humanize::transform_phrasing_discovery(df)?;
+    let df =
+        humanize::transform_phrasing_discovery(df).map_err(|e| nexcore_error::nexerror!("{e}"))?;
 
     // Stage 4: ρ(t+1) — New State Sink
-    stats.records_written = sink_new_state(df, output)?;
+    stats.records_written =
+        sink_new_state(df, output).map_err(|e| nexcore_error::nexerror!("{e}"))?;
 
     stats.duration_secs = start.elapsed().as_secs_f64();
     Ok(stats)
@@ -146,6 +133,37 @@ async fn run_pipeline(output: &PathBuf) -> Result<PipelineStats> {
         stage = "state-assessment",
         "Reading current state from stdin"
     );
+    let json_str = read_stdin_json();
+
+    let df = DataFrame::from_json(&json_str).context("Failed to parse JSON from stdin")?;
+
+    stats.records_ingested = df.height() as u64;
+    info!(records = stats.records_ingested, "State ingested");
+
+    // Stage 2: ∂(¬σ⁻¹) — Anti-Regression Gate
+    info!(
+        stage = "anti-regression-gate",
+        "Filtering backward regression"
+    );
+    let df = transform_anti_regression_gate(df)
+        .map_err(|e| nexcore_error::nexerror!("Anti-regression gate failed: {e}"))?;
+
+    // Stage 3: ∃(ν) — Curiosity Search
+    info!(stage = "curiosity-search", "Aggregating novelty by domain");
+    let df = transform_curiosity_search(df)
+        .map_err(|e| nexcore_error::nexerror!("Curiosity search failed: {e}"))?;
+
+    // Stage 4: ρ(t+1) — New State Sink
+    info!(stage = "new-state", path = %output.display(), "Writing new state");
+    stats.records_written =
+        sink_new_state(df, output).map_err(|e| nexcore_error::nexerror!("Sink failed: {e}"))?;
+
+    stats.duration_secs = start.elapsed().as_secs_f64();
+    Ok(stats)
+}
+
+/// Read JSON from stdin, handling single-line arrays and multi-line objects.
+fn read_stdin_json() -> String {
     let stdin = io::stdin();
     let lines: Vec<String> = stdin
         .lock()
@@ -154,37 +172,9 @@ async fn run_pipeline(output: &PathBuf) -> Result<PipelineStats> {
         .filter(|line| !line.trim().is_empty())
         .collect();
 
-    let json_str = if lines.len() == 1 && lines[0].trim().starts_with('[') {
+    if lines.len() == 1 && lines[0].trim().starts_with('[') {
         lines[0].clone()
     } else {
         format!("[{}]", lines.join(","))
-    };
-
-    let cursor = std::io::Cursor::new(json_str);
-    let df = JsonReader::new(cursor)
-        .finish()
-        .context("Failed to parse JSON from stdin")?;
-
-    stats.records_ingested = df.height() as u64;
-    info!(records = stats.records_ingested, "State ingested");
-
-    let df = df.lazy();
-
-    // Stage 2: ∂(¬σ⁻¹) — Anti-Regression Gate
-    info!(
-        stage = "anti-regression-gate",
-        "Filtering backward regression"
-    );
-    let df = transform_anti_regression_gate(df).context("Anti-regression gate failed")?;
-
-    // Stage 3: ∃(ν) — Curiosity Search
-    info!(stage = "curiosity-search", "Aggregating novelty by domain");
-    let df = transform_curiosity_search(df).context("Curiosity search failed")?;
-
-    // Stage 4: ρ(t+1) — New State Sink
-    info!(stage = "new-state", path = %output.display(), "Writing new state");
-    stats.records_written = sink_new_state(df, output).context("Sink failed")?;
-
-    stats.duration_secs = start.elapsed().as_secs_f64();
-    Ok(stats)
+    }
 }

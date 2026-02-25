@@ -39,7 +39,7 @@
 //! let verdict = controller.evaluate(&signals);
 //! ```
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
@@ -272,7 +272,7 @@ pub struct HookSignal {
     pub signal_type: SignalType,
 
     /// When the hook fired.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
 }
 
 impl HookSignal {
@@ -283,7 +283,7 @@ impl HookSignal {
             hook_name: hook_name.into(),
             severity: severity.clamp(0.0, 1.0),
             signal_type,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         }
     }
 
@@ -293,7 +293,7 @@ impl HookSignal {
         hook_name: impl Into<String>,
         severity: f64,
         signal_type: SignalType,
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     ) -> Self {
         Self {
             hook_name: hook_name.into(),

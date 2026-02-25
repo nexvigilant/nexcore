@@ -55,7 +55,7 @@ pub fn prepare() -> Result<CallToolResult, McpError> {
     let signals = count_lines(&telemetry_dir().join("signals.jsonl"));
 
     let baseline = json!({
-        "timestamp": chrono::Utc::now().to_rfc3339(),
+        "timestamp": nexcore_chrono::DateTime::now().to_rfc3339(),
         "sessions": sessions,
         "antibodies": antibodies,
         "patterns": patterns,
@@ -68,7 +68,9 @@ pub fn prepare() -> Result<CallToolResult, McpError> {
     std::fs::create_dir_all(&baselines_dir).map_err(|e| mcp_err(&format!("mkdir: {e}")))?;
     let baseline_file = baselines_dir.join(format!(
         "baseline_{}.json",
-        chrono::Utc::now().format("%Y%m%d%H%M%S")
+        nexcore_chrono::DateTime::now()
+            .format("%Y%m%d%H%M%S")
+            .unwrap_or_default()
     ));
     std::fs::write(
         &baseline_file,
@@ -167,7 +169,7 @@ pub fn observe() -> Result<CallToolResult, McpError> {
         + content_lower.matches("not found").count();
 
     let findings = json!({
-        "timestamp": chrono::Utc::now().to_rfc3339(),
+        "timestamp": nexcore_chrono::DateTime::now().to_rfc3339(),
         "source": latest.path().display().to_string(),
         "brain": brain,
         "immunity": immunity,
@@ -314,7 +316,7 @@ pub fn validate() -> Result<CallToolResult, McpError> {
 
     // Save validation
     let validation = json!({
-        "timestamp": chrono::Utc::now().to_rfc3339(),
+        "timestamp": nexcore_chrono::DateTime::now().to_rfc3339(),
         "passed": pass,
         "failed": fail,
         "total": total,

@@ -210,7 +210,7 @@ pub struct EndocrineState {
     /// Rest/recovery
     pub melatonin: HormoneLevel,
     /// Last update time
-    pub last_updated: chrono::DateTime<chrono::Utc>,
+    pub last_updated: nexcore_chrono::DateTime,
     /// Session count
     pub session_count: u64,
 }
@@ -224,7 +224,7 @@ impl Default for EndocrineState {
             adrenaline: HormoneLevel::min(),
             oxytocin: HormoneLevel::baseline(),
             melatonin: HormoneLevel::min(),
-            last_updated: chrono::Utc::now(),
+            last_updated: nexcore_chrono::DateTime::now(),
             session_count: 0,
         }
     }
@@ -300,7 +300,7 @@ impl EndocrineState {
             HormoneType::Oxytocin => self.oxytocin = level,
             HormoneType::Melatonin => self.melatonin = level,
         }
-        self.last_updated = chrono::Utc::now();
+        self.last_updated = nexcore_chrono::DateTime::now();
     }
 
     /// Apply decay to all hormones
@@ -528,7 +528,7 @@ impl Stimulus {
                 }
             }
         }
-        state.last_updated = chrono::Utc::now();
+        state.last_updated = nexcore_chrono::DateTime::now();
     }
 }
 

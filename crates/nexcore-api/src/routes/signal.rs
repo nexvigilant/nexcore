@@ -151,12 +151,7 @@ fn metrics_to_response(
 pub async fn detect(
     Json(req): Json<SignalDetectRequest>,
 ) -> Result<Json<SignalDetectResponse>, ApiError> {
-    let table = ContingencyTable {
-        a: req.a,
-        b: req.b,
-        c: req.c,
-        d: req.d,
-    };
+    let table = ContingencyTable::new(req.a, req.b, req.c, req.d);
     let metrics = compute_all(&table);
     Ok(Json(metrics_to_response(req.drug, req.event, &metrics)))
 }
@@ -176,12 +171,7 @@ pub async fn batch(Json(req): Json<SignalBatchRequest>) -> Json<SignalBatchRespo
         .items
         .into_iter()
         .map(|item| {
-            let table = ContingencyTable {
-                a: item.a,
-                b: item.b,
-                c: item.c,
-                d: item.d,
-            };
+            let table = ContingencyTable::new(item.a, item.b, item.c, item.d);
             let metrics = compute_all(&table);
             metrics_to_response(item.drug, item.event, &metrics)
         })

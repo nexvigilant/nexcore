@@ -73,7 +73,7 @@ fn init_schema(conn: &Connection) -> Result<()> {
 
 fn map_row_to_sam(row: &duckdb::Row<'_>) -> Result<SignalAnalysisResult> {
     let id_str: String = row.get(0)?;
-    let id = NexId::parse_str(&id_str).unwrap_or_else(|_| NexId::v4());
+    let id = id_str.parse::<NexId>().unwrap_or_else(|_| NexId::v4());
 
     Ok(SignalAnalysisResult {
         id,

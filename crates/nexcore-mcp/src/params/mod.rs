@@ -515,3 +515,19 @@ pub use skills_engine::*;
 // NCBI (National Center for Biotechnology Information — ESearch, ESummary, EFetch, ELink)
 pub mod ncbi;
 pub use ncbi::*;
+
+// Entropy (Shannon, cross, KL, mutual information, normalized, conditional)
+pub mod entropy;
+pub use entropy::*;
+
+// Graph (centrality, components, shortest paths, PageRank, communities, SCC, topo sort)
+pub mod graph;
+pub use graph::*;
+
+// Markov chains (stationary distribution, n-step probabilities, ergodicity, classification)
+pub mod markov;
+pub use markov::*;
+
+// DataFrame (sovereign columnar engine — Directive 006A Phase 5)
+pub mod dataframe;
+pub use dataframe::*;

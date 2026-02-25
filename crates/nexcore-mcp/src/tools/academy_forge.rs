@@ -131,11 +131,8 @@ pub fn forge_scaffold(params: ForgeScaffoldParams) -> Result<CallToolResult, Mcp
     };
 
     // Build scaffold params
-    let scaffold_params = academy_forge::ScaffoldParams {
-        pathway_id: params.pathway_id,
-        title: params.title,
-        domain: params.domain.clone(),
-    };
+    let scaffold_params =
+        academy_forge::ScaffoldParams::new(params.pathway_id, params.title, params.domain.clone());
 
     let scaffold = academy_forge::scaffold(domain, &scaffold_params);
 
@@ -259,11 +256,8 @@ pub fn forge_compile(params: ForgeCompileParams) -> Result<CallToolResult, McpEr
         ))]));
     }
 
-    let compile_params = academy_forge::CompileParams {
-        input_path,
-        output_dir,
-        overwrite: params.overwrite,
-    };
+    let compile_params =
+        academy_forge::CompileParams::new(input_path, output_dir, params.overwrite);
 
     match academy_forge::compile_pathway(&compile_params) {
         Ok(result) => {

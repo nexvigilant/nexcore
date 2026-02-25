@@ -456,7 +456,7 @@ mod tests {
             to: "agent-b".into(),
             protocol: ProtocolType::Mcp,
             payload: r#"{"action":"test"}"#.into(),
-            timestamp: chrono::Utc::now().timestamp_millis(),
+            timestamp: nexcore_chrono::DateTime::now().timestamp_millis(),
             ttl: 60,
         };
 

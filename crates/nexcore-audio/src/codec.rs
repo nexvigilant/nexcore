@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 /// Codec identifier.
 ///
 /// Tier: T2-P (Σ Sum — codec variants)
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CodecId {
     /// Raw PCM (no encoding).
@@ -53,7 +54,15 @@ pub fn s16_to_f32(sample: i16) -> f32 {
 /// Maps [-1.0, 1.0] → [-32768, 32767] with clamping.
 pub fn f32_to_s16(sample: f32) -> i16 {
     let clamped = sample.clamp(-1.0, 1.0);
-    (clamped * 32767.0) as i16
+    // f32 clamped to [-1.0, 1.0] * 32767.0 produces [-32767.0, 32767.0].
+    // This range fits in i16 [-32768, 32767] without truncation.
+    #[allow(
+        clippy::as_conversions,
+        reason = "f32 is clamped to [-1.0, 1.0] before multiplication; result is in [-32767.0, 32767.0] which fits in i16"
+    )]
+    {
+        (clamped * 32767.0) as i16
+    }
 }
 
 /// Convert a single U8 sample to F32.
@@ -68,7 +77,15 @@ pub fn u8_to_f32(sample: u8) -> f32 {
 /// Maps [-1.0, 1.0] → [0, 255].
 pub fn f32_to_u8(sample: f32) -> u8 {
     let clamped = sample.clamp(-1.0, 1.0);
-    ((clamped + 1.0) * 127.5) as u8
+    // clamped in [-1.0, 1.0]; (clamped + 1.0) in [0.0, 2.0]; * 127.5 in [0.0, 255.0].
+    // Result fits in u8 [0, 255].
+    #[allow(
+        clippy::as_conversions,
+        reason = "f32 clamped to [-1.0, 1.0]; after +1.0 and *127.5 result is in [0.0, 255.0] which fits in u8"
+    )]
+    {
+        ((clamped + 1.0) * 127.5) as u8
+    }
 }
 
 /// Convert a buffer of S16 samples to F32.
@@ -84,6 +101,7 @@ pub fn convert_f32_to_s16(input: &[f32]) -> Vec<i16> {
 /// Simple resampling quality.
 ///
 /// Tier: T2-P (Σ Sum — quality tiers)
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ResampleQuality {
     /// Nearest-neighbor (fastest, worst quality).
@@ -96,6 +114,14 @@ pub enum ResampleQuality {
 ///
 /// Returns resampled buffer. This is a simple synchronous resampler
 /// suitable for non-realtime conversion.
+#[allow(
+    clippy::as_conversions,
+    clippy::arithmetic_side_effects,
+    clippy::indexing_slicing,
+    reason = "DSP resampler: f64/usize casts are standard for sample-index arithmetic; \
+              idx and idx+1 are bounds-checked before indexing; \
+              arithmetic on sample indices is bounded by input.len() and ratio"
+)]
 pub fn resample_f32(
     input: &[f32],
     from_rate: SampleRate,
@@ -135,6 +161,7 @@ pub fn resample_f32(
 /// Conversion specification — describes a format conversion operation.
 ///
 /// Tier: T2-C (μ Mapping — source → destination format mapping)
+#[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ConversionSpec {
     /// Source format.

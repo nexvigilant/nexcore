@@ -105,7 +105,7 @@ impl Spliceosome {
             task_category: category,
             markers,
             generator_version: GENERATOR_VERSION.into(),
-            generated_at: chrono::Utc::now(),
+            generated_at: nexcore_chrono::DateTime::now(),
         })
     }
 

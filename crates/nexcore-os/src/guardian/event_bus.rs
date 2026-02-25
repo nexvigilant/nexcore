@@ -172,7 +172,7 @@ impl Default for EventBus {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
     use nexcore_primitives::measurement::Measured;
     use std::collections::HashMap;
 
@@ -184,7 +184,7 @@ mod tests {
     fn make_loop_result() -> LoopIterationResult {
         LoopIterationResult {
             iteration_id: "iter-42".to_string(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             signals_detected: 3,
             actions_taken: 1,
             results: vec![ActuatorResultSummary {
@@ -203,7 +203,7 @@ mod tests {
             id: "sig-001".to_string(),
             pattern: "elevated-prr".to_string(),
             severity: ThreatLevel::High,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             source: SignalSource::Damp {
                 subsystem: "pv-engine".to_string(),
                 damage_type: "threshold-breach".to_string(),

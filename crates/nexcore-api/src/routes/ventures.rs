@@ -4,7 +4,7 @@ use crate::ApiState;
 use crate::persistence::InquiryRecord;
 use axum::extract::{Json, Path, State};
 use axum::routing::{get, patch};
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
@@ -17,7 +17,7 @@ pub struct PartnershipInquiry {
     pub organization: String,
     pub interest: String,
     pub message: String,
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     pub status: String,
 }
 
@@ -93,7 +93,7 @@ pub async fn submit_inquiry(
         organization: req.organization,
         interest: req.interest,
         message: req.message,
-        created_at: Utc::now(),
+        created_at: DateTime::now(),
         status: "received".to_string(),
     };
 

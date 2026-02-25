@@ -58,6 +58,7 @@ pub mod summatory;
 
 /// Errors produced by number-theoretic operations.
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum NumberTheoryError {
     /// Input must be positive; got the enclosed value.
     NonPositive(u64),

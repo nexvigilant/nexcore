@@ -81,7 +81,7 @@ impl Threshold for CompositeThreshold {
 mod tests {
     use super::*;
     use crate::core::*;
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     fn make_result(prr_val: f64, chi_val: f64, case_count: u64) -> DetectionResult {
         DetectionResult {
@@ -98,7 +98,7 @@ mod tests {
             ebgm: Some(Ebgm(1.0)),
             chi_square: ChiSquare(chi_val),
             strength: SignalStrength::from_prr(prr_val),
-            detected_at: Utc::now(),
+            detected_at: DateTime::now(),
         }
     }
 

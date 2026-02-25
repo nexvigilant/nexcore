@@ -223,7 +223,7 @@ impl CSPGrid {
         let mut propagation_record = PropagationLog {
             source_id: source_id.to_string(),
             evidence_lr: source_lr,
-            timestamp: chrono::Utc::now().to_rfc3339(),
+            timestamp: nexcore_chrono::DateTime::now().to_rfc3339(),
             propagated_to: Vec::new(),
         };
 

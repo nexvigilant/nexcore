@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 /// Network packet disposition (Allow/Drop/Reject/Log).
 ///
 /// Tier: T2-P (∂ — boundary decision)
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum PacketDisposition {
     /// Allow the packet.
@@ -47,6 +48,7 @@ impl PacketDisposition {
 /// Network protocol to match.
 ///
 /// Tier: T2-P (Σ Sum)
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Protocol {
     /// Any protocol.
@@ -62,6 +64,7 @@ pub enum Protocol {
 /// Traffic direction.
 ///
 /// Tier: T2-P (σ Sequence — direction of flow)
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum TrafficDirection {
     /// Incoming traffic.
@@ -75,6 +78,7 @@ pub enum TrafficDirection {
 /// A port range specification.
 ///
 /// Tier: T2-P (∂ Boundary — numeric range)
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PortRange {
     /// Start port (inclusive).
@@ -119,6 +123,7 @@ impl PortRange {
 /// A single firewall rule.
 ///
 /// Tier: T2-C (∂ + κ + σ — boundary comparison in sequence)
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FirewallRule {
     /// Rule name (for logging/identification).
@@ -201,6 +206,10 @@ impl FirewallRule {
     }
 
     /// Check if this rule matches a packet description.
+    #[allow(
+        clippy::too_many_arguments,
+        reason = "packet matching requires all five tuple fields plus direction; a struct parameter would only rename, not reduce, the arguments"
+    )]
     pub fn matches(
         &self,
         direction: TrafficDirection,
@@ -333,6 +342,10 @@ impl Firewall {
     /// Evaluate a packet against the firewall rules.
     ///
     /// Returns the action to take. First matching rule wins.
+    #[allow(
+        clippy::too_many_arguments,
+        reason = "packet evaluation requires all five tuple fields plus direction; a struct parameter would only rename, not reduce, the arguments"
+    )]
     pub fn evaluate(
         &mut self,
         direction: TrafficDirection,
@@ -342,14 +355,14 @@ impl Firewall {
         source_port: Option<u16>,
         dest_port: Option<u16>,
     ) -> PacketDisposition {
-        self.packets_evaluated += 1;
+        self.packets_evaluated = self.packets_evaluated.saturating_add(1);
 
         for rule in &mut self.rules {
             if rule.matches(direction, protocol, source, dest, source_port, dest_port) {
-                rule.hit_count += 1;
+                rule.hit_count = rule.hit_count.saturating_add(1);
                 let action = rule.action;
                 if matches!(action, PacketDisposition::Drop | PacketDisposition::Reject) {
-                    self.packets_blocked += 1;
+                    self.packets_blocked = self.packets_blocked.saturating_add(1);
                 }
                 return action;
             }
@@ -360,7 +373,7 @@ impl Firewall {
             self.default_action,
             PacketDisposition::Drop | PacketDisposition::Reject
         ) {
-            self.packets_blocked += 1;
+            self.packets_blocked = self.packets_blocked.saturating_add(1);
         }
         self.default_action
     }
@@ -390,7 +403,18 @@ impl Firewall {
         if self.packets_evaluated == 0 {
             return 0.0;
         }
-        self.packets_blocked as f64 / self.packets_evaluated as f64 * 100.0
+        // u64→f64: packet counters fit exactly in f64 mantissa for any realistic firewall throughput
+        #[allow(
+            clippy::as_conversions,
+            reason = "u64 packet counts fit exactly in f64 mantissa for any realistic firewall throughput"
+        )]
+        let blocked = self.packets_blocked as f64;
+        #[allow(
+            clippy::as_conversions,
+            reason = "u64 packet counts fit exactly in f64 mantissa for any realistic firewall throughput"
+        )]
+        let evaluated = self.packets_evaluated as f64;
+        blocked / evaluated * 100.0
     }
 
     /// Summary string.

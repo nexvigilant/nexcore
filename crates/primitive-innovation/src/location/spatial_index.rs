@@ -136,7 +136,7 @@ impl<V: Clone + fmt::Debug> SpatialIndex<V> {
             .entry(key)
             .or_default()
             .push(SpatialEntry { coord, value });
-        self.count += 1;
+        self.count = self.count.saturating_add(1);
     }
 
     /// Query all values within a bounding box.
@@ -164,6 +164,14 @@ impl<V: Clone + fmt::Debug> SpatialIndex<V> {
 
     /// Find the nearest value to a given coordinate.
     #[must_use]
+    #[allow(
+        clippy::arithmetic_side_effects,
+        reason = "grid ring arithmetic: i64 range ops on bounded grid coordinates"
+    )]
+    #[allow(
+        clippy::as_conversions,
+        reason = "i64 to f64 for distance comparison; grid radius fits in f64"
+    )]
     pub fn nearest(&self, target: &Coord) -> Option<(&Coord, &V)> {
         let mut best: Option<(&Coord, &V, f64)> = None;
 
@@ -230,6 +238,10 @@ impl<V: Clone + fmt::Debug> SpatialIndex<V> {
     }
 
     /// Convert a coordinate to a grid cell key.
+    #[allow(
+        clippy::as_conversions,
+        reason = "f64 floor to i64 for grid cell indexing; values are bounded by coordinate space"
+    )]
     fn grid_key(&self, coord: &Coord) -> (i64, i64) {
         (
             (coord.x / self.cell_size).floor() as i64,
@@ -238,6 +250,10 @@ impl<V: Clone + fmt::Debug> SpatialIndex<V> {
     }
 
     /// Maximum search radius based on occupied cells.
+    #[allow(
+        clippy::as_conversions,
+        reason = "usize to f64 for sqrt heuristic; result ceil back to i64 for ring count"
+    )]
     fn search_radius(&self) -> i64 {
         // Heuristic: search up to sqrt(cell_count) rings
         let r = (self.cells.len() as f64).sqrt().ceil() as i64;

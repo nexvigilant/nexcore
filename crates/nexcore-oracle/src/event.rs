@@ -11,7 +11,7 @@
 //! | `EventKind` | T1 | Σ (sum type — one of N categories) |
 //! | `EventSequence` | T2-C | σ + ∃ + ν (ordered sequence of existences) |
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// A categorized event kind. Events are strings so any domain can use Oracle.
@@ -23,7 +23,7 @@ pub struct Event {
     /// The event category (e.g., "tool:Read", "build:fail", "test:pass").
     pub kind: EventKind,
     /// When the event was observed.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Optional context (e.g., file path, error message).
     pub context: Option<String>,
 }
@@ -33,7 +33,7 @@ impl Event {
     pub fn now(kind: impl Into<String>) -> Self {
         Self {
             kind: kind.into(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             context: None,
         }
     }
@@ -42,13 +42,13 @@ impl Event {
     pub fn with_context(kind: impl Into<String>, context: impl Into<String>) -> Self {
         Self {
             kind: kind.into(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             context: Some(context.into()),
         }
     }
 
     /// Create an event at a specific time.
-    pub fn at(kind: impl Into<String>, timestamp: DateTime<Utc>) -> Self {
+    pub fn at(kind: impl Into<String>, timestamp: DateTime) -> Self {
         Self {
             kind: kind.into(),
             timestamp,

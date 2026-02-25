@@ -135,6 +135,7 @@ async fn dispatch_inner(
     match command {
         "help" => help_catalog(),
         "toolbox" => typed(params, toolbox_search),
+        "tool_schema" => tool_schema_lookup(&params, server),
 
         // ====================================================================
         // System Tools (4)
@@ -480,6 +481,18 @@ async fn dispatch_inner(
         "faers_geographic_divergence" => {
             typed(params, tools::faers_analytics::geographic_divergence)
         }
+
+        // ====================================================================
+        // DataFrame Tools (8) — Sovereign Columnar Engine (Directive 006A)
+        // ====================================================================
+        "dataframe_describe" => typed(params, tools::dataframe::describe),
+        "dataframe_query" => typed(params, tools::dataframe::query),
+        "dataframe_aggregate" => typed(params, tools::dataframe::aggregate),
+        "dataframe_counter" => typed(params, tools::dataframe::counter),
+        "dataframe_column_stats" => typed(params, tools::dataframe::column_stats),
+        "dataframe_construct" => typed(params, tools::dataframe::construct),
+        "dataframe_transform" => typed(params, tools::dataframe::transform),
+        "dataframe_save" => typed(params, tools::dataframe::save),
 
         // ====================================================================
         // NCBI Entrez Tools (3)
@@ -1299,11 +1312,27 @@ async fn dispatch_inner(
         "relay_fidelity_compose" => typed(params, tools::relay::relay_fidelity_compose),
 
         // ====================================================================
-        // PV Core Tools (3) — IVF axioms, severity classification
+        // PV Core Tools (8) — IVF axioms, severity classification, survival analysis
         // ====================================================================
         "pv_core_ivf_assess" => typed(params, tools::pv_core::ivf_assess),
         "pv_core_ivf_axioms" => typed(params, tools::pv_core::ivf_axioms),
         "pv_core_severity_assess" => typed(params, tools::pv_core::severity_assess),
+        // Survival analysis (Directive 002 Phase B)
+        "pv_core_kaplan_meier" => typed(params, tools::pv_core::survival_kaplan_meier),
+        "pv_core_log_rank" => typed(params, tools::pv_core::survival_log_rank),
+        "pv_core_cumulative_incidence" => {
+            typed(params, tools::pv_core::survival_cumulative_incidence)
+        }
+        "pv_core_cox" => typed(params, tools::pv_core::survival_cox),
+        "pv_core_hazard_ratio" => typed(params, tools::pv_core::survival_hazard_ratio),
+        // FDR / multiple testing correction (Directive 003 Phase B)
+        "pv_core_fdr_adjust" => typed(params, tools::pv_core::fdr_adjust),
+        // Bayesian conjugate update tools (Directive 003 Phase B.4)
+        "pv_core_bayesian_beta_binomial" => typed(params, tools::pv_core::bayesian_beta_binomial),
+        "pv_core_bayesian_gamma_poisson" => typed(params, tools::pv_core::bayesian_gamma_poisson),
+        "pv_core_bayesian_sequential" => {
+            typed(params, tools::pv_core::bayesian_sequential_beta_binomial)
+        }
 
         // ====================================================================
         // Visualization Tools (31)
@@ -1314,6 +1343,7 @@ async fn dispatch_inner(
         "viz_confidence_chain" => typed(params, tools::viz::confidence),
         "viz_bounds" => typed(params, tools::viz::bounds),
         "viz_dag" => typed(params, tools::viz::dag),
+        "viz_node_confidence" => typed(params, tools::viz::node_confidence),
         // Foundation (pre-phase)
         "viz_molecular_info" => typed(params, tools::viz_foundation::molecular_info),
         "viz_surface_mesh" => typed(params, tools::viz_foundation::surface_mesh),
@@ -2645,6 +2675,17 @@ async fn dispatch_inner(
         "ncbi_search_and_fetch" => typed_async(params, tools::ncbi::search_and_fetch).await,
         "ncbi_search_and_summarize" => typed_async(params, tools::ncbi::search_and_summarize).await,
 
+        // Entropy (Shannon, cross-entropy, KL divergence, mutual info, normalized, conditional)
+        "entropy_compute" => typed(params, tools::entropy::entropy_compute),
+
+        // Graph (centrality, components, shortest paths, PageRank, communities, SCC, topo sort)
+        "graph_analyze" => typed(params, tools::graph::graph_analyze),
+        "graph_construct" => typed(params, tools::graph::graph_construct),
+
+        // Markov chains (stationary distribution, n-step probabilities, ergodicity, classification)
+        "markov_analyze" => typed(params, tools::markov::markov_analyze),
+        "markov_from_data" => typed(params, tools::markov::markov_from_data),
+
         // ====================================================================
         _ => Err(McpError::invalid_params(
             format!("Unknown command: {command}. Use command='help' for catalog."),
@@ -2798,10 +2839,96 @@ fn toolbox_search(params: params::system::ToolboxParams) -> Result<CallToolResul
     )]))
 }
 
+/// Look up a tool's input schema by command name.
+///
+/// Queries the tool router's full tool list (normally hidden in toolbox mode)
+/// and returns the JSON Schema for the named tool's parameters.
+fn tool_schema_lookup(
+    params: &Value,
+    server: &NexCoreMcpServer,
+) -> Result<CallToolResult, McpError> {
+    let tool_name = params.get("tool").and_then(|v| v.as_str()).ok_or_else(|| {
+        McpError::invalid_params(
+            "missing field `tool` (string: command name to look up)",
+            None,
+        )
+    })?;
+
+    // Search the tool router's generated schema list
+    let all_tools = server.tool_router.list_all();
+    let found = all_tools.iter().find(|t| {
+        // Match against the tool method name (snake_case form used in #[tool] methods)
+        // The router stores the Rust method name, so normalize both sides
+        let router_name = t.name.as_ref();
+        router_name == tool_name || router_name.replace('-', "_") == tool_name.replace('-', "_")
+    });
+
+    if let Some(tool) = found {
+        let schema_value = serde_json::to_value(&tool.input_schema)
+            .unwrap_or_else(|_| serde_json::json!({"error": "schema serialization failed"}));
+
+        // Extract just the property names and types for quick reference
+        let properties = schema_value
+            .get("properties")
+            .cloned()
+            .unwrap_or_else(|| serde_json::json!({}));
+        let required = schema_value
+            .get("required")
+            .cloned()
+            .unwrap_or_else(|| serde_json::json!([]));
+
+        let result = serde_json::json!({
+            "tool": tool_name,
+            "description": tool.description.as_deref().unwrap_or(""),
+            "required": required,
+            "properties": properties,
+            "full_schema": schema_value,
+        });
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".to_string()),
+        )]))
+    } else {
+        // Try matching against the unified dispatch table (command names)
+        // since dispatch commands don't always match tool router names
+        let catalog = toolbox_catalog();
+        let mut found_in_catalog = false;
+        let mut category_hint = String::new();
+
+        for (cat, tools) in &catalog {
+            if tools.iter().any(|t| t == tool_name) {
+                found_in_catalog = true;
+                category_hint = cat.to_string();
+                break;
+            }
+        }
+
+        if found_in_catalog {
+            // Tool exists in dispatch but schema not available via router
+            // (unified commands don't register individually in tool_router)
+            let result = serde_json::json!({
+                "tool": tool_name,
+                "category": category_hint,
+                "note": "This is a unified dispatch command. Schema not available via tool_router. Check source at crates/nexcore-mcp/src/params/ for the param struct.",
+                "hint": format!("grep -r '\"{}\"' crates/nexcore-mcp/src/unified.rs to find the handler, then check the typed() param type", tool_name),
+            });
+
+            Ok(CallToolResult::success(vec![Content::text(
+                serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".to_string()),
+            )]))
+        } else {
+            Err(McpError::invalid_params(
+                format!("tool '{}' not found in catalog or router", tool_name),
+                None,
+            ))
+        }
+    }
+}
+
 /// Static tool catalog for toolbox search.
 fn toolbox_catalog() -> Vec<(&'static str, Vec<String>)> {
     // Reuse the same data as help_catalog but structured for search
-    let catalog_json = help_catalog_json();
+    let catalog_json = unified_catalog_data();
     let categories = catalog_json
         .get("categories")
         .and_then(|c| c.as_object())
@@ -2824,18 +2951,20 @@ fn toolbox_catalog() -> Vec<(&'static str, Vec<String>)> {
         .collect()
 }
 
-/// Shared catalog data as JSON Value.
-fn help_catalog_json() -> serde_json::Value {
+/// Single source of truth for the complete MCP tool catalog.
+/// Both `help_catalog()` and `toolbox_catalog()` consume this.
+fn unified_catalog_data() -> serde_json::Value {
     serde_json::json!({
         "categories": {
-            "system": ["nexcore_health", "config_validate", "mcp_servers_list", "mcp_server_get"],
+            "system": ["nexcore_health", "config_validate", "mcp_servers_list", "mcp_server_get", "tool_schema"],
             "foundation": ["foundation_levenshtein", "foundation_levenshtein_bounded", "foundation_fuzzy_search", "foundation_sha256", "foundation_yaml_parse", "foundation_graph_topsort", "foundation_graph_levels", "foundation_fsrs_review", "foundation_concept_grep", "foundation_domain_distance", "foundation_flywheel_velocity", "foundation_token_ratio", "foundation_spectral_overlap"],
             "topology": ["topo_vietoris_rips", "topo_persistence", "topo_betti", "graph_centrality", "graph_components", "graph_shortest_path"],
             "pv": ["pv_signal_complete", "pv_signal_prr", "pv_signal_ror", "pv_signal_ic", "pv_signal_ebgm", "pv_chi_square", "pv_signal_cooperative", "pv_naranjo_quick", "pv_who_umc_quick", "pv_signal_strength"],
+            "pv_core": ["pv_core_ivf_assess", "pv_core_ivf_axioms", "pv_core_severity_assess", "pv_core_kaplan_meier", "pv_core_log_rank", "pv_core_cumulative_incidence", "pv_core_cox", "pv_core_hazard_ratio", "pv_core_fdr_adjust", "pv_core_bayesian_beta_binomial", "pv_core_bayesian_gamma_poisson", "pv_core_bayesian_sequential"],
             "benefit_risk": ["pv_qbri_compute", "pv_qbri_derive", "pv_qbri_equation", "qbr_compute", "qbr_simple", "qbr_therapeutic_window"],
             "signal": ["signal_detect", "signal_batch", "signal_thresholds"],
             "vigilance": ["vigilance_safety_margin", "vigilance_risk_score", "vigilance_harm_types", "vigilance_map_to_tov", "pv_signal_chart"],
-            "guardian": ["guardian_homeostasis_tick", "guardian_evaluate_pv", "guardian_status", "guardian_reset", "guardian_inject_signal", "guardian_sensors_list", "guardian_actuators_list", "guardian_history", "guardian_originator_classify", "guardian_ceiling_for_originator", "guardian_space3d_compute"],
+            "guardian": ["guardian_homeostasis_tick", "guardian_evaluate_pv", "guardian_status", "guardian_reset", "guardian_inject_signal", "guardian_sensors_list", "guardian_actuators_list", "guardian_history", "guardian_subscribe", "guardian_originator_classify", "guardian_ceiling_for_originator", "guardian_space3d_compute", "guardian_adversarial_input", "adversarial_decision_probe", "pv_control_loop_tick", "fda_bridge_evaluate", "fda_bridge_batch"],
             "vigil": ["vigil_status", "vigil_health", "vigil_emit_event", "vigil_memory_search", "vigil_memory_stats", "vigil_llm_stats", "vigil_source_control", "vigil_executor_control", "vigil_authority_config", "vigil_context_assemble", "vigil_authority_verify", "vigil_webhook_test", "vigil_source_config"],
             "skills": ["skill_scan", "skill_list", "skill_get", "skill_validate", "skill_search_by_tag", "skill_list_nested", "skill_taxonomy_query", "skill_taxonomy_list", "skill_categories_compute_intensive", "skill_orchestration_analyze", "skill_execute", "skill_schema", "skill_compile", "skill_compile_check", "vocab_skill_lookup", "primitive_skill_lookup", "skill_chain_lookup", "skill_route", "vocab_list", "nexcore_assist"],
             "guidelines": ["guidelines_search", "guidelines_get", "guidelines_categories", "guidelines_pv_all", "guidelines_url", "ich_lookup", "ich_search", "ich_guideline", "ich_stats"],
@@ -2843,12 +2972,13 @@ fn help_catalog_json() -> serde_json::Value {
             "faers": ["faers_search", "faers_drug_events", "faers_signal_check", "faers_disproportionality", "faers_compare_drugs"],
             "faers_analytics": ["faers_outcome_conditioned", "faers_signal_velocity", "faers_seriousness_cascade", "faers_polypharmacy", "faers_reporter_weighted", "faers_geographic_divergence"],
             "faers_etl": ["faers_etl_run", "faers_etl_signals", "faers_etl_known_pairs", "faers_etl_status"],
+            "dataframe": ["dataframe_describe", "dataframe_query", "dataframe_aggregate", "dataframe_counter", "dataframe_column_stats", "dataframe_construct", "dataframe_transform", "dataframe_save"],
             "gcloud": ["gcloud_auth_list", "gcloud_config_list", "gcloud_config_get", "gcloud_config_set", "gcloud_projects_list", "gcloud_projects_describe", "gcloud_projects_get_iam_policy", "gcloud_secrets_list", "gcloud_secrets_versions_access", "gcloud_storage_buckets_list", "gcloud_storage_ls", "gcloud_storage_cp", "gcloud_compute_instances_list", "gcloud_run_services_list", "gcloud_run_services_describe", "gcloud_functions_list", "gcloud_iam_service_accounts_list", "gcloud_logging_read", "gcloud_run_command"],
-            "wolfram": ["wolfram_query", "wolfram_short_answer", "wolfram_spoken_answer", "wolfram_calculate", "wolfram_step_by_step", "wolfram_plot", "wolfram_convert", "wolfram_chemistry", "wolfram_physics", "wolfram_astronomy", "wolfram_statistics", "wolfram_data_lookup", "wolfram_datetime", "wolfram_nutrition", "wolfram_finance", "wolfram_linguistics"],
+            "wolfram": ["wolfram_query", "wolfram_short_answer", "wolfram_spoken_answer", "wolfram_calculate", "wolfram_step_by_step", "wolfram_plot", "wolfram_convert", "wolfram_chemistry", "wolfram_physics", "wolfram_astronomy", "wolfram_statistics", "wolfram_data_lookup", "wolfram_query_with_assumption", "wolfram_query_filtered", "wolfram_image_result", "wolfram_datetime", "wolfram_nutrition", "wolfram_finance", "wolfram_linguistics"],
             "principles": ["principles_list", "principles_get", "principles_search"],
-            "brain": ["brain_session_create", "brain_session_load", "brain_sessions_list", "brain_artifact_save", "brain_artifact_resolve", "brain_artifact_get", "brain_artifact_diff", "code_tracker_track", "code_tracker_changed", "code_tracker_original", "implicit_get", "implicit_set", "implicit_stats", "implicit_find_corrections", "implicit_patterns_by_grounding", "implicit_patterns_by_relevance", "brain_recovery_check", "brain_recovery_repair", "brain_recovery_rebuild_index", "brain_recovery_auto", "brain_coordination_acquire", "brain_coordination_release", "brain_coordination_status"],
-            "regulatory": ["regulatory_primitives_extract", "regulatory_primitives_audit", "regulatory_primitives_compare"],
-            "chemistry": ["chemistry_threshold_rate", "chemistry_decay_remaining", "chemistry_saturation_rate", "chemistry_feasibility", "chemistry_dependency_rate", "chemistry_buffer_capacity", "chemistry_signal_absorbance", "chemistry_equilibrium", "chemistry_pv_mappings", "chemistry_threshold_exceeded", "chemistry_hill_response", "chemistry_nernst_potential", "chemistry_inhibition_rate", "chemistry_eyring_rate", "chemistry_langmuir_coverage", "chemistry_gaussian_overlap"],
+            "brain": ["brain_session_create", "brain_session_load", "brain_sessions_list", "brain_artifact_save", "brain_artifact_resolve", "brain_artifact_get", "brain_artifact_diff", "code_tracker_track", "code_tracker_changed", "code_tracker_original", "implicit_get", "implicit_set", "implicit_stats", "implicit_find_corrections", "implicit_patterns_by_grounding", "implicit_patterns_by_relevance", "brain_recovery_check", "brain_recovery_repair", "brain_recovery_rebuild_index", "brain_recovery_auto", "brain_coordination_acquire", "brain_coordination_release", "brain_coordination_status", "brain_verify_engrams"],
+            "regulatory": ["regulatory_primitives_extract", "regulatory_primitives_audit", "regulatory_primitives_compare", "regulatory_effectiveness_assess"],
+            "chemistry": ["chemistry_threshold_rate", "chemistry_decay_remaining", "chemistry_saturation_rate", "chemistry_feasibility", "chemistry_dependency_rate", "chemistry_buffer_capacity", "chemistry_signal_absorbance", "chemistry_equilibrium", "chemistry_pv_mappings", "chemistry_threshold_exceeded", "chemistry_hill_response", "chemistry_nernst_potential", "chemistry_inhibition_rate", "chemistry_eyring_rate", "chemistry_langmuir_coverage", "chemistry_gaussian_overlap", "chemistry_first_law_closed", "chemistry_first_law_open"],
             "stem": ["stem_version", "stem_taxonomy", "stem_confidence_combine", "stem_tier_info", "stem_chem_balance", "stem_chem_fraction", "stem_chem_ratio", "stem_chem_rate", "stem_chem_affinity", "stem_phys_fma", "stem_phys_conservation", "stem_phys_period", "stem_phys_amplitude", "stem_phys_scale", "stem_phys_inertia", "stem_math_bounds_check", "stem_math_relation_invert", "stem_math_proof", "stem_math_identity", "stem_spatial_distance", "stem_spatial_triangle", "stem_spatial_neighborhood", "stem_spatial_dimension", "stem_spatial_orientation"],
             "algovigilance": ["algovigil_dedup_pair", "algovigil_dedup_batch", "algovigil_triage_decay", "algovigil_triage_reinforce", "algovigil_triage_queue", "algovigil_status"],
             "edit_distance": ["edit_distance_compute", "edit_distance_similarity", "edit_distance_traceback", "edit_distance_transfer", "edit_distance_batch"],
@@ -2896,73 +3026,30 @@ fn help_catalog_json() -> serde_json::Value {
             "rate_limit": ["rate_limit_token_bucket", "rate_limit_sliding_window", "rate_limit_status"],
             "rank_fusion": ["rank_fusion_rrf", "rank_fusion_hybrid", "rank_fusion_borda"],
             "security_posture": ["security_posture_assess", "security_threat_readiness", "security_compliance_gap"],
-            "observability": ["observability_record_latency", "observability_query", "observability_freshness"]
-        }
-    })
-}
-
-fn help_catalog() -> Result<CallToolResult, McpError> {
-    let catalog = serde_json::json!({
-        "total": 496,
-        "usage": "nexcore(command=\"CMD\", params={...})",
-        "categories": {
-            "system": ["nexcore_health", "config_validate", "mcp_servers_list", "mcp_server_get"],
+            "observability": ["observability_record_latency", "observability_query", "observability_freshness"],
             "forge": ["forge_init", "forge_reference", "forge_mine", "forge_prompt", "forge_suggest", "forge_summary", "forge_system_prompt", "forge_tier"],
             "academy_forge": ["forge_extract", "forge_validate", "forge_scaffold", "forge_schema", "forge_compile", "forge_atomize", "forge_graph", "forge_shortest_path"],
-            "foundation": ["foundation_levenshtein", "foundation_levenshtein_bounded", "foundation_fuzzy_search", "foundation_sha256", "foundation_yaml_parse", "foundation_graph_topsort", "foundation_graph_levels", "foundation_fsrs_review", "foundation_concept_grep", "foundation_domain_distance", "foundation_flywheel_velocity", "foundation_token_ratio", "foundation_spectral_overlap"],
-            "topology": ["topo_vietoris_rips", "topo_persistence", "topo_betti", "graph_centrality", "graph_components", "graph_shortest_path"],
-            "pv": ["pv_signal_complete", "pv_signal_prr", "pv_signal_ror", "pv_signal_ic", "pv_signal_ebgm", "pv_chi_square", "pv_signal_cooperative", "pv_naranjo_quick", "pv_who_umc_quick", "pv_signal_strength"],
-            "benefit_risk": ["pv_qbri_compute", "pv_qbri_derive", "pv_qbri_equation", "qbr_compute", "qbr_simple", "qbr_therapeutic_window"],
-            "signal": ["signal_detect", "signal_batch", "signal_thresholds"],
-            "pvdsl": ["pvdsl_compile", "pvdsl_execute", "pvdsl_eval", "pvdsl_functions"],
             "mcp_lock": ["mcp_lock", "mcp_unlock", "mcp_lock_status"],
-            "vigilance": ["vigilance_safety_margin", "vigilance_risk_score", "vigilance_harm_types", "vigilance_map_to_tov", "pv_signal_chart"],
-            "compliance": ["compliance_check_exclusion", "compliance_assess", "compliance_catalog_ich", "compliance_sec_filings", "compliance_sec_pharma"],
-            "hormone": ["hormone_status", "hormone_get", "hormone_stimulus", "hormone_modifiers"],
-            "guardian": ["guardian_homeostasis_tick", "guardian_evaluate_pv", "guardian_status", "guardian_reset", "guardian_inject_signal", "guardian_sensors_list", "guardian_actuators_list", "guardian_history", "guardian_subscribe", "guardian_originator_classify", "guardian_ceiling_for_originator", "guardian_space3d_compute", "guardian_adversarial_input", "adversarial_decision_probe", "pv_control_loop_tick", "fda_bridge_evaluate", "fda_bridge_batch"],
-            "hud": ["sba_allocate_agent", "sba_chain_next", "ssa_persist_state", "ssa_verify_integrity", "fed_budget_report", "fed_recommend_model", "sec_audit_market", "comm_recommend_protocol", "comm_route_message", "explore_launch_mission", "explore_record_discovery", "explore_get_frontier", "health_validate_signal", "health_measure_impact", "treasury_convert_asymmetry", "treasury_audit", "dot_dispatch_manifest", "dot_verify_highway", "dhs_verify_boundary", "edu_train_agent", "edu_evaluate", "nsf_fund_research", "gsa_procure", "gsa_audit_value"],
             "commandments": ["commandment_verify", "commandment_info", "commandment_list", "commandment_audit"],
             "docs": ["docs_generate_claude_md"],
-            "vigil": ["vigil_status", "vigil_health", "vigil_emit_event", "vigil_memory_search", "vigil_memory_stats", "vigil_llm_stats", "vigil_source_control", "vigil_executor_control", "vigil_authority_config", "vigil_context_assemble", "vigil_authority_verify", "vigil_webhook_test", "vigil_source_config"],
             "pv_pipeline": ["pv_pipeline"],
             "pv_axioms": ["pv_axioms_ksb_lookup", "pv_axioms_regulation_search", "pv_axioms_traceability_chain", "pv_axioms_domain_dashboard", "pv_axioms_query"],
-            "skills": ["skill_scan", "skill_list", "skill_get", "skill_validate", "skill_search_by_tag", "skill_list_nested", "skill_taxonomy_query", "skill_taxonomy_list", "skill_categories_compute_intensive", "skill_orchestration_analyze", "skill_execute", "skill_schema", "skill_compile", "skill_compile_check", "vocab_skill_lookup", "primitive_skill_lookup", "skill_chain_lookup", "skill_route", "vocab_list", "nexcore_assist"],
-            "guidelines": ["guidelines_search", "guidelines_get", "guidelines_categories", "guidelines_pv_all", "guidelines_url", "ich_lookup", "ich_search", "ich_guideline", "ich_stats"],
-            "fda_guidance": ["fda_guidance_search", "fda_guidance_get", "fda_guidance_categories", "fda_guidance_url", "fda_guidance_status"],
-            "mesh": ["mesh_lookup", "mesh_search", "mesh_tree", "mesh_crossref", "mesh_enrich_pubmed", "mesh_consistency"],
-            "faers": ["faers_search", "faers_drug_events", "faers_signal_check", "faers_disproportionality", "faers_compare_drugs"],
-            // "ncbi": disabled — needs feature gate in nexcore-dna
-            "faers_etl": ["faers_etl_run", "faers_etl_signals", "faers_etl_known_pairs", "faers_etl_status"],
             "pharos": ["pharos_run", "pharos_status", "pharos_report"],
-            "faers_analytics": ["faers_outcome_conditioned", "faers_signal_velocity", "faers_seriousness_cascade", "faers_polypharmacy", "faers_reporter_weighted", "faers_geographic_divergence"],
             "lex_primitiva": ["lex_primitiva_list", "lex_primitiva_get", "lex_primitiva_tier", "lex_primitiva_composition", "lex_primitiva_reverse_compose", "lex_primitiva_reverse_lookup", "lex_primitiva_molecular_weight", "lex_primitiva_dominant_shift", "lex_primitiva_state_mode", "lex_primitiva_audit", "lex_primitiva_synth"],
             "laboratory": ["lab_experiment", "lab_compare", "lab_react", "lab_batch"],
             "skill_tokens": ["skill_token_analyze"],
             "cep": ["cep_execute_stage", "cep_pipeline_stages", "cep_validate_extraction", "cep_extract_primitives", "cep_domain_translate", "cep_classify_primitive"],
-            "gcloud": ["gcloud_auth_list", "gcloud_config_list", "gcloud_config_get", "gcloud_config_set", "gcloud_projects_list", "gcloud_projects_describe", "gcloud_projects_get_iam_policy", "gcloud_secrets_list", "gcloud_secrets_versions_access", "gcloud_storage_buckets_list", "gcloud_storage_ls", "gcloud_storage_cp", "gcloud_compute_instances_list", "gcloud_run_services_list", "gcloud_run_services_describe", "gcloud_functions_list", "gcloud_iam_service_accounts_list", "gcloud_logging_read", "gcloud_run_command"],
-            "wolfram": ["wolfram_query", "wolfram_short_answer", "wolfram_spoken_answer", "wolfram_calculate", "wolfram_step_by_step", "wolfram_plot", "wolfram_convert", "wolfram_chemistry", "wolfram_physics", "wolfram_astronomy", "wolfram_statistics", "wolfram_data_lookup", "wolfram_query_with_assumption", "wolfram_query_filtered", "wolfram_image_result", "wolfram_datetime", "wolfram_nutrition", "wolfram_finance", "wolfram_linguistics"],
             "perplexity": ["perplexity_search", "perplexity_research", "perplexity_competitive", "perplexity_regulatory"],
-            "principles": ["principles_list", "principles_get", "principles_search"],
-            "validation": ["validation_run", "validation_check", "validation_domains", "validation_classify_tests"],
-            "brain": ["brain_session_create", "brain_session_load", "brain_sessions_list", "brain_artifact_save", "brain_artifact_resolve", "brain_artifact_get", "brain_artifact_diff", "code_tracker_track", "code_tracker_changed", "code_tracker_original", "implicit_get", "implicit_set", "implicit_stats", "implicit_find_corrections", "implicit_patterns_by_grounding", "implicit_patterns_by_relevance", "brain_recovery_check", "brain_recovery_repair", "brain_recovery_rebuild_index", "brain_recovery_auto", "brain_coordination_acquire", "brain_coordination_release", "brain_coordination_status", "brain_verify_engrams"],
             "brain_db": ["brain_db_summary", "brain_db_decisions_stats", "brain_db_tool_stats", "brain_db_antibodies", "brain_db_handoffs", "brain_db_tasks", "brain_db_efficiency", "brain_db_sync", "brain_db_query"],
             "anatomy_db": ["anatomy_query", "anatomy_status", "anatomy_record_cytokine", "anatomy_record_hormones", "anatomy_record_guardian_tick", "anatomy_record_immunity_event", "anatomy_record_synapse", "anatomy_record_energy", "anatomy_record_transcriptase", "anatomy_record_ribosome", "anatomy_record_phenotype", "anatomy_record_organ_signal"],
             "learning": ["learning_daemon_status", "learning_daemon_trends", "learning_daemon_beliefs", "learning_daemon_corrections", "learning_daemon_velocity", "learn_landscape", "learn_extract", "learn_assimilate", "learn_recall", "learn_normalize", "learn_pipeline"],
             "oracle": ["oracle_ingest", "oracle_predict", "oracle_observe", "oracle_report", "oracle_status", "oracle_reset", "oracle_top_predictions"],
-            "synapse": ["synapse_get_or_create", "synapse_get", "synapse_observe", "synapse_list", "synapse_stats", "synapse_prune"],
-            "immunity": ["immunity_scan", "immunity_scan_errors", "immunity_list", "immunity_get", "immunity_propose", "immunity_status"],
             "nmd": ["nmd_check", "nmd_upf_evaluate", "nmd_smg_process", "nmd_adaptive_stats", "nmd_thymic_status", "nmd_status"],
-            "regulatory": ["regulatory_primitives_extract", "regulatory_primitives_audit", "regulatory_primitives_compare", "regulatory_effectiveness_assess"],
-            "brand_semantics": ["brand_decomposition_nexvigilant", "brand_decomposition_get", "brand_primitive_test", "brand_semantic_tiers"],
-            "primitive_validation": ["primitive_validate", "primitive_cite", "primitive_validate_batch", "primitive_validation_tiers"],
-            "chemistry": ["chemistry_threshold_rate", "chemistry_decay_remaining", "chemistry_saturation_rate", "chemistry_feasibility", "chemistry_dependency_rate", "chemistry_buffer_capacity", "chemistry_signal_absorbance", "chemistry_equilibrium", "chemistry_pv_mappings", "chemistry_threshold_exceeded", "chemistry_hill_response", "chemistry_nernst_potential", "chemistry_inhibition_rate", "chemistry_eyring_rate", "chemistry_langmuir_coverage", "chemistry_first_law_closed", "chemistry_first_law_open"],
             "molecular": ["molecular_translate_codon", "molecular_translate_mrna", "molecular_central_dogma", "molecular_adme_phase"],
             "visual": ["visual_shape_classify", "visual_color_analyze", "visual_shape_list"],
-            "cytokine": ["cytokine_emit", "cytokine_status", "cytokine_families", "cytokine_recent", "chemotaxis_gradient", "endocytosis_internalize"],
             "value_mining": ["value_signal_types", "value_signal_detect", "value_baseline_create", "value_pv_mapping"],
             "signal_theory": ["signal_theory_axioms", "signal_theory_theorems", "signal_theory_detect", "signal_theory_decision_matrix", "signal_theory_conservation_check", "signal_theory_pipeline", "signal_theory_cascade", "signal_theory_parallel"],
             "signal_fence": ["fence_status", "fence_scan", "fence_evaluate"],
-            "game_theory": ["game_theory_nash_2x2", "forge_payoff_matrix", "forge_nash_solve", "forge_quality_score", "forge_code_generate"],
             "mesh_network": ["mesh_network_simulate", "mesh_network_route_quality", "mesh_network_grounding", "mesh_network_node_info"],
             "prima": ["prima_parse", "prima_eval", "prima_codegen", "prima_primitives", "prima_targets"],
             "aggregate": ["aggregate_fold", "aggregate_tree_fold", "aggregate_rank", "aggregate_percentile", "aggregate_outliers"],
@@ -2970,21 +3057,12 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "ccp": ["ccp_episode_start", "ccp_dose_compute", "ccp_episode_advance", "ccp_interaction_check", "ccp_quality_score", "ccp_phase_transition"],
             "education": ["edu_subject_create", "edu_subject_list", "edu_lesson_create", "edu_lesson_add_step", "edu_learner_create", "edu_enroll", "edu_assess", "edu_mastery", "edu_phase_transition", "edu_phase_info", "edu_review_create", "edu_review_schedule", "edu_review_status", "edu_bayesian_update", "edu_primitive_map"],
             "antitransformer": ["antitransformer_analyze", "antitransformer_batch"],
-            "energy": ["energy_charge", "energy_decide"],
-            "transcriptase": ["transcriptase_process", "transcriptase_infer", "transcriptase_violations", "transcriptase_generate"],
-            "ribosome": ["ribosome_store", "ribosome_list", "ribosome_validate", "ribosome_generate", "ribosome_drift"],
-            "phenotype": ["phenotype_mutate", "phenotype_verify"],
             "domain_primitives": ["domain_primitives_list", "domain_primitives_transfer", "domain_primitives_decompose", "domain_primitives_bottlenecks", "domain_primitives_compare", "domain_primitives_topo_sort", "domain_primitives_critical_paths", "domain_primitives_registry", "domain_primitives_save", "domain_primitives_load", "domain_primitives_transfer_matrix"],
             "fda_credibility": ["fda_define_cou", "fda_assess_risk", "fda_create_plan", "fda_validate_evidence", "fda_decide_adequacy", "fda_calculate_score", "fda_metrics_summary", "fda_evidence_distribution", "fda_risk_distribution", "fda_drift_trend", "fda_rating_thresholds"],
-            "stem": ["stem_version", "stem_taxonomy", "stem_confidence_combine", "stem_tier_info", "stem_chem_balance", "stem_chem_fraction", "stem_chem_ratio", "stem_chem_rate", "stem_chem_affinity", "stem_phys_fma", "stem_phys_conservation", "stem_phys_period", "stem_phys_amplitude", "stem_phys_scale", "stem_phys_inertia", "stem_math_bounds_check", "stem_math_relation_invert", "stem_math_proof", "stem_math_identity", "stem_spatial_distance", "stem_spatial_triangle", "stem_spatial_neighborhood", "stem_spatial_dimension", "stem_spatial_orientation"],
-            "viz": ["viz_stem_taxonomy", "viz_type_composition", "viz_method_loop", "viz_confidence_chain", "viz_bounds", "viz_dag", "viz_molecular_info", "viz_surface_mesh", "viz_spectral_analysis", "viz_community_detect", "viz_centrality", "viz_vdag_overlay", "viz_antibody_structure", "viz_interaction_map", "viz_projection", "viz_protein_structure", "viz_topology_analysis", "viz_dynamics_step", "viz_force_field_energy", "viz_gpu_layout", "viz_hypergraph", "viz_lod_select", "viz_minimize_energy", "viz_particle_preset", "viz_ae_overlay", "viz_coord_gen", "viz_bipartite_layout", "viz_manifold_sample", "viz_string_modes", "viz_render_pipeline", "viz_orbital_density"],
-            "watchtower": ["watchtower_sessions_list", "watchtower_active_sessions", "watchtower_analyze", "watchtower_telemetry_stats", "watchtower_recent", "watchtower_symbol_audit", "watchtower_gemini_stats", "watchtower_gemini_recent", "watchtower_unified"],
+            "viz": ["viz_stem_taxonomy", "viz_type_composition", "viz_method_loop", "viz_confidence_chain", "viz_bounds", "viz_dag", "viz_node_confidence", "viz_molecular_info", "viz_surface_mesh", "viz_spectral_analysis", "viz_community_detect", "viz_centrality", "viz_vdag_overlay", "viz_antibody_structure", "viz_interaction_map", "viz_projection", "viz_protein_structure", "viz_topology_analysis", "viz_dynamics_step", "viz_force_field_energy", "viz_gpu_layout", "viz_hypergraph", "viz_lod_select", "viz_minimize_energy", "viz_particle_preset", "viz_ae_overlay", "viz_coord_gen", "viz_bipartite_layout", "viz_manifold_sample", "viz_string_modes", "viz_render_pipeline", "viz_orbital_density"],
             "node_hunter": ["node_hunt_scan", "node_hunt_isolate"],
             "telemetry_intel": ["telemetry_sources_list", "telemetry_source_analyze", "telemetry_governance_crossref", "telemetry_snapshot_evolution", "telemetry_intel_report", "telemetry_recent"],
             "primitive_scanner": ["primitive_scan", "primitive_batch_test"],
-            "algovigilance": ["algovigil_dedup_pair", "algovigil_dedup_batch", "algovigil_triage_decay", "algovigil_triage_reinforce", "algovigil_triage_queue", "algovigil_status"],
-            "dtree": ["dtree_train", "dtree_predict", "dtree_importance", "dtree_prune", "dtree_export", "dtree_info"],
-            "edit_distance": ["edit_distance_compute", "edit_distance_similarity", "edit_distance_traceback", "edit_distance_transfer", "edit_distance_batch"],
             "integrity": ["integrity_analyze", "integrity_assess_ksb", "integrity_calibration"],
             "organize": ["organize_analyze", "organize_config_default", "organize_report_markdown", "organize_report_json", "organize_observe", "organize_rank"],
             "sentinel": ["sentinel_status", "sentinel_check_ip", "sentinel_parse_line", "sentinel_config_defaults"],
@@ -3000,8 +3078,8 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "user": ["user_create", "user_login", "user_logout", "user_list", "user_lock", "user_unlock", "user_status", "user_change_password"],
             "claude_fs": ["claude_fs_list", "claude_fs_read", "claude_fs_write", "claude_fs_delete", "claude_fs_search", "claude_fs_tail", "claude_fs_diff", "claude_fs_stat", "claude_fs_backup_now"],
             "compendious": ["compendious_score_text", "compendious_compress_text", "compendious_compare_texts", "compendious_analyze_patterns", "compendious_get_domain_target"],
-            "docs_claude": ["docs_claude_list_pages", "docs_claude_get_page", "docs_claude_search_docs", "docs_claude_get_docs_index"],
-            "gsheets": ["gsheets_list_sheets", "gsheets_read_range", "gsheets_batch_read", "gsheets_write_range", "gsheets_append_rows", "gsheets_metadata", "gsheets_search"],
+            "docs_claude": ["docs_claude_list_pages", "docs_claude_get_page", "docs_claude_search_docs", "docs_claude_get_docs_index", "docs_claude_index", "docs_claude_search"],
+            "gsheets": ["gsheets_list_sheets", "gsheets_read_range", "gsheets_batch_read", "gsheets_write_range", "gsheets_append_rows", "gsheets_metadata", "gsheets_search", "gsheets_append"],
             "reddit": ["reddit_status", "reddit_authenticate", "reddit_hot_posts", "reddit_new_posts", "reddit_subreddit_info", "reddit_detect_signals", "reddit_search_entity"],
             "trust": ["trust_score", "trust_record", "trust_snapshot", "trust_decide", "trust_harm_weight", "trust_velocity", "trust_multi_score", "trust_network_chain"],
             "molecular_weight": ["mw_compute", "mw_periodic_table", "mw_compare", "mw_predict_transfer"],
@@ -3040,28 +3118,9 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "respiratory": ["respiratory_exchange", "respiratory_dead_space", "respiratory_tidal", "respiratory_health"],
             "urinary": ["urinary_pruning", "urinary_expiry", "urinary_retention", "urinary_health"],
             "integumentary": ["integumentary_permission", "integumentary_settings", "integumentary_sandbox", "integumentary_scarring", "integumentary_health"],
-            "kellnr_pk": ["kellnr_compute_pk_auc", "kellnr_compute_pk_steady_state", "kellnr_compute_pk_ionization", "kellnr_compute_pk_clearance", "kellnr_compute_pk_volume_distribution", "kellnr_compute_pk_michaelis_menten"],
-            "kellnr_thermo": ["kellnr_compute_thermo_gibbs", "kellnr_compute_thermo_kd", "kellnr_compute_thermo_binding_affinity", "kellnr_compute_thermo_arrhenius"],
-            "kellnr_stats": ["kellnr_compute_stats_welch_ttest", "kellnr_compute_stats_ols_regression", "kellnr_compute_stats_poisson_ci", "kellnr_compute_stats_bayesian_posterior", "kellnr_compute_stats_entropy"],
-            "kellnr_graph": ["kellnr_compute_graph_betweenness", "kellnr_compute_graph_mutual_info", "kellnr_compute_graph_tarjan_scc", "kellnr_compute_graph_topsort"],
-            "kellnr_dtree": ["kellnr_compute_dtree_feature_importance", "kellnr_compute_dtree_prune", "kellnr_compute_dtree_to_rules"],
-            "kellnr_signal": ["kellnr_compute_signal_sprt", "kellnr_compute_signal_cusum", "kellnr_compute_signal_weibull_tto"],
-            "kellnr_registry": ["kellnr_search_crates", "kellnr_get_crate_metadata", "kellnr_list_crate_versions", "kellnr_get_version_details", "kellnr_list_owners", "kellnr_add_owner", "kellnr_remove_owner", "kellnr_yank_version", "kellnr_unyank_version", "kellnr_list_all_crates", "kellnr_get_dependencies", "kellnr_get_dependents", "kellnr_health_check", "kellnr_download_crate", "kellnr_registry_stats"],
             "registry": ["registry_assess_skill", "registry_assess_all", "registry_gap_report", "registry_promotable", "registry_promotion_plan", "registry_tov_safety", "registry_tov_harm", "registry_tov_is_safe"],
-            "stoichiometry": ["stoichiometry_encode", "stoichiometry_decode", "stoichiometry_sisters", "stoichiometry_mass_state", "stoichiometry_dictionary", "stoichiometry_is_balanced", "stoichiometry_prove", "stoichiometry_is_isomer"],
-            "graph_layout": ["graph_layout_converge"],
-            "career": ["career_transitions"],
-            "learning_dag": ["learning_dag_resolve"],
-            "drift": ["drift_ks_test", "drift_psi", "drift_jsd", "drift_detect"],
-            "rate_limit": ["rate_limit_token_bucket", "rate_limit_sliding_window", "rate_limit_status"],
-            "rank_fusion": ["rank_fusion_rrf", "rank_fusion_hybrid", "rank_fusion_borda"],
-            "security_posture": ["security_posture_assess", "security_threat_readiness", "security_compliance_gap"],
-            "observability": ["observability_record_latency", "observability_query", "observability_freshness"],
-            "epidemiology": ["epidemiology_relative_risk", "epidemiology_odds_ratio", "epidemiology_attributable_risk", "epidemiology_nnt_nnh", "epidemiology_attributable_fraction", "epidemiology_population_attributable_fraction", "epidemiology_incidence_rate", "epidemiology_prevalence", "epidemiology_kaplan_meier", "epidemiology_smr", "epidemiology_mappings"],
             "trial": ["trial_protocol_register", "trial_power_analysis", "trial_randomize", "trial_blind_verify", "trial_interim_analyze", "trial_safety_check", "trial_endpoint_evaluate", "trial_multiplicity_adjust", "trial_adapt_decide", "trial_report_generate"],
             "cognition": ["cognition_process", "cognition_analyze", "cognition_forward", "cognition_entropy", "cognition_perplexity", "cognition_embed", "cognition_sample", "cognition_confidence"],
-            "notebooklm": ["nlm_add_notebook", "nlm_list_notebooks", "nlm_get_notebook", "nlm_select_notebook", "nlm_update_notebook", "nlm_remove_notebook", "nlm_search_notebooks", "nlm_get_library_stats", "nlm_list_sessions", "nlm_close_session", "nlm_reset_session", "nlm_get_health", "nlm_setup_auth", "nlm_re_auth", "nlm_ask_question", "nlm_cleanup_data"],
-            "cloud": ["cloud_primitive_composition", "cloud_transfer_confidence", "cloud_tier_classify", "cloud_compare_types", "cloud_reverse_synthesize", "cloud_list_types", "cloud_molecular_weight", "cloud_dominant_shift", "cloud_infra_status", "cloud_infra_map", "cloud_capacity_project", "cloud_supervisor_health", "cloud_reverse_transfer", "cloud_transfer_chain", "cloud_architecture_advisor", "cloud_anomaly_detect", "cloud_transfer_matrix"],
             "zeta": ["zeta_compute", "zeta_find_zeros", "zeta_verify_rh", "zeta_embedded_zeros", "zeta_lmfdb_parse", "zeta_telescope_run", "zeta_batch_run", "zeta_scaling_fit", "zeta_scaling_predict", "zeta_cayley", "zeta_operator_hunt", "zeta_operator_candidate", "zeta_gue_compare"],
             "signal_pipeline": ["pipeline_compute_all", "pipeline_batch_compute", "pipeline_detect", "pipeline_validate", "pipeline_thresholds", "pipeline_report", "pipeline_relay_chain", "pipeline_transfer", "pipeline_primitives"],
             "preemptive_pv": ["preemptive_reactive", "preemptive_gibbs", "preemptive_trajectory", "preemptive_severity", "preemptive_noise", "preemptive_predictive", "preemptive_evaluate", "preemptive_intervention", "preemptive_required_strength", "preemptive_omega_table"],
@@ -3087,10 +3146,234 @@ fn help_catalog() -> Result<CallToolResult, McpError> {
             "build_orchestrator": ["build_orchestrator_dry_run", "build_orchestrator_stages", "build_orchestrator_workspace", "build_orchestrator_history", "build_orchestrator_metrics"],
             "skills_engine": ["skill_quality_index", "skill_maturity", "skill_ksb_verify", "skill_ecosystem_score", "skill_dependency_graph", "skill_gap_analysis", "skill_evolution_track"],
             "ncbi": ["ncbi_esearch", "ncbi_esummary", "ncbi_efetch", "ncbi_elink", "ncbi_search_and_fetch", "ncbi_search_and_summarize"],
+            "entropy": ["entropy_compute"],
+            "graph": ["graph_analyze", "graph_construct"],
+            "markov": ["markov_analyze", "markov_from_data"],
+            "stem_finance": ["stem_finance_discount", "stem_finance_compound", "stem_finance_spread", "stem_finance_maturity", "stem_finance_exposure", "stem_finance_arbitrage", "stem_finance_diversify", "stem_finance_return"],
+            "stem_bio": ["stem_bio_behavior_profile", "stem_bio_tone_profile"],
+            "stem_extended": ["stem_transfer_confidence", "stem_retry_budget", "stem_integrity_check", "stem_determinism_score"],
+            "foundry_pipeline": ["foundry_validate_artifact", "foundry_vdag_order", "foundry_render_intelligence", "foundry_cascade_validate", "foundry_infer"],
+            "crate_dev": ["crate_xray", "crate_xray_trial", "crate_xray_goals", "crate_dev_scaffold", "crate_dev_audit"],
+            "disney_loop": ["disney_loop_run", "disney_loop_state_assess", "disney_loop_curiosity_search", "disney_loop_anti_regression"],
+            "relay": ["relay_core_detection", "relay_pv_pipeline", "relay_chain_verify", "relay_fidelity_compose"],
+            "tov_extended": ["tov_stability_shell", "tov_signal_strength", "tov_epistemic_trust"],
+            "ksb": ["ksb_search", "ksb_get", "ksb_stats"],
+            "muscular": ["muscular_health", "muscular_fatigue", "muscular_classify"],
+            "skeletal": ["skeletal_wolffs_law", "skeletal_structure", "skeletal_health"],
+            "digestive": ["digestive_process", "digestive_health", "digestive_taste"],
+            "circulatory": ["circulatory_health", "circulatory_pressure", "circulatory_pump"],
+            "compendious_aliases": ["score_text", "compress_text", "compare_texts", "get_domain_target", "analyze_patterns"],
+            "api": ["api_list_routes", "api_health"]
         }
+    })
+}
+
+fn help_catalog() -> Result<CallToolResult, McpError> {
+    let data = unified_catalog_data();
+    let categories = data
+        .get("categories")
+        .cloned()
+        .unwrap_or_else(|| serde_json::json!({}));
+    let total: usize = categories
+        .as_object()
+        .map(|cats| {
+            cats.values()
+                .filter_map(|v| v.as_array())
+                .map(|a| a.len())
+                .sum()
+        })
+        .unwrap_or(0);
+    let catalog = serde_json::json!({
+        "total": total,
+        "usage": "nexcore(command=\"CMD\", params={...})",
+        "categories": categories
     });
 
     Ok(CallToolResult::success(vec![Content::text(
         serde_json::to_string_pretty(&catalog).unwrap_or_else(|_| "{}".to_string()),
     )]))
+}
+
+// ============================================================================
+// Catalog Validation Tests (C5+C6 from Directive 005)
+// ============================================================================
+
+#[cfg(test)]
+mod catalog_tests {
+    use super::*;
+    use std::collections::HashSet;
+
+    /// C5: Extract all dispatch command names from source code.
+    /// Uses `include_str!` + regex-style parsing to stay self-maintaining.
+    fn dispatch_commands_from_source() -> HashSet<String> {
+        let source = include_str!("unified.rs");
+        let mut commands = HashSet::new();
+
+        for line in source.lines() {
+            let trimmed = line.trim();
+            // Match patterns like: "command_name" => ...
+            // But NOT inside comments, strings, or the test module itself
+            if trimmed.starts_with("//") || trimmed.starts_with("///") || trimmed.starts_with("* ")
+            {
+                continue;
+            }
+            // Stop parsing when we reach this test module
+            if trimmed == "mod catalog_tests {" {
+                break;
+            }
+            if let Some(rest) = trimmed.strip_prefix('"') {
+                if let Some(cmd_end) = rest.find('"') {
+                    let candidate = &rest[..cmd_end];
+                    // Must be followed by " => (match arm pattern)
+                    let after_quote = &rest[cmd_end + 1..].trim_start();
+                    if after_quote.starts_with("=>")
+                        && !candidate.contains(' ')
+                        && !candidate.contains('/')
+                    {
+                        commands.insert(candidate.to_string());
+                    }
+                }
+            }
+        }
+
+        commands
+    }
+
+    /// C6a: Catalog has all expected categories (>= 192 from unification).
+    #[test]
+    fn catalog_has_expected_categories() {
+        let data = unified_catalog_data();
+        let categories = data
+            .get("categories")
+            .and_then(|c| c.as_object())
+            .expect("categories must exist");
+
+        assert!(
+            categories.len() >= 190,
+            "Expected >= 190 categories, got {}",
+            categories.len()
+        );
+    }
+
+    /// C6b: Total tool count is above threshold (computed, not hardcoded).
+    #[test]
+    fn catalog_total_above_threshold() {
+        let data = unified_catalog_data();
+        let categories = data
+            .get("categories")
+            .and_then(|c| c.as_object())
+            .expect("categories must exist");
+
+        let total: usize = categories
+            .values()
+            .filter_map(|v| v.as_array())
+            .map(|arr| arr.len())
+            .sum();
+
+        assert!(total > 400, "Catalog should have >400 tools, got {}", total);
+    }
+
+    /// C6c: No empty categories in the catalog.
+    #[test]
+    fn no_empty_categories() {
+        let data = unified_catalog_data();
+        let categories = data
+            .get("categories")
+            .and_then(|c| c.as_object())
+            .expect("categories must exist");
+
+        let empty: Vec<&String> = categories
+            .iter()
+            .filter(|(_, v)| v.as_array().map(|a| a.is_empty()).unwrap_or(true))
+            .map(|(k, _)| k)
+            .collect();
+
+        assert!(empty.is_empty(), "Empty categories found: {:?}", empty);
+    }
+
+    /// C6d: Both discovery surfaces share the same source.
+    /// toolbox_catalog() categories == unified_catalog_data() categories.
+    #[test]
+    fn toolbox_and_help_share_source() {
+        let catalog = toolbox_catalog();
+        let toolbox_cats: HashSet<&str> = catalog.iter().map(|(cat, _)| *cat).collect();
+
+        let data = unified_catalog_data();
+        let unified_cats: HashSet<String> = data
+            .get("categories")
+            .and_then(|c| c.as_object())
+            .expect("categories must exist")
+            .keys()
+            .cloned()
+            .collect();
+
+        // Every unified category should appear in toolbox
+        let missing_from_toolbox: Vec<&String> = unified_cats
+            .iter()
+            .filter(|c| !toolbox_cats.contains(c.as_str()))
+            .collect();
+
+        assert!(
+            missing_from_toolbox.is_empty(),
+            "Categories in unified but not toolbox: {:?}",
+            missing_from_toolbox
+        );
+    }
+
+    /// C6e: Dispatch commands are covered by catalog.
+    /// Verifies every dispatch match arm has a corresponding catalog entry.
+    #[test]
+    fn dispatch_commands_in_catalog() {
+        let dispatch_cmds = dispatch_commands_from_source();
+        let data = unified_catalog_data();
+        let categories = data
+            .get("categories")
+            .and_then(|c| c.as_object())
+            .expect("categories must exist");
+
+        // Collect all cataloged tool names
+        let cataloged: HashSet<String> = categories
+            .values()
+            .filter_map(|v| v.as_array())
+            .flat_map(|arr| arr.iter())
+            .filter_map(|v| v.as_str().map(String::from))
+            .collect();
+
+        // System/meta commands excluded from catalog requirement
+        let system_commands: HashSet<&str> =
+            ["help", "toolbox", "tool_schema"].iter().copied().collect();
+
+        let not_in_catalog: Vec<&String> = dispatch_cmds
+            .iter()
+            .filter(|c| !system_commands.contains(c.as_str()))
+            .filter(|c| !cataloged.contains(c.as_str()))
+            .collect();
+
+        // Report but don't fail hard — catalog may legitimately lag dispatch
+        // This becomes a hard gate once all commands are cataloged
+        if !not_in_catalog.is_empty() {
+            eprintln!(
+                "WARNING: {} dispatch commands not in catalog: {:?}",
+                not_in_catalog.len(),
+                not_in_catalog
+            );
+        }
+
+        // Hard gate: >=99% of dispatch commands must be cataloged (D009)
+        let coverage = if dispatch_cmds.len() > 2 {
+            (dispatch_cmds.len() - 2 - not_in_catalog.len()) as f64
+                / (dispatch_cmds.len() - 2) as f64
+        } else {
+            1.0
+        };
+
+        assert!(
+            coverage >= 0.99,
+            "Catalog coverage {:.1}% is below 99% threshold ({} of {} commands not cataloged: {:?})",
+            coverage * 100.0,
+            not_in_catalog.len(),
+            dispatch_cmds.len() - 2,
+            not_in_catalog
+        );
+    }
 }

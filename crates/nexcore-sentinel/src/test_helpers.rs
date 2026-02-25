@@ -19,7 +19,7 @@
 
 use std::net::IpAddr;
 
-use chrono::{DateTime, Duration, Utc};
+use nexcore_chrono::{DateTime, Duration};
 
 use crate::types::{BanRecord, Count, FailureRecord};
 
@@ -37,11 +37,11 @@ use crate::types::{BanRecord, Count, FailureRecord};
 ///     .failure_count(3)
 ///     .build();
 ///
-/// assert!(!ban.is_expired(chrono::Utc::now()));
+/// assert!(!ban.is_expired(nexcore_chrono::DateTime::now()));
 /// ```
 pub struct FutureBanBuilder {
     ip: IpAddr,
-    banned_at: DateTime<Utc>,
+    banned_at: DateTime,
     ban_duration_secs: i64,
     failure_count: Count,
 }
@@ -55,7 +55,7 @@ impl FutureBanBuilder {
             .unwrap_or(IpAddr::V4(std::net::Ipv4Addr::LOCALHOST));
         Self {
             ip,
-            banned_at: Utc::now(),
+            banned_at: DateTime::now(),
             ban_duration_secs: 86400,
             failure_count: 3,
         }
@@ -63,7 +63,7 @@ impl FutureBanBuilder {
 
     /// Set when the ban was applied (default: now).
     #[must_use]
-    pub fn banned_at(mut self, when: DateTime<Utc>) -> Self {
+    pub fn banned_at(mut self, when: DateTime) -> Self {
         self.banned_at = when;
         self
     }
@@ -134,7 +134,7 @@ impl ExpiredBanBuilder {
     /// Build the `BanRecord` with guaranteed past expiry.
     #[must_use]
     pub fn build(self) -> BanRecord {
-        let now = Utc::now();
+        let now = DateTime::now();
         let banned_at = now - Duration::seconds(self.expired_secs_ago + 3600);
         let expires_at = now - Duration::seconds(self.expired_secs_ago);
         BanRecord {
@@ -155,7 +155,7 @@ pub fn recent_failures(ip_str: &str, count: usize, window_secs: i64) -> FailureR
     let ip = ip_str
         .parse()
         .unwrap_or(IpAddr::V4(std::net::Ipv4Addr::LOCALHOST));
-    let now = Utc::now();
+    let now = DateTime::now();
     let spacing = if count > 1 {
         window_secs / count as i64
     } else {
@@ -179,7 +179,7 @@ mod tests {
     #[test]
     fn future_ban_is_not_expired() {
         let ban = FutureBanBuilder::new("10.0.0.1").build();
-        assert!(!ban.is_expired(Utc::now()));
+        assert!(!ban.is_expired(DateTime::now()));
     }
 
     #[test]
@@ -187,14 +187,14 @@ mod tests {
         let ban = FutureBanBuilder::new("10.0.0.1")
             .ban_duration_secs(1)
             .build();
-        assert!(!ban.is_expired(Utc::now()));
+        assert!(!ban.is_expired(DateTime::now()));
         assert_eq!(ban.failure_count, 3);
     }
 
     #[test]
     fn expired_ban_is_expired() {
         let ban = ExpiredBanBuilder::new("10.0.0.2").build();
-        assert!(ban.is_expired(Utc::now()));
+        assert!(ban.is_expired(DateTime::now()));
     }
 
     #[test]
@@ -203,7 +203,7 @@ mod tests {
             .expired_secs_ago(60)
             .failure_count(5)
             .build();
-        assert!(ban.is_expired(Utc::now()));
+        assert!(ban.is_expired(DateTime::now()));
         assert_eq!(ban.failure_count, 5);
     }
 

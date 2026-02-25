@@ -318,7 +318,7 @@ impl FederalReserveAct {
             daily_usage: TokenCount(0),
             current_session: None,
             request_count: 0,
-            window_start: chrono::Utc::now().timestamp(),
+            window_start: nexcore_chrono::DateTime::now().timestamp(),
         }
     }
 
@@ -422,7 +422,7 @@ impl FederalReserveAct {
 
     /// Check rate limit status.
     pub fn check_rate_limit(&mut self) -> RateLimitStatus {
-        let now = chrono::Utc::now().timestamp();
+        let now = nexcore_chrono::DateTime::now().timestamp();
         let window_duration = 60; // 1 minute window
 
         // Reset window if expired
@@ -496,7 +496,7 @@ mod tests {
             input_tokens: TokenCount(10_000),
             output_tokens: TokenCount(5_000),
             model_tier: ModelTier::Standard,
-            timestamp: chrono::Utc::now().timestamp(),
+            timestamp: nexcore_chrono::DateTime::now().timestamp(),
         };
 
         let report = fed.record_usage(usage);

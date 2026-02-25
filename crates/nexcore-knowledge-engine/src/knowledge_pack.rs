@@ -2,7 +2,7 @@
 //!
 //! Versioned, serializable, queryable. Follows Brain's `.resolved.N` pattern.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::concept_graph::ConceptGraph;
@@ -17,7 +17,7 @@ pub struct KnowledgePack {
     pub fragments: Vec<KnowledgeFragment>,
     pub concept_graph: ConceptGraph,
     pub stats: PackStats,
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 }
 
 /// Index entry for a pack (lightweight, for listing).
@@ -28,7 +28,7 @@ pub struct PackIndex {
     pub fragment_count: usize,
     pub concept_count: usize,
     pub avg_score: f64,
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 }
 
 /// Statistics for a knowledge pack.
@@ -59,7 +59,7 @@ impl KnowledgePack {
             fragments,
             concept_graph,
             stats,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
         }
     }
 

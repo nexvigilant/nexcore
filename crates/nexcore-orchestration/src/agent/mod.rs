@@ -6,7 +6,7 @@ pub mod supervisor;
 
 use std::fmt;
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{AgentId, Priority, TaskGroupId};
@@ -78,9 +78,9 @@ pub struct AgentRecord {
     /// Optional group membership.
     pub group: Option<TaskGroupId>,
     /// When the agent was created.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// When the state last changed.
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
     /// Serialized result (populated on Done).
     pub result: Option<serde_json::Value>,
     /// Error message (populated on Error).
@@ -91,7 +91,7 @@ impl AgentRecord {
     /// Create a new agent record in Queued state.
     #[must_use]
     pub fn new(id: AgentId, name: String, priority: Priority, group: Option<TaskGroupId>) -> Self {
-        let now = Utc::now();
+        let now = DateTime::now();
         Self {
             id,
             name,

@@ -3,7 +3,7 @@
 
 //! Core types for value mining.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// Type of value signal detected.
@@ -128,11 +128,11 @@ pub struct ValueSignal {
     /// Signal strength classification.
     pub strength: SignalStrength,
     /// Start of detection window.
-    pub window_start: DateTime<Utc>,
+    pub window_start: DateTime,
     /// End of detection window.
-    pub window_end: DateTime<Utc>,
+    pub window_end: DateTime,
     /// When signal was detected.
-    pub detected_at: DateTime<Utc>,
+    pub detected_at: DateTime,
     /// Number of data points used in detection.
     pub sample_size: usize,
     /// Additional metadata (JSON).
@@ -152,14 +152,14 @@ impl ValueSignal {
         source: impl Into<String>,
         score: f64,
         confidence: f64,
-        window_start: DateTime<Utc>,
-        window_end: DateTime<Utc>,
+        window_start: DateTime,
+        window_end: DateTime,
         sample_size: usize,
     ) -> Self {
         let id = format!(
             "{}-{}-{}",
             signal_type,
-            chrono::Utc::now().timestamp_millis(),
+            nexcore_chrono::DateTime::now().timestamp_millis(),
             rand_suffix()
         );
 
@@ -173,7 +173,7 @@ impl ValueSignal {
             strength: SignalStrength::from_confidence(confidence),
             window_start,
             window_end,
-            detected_at: Utc::now(),
+            detected_at: DateTime::now(),
             sample_size,
             metadata: serde_json::Value::Null,
         }
@@ -205,7 +205,7 @@ pub struct Baseline {
     /// Average posts per hour.
     pub posts_per_hour: f64,
     /// When baseline was computed.
-    pub computed_at: DateTime<Utc>,
+    pub computed_at: DateTime,
     /// Number of samples used to compute baseline.
     pub sample_count: usize,
 }
@@ -219,7 +219,7 @@ impl Baseline {
             negative_rate: 0.5,
             avg_engagement: 100.0,
             posts_per_hour: 10.0,
-            computed_at: Utc::now(),
+            computed_at: DateTime::now(),
             sample_count: 0,
         }
     }
@@ -243,7 +243,7 @@ impl Baseline {
         self.avg_engagement = self.avg_engagement * old_weight + avg_engagement * new_weight;
         self.posts_per_hour = self.posts_per_hour * old_weight + posts_per_hour * new_weight;
         self.sample_count += new_samples;
-        self.computed_at = Utc::now();
+        self.computed_at = DateTime::now();
     }
 
     /// Update baseline from posts data.
@@ -350,8 +350,8 @@ mod tests {
             "wallstreetbets",
             3.5,
             0.85,
-            Utc::now(),
-            Utc::now(),
+            DateTime::now(),
+            DateTime::now(),
             100,
         );
 

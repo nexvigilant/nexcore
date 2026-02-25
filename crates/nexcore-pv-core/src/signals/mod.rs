@@ -23,6 +23,8 @@
 //! - Chi-square >= 3.841 (p < 0.05)
 //! - Minimum 3 cases
 
+use serde::{Deserialize, Serialize};
+
 // =============================================================================
 // SUBMODULES
 // =============================================================================
@@ -268,6 +270,75 @@ pub use signal_equation::{
 };
 
 // =============================================================================
+// FDR / MULTIPLE TESTING CONFIGURATION
+// =============================================================================
+
+/// Method for multiple testing correction.
+///
+/// Used to select which adjustment procedure to apply when correcting
+/// p-values across multiple drug-event pair evaluations.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum AdjustmentMethod {
+    /// Benjamini-Hochberg — controls FDR (default for screening)
+    BenjaminiHochberg,
+    /// Bonferroni — controls FWER (conservative)
+    Bonferroni,
+    /// Holm step-down — controls FWER (more powerful than Bonferroni)
+    Holm,
+    /// Šidák — controls FWER (assumes independence)
+    Sidak,
+    /// No correction applied
+    None,
+}
+
+impl Default for AdjustmentMethod {
+    fn default() -> Self {
+        Self::BenjaminiHochberg
+    }
+}
+
+/// Configuration for signal evaluation with optional FDR correction.
+///
+/// When `fdr_correction` is enabled, frequentist methods (PRR, ROR) have their
+/// p-values adjusted for multiple comparisons. Bayesian methods (BCPNN, EBGM,
+/// IC, Omega) are NOT adjusted — they have built-in shrinkage that implicitly
+/// controls false discoveries.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SignalEvaluationConfig {
+    /// Apply FDR correction to frequentist methods
+    pub fdr_correction: bool,
+    /// FDR level (default 0.05)
+    pub fdr_level: f64,
+    /// Which adjustment method to use
+    pub adjustment_method: AdjustmentMethod,
+}
+
+impl Default for SignalEvaluationConfig {
+    fn default() -> Self {
+        Self {
+            fdr_correction: false,
+            fdr_level: 0.05,
+            adjustment_method: AdjustmentMethod::BenjaminiHochberg,
+        }
+    }
+}
+
+impl SignalEvaluationConfig {
+    /// Configuration for batch processing — FDR on by default.
+    ///
+    /// When screening 100K+ drug-event pairs, multiplicity correction
+    /// is the pharmacostatistically correct default.
+    #[must_use]
+    pub fn batch_default() -> Self {
+        Self {
+            fdr_correction: true,
+            fdr_level: 0.05,
+            adjustment_method: AdjustmentMethod::BenjaminiHochberg,
+        }
+    }
+}
+
+// =============================================================================
 // CONSTANTS
 // =============================================================================
 
@@ -279,6 +350,9 @@ pub const EVANS_CHI_SQUARE_THRESHOLD: f64 = 3.841;
 pub const EVANS_MIN_CASES: u32 = 3;
 /// Z-score for 95% confidence interval
 pub const Z_95: f64 = 1.96;
+
+// FDR batch processing
+pub use batch::parallel::{BatchAdjustmentMetadata, BatchFdrResults, batch_complete_with_fdr};
 
 // =============================================================================
 // CONVENIENCE FUNCTIONS

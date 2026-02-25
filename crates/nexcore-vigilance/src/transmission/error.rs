@@ -247,7 +247,7 @@ impl ErrorResponse {
                 code: error.code().to_string(),
                 message: error.to_string(),
                 details: None,
-                timestamp: chrono::Utc::now().to_rfc3339(),
+                timestamp: nexcore_chrono::DateTime::now().to_rfc3339(),
                 request_id,
                 retryable: error.is_retryable(),
             },

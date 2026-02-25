@@ -22,7 +22,7 @@
 //! - **Digestion**: Analyze and classify the threat
 //! - **Presentation**: Report findings to the broader system
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// Result of attempting to engulf a threat.
@@ -76,9 +76,9 @@ pub struct ThreatDigest {
     /// Severity score \[0, 100\]
     pub severity: u8,
     /// When the threat was engulfed
-    pub engulfed_at: DateTime<Utc>,
+    pub engulfed_at: DateTime,
     /// When digestion completed
-    pub digested_at: Option<DateTime<Utc>>,
+    pub digested_at: Option<DateTime>,
     /// Whether the threat was fully neutralized
     pub neutralized: bool,
 }
@@ -187,7 +187,7 @@ impl Phagocyte {
             location: location.to_string(),
             class,
             severity,
-            engulfed_at: Utc::now(),
+            engulfed_at: DateTime::now(),
             digested_at: None,
             neutralized: false,
         };
@@ -216,7 +216,7 @@ impl Phagocyte {
     /// Marks them as neutralized and moves to antigen library.
     /// Returns number of threats digested.
     pub fn digest(&mut self) -> usize {
-        let now = Utc::now();
+        let now = DateTime::now();
         let mut digested = 0;
 
         for threat in &mut self.digesting {

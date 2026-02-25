@@ -1,6 +1,6 @@
 //! Team management — user invitations, roles, activity within a tenant.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use vr_core::{Action, Resource, TenantContext, TenantId, UserId, UserRole, VrError, VrResult};
 
@@ -15,8 +15,8 @@ pub struct TeamMember {
     pub role: UserRole,
     pub status: MemberStatus,
     pub invited_by: Option<UserId>,
-    pub created_at: DateTime<Utc>,
-    pub last_active_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime,
+    pub last_active_at: Option<DateTime>,
 }
 
 /// Status of a team member.
@@ -189,7 +189,7 @@ mod tests {
             role: UserRole::Owner,
             status: MemberStatus::Active,
             invited_by: None,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             last_active_at: None,
         };
         assert!(validate_role_change(&ctx, &member, UserRole::Admin).is_err());

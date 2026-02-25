@@ -114,6 +114,9 @@ pub mod spectral;
 // VDAG — Validated DAG with AE signal overlay
 pub mod vdag;
 
+// Node confidence computation — server-side Measured<T> for Observatory explorers
+pub mod node_confidence;
+
 // Phase 4 "Nervous System" — AE signal overlay computation
 pub mod ae_overlay;
 
@@ -167,6 +170,7 @@ pub use composition::{PrimitiveNode, TypeComposition, render_composition};
 pub use confidence::{Claim, render_confidence_chain};
 pub use dag::{DagEdge, DagNode, render_dag};
 pub use metrics::{TextExtent, TextMetrics, measure_text, measure_text_bold};
+pub use node_confidence::{ConfidenceSource, compute_confidence, compute_confidence_batch};
 pub use scale::{LinearScale, LogScale, OrdinalScale, Scale};
 pub use science_loop::{LoopStep, render_science_loop};
 pub use taxonomy::{TraitEntry, render_taxonomy};

@@ -91,10 +91,10 @@ pub struct PipelineExecution {
     /// All feedback signals collected.
     pub feedback_buffer: Vec<FeedbackSignal>,
     /// Start time.
-    pub started_at: chrono::DateTime<chrono::Utc>,
+    pub started_at: nexcore_chrono::DateTime,
     /// End time (if completed).
     #[serde(default)]
-    pub completed_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub completed_at: Option<nexcore_chrono::DateTime>,
 }
 
 /// Outputs from each stage.
@@ -250,7 +250,7 @@ impl CepPipeline {
             state: PipelineState::Running(StageId::See),
             stage_outputs: StageOutputs::default(),
             feedback_buffer: Vec::new(),
-            started_at: chrono::Utc::now(),
+            started_at: nexcore_chrono::DateTime::now(),
             completed_at: None,
         };
         self.current_execution = Some(execution);
@@ -267,7 +267,7 @@ impl CepPipeline {
                 }
                 // Completed all stages
                 exec.state = PipelineState::Completed;
-                exec.completed_at = Some(chrono::Utc::now());
+                exec.completed_at = Some(nexcore_chrono::DateTime::now());
             }
         }
         None
@@ -337,7 +337,7 @@ impl CepPipeline {
     pub fn finish(&mut self) -> Option<PipelineExecution> {
         if let Some(mut exec) = self.current_execution.take() {
             exec.state = PipelineState::Completed;
-            exec.completed_at = Some(chrono::Utc::now());
+            exec.completed_at = Some(nexcore_chrono::DateTime::now());
             self.history.push(exec.clone());
             return Some(exec);
         }

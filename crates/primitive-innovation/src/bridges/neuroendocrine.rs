@@ -144,7 +144,7 @@ impl NeuroendocrineCoordinator {
 
     /// Advance time by one tick — decay all slow states.
     pub fn tick(&mut self) {
-        self.tick_count += 1;
+        self.tick_count = self.tick_count.saturating_add(1);
         for state in self.states.values_mut() {
             state.decay();
         }

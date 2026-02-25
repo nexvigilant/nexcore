@@ -3,7 +3,7 @@
 //! Defines interactive slide presentations with various page types.
 //! QuizTivity is a feature for creating interactive content beyond quizzes.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 
@@ -17,7 +17,7 @@ pub struct QuizTivity {
     pub title: String,
 
     /// Creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Owner user ID.
     pub user_id: NexId,
@@ -32,7 +32,7 @@ impl QuizTivity {
         Self {
             id: NexId::v4(),
             title,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             user_id,
             pages: Vec::new(),
         }
@@ -159,7 +159,7 @@ pub struct QuizTivityShare {
     pub name: Option<String>,
 
     /// Expiration timestamp.
-    pub expire_at: Option<DateTime<Utc>>,
+    pub expire_at: Option<DateTime>,
 
     /// QuizTivity ID being shared.
     pub quiztivity_id: NexId,
@@ -171,7 +171,8 @@ pub struct QuizTivityShare {
 impl QuizTivityShare {
     /// Create a new share link.
     pub fn new(quiztivity_id: NexId, user_id: NexId, expire_in_minutes: Option<i64>) -> Self {
-        let expire_at = expire_in_minutes.map(|mins| Utc::now() + chrono::Duration::minutes(mins));
+        let expire_at =
+            expire_in_minutes.map(|mins| DateTime::now() + nexcore_chrono::Duration::minutes(mins));
 
         Self {
             id: NexId::v4(),
@@ -184,7 +185,7 @@ impl QuizTivityShare {
 
     /// Check if the share link has expired.
     pub fn is_expired(&self) -> bool {
-        self.expire_at.is_some_and(|exp| Utc::now() > exp)
+        self.expire_at.is_some_and(|exp| DateTime::now() > exp)
     }
 }
 

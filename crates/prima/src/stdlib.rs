@@ -1433,6 +1433,7 @@ fn exec_tier(args: Vec<Value>) -> PrimaResult<Value> {
         Tier::T2Primitive => "T2-P",
         Tier::T2Composite => "T2-C",
         Tier::T3DomainSpecific => "T3",
+        _ => "Unknown",
     };
     Ok(Value::string(tier_str.to_string()))
 }
@@ -1462,6 +1463,7 @@ fn exec_transfer(args: Vec<Value>) -> PrimaResult<Value> {
         Tier::T2Primitive => 0.9,
         Tier::T2Composite => 0.7,
         Tier::T3DomainSpecific => 0.4,
+        _ => 0.3,
     };
     Ok(Value::float(confidence))
 }

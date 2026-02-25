@@ -86,6 +86,10 @@ pub fn extract_crate(crate_path: &Path, domain_name: Option<&str>) -> ForgeResul
 }
 
 /// Build a graph topology from module relationships.
+#[allow(
+    clippy::as_conversions,
+    reason = "usize->f64 cast for line count weight; line counts never exceed f64 precision limits"
+)]
 fn build_module_graph(modules: &[crate::ir::ModuleInfo]) -> GraphTopology {
     use crate::ir::{GraphEdge, GraphNode};
 
@@ -107,7 +111,9 @@ fn build_module_graph(modules: &[crate::ir::ModuleInfo]) -> GraphTopology {
     let mut edges = Vec::new();
     for module in modules {
         if let Some(parent_pos) = module.path.rfind("::") {
-            let parent = &module.path[..parent_pos];
+            // parent_pos is a char boundary (rfind returns byte index of ':')
+            // but '::' is ASCII so parent_pos points to a valid char boundary.
+            let parent = module.path.get(..parent_pos).unwrap_or("");
             if modules.iter().any(|m| m.path == parent) {
                 edges.push(GraphEdge {
                     source: parent.to_string(),

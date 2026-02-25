@@ -400,7 +400,7 @@ impl ValidationResult {
             overall_status: ValidationStatus::White,
             score: 0.0,
             duration_ms: 0.0,
-            timestamp: chrono::Utc::now().to_rfc3339(),
+            timestamp: nexcore_chrono::DateTime::now().to_rfc3339(),
         }
     }
 

@@ -3,7 +3,7 @@
 //! Computes ecosystem-level KPIs from `active_skills` and `active_agents`
 //! and persists results into `skill_kpis`.
 
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use rusqlite::Connection;
 
 use crate::error::Result;
@@ -235,7 +235,7 @@ struct KpiDef {
 ///
 /// Returns an error on query or upsert failure.
 pub fn compute_all_kpis(conn: &Connection) -> Result<Vec<KpiRow>> {
-    let now = Utc::now();
+    let now = DateTime::now();
     let mut results = Vec::with_capacity(KPI_DEFS.len());
 
     for def in KPI_DEFS {
@@ -270,7 +270,7 @@ pub fn compute_kpi(conn: &Connection, name: &str) -> Result<KpiRow> {
         .find(|d| d.name == name)
         .ok_or_else(|| crate::error::RegistryError::NotFound(format!("kpi definition {name}")))?;
 
-    let now = Utc::now();
+    let now = DateTime::now();
     let value: Option<f64> = conn.query_row(def.formula, [], |row| row.get(0)).ok();
 
     let kpi = KpiRow {
@@ -295,7 +295,7 @@ mod tests {
     use crate::skills::{self, SkillRow};
 
     fn seed_skills(conn: &Connection) {
-        let now = Utc::now();
+        let now = DateTime::now();
         for i in 0..5 {
             let row = SkillRow {
                 name: format!("skill-{i}"),

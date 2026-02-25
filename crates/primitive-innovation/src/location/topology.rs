@@ -129,8 +129,7 @@ impl TopologyGraph {
 
         while let Some(current) = queue.pop_front() {
             for &(neighbor, _) in self.adjacency.get(&current).unwrap_or(&Vec::new()) {
-                if !visited.contains(&neighbor) {
-                    visited.insert(neighbor);
+                if visited.insert(neighbor) {
                     parent.insert(neighbor, current);
                     if neighbor == to {
                         // Reconstruct path

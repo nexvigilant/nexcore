@@ -65,7 +65,7 @@ impl ReversalAuthorization {
         Self {
             authorizer: authorizer.into(),
             reason: reason.into(),
-            timestamp: chrono::Utc::now().to_rfc3339(),
+            timestamp: nexcore_chrono::DateTime::now().to_rfc3339(),
         }
     }
 }

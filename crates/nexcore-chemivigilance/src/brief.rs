@@ -24,7 +24,7 @@
 //! assert!(json.contains("M7-001"));
 //! ```
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_metabolite::types::MetaboliteTree;
 use nexcore_molcore::descriptor::Descriptors;
 use nexcore_qsar::types::{RiskLevel, ToxProfile};
@@ -258,7 +258,7 @@ pub struct SafetyBrief {
     /// Regulatory flags raised during analysis.
     pub regulatory_flags: Vec<RegulatoryFlag>,
     /// UTC timestamp of report generation.
-    pub generated_at: DateTime<Utc>,
+    pub generated_at: DateTime,
     /// Model version identifiers keyed by component name.
     pub model_versions: HashMap<String, String>,
 }

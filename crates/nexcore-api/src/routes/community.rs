@@ -4,7 +4,7 @@ use crate::ApiState;
 use crate::persistence::PostRecord;
 use axum::extract::{Json, State};
 use axum::routing::get;
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
@@ -17,7 +17,7 @@ pub struct Post {
     pub content: String,
     pub likes: u32,
     pub replies: u32,
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 }
 
 /// Request to create a new post
@@ -69,7 +69,7 @@ pub async fn list_posts(
                 content: "Interesting pattern in the latest FAERS Q4 data: unusual clustering of hepatotoxicity reports for a newly approved kinase inhibitor. Has anyone else noticed this?".to_string(),
                 likes: 12,
                 replies: 5,
-                created_at: Utc::now(),
+                created_at: DateTime::now(),
             },
             Post {
                 id: "2".to_string(),
@@ -78,7 +78,7 @@ pub async fn list_posts(
                 content: "Just completed the D08 Signal Detection pathway on Academy! The PRR/ROR exercises were incredibly practical. Highly recommend.".to_string(),
                 likes: 24,
                 replies: 8,
-                created_at: Utc::now(),
+                created_at: DateTime::now(),
             },
         ];
     }
@@ -107,7 +107,7 @@ pub async fn create_post(
         content: req.content,
         likes: 0,
         replies: 0,
-        created_at: Utc::now(),
+        created_at: DateTime::now(),
     };
 
     let record = PostRecord {

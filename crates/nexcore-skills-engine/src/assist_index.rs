@@ -1,14 +1,13 @@
 //! # Skill Knowledge Index
 //!
 //! Pre-populated index of SKILL.md files for intent-based search.
-//! Mirrors `nexcore-knowledge::KsbIndex` pattern: rayon parallel scoring,
+//! Mirrors `nexcore-knowledge::KsbIndex` pattern: parallel scoring,
 //! regex-per-term matching, weighted field scoring.
 
 use std::collections::HashMap;
 use std::path::Path;
 
 use nexcore_fs::walk::WalkDir;
-use rayon::prelude::*;
 use regex::RegexBuilder;
 use serde::{Deserialize, Serialize};
 
@@ -100,7 +99,7 @@ impl SkillKnowledgeIndex {
 
     /// Scan directory for SKILL.md files and build index.
     ///
-    /// Uses rayon for parallel frontmatter parsing.
+    /// Parses skill frontmatter from SKILL.md files.
     ///
     /// # Errors
     ///
@@ -187,12 +186,13 @@ fn collect_skill_paths(path: &Path) -> Vec<std::path::PathBuf> {
         .collect()
 }
 
-/// Parse SKILL.md files into entries using rayon.
+/// Parse SKILL.md files into entries sequentially.
+///
+/// Previously used rayon `par_iter()`, but this caused deadlocks when
+/// called from within the tokio async runtime (MCP server context).
+/// With ~120 skill files, sequential parsing completes in milliseconds.
 fn parse_entries_parallel(paths: &[std::path::PathBuf]) -> Vec<SkillKnowledgeEntry> {
-    paths
-        .par_iter()
-        .filter_map(|p| parse_single_entry(p))
-        .collect()
+    paths.iter().filter_map(|p| parse_single_entry(p)).collect()
 }
 
 /// Parse a single SKILL.md file into an entry.
@@ -269,7 +269,7 @@ pub fn search_skills(
     let entries = filter_entries(index, tag_filter);
 
     let mut results: Vec<SkillSearchResult> = entries
-        .par_iter()
+        .iter()
         .filter_map(|entry| score_entry(entry, &patterns, &query_terms))
         .collect();
 

@@ -1,6 +1,6 @@
 //! Performance metrics and A/B testing evaluation.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 
@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMetrics {
     pub task_id: String,
-    pub start_time: DateTime<Utc>,
-    pub end_time: DateTime<Utc>,
+    pub start_time: DateTime,
+    pub end_time: DateTime,
     pub completion_time_ms: u64,
     pub success: bool,
     pub skills_used: Vec<String>,

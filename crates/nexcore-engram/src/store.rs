@@ -19,7 +19,7 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::consolidate::{DuplicatePair, find_duplicates};
@@ -104,7 +104,7 @@ impl EngramStore {
     /// Search with decay-adjusted scoring (recent knowledge ranks higher).
     #[must_use]
     pub fn search_with_decay(&self, query: &str) -> Vec<SearchResult> {
-        let now = Utc::now();
+        let now = DateTime::now();
         let mut results = self.index.search(query);
 
         for result in &mut results {
@@ -128,7 +128,7 @@ impl EngramStore {
     /// Get all stale engrams (below decay threshold).
     #[must_use]
     pub fn stale_engrams(&self) -> Vec<EngramId> {
-        let now = Utc::now();
+        let now = DateTime::now();
         self.engrams
             .values()
             .filter(|e| crate::decay::is_stale(e, now, &self.decay_config))

@@ -21,7 +21,7 @@
 use crate::error::MiningResult;
 use crate::signals::SignalDetector;
 use crate::types::{Baseline, SignalType, ValueSignal};
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_social::Post;
 
 /// Trend signal detector using weighted moving average.
@@ -134,11 +134,11 @@ impl SignalDetector for TrendDetector {
                 let window_start = relevant
                     .first()
                     .map(|p| p.created_datetime())
-                    .unwrap_or_else(Utc::now);
+                    .unwrap_or_else(|| DateTime::now());
                 let window_end = relevant
                     .last()
                     .map(|p| p.created_datetime())
-                    .unwrap_or_else(Utc::now);
+                    .unwrap_or_else(|| DateTime::now());
 
                 let signal = ValueSignal::new(
                     SignalType::Trend,
@@ -201,7 +201,7 @@ mod tests {
         let baseline = Baseline::new("test");
 
         // Create posts with increasing positive sentiment
-        let now = chrono::Utc::now().timestamp() as f64;
+        let now = nexcore_chrono::DateTime::now().timestamp() as f64;
         let posts: Vec<_> = (0..20)
             .map(|i| {
                 let ratio = 0.5 + (i as f64 / 40.0); // Gradually increasing

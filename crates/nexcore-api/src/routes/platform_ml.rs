@@ -7,7 +7,7 @@ use axum::{
     Json, Router,
     routing::{get, post},
 };
-use chrono::{Duration, Utc};
+use nexcore_chrono::{DateTime, Duration};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
@@ -261,7 +261,7 @@ pub async fn list_models(_tenant: VerifiedTenant) -> Json<ModelListResponse> {
             description: "Predicts aqueous solubility from molecular structure. Trained on 45K compounds from platform data.".to_string(),
             benchmark_score: 0.89,
             usage_count: 12_450,
-            created_at: (Utc::now() - Duration::days(45)).to_rfc3339(),
+            created_at: (DateTime::now() - Duration::days(45)).to_rfc3339(),
             properties_predicted: vec!["solubility".to_string(), "logP".to_string()],
         },
         ModelInfo {
@@ -274,7 +274,7 @@ pub async fn list_models(_tenant: VerifiedTenant) -> Json<ModelListResponse> {
             description: "Binary classifier for hERG channel inhibition liability. MCC=0.82 on held-out test set.".to_string(),
             benchmark_score: 0.82,
             usage_count: 8_200,
-            created_at: (Utc::now() - Duration::days(90)).to_rfc3339(),
+            created_at: (DateTime::now() - Duration::days(90)).to_rfc3339(),
             properties_predicted: vec!["herg_inhibition".to_string()],
         },
         ModelInfo {
@@ -287,7 +287,7 @@ pub async fn list_models(_tenant: VerifiedTenant) -> Json<ModelListResponse> {
             description: "Predicts apparent permeability from molecular descriptors. R²=0.78 on external test set.".to_string(),
             benchmark_score: 0.78,
             usage_count: 6_800,
-            created_at: (Utc::now() - Duration::days(120)).to_rfc3339(),
+            created_at: (DateTime::now() - Duration::days(120)).to_rfc3339(),
             properties_predicted: vec!["permeability".to_string(), "efflux_ratio".to_string()],
         },
         ModelInfo {
@@ -300,7 +300,7 @@ pub async fn list_models(_tenant: VerifiedTenant) -> Json<ModelListResponse> {
             description: "Predicts Ames test outcome. Community-contributed model with curated training data.".to_string(),
             benchmark_score: 0.85,
             usage_count: 4_100,
-            created_at: (Utc::now() - Duration::days(60)).to_rfc3339(),
+            created_at: (DateTime::now() - Duration::days(60)).to_rfc3339(),
             properties_predicted: vec!["ames_mutagenicity".to_string()],
         },
         ModelInfo {
@@ -313,7 +313,7 @@ pub async fn list_models(_tenant: VerifiedTenant) -> Json<ModelListResponse> {
             description: "Multi-target kinase activity prediction. Currently training on aggregated platform data.".to_string(),
             benchmark_score: 0.0,
             usage_count: 0,
-            created_at: Utc::now().to_rfc3339(),
+            created_at: DateTime::now().to_rfc3339(),
             properties_predicted: vec!["kinase_ic50".to_string(), "selectivity".to_string()],
         },
         ModelInfo {
@@ -326,7 +326,7 @@ pub async fn list_models(_tenant: VerifiedTenant) -> Json<ModelListResponse> {
             description: "Given a hit compound, generates structurally related analogs optimized for drug-like properties.".to_string(),
             benchmark_score: 0.74,
             usage_count: 2_300,
-            created_at: (Utc::now() - Duration::days(30)).to_rfc3339(),
+            created_at: (DateTime::now() - Duration::days(30)).to_rfc3339(),
             properties_predicted: vec!["generated_smiles".to_string(), "novelty_score".to_string()],
         },
     ];
@@ -387,7 +387,7 @@ pub async fn get_model_benchmark(
         ],
         grade: "SILVER".to_string(),
         dataset_size: 12_500,
-        evaluated_at: (Utc::now() - Duration::days(7)).to_rfc3339(),
+        evaluated_at: (DateTime::now() - Duration::days(7)).to_rfc3339(),
     })
 }
 
@@ -407,7 +407,7 @@ pub async fn trigger_training(
     _tenant: VerifiedTenant,
     Json(req): Json<TriggerTrainingRequest>,
 ) -> (axum::http::StatusCode, Json<TrainingJobResponse>) {
-    let now = Utc::now();
+    let now = DateTime::now();
     (
         axum::http::StatusCode::ACCEPTED,
         Json(TrainingJobResponse {
@@ -431,7 +431,7 @@ pub async fn trigger_training(
     security(("bearer_auth" = []))
 )]
 pub async fn get_training_status(_tenant: VerifiedTenant) -> Json<TrainingStatusResponse> {
-    let now = Utc::now();
+    let now = DateTime::now();
     Json(TrainingStatusResponse {
         active_jobs: vec![TrainingJobInfo {
             job_id: "train-kinase-001".to_string(),
@@ -535,7 +535,7 @@ pub async fn get_al_suggestions(
     security(("bearer_auth" = []))
 )]
 pub async fn get_aggregation_stats(_tenant: VerifiedTenant) -> Json<AggregationStatsResponse> {
-    let now = Utc::now();
+    let now = DateTime::now();
     Json(AggregationStatsResponse {
         total_data_points: 847_230,
         contributing_tenants: 42,

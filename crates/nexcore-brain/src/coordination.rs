@@ -7,7 +7,7 @@
 //! - **Tier**: T2-C / T3
 //! - **Commandments**: I (Quantify), II (Classify), IV (From), V (Wrap)
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_fs::dirs;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -72,7 +72,7 @@ pub struct FileLock {
     /// Current status.
     pub status: LockStatus,
     /// When the lock was acquired.
-    pub acquired_at: DateTime<Utc>,
+    pub acquired_at: DateTime,
     /// How long the lock is valid.
     pub ttl: LockDuration,
 }
@@ -81,8 +81,8 @@ impl FileLock {
     /// Check if the lock has expired.
     #[must_use]
     pub fn is_expired(&self) -> bool {
-        let now = Utc::now();
-        let expires_at = self.acquired_at + chrono::Duration::seconds(self.ttl.0 as i64);
+        let now = DateTime::now();
+        let expires_at = self.acquired_at + nexcore_chrono::Duration::seconds(self.ttl.0 as i64);
         now > expires_at
     }
 }
@@ -95,7 +95,7 @@ pub struct CoordinationRegistry {
     /// Map of normalized paths to their active locks.
     pub locks: HashMap<String, FileLock>,
     /// Last global update timestamp.
-    pub last_updated: DateTime<Utc>,
+    pub last_updated: DateTime,
 }
 
 impl CoordinationRegistry {
@@ -117,7 +117,7 @@ impl CoordinationRegistry {
     /// two agents loading the registry simultaneously, both seeing
     /// Vacant, both saving — last write wins, first lock lost.
     pub fn save(&mut self) -> Result<()> {
-        self.last_updated = Utc::now();
+        self.last_updated = DateTime::now();
         let path = Self::registry_path();
 
         // Bathroom lock the registry itself
@@ -154,7 +154,7 @@ impl CoordinationRegistry {
             path: file_path.to_path_buf(),
             agent_id,
             status: LockStatus::Occupied,
-            acquired_at: Utc::now(),
+            acquired_at: DateTime::now(),
             ttl,
         };
 
@@ -219,7 +219,7 @@ pub fn log_access(agent_id: &AgentId, path: &Path, action: &str) -> Result<()> {
 
     let entry = format!(
         "{} | Agent: {} | File: {} | Action: {}\n",
-        Utc::now().to_rfc3339(),
+        DateTime::now().to_rfc3339(),
         agent_id.0,
         path.display(),
         action

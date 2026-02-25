@@ -1,5 +1,5 @@
-use chrono::{DateTime, Utc};
 use dashmap::DashMap;
+use nexcore_chrono::DateTime;
 
 /// Process lifecycle state machine.
 ///
@@ -50,8 +50,8 @@ pub struct ServiceRecord {
     pub pid: Option<u32>,
     pub port: u16,
     pub restarts: u32,
-    pub started_at: Option<DateTime<Utc>>,
-    pub last_health: Option<DateTime<Utc>>,
+    pub started_at: Option<DateTime>,
+    pub last_health: Option<DateTime>,
 }
 
 /// Concurrent service registry backed by DashMap.
@@ -104,7 +104,7 @@ impl ServiceRegistry {
     pub fn record_healthy(&self, name: &str) {
         if let Some(mut record) = self.inner.get_mut(name) {
             record.state = ProcessState::Healthy;
-            record.last_health = Some(Utc::now());
+            record.last_health = Some(DateTime::now());
         }
     }
 
@@ -120,7 +120,7 @@ impl ServiceRegistry {
         if let Some(mut record) = self.inner.get_mut(name) {
             record.state = ProcessState::Starting;
             record.pid = Some(pid);
-            record.started_at = Some(Utc::now());
+            record.started_at = Some(DateTime::now());
         }
     }
 

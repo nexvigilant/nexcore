@@ -1,6 +1,6 @@
 //! Task domain types: tasks, documents, and compliance items.
 
-use chrono::{DateTime, NaiveDate, Utc};
+use nexcore_chrono::{Date, DateTime};
 use nexcore_id::NexId;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
@@ -40,11 +40,11 @@ pub struct Task {
 
     /// Due date.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub due_date: Option<NaiveDate>,
+    pub due_date: Option<Date>,
 
     /// When completed.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub completed_at: Option<DateTime<Utc>>,
+    pub completed_at: Option<DateTime>,
 
     /// Recurrence type.
     #[serde(default)]
@@ -75,11 +75,11 @@ pub struct Task {
     pub tags: Vec<String>,
 
     /// Creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Last update timestamp.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime>,
 }
 
 fn default_one() -> i32 {
@@ -108,7 +108,7 @@ impl Task {
             parent_task_id: None,
             category: None,
             tags: Vec::new(),
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             updated_at: None,
         }
     }
@@ -117,7 +117,7 @@ impl Task {
     #[must_use]
     pub fn is_overdue(&self) -> bool {
         if let Some(due_date) = self.due_date {
-            let today = Utc::now().date_naive();
+            let today = DateTime::now().date();
             due_date < today && !self.is_completed()
         } else {
             false
@@ -139,8 +139,8 @@ impl Task {
     /// Mark task as completed.
     pub fn complete(&mut self) {
         self.status = TaskStatus::Completed;
-        self.completed_at = Some(Utc::now());
-        self.updated_at = Some(Utc::now());
+        self.completed_at = Some(DateTime::now());
+        self.updated_at = Some(DateTime::now());
     }
 }
 
@@ -172,15 +172,15 @@ pub struct Document {
 
     /// Issue date.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub issue_date: Option<NaiveDate>,
+    pub issue_date: Option<Date>,
 
     /// Expiry date.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub expiry_date: Option<NaiveDate>,
+    pub expiry_date: Option<Date>,
 
     /// Renewal date.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub renewal_date: Option<NaiveDate>,
+    pub renewal_date: Option<Date>,
 
     /// Issuing authority.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -216,7 +216,7 @@ pub struct Document {
 
     /// When last reminder was sent.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub last_reminder_sent_at: Option<DateTime<Utc>>,
+    pub last_reminder_sent_at: Option<DateTime>,
 
     /// Tags.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -227,11 +227,11 @@ pub struct Document {
     pub notes: Option<String>,
 
     /// Creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Last update timestamp.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime>,
 }
 
 fn default_reminder_days() -> i32 {
@@ -269,7 +269,7 @@ impl Document {
             last_reminder_sent_at: None,
             tags: Vec::new(),
             notes: None,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             updated_at: None,
         }
     }
@@ -278,7 +278,7 @@ impl Document {
     #[must_use]
     pub fn days_until_expiry(&self) -> Option<i64> {
         self.expiry_date.map(|expiry| {
-            let today = Utc::now().date_naive();
+            let today = DateTime::now().date();
             (expiry - today).num_days()
         })
     }
@@ -303,7 +303,7 @@ impl Document {
         } else if self.is_expiring_soon() {
             self.status = DocumentStatus::ExpiringSoon;
         }
-        self.updated_at = Some(Utc::now());
+        self.updated_at = Some(DateTime::now());
     }
 }
 
@@ -342,15 +342,15 @@ pub struct ComplianceItem {
     pub requirement_level: Option<String>,
 
     /// Due date.
-    pub due_date: NaiveDate,
+    pub due_date: Date,
 
     /// When filed.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub filed_date: Option<NaiveDate>,
+    pub filed_date: Option<Date>,
 
     /// Next due date.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub next_due_date: Option<NaiveDate>,
+    pub next_due_date: Option<Date>,
 
     /// Whether recurring.
     #[serde(default)]
@@ -394,18 +394,18 @@ pub struct ComplianceItem {
 
     /// When last reminder was sent.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub last_reminder_sent_at: Option<DateTime<Utc>>,
+    pub last_reminder_sent_at: Option<DateTime>,
 
     /// Tags.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tags: Vec<String>,
 
     /// Creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Last update timestamp.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime>,
 }
 
 impl ComplianceItem {
@@ -416,7 +416,7 @@ impl ComplianceItem {
         created_by: NexId,
         title: impl Into<String>,
         compliance_type: impl Into<String>,
-        due_date: NaiveDate,
+        due_date: Date,
     ) -> Self {
         Self {
             id: NexId::v4(),
@@ -443,7 +443,7 @@ impl ComplianceItem {
             reminder_days_before: 30,
             last_reminder_sent_at: None,
             tags: Vec::new(),
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             updated_at: None,
         }
     }
@@ -451,7 +451,7 @@ impl ComplianceItem {
     /// Calculate days until due.
     #[must_use]
     pub fn days_until_due(&self) -> i64 {
-        let today = Utc::now().date_naive();
+        let today = DateTime::now().date();
         (self.due_date - today).num_days()
     }
 
@@ -479,15 +479,15 @@ impl ComplianceItem {
         } else {
             self.status = ComplianceStatus::Compliant;
         }
-        self.updated_at = Some(Utc::now());
+        self.updated_at = Some(DateTime::now());
     }
 
     /// Mark as filed.
     pub fn mark_filed(&mut self) {
         self.is_complete = true;
-        self.filed_date = Some(Utc::now().date_naive());
+        self.filed_date = Some(DateTime::now().date());
         self.status = ComplianceStatus::Filed;
-        self.updated_at = Some(Utc::now());
+        self.updated_at = Some(DateTime::now());
     }
 }
 
@@ -527,14 +527,14 @@ mod tests {
         let mut doc = Document::new(llc_id, user_id, "License", "Business License");
 
         // Set expiry to 10 days from now
-        let expiry = Utc::now().date_naive() + chrono::Duration::days(10);
+        let expiry = DateTime::now().date() + nexcore_chrono::Duration::days(10);
         doc.expiry_date = Some(expiry);
 
         assert!(!doc.is_expired());
         assert!(doc.is_expiring_soon()); // Within 30-day window
 
         // Set expiry to 60 days from now
-        let expiry = Utc::now().date_naive() + chrono::Duration::days(60);
+        let expiry = DateTime::now().date() + nexcore_chrono::Duration::days(60);
         doc.expiry_date = Some(expiry);
 
         assert!(!doc.is_expired());
@@ -545,7 +545,7 @@ mod tests {
     fn test_compliance_item_status() {
         let llc_id = NexId::v4();
         let user_id = NexId::v4();
-        let due_date = Utc::now().date_naive() + chrono::Duration::days(15);
+        let due_date = DateTime::now().date() + nexcore_chrono::Duration::days(15);
 
         let mut item =
             ComplianceItem::new(llc_id, user_id, "Annual Report", "Annual Report", due_date);

@@ -225,7 +225,7 @@ impl KsbArticle {
         let body = parts[2].trim();
 
         // Parse YAML frontmatter
-        let yaml: serde_yaml::Value = serde_yaml::from_str(frontmatter)
+        let yaml: serde_yml::Value = serde_yml::from_str(frontmatter)
             .map_err(|e| crate::KnowledgeError::ParseError(e.to_string()))?;
 
         let name = yaml["name"].as_str().unwrap_or("").to_string();

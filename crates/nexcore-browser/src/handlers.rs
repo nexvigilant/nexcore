@@ -3,7 +3,7 @@
 //! Routes Chrome DevTools Protocol events to collectors and broadcasts
 //! them for Vigil integration.
 
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use tokio::sync::broadcast;
 use tracing::{debug, warn};
 
@@ -21,7 +21,7 @@ pub fn handle_console_message(
     page_id: &str,
     tx: &broadcast::Sender<BrowserEvent>,
 ) {
-    let timestamp = Utc::now();
+    let timestamp = DateTime::now();
     let level_enum = ConsoleLevel::parse_cdp(level);
 
     // Add to collector
@@ -71,7 +71,7 @@ pub fn handle_network_request_start(
         duration_ms: None,
         error: None,
         resource_type,
-        started_at: Utc::now(),
+        started_at: DateTime::now(),
         completed_at: None,
         page_id: page_id.to_string(),
     };
@@ -86,7 +86,7 @@ pub fn handle_network_request_complete(
     page_id: &str,
     tx: &broadcast::Sender<BrowserEvent>,
 ) {
-    let timestamp = Utc::now();
+    let timestamp = DateTime::now();
     let collector = get_network_collector();
 
     // Get the original entry for URL/method info
@@ -134,7 +134,7 @@ pub fn handle_network_request_failed(
     page_id: &str,
     tx: &broadcast::Sender<BrowserEvent>,
 ) {
-    let timestamp = Utc::now();
+    let timestamp = DateTime::now();
     let collector = get_network_collector();
 
     // Get the original entry for URL/method info
@@ -178,7 +178,7 @@ pub fn handle_page_loaded(
         title,
         load_time_ms,
         page_id: page_id.to_string(),
-        timestamp: Utc::now(),
+        timestamp: DateTime::now(),
     };
 
     if let Err(e) = tx.send(event) {
@@ -195,7 +195,7 @@ pub fn handle_page_crashed(
     let event = BrowserEvent::PageCrashed {
         page_id: page_id.to_string(),
         error,
-        timestamp: Utc::now(),
+        timestamp: DateTime::now(),
     };
 
     if let Err(e) = tx.send(event) {
@@ -207,7 +207,7 @@ pub fn handle_page_crashed(
 pub fn handle_browser_disconnected(reason: String, tx: &broadcast::Sender<BrowserEvent>) {
     let event = BrowserEvent::BrowserDisconnected {
         reason,
-        timestamp: Utc::now(),
+        timestamp: DateTime::now(),
     };
 
     if let Err(e) = tx.send(event) {

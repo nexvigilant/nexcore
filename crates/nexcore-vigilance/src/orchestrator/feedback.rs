@@ -5,7 +5,7 @@
 //! - `skill_stats.json` - Aggregated skill success rates and chain rankings
 
 use super::models::{AndonSignal, Chain, ChainMetrics, ExecutionResult, ExecutionStatus};
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
@@ -78,7 +78,7 @@ impl FeedbackLoop {
         let stats = CachedStats {
             skill_success_rates: self.skill_success_rates.clone(),
             chain_rankings: self.chain_rankings.clone(),
-            updated_at: Some(Utc::now().to_rfc3339()),
+            updated_at: Some(DateTime::now().to_rfc3339()),
         };
 
         let file = match File::create(&self.stats_file) {

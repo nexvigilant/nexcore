@@ -8,7 +8,7 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_codec::hex;
 use sha2::{Digest, Sha256};
 
@@ -26,7 +26,7 @@ pub struct OrganizeState {
     /// Root directory.
     pub root: PathBuf,
     /// Snapshot timestamp.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Map of relative path → content hash.
     pub entries: HashMap<String, String>,
     /// Total number of entries.
@@ -39,9 +39,9 @@ pub struct OrganizeState {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct DriftReport {
     /// Previous snapshot timestamp.
-    pub previous: DateTime<Utc>,
+    pub previous: DateTime,
     /// Current snapshot timestamp.
-    pub current: DateTime<Utc>,
+    pub current: DateTime,
     /// Files added since previous snapshot.
     pub added: Vec<String>,
     /// Files removed since previous snapshot.
@@ -87,7 +87,7 @@ pub fn snapshot(root: &Path) -> OrganizeResult<OrganizeState> {
 
     Ok(OrganizeState {
         root: root.to_path_buf(),
-        timestamp: Utc::now(),
+        timestamp: DateTime::now(),
         entries,
         count,
     })
@@ -225,13 +225,13 @@ mod tests {
 
         let s1 = OrganizeState {
             root: PathBuf::from("/tmp"),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             entries: entries.clone(),
             count: 1,
         };
         let s2 = OrganizeState {
             root: PathBuf::from("/tmp"),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             entries,
             count: 1,
         };
@@ -251,13 +251,13 @@ mod tests {
 
         let s1 = OrganizeState {
             root: PathBuf::from("/tmp"),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             entries: entries1,
             count: 1,
         };
         let s2 = OrganizeState {
             root: PathBuf::from("/tmp"),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             entries: entries2,
             count: 2,
         };
@@ -279,13 +279,13 @@ mod tests {
 
         let s1 = OrganizeState {
             root: PathBuf::from("/tmp"),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             entries: entries1,
             count: 2,
         };
         let s2 = OrganizeState {
             root: PathBuf::from("/tmp"),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             entries: entries2,
             count: 1,
         };
@@ -305,13 +305,13 @@ mod tests {
 
         let s1 = OrganizeState {
             root: PathBuf::from("/tmp"),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             entries: entries1,
             count: 1,
         };
         let s2 = OrganizeState {
             root: PathBuf::from("/tmp"),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             entries: entries2,
             count: 1,
         };
@@ -330,7 +330,7 @@ mod tests {
 
             let state = OrganizeState {
                 root: PathBuf::from("/tmp"),
-                timestamp: Utc::now(),
+                timestamp: DateTime::now(),
                 entries,
                 count: 1,
             };
@@ -351,8 +351,8 @@ mod tests {
     #[test]
     fn test_drift_report_change_count() {
         let drift = DriftReport {
-            previous: Utc::now(),
-            current: Utc::now(),
+            previous: DateTime::now(),
+            current: DateTime::now(),
             added: vec!["a".to_string()],
             removed: vec!["b".to_string(), "c".to_string()],
             modified: vec![],

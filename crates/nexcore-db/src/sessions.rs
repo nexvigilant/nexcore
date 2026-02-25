@@ -1,6 +1,6 @@
 //! Session CRUD operations.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 
@@ -18,7 +18,7 @@ pub struct SessionRow {
     /// Human-readable description
     pub description: String,
     /// When the session was created
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 }
 
 /// Insert a new session.
@@ -148,10 +148,8 @@ pub fn count(conn: &Connection) -> Result<i64> {
 }
 
 /// Parse an RFC3339 datetime string, falling back to now on failure.
-fn parse_datetime(s: String) -> DateTime<Utc> {
-    DateTime::parse_from_rfc3339(&s)
-        .map(|dt| dt.with_timezone(&Utc))
-        .unwrap_or_else(|_| Utc::now())
+fn parse_datetime(s: String) -> DateTime {
+    DateTime::parse_from_rfc3339(&s).unwrap_or_else(|_| DateTime::now())
 }
 
 #[cfg(test)]
@@ -172,7 +170,7 @@ mod tests {
                 project: "nucleus".into(),
                 git_commit: Some("abc123".into()),
                 description: "Test session".into(),
-                created_at: Utc::now(),
+                created_at: DateTime::now(),
             };
             insert(conn, &session)?;
 
@@ -197,7 +195,7 @@ mod tests {
                         project: "test".into(),
                         git_commit: None,
                         description: format!("Session {i}"),
-                        created_at: Utc::now(),
+                        created_at: DateTime::now(),
                     },
                 )?;
             }
@@ -227,7 +225,7 @@ mod tests {
                     project: "p".into(),
                     git_commit: None,
                     description: "d".into(),
-                    created_at: Utc::now(),
+                    created_at: DateTime::now(),
                 },
             )?;
             assert_eq!(count(conn)?, 1);

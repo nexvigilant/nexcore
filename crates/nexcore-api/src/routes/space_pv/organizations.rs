@@ -46,8 +46,8 @@ async fn create_organization(
         org_type: req.org_type,
         country: req.country,
         registration_number: req.registration_number,
-        created_at: chrono::Utc::now(),
-        updated_at: chrono::Utc::now(),
+        created_at: nexcore_chrono::DateTime::now(),
+        updated_at: nexcore_chrono::DateTime::now(),
     };
     Ok((StatusCode::CREATED, Json(org)))
 }

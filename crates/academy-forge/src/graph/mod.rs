@@ -13,7 +13,7 @@
 
 pub mod queries;
 
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 
 use crate::error::{ForgeError, ForgeResult};
 use crate::ir::{
@@ -40,8 +40,8 @@ pub fn build_graph(
         pathway_ids.push(pathway.id.clone());
     }
 
-    // Step 2: Build KSB index for overlap detection
-    let mut ksb_index: HashMap<String, Vec<String>> = HashMap::new();
+    // Step 2: Build KSB index for overlap detection (BTreeMap for deterministic iteration)
+    let mut ksb_index: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for alo in &all_alos {
         for ksb in &alo.ksb_refs {
             ksb_index
@@ -84,15 +84,15 @@ pub fn build_graph(
             overlap_clusters.push(cluster);
 
             // Add Strengthens edges between overlapping ALOs
-            for i in 0..alo_ids.len() {
-                for j in (i + 1)..alo_ids.len() {
+            for (i, id_i) in alo_ids.iter().enumerate() {
+                for id_j in alo_ids.iter().skip(i.saturating_add(1)) {
                     // Only add cross-pathway edges (Rule E5)
-                    let pw_i = alo_pathway_map.get(&alo_ids[i]);
-                    let pw_j = alo_pathway_map.get(&alo_ids[j]);
+                    let pw_i = alo_pathway_map.get(id_i);
+                    let pw_j = alo_pathway_map.get(id_j);
                     if pw_i != pw_j {
                         all_edges.push(AloEdge {
-                            from: alo_ids[i].clone(),
-                            to: alo_ids[j].clone(),
+                            from: id_i.clone(),
+                            to: id_j.clone(),
                             edge_type: AloEdgeType::Strengthens,
                             strength: 0.5,
                         });
@@ -153,15 +153,19 @@ fn validate_dag_acyclicity(
     }
 
     let mut queue: VecDeque<&str> = VecDeque::new();
-    for (&node, &deg) in &in_degree {
-        if deg == 0 {
-            queue.push_back(node);
-        }
+    // Collect into sorted vec first for deterministic iteration
+    let mut zero_degree: Vec<&str> = in_degree
+        .iter()
+        .filter_map(|(&node, &deg)| if deg == 0 { Some(node) } else { None })
+        .collect();
+    zero_degree.sort_unstable();
+    for node in zero_degree {
+        queue.push_back(node);
     }
 
     let mut visited = 0usize;
     while let Some(node) = queue.pop_front() {
-        visited += 1;
+        visited = visited.saturating_add(1);
         if let Some(neighbors) = adj.get(node) {
             for &neighbor in neighbors {
                 if let Some(deg) = in_degree.get_mut(neighbor) {
@@ -226,23 +230,21 @@ fn detect_fuzzy_overlaps(
         .filter(|a| a.alo_type == crate::ir::AloType::Concept)
         .collect();
 
-    for i in 0..concepts.len() {
-        for j in (i + 1)..concepts.len() {
-            let pw_i = pathway_map.get(&concepts[i].id);
-            let pw_j = pathway_map.get(&concepts[j].id);
+    for (i, concept_i) in concepts.iter().enumerate() {
+        for concept_j in concepts.iter().skip(i.saturating_add(1)) {
+            let pw_i = pathway_map.get(&concept_i.id);
+            let pw_j = pathway_map.get(&concept_j.id);
             if pw_i == pw_j {
                 continue; // Same pathway, skip
             }
 
-            let sim = jaccard_similarity(
-                &concepts[i].learning_objective,
-                &concepts[j].learning_objective,
-            );
+            let sim =
+                jaccard_similarity(&concept_i.learning_objective, &concept_j.learning_objective);
 
             if sim >= threshold {
                 edges.push(AloEdge {
-                    from: concepts[i].id.clone(),
-                    to: concepts[j].id.clone(),
+                    from: concept_i.id.clone(),
+                    to: concept_j.id.clone(),
                     edge_type: AloEdgeType::Strengthens,
                     strength: sim * 0.6,
                 });
@@ -271,7 +273,13 @@ fn jaccard_similarity(a: &str, b: &str) -> f32 {
         return 0.0;
     }
 
-    intersection as f32 / union as f32
+    #[allow(
+        clippy::as_conversions,
+        clippy::cast_precision_loss,
+        reason = "usize->f32 cast for Jaccard ratio; counts are small enough that f32 precision is sufficient"
+    )]
+    let ratio = intersection as f32 / union as f32;
+    ratio
 }
 
 /// Extract pathway prefix from ALO ID (e.g., "tov-01" from "tov-01-03-c02").
@@ -279,14 +287,18 @@ fn extract_pathway_prefix(alo_id: &str) -> String {
     // Pathway prefix is everything before the stage number pattern
     // Format: {pathway}-{stage_num:02}-{type}{seq}
     let parts: Vec<&str> = alo_id.rsplitn(3, '-').collect();
-    if parts.len() >= 3 {
-        parts[2].to_string()
-    } else {
-        alo_id.to_string()
-    }
+    // rsplitn(3, '-') gives at most 3 parts in reverse order; index 2 is the prefix
+    parts
+        .get(2)
+        .map_or_else(|| alo_id.to_string(), |s| s.to_string())
 }
 
 /// Compute graph metadata.
+#[allow(
+    clippy::as_conversions,
+    clippy::cast_precision_loss,
+    reason = "usize/u32->f32 casts for ratio and average computation; node counts fit in f32 for practical dataset sizes"
+)]
 fn compute_metadata(
     alos: &[crate::ir::AtomicLearningObject],
     edges: &[AloEdge],
@@ -295,7 +307,10 @@ fn compute_metadata(
     let node_count = alos.len();
     let edge_count = edges.len();
 
-    let total_duration: u32 = alos.iter().map(|a| a.estimated_duration as u32).sum();
+    let total_duration: u32 = alos
+        .iter()
+        .map(|a| u32::from(a.estimated_duration))
+        .fold(0u32, |acc, d| acc.saturating_add(d));
     let avg_duration = if node_count > 0 {
         total_duration as f32 / node_count as f32
     } else {
@@ -354,7 +369,7 @@ fn count_connected_components(
         if visited.contains(alo.id.as_str()) {
             continue;
         }
-        components += 1;
+        components = components.saturating_add(1);
         let mut queue = VecDeque::new();
         queue.push_back(alo.id.as_str());
         while let Some(node) = queue.pop_front() {
@@ -394,7 +409,7 @@ fn compute_diameter(alos: &[crate::ir::AtomicLearningObject], edges: &[AloEdge])
     // BFS from each node (only on small graphs; for large graphs use sampling)
     if alos.len() > 500 {
         // Sample 50 nodes for performance
-        for alo in alos.iter().step_by(alos.len() / 50 + 1) {
+        for alo in alos.iter().step_by((alos.len() / 50).saturating_add(1)) {
             let dist = bfs_max_distance(alo.id.as_str(), &adj);
             if dist > max_dist {
                 max_dist = dist;
@@ -426,7 +441,7 @@ fn bfs_max_distance<'a>(start: &'a str, adj: &HashMap<&'a str, Vec<&'a str>>) ->
         if let Some(neighbors) = adj.get(node) {
             for &n in neighbors {
                 if visited.insert(n) {
-                    queue.push_back((n, dist + 1));
+                    queue.push_back((n, dist.saturating_add(1)));
                 }
             }
         }

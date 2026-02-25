@@ -33,7 +33,11 @@
 #![deny(clippy::panic)]
 #![forbid(unsafe_code)]
 
+pub mod distributions;
+pub mod graph;
 pub mod grounding;
+pub mod markov;
+pub mod matrix;
 pub mod spatial;
 pub mod spatial_grounding;
 pub mod spatial_index;

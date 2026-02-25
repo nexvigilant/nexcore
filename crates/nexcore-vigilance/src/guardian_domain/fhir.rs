@@ -2,7 +2,7 @@
 //!
 //! HL7 FHIR R4 resource types for US Core compliance.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// FHIR Meta element for versioning and profiles.
@@ -10,8 +10,8 @@ use serde::{Deserialize, Serialize};
 pub struct FHIRMeta {
     #[serde(default = "default_version")]
     pub version_id: String,
-    #[serde(default = "Utc::now", rename = "lastUpdated")]
-    pub last_updated: DateTime<Utc>,
+    #[serde(default = "DateTime::now", rename = "lastUpdated")]
+    pub last_updated: DateTime,
     #[serde(default)]
     pub profile: Vec<String>,
 }
@@ -24,7 +24,7 @@ impl Default for FHIRMeta {
     fn default() -> Self {
         Self {
             version_id: default_version(),
-            last_updated: Utc::now(),
+            last_updated: DateTime::now(),
             profile: Vec::new(),
         }
     }
@@ -86,9 +86,9 @@ fn default_unit_system() -> String {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct FHIRPeriod {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub start: Option<DateTime<Utc>>,
+    pub start: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub end: Option<DateTime<Utc>>,
+    pub end: Option<DateTime>,
 }
 
 /// FHIR Annotation element.
@@ -107,7 +107,7 @@ pub struct FHIRAnnotation {
     )]
     pub author_reference: Option<FHIRReference>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub time: Option<DateTime<Utc>>,
+    pub time: Option<DateTime>,
     pub text: String,
 }
 
@@ -144,7 +144,7 @@ pub struct FHIRAllergyIntolerance {
         skip_serializing_if = "Option::is_none",
         rename = "recordedDate"
     )]
-    pub recorded_date: Option<DateTime<Utc>>,
+    pub recorded_date: Option<DateTime>,
     #[serde(default)]
     pub note: Vec<FHIRAnnotation>,
     #[serde(default)]
@@ -185,7 +185,7 @@ pub struct FHIRCondition {
         skip_serializing_if = "Option::is_none",
         rename = "recordedDate"
     )]
-    pub recorded_date: Option<DateTime<Utc>>,
+    pub recorded_date: Option<DateTime>,
     #[serde(default)]
     pub note: Vec<FHIRAnnotation>,
 }
@@ -212,7 +212,7 @@ pub struct FHIRProcedure {
         skip_serializing_if = "Option::is_none",
         rename = "performedDateTime"
     )]
-    pub performed_date_time: Option<DateTime<Utc>>,
+    pub performed_date_time: Option<DateTime>,
     #[serde(default)]
     pub performer: Vec<serde_json::Value>,
     #[serde(default)]
@@ -238,7 +238,7 @@ pub struct FHIRDiagnosticReport {
     pub code: FHIRCodeableConcept,
     pub subject: FHIRReference,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub issued: Option<DateTime<Utc>>,
+    pub issued: Option<DateTime>,
     #[serde(default)]
     pub result: Vec<FHIRReference>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -275,7 +275,7 @@ pub struct FHIRMedicationRequest {
     pub medication_reference: Option<FHIRReference>,
     pub subject: FHIRReference,
     #[serde(rename = "authoredOn")]
-    pub authored_on: DateTime<Utc>,
+    pub authored_on: DateTime,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub requester: Option<FHIRReference>,
     #[serde(default)]

@@ -29,14 +29,5 @@ uuid = { version = "1.0", features = ["v4", "v7"] }
 name = "uuid_comparison"
 harness = false
 
-[lints.rust]
-# deny (not forbid) to allow isolated Windows FFI in fill_random_windows()
-unsafe_code = "deny"
-
-[lints.clippy]
-all = "warn"
-pedantic = "warn"
-nursery = "warn"
-unwrap_used = "deny"
-expect_used = "deny"
-panic = "deny"
+[lints]
+workspace = true

@@ -21,6 +21,9 @@
 use nexcore_lex_primitiva::grounding::GroundsTo;
 use nexcore_lex_primitiva::primitiva::{LexPrimitiva, PrimitiveComposition};
 
+use crate::graph::{Graph, VertexId};
+use crate::markov::{MarkovChain, StateClass};
+use crate::matrix::Matrix;
 use crate::{Bounded, Identity, MathError, MeasuredBound, Proof, Relation};
 
 // ===========================================================================
@@ -122,6 +125,97 @@ impl GroundsTo for MathError {
 }
 
 // ===========================================================================
+// Graph types
+// ===========================================================================
+
+/// Graph<V, E>: T2-C (Mapping + Location + Boundary + Sequence), dominant Mapping
+///
+/// A directed graph with typed vertices and edges.
+/// Mapping-dominant: the defining characteristic IS the vertex-to-vertex
+/// relationships (edges as mappings). Location for node positions,
+/// Boundary for components/communities, Sequence for paths/ordering.
+impl<V, E> GroundsTo for Graph<V, E> {
+    fn primitive_composition() -> PrimitiveComposition {
+        PrimitiveComposition::new(vec![
+            LexPrimitiva::Mapping,  // mu -- vertex-to-vertex relationships
+            LexPrimitiva::Location, // lambda -- nodes as positions in a network
+            LexPrimitiva::Boundary, // partial -- communities, components
+            LexPrimitiva::Sequence, // sigma -- paths, topological ordering
+        ])
+        .with_dominant(LexPrimitiva::Mapping, 0.85)
+    }
+}
+
+/// VertexId: T1 (Location), dominant Location
+///
+/// An opaque identifier for a position in the graph.
+/// Pure Location primitive — it IS a position.
+impl GroundsTo for VertexId {
+    fn primitive_composition() -> PrimitiveComposition {
+        PrimitiveComposition::new(vec![
+            LexPrimitiva::Location, // lambda -- position in graph
+        ])
+        .with_dominant(LexPrimitiva::Location, 0.95)
+    }
+}
+
+// ===========================================================================
+// Matrix type
+// ===========================================================================
+
+/// Matrix: T2-P (Mapping + Quantity + Boundary), dominant Mapping
+///
+/// A dense numerical matrix with row-major storage.
+/// Mapping-dominant: the defining characteristic IS the row-to-column
+/// transformation. Quantity for numeric values, Boundary for dimension
+/// constraints.
+impl GroundsTo for Matrix {
+    fn primitive_composition() -> PrimitiveComposition {
+        PrimitiveComposition::new(vec![
+            LexPrimitiva::Mapping,  // mu -- row-to-column transformations
+            LexPrimitiva::Quantity, // N -- numeric values
+            LexPrimitiva::Boundary, // partial -- dimension constraints
+        ])
+        .with_dominant(LexPrimitiva::Mapping, 0.85)
+    }
+}
+
+// ===========================================================================
+// Markov chain types
+// ===========================================================================
+
+/// MarkovChain<S>: T2-C (State + Sequence + Quantity + Recursion), dominant State
+///
+/// A discrete-time Markov chain with typed state labels and transition matrix.
+/// State-dominant: the defining characteristic IS the probabilistic state
+/// transitions. Sequence for temporal evolution, Quantity for probabilities,
+/// Recursion for power iteration and n-step computation.
+impl<S> GroundsTo for MarkovChain<S> {
+    fn primitive_composition() -> PrimitiveComposition {
+        PrimitiveComposition::new(vec![
+            LexPrimitiva::State,     // varsigma -- discrete states with transitions
+            LexPrimitiva::Sequence,  // sigma -- state-to-state temporal evolution
+            LexPrimitiva::Quantity,  // N -- transition probabilities
+            LexPrimitiva::Recursion, // rho -- power iteration, n-step computation
+        ])
+        .with_dominant(LexPrimitiva::State, 0.80)
+    }
+}
+
+/// StateClass: T1 (State), dominant State
+///
+/// Classification of a Markov chain state as Recurrent, Transient, or Absorbing.
+/// Pure State primitive — it IS a classification of state behavior.
+impl GroundsTo for StateClass {
+    fn primitive_composition() -> PrimitiveComposition {
+        PrimitiveComposition::new(vec![
+            LexPrimitiva::State, // varsigma -- state classification
+        ])
+        .with_dominant(LexPrimitiva::State, 0.95)
+    }
+}
+
+// ===========================================================================
 // Tests
 // ===========================================================================
 
@@ -196,24 +290,96 @@ mod tests {
     }
 
     #[test]
-    fn tier_distribution_is_reasonable() {
-        // T1: Relation, Identity, MathError = 3
-        let t1_count = [Relation::tier(), Identity::<()>::tier(), MathError::tier()]
-            .iter()
-            .filter(|t| **t == Tier::T1Universal)
-            .count();
+    fn graph_is_t2c_mapping_dominant() {
+        assert_eq!(Graph::<(), ()>::tier(), Tier::T2Composite);
+        assert_eq!(
+            Graph::<(), ()>::primitive_composition().dominant,
+            Some(LexPrimitiva::Mapping)
+        );
+        let comp = Graph::<(), ()>::primitive_composition();
+        assert!(comp.primitives.contains(&LexPrimitiva::Location));
+        assert!(comp.primitives.contains(&LexPrimitiva::Boundary));
+        assert!(comp.primitives.contains(&LexPrimitiva::Sequence));
+    }
 
-        // T2-P (2-3 primitives): Bounded, Proof, MeasuredBound = 3
+    #[test]
+    fn vertex_id_is_t1_location_dominant() {
+        assert_eq!(VertexId::tier(), Tier::T1Universal);
+        assert_eq!(
+            VertexId::primitive_composition().dominant,
+            Some(LexPrimitiva::Location)
+        );
+        assert!(VertexId::is_pure_primitive());
+    }
+
+    #[test]
+    fn matrix_is_t2p_mapping_dominant() {
+        assert_eq!(Matrix::tier(), Tier::T2Primitive);
+        assert_eq!(
+            Matrix::primitive_composition().dominant,
+            Some(LexPrimitiva::Mapping)
+        );
+        let comp = Matrix::primitive_composition();
+        assert!(comp.primitives.contains(&LexPrimitiva::Quantity));
+        assert!(comp.primitives.contains(&LexPrimitiva::Boundary));
+    }
+
+    #[test]
+    fn markov_chain_is_t2c_state_dominant() {
+        assert_eq!(MarkovChain::<String>::tier(), Tier::T2Composite);
+        assert_eq!(
+            MarkovChain::<String>::primitive_composition().dominant,
+            Some(LexPrimitiva::State)
+        );
+        let comp = MarkovChain::<String>::primitive_composition();
+        assert!(comp.primitives.contains(&LexPrimitiva::Sequence));
+        assert!(comp.primitives.contains(&LexPrimitiva::Quantity));
+        assert!(comp.primitives.contains(&LexPrimitiva::Recursion));
+    }
+
+    #[test]
+    fn state_class_is_t1_state_dominant() {
+        assert_eq!(StateClass::tier(), Tier::T1Universal);
+        assert_eq!(
+            StateClass::primitive_composition().dominant,
+            Some(LexPrimitiva::State)
+        );
+        assert!(StateClass::is_pure_primitive());
+    }
+
+    #[test]
+    fn tier_distribution_is_reasonable() {
+        // T1: Relation, Identity, MathError, VertexId, StateClass = 5
+        let t1_count = [
+            Relation::tier(),
+            Identity::<()>::tier(),
+            MathError::tier(),
+            VertexId::tier(),
+            StateClass::tier(),
+        ]
+        .iter()
+        .filter(|t| **t == Tier::T1Universal)
+        .count();
+
+        // T2-P (2-3 primitives): Bounded, Proof, MeasuredBound, Matrix = 4
         let t2p_count = [
             Bounded::<()>::tier(),
             Proof::<(), ()>::tier(),
             MeasuredBound::<()>::tier(),
+            Matrix::tier(),
         ]
         .iter()
         .filter(|t| **t == Tier::T2Primitive)
         .count();
 
-        assert_eq!(t1_count, 3, "expected 3 T1 types");
-        assert_eq!(t2p_count, 3, "expected 3 T2-P types");
+        // T2-C (4+ primitives): Graph, MarkovChain = 2
+        let t2c_count = [Graph::<(), ()>::tier(), MarkovChain::<String>::tier()]
+            .iter()
+            .filter(|t| **t == Tier::T2Composite)
+            .count();
+
+        assert_eq!(t1_count, 5, "expected 5 T1 types");
+        assert_eq!(t2p_count, 4, "expected 4 T2-P types");
+        assert_eq!(t2c_count, 2, "expected 2 T2-C types");
     }
 }

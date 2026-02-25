@@ -86,7 +86,7 @@ impl<V: Clone + fmt::Debug> PathResolver<V> {
         }
 
         if node.value.is_none() {
-            self.count += 1;
+            self.count = self.count.saturating_add(1);
         }
         node.value = Some(value);
     }

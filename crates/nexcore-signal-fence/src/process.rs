@@ -8,7 +8,7 @@
 use std::net::IpAddr;
 use std::path::PathBuf;
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::connection::{Protocol, SocketEntry, TcpState};
@@ -78,7 +78,7 @@ pub struct ConnectionEvent {
     /// Inferred traffic direction.
     pub direction: Direction,
     /// When this event was observed.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
 }
 
 impl ConnectionEvent {
@@ -89,7 +89,7 @@ impl ConnectionEvent {
             socket,
             process,
             direction,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         }
     }
 
@@ -97,7 +97,7 @@ impl ConnectionEvent {
     pub fn with_timestamp(
         socket: SocketEntry,
         process: Option<ProcessInfo>,
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     ) -> Self {
         let direction = Direction::infer(&socket);
         Self {
@@ -296,7 +296,7 @@ mod tests {
     #[test]
     fn test_connection_event_with_timestamp() {
         let socket = make_socket(8080, 0, TcpState::Listen, 200);
-        let ts = Utc::now();
+        let ts = DateTime::now();
         let event = ConnectionEvent::with_timestamp(socket, None, ts);
         assert_eq!(event.timestamp, ts);
     }

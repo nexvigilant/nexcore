@@ -25,14 +25,15 @@
 ///
 /// Tier: T2-C (κ + π — comparison of meanings, persisted definition)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct VocabEntry {
     /// Canonical symbol name (e.g., "ThreatLevel").
     pub symbol: &'static str,
     /// Calculated definition — precise, unique semantics.
     pub definition: &'static str,
-    /// Lex Primitiva grounding symbols (e.g., ["κ", "∂"]).
+    /// Lex Primitiva grounding symbols (e.g., `["κ", "∂"]`).
     pub primitives: &'static [&'static str],
-    /// Overloaded names this symbol replaces (e.g., ["Severity@guardian-engine"]).
+    /// Overloaded names this symbol replaces (e.g., `["Severity@guardian-engine"]`).
     pub replaces: &'static [&'static str],
 }
 
@@ -334,7 +335,7 @@ pub fn find_replacements(old_name: &str) -> Vec<&'static VocabEntry> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashSet;
+    use std::collections::BTreeSet;
 
     #[test]
     fn test_lookup_existing() {
@@ -351,7 +352,7 @@ mod tests {
 
     #[test]
     fn test_all_symbols_unique() {
-        let symbols: HashSet<_> = ALL_ENTRIES.iter().map(|e| e.symbol).collect();
+        let symbols: BTreeSet<_> = ALL_ENTRIES.iter().map(|e| e.symbol).collect();
         assert_eq!(
             symbols.len(),
             ALL_ENTRIES.len(),

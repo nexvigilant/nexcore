@@ -2,7 +2,7 @@
 //!
 //! Automated security threat detection and response per NIST SP 800-207.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -93,13 +93,13 @@ pub struct ThreatEvent {
     #[serde(default)]
     pub response_actions: Vec<ResponseAction>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub response_timestamp: Option<DateTime<Utc>>,
+    pub response_timestamp: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub response_details: Option<HashMap<String, serde_json::Value>>,
-    #[serde(default = "Utc::now")]
-    pub detected_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub detected_at: DateTime,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub resolved_at: Option<DateTime<Utc>>,
+    pub resolved_at: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub resolved_by: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -116,19 +116,19 @@ pub struct AccountLockout {
     pub reason: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub threat_event_id: Option<String>,
-    #[serde(default = "Utc::now")]
-    pub locked_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub locked_at: DateTime,
     #[serde(default = "default_system")]
     pub locked_by: String,
     /// Lockout duration in minutes (None = indefinite).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub duration_minutes: Option<i32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub unlock_at: Option<DateTime<Utc>>,
+    pub unlock_at: Option<DateTime>,
     #[serde(default)]
     pub status: AccountLockoutStatus,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub unlocked_at: Option<DateTime<Utc>>,
+    pub unlocked_at: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub unlocked_by: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -150,22 +150,22 @@ pub struct IPBlock {
     pub reason: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub threat_event_id: Option<String>,
-    #[serde(default = "Utc::now")]
-    pub blocked_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub blocked_at: DateTime,
     #[serde(default = "default_system")]
     pub blocked_by: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub duration_minutes: Option<i32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub unblock_at: Option<DateTime<Utc>>,
+    pub unblock_at: Option<DateTime>,
     #[serde(default)]
     pub status: IPBlockStatus,
     #[serde(default)]
     pub blocked_requests: i64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub last_attempt_at: Option<DateTime<Utc>>,
+    pub last_attempt_at: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub unblocked_at: Option<DateTime<Utc>>,
+    pub unblocked_at: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub unblocked_by: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -183,8 +183,8 @@ pub struct SessionTermination {
     pub reason: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub threat_event_id: Option<String>,
-    #[serde(default = "Utc::now")]
-    pub terminated_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub terminated_at: DateTime,
     #[serde(default = "default_system")]
     pub terminated_by: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -204,20 +204,20 @@ pub struct MFAStepUp {
     pub reason: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub threat_event_id: Option<String>,
-    #[serde(default = "Utc::now")]
-    pub required_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub required_at: DateTime,
     pub mfa_method: String,
     #[serde(default)]
     pub challenge_sent: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub challenge_sent_at: Option<DateTime<Utc>>,
+    pub challenge_sent_at: Option<DateTime>,
     #[serde(default)]
     pub verified: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub verified_at: Option<DateTime<Utc>>,
+    pub verified_at: Option<DateTime>,
     #[serde(default)]
     pub attempts: i32,
-    pub expires_at: DateTime<Utc>,
+    pub expires_at: DateTime,
     #[serde(default)]
     pub expired: bool,
     pub tenant_id: String,

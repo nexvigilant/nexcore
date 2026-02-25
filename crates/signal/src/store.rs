@@ -105,7 +105,7 @@ impl Store for JsonFileStore {
 mod tests {
     use super::*;
     use crate::core::*;
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     fn make_alert() -> Alert {
         Alert {
@@ -124,11 +124,11 @@ mod tests {
                 ebgm: Some(Ebgm(2.0)),
                 chi_square: ChiSquare(10.0),
                 strength: SignalStrength::Strong,
-                detected_at: Utc::now(),
+                detected_at: DateTime::now(),
             },
             state: AlertState::New,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+            created_at: DateTime::now(),
+            updated_at: DateTime::now(),
             notes: vec![],
         }
     }

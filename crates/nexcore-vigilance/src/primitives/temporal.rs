@@ -17,7 +17,7 @@ use std::fmt;
 use std::hash::Hash;
 use std::time::Duration;
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 // ============================================================================
@@ -76,18 +76,18 @@ impl SlidingWindow {
 
     /// Compute the cutoff timestamp: anything before this is outside the window.
     #[must_use]
-    pub fn cutoff(&self, now: DateTime<Utc>) -> DateTime<Utc> {
-        now - self.0
+    pub fn cutoff(&self, now: DateTime) -> DateTime {
+        now - nexcore_chrono::Duration::from_std(self.0)
     }
 
     /// Check if a timestamp is within the window relative to `now`.
     #[must_use]
-    pub fn contains(&self, timestamp: DateTime<Utc>, now: DateTime<Utc>) -> bool {
+    pub fn contains(&self, timestamp: DateTime, now: DateTime) -> bool {
         timestamp >= self.cutoff(now)
     }
 
     /// Prune a sorted vec of timestamps, retaining only those within the window.
-    pub fn prune(&self, timestamps: &mut Vec<DateTime<Utc>>, now: DateTime<Utc>) {
+    pub fn prune(&self, timestamps: &mut Vec<DateTime>, now: DateTime) {
         let cutoff = self.cutoff(now);
         timestamps.retain(|&t| t >= cutoff);
     }
@@ -156,13 +156,13 @@ impl Ttl {
 
     /// Compute the expiry timestamp given a start time.
     #[must_use]
-    pub fn expires_at(&self, start: DateTime<Utc>) -> DateTime<Utc> {
-        start + self.0
+    pub fn expires_at(&self, start: DateTime) -> DateTime {
+        start + nexcore_chrono::Duration::from_std(self.0)
     }
 
     /// Check if something started at `start` has expired by `now`.
     #[must_use]
-    pub fn is_expired(&self, start: DateTime<Utc>, now: DateTime<Utc>) -> bool {
+    pub fn is_expired(&self, start: DateTime, now: DateTime) -> bool {
         now >= self.expires_at(start)
     }
 
@@ -188,7 +188,7 @@ impl fmt::Display for Ttl {
 
 /// Tier: T2-C — An entity bound to a validity window `[created_at, expires_at]`.
 ///
-/// Components: `T` (entity) + `DateTime<Utc>` (start) + `DateTime<Utc>` (expiry).
+/// Components: `T` (entity) + `DateTime` (start) + `DateTime` (expiry).
 ///
 /// ## Primitive Test
 ///
@@ -216,15 +216,15 @@ pub struct ExpiryRecord<T> {
     /// The entity this record is about.
     pub entity: T,
     /// When the record was created / enforcement began.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// When the record expires / enforcement ends.
-    pub expires_at: DateTime<Utc>,
+    pub expires_at: DateTime,
 }
 
 impl<T> ExpiryRecord<T> {
     /// Create a new expiry record from entity, start time, and TTL.
     #[must_use]
-    pub fn new(entity: T, created_at: DateTime<Utc>, ttl: Ttl) -> Self {
+    pub fn new(entity: T, created_at: DateTime, ttl: Ttl) -> Self {
         Self {
             entity,
             created_at,
@@ -234,7 +234,7 @@ impl<T> ExpiryRecord<T> {
 
     /// Create with an explicit expiry timestamp.
     #[must_use]
-    pub fn with_expiry(entity: T, created_at: DateTime<Utc>, expires_at: DateTime<Utc>) -> Self {
+    pub fn with_expiry(entity: T, created_at: DateTime, expires_at: DateTime) -> Self {
         Self {
             entity,
             created_at,
@@ -244,23 +244,25 @@ impl<T> ExpiryRecord<T> {
 
     /// Check if the record has expired relative to `now`.
     #[must_use]
-    pub fn is_expired(&self, now: DateTime<Utc>) -> bool {
+    pub fn is_expired(&self, now: DateTime) -> bool {
         now >= self.expires_at
     }
 
     /// Check if the record is still active at `now`.
     #[must_use]
-    pub fn is_active(&self, now: DateTime<Utc>) -> bool {
+    pub fn is_active(&self, now: DateTime) -> bool {
         !self.is_expired(now)
     }
 
     /// Remaining duration until expiry, or zero if already expired.
     #[must_use]
-    pub fn remaining(&self, now: DateTime<Utc>) -> Duration {
+    pub fn remaining(&self, now: DateTime) -> Duration {
         if self.is_expired(now) {
             Duration::ZERO
         } else {
-            (self.expires_at - now).to_std().unwrap_or(Duration::ZERO)
+            (self.expires_at - now)
+                .to_std()
+                .unwrap_or(std::time::Duration::ZERO)
         }
     }
 
@@ -291,7 +293,9 @@ impl<T: fmt::Display> fmt::Display for ExpiryRecord<T> {
             f,
             "ExpiryRecord({}, expires: {})",
             self.entity,
-            self.expires_at.format("%Y-%m-%d %H:%M:%S")
+            self.expires_at
+                .format("%Y-%m-%d %H:%M:%S")
+                .unwrap_or_default()
         )
     }
 }
@@ -332,7 +336,7 @@ pub struct ThresholdCounter {
     /// Maximum count before triggering.
     max_count: u64,
     /// Recorded event timestamps.
-    events: Vec<DateTime<Utc>>,
+    events: Vec<DateTime>,
 }
 
 impl ThresholdCounter {
@@ -348,7 +352,7 @@ impl ThresholdCounter {
 
     /// Record an event at the given timestamp. Returns `true` if the
     /// threshold was reached (i.e., this event caused a trigger).
-    pub fn record(&mut self, when: DateTime<Utc>) -> bool {
+    pub fn record(&mut self, when: DateTime) -> bool {
         self.events.push(when);
         self.window.prune(&mut self.events, when);
         self.events.len() as u64 >= self.max_count
@@ -356,7 +360,7 @@ impl ThresholdCounter {
 
     /// Current count of events within the window.
     #[must_use]
-    pub fn count(&self, now: DateTime<Utc>) -> u64 {
+    pub fn count(&self, now: DateTime) -> u64 {
         self.events
             .iter()
             .filter(|&&t| self.window.contains(t, now))
@@ -365,7 +369,7 @@ impl ThresholdCounter {
 
     /// Check if the threshold is currently exceeded.
     #[must_use]
-    pub fn is_triggered(&self, now: DateTime<Utc>) -> bool {
+    pub fn is_triggered(&self, now: DateTime) -> bool {
         self.count(now) >= self.max_count
     }
 
@@ -387,7 +391,7 @@ impl ThresholdCounter {
     }
 
     /// Prune expired events from memory.
-    pub fn prune(&mut self, now: DateTime<Utc>) {
+    pub fn prune(&mut self, now: DateTime) {
         self.window.prune(&mut self.events, now);
     }
 }
@@ -411,10 +415,10 @@ impl fmt::Display for ThresholdCounter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Duration as ChronoDuration;
+    use nexcore_chrono::Duration as ChronoDuration;
 
-    fn now() -> DateTime<Utc> {
-        Utc::now()
+    fn now() -> DateTime {
+        DateTime::now()
     }
 
     // ── SlidingWindow tests ──────────────────────────────────────

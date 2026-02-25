@@ -3,7 +3,7 @@
 //! Tier: T3 (domain-specific PV deduplication types)
 //! Grounds to: T1::Mapping (narrative → deduplicated set)
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{CaseId, Similarity};
@@ -16,7 +16,7 @@ pub struct IcsrNarrative {
     /// Full narrative text
     pub narrative_text: String,
     /// Report date
-    pub report_date: Option<DateTime<Utc>>,
+    pub report_date: Option<DateTime>,
     /// Drug names mentioned
     pub drug_names: Vec<String>,
     /// MedDRA event terms

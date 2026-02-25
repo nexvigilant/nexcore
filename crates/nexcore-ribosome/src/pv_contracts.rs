@@ -387,7 +387,7 @@ pub fn evaluate_drift(result: &DriftResult, category: PvContractCategory) -> PvD
 mod tests {
     use super::*;
     use crate::{DriftResult, SchemaDrift};
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     fn make_drift_result(
         contract_id: &str,
@@ -400,7 +400,7 @@ mod tests {
             drift_score: score,
             drift_detected: detected,
             violations,
-            validated_at: Utc::now(),
+            validated_at: DateTime::now(),
         }
     }
 

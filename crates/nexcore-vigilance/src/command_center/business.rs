@@ -1,6 +1,6 @@
 //! Business domain types: LLCs, transactions, and KPIs.
 
-use chrono::{DateTime, NaiveDate, Utc};
+use nexcore_chrono::{Date, DateTime};
 use nexcore_id::NexId;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
@@ -28,7 +28,7 @@ pub struct Llc {
 
     /// Date of formation.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub formation_date: Option<NaiveDate>,
+    pub formation_date: Option<Date>,
 
     /// Fiscal year start month (1-12).
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -95,11 +95,11 @@ pub struct Llc {
     pub is_active: bool,
 
     /// Creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Last update timestamp.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime>,
 }
 
 fn default_tax_rate() -> Decimal {
@@ -155,7 +155,7 @@ impl Llc {
             naics_code: None,
             annual_report_due_date: None,
             is_active: true,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             updated_at: None,
         }
     }
@@ -206,7 +206,7 @@ pub struct Transaction {
     pub amount: Decimal,
 
     /// Transaction date.
-    pub date: NaiveDate,
+    pub date: Date,
 
     /// Description.
     pub description: String,
@@ -252,7 +252,7 @@ pub struct Transaction {
 
     /// When reconciled.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub reconciled_at: Option<DateTime<Utc>>,
+    pub reconciled_at: Option<DateTime>,
 
     /// Receipt URL.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -267,11 +267,11 @@ pub struct Transaction {
     pub tags: Vec<String>,
 
     /// Creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Last update timestamp.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime>,
 }
 
 impl Transaction {
@@ -282,7 +282,7 @@ impl Transaction {
         created_by: NexId,
         transaction_type: TransactionType,
         amount: Decimal,
-        date: NaiveDate,
+        date: Date,
         description: impl Into<String>,
         category: impl Into<String>,
     ) -> Self {
@@ -309,7 +309,7 @@ impl Transaction {
             receipt_url: None,
             notes: None,
             tags: Vec::new(),
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             updated_at: None,
         }
     }
@@ -346,7 +346,7 @@ pub struct Kpi {
     pub llc_id: NexId,
 
     /// Snapshot date.
-    pub snapshot_date: NaiveDate,
+    pub snapshot_date: Date,
 
     /// Total revenue to date.
     #[serde(default)]
@@ -429,18 +429,18 @@ pub struct Kpi {
     pub compliance_score: Option<Decimal>,
 
     /// Creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 }
 
 impl Kpi {
     /// Create a new KPI snapshot.
     #[must_use]
-    pub fn new(llc_id: NexId, snapshot_date: NaiveDate) -> Self {
+    pub fn new(llc_id: NexId, snapshot_date: Date) -> Self {
         Self {
             id: NexId::v4(),
             llc_id,
             snapshot_date,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             ..Default::default()
         }
     }
@@ -479,7 +479,7 @@ mod tests {
     fn test_transaction_signed_amount() {
         let llc_id = NexId::v4();
         let user_id = NexId::v4();
-        let date = NaiveDate::from_ymd_opt(2025, 1, 15).unwrap();
+        let date = Date::from_ymd_opt(2025, 1, 15).unwrap();
 
         let revenue = Transaction::new(
             llc_id,
@@ -507,7 +507,7 @@ mod tests {
     #[test]
     fn test_kpi_working_capital() {
         let llc_id = NexId::v4();
-        let date = NaiveDate::from_ymd_opt(2025, 1, 15).unwrap();
+        let date = Date::from_ymd_opt(2025, 1, 15).unwrap();
 
         let mut kpi = Kpi::new(llc_id, date);
         kpi.cash_balance = Decimal::from(10000);

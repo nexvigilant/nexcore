@@ -1,7 +1,7 @@
 //! Data models for lessons learned
 //! Tier: T2-P primitives
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -66,7 +66,7 @@ pub struct Lesson {
     pub context: String,
     pub tags: Vec<String>,
     pub primitives: Vec<ExtractedPrimitive>,
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     #[serde(default)]
     pub source: String,
 }

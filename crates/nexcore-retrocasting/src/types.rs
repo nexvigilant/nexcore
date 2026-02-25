@@ -36,7 +36,7 @@ pub struct RetrocastResult {
     /// Overall confidence in the retrocasting analysis (0.0–1.0).
     pub confidence: f64,
     /// UTC timestamp when analysis was completed.
-    pub analyzed_at: chrono::DateTime<chrono::Utc>,
+    pub analyzed_at: nexcore_chrono::DateTime,
 }
 
 /// A single pharmacovigilance signal from FAERS.
@@ -185,7 +185,7 @@ pub struct TrainingDataset {
     /// Cohort years present in this dataset (for temporal splits).
     pub cohort_years: Vec<u32>,
     /// UTC timestamp when this dataset was generated.
-    pub generated_at: chrono::DateTime<chrono::Utc>,
+    pub generated_at: nexcore_chrono::DateTime,
     /// Version tag for reproducibility.
     pub version: String,
 }
@@ -264,7 +264,7 @@ mod tests {
             structural_clusters: vec![],
             new_alert_candidates: vec![],
             confidence: 0.75,
-            analyzed_at: chrono::Utc::now(),
+            analyzed_at: nexcore_chrono::DateTime::now(),
         };
         let json = serde_json::to_string(&result);
         assert!(json.is_ok());
@@ -300,7 +300,7 @@ mod tests {
             positive_count: 1,
             negative_count: 1,
             cohort_years: vec![1995, 2015],
-            generated_at: chrono::Utc::now(),
+            generated_at: nexcore_chrono::DateTime::now(),
             version: "v1.0".to_string(),
         };
 
@@ -319,7 +319,7 @@ mod tests {
             positive_count: 0,
             negative_count: 0,
             cohort_years: vec![],
-            generated_at: chrono::Utc::now(),
+            generated_at: nexcore_chrono::DateTime::now(),
             version: "v1.0".to_string(),
         };
         assert_eq!(dataset.class_balance(), 0.0);
@@ -333,7 +333,7 @@ mod tests {
             positive_count: 5,
             negative_count: 5,
             cohort_years: vec![],
-            generated_at: chrono::Utc::now(),
+            generated_at: nexcore_chrono::DateTime::now(),
             version: "v1.0".to_string(),
         };
         assert!((dataset.class_balance() - 0.5).abs() < f64::EPSILON);

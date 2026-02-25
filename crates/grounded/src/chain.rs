@@ -5,7 +5,7 @@
 //!
 //! Grounds to: σ(Sequence) + →(Causality) + N(Quantity)
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::confidence::Confidence;
@@ -21,7 +21,7 @@ pub struct EvidenceStep {
     /// Positive = strengthened, negative = weakened.
     pub delta: f64,
     /// When this step was recorded.
-    pub recorded_at: DateTime<Utc>,
+    pub recorded_at: DateTime,
 }
 
 /// A chain of evidence steps tracking confidence propagation.
@@ -48,7 +48,7 @@ impl EvidenceChain {
                 description: format!("initial prior for: {claim}"),
                 confidence: initial_confidence,
                 delta: 0.0,
-                recorded_at: Utc::now(),
+                recorded_at: DateTime::now(),
             }],
             claim,
             current_confidence: initial_confidence,
@@ -67,7 +67,7 @@ impl EvidenceChain {
             description: description.into(),
             confidence: new_confidence,
             delta,
-            recorded_at: Utc::now(),
+            recorded_at: DateTime::now(),
         });
         self.current_confidence = new_confidence;
     }
@@ -84,7 +84,7 @@ impl EvidenceChain {
             description: description.into(),
             confidence: new_confidence,
             delta,
-            recorded_at: Utc::now(),
+            recorded_at: DateTime::now(),
         });
         self.current_confidence = new_confidence;
     }
@@ -96,7 +96,7 @@ impl EvidenceChain {
             description: description.into(),
             confidence: new_confidence,
             delta,
-            recorded_at: Utc::now(),
+            recorded_at: DateTime::now(),
         });
         self.current_confidence = new_confidence;
     }

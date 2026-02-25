@@ -257,8 +257,8 @@ impl Mixer {
                 }
 
                 for (i, &sample) in samples.iter().enumerate() {
-                    if i < output.len() {
-                        output[i] += sample * vol;
+                    if let Some(out_sample) = output.get_mut(i) {
+                        *out_sample += sample * vol;
                     }
                 }
             }

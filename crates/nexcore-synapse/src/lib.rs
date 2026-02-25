@@ -63,7 +63,7 @@ pub mod gate_control;
 pub mod grounding;
 pub mod referred_pain;
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -168,7 +168,7 @@ pub struct LearningSignal {
     pub relevance: f64,
 
     /// Timestamp of observation.
-    pub observed_at: DateTime<Utc>,
+    pub observed_at: DateTime,
 }
 
 impl LearningSignal {
@@ -178,13 +178,13 @@ impl LearningSignal {
         Self {
             confidence: confidence.clamp(0.0, 1.0),
             relevance: relevance.clamp(0.0, 1.0),
-            observed_at: Utc::now(),
+            observed_at: DateTime::now(),
         }
     }
 
     /// Create a signal with specific timestamp.
     #[must_use]
-    pub fn with_timestamp(confidence: f64, relevance: f64, timestamp: DateTime<Utc>) -> Self {
+    pub fn with_timestamp(confidence: f64, relevance: f64, timestamp: DateTime) -> Self {
         Self {
             confidence: confidence.clamp(0.0, 1.0),
             relevance: relevance.clamp(0.0, 1.0),
@@ -384,10 +384,10 @@ pub struct Synapse {
     observation_count: u32,
 
     /// Timestamp of last observation.
-    last_observed: DateTime<Utc>,
+    last_observed: DateTime,
 
     /// Timestamp when created.
-    created_at: DateTime<Utc>,
+    created_at: DateTime,
 
     /// Peak amplitude ever reached.
     peak_amplitude: Amplitude,
@@ -400,7 +400,7 @@ impl Synapse {
     /// Create a new synapse with given ID and configuration.
     #[must_use]
     pub fn new(id: impl Into<String>, config: AmplitudeConfig) -> Self {
-        let now = Utc::now();
+        let now = DateTime::now();
         Self {
             id: id.into(),
             config,
@@ -461,7 +461,7 @@ impl Synapse {
     pub fn current_amplitude(&self) -> Amplitude {
         #[allow(clippy::cast_precision_loss)]
         // Elapsed seconds are typically small; exact precision not needed for decay
-        let elapsed = (Utc::now() - self.last_observed).num_seconds().max(0) as f64;
+        let elapsed = (DateTime::now() - self.last_observed).num_seconds().max(0) as f64;
         self.amplitude.decay(elapsed, self.config.half_life_seconds)
     }
 
@@ -534,7 +534,7 @@ impl Synapse {
     pub fn reset(&mut self) {
         self.amplitude = Amplitude::ZERO;
         self.observation_count = 0;
-        self.last_observed = Utc::now();
+        self.last_observed = DateTime::now();
         self.peak_amplitude = Amplitude::ZERO;
         self.ever_consolidated = false;
     }
@@ -633,7 +633,7 @@ impl SynapseBank {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Duration;
+    use nexcore_chrono::Duration;
 
     #[test]
     fn test_amplitude_clamping() {

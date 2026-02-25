@@ -131,7 +131,7 @@ mod integration_tests {
             "temporal logic verification algorithms",
             EngramSource::Lesson,
         );
-        old.created_at = chrono::Utc::now() - chrono::Duration::days(60);
+        old.created_at = nexcore_chrono::DateTime::now() - nexcore_chrono::Duration::days(60);
         old.last_accessed = old.created_at;
 
         let fresh = Engram::new(

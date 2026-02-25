@@ -124,7 +124,7 @@ pub fn grounded_evidence_new(
         .map_err(|e| McpError::invalid_params(format!("Invalid initial_confidence: {e}"), None))?;
 
     let chain = EvidenceChain::new(&params.claim, initial);
-    let chain_id = format!("ev-{}", chrono::Utc::now().timestamp_millis());
+    let chain_id = format!("ev-{}", nexcore_chrono::DateTime::now().timestamp_millis());
 
     let mut chains = EVIDENCE_CHAINS.lock();
     chains.insert(chain_id.clone(), chain);

@@ -4864,7 +4864,7 @@ pub fn export_route_index() -> serde_json::Value {
 
     json!({
         "version": 1,
-        "generated_at": chrono::Utc::now().to_rfc3339(),
+        "generated_at": nexcore_chrono::DateTime::now().to_rfc3339(),
         "rules_count": rules.len(),
         "keywords_count": keyword_map.len(),
         "keywords": keyword_map,

@@ -6,7 +6,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_vigilance::guardian::response::{Actuator, ActuatorResult, ResponseAction};
 use nexcore_vigilance::guardian::sensing::{Sensor, SignalSource, ThreatLevel, ThreatSignal};
 
@@ -42,7 +42,7 @@ impl OrchestrationSensor {
 
         if error_rate > self.error_rate_threshold {
             Some(ThreatSignal {
-                id: format!("orc-error-rate-{}", Utc::now().timestamp_millis()),
+                id: format!("orc-error-rate-{}", DateTime::now().timestamp_millis()),
                 pattern: format!(
                     "high error rate: {:.1}% ({error_count}/{total})",
                     error_rate * 100.0
@@ -52,7 +52,7 @@ impl OrchestrationSensor {
                 } else {
                     ThreatLevel::High
                 },
-                timestamp: Utc::now(),
+                timestamp: DateTime::now(),
                 source: SignalSource::Damp {
                     subsystem: "orchestration".to_string(),
                     damage_type: "error_rate".to_string(),
@@ -67,8 +67,8 @@ impl OrchestrationSensor {
 
     /// Detect agents stuck in non-terminal states too long.
     fn detect_stuck_agents(&self) -> Vec<ThreatSignal<String>> {
-        let now = Utc::now();
-        let stuck_threshold = chrono::Duration::minutes(10);
+        let now = DateTime::now();
+        let stuck_threshold = nexcore_chrono::Duration::minutes(10);
         let mut signals = Vec::new();
 
         let executing = self.registry.by_state(AgentState::Executing);
@@ -144,7 +144,7 @@ impl Actuator for OrchestrationActuator {
                 ActuatorResult {
                     success: true,
                     message: format!("alert logged: {message}"),
-                    timestamp: Utc::now(),
+                    timestamp: DateTime::now(),
                     duration_ms: 0,
                     data: std::collections::HashMap::new(),
                 }
@@ -157,14 +157,14 @@ impl Actuator for OrchestrationActuator {
                         Ok(()) => ActuatorResult {
                             success: true,
                             message: format!("cancelled agent {agent_id}"),
-                            timestamp: Utc::now(),
+                            timestamp: DateTime::now(),
                             duration_ms: 0,
                             data: std::collections::HashMap::new(),
                         },
                         Err(e) => ActuatorResult {
                             success: false,
                             message: format!("failed to cancel agent: {e}"),
-                            timestamp: Utc::now(),
+                            timestamp: DateTime::now(),
                             duration_ms: 0,
                             data: std::collections::HashMap::new(),
                         },
@@ -173,7 +173,7 @@ impl Actuator for OrchestrationActuator {
                     ActuatorResult {
                         success: false,
                         message: format!("invalid agent id: {target}"),
-                        timestamp: Utc::now(),
+                        timestamp: DateTime::now(),
                         duration_ms: 0,
                         data: std::collections::HashMap::new(),
                     }
@@ -182,7 +182,7 @@ impl Actuator for OrchestrationActuator {
             _ => ActuatorResult {
                 success: false,
                 message: "unsupported action for orchestration actuator".to_string(),
-                timestamp: Utc::now(),
+                timestamp: DateTime::now(),
                 duration_ms: 0,
                 data: std::collections::HashMap::new(),
             },
@@ -193,7 +193,7 @@ impl Actuator for OrchestrationActuator {
         ActuatorResult {
             success: true,
             message: "revert not implemented for orchestration actuator".to_string(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             duration_ms: 0,
             data: std::collections::HashMap::new(),
         }

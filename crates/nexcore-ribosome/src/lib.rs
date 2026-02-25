@@ -36,7 +36,7 @@ pub mod stall_monitor;
 use std::collections::HashMap;
 use std::fmt;
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_transcriptase::{Schema, SchemaKind};
 use serde::{Deserialize, Serialize};
 
@@ -87,9 +87,9 @@ pub struct Contract {
     /// The baseline schema.
     pub schema: Schema,
     /// When this contract was created.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// When this contract was last updated.
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
     /// Number of observations that built this contract.
     pub observation_count: usize,
     /// Arbitrary metadata.
@@ -108,7 +108,7 @@ pub struct DriftResult {
     /// Per-field drift violations.
     pub violations: Vec<SchemaDrift>,
     /// When validation occurred.
-    pub validated_at: DateTime<Utc>,
+    pub validated_at: DateTime,
 }
 
 /// Specific schema drift violation.
@@ -674,7 +674,7 @@ impl Ribosome {
     /// - With `auto_update=false`: returns the existing contract unchanged
     pub fn store_contract(&mut self, id: impl Into<String>, schema: Schema) -> Result<Contract> {
         let id = id.into();
-        let now = Utc::now();
+        let now = DateTime::now();
 
         if let Some(existing) = self.contracts.get_mut(&id) {
             if self.config.auto_update {
@@ -742,7 +742,7 @@ impl Ribosome {
             drift_score,
             drift_detected: drift_score >= self.config.drift_threshold,
             violations,
-            validated_at: Utc::now(),
+            validated_at: DateTime::now(),
         })
     }
 

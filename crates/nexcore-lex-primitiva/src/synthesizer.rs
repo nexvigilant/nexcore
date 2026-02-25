@@ -11,7 +11,7 @@ use crate::grammar::{Interaction, InteractionGraph, PatternRegistry};
 use crate::primitiva::{LexPrimitiva, PrimitiveComposition};
 use crate::tier::Tier;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ERROR TYPE
@@ -21,6 +21,7 @@ use std::collections::HashSet;
 ///
 /// Tier: T2-P (Boundary + Comparison)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum SynthesisError {
     /// No primitives provided.
     EmptyPrimitives,
@@ -57,6 +58,7 @@ impl std::error::Error for SynthesisError {}
 ///
 /// Tier: T2-P (State + Comparison)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct SynthesisOpts {
     /// Optional target tier to aim for.
     pub target_tier: Option<Tier>,
@@ -84,6 +86,7 @@ impl Default for SynthesisOpts {
 ///
 /// Tier: T2-C (Mapping + Sequence + Comparison + Sum)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct SynthesisResult {
     /// The composed primitive composition.
     pub composition: PrimitiveComposition,
@@ -107,6 +110,7 @@ pub struct SynthesisResult {
 ///
 /// Tier: T2-P (Comparison + Mapping)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct PatternMatch {
     /// Canonical pattern name.
     pub name: String,
@@ -122,6 +126,7 @@ pub struct PatternMatch {
 ///
 /// Tier: T2-P (Causality + Mapping)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct CompletionSuggestion {
     /// Target pattern name.
     pub target_pattern: String,
@@ -182,7 +187,7 @@ impl RevSynthesizer {
         }
 
         // 2. Build composition
-        let unique: HashSet<LexPrimitiva> = primitives.iter().copied().collect();
+        let unique: BTreeSet<LexPrimitiva> = primitives.iter().copied().collect();
         let unique_vec: Vec<LexPrimitiva> = unique.into_iter().collect();
         let composition = PrimitiveComposition::new(unique_vec.clone());
 
@@ -245,7 +250,7 @@ impl RevSynthesizer {
         target_pattern: &str,
     ) -> Option<CompletionSuggestion> {
         let pattern = self.registry.get(target_pattern)?;
-        let have_set: HashSet<LexPrimitiva> = have.iter().copied().collect();
+        let have_set: BTreeSet<LexPrimitiva> = have.iter().copied().collect();
         let pattern_set = pattern.composition.unique();
 
         let missing: Vec<LexPrimitiva> = pattern_set.difference(&have_set).copied().collect();
@@ -295,7 +300,7 @@ impl RevSynthesizer {
             return None;
         }
         if primitives.len() == 1 {
-            return Some(primitives[0]);
+            return primitives.first().copied();
         }
 
         // If pattern hint given, use that pattern's dominant
@@ -309,7 +314,7 @@ impl RevSynthesizer {
             }
         }
 
-        let prim_set: HashSet<LexPrimitiva> = primitives.iter().copied().collect();
+        let prim_set: BTreeSet<LexPrimitiva> = primitives.iter().copied().collect();
 
         // Count edges per primitive within the given set
         let mut edge_counts: Vec<(LexPrimitiva, usize)> = primitives
@@ -347,7 +352,7 @@ impl RevSynthesizer {
 
     /// Find all interactions among the given primitives.
     fn find_interactions(&self, primitives: &[LexPrimitiva]) -> Vec<Interaction> {
-        let prim_set: HashSet<LexPrimitiva> = primitives.iter().copied().collect();
+        let prim_set: BTreeSet<LexPrimitiva> = primitives.iter().copied().collect();
         let mut interactions = Vec::new();
 
         for &src in primitives {
@@ -362,7 +367,7 @@ impl RevSynthesizer {
         }
 
         // Deduplicate: keep unique (source, target) pairs
-        let mut seen = HashSet::new();
+        let mut seen: BTreeSet<(usize, usize)> = BTreeSet::new();
         interactions.retain(|i| {
             let key = (
                 LexPrimitiva::all()
@@ -383,7 +388,7 @@ impl RevSynthesizer {
 
     /// Match input composition against all canonical patterns.
     fn match_patterns(&self, comp: &PrimitiveComposition) -> Vec<PatternMatch> {
-        let comp_set = comp.unique();
+        let comp_set: BTreeSet<LexPrimitiva> = comp.unique();
         let mut matches: Vec<PatternMatch> = self
             .registry
             .iter()
@@ -415,7 +420,7 @@ impl RevSynthesizer {
 
     /// Generate completion suggestions for near-miss patterns.
     fn generate_suggestions(&self, comp: &PrimitiveComposition) -> Vec<CompletionSuggestion> {
-        let comp_set = comp.unique();
+        let comp_set: BTreeSet<LexPrimitiva> = comp.unique();
         let have: Vec<LexPrimitiva> = comp_set.iter().copied().collect();
 
         let mut suggestions: Vec<CompletionSuggestion> = Vec::new();

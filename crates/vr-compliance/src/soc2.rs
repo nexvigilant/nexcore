@@ -11,7 +11,7 @@
 //! Scorecards aggregate control status per category with weighted
 //! overall scoring for audit readiness assessment.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 // ============================================================================
@@ -111,9 +111,9 @@ pub struct Soc2Control {
     /// Current compliance status.
     pub status: ControlStatus,
     /// When this control was last assessed (None if never).
-    pub last_assessed_at: Option<DateTime<Utc>>,
+    pub last_assessed_at: Option<DateTime>,
     /// When the next assessment is due (None if not scheduled).
-    pub next_assessment_due: Option<DateTime<Utc>>,
+    pub next_assessment_due: Option<DateTime>,
 }
 
 // ============================================================================
@@ -249,7 +249,7 @@ mod tests {
             description: format!("Test control {control_id}"),
             evidence_type: EvidenceType::Automated,
             status,
-            last_assessed_at: Some(Utc::now()),
+            last_assessed_at: Some(DateTime::now()),
             next_assessment_due: None,
         }
     }

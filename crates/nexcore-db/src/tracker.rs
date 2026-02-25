@@ -1,6 +1,6 @@
 //! Code tracker CRUD: content-addressable file snapshots.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 
@@ -20,9 +20,9 @@ pub struct TrackedFileRow {
     /// File size in bytes
     pub file_size: u64,
     /// When the file was tracked
-    pub tracked_at: DateTime<Utc>,
+    pub tracked_at: DateTime,
     /// File modification time
-    pub mtime: DateTime<Utc>,
+    pub mtime: DateTime,
 }
 
 /// Upsert a tracked file (by project + file_path).
@@ -102,10 +102,8 @@ pub fn list_by_project(conn: &Connection, project: &str) -> Result<Vec<TrackedFi
     Ok(rows)
 }
 
-fn parse_dt(s: String) -> DateTime<Utc> {
-    DateTime::parse_from_rfc3339(&s)
-        .map(|dt| dt.with_timezone(&Utc))
-        .unwrap_or_else(|_| Utc::now())
+fn parse_dt(s: String) -> DateTime {
+    DateTime::parse_from_rfc3339(&s).unwrap_or_else(|_| DateTime::now())
 }
 
 #[cfg(test)]
@@ -123,8 +121,8 @@ mod tests {
                 file_path: "src/lib.rs".into(),
                 content_hash: "abc123def456".into(),
                 file_size: 1024,
-                tracked_at: Utc::now(),
-                mtime: Utc::now(),
+                tracked_at: DateTime::now(),
+                mtime: DateTime::now(),
             };
             upsert(conn, &f)?;
 
@@ -149,8 +147,8 @@ mod tests {
                 file_path: "a.rs".into(),
                 content_hash: "hash1".into(),
                 file_size: 100,
-                tracked_at: Utc::now(),
-                mtime: Utc::now(),
+                tracked_at: DateTime::now(),
+                mtime: DateTime::now(),
             };
             upsert(conn, &f)?;
 

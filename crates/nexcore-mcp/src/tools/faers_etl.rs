@@ -339,7 +339,7 @@ fn file_info(entry: &std::fs::DirEntry) -> Option<serde_json::Value> {
         .modified()
         .ok()
         .map(|t| {
-            let dt: chrono::DateTime<chrono::Utc> = t.into();
+            let dt: nexcore_chrono::DateTime = t.into();
             dt.to_rfc3339()
         })
         .unwrap_or_else(|| "unknown".to_string());

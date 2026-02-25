@@ -8,7 +8,7 @@
 
 use crate::level::ClassificationLevel;
 use crate::tag::TagTarget;
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -66,7 +66,7 @@ pub struct ClearanceEntry {
     /// Who performed the action.
     pub actor: String,
     /// When the action occurred.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Additional context.
     pub context: String,
 }
@@ -86,7 +86,7 @@ impl ClearanceEntry {
             action,
             level,
             actor: actor.into(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             context: context.into(),
         }
     }
@@ -97,7 +97,9 @@ impl fmt::Display for ClearanceEntry {
         write!(
             f,
             "[{}] {} {} on {} ({})",
-            self.timestamp.format("%Y-%m-%dT%H:%M:%S"),
+            self.timestamp
+                .format("%Y-%m-%dT%H:%M:%S")
+                .unwrap_or_default(),
             self.actor,
             self.action,
             self.target,
@@ -376,7 +378,7 @@ mod tests {
     #[test]
     fn entry_timestamps_are_recent() {
         let entry = sample_entry(AuditAction::Access, ClassificationLevel::Internal);
-        let now = Utc::now();
+        let now = DateTime::now();
         let diff = now.signed_duration_since(entry.timestamp);
         assert!(diff.num_seconds() < 5);
     }

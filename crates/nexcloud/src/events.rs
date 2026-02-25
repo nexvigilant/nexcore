@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use std::time::Duration;
 
 /// Events emitted by the cloud platform during operation.
@@ -11,24 +11,24 @@ pub enum CloudEvent {
     ServiceStarted {
         name: String,
         pid: u32,
-        at: DateTime<Utc>,
+        at: DateTime,
     },
 
     /// A service passed its health check.
-    ServiceHealthy { name: String, at: DateTime<Utc> },
+    ServiceHealthy { name: String, at: DateTime },
 
     /// A service failed its health check.
     HealthCheckFailed {
         name: String,
         reason: String,
-        at: DateTime<Utc>,
+        at: DateTime,
     },
 
     /// A service process exited unexpectedly.
     ServiceCrashed {
         name: String,
         exit_code: Option<i32>,
-        at: DateTime<Utc>,
+        at: DateTime,
     },
 
     /// A restart has been scheduled after a crash.
@@ -36,11 +36,11 @@ pub enum CloudEvent {
         name: String,
         attempt: u32,
         backoff: Duration,
-        at: DateTime<Utc>,
+        at: DateTime,
     },
 
     /// A service was stopped cleanly.
-    ServiceStopped { name: String, at: DateTime<Utc> },
+    ServiceStopped { name: String, at: DateTime },
 
     /// The reverse proxy handled a request.
     ProxyRequest {
@@ -54,11 +54,11 @@ pub enum CloudEvent {
     PlatformStarted {
         name: String,
         services: usize,
-        at: DateTime<Utc>,
+        at: DateTime,
     },
 
     /// Platform shutdown initiated.
-    PlatformStopping { at: DateTime<Utc> },
+    PlatformStopping { at: DateTime },
 }
 
 /// Simple broadcast channel for cloud events.
@@ -103,7 +103,7 @@ mod tests {
         let bus = EventBus::new(64);
         // Bus should be functional
         bus.emit(CloudEvent::PlatformStopping {
-            at: chrono::Utc::now(),
+            at: nexcore_chrono::DateTime::now(),
         });
     }
 
@@ -112,7 +112,7 @@ mod tests {
         let bus = EventBus::default();
         // Should not panic
         bus.emit(CloudEvent::PlatformStopping {
-            at: chrono::Utc::now(),
+            at: nexcore_chrono::DateTime::now(),
         });
     }
 
@@ -123,7 +123,7 @@ mod tests {
 
         bus.emit(CloudEvent::ServiceStopped {
             name: "web".to_string(),
-            at: chrono::Utc::now(),
+            at: nexcore_chrono::DateTime::now(),
         });
 
         let event = rx.try_recv();
@@ -142,7 +142,7 @@ mod tests {
         bus.emit(CloudEvent::PlatformStarted {
             name: "test".to_string(),
             services: 0,
-            at: chrono::Utc::now(),
+            at: nexcore_chrono::DateTime::now(),
         });
     }
 
@@ -154,7 +154,7 @@ mod tests {
 
         bus.emit(CloudEvent::ServiceHealthy {
             name: "api".to_string(),
-            at: chrono::Utc::now(),
+            at: nexcore_chrono::DateTime::now(),
         });
 
         assert!(rx1.try_recv().is_ok());
@@ -167,36 +167,36 @@ mod tests {
             CloudEvent::ServiceStarted {
                 name: "a".to_string(),
                 pid: 123,
-                at: chrono::Utc::now(),
+                at: nexcore_chrono::DateTime::now(),
             },
             CloudEvent::ServiceHealthy {
                 name: "b".to_string(),
-                at: chrono::Utc::now(),
+                at: nexcore_chrono::DateTime::now(),
             },
             CloudEvent::HealthCheckFailed {
                 name: "c".to_string(),
                 reason: "timeout".to_string(),
-                at: chrono::Utc::now(),
+                at: nexcore_chrono::DateTime::now(),
             },
             CloudEvent::ServiceCrashed {
                 name: "d".to_string(),
                 exit_code: Some(1),
-                at: chrono::Utc::now(),
+                at: nexcore_chrono::DateTime::now(),
             },
             CloudEvent::ServiceCrashed {
                 name: "e".to_string(),
                 exit_code: None,
-                at: chrono::Utc::now(),
+                at: nexcore_chrono::DateTime::now(),
             },
             CloudEvent::RestartScheduled {
                 name: "f".to_string(),
                 attempt: 3,
                 backoff: Duration::from_secs(4),
-                at: chrono::Utc::now(),
+                at: nexcore_chrono::DateTime::now(),
             },
             CloudEvent::ServiceStopped {
                 name: "g".to_string(),
-                at: chrono::Utc::now(),
+                at: nexcore_chrono::DateTime::now(),
             },
             CloudEvent::ProxyRequest {
                 route: "/api".to_string(),
@@ -207,10 +207,10 @@ mod tests {
             CloudEvent::PlatformStarted {
                 name: "prod".to_string(),
                 services: 3,
-                at: chrono::Utc::now(),
+                at: nexcore_chrono::DateTime::now(),
             },
             CloudEvent::PlatformStopping {
-                at: chrono::Utc::now(),
+                at: nexcore_chrono::DateTime::now(),
             },
         ];
 

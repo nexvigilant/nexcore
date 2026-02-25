@@ -225,13 +225,13 @@ pub fn audio_device_capabilities(
     let rates: Vec<SampleRate> = p.rates.iter().map(|&hz| SampleRate::from_hz(hz)).collect();
     let layouts: Vec<ChannelLayout> = p.layouts.iter().filter_map(|s| parse_layout(s)).collect();
 
-    let caps = nexcore_audio::device::DeviceCapabilities {
-        formats: formats.clone(),
-        rates: rates.clone(),
-        layouts: layouts.clone(),
-        min_buffer_frames: p.min_buffer_frames.unwrap_or(256),
-        max_buffer_frames: p.max_buffer_frames.unwrap_or(8192),
-    };
+    let caps = nexcore_audio::device::DeviceCapabilities::new(
+        formats.clone(),
+        rates.clone(),
+        layouts.clone(),
+        p.min_buffer_frames.unwrap_or(256),
+        p.max_buffer_frames.unwrap_or(8192),
+    );
 
     let preferred = caps.preferred_spec();
 

@@ -140,8 +140,16 @@ impl RegionPartitioner {
 
         let count = points.len();
         let area = region.area();
+        #[allow(
+            clippy::as_conversions,
+            reason = "usize to f64 for density calculation; count fits in f64"
+        )]
         let density = if area > 0.0 { count as f64 / area } else { 0.0 };
         let value_sum: f64 = points.iter().map(|(_, v)| v).sum();
+        #[allow(
+            clippy::as_conversions,
+            reason = "usize to f64 for mean calculation; count fits in f64"
+        )]
         let value_mean = if count > 0 {
             value_sum / count as f64
         } else {

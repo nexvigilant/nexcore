@@ -2,7 +2,7 @@
 //!
 //! Primitive composition: Σ(Sum) + π(Persistence) + σ(Sequence)
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// A single signal entry in the surveillance report.
@@ -30,7 +30,7 @@ pub struct SurveillanceReport {
     pub run_id: String,
 
     /// Timestamp of the run.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
 
     /// FAERS data directory processed.
     pub faers_dir: String,
@@ -65,7 +65,7 @@ impl SurveillanceReport {
     pub fn new(faers_dir: &str) -> Self {
         Self {
             run_id: nexcore_id::NexId::v4().to_string(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             faers_dir: faers_dir.to_string(),
             total_pairs: 0,
             raw_signals: 0,

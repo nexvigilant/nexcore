@@ -2,7 +2,7 @@
 //!
 //! Types representing workflow execution state, results, and events.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -69,9 +69,9 @@ pub struct WorkflowStepResult {
     /// Number of retry attempts.
     pub retry_count: u32,
     /// When the step started.
-    pub start_time: DateTime<Utc>,
+    pub start_time: DateTime,
     /// When the step ended.
-    pub end_time: DateTime<Utc>,
+    pub end_time: DateTime,
     /// Additional metadata.
     #[serde(default)]
     pub metadata: HashMap<String, serde_json::Value>,
@@ -126,9 +126,9 @@ pub struct WorkflowExecutionResult {
     /// Total duration in milliseconds.
     pub total_duration_ms: u64,
     /// When the workflow started.
-    pub start_time: DateTime<Utc>,
+    pub start_time: DateTime,
     /// When the workflow ended.
-    pub end_time: DateTime<Utc>,
+    pub end_time: DateTime,
     /// Request ID from options.
     pub request_id: String,
     /// Correlation ID from options.
@@ -154,7 +154,7 @@ pub struct WorkflowExecutionContext {
     /// Correlation ID.
     pub correlation_id: String,
     /// When execution started.
-    pub start_time: DateTime<Utc>,
+    pub start_time: DateTime,
     /// Execution options.
     pub options: WorkflowExecutionOptions,
     /// Results from completed steps.
@@ -209,7 +209,7 @@ pub enum WorkflowExecutionEvent {
         /// Workflow name.
         workflow_name: String,
         /// When the event occurred.
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     },
     /// Workflow execution completed.
     WorkflowCompleted {
@@ -222,7 +222,7 @@ pub enum WorkflowExecutionEvent {
         /// Total duration in milliseconds.
         duration_ms: u64,
         /// When the event occurred.
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     },
     /// Step execution started.
     StepStarted {
@@ -235,7 +235,7 @@ pub enum WorkflowExecutionEvent {
         /// Action name.
         action: String,
         /// When the event occurred.
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     },
     /// Step execution completed.
     StepCompleted {
@@ -252,7 +252,7 @@ pub enum WorkflowExecutionEvent {
         /// Duration in milliseconds.
         duration_ms: u64,
         /// When the event occurred.
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     },
     /// Step was retried.
     StepRetried {
@@ -267,7 +267,7 @@ pub enum WorkflowExecutionEvent {
         /// Error that caused the retry.
         error: String,
         /// When the event occurred.
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     },
     /// Workflow execution failed.
     WorkflowFailed {
@@ -281,7 +281,7 @@ pub enum WorkflowExecutionEvent {
         #[serde(skip_serializing_if = "Option::is_none")]
         step_index: Option<usize>,
         /// When the event occurred.
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     },
 }
 
@@ -292,7 +292,7 @@ impl WorkflowExecutionEvent {
         Self::WorkflowStarted {
             execution_id,
             workflow_name,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         }
     }
 
@@ -309,7 +309,7 @@ impl WorkflowExecutionEvent {
             workflow_name,
             success,
             duration_ms,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         }
     }
 
@@ -326,7 +326,7 @@ impl WorkflowExecutionEvent {
             step_index,
             engine,
             action,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         }
     }
 
@@ -347,7 +347,7 @@ impl WorkflowExecutionEvent {
             action,
             success,
             duration_ms,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         }
     }
 
@@ -364,7 +364,7 @@ impl WorkflowExecutionEvent {
             workflow_name,
             error,
             step_index,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         }
     }
 
@@ -396,7 +396,7 @@ impl WorkflowExecutionEvent {
 
     /// Get the timestamp.
     #[must_use]
-    pub fn timestamp(&self) -> DateTime<Utc> {
+    pub fn timestamp(&self) -> DateTime {
         match self {
             Self::WorkflowStarted { timestamp, .. }
             | Self::WorkflowCompleted { timestamp, .. }
@@ -438,10 +438,10 @@ pub struct WorkflowState {
     /// Total number of steps.
     pub total_steps: usize,
     /// When execution started.
-    pub start_time: DateTime<Utc>,
+    pub start_time: DateTime,
     /// When execution ended.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub end_time: Option<DateTime<Utc>>,
+    pub end_time: Option<DateTime>,
     /// Request ID.
     pub request_id: String,
     /// Correlation ID.
@@ -456,9 +456,9 @@ pub struct WorkflowState {
     /// Additional metadata.
     pub metadata: HashMap<String, serde_json::Value>,
     /// When the state was created.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// When the state was last updated.
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
 }
 
 impl WorkflowState {
@@ -472,7 +472,7 @@ impl WorkflowState {
         correlation_id: String,
         payload: serde_json::Value,
     ) -> Self {
-        let now = Utc::now();
+        let now = DateTime::now();
         Self {
             execution_id,
             workflow_name,
@@ -495,30 +495,30 @@ impl WorkflowState {
     /// Mark the workflow as completed.
     pub fn complete(&mut self) {
         self.status = WorkflowStatus::Completed;
-        self.end_time = Some(Utc::now());
-        self.updated_at = Utc::now();
+        self.end_time = Some(DateTime::now());
+        self.updated_at = DateTime::now();
     }
 
     /// Mark the workflow as failed.
     pub fn fail(&mut self, error: String) {
         self.status = WorkflowStatus::Failed;
         self.error = Some(error);
-        self.end_time = Some(Utc::now());
-        self.updated_at = Utc::now();
+        self.end_time = Some(DateTime::now());
+        self.updated_at = DateTime::now();
     }
 
     /// Mark the workflow as cancelled.
     pub fn cancel(&mut self) {
         self.status = WorkflowStatus::Cancelled;
-        self.end_time = Some(Utc::now());
-        self.updated_at = Utc::now();
+        self.end_time = Some(DateTime::now());
+        self.updated_at = DateTime::now();
     }
 
     /// Add a step result.
     pub fn add_step_result(&mut self, result: WorkflowStepResult) {
         self.step_results.push(result);
         self.current_step_index = self.step_results.len();
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 }
 

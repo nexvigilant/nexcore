@@ -2,7 +2,7 @@
 //!
 //! These tables store operational knowledge extracted from dotfiles.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 

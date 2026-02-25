@@ -14,33 +14,11 @@ nexcore-constants = { version = "1.0.0", path = "../nexcore-constants", registry
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
-chrono = { version = "0.4.38", features = ["serde"] }
 sha2 = { version = "0.10.8" }
 rand = "0.9"
 
 [dev-dependencies]
 
-[lints.rust]
-async_fn_in_trait = "allow"
-dead_code = "allow"
-unused_imports = "allow"
-unused_variables = "allow"
-unused_mut = "allow"
-unused_assignments = "allow"
-unused_must_use = "allow"
 
-[lints.clippy]
-all = "allow"
-pedantic = "allow"
-nursery = "allow"
-cargo = "allow"
-map_unwrap_or = "allow"
-manual_map = "allow"
-option_map_or_none = "allow"
-derivable_impls = "allow"
-unwrap_used = "allow"
-expect_used = "allow"
-panic = "allow"
-todo = "allow"
-unimplemented = "allow"
-unreachable = "allow"
+[lints]
+workspace = true

@@ -11,7 +11,7 @@ description = "GROUNDED: Giving Reasoning Observable, Unified, Nested, Developme
 nexcore-error = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-chrono = { workspace = true }
+nexcore-chrono = { workspace = true }
 rusqlite = { workspace = true }
 
 [dev-dependencies]

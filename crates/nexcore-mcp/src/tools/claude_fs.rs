@@ -182,7 +182,9 @@ fn create_backup() -> Result<String, io::Error> {
     let backup_dir = Path::new(BACKUP_DIR);
     std::fs::create_dir_all(backup_dir)?;
 
-    let stamp = chrono::Local::now().format("%Y%m%d-%H%M%S").to_string();
+    let stamp = nexcore_chrono::DateTime::now_local()
+        .format("%Y%m%d-%H%M%S")
+        .unwrap_or_default();
     let backup_path = backup_dir.join(format!("claude-backup-{stamp}.tar.gz"));
     let tar_gz = File::create(&backup_path)?;
     let enc = GzEncoder::new(tar_gz, Compression::default());

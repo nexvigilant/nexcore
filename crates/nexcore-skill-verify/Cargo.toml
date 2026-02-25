@@ -11,7 +11,7 @@ license = "MIT"
 nexcore-error = { workspace = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-serde_yaml = "0.9"
+serde_yml = "0.0.12"
 clap = { version = "4.0", features = ["derive"] }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 
@@ -22,18 +22,6 @@ tempfile = "3.15"
 name = "skill-verify"
 path = "bin/skill-verify.rs"
 
-[lints.rust]
-unsafe_code = "forbid"
 
-[lints.clippy]
-all = { level = "warn", priority = -1 }
-pedantic = { level = "warn", priority = -1 }
-must_use_candidate = "allow"
-return_self_not_must_use = "allow"
-missing_errors_doc = "allow"
-missing_panics_doc = "allow"
-doc_markdown = "allow"
-match_same_arms = "allow"
-format_push_string = "allow"
-bool_to_int_with_if = "allow"
-unnecessary_debug_formatting = "allow"
+[lints]
+workspace = true

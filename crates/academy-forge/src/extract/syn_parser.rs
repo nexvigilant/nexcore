@@ -10,6 +10,7 @@ use crate::extract::doc_comments::{extract_doc_comment, extract_doc_summary};
 use crate::ir::{ConstantInfo, EnumInfo, FieldInfo, TraitInfo, TypeInfo, VariantInfo};
 
 /// Parsed items from a single Rust source file.
+#[non_exhaustive]
 #[derive(Debug, Default)]
 pub struct ParsedFile {
     /// Module-level doc comment.
@@ -85,7 +86,23 @@ fn extract_item(item: &syn::Item, result: &mut ParsedFile) {
                 }
             }
         }
-        _ => {}
+        syn::Item::Const(_)
+        | syn::Item::Enum(_)
+        | syn::Item::ExternCrate(_)
+        | syn::Item::Fn(_)
+        | syn::Item::ForeignMod(_)
+        | syn::Item::Impl(_)
+        | syn::Item::Macro(_)
+        | syn::Item::Mod(_)
+        | syn::Item::Static(_)
+        | syn::Item::Struct(_)
+        | syn::Item::Trait(_)
+        | syn::Item::TraitAlias(_)
+        | syn::Item::Type(_)
+        | syn::Item::Union(_)
+        | syn::Item::Use(_)
+        | syn::Item::Verbatim(_)
+        | _ => {}
     }
 }
 

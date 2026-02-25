@@ -17,6 +17,7 @@ pub struct Money {
 }
 
 /// Supported currencies.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum Currency {
     USD,
@@ -33,6 +34,10 @@ impl Money {
 
     /// Create from dollars (or major currency unit).
     #[must_use]
+    #[allow(
+        clippy::arithmetic_side_effects,
+        reason = "dollars * 100 overflows only above 1.8e17 dollars, which is not a valid monetary input"
+    )]
     pub const fn from_dollars(dollars: u64, currency: Currency) -> Self {
         Self {
             cents: dollars * 100,
@@ -64,12 +69,20 @@ impl Money {
 
     /// Convert to f64 dollars for display. NOT for calculations.
     #[must_use]
+    #[allow(
+        clippy::as_conversions,
+        reason = "intentional lossy cast for display-only use; caller is warned not to use for calculations"
+    )]
     pub fn as_dollars_f64(&self) -> f64 {
         self.cents as f64 / 100.0
     }
 
     /// Multiply by a quantity (e.g., price * units).
     #[must_use]
+    #[allow(
+        clippy::arithmetic_side_effects,
+        reason = "financial multiplication; callers are responsible for ensuring quantity does not cause overflow in their billing context"
+    )]
     pub const fn times(self, quantity: u64) -> Self {
         Self {
             cents: self.cents * quantity,
@@ -80,6 +93,10 @@ impl Money {
     /// Apply a percentage (basis points: 100 = 1%, 10000 = 100%).
     /// Commission calculation: amount.percent_bps(800) = 8%.
     #[must_use]
+    #[allow(
+        clippy::arithmetic_side_effects,
+        reason = "bps is bounded 0..=10_000 by convention; intermediate product overflows only for amounts exceeding u64::MAX / 10_000"
+    )]
     pub const fn percent_bps(self, bps: u64) -> Self {
         Self {
             cents: self.cents * bps / 10_000,
@@ -108,7 +125,7 @@ impl Add for Money {
             "cannot add different currencies"
         );
         Self {
-            cents: self.cents + rhs.cents,
+            cents: self.cents.saturating_add(rhs.cents),
             currency: self.currency,
         }
     }

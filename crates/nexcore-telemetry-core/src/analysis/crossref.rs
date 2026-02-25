@@ -3,7 +3,7 @@
 //! Identifies file accesses to governance-related paths such as
 //! primitives, governance modules, and capability definitions.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{ActivityType, Source};
@@ -68,7 +68,7 @@ pub struct GovernanceAccess {
     /// Session ID where access occurred
     pub session_id: String,
     /// Timestamp of last access
-    pub last_accessed: DateTime<Utc>,
+    pub last_accessed: DateTime,
 }
 
 impl GovernanceAccess {
@@ -82,7 +82,7 @@ impl GovernanceAccess {
             read_count: 0,
             write_count: 0,
             session_id,
-            last_accessed: Utc::now(),
+            last_accessed: DateTime::now(),
         }
     }
 
@@ -247,11 +247,11 @@ mod tests {
         Source {
             id: id.to_string(),
             project_hash: "test-hash".to_string(),
-            start_time: Utc::now(),
-            last_updated: Utc::now(),
+            start_time: DateTime::now(),
+            last_updated: DateTime::now(),
             messages: vec![SourceEntry {
                 id: "entry-1".to_string(),
-                timestamp: Utc::now(),
+                timestamp: DateTime::now(),
                 entry_type: EntryType::Assistant,
                 content: String::new(),
                 thoughts: vec![],
@@ -271,7 +271,7 @@ mod tests {
             args,
             result: vec![],
             status: OperationStatus::Success,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             result_display: None,
             display_name: None,
             description: None,

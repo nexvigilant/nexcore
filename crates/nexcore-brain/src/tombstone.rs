@@ -21,7 +21,7 @@
 //! assert!(registry.is_entombed("session-123"));
 //! ```
 
-use chrono::{DateTime, Duration, Utc};
+use nexcore_chrono::{DateTime, Duration};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -31,7 +31,7 @@ use crate::{BrainError, Result};
 ///
 /// Stores as total milliseconds (i64) for compact, portable representation.
 mod duration_serde {
-    use chrono::Duration;
+    use nexcore_chrono::Duration;
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
     pub fn serialize<S>(duration: &Duration, serializer: S) -> std::result::Result<S::Ok, S::Error>
@@ -102,7 +102,7 @@ pub struct Tombstone {
     /// Current lifecycle state.
     pub state: TombstoneState,
     /// Timestamp when the entity was entombed.
-    pub entombed_at: DateTime<Utc>,
+    pub entombed_at: DateTime,
     /// Parent tombstone ID for cascade chains (∅ × ρ recursive pair).
     pub parent_id: Option<String>,
 }
@@ -115,7 +115,7 @@ impl Tombstone {
             reason,
             policy,
             state: TombstoneState::Pending,
-            entombed_at: Utc::now(),
+            entombed_at: DateTime::now(),
             parent_id,
         }
     }
@@ -128,7 +128,7 @@ impl Tombstone {
     pub fn is_expired(&self) -> bool {
         match &self.policy {
             TombstonePolicy::Ttl(duration) => {
-                let elapsed = Utc::now().signed_duration_since(self.entombed_at);
+                let elapsed = DateTime::now().signed_duration_since(self.entombed_at);
                 elapsed >= *duration
             }
             TombstonePolicy::Permanent | TombstonePolicy::UntilAcknowledged => false,

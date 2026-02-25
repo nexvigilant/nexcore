@@ -19,6 +19,7 @@ use serde::{Deserialize, Serialize};
 /// PCM sample format (bit depth + encoding).
 ///
 /// Tier: T2-P (Σ Sum — format variant union)
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SampleFormat {
     /// Signed 16-bit integer (CD quality).
@@ -46,7 +47,16 @@ impl SampleFormat {
 
     /// Bits per sample.
     pub const fn bits_per_sample(self) -> u32 {
-        (self.bytes_per_sample() * 8) as u32
+        // bytes_per_sample() returns at most 4; cast to u32 and * 8 yields at most 32.
+        // Both the cast and the multiplication are safe for all defined SampleFormat variants.
+        #[allow(
+            clippy::as_conversions,
+            clippy::arithmetic_side_effects,
+            reason = "bytes_per_sample() <= 4 (usize); usize → u32 cast is safe here; product <= 32, fits in u32"
+        )]
+        {
+            self.bytes_per_sample() as u32 * 8
+        }
     }
 
     /// Whether this is a floating-point format.
@@ -80,6 +90,7 @@ impl std::fmt::Display for SampleFormat {
 /// Standard sample rates.
 ///
 /// Tier: T2-P (N + ν — quantified frequency)
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SampleRate {
     /// 8 kHz (telephony).
@@ -166,6 +177,7 @@ impl std::fmt::Display for SampleRate {
 /// Channel layout — speaker arrangement.
 ///
 /// Tier: T2-P (Σ + N — variant sum of channel counts)
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ChannelLayout {
     /// Single channel.
@@ -229,6 +241,7 @@ impl std::fmt::Display for ChannelLayout {
 /// Complete audio specification — format + rate + layout.
 ///
 /// Tier: T2-C (× Product — composite specification)
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct AudioSpec {
     /// Sample format.
@@ -283,12 +296,30 @@ impl AudioSpec {
 
     /// Bytes per frame (all channels, one sample instant).
     pub const fn bytes_per_frame(self) -> usize {
-        self.format.bytes_per_sample() * self.layout.channels() as usize
+        // channels() returns u16 (max 65535); bytes_per_sample() returns usize (max 4).
+        // Product fits in usize on any 32/64-bit platform.
+        #[allow(
+            clippy::arithmetic_side_effects,
+            clippy::as_conversions,
+            reason = "channels() is u16 cast to usize; product bounded by 4 * 65535 < usize::MAX"
+        )]
+        {
+            self.format.bytes_per_sample() * self.layout.channels() as usize
+        }
     }
 
     /// Bytes per second at this spec.
     pub const fn bytes_per_second(self) -> usize {
-        self.bytes_per_frame() * self.rate.hz() as usize
+        // hz() is u32 (max ~4 billion); bytes_per_frame() is at most ~262140.
+        // Product bounded by ~4e9 * 262140 which can exceed u32 but fits in u64/usize on 64-bit.
+        #[allow(
+            clippy::arithmetic_side_effects,
+            clippy::as_conversions,
+            reason = "hz() is u32 cast to usize; product bounded and fits in usize on 64-bit platforms"
+        )]
+        {
+            self.bytes_per_frame() * self.rate.hz() as usize
+        }
     }
 
     /// Duration in seconds for a given byte count.
@@ -297,12 +328,27 @@ impl AudioSpec {
         if bps == 0 {
             return 0.0;
         }
-        bytes as f64 / bps as f64
+        // usize values fit exactly in f64 for all practical audio byte counts.
+        #[allow(
+            clippy::as_conversions,
+            reason = "usize → f64 cast; precision sufficient for audio duration calculations"
+        )]
+        {
+            bytes as f64 / bps as f64
+        }
     }
 
     /// Byte count for a given duration in seconds.
     pub fn bytes_for_duration(self, seconds: f64) -> usize {
-        (self.bytes_per_second() as f64 * seconds) as usize
+        // f64 → usize: result is a byte count; negative/NaN seconds produce 0 via saturating cast.
+        #[allow(
+            clippy::as_conversions,
+            clippy::arithmetic_side_effects,
+            reason = "bytes_per_second() as f64 is exact for typical audio rates; f64 result cast to usize is bounded by valid duration inputs"
+        )]
+        {
+            (self.bytes_per_second() as f64 * seconds) as usize
+        }
     }
 }
 

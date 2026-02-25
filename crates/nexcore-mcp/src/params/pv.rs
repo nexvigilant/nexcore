@@ -33,6 +33,11 @@ pub struct SignalCompleteParams {
     /// Minimum case count (default: 3)
     #[serde(default = "default_min_n")]
     pub min_n: u32,
+    /// Include FDR correction metadata for frequentist methods (default: false).
+    /// Reports p-values and notes which methods are correctable (PRR/ROR) vs
+    /// Bayesian (BCPNN/EBGM/IC) which use built-in shrinkage.
+    #[serde(default)]
+    pub fdr_correction: bool,
 }
 
 fn default_prr_threshold() -> f64 {

@@ -526,3 +526,15 @@ pub mod skills_engine;
 
 // NCBI (National Center for Biotechnology Information — PubMed, Gene, Protein search)
 pub mod ncbi;
+
+// Entropy (Shannon, cross, KL, mutual information, normalized, conditional)
+pub mod entropy;
+
+// Graph (centrality, components, shortest paths, PageRank, communities, SCC, topo sort)
+pub mod graph;
+
+// Markov chains (stationary distribution, n-step probabilities, ergodicity, classification)
+pub mod markov;
+
+// DataFrame (sovereign columnar engine — describe, query, aggregate, counter, stats, construct, transform, save)
+pub mod dataframe;

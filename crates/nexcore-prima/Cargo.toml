@@ -26,9 +26,6 @@ prima = { version = "0.1.0", path = "../prima" }
 nexcore-lex-primitiva = { workspace = true }
 nexcore-error = { workspace = true }
 
-[lints.rust]
-dead_code = "allow"
-unused_imports = "allow"
 
-[lints.clippy]
-all = "allow"
+[lints]
+workspace = true

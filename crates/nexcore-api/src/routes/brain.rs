@@ -106,7 +106,7 @@ pub fn router() -> axum::Router<crate::ApiState> {
 )]
 pub async fn session_create(Json(req): Json<SessionCreateRequest>) -> ApiResult<SessionResponse> {
     let id = nexcore_id::NexId::v4().to_string();
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = nexcore_chrono::DateTime::now().to_rfc3339();
 
     // Create session directory
     let brain_dir = shellexpand::tilde("~/.claude/brain/sessions").to_string();
@@ -271,7 +271,7 @@ pub async fn artifact_save(
     }
 
     let artifact_path = session_dir.join(&req.name);
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = nexcore_chrono::DateTime::now().to_rfc3339();
 
     std::fs::write(&artifact_path, &req.content)
         .map_err(|e| ApiError::new("INTERNAL_ERROR", e.to_string()))?;
@@ -341,9 +341,9 @@ pub async fn artifact_get(
             .ok()
             .and_then(|c| serde_json::from_str::<serde_json::Value>(&c).ok())
             .and_then(|m| m["modified_at"].as_str().map(String::from))
-            .unwrap_or_else(|| chrono::Utc::now().to_rfc3339())
+            .unwrap_or_else(|| nexcore_chrono::DateTime::now().to_rfc3339())
     } else {
-        chrono::Utc::now().to_rfc3339()
+        nexcore_chrono::DateTime::now().to_rfc3339()
     };
 
     Ok(Json(ArtifactResponse {
@@ -404,7 +404,7 @@ pub async fn artifact_resolve(
         name,
         content,
         version: Some(version),
-        modified_at: chrono::Utc::now().to_rfc3339(),
+        modified_at: nexcore_chrono::DateTime::now().to_rfc3339(),
     }))
 }
 
@@ -437,7 +437,7 @@ pub async fn code_tracker_track(
     // Calculate hash
     let hash_result = nexcore_vigilance::foundation::sha256_hash(&content);
     let hash = hash_result.hex;
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = nexcore_chrono::DateTime::now().to_rfc3339();
 
     // Store in code_tracker directory
     let tracker_dir = shellexpand::tilde("~/.claude/code_tracker").to_string();

@@ -1,0 +1,19 @@
+[package]
+name = "nexcore-ccim"
+version = "0.1.0"
+edition = "2024"
+license = "LicenseRef-NexVigilant-Proprietary"
+authors = ["NexVigilant Team"]
+description = "Capability Compound Interest Machine — sovereign development acceleration modeled as financial instrument"
+rust-version = "1.85"
+
+[dependencies]
+nexcore-constants = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints]
+workspace = true

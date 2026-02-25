@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 /// yielding 80 total atoms that form the irreducible vocabulary of computation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[non_exhaustive]
 pub enum BedrockAtom {
     // ═══════════════════════════════════════════════════════════════════
     // Quantity (N) — numeric measurement and aggregation

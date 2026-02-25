@@ -2,7 +2,7 @@
 //!
 //! Trust is earned through demonstrated competence, not granted through compliance.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use super::t1::T1Primitive;
@@ -19,9 +19,9 @@ pub struct TrustAccumulator {
     /// Number of failures or mistakes
     pub failures: u32,
     /// When this accumulator was created
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// When last updated
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
     /// Optional T1 primitive grounding for the domain
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub t1_grounding: Option<T1Primitive>,
@@ -35,8 +35,8 @@ impl TrustAccumulator {
             domain: domain.into(),
             demonstrations: 0,
             failures: 0,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+            created_at: DateTime::now(),
+            updated_at: DateTime::now(),
             t1_grounding: None,
         }
     }
@@ -44,13 +44,13 @@ impl TrustAccumulator {
     /// Record a successful demonstration
     pub fn record_success(&mut self) {
         self.demonstrations += 1;
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Record a failure
     pub fn record_failure(&mut self) {
         self.failures += 1;
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Compute earned trust score: demonstrations / (demonstrations + failures + 1)

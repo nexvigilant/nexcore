@@ -2,7 +2,7 @@
 //!
 //! Equipment management and calibration tracking per GMP requirements.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// Types of equipment requiring calibration.
@@ -56,24 +56,24 @@ pub struct Equipment {
     pub department: Option<String>,
     pub calibration_frequency_days: i32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub last_calibration_date: Option<DateTime<Utc>>,
-    pub next_calibration_date: DateTime<Utc>,
+    pub last_calibration_date: Option<DateTime>,
+    pub next_calibration_date: DateTime,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub installation_qualification_date: Option<DateTime<Utc>>,
+    pub installation_qualification_date: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub operational_qualification_date: Option<DateTime<Utc>>,
+    pub operational_qualification_date: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub performance_qualification_date: Option<DateTime<Utc>>,
+    pub performance_qualification_date: Option<DateTime>,
     #[serde(default)]
     pub status: EquipmentStatus,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub owner_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub owner_name: Option<String>,
-    #[serde(default = "Utc::now")]
-    pub created_at: DateTime<Utc>,
-    #[serde(default = "Utc::now")]
-    pub updated_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub created_at: DateTime,
+    #[serde(default = "DateTime::now")]
+    pub updated_at: DateTime,
     pub tenant_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub notes: Option<String>,
@@ -82,12 +82,12 @@ pub struct Equipment {
 impl Equipment {
     /// Check if calibration is overdue.
     pub fn is_calibration_due(&self) -> bool {
-        Utc::now() >= self.next_calibration_date
+        DateTime::now() >= self.next_calibration_date
     }
 
     /// Get days until next calibration (negative if overdue).
     pub fn days_until_calibration(&self) -> i64 {
-        (self.next_calibration_date - Utc::now()).num_days()
+        (self.next_calibration_date - DateTime::now()).num_days()
     }
 }
 
@@ -97,7 +97,7 @@ pub struct CalibrationRecord {
     pub id: String,
     pub equipment_id: String,
     pub equipment_name: String,
-    pub calibration_date: DateTime<Utc>,
+    pub calibration_date: DateTime,
     pub calibration_type: String,
     pub performed_by: String,
     pub performed_by_name: String,
@@ -118,17 +118,17 @@ pub struct CalibrationRecord {
     pub certificate_url: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub certificate_number: Option<String>,
-    pub next_calibration_date: DateTime<Utc>,
+    pub next_calibration_date: DateTime,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reviewed_by: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reviewed_by_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub reviewed_date: Option<DateTime<Utc>>,
+    pub reviewed_date: Option<DateTime>,
     #[serde(default)]
     pub approved: bool,
-    #[serde(default = "Utc::now")]
-    pub created_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub created_at: DateTime,
     pub tenant_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub notes: Option<String>,
@@ -138,8 +138,8 @@ pub struct CalibrationRecord {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CalibrationSchedule {
     pub tenant_id: String,
-    pub start_date: DateTime<Utc>,
-    pub end_date: DateTime<Utc>,
+    pub start_date: DateTime,
+    pub end_date: DateTime,
     pub equipment_count: i64,
     pub calibrations_due: i64,
     pub calibrations_overdue: i64,
@@ -150,7 +150,7 @@ pub struct CalibrationSchedule {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Duration;
+    use nexcore_chrono::Duration;
 
     #[test]
     fn test_equipment_calibration_due() {
@@ -165,15 +165,15 @@ mod tests {
             department: None,
             calibration_frequency_days: 180,
             last_calibration_date: None,
-            next_calibration_date: Utc::now() - Duration::days(1),
+            next_calibration_date: DateTime::now() - Duration::days(1),
             installation_qualification_date: None,
             operational_qualification_date: None,
             performance_qualification_date: None,
             status: EquipmentStatus::Active,
             owner_id: None,
             owner_name: None,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+            created_at: DateTime::now(),
+            updated_at: DateTime::now(),
             tenant_id: "tenant-1".to_string(),
             notes: None,
         };

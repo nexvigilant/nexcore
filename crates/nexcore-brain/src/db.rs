@@ -13,7 +13,7 @@
 //! - **INSERT OR IGNORE** for sessions (may already exist from migration).
 //! - **Upsert** for artifacts and implicit knowledge (idempotent updates).
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_db::pool::DbPool;
 use std::sync::{LazyLock, Mutex};
 
@@ -65,7 +65,7 @@ pub fn sync_session(
     project: Option<&str>,
     git_commit: Option<&str>,
     description: Option<&str>,
-    created_at: DateTime<Utc>,
+    created_at: DateTime,
 ) {
     with_db("sync_session", |pool| {
         pool.with_conn(|conn| {
@@ -95,8 +95,8 @@ pub fn sync_artifact(
     current_version: u32,
     tags: &str,
     custom_meta: &str,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
+    created_at: DateTime,
+    updated_at: DateTime,
 ) {
     with_db("sync_artifact", |pool| {
         pool.with_conn(|conn| {
@@ -132,7 +132,7 @@ pub fn sync_artifact_version(session_id: &str, artifact_name: &str, version: u32
                     artifact_name: artifact_name.to_string(),
                     version,
                     content: content.to_string(),
-                    resolved_at: Utc::now(),
+                    resolved_at: DateTime::now(),
                 },
             )
         })
@@ -148,7 +148,7 @@ pub fn sync_preference(
     description: Option<&str>,
     confidence: f64,
     reinforcement_count: u32,
-    updated_at: DateTime<Utc>,
+    updated_at: DateTime,
 ) {
     with_db("sync_preference", |pool| {
         let value_str = serde_json::to_string(value).unwrap_or_else(|_| "null".to_string());
@@ -174,8 +174,8 @@ pub fn sync_pattern(
     pattern_type: &str,
     description: &str,
     examples: &[String],
-    detected_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
+    detected_at: DateTime,
+    updated_at: DateTime,
     confidence: f64,
     occurrence_count: u32,
     t1_grounding: Option<&str>,
@@ -206,7 +206,7 @@ pub fn sync_correction(
     mistake: &str,
     correction: &str,
     context: Option<&str>,
-    learned_at: DateTime<Utc>,
+    learned_at: DateTime,
     application_count: u32,
 ) {
     with_db("sync_correction", |pool| {
@@ -234,8 +234,8 @@ pub fn sync_belief(
     confidence: f64,
     evidence_json: &str,
     t1_grounding: Option<&str>,
-    formed_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
+    formed_at: DateTime,
+    updated_at: DateTime,
     validation_count: u32,
     user_confirmed: bool,
 ) {
@@ -265,8 +265,8 @@ pub fn sync_trust(
     domain: &str,
     demonstrations: u32,
     failures: u32,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
+    created_at: DateTime,
+    updated_at: DateTime,
     t1_grounding: Option<&str>,
 ) {
     with_db("sync_trust", |pool| {
@@ -291,7 +291,7 @@ pub fn sync_implication(
     from_belief: &str,
     to_belief: &str,
     strength: &str,
-    established_at: DateTime<Utc>,
+    established_at: DateTime,
 ) {
     with_db("sync_implication", |pool| {
         pool.with_conn(|conn| {
@@ -316,8 +316,8 @@ pub fn sync_tracked_file(
     file_path: &str,
     content_hash: &str,
     file_size: u64,
-    tracked_at: DateTime<Utc>,
-    mtime: DateTime<Utc>,
+    tracked_at: DateTime,
+    mtime: DateTime,
 ) {
     with_db("sync_tracked_file", |pool| {
         pool.with_conn(|conn| {
@@ -343,7 +343,7 @@ pub fn sync_tracked_file(
 ///
 /// Called from the decision-journal hook's insert binary.
 pub fn sync_decision(
-    timestamp: DateTime<Utc>,
+    timestamp: DateTime,
     session_id: &str,
     tool: &str,
     action: &str,

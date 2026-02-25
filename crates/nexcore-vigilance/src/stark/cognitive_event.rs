@@ -26,7 +26,7 @@
 //! assert_eq!(event.event_type, "INGESTION_ACCEPT");
 //! ```
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 
@@ -43,7 +43,7 @@ pub struct CognitiveEvent {
     /// Unique identifier for this event
     pub event_id: String,
     /// ISO 8601 timestamp
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Module that generated this event
     pub source_module: String,
     /// Event type classification (e.g., "INGESTION", "COGNITION", "VERIFICATION")
@@ -67,7 +67,7 @@ impl CognitiveEvent {
     pub fn new(source: &str, event_type: &str, data: serde_json::Value, power: f64) -> Self {
         Self {
             event_id: NexId::v4().to_string(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             source_module: source.to_string(),
             event_type: event_type.to_string(),
             data,

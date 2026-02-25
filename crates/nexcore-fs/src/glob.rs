@@ -38,6 +38,7 @@ enum Token {
 }
 
 /// Error returned when a glob pattern is invalid.
+#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct PatternError {
     pub pos: usize,
@@ -61,10 +62,18 @@ impl Pattern {
     /// - `[abc]` matches any character in the set
     /// - `[a-z]` matches any character in the range
     /// - `[!abc]` or `[^abc]` matches any character NOT in the set
+    #[allow(
+        clippy::indexing_slicing,
+        reason = "all indices are guarded by explicit `i < chars.len()` and `i + N < chars.len()` checks before use"
+    )]
+    #[allow(
+        clippy::arithmetic_side_effects,
+        reason = "loop counter `i` is bounded by `chars.len()` at every increment site; increments of 1-3 cannot overflow usize on any supported platform"
+    )]
     pub fn new(pattern: &str) -> Result<Self, PatternError> {
         let mut tokens = Vec::new();
         let chars: Vec<char> = pattern.chars().collect();
-        let mut i = 0;
+        let mut i = 0usize;
 
         while i < chars.len() {
             match chars[i] {
@@ -141,11 +150,19 @@ impl Pattern {
         &self.source
     }
 
+    #[allow(
+        clippy::indexing_slicing,
+        reason = "all indices are guarded by explicit `si < text.len()`, `ti < tokens.len()`, and `si > 0` checks immediately before use"
+    )]
+    #[allow(
+        clippy::arithmetic_side_effects,
+        reason = "counters `ti`, `si`, and `star_si` are bounded by `tokens.len()` and `text.len()` respectively; `st + 1` is safe because `st` was stored from a valid token index"
+    )]
     fn matches_from(&self, tokens: &[Token], text: &[char]) -> bool {
-        let mut ti = 0; // token index
-        let mut si = 0; // string index
-        let mut star_ti = None; // last star token position
-        let mut star_si = 0; // string position when star was seen
+        let mut ti = 0usize; // token index
+        let mut si = 0usize; // string index
+        let mut star_ti: Option<usize> = None; // last star token position
+        let mut star_si = 0usize; // string position when star was seen
 
         while si < text.len() {
             if ti < tokens.len() {

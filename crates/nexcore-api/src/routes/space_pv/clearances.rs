@@ -66,8 +66,8 @@ async fn create_clearance(
         reviewer_notes: None,
         decision_date: None,
         expiry_date: None,
-        created_at: chrono::Utc::now(),
-        updated_at: chrono::Utc::now(),
+        created_at: nexcore_chrono::DateTime::now(),
+        updated_at: nexcore_chrono::DateTime::now(),
     };
     Ok((StatusCode::CREATED, Json(clearance)))
 }

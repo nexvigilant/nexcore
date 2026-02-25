@@ -7,7 +7,7 @@
 
 use std::path::PathBuf;
 
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 
 use crate::GroundedError;
 use crate::confidence::Confidence;
@@ -232,7 +232,7 @@ impl Context for SkillContext {
             claim: format!("[{}] {}: {}", check.tier, check.name, check.claim),
             prior,
             falsification_criteria: format!("command returns FAIL: {}", check.command),
-            generated_at: Utc::now(),
+            generated_at: DateTime::now(),
         })
     }
 
@@ -285,7 +285,7 @@ impl Context for SkillContext {
             verdict,
             hypothesis_claim: hypothesis.claim.clone(),
             observation: outcome.observation.clone(),
-            learned_at: Utc::now(),
+            learned_at: DateTime::now(),
         })
     }
 
@@ -315,7 +315,7 @@ mod tests {
             claim: String::new(),
             prior: Confidence::NONE,
             falsification_criteria: String::new(),
-            generated_at: Utc::now(),
+            generated_at: DateTime::now(),
         });
         assert!(h.claim.contains("SKILL.md"));
     }
@@ -327,7 +327,7 @@ mod tests {
             claim: String::new(),
             prior: Confidence::NONE,
             falsification_criteria: String::new(),
-            generated_at: Utc::now(),
+            generated_at: DateTime::now(),
         });
         let exp = ctx.design_test(&h);
         assert!(exp.is_ok());

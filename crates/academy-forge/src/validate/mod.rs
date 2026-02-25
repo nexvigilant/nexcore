@@ -19,6 +19,7 @@ use serde::{Deserialize, Serialize};
 use crate::ir::DomainAnalysis;
 
 /// Severity level for a validation finding.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Severity {
     /// Must fix — content is structurally broken or factually wrong.
@@ -30,6 +31,7 @@ pub enum Severity {
 }
 
 /// A single validation finding.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationFinding {
     /// Rule identifier (e.g., "R1", "R14").
@@ -43,6 +45,7 @@ pub struct ValidationFinding {
 }
 
 /// Complete validation report.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationReport {
     /// Whether the content passes all error-level rules.

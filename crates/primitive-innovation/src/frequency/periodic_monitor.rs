@@ -100,12 +100,12 @@ impl PeriodicMonitor {
 
     /// Record a heartbeat (success or failure).
     pub fn record_heartbeat(&mut self, timestamp: u64, success: bool) {
-        self.total_checks += 1;
+        self.total_checks = self.total_checks.saturating_add(1);
         self.last_heartbeat = Some(timestamp);
 
         if success {
-            self.total_successes += 1;
-            self.consecutive_successes += 1;
+            self.total_successes = self.total_successes.saturating_add(1);
+            self.consecutive_successes = self.consecutive_successes.saturating_add(1);
             self.consecutive_failures = 0;
 
             match self.status {
@@ -121,7 +121,7 @@ impl PeriodicMonitor {
                 HealthStatus::Healthy => {} // stay healthy
             }
         } else {
-            self.consecutive_failures += 1;
+            self.consecutive_failures = self.consecutive_failures.saturating_add(1);
             self.consecutive_successes = 0;
 
             if self.consecutive_failures >= self.failure_threshold {
@@ -152,6 +152,10 @@ impl PeriodicMonitor {
 
     /// Uptime ratio (0.0 to 1.0).
     #[must_use]
+    #[allow(
+        clippy::as_conversions,
+        reason = "u64 to f64 for ratio calculation; counts fit safely in f64"
+    )]
     pub fn uptime_ratio(&self) -> f64 {
         if self.total_checks == 0 {
             return 0.0;
@@ -161,6 +165,10 @@ impl PeriodicMonitor {
 
     /// Expected check frequency in Hz.
     #[must_use]
+    #[allow(
+        clippy::as_conversions,
+        reason = "u64 to f64 for frequency calculation; interval fits safely in f64"
+    )]
     pub fn expected_frequency_hz(&self) -> f64 {
         if self.check_interval_ms == 0 {
             return 0.0;

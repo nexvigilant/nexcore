@@ -20,7 +20,10 @@
 //!
 //! ## Tier: T1-Universal
 
-#![allow(dead_code)]
+#![allow(
+    dead_code,
+    reason = "module contains proof infrastructure used in tests and doc examples"
+)]
 
 use crate::primitiva::LexPrimitiva;
 use serde::{Deserialize, Serialize};
@@ -28,6 +31,7 @@ use std::fmt;
 
 /// An external authority that grounds a primitive independently of internal structure.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ExternalAuthority {
     /// Name of the authority (e.g., "Peano Axioms")
     pub name: &'static str,
@@ -44,7 +48,8 @@ pub struct ExternalAuthority {
 }
 
 /// Domain classification for external authorities.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum AuthorityDomain {
     /// Pure mathematics (axioms, proofs)
     Mathematics,
@@ -153,7 +158,20 @@ pub fn external_authorities(primitive: LexPrimitiva) -> Option<&'static [Externa
     match primitive {
         LexPrimitiva::Quantity => Some(&QUANTITY_AUTHORITIES),
         LexPrimitiva::Causality => Some(&CAUSALITY_AUTHORITIES),
-        _ => None,
+        LexPrimitiva::Sequence
+        | LexPrimitiva::Mapping
+        | LexPrimitiva::State
+        | LexPrimitiva::Recursion
+        | LexPrimitiva::Void
+        | LexPrimitiva::Boundary
+        | LexPrimitiva::Frequency
+        | LexPrimitiva::Existence
+        | LexPrimitiva::Persistence
+        | LexPrimitiva::Comparison
+        | LexPrimitiva::Location
+        | LexPrimitiva::Irreversibility
+        | LexPrimitiva::Sum
+        | LexPrimitiva::Product => None,
     }
 }
 
@@ -165,7 +183,7 @@ pub fn external_authorities(primitive: LexPrimitiva) -> Option<&'static [Externa
 pub fn is_externally_grounded(primitive: LexPrimitiva) -> bool {
     external_authorities(primitive)
         .map(|auths| {
-            let domains: std::collections::HashSet<_> = auths.iter().map(|a| a.domain).collect();
+            let domains: std::collections::BTreeSet<_> = auths.iter().map(|a| a.domain).collect();
             domains.len() >= 2
         })
         .unwrap_or(false)
@@ -179,6 +197,7 @@ pub fn oldest_authority_year(primitive: LexPrimitiva) -> Option<u16> {
 
 /// Grounding strength based on authority diversity and citation age.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum GroundingStrength {
     /// Strong: 3+ domains, oldest citation >100 years
     Strong,
@@ -197,7 +216,7 @@ pub fn grounding_strength(primitive: LexPrimitiva) -> GroundingStrength {
         return GroundingStrength::None;
     };
 
-    let domains: std::collections::HashSet<_> = auths.iter().map(|a| a.domain).collect();
+    let domains: std::collections::BTreeSet<_> = auths.iter().map(|a| a.domain).collect();
     let oldest = auths.iter().map(|a| a.year).min().unwrap_or(2025);
     let age = 2026_u16.saturating_sub(oldest);
 
@@ -290,7 +309,7 @@ mod tests {
         // Check both roots have multiple domains
         for root in LexPrimitiva::roots() {
             let auths = external_authorities(root).expect("root should have authorities");
-            let domains: std::collections::HashSet<_> = auths.iter().map(|a| a.domain).collect();
+            let domains: std::collections::BTreeSet<_> = auths.iter().map(|a| a.domain).collect();
             assert!(
                 domains.len() >= 2,
                 "{:?} should have authorities from 2+ domains",

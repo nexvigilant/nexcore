@@ -103,7 +103,7 @@ impl CloudSupervisor {
         self.event_bus.emit(CloudEvent::PlatformStarted {
             name: self.manifest.platform.name.clone(),
             services: service_count,
-            at: chrono::Utc::now(),
+            at: nexcore_chrono::DateTime::now(),
         });
 
         // Start health monitoring loop
@@ -186,7 +186,7 @@ impl CloudSupervisor {
         self.event_bus.emit(CloudEvent::ServiceStarted {
             name: name.to_string(),
             pid,
-            at: chrono::Utc::now(),
+            at: nexcore_chrono::DateTime::now(),
         });
 
         // Wait briefly for the service to initialize
@@ -200,7 +200,7 @@ impl CloudSupervisor {
                     self.registry.record_healthy(name);
                     self.event_bus.emit(CloudEvent::ServiceHealthy {
                         name: name.to_string(),
-                        at: chrono::Utc::now(),
+                        at: nexcore_chrono::DateTime::now(),
                     });
                     tracing::info!(service = %name, pid = pid, "service healthy");
                 }
@@ -217,7 +217,7 @@ impl CloudSupervisor {
     /// Stop all services in reverse dependency order.
     pub async fn stop(&mut self) -> Result<()> {
         self.event_bus.emit(CloudEvent::PlatformStopping {
-            at: chrono::Utc::now(),
+            at: nexcore_chrono::DateTime::now(),
         });
 
         let mut order = self.manifest.topo_sort()?;
@@ -246,7 +246,7 @@ impl CloudSupervisor {
 
         self.event_bus.emit(CloudEvent::ServiceStopped {
             name: name.to_string(),
-            at: chrono::Utc::now(),
+            at: nexcore_chrono::DateTime::now(),
         });
 
         Ok(())
@@ -319,7 +319,7 @@ async fn health_monitor_loop(
                         registry.record_healthy(&svc.name);
                         event_bus.emit(CloudEvent::ServiceHealthy {
                             name: svc.name.clone(),
-                            at: chrono::Utc::now(),
+                            at: nexcore_chrono::DateTime::now(),
                         });
                     }
                     // Reset restart policy after sustained health
@@ -332,7 +332,7 @@ async fn health_monitor_loop(
                     event_bus.emit(CloudEvent::HealthCheckFailed {
                         name: svc.name.clone(),
                         reason: reason.clone(),
-                        at: chrono::Utc::now(),
+                        at: nexcore_chrono::DateTime::now(),
                     });
 
                     tracing::warn!(
@@ -358,7 +358,7 @@ async fn health_monitor_loop(
                                 name: svc.name.clone(),
                                 attempt,
                                 backoff,
-                                at: chrono::Utc::now(),
+                                at: nexcore_chrono::DateTime::now(),
                             });
 
                             tracing::info!(

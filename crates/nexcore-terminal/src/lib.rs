@@ -1,0 +1,27 @@
+//! NexVigilant Terminal — multi-tenant, AI-augmented terminal sessions.
+//!
+//! Three modes in one surface:
+//! - **Shell**: Raw PTY commands in a sandboxed process
+//! - **Regulatory**: MCP tool dispatch for pharmacovigilance queries
+//! - **AI**: Natural language routed to Claude (or other backends) with tool_use
+//!
+//! ## Architecture
+//!
+//! Orchestration-layer crate consumed by `nexcore-api` for the WebSocket
+//! terminal endpoint. Depends on `vr-core` for tenant isolation.
+//!
+//! ## Primitive Grounding
+//!
+//! `∂(Boundary) + ς(State) + σ(Sequence) + μ(Mapping) + →(Causality)`
+
+pub mod ai;
+pub mod audit;
+pub mod config;
+pub mod formatter;
+pub mod metering;
+pub mod protocol;
+pub mod pty;
+pub mod registry;
+pub mod router;
+pub mod sandbox;
+pub mod session;

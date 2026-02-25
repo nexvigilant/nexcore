@@ -11,7 +11,22 @@
 use crate::core::{DetectionResult, Report, Result, SignalStrength};
 
 /// JSON summary reporter.
+#[non_exhaustive]
 pub struct JsonReporter;
+
+impl JsonReporter {
+    /// Create a new `JsonReporter`.
+    #[must_use]
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl Default for JsonReporter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl Report for JsonReporter {
     fn report(&self, results: &[DetectionResult]) -> Result<String> {
@@ -35,7 +50,22 @@ impl Report for JsonReporter {
 }
 
 /// Plain-text tabular reporter.
+#[non_exhaustive]
 pub struct TableReporter;
+
+impl TableReporter {
+    /// Create a new `TableReporter`.
+    #[must_use]
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl Default for TableReporter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl Report for TableReporter {
     fn report(&self, results: &[DetectionResult]) -> Result<String> {
@@ -77,7 +107,11 @@ fn truncate(s: &str, max: usize) -> String {
     if s.len() <= max {
         s.to_owned()
     } else {
-        format!("{}…", &s[..max - 1])
+        // Take up to (max - 1) chars, leaving room for the ellipsis.
+        // char_indices guarantees we stay on char boundaries.
+        let cut = max.saturating_sub(1);
+        let truncated: String = s.chars().take(cut).collect();
+        format!("{truncated}…")
     }
 }
 
@@ -85,7 +119,7 @@ fn truncate(s: &str, max: usize) -> String {
 mod tests {
     use super::*;
     use crate::core::*;
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     fn make_results() -> Vec<DetectionResult> {
         vec![DetectionResult {
@@ -102,7 +136,7 @@ mod tests {
             ebgm: Some(Ebgm(2.5)),
             chi_square: ChiSquare(12.0),
             strength: SignalStrength::Strong,
-            detected_at: Utc::now(),
+            detected_at: DateTime::now(),
         }]
     }
 

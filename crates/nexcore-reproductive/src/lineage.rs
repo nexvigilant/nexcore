@@ -14,7 +14,7 @@
 //! | Generation | Generational distance | Session hops / version count |
 //! | Pedigree | Breeding record | Full provenance chain |
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// A node in the lineage tree.
@@ -31,7 +31,7 @@ pub struct LineageNode {
     /// Generation number (0 = progenitor).
     pub generation: u32,
     /// When this entity was created.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// Metadata tags for this entity.
     pub tags: Vec<String>,
 }
@@ -77,7 +77,7 @@ impl Lineage {
             kind,
             parent_id: None,
             generation: 0,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             tags: Vec::new(),
         };
         self.nodes.push(node);
@@ -102,7 +102,7 @@ impl Lineage {
             kind,
             parent_id: Some(parent_id.to_string()),
             generation: parent_gen + 1,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             tags: Vec::new(),
         };
         self.nodes.push(node);
@@ -228,7 +228,7 @@ pub struct Pedigree {
     /// Whether the lineage is complete (no broken links).
     pub complete: bool,
     /// When the pedigree was computed.
-    pub computed_at: DateTime<Utc>,
+    pub computed_at: DateTime,
 }
 
 impl Pedigree {
@@ -252,7 +252,7 @@ impl Pedigree {
             ancestors,
             depth,
             complete,
-            computed_at: Utc::now(),
+            computed_at: DateTime::now(),
         })
     }
 }

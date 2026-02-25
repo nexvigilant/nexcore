@@ -14,7 +14,7 @@
 use crate::primitiva::{LexPrimitiva, PrimitiveComposition};
 use crate::tier::Tier;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 /// Weight for structural similarity in confidence calculation.
 pub const STRUCTURAL_WEIGHT: f64 = 0.4;
@@ -25,6 +25,7 @@ pub const CONTEXTUAL_WEIGHT: f64 = 0.2;
 
 /// A domain for cross-domain transfer analysis.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Domain {
     /// Domain name.
     pub name: String,
@@ -47,7 +48,7 @@ impl Domain {
 
     /// Get primitives as a set for fast lookup.
     #[must_use]
-    pub fn primitive_set(&self) -> HashSet<LexPrimitiva> {
+    pub fn primitive_set(&self) -> BTreeSet<LexPrimitiva> {
         self.core_primitives.iter().copied().collect()
     }
 
@@ -168,6 +169,7 @@ impl Domain {
 
 /// Result of a transfer confidence calculation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct TransferResult {
     /// Source domain.
     pub source: String,
@@ -206,6 +208,7 @@ pub struct TransferResult {
 
 /// Calculator for cross-domain transfer confidence.
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct TransferCalculator;
 
 impl TransferCalculator {
@@ -264,33 +267,46 @@ impl TransferCalculator {
 
     /// Find primitives in both sets.
     fn shared_primitives(
-        source: &HashSet<LexPrimitiva>,
-        target: &HashSet<LexPrimitiva>,
-    ) -> HashSet<LexPrimitiva> {
+        source: &BTreeSet<LexPrimitiva>,
+        target: &BTreeSet<LexPrimitiva>,
+    ) -> BTreeSet<LexPrimitiva> {
         source.intersection(target).copied().collect()
     }
 
     /// Calculate structural similarity (Jaccard index).
     fn structural_score(
-        source: &HashSet<LexPrimitiva>,
-        target: &HashSet<LexPrimitiva>,
-        shared: &HashSet<LexPrimitiva>,
+        source: &BTreeSet<LexPrimitiva>,
+        target: &BTreeSet<LexPrimitiva>,
+        shared: &BTreeSet<LexPrimitiva>,
     ) -> f64 {
         let union_size = source.union(target).count();
         if union_size == 0 {
             return 0.0;
         }
-        shared.len() as f64 / union_size as f64
+        #[allow(
+            clippy::as_conversions,
+            reason = "shared.len() and union_size bounded by 16; safe cast to f64"
+        )]
+        let result = shared.len() as f64 / union_size as f64;
+        result
     }
 
     /// Calculate functional similarity.
-    fn functional_score(composition: &PrimitiveComposition, target: &HashSet<LexPrimitiva>) -> f64 {
+    fn functional_score(
+        composition: &PrimitiveComposition,
+        target: &BTreeSet<LexPrimitiva>,
+    ) -> f64 {
         let unique = composition.unique();
         if unique.is_empty() {
             return 1.0;
         }
         let matching = unique.iter().filter(|p| target.contains(p)).count();
-        matching as f64 / unique.len() as f64
+        #[allow(
+            clippy::as_conversions,
+            reason = "matching and unique.len() bounded by 16; safe cast to f64"
+        )]
+        let result = matching as f64 / unique.len() as f64;
+        result
     }
 
     /// Calculate contextual similarity from domain affinity.

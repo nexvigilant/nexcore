@@ -221,11 +221,9 @@ pub fn engram_find_duplicates(p: EngramFindDuplicatesParams) -> Result<CallToolR
 
 /// Compute temporal decay score for an engram (pure computation, no store needed).
 pub fn engram_decay_score(p: EngramDecayScoreParams) -> Result<CallToolResult, McpError> {
-    let created_at = chrono::DateTime::parse_from_rfc3339(&p.created_at)
-        .map(|dt| dt.with_timezone(&chrono::Utc))
+    let created_at = nexcore_chrono::DateTime::parse_from_rfc3339(&p.created_at)
         .map_err(|e| internal_err(["Invalid created_at: ", &e.to_string()].concat()))?;
-    let last_accessed = chrono::DateTime::parse_from_rfc3339(&p.last_accessed)
-        .map(|dt| dt.with_timezone(&chrono::Utc))
+    let last_accessed = nexcore_chrono::DateTime::parse_from_rfc3339(&p.last_accessed)
         .map_err(|e| internal_err(["Invalid last_accessed: ", &e.to_string()].concat()))?;
 
     let engram = Engram {
@@ -244,7 +242,7 @@ pub fn engram_decay_score(p: EngramDecayScoreParams) -> Result<CallToolResult, M
         stale_threshold: p.stale_threshold.unwrap_or(0.1),
         ..DecayConfig::default()
     };
-    let now = chrono::Utc::now();
+    let now = nexcore_chrono::DateTime::now();
     let score = decay_score(&engram, now, &config);
     let stale = is_stale(&engram, now, &config);
 

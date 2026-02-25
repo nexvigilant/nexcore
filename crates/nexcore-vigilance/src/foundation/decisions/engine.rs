@@ -517,7 +517,7 @@ impl DecisionEngine {
 ///
 /// Returns `DecisionError::YamlParse` if parsing fails.
 pub fn load_tree(yaml: &str) -> Result<DecisionTree, DecisionError> {
-    serde_yaml::from_str(yaml).map_err(|e| DecisionError::YamlParse(e.to_string()))
+    serde_yml::from_str(yaml).map_err(|e| DecisionError::YamlParse(e.to_string()))
 }
 
 /// Load a decision tree in strict mode (no LLM fallbacks allowed)
@@ -527,7 +527,7 @@ pub fn load_tree(yaml: &str) -> Result<DecisionTree, DecisionError> {
 /// Returns `DecisionError` if parsing fails or if any node uses `LlmFallback`.
 pub fn load_tree_strict(yaml: &str) -> Result<DecisionTree, DecisionError> {
     let tree: DecisionTree =
-        serde_yaml::from_str(yaml).map_err(|e| DecisionError::YamlParse(e.to_string()))?;
+        serde_yml::from_str(yaml).map_err(|e| DecisionError::YamlParse(e.to_string()))?;
 
     // Diamond compliance: No LlmFallback allowed
     for (id, node) in &tree.nodes {

@@ -1,6 +1,6 @@
 //! Active agents CRUD operations.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 
@@ -22,7 +22,7 @@ pub struct AgentRow {
     /// Paired skill name (FK to `active_skills`)
     pub paired_skill: Option<String>,
     /// When the agent was last scanned
-    pub scanned_at: DateTime<Utc>,
+    pub scanned_at: DateTime,
 }
 
 /// Insert a new agent row.
@@ -156,8 +156,8 @@ pub fn delete_all(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
-fn parse_dt(s: String) -> DateTime<Utc> {
-    s.parse::<DateTime<Utc>>().unwrap_or_else(|_| Utc::now())
+fn parse_dt(s: String) -> DateTime {
+    s.parse::<DateTime>().unwrap_or_else(|_| DateTime::now())
 }
 
 #[cfg(test)]
@@ -173,7 +173,7 @@ mod tests {
             tools: Some("[\"Read\",\"Grep\"]".to_string()),
             description: Some("Test agent".to_string()),
             paired_skill: None,
-            scanned_at: Utc::now(),
+            scanned_at: DateTime::now(),
         }
     }
 

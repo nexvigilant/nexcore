@@ -2,7 +2,7 @@
 //!
 //! Wizard progression, validation, and state management for healthcare compliance setup.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -82,8 +82,8 @@ fn default_true() -> bool {
 pub struct WizardSessionData {
     pub session_id: String,
     pub user_email: String,
-    pub created_at: DateTime<Utc>,
-    pub last_modified: DateTime<Utc>,
+    pub created_at: DateTime,
+    pub last_modified: DateTime,
     #[serde(default)]
     pub completion_percentage: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -166,8 +166,8 @@ mod tests {
         let session = WizardSessionData {
             session_id: "sess-1".to_string(),
             user_email: "test@example.com".to_string(),
-            created_at: Utc::now(),
-            last_modified: Utc::now(),
+            created_at: DateTime::now(),
+            last_modified: DateTime::now(),
             completion_percentage: 0.0,
             step_1_organization: Some(OrganizationProfile {
                 organization_name: "Large Hospital".to_string(),

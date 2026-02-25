@@ -5,7 +5,7 @@ use crate::persistence::MessageRecord;
 use axum::extract::{Json, Path, State};
 use axum::http::HeaderMap;
 use axum::routing::{get, post};
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
@@ -16,7 +16,7 @@ pub struct Message {
     pub sender_id: String,
     pub recipient_id: String,
     pub content: String,
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     pub read: bool,
 }
 
@@ -83,7 +83,7 @@ pub async fn send_message(
         sender_id: req.sender_id,
         recipient_id: req.recipient_id,
         content: req.content,
-        created_at: Utc::now(),
+        created_at: DateTime::now(),
         read: false,
     };
 

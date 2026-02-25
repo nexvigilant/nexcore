@@ -32,6 +32,7 @@ vr-core = { workspace = true }
 hmac = { workspace = true }
 sha2 = { workspace = true }
 nexcore-codec = { workspace = true }
+nexcore-terminal = { workspace = true }
 
 # HTTP server
 axum = { workspace = true }
@@ -63,7 +64,7 @@ futures = { workspace = true }
 rusqlite = { workspace = true }
 
 # Utilities
-chrono = { workspace = true }
+nexcore-chrono = { workspace = true }
 nexcore-fs = { workspace = true }
 nexcore-id = { workspace = true }
 shellexpand = "3.1"

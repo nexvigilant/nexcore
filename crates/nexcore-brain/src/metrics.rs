@@ -8,7 +8,7 @@
 //! - Growth rate analysis
 //! - Telemetry snapshots for tracking growth over time
 
-use chrono::{DateTime, Duration, Utc};
+use nexcore_chrono::{DateTime, Duration};
 use nexcore_constants::bathroom_lock::BathroomLock;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -55,7 +55,7 @@ pub struct SessionMetrics {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BrainSnapshot {
     /// ISO-8601 timestamp
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Artifact metrics
     pub artifacts: ArtifactMetrics,
     /// Total bytes across all artifacts
@@ -78,7 +78,7 @@ impl BrainSnapshot {
         let health = BrainHealth::collect()?;
 
         Ok(Self {
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             artifacts: health.artifacts,
             total_bytes: health.total_bytes,
             sessions: health.sessions,
@@ -100,14 +100,14 @@ pub struct ArtifactSizeInfo {
     /// Size in bytes
     pub size_bytes: u64,
     /// Last modified time
-    pub modified_at: DateTime<Utc>,
+    pub modified_at: DateTime,
 }
 
 /// Comprehensive brain health report
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BrainHealth {
     /// Collection timestamp
-    pub collected_at: DateTime<Utc>,
+    pub collected_at: DateTime,
     /// Artifact metrics
     pub artifacts: ArtifactMetrics,
     /// Total bytes across all artifacts
@@ -160,7 +160,7 @@ impl BrainHealth {
         let status = determine_health_status(&sessions, &artifacts, &warnings);
 
         Ok(Self {
-            collected_at: Utc::now(),
+            collected_at: DateTime::now(),
             artifacts,
             total_bytes,
             sessions,
@@ -178,9 +178,9 @@ impl BrainHealth {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GrowthRate {
     /// Analysis period start
-    pub period_start: DateTime<Utc>,
+    pub period_start: DateTime,
     /// Analysis period end
-    pub period_end: DateTime<Utc>,
+    pub period_end: DateTime,
     /// Number of days analyzed
     pub days_analyzed: u32,
     /// Artifacts created per day (average)
@@ -203,7 +203,7 @@ impl GrowthRate {
     /// Returns an error if snapshots cannot be read.
     pub fn calculate(days: u32) -> Result<Self> {
         let snapshots = load_snapshots()?;
-        let now = Utc::now();
+        let now = DateTime::now();
         let period_start = now - Duration::days(i64::from(days));
 
         // Filter snapshots within period
@@ -383,8 +383,8 @@ pub fn largest_artifacts(n: usize) -> Result<Vec<ArtifactSizeInfo>> {
                         if metadata.is_file() {
                             let modified_at = metadata
                                 .modified()
-                                .map(DateTime::<Utc>::from)
-                                .unwrap_or_else(|_| Utc::now());
+                                .map(DateTime::from)
+                                .unwrap_or_else(|_| DateTime::now());
 
                             let artifact_type = ArtifactType::from_filename(name);
 
@@ -424,7 +424,7 @@ fn collect_session_metrics(warnings: &mut Vec<String>) -> SessionMetrics {
         }
     };
 
-    let now = Utc::now();
+    let now = DateTime::now();
     let active_cutoff = now - Duration::hours(24);
 
     let active = sessions
@@ -620,7 +620,7 @@ mod tests {
     #[test]
     fn test_brain_snapshot_serialization() {
         let snapshot = BrainSnapshot {
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             artifacts: ArtifactMetrics::default(),
             total_bytes: 1234,
             sessions: SessionMetrics {
@@ -646,7 +646,7 @@ mod tests {
             name: "task.md".to_string(),
             artifact_type: "task".to_string(),
             size_bytes: 2048,
-            modified_at: Utc::now(),
+            modified_at: DateTime::now(),
         };
 
         let json = serde_json::to_string(&info).unwrap();
@@ -659,8 +659,8 @@ mod tests {
     #[test]
     fn test_growth_rate_serialization() {
         let rate = GrowthRate {
-            period_start: Utc::now() - Duration::days(7),
-            period_end: Utc::now(),
+            period_start: DateTime::now() - Duration::days(7),
+            period_end: DateTime::now(),
             days_analyzed: 7,
             artifacts_per_day: 2.5,
             sessions_per_day: 1.0,

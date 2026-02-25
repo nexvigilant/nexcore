@@ -2,7 +2,7 @@
 //!
 //! Consolidated from ~/projects/space-pv/nexvigilant-api/src/models/
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 // ============================================================================
@@ -33,8 +33,8 @@ pub struct Organization {
     pub org_type: OrgType,
     pub country: String,
     pub registration_number: Option<String>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub created_at: DateTime,
+    pub updated_at: DateTime,
 }
 
 /// Request to create an organization
@@ -64,8 +64,8 @@ pub struct Drug {
     pub dosage_form: String,
     pub strength: String,
     pub description: Option<String>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub created_at: DateTime,
+    pub updated_at: DateTime,
 }
 
 /// Request to register a new drug
@@ -141,10 +141,10 @@ pub struct SpaceClearance {
     pub stability_data: Option<serde_json::Value>,
     pub pk_data: Option<serde_json::Value>,
     pub reviewer_notes: Option<String>,
-    pub decision_date: Option<DateTime<Utc>>,
-    pub expiry_date: Option<DateTime<Utc>>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub decision_date: Option<DateTime>,
+    pub expiry_date: Option<DateTime>,
+    pub created_at: DateTime,
+    pub updated_at: DateTime,
 }
 
 /// Request to create a clearance application

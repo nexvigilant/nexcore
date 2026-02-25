@@ -457,7 +457,7 @@ impl SmallBusinessAct {
             agent_id: format!(
                 "SBA-{}-{}",
                 agent_key.to_uppercase(),
-                chrono::Utc::now().timestamp()
+                nexcore_chrono::DateTime::now().timestamp()
             ),
             agent_type: spec.agent_type.clone(),
             model,
@@ -472,7 +472,10 @@ impl SmallBusinessAct {
         if agent_key != "general" {
             if let Some(gen_spec) = self.skill_agent_map.get("general") {
                 alternatives.push(LoanGrant {
-                    agent_id: format!("SBA-GENERAL-{}", chrono::Utc::now().timestamp()),
+                    agent_id: format!(
+                        "SBA-GENERAL-{}",
+                        nexcore_chrono::DateTime::now().timestamp()
+                    ),
                     agent_type: gen_spec.agent_type.clone(),
                     model: gen_spec.model,
                     quota_grant: gen_spec.model.base_quota(),

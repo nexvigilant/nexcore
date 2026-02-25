@@ -3,7 +3,7 @@
 //! Tracks files using SHA-256 content hashes for change detection
 //! and version management independent of git.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_codec::hex;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -31,7 +31,7 @@ pub struct ProjectSnapshot {
     pub git_commit: Option<String>,
 
     /// When the snapshot was created
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Tracked files in this snapshot
     pub files: HashMap<String, TrackedFile>,
@@ -50,10 +50,10 @@ pub struct TrackedFile {
     pub size: u64,
 
     /// When the file was tracked
-    pub tracked_at: DateTime<Utc>,
+    pub tracked_at: DateTime,
 
     /// File modification time when tracked
-    pub mtime: DateTime<Utc>,
+    pub mtime: DateTime,
 }
 
 impl TrackedFile {
@@ -68,14 +68,14 @@ impl TrackedFile {
         let metadata = fs::metadata(path)?;
         let mtime = metadata
             .modified()
-            .map(DateTime::<Utc>::from)
-            .unwrap_or_else(|_| Utc::now());
+            .map(DateTime::from)
+            .unwrap_or_else(|_| DateTime::now());
 
         Ok(Self {
             path: path.to_path_buf(),
             content_hash: hash,
             size: metadata.len(),
-            tracked_at: Utc::now(),
+            tracked_at: DateTime::now(),
             mtime,
         })
     }
@@ -273,7 +273,7 @@ impl CodeTracker {
         }
 
         // Move to history with timestamp
-        let timestamp = Utc::now().format("%Y%m%d_%H%M%S");
+        let timestamp = DateTime::now().format("%Y%m%d_%H%M%S").unwrap_or_default();
         let history_name = format!("{}_{timestamp}", self.project.replace('/', "_"));
         let history_dir = self.tracker_path.join("history").join(&history_name);
 
@@ -322,7 +322,7 @@ impl CodeTracker {
         let snapshot = ProjectSnapshot {
             project: self.project.clone(),
             git_commit: self.commit.clone(),
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             files: self.files.clone(),
         };
 
@@ -455,7 +455,7 @@ mod tests {
         let snapshot = ProjectSnapshot {
             project: "test-project".into(),
             git_commit: Some("abc123".into()),
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             files: HashMap::new(),
         };
 
@@ -519,7 +519,7 @@ mod tests {
         let tracked = TrackedFile::from_path(&file_path).unwrap();
 
         // mtime should be within the last minute
-        let now = Utc::now();
+        let now = DateTime::now();
         let diff = now.signed_duration_since(tracked.mtime);
         assert!(diff.num_seconds() < 60);
     }

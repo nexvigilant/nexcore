@@ -3,7 +3,7 @@
 //! Aggregates telemetry data into actionable intelligence reports
 //! for understanding external assistant behavior patterns.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
@@ -19,9 +19,9 @@ pub struct FileAccessPattern {
     /// Number of write operations
     pub write_count: usize,
     /// First access timestamp
-    pub first_access: DateTime<Utc>,
+    pub first_access: DateTime,
     /// Most recent access timestamp
-    pub last_access: DateTime<Utc>,
+    pub last_access: DateTime,
     /// Source IDs that accessed this file
     pub source_ids: Vec<String>,
 }
@@ -38,14 +38,14 @@ pub struct GovernanceAccess {
     /// Source IDs that accessed this resource
     pub source_ids: Vec<String>,
     /// Timestamps of accesses
-    pub timestamps: Vec<DateTime<Utc>>,
+    pub timestamps: Vec<DateTime>,
 }
 
 /// Summary of activity for a specific source session.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ActivitySummary {
     /// When this activity summary was created
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Source session identifier
     pub source_id: String,
     /// Total number of operations in this session
@@ -58,7 +58,7 @@ pub struct ActivitySummary {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IntelReport {
     /// Timestamp when this report was generated
-    pub generated_at: DateTime<Utc>,
+    pub generated_at: DateTime,
     /// Number of source sessions analyzed
     pub sources_analyzed: usize,
     /// Aggregated token usage across all sources
@@ -74,7 +74,7 @@ pub struct IntelReport {
 impl Default for IntelReport {
     fn default() -> Self {
         Self {
-            generated_at: Utc::now(),
+            generated_at: DateTime::now(),
             sources_analyzed: 0,
             total_tokens: TokenUsage::default(),
             file_access_patterns: Vec::new(),
@@ -125,21 +125,19 @@ fn classify_governance(path: &str) -> Option<(&'static str, &'static str)> {
 #[must_use]
 pub fn generate_report(sources: &[Source], snapshots: &[Snapshot]) -> IntelReport {
     let mut report = IntelReport {
-        generated_at: Utc::now(),
+        generated_at: DateTime::now(),
         sources_analyzed: sources.len(),
         ..Default::default()
     };
 
     // Track file access patterns: path -> (reads, writes, first, last, sources)
-    let mut file_patterns: HashMap<
-        String,
-        (usize, usize, DateTime<Utc>, DateTime<Utc>, HashSet<String>),
-    > = HashMap::new();
+    let mut file_patterns: HashMap<String, (usize, usize, DateTime, DateTime, HashSet<String>)> =
+        HashMap::new();
 
     // Track governance access: (category, resource) -> (count, sources, timestamps)
     let mut governance_map: HashMap<
         (&'static str, String),
-        (usize, HashSet<String>, Vec<DateTime<Utc>>),
+        (usize, HashSet<String>, Vec<DateTime>),
     > = HashMap::new();
 
     let mut total_tokens = TokenUsage::default();
@@ -180,14 +178,8 @@ pub fn generate_report(sources: &[Source], snapshots: &[Snapshot]) -> IntelRepor
 fn process_source_session(
     source: &Source,
     total_tokens: &mut TokenUsage,
-    file_patterns: &mut HashMap<
-        String,
-        (usize, usize, DateTime<Utc>, DateTime<Utc>, HashSet<String>),
-    >,
-    governance_map: &mut HashMap<
-        (&'static str, String),
-        (usize, HashSet<String>, Vec<DateTime<Utc>>),
-    >,
+    file_patterns: &mut HashMap<String, (usize, usize, DateTime, DateTime, HashSet<String>)>,
+    governance_map: &mut HashMap<(&'static str, String), (usize, HashSet<String>, Vec<DateTime>)>,
     recent_activity: &mut Vec<ActivitySummary>,
 ) {
     let source_tokens = source.total_tokens();
@@ -228,14 +220,8 @@ fn process_source_session(
 fn process_intel_operation(
     op: &crate::types::Operation,
     source: &Source,
-    file_patterns: &mut HashMap<
-        String,
-        (usize, usize, DateTime<Utc>, DateTime<Utc>, HashSet<String>),
-    >,
-    governance_map: &mut HashMap<
-        (&'static str, String),
-        (usize, HashSet<String>, Vec<DateTime<Utc>>),
-    >,
+    file_patterns: &mut HashMap<String, (usize, usize, DateTime, DateTime, HashSet<String>)>,
+    governance_map: &mut HashMap<(&'static str, String), (usize, HashSet<String>, Vec<DateTime>)>,
     files_touched_set: &mut HashSet<String>,
 ) {
     if let Some(path) = op.file_path() {
@@ -277,10 +263,7 @@ fn process_intel_operation(
 /// Helper to process a single snapshot.
 fn process_snapshot(
     snapshot: &Snapshot,
-    governance_map: &mut HashMap<
-        (&'static str, String),
-        (usize, HashSet<String>, Vec<DateTime<Utc>>),
-    >,
+    governance_map: &mut HashMap<(&'static str, String), (usize, HashSet<String>, Vec<DateTime>)>,
 ) {
     let path = snapshot.path.to_string_lossy().to_string();
     if let Some((category, resource)) = classify_governance(&path) {
@@ -297,7 +280,7 @@ fn process_snapshot(
 
 /// Helper to finalize file patterns list.
 fn finalize_file_patterns(
-    file_patterns: HashMap<String, (usize, usize, DateTime<Utc>, DateTime<Utc>, HashSet<String>)>,
+    file_patterns: HashMap<String, (usize, usize, DateTime, DateTime, HashSet<String>)>,
 ) -> Vec<FileAccessPattern> {
     let mut patterns: Vec<FileAccessPattern> = file_patterns
         .into_iter()
@@ -324,7 +307,7 @@ fn finalize_file_patterns(
 
 /// Helper to finalize governance access list.
 fn finalize_governance_access(
-    governance_map: HashMap<(&'static str, String), (usize, HashSet<String>, Vec<DateTime<Utc>>)>,
+    governance_map: HashMap<(&'static str, String), (usize, HashSet<String>, Vec<DateTime>)>,
 ) -> Vec<GovernanceAccess> {
     let mut access: Vec<GovernanceAccess> = governance_map
         .into_iter()

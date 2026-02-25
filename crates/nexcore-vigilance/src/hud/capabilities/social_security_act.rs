@@ -189,7 +189,7 @@ impl StateBackup {
             integrity_hash: IntegrityHash::compute(content),
             version: VersionNumber::initial(),
             level,
-            created_at: chrono::Utc::now().timestamp(),
+            created_at: nexcore_chrono::DateTime::now().timestamp(),
             size_bytes: content.len(),
         }
     }
@@ -202,7 +202,7 @@ impl StateBackup {
             integrity_hash: IntegrityHash::compute(new_content),
             version: self.version.next(),
             level: PersistenceLevel::Resolved,
-            created_at: chrono::Utc::now().timestamp(),
+            created_at: nexcore_chrono::DateTime::now().timestamp(),
             size_bytes: new_content.len(),
         }
     }

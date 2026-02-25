@@ -127,7 +127,7 @@ fn attempt_index_recovery(sessions_dir: &PathBuf, index_path: &PathBuf) -> Resul
                 if name.len() >= 8 && name.chars().all(|c| c.is_alphanumeric() || c == '-') {
                     recovered.push(serde_json::json!({
                         "id": name,
-                        "created_at": chrono::Utc::now().to_rfc3339(),
+                        "created_at": nexcore_chrono::DateTime::now().to_rfc3339(),
                         "project": null,
                         "description": "Recovered session"
                     }));

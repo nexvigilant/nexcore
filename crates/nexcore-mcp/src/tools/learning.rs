@@ -528,7 +528,7 @@ pub fn learn_assimilate() -> Result<CallToolResult, McpError> {
             continue;
         }
 
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = nexcore_chrono::DateTime::now().to_rfc3339();
         let data_str = p.get("data").map(|v| v.to_string()).unwrap_or_default();
         let description = format!("{} (source: {})", ptype, source);
 
@@ -567,7 +567,7 @@ pub fn learn_assimilate() -> Result<CallToolResult, McpError> {
                         .unwrap_or(false))
         });
         if !already {
-            let now = chrono::Utc::now().to_rfc3339();
+            let now = nexcore_chrono::DateTime::now().to_rfc3339();
             let data_str = p.get("data").map(|v| v.to_string()).unwrap_or_default();
             let confidence = p.get("confidence").and_then(|v| v.as_f64()).unwrap_or(0.5);
             existing.push(json!({"id": target_id, "pattern_type": ptype, "description": format!("{} (source: {})", ptype, psource), "examples": [psource], "detected_at": now, "updated_at": now, "confidence": confidence, "occurrence_count": 1}));
@@ -705,7 +705,9 @@ pub fn learn_normalize() -> Result<CallToolResult, McpError> {
         let lines: Vec<&str> = content.lines().collect();
         let archive = telemetry_dir().join(format!(
             "signals_archive_{}.jsonl",
-            chrono::Utc::now().format("%Y%m%d%H%M%S")
+            nexcore_chrono::DateTime::now()
+                .format("%Y%m%d%H%M%S")
+                .unwrap_or_default()
         ));
         std::fs::write(&archive, content.as_bytes()).ok();
         let tail: String = lines[lines.len().saturating_sub(1000)..].join("\n");
@@ -716,7 +718,7 @@ pub fn learn_normalize() -> Result<CallToolResult, McpError> {
     };
 
     let history_path = telemetry_dir().join("learn_history.jsonl");
-    let entry = json!({"timestamp": chrono::Utc::now().to_rfc3339(), "pruned": pruned, "dedup": dedup_count, "rotated": rotated});
+    let entry = json!({"timestamp": nexcore_chrono::DateTime::now().to_rfc3339(), "pruned": pruned, "dedup": dedup_count, "rotated": rotated});
     if let Ok(mut file) = std::fs::OpenOptions::new()
         .create(true)
         .append(true)

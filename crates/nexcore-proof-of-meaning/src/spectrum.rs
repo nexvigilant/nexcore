@@ -55,7 +55,7 @@ pub struct Spectrum {
     pub lines: Vec<SpectralLine>,
     /// Timestamp — spectra can drift over time as regulatory
     /// contexts evolve.
-    pub recorded_at: chrono::DateTime<chrono::Utc>,
+    pub recorded_at: nexcore_chrono::DateTime,
 }
 
 impl Spectrum {

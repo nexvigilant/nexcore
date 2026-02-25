@@ -9,7 +9,7 @@
 
 use std::collections::HashMap;
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_error::{Result, bail, nexerror};
 use serde::{Deserialize, Serialize};
 
@@ -47,7 +47,7 @@ pub enum ConvergenceState {
     /// All future [`ConvergentSpatialMonitor::observe`] calls maintain this state.
     LockedIn {
         /// Timestamp when lock-in was first detected.
-        locked_at: DateTime<Utc>,
+        locked_at: DateTime,
     },
 }
 
@@ -55,7 +55,7 @@ pub enum ConvergenceState {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CadenceRecord {
     /// When this observation was recorded.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Location identifier at time of observation.
     pub location: String,
     /// Observed signal value.
@@ -74,7 +74,7 @@ pub struct ConvergenceProbe {
     /// Current location identifier.
     pub location: String,
     /// Chronological observations as `(timestamp, value)` pairs.
-    pub observations: Vec<(DateTime<Utc>, f64)>,
+    pub observations: Vec<(DateTime, f64)>,
     /// Current convergence state.
     pub state: ConvergenceState,
     /// Complete cadence history (ν×π).
@@ -97,10 +97,10 @@ pub struct ConvergenceProbe {
 ///
 /// ```rust
 /// use nexcore_guardian_engine::convergence::ConvergentSpatialMonitor;
-/// use chrono::Utc;
+/// use nexcore_chrono::DateTime;
 ///
 /// let mut monitor = ConvergentSpatialMonitor::new(0.7, 0.01);
-/// assert!(monitor.observe("sensor-1", "site-A", 1.0, Utc::now()).is_ok());
+/// assert!(monitor.observe("sensor-1", "site-A", 1.0, DateTime::now()).is_ok());
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConvergentSpatialMonitor {
@@ -167,7 +167,7 @@ fn mean_damping_ratio(amplitudes: &[f64]) -> Option<f64> {
 
 /// Determine the next convergence state from observations and current state.
 fn determine_state(
-    observations: &[(DateTime<Utc>, f64)],
+    observations: &[(DateTime, f64)],
     current_state: &ConvergenceState,
     damping_threshold: f64,
     lock_threshold: f64,
@@ -189,7 +189,7 @@ fn determine_state(
             let locked_at = observations
                 .last()
                 .map(|(t, _)| *t)
-                .unwrap_or_else(Utc::now);
+                .unwrap_or_else(|| DateTime::now());
             return ConvergenceState::LockedIn { locked_at };
         }
     }
@@ -257,7 +257,7 @@ impl ConvergentSpatialMonitor {
         probe_name: &str,
         location: &str,
         value: f64,
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     ) -> Result<ConvergenceState> {
         if probe_name.is_empty() {
             bail!("probe_name must not be empty");
@@ -385,21 +385,21 @@ impl ConvergentSpatialMonitor {
 
 #[cfg(test)]
 mod tests {
-    use chrono::TimeZone;
+    use nexcore_chrono::DateTime;
 
     use super::*;
 
-    fn ts(seconds: i64) -> DateTime<Utc> {
-        Utc.timestamp_opt(seconds, 0)
+    fn ts(seconds: i64) -> DateTime {
+        DateTime::from_timestamp(seconds)
             .single()
-            .unwrap_or_else(Utc::now)
+            .unwrap_or_else(|| DateTime::now())
     }
 
     /// Build a strongly-damped oscillation (d=0.3 per half-cycle).
     ///
     /// With d=0.3, all consecutive amplitude ratios ≈ 0.3 < 0.7 (damping_threshold),
     /// so the monitor reaches Converging after ≥4 extrema pairs.
-    fn damped_observations(n_halfcycles: u32) -> Vec<(DateTime<Utc>, f64)> {
+    fn damped_observations(n_halfcycles: u32) -> Vec<(DateTime, f64)> {
         let d = 0.3_f64;
         let a = 8.0_f64;
         let mut obs = vec![(ts(0), 0.0)];
@@ -417,7 +417,7 @@ mod tests {
         monitor: &mut ConvergentSpatialMonitor,
         name: &str,
         loc: &str,
-        obs: &[(DateTime<Utc>, f64)],
+        obs: &[(DateTime, f64)],
     ) {
         for (ts_val, v) in obs {
             assert!(

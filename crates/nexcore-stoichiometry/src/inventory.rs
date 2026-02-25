@@ -131,6 +131,7 @@ impl PrimitiveInventory {
             LexPrimitiva::Irreversibility => Some(13),
             LexPrimitiva::Sum => Some(14),
             LexPrimitiva::Product => None,
+            _ => None, // non_exhaustive fallback
         }
     }
 

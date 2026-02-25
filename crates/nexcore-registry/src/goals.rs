@@ -1,6 +1,6 @@
 //! Skill goals and KPI CRUD operations.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 
@@ -34,9 +34,9 @@ pub struct GoalRow {
     /// Unit of measurement
     pub unit: Option<String>,
     /// When created
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// When last updated
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
 }
 
 /// A row from the `skill_kpis` table.
@@ -57,7 +57,7 @@ pub struct KpiRow {
     /// Direction: "higher_better", "lower_better", or "target"
     pub direction: Option<String>,
     /// When last updated
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
 }
 
 // --- Goal CRUD ---
@@ -212,8 +212,8 @@ pub fn list_kpis(conn: &Connection) -> Result<Vec<KpiRow>> {
     Ok(rows)
 }
 
-fn parse_dt(s: String) -> DateTime<Utc> {
-    s.parse::<DateTime<Utc>>().unwrap_or_else(|_| Utc::now())
+fn parse_dt(s: String) -> DateTime {
+    s.parse::<DateTime>().unwrap_or_else(|_| DateTime::now())
 }
 
 #[cfg(test)]
@@ -235,7 +235,7 @@ mod tests {
                 target_value: None,
                 unit: Some("count".to_string()),
                 direction: Some("higher_better".to_string()),
-                updated_at: Utc::now(),
+                updated_at: DateTime::now(),
             };
             upsert_kpi(conn, &kpi)?;
             let got = get_kpi(conn, "total_skills")?;
@@ -269,8 +269,8 @@ mod tests {
                 current_value: Some(60.0),
                 target_value: Some(80.0),
                 unit: Some("percent".to_string()),
-                created_at: Utc::now(),
-                updated_at: Utc::now(),
+                created_at: DateTime::now(),
+                updated_at: DateTime::now(),
             };
             insert_goal(conn, &goal)?;
             let goals = list_goals(conn, "test-skill")?;

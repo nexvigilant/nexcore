@@ -43,7 +43,7 @@
 //! | G7 | ActionableRate | ≥ 0.3 (30%) | 30 days | P4 |
 //! | G8 | FalsePositiveRate | ≤ 0.1 (10%) | 60 days | P0 |
 
-use chrono::{DateTime, Duration, Utc};
+use nexcore_chrono::{DateTime, Duration};
 use serde::{Deserialize, Serialize};
 
 use crate::intelligence::MonitoringDashboard;
@@ -413,11 +413,11 @@ pub struct IntelligenceGoal {
     /// Current status.
     pub status: GoalStatus,
     /// When goal was created.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// When goal must be achieved.
-    pub deadline: DateTime<Utc>,
+    pub deadline: DateTime,
     /// When goal was achieved (if applicable).
-    pub achieved_at: Option<DateTime<Utc>>,
+    pub achieved_at: Option<DateTime>,
     /// Number of times progress has been updated.
     pub check_count: u32,
 }
@@ -435,7 +435,7 @@ impl IntelligenceGoal {
         let priority = metric.default_priority();
         let higher_is_better = metric.higher_is_better();
         let progress = GoalProgress::new(baseline, target, baseline, higher_is_better);
-        let now = Utc::now();
+        let now = DateTime::now();
 
         Self {
             id: id.into(),
@@ -461,9 +461,9 @@ impl IntelligenceGoal {
         if self.progress.is_met() {
             self.status = GoalStatus::Achieved;
             if self.achieved_at.is_none() {
-                self.achieved_at = Some(Utc::now());
+                self.achieved_at = Some(DateTime::now());
             }
-        } else if Utc::now() > self.deadline {
+        } else if DateTime::now() > self.deadline {
             self.status = GoalStatus::Failed;
         } else {
             // Assess trajectory
@@ -486,13 +486,13 @@ impl IntelligenceGoal {
         if total <= 0.0 {
             return 1.0;
         }
-        let elapsed = (Utc::now() - self.created_at).num_seconds() as f64;
+        let elapsed = (DateTime::now() - self.created_at).num_seconds() as f64;
         (elapsed / total).clamp(0.0, 1.0)
     }
 
     /// Remaining time in seconds.
     pub fn remaining_seconds(&self) -> f64 {
-        let remaining = self.deadline - Utc::now();
+        let remaining = self.deadline - DateTime::now();
         remaining.num_seconds().max(0) as f64
     }
 
@@ -607,7 +607,7 @@ pub struct GoalPortfolio {
     /// All goals in the portfolio.
     pub goals: Vec<IntelligenceGoal>,
     /// When the portfolio was last assessed.
-    pub last_assessed: DateTime<Utc>,
+    pub last_assessed: DateTime,
 }
 
 impl GoalPortfolio {
@@ -682,7 +682,7 @@ impl GoalPortfolio {
 
         Self {
             goals,
-            last_assessed: Utc::now(),
+            last_assessed: DateTime::now(),
         }
     }
 
@@ -693,7 +693,7 @@ impl GoalPortfolio {
                 goal.update_from_dashboard(dashboard);
             }
         }
-        self.last_assessed = Utc::now();
+        self.last_assessed = DateTime::now();
     }
 
     /// Number of achieved goals.
@@ -922,7 +922,7 @@ mod tests {
             false_positive_rate: 0.08,
             actionable_ratio: 0.35,
             time_to_current_state: 1800.0,
-            snapshot_at: Utc::now(),
+            snapshot_at: DateTime::now(),
         };
 
         assert!(
@@ -1032,7 +1032,7 @@ mod tests {
             false_positive_rate: 0.05,
             actionable_ratio: 0.4,
             time_to_current_state: 900.0,
-            snapshot_at: Utc::now(),
+            snapshot_at: DateTime::now(),
         };
 
         goal.update_from_dashboard(&dashboard);

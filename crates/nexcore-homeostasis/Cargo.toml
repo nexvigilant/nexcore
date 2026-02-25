@@ -13,7 +13,6 @@ nexcore-homeostasis-storm = { path = "../nexcore-homeostasis-storm" }
 nexcore-homeostasis-memory = { path = "../nexcore-homeostasis-memory" }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-chrono = { workspace = true, features = ["serde"] }
 nexcore-error = { workspace = true }
 tracing = { workspace = true }
 tokio = { workspace = true, features = ["sync", "time", "rt", "macros"] }

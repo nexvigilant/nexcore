@@ -240,6 +240,7 @@ fn primitive_grounding(p: LexPrimitiva) -> (RootConstant, String) {
             RootConstant::One,
             "× combines existing components → 1".into(),
         ),
+        _ => (RootConstant::One, "unknown primitive → 1".into()),
     }
 }
 

@@ -126,8 +126,7 @@ fn str_to_verdict(s: &str) -> Verdict {
 
 fn row_to_learning(row: LearningRow) -> Result<Learning, GroundedError> {
     let posterior = Confidence::new(row.posterior)?;
-    let learned_at = chrono::DateTime::parse_from_rfc3339(&row.learned_at)
-        .map(|dt| dt.with_timezone(&chrono::Utc))
+    let learned_at = nexcore_chrono::DateTime::parse_from_rfc3339(&row.learned_at)
         .map_err(|e| GroundedError::PersistenceFailed(format!("parse date: {e}")))?;
 
     Ok(Learning {
@@ -224,7 +223,7 @@ impl ExperienceStore for SqliteStore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     fn make_learning(claim: &str, verdict: Verdict, posterior: f64) -> Learning {
         Learning {
@@ -233,7 +232,7 @@ mod tests {
             verdict,
             hypothesis_claim: claim.into(),
             observation: "observed".into(),
-            learned_at: Utc::now(),
+            learned_at: DateTime::now(),
         }
     }
 

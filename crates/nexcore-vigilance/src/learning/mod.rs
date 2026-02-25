@@ -23,7 +23,7 @@ pub use models::*;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
     use nexcore_id::NexId;
 
     struct MockTeacher;
@@ -81,8 +81,8 @@ mod tests {
             user_id: "user1".into(),
             metrics: vec![PerformanceMetrics {
                 task_id: "task1".into(),
-                start_time: Utc::now(),
-                end_time: Utc::now(),
+                start_time: DateTime::now(),
+                end_time: DateTime::now(),
                 completion_time_ms: 1000,
                 success: true,
                 skills_used: vec![],
@@ -98,8 +98,8 @@ mod tests {
             user_id: "user2".into(),
             metrics: vec![PerformanceMetrics {
                 task_id: "task1".into(),
-                start_time: Utc::now(),
-                end_time: Utc::now(),
+                start_time: DateTime::now(),
+                end_time: DateTime::now(),
                 completion_time_ms: 800,
                 success: true,
                 skills_used: vec!["skill1".into()],

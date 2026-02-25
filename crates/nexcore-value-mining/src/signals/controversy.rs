@@ -19,7 +19,7 @@
 use crate::error::MiningResult;
 use crate::signals::SignalDetector;
 use crate::types::{Baseline, SignalType, ValueSignal};
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_social::Post;
 
 /// Controversy signal detector (high variance / polarization).
@@ -118,12 +118,12 @@ impl SignalDetector for ControversyDetector {
                     .iter()
                     .map(|p| p.created_datetime())
                     .min()
-                    .unwrap_or_else(Utc::now);
+                    .unwrap_or_else(|| DateTime::now());
                 let window_end = relevant
                     .iter()
                     .map(|p| p.created_datetime())
                     .max()
-                    .unwrap_or_else(Utc::now);
+                    .unwrap_or_else(|| DateTime::now());
 
                 let signal = ValueSignal::new(
                     SignalType::Controversy,

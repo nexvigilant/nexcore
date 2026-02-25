@@ -24,7 +24,7 @@
 //! - **Cleanup**: Release resources, notify dependents
 
 use crate::Cytokine;
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// Phase of the apoptotic shutdown process.
@@ -74,9 +74,9 @@ pub struct PostMortem {
     /// Why shutdown was triggered
     pub cause: String,
     /// When the death signal was received
-    pub initiated_at: DateTime<Utc>,
+    pub initiated_at: DateTime,
     /// When shutdown completed
-    pub completed_at: Option<DateTime<Utc>>,
+    pub completed_at: Option<DateTime>,
     /// Final phase reached
     pub final_phase: ShutdownPhase,
     /// Arbitrary state snapshot
@@ -101,13 +101,13 @@ pub struct ApoptosisController {
     /// Grace period in seconds before forced termination
     grace_period_secs: u32,
     /// When shutdown was initiated
-    initiated_at: Option<DateTime<Utc>>,
+    initiated_at: Option<DateTime>,
     /// The triggering signal
     trigger: Option<Cytokine>,
     /// Post-mortem record (built during shutdown)
     post_mortem: Option<PostMortem>,
     /// Callbacks registered for each phase transition
-    phase_log: Vec<(ShutdownPhase, DateTime<Utc>)>,
+    phase_log: Vec<(ShutdownPhase, DateTime)>,
 }
 
 impl ApoptosisController {
@@ -142,7 +142,7 @@ impl ApoptosisController {
             return false;
         }
 
-        let now = Utc::now();
+        let now = DateTime::now();
         self.phase = ShutdownPhase::Initiated;
         self.initiated_at = Some(now);
         self.trigger = Some(trigger);
@@ -154,7 +154,7 @@ impl ApoptosisController {
     ///
     /// Returns the new phase, or `None` if already dead.
     pub fn advance(&mut self) -> Option<ShutdownPhase> {
-        let now = Utc::now();
+        let now = DateTime::now();
         let next = match self.phase {
             // Must call initiate() first
             ShutdownPhase::Alive | ShutdownPhase::Dead => return None,
@@ -171,21 +171,23 @@ impl ApoptosisController {
     /// Check if the grace period has elapsed.
     pub fn grace_period_elapsed(&self) -> bool {
         self.initiated_at.is_some_and(|initiated| {
-            let elapsed = Utc::now().signed_duration_since(initiated).num_seconds();
+            let elapsed = DateTime::now()
+                .signed_duration_since(initiated)
+                .num_seconds();
             elapsed >= i64::from(self.grace_period_secs)
         })
     }
 
     /// Force immediate death (skip remaining phases).
     pub fn force_kill(&mut self) {
-        let now = Utc::now();
+        let now = DateTime::now();
         self.phase = ShutdownPhase::Dead;
         self.phase_log.push((ShutdownPhase::Dead, now));
     }
 
     /// Complete shutdown and produce post-mortem record.
     pub fn complete(&mut self, state_snapshot: serde_json::Value) -> PostMortem {
-        let now = Utc::now();
+        let now = DateTime::now();
 
         if self.phase != ShutdownPhase::Dead {
             self.phase = ShutdownPhase::Dead;
@@ -224,7 +226,7 @@ impl ApoptosisController {
     }
 
     /// Get the phase transition log.
-    pub fn phase_log(&self) -> &[(ShutdownPhase, DateTime<Utc>)] {
+    pub fn phase_log(&self) -> &[(ShutdownPhase, DateTime)] {
         &self.phase_log
     }
 }

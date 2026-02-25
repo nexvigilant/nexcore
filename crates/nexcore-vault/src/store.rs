@@ -200,7 +200,7 @@ impl Vault {
     /// Encrypt a single entry, preserving created_at if it exists.
     fn encrypt_entry(&self, name: &SecretName, value: &str) -> Result<VaultEntry> {
         let (nonce, ciphertext) = cipher::encrypt(&self.key, value.as_bytes())?;
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = nexcore_chrono::DateTime::now().to_rfc3339();
 
         let existing_created = self
             .file
@@ -230,7 +230,7 @@ impl Vault {
 
     /// Re-encrypt all secrets from a plaintext export.
     fn reencrypt_all(&mut self, export: &PlaintextExport) -> Result<()> {
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = nexcore_chrono::DateTime::now().to_rfc3339();
         for (name, value) in &export.secrets {
             let (nonce, ciphertext) = cipher::encrypt(&self.key, value.as_bytes())?;
             self.file.entries.insert(

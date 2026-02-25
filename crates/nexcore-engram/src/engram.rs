@@ -14,7 +14,7 @@
 //! - μ Mapping: title→content mapping
 //! - ν Frequency: access frequency tracking
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// Unique identifier for an engram.
@@ -53,9 +53,9 @@ pub struct Engram {
     /// Classification tags.
     pub tags: Vec<String>,
     /// When this knowledge was created.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// When this knowledge was last accessed.
-    pub last_accessed: DateTime<Utc>,
+    pub last_accessed: DateTime,
     /// How many times this has been accessed.
     pub access_count: u64,
     /// Current relevance score (decays over time).
@@ -71,7 +71,7 @@ impl Engram {
         content: impl Into<String>,
         source: EngramSource,
     ) -> Self {
-        let now = Utc::now();
+        let now = DateTime::now();
         Self {
             id,
             title: title.into(),
@@ -94,7 +94,7 @@ impl Engram {
 
     /// Record an access event (updates last_accessed and access_count).
     pub fn record_access(&mut self) {
-        self.last_accessed = Utc::now();
+        self.last_accessed = DateTime::now();
         self.access_count += 1;
     }
 

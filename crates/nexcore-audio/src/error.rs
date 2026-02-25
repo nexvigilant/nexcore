@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 /// Audio subsystem errors.
 ///
 /// Tier: T2-P (Σ Sum — all audio failure modes)
+#[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AudioError {
     /// Device not found by ID.

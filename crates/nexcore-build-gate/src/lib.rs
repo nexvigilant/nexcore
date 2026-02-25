@@ -214,7 +214,7 @@ pub struct BuildResult {
     pub success: bool,
     pub exit_code: i32,
     pub command: String,
-    pub timestamp: chrono::DateTime<chrono::Utc>,
+    pub timestamp: nexcore_chrono::DateTime,
     pub duration_ms: u64,
     pub hash: String,
 }
@@ -282,7 +282,7 @@ pub fn run_cargo(workspace: &Path, args: &[&str], force: bool) -> Result<BuildRe
         success,
         exit_code,
         command,
-        timestamp: chrono::Utc::now(),
+        timestamp: nexcore_chrono::DateTime::now(),
         duration_ms,
         hash: hash_source_dir(workspace)?,
     };

@@ -11,6 +11,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use crate::ir::{AloEdgeType, AtomicLearningObject, LearningGraph};
 
 /// Result of a shortest-path query.
+#[non_exhaustive]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PathResult {
     /// Ordered list of ALO IDs from start to target.
@@ -22,6 +23,7 @@ pub struct PathResult {
 }
 
 /// Result of a capability surface query.
+#[non_exhaustive]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CapabilitySurface {
     /// ALO IDs now unlocked (all prereqs satisfied).
@@ -96,7 +98,7 @@ pub fn shortest_path_to_alo(
     let total_duration: u32 = sorted
         .iter()
         .filter_map(|id| alo_map.get(id.as_str()))
-        .map(|a| a.estimated_duration as u32)
+        .map(|a| u32::from(a.estimated_duration))
         .sum();
 
     let alo_count = sorted.len();
@@ -184,7 +186,12 @@ pub fn capability_surface(graph: &LearningGraph, completed: &HashSet<String>) ->
     }
 
     let total = graph.nodes.len();
-    let completed_and_unlocked = completed.len() + unlocked.len();
+    let completed_and_unlocked = completed.len().saturating_add(unlocked.len());
+    #[allow(
+        clippy::as_conversions,
+        clippy::cast_precision_loss,
+        reason = "usize->f32 cast for ratio computation; node count fits in f32 for practical dataset sizes"
+    )]
     let unlock_ratio = if total > 0 {
         completed_and_unlocked as f32 / total as f32
     } else {
@@ -227,30 +234,38 @@ fn topological_sort(node_ids: &HashSet<&str>, edges: &[crate::ir::AloEdge]) -> V
     }
 
     for edge in &relevant_edges {
-        *in_degree.entry(edge.to.as_str()).or_insert(0) += 1;
+        let deg = in_degree.entry(edge.to.as_str()).or_insert(0);
+        *deg = deg.saturating_add(1);
         adj.entry(edge.from.as_str())
             .or_default()
             .push(edge.to.as_str());
     }
 
-    let mut queue: VecDeque<&str> = VecDeque::new();
-    for (&node, &deg) in &in_degree {
-        if deg == 0 {
-            queue.push_back(node);
-        }
-    }
+    // Collect into sorted vec first for deterministic topological order
+    let mut zero_degree: Vec<&str> = in_degree
+        .iter()
+        .filter_map(|(&node, &deg)| if deg == 0 { Some(node) } else { None })
+        .collect();
+    zero_degree.sort_unstable();
+
+    let mut queue: VecDeque<&str> = VecDeque::from(zero_degree);
 
     let mut sorted = Vec::new();
     while let Some(node) = queue.pop_front() {
         sorted.push(node.to_string());
         if let Some(neighbors) = adj.get(node) {
+            let mut next_zero: Vec<&str> = Vec::new();
             for &neighbor in neighbors {
                 if let Some(deg) = in_degree.get_mut(neighbor) {
                     *deg = deg.saturating_sub(1);
                     if *deg == 0 {
-                        queue.push_back(neighbor);
+                        next_zero.push(neighbor);
                     }
                 }
+            }
+            next_zero.sort_unstable();
+            for n in next_zero {
+                queue.push_back(n);
             }
         }
     }

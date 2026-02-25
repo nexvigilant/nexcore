@@ -72,7 +72,7 @@ pub struct FeedbackSignal {
     /// Which stage generated this feedback.
     pub source_stage: StageId,
     /// Timestamp.
-    pub timestamp: chrono::DateTime<chrono::Utc>,
+    pub timestamp: nexcore_chrono::DateTime,
     /// Priority level.
     pub priority: FeedbackPriority,
     /// Feedback source details.
@@ -99,7 +99,7 @@ impl FeedbackSignal {
         Self {
             id: nexcore_id::NexId::v4().to_string(),
             source_stage,
-            timestamp: chrono::Utc::now(),
+            timestamp: nexcore_chrono::DateTime::now(),
             priority,
             source,
             message: message.into(),

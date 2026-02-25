@@ -79,7 +79,7 @@ pub async fn ingest_event(
         event_type: req.event_type,
         user_id: req.user_id,
         metadata: req.metadata,
-        timestamp: chrono::Utc::now().to_rfc3339(),
+        timestamp: nexcore_chrono::DateTime::now().to_rfc3339(),
     };
 
     state

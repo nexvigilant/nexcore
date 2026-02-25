@@ -1,6 +1,6 @@
 //! Core domain models for teaching ecosystem.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -41,7 +41,7 @@ pub enum ObservationFlag {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Observation {
     pub id: NexId,
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     pub event_type: ObservationEventType,
     pub agent_id: String,
     pub session_id: String,
@@ -79,7 +79,7 @@ pub enum AndonSignal {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Intervention {
     pub id: NexId,
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     pub trigger: String,
     #[serde(rename = "type")]
     pub intervention_type: InterventionType,
@@ -97,8 +97,8 @@ pub struct TodoItem {
     pub content: String,
     pub active_form: String,
     pub status: String,
-    pub created_at: DateTime<Utc>,
-    pub completed_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime,
+    pub completed_at: Option<DateTime>,
 }
 
 /// An agent learning session.
@@ -106,8 +106,8 @@ pub struct TodoItem {
 pub struct AgentSession {
     pub id: String,
     pub agent_name: String,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub created_at: DateTime,
+    pub updated_at: DateTime,
     pub status: String,
     pub todos: Vec<TodoItem>,
     pub metadata: HashMap<String, serde_json::Value>,

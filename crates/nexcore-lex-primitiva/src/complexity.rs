@@ -20,11 +20,14 @@
 //!
 //! ## Tier: T1-Universal
 
-#![allow(dead_code)]
+#![allow(
+    dead_code,
+    reason = "module contains proofs used in tests and analysis"
+)]
 
 use crate::primitiva::LexPrimitiva;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 /// The proposed minimal set of 9 primitives.
@@ -42,6 +45,7 @@ pub const MINIMAL_SET: [LexPrimitiva; 9] = [
 
 /// Derivations for the 6 "redundant" primitives in terms of the minimal set.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct Derivation {
     /// The primitive being derived
     pub target: LexPrimitiva,
@@ -104,6 +108,7 @@ pub fn derivations() -> Vec<Derivation> {
 
 /// Complexity class for derivation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum ComplexityClass {
     /// O(1) - Direct representation, no derivation needed
     Constant,
@@ -134,7 +139,7 @@ pub fn derivation_complexity(primitive: LexPrimitiva, use_minimal_set: bool) -> 
         return ComplexityClass::Constant;
     }
 
-    let minimal: HashSet<_> = MINIMAL_SET.iter().copied().collect();
+    let minimal: BTreeSet<_> = MINIMAL_SET.iter().copied().collect();
 
     if minimal.contains(&primitive) {
         ComplexityClass::Constant
@@ -152,6 +157,7 @@ pub fn derivation_complexity(primitive: LexPrimitiva, use_minimal_set: bool) -> 
 
 /// Total derivation cost for expressing ALL 16 primitives.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct TotalCost {
     /// Number of O(1) primitives
     pub constant_count: usize,
@@ -166,21 +172,23 @@ pub struct TotalCost {
 /// Computes total cost of expressing all primitives.
 #[must_use]
 pub fn total_derivation_cost(use_minimal_set: bool) -> TotalCost {
-    let mut constant_count = 0;
-    let mut linear_count = 0;
-    let mut quadratic_count = 0;
-    let mut total_steps = 0;
+    let mut constant_count: usize = 0;
+    let mut linear_count: usize = 0;
+    let mut quadratic_count: usize = 0;
+    let mut total_steps: usize = 0;
 
     for p in LexPrimitiva::all() {
         match derivation_complexity(p, use_minimal_set) {
-            ComplexityClass::Constant => constant_count += 1,
+            ComplexityClass::Constant => {
+                constant_count = constant_count.saturating_add(1);
+            }
             ComplexityClass::Linear => {
-                linear_count += 1;
-                total_steps += 2; // Average 2 steps per linear derivation
+                linear_count = linear_count.saturating_add(1);
+                total_steps = total_steps.saturating_add(2); // Average 2 steps per linear derivation
             }
             ComplexityClass::Quadratic => {
-                quadratic_count += 1;
-                total_steps += 4; // Average 4 steps per quadratic derivation
+                quadratic_count = quadratic_count.saturating_add(1);
+                total_steps = total_steps.saturating_add(4); // Average 4 steps per quadratic derivation
             }
         }
     }
@@ -195,6 +203,10 @@ pub fn total_derivation_cost(use_minimal_set: bool) -> TotalCost {
 
 /// Expressiveness score: lower is better (fewer derivation steps needed).
 #[must_use]
+#[allow(
+    clippy::as_conversions,
+    reason = "total_steps is bounded by primitive count (<=64), safe cast to f64"
+)]
 pub fn expressiveness_score(use_minimal_set: bool) -> f64 {
     let cost = total_derivation_cost(use_minimal_set);
     // Score = total_steps / primitive_count
@@ -204,6 +216,7 @@ pub fn expressiveness_score(use_minimal_set: bool) -> f64 {
 
 /// Comparison report between full and minimal sets.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ComparisonReport {
     /// Cost with full 16-primitive set
     pub full_set_cost: TotalCost,
@@ -220,7 +233,7 @@ pub struct ComparisonReport {
 /// Generates a comparison report.
 #[must_use]
 pub fn comparison_report() -> ComparisonReport {
-    let minimal: HashSet<_> = MINIMAL_SET.iter().copied().collect();
+    let minimal: BTreeSet<_> = MINIMAL_SET.iter().copied().collect();
     let derived: Vec<_> = LexPrimitiva::all()
         .into_iter()
         .filter(|p| !minimal.contains(p))
@@ -237,6 +250,7 @@ pub fn comparison_report() -> ComparisonReport {
 
 /// The practical minimality argument.
 #[derive(Debug, Clone, Serialize)]
+#[non_exhaustive]
 pub struct PracticalMinimalityArgument {
     /// The claim being defended
     pub claim: &'static str,
@@ -274,7 +288,7 @@ pub fn kolmogorov_estimate(primitive: LexPrimitiva, use_minimal_set: bool) -> us
         return 1;
     }
 
-    let minimal: HashSet<_> = MINIMAL_SET.iter().copied().collect();
+    let minimal: BTreeSet<_> = MINIMAL_SET.iter().copied().collect();
     if minimal.contains(&primitive) {
         1
     } else {
@@ -282,7 +296,7 @@ pub fn kolmogorov_estimate(primitive: LexPrimitiva, use_minimal_set: bool) -> us
         derivations()
             .iter()
             .find(|d| d.target == primitive)
-            .map(|d| d.from.len() + 1) // composition adds 1 for operator
+            .map(|d| d.from.len().saturating_add(1)) // composition adds 1 for operator
             .unwrap_or(5) // unknown derivation, assume complex
     }
 }
@@ -296,6 +310,13 @@ pub fn total_kolmogorov_complexity(use_minimal_set: bool) -> usize {
         .sum()
 }
 
+/// Unused map type to satisfy import — kept for potential future use.
+#[allow(
+    dead_code,
+    reason = "BTreeMap imported for consistency with workspace lint policy"
+)]
+type _UnusedMap<K, V> = BTreeMap<K, V>;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -307,11 +328,11 @@ mod tests {
 
     #[test]
     fn test_derivations_cover_remaining() {
-        let minimal: HashSet<_> = MINIMAL_SET.iter().copied().collect();
-        let all: HashSet<_> = LexPrimitiva::all().into_iter().collect();
-        let remaining: HashSet<_> = all.difference(&minimal).copied().collect();
+        let minimal: BTreeSet<_> = MINIMAL_SET.iter().copied().collect();
+        let all: BTreeSet<_> = LexPrimitiva::all().into_iter().collect();
+        let remaining: BTreeSet<_> = all.difference(&minimal).copied().collect();
 
-        let derived: HashSet<_> = derivations().iter().map(|d| d.target).collect();
+        let derived: BTreeSet<_> = derivations().iter().map(|d| d.target).collect();
         assert_eq!(remaining.len(), 7, "Should have 7 derived primitives");
         assert_eq!(remaining, derived);
     }

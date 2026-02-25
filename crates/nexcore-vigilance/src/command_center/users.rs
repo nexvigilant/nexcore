@@ -1,6 +1,6 @@
 //! User domain types: accounts, sessions, profiles, and role assignments.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 
@@ -35,11 +35,11 @@ pub struct User {
 
     /// When email was verified.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub email_verified_at: Option<DateTime<Utc>>,
+    pub email_verified_at: Option<DateTime>,
 
     /// Last login timestamp.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub last_login_at: Option<DateTime<Utc>>,
+    pub last_login_at: Option<DateTime>,
 
     /// Whether MFA is enabled.
     #[serde(default)]
@@ -50,11 +50,11 @@ pub struct User {
     pub google_id: Option<String>,
 
     /// Account creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Last update timestamp.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime>,
 }
 
 fn default_true() -> bool {
@@ -76,7 +76,7 @@ impl User {
             last_login_at: None,
             mfa_enabled: false,
             google_id: None,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             updated_at: None,
         }
     }
@@ -114,7 +114,7 @@ pub struct UserSession {
     pub device_name: Option<String>,
 
     /// When session expires.
-    pub expires_at: DateTime<Utc>,
+    pub expires_at: DateTime,
 
     /// Whether session is active.
     #[serde(default = "default_true")]
@@ -122,20 +122,20 @@ pub struct UserSession {
 
     /// When session was revoked.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub revoked_at: Option<DateTime<Utc>>,
+    pub revoked_at: Option<DateTime>,
 
     /// Session creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Last activity timestamp.
-    pub last_activity_at: DateTime<Utc>,
+    pub last_activity_at: DateTime,
 }
 
 impl UserSession {
     /// Check if session is expired.
     #[must_use]
     pub fn is_expired(&self) -> bool {
-        Utc::now() > self.expires_at
+        DateTime::now() > self.expires_at
     }
 
     /// Check if session is valid (active and not expired).
@@ -204,7 +204,7 @@ pub struct UserProfile {
 
     /// When onboarding was completed.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub onboarding_completed_at: Option<DateTime<Utc>>,
+    pub onboarding_completed_at: Option<DateTime>,
 
     /// Whether quiz is complete.
     #[serde(default)]
@@ -212,7 +212,7 @@ pub struct UserProfile {
 
     /// When quiz was completed.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub quiz_completed_at: Option<DateTime<Utc>>,
+    pub quiz_completed_at: Option<DateTime>,
 
     /// Email notification preference.
     #[serde(default = "default_true")]
@@ -243,11 +243,11 @@ pub struct UserProfile {
     pub website_url: Option<String>,
 
     /// Creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Last update timestamp.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime>,
 }
 
 fn default_timezone() -> String {
@@ -283,7 +283,7 @@ impl UserProfile {
             avatar_url: None,
             linkedin_url: None,
             website_url: None,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             updated_at: None,
         }
     }
@@ -311,18 +311,18 @@ pub struct UserLlcRole {
 
     /// When invitation was sent.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub invited_at: Option<DateTime<Utc>>,
+    pub invited_at: Option<DateTime>,
 
     /// When invitation was accepted.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub accepted_at: Option<DateTime<Utc>>,
+    pub accepted_at: Option<DateTime>,
 
     /// Creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Last update timestamp.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime>,
 }
 
 impl UserLlcRole {
@@ -337,7 +337,7 @@ impl UserLlcRole {
             invited_by: None,
             invited_at: None,
             accepted_at: None,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             updated_at: None,
         }
     }

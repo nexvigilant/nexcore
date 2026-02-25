@@ -4,7 +4,7 @@
 //! healthcare environment, including metadata for regulatory audit trails
 //! and incident response.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -95,8 +95,8 @@ pub struct Alert {
     /// Alert source system.
     pub source: String,
     /// Timestamp when alert was created.
-    #[serde(default = "Utc::now")]
-    pub timestamp: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub timestamp: DateTime,
     /// Additional alert metadata.
     #[serde(default)]
     pub metadata: HashMap<String, serde_json::Value>,
@@ -108,10 +108,10 @@ pub struct Alert {
     pub acknowledged_by: Option<String>,
     /// Timestamp when alert was resolved.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub resolved_at: Option<DateTime<Utc>>,
+    pub resolved_at: Option<DateTime>,
     /// Firestore TTL field for automatic expiration.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub expires_at: Option<DateTime<Utc>>,
+    pub expires_at: Option<DateTime>,
 }
 
 impl Alert {
@@ -130,7 +130,7 @@ impl Alert {
             status: AlertStatus::Active,
             message,
             source,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             metadata: HashMap::new(),
             tenant_id: None,
             acknowledged_by: None,

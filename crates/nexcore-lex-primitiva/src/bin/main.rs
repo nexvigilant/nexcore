@@ -1,5 +1,10 @@
 //! Lex Primitiva CLI binary.
 
+#![allow(
+    clippy::print_stderr,
+    reason = "Binary entry point reports errors to stderr by design"
+)]
+
 use clap::Parser;
 use nexcore_lex_primitiva::cli::{Cli, run};
 

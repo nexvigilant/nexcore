@@ -9,6 +9,7 @@ use nexcore_error::Error;
 ///
 /// ## Tier: T2-P (∂ + ∃)
 /// Boundary errors (∂) asserting existence failures (∃).
+#[non_exhaustive]
 #[derive(Debug, Error)]
 pub enum RegistryError {
     /// Compound not found in any source.

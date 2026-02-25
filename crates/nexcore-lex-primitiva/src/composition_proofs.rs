@@ -8,8 +8,21 @@
 //! Theorem 18: Per-edge operator characterization
 //! Theorem 19: DAG-Boolean alignment metric
 
+#![allow(
+    clippy::as_conversions,
+    reason = "Extensive numeric analysis on bounded u8/usize/f64; all casts are safe within proof domains"
+)]
+#![allow(
+    clippy::arithmetic_side_effects,
+    reason = "Proof computations use bounded u8 arithmetic; overflow not possible for 4-bit values"
+)]
+#![allow(
+    clippy::indexing_slicing,
+    reason = "Proof array indexing is bounded by 16-element primitive arrays and 4-bit value sets"
+)]
+
 use crate::primitiva::LexPrimitiva;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 
 // ═══════════════════════════════════════════
 // SHARED INFRASTRUCTURE
@@ -461,7 +474,7 @@ fn theorem_18_per_edge_operator_characterization() {
         .map(|(child, parents)| (child, parents[0]))
         .collect();
 
-    let mut unary_transforms: HashMap<String, u8> = HashMap::new();
+    let mut unary_transforms: BTreeMap<String, u8> = BTreeMap::new();
 
     for &(child, parent) in &single_parent_edges {
         let p_val = boolean_val(parent);
@@ -577,19 +590,20 @@ fn theorem_18_per_edge_operator_characterization() {
         .collect();
 
     if !solvable_ops.is_empty() {
-        let mut universal_fwd: HashSet<u8> = (0..16).collect();
+        let mut universal_fwd: BTreeSet<u8> = (0..16).collect();
         for (_, fwd, _) in &solvable_ops {
             if !fwd.is_empty() {
-                let fwd_set: HashSet<u8> = fwd.iter().copied().collect();
+                let fwd_set: BTreeSet<u8> = fwd.iter().copied().collect();
                 universal_fwd = universal_fwd.intersection(&fwd_set).copied().collect();
             }
         }
         // Even among solvable edges, no universal operator exists
         // (this may or may not hold — let's test)
+        drop(universal_fwd);
     }
 
     // 3. Count distinct operators needed
-    let mut all_used_ops: HashSet<u8> = HashSet::new();
+    let mut all_used_ops: BTreeSet<u8> = BTreeSet::new();
     for (_, fwd, rev) in &edge_ops {
         all_used_ops.extend(fwd);
         all_used_ops.extend(rev);
@@ -675,7 +689,7 @@ fn theorem_19_dag_boolean_alignment() {
 
     // Metric 4: DAG depth vs popcount correlation
     // Compute depth of each primitive in the DAG
-    let mut depths: HashMap<LexPrimitiva, usize> = HashMap::new();
+    let mut depths: BTreeMap<LexPrimitiva, usize> = BTreeMap::new();
     for &p in &LexPrimitiva::all() {
         depths.insert(p, compute_depth(p));
     }
@@ -992,7 +1006,7 @@ fn theorem_diagnostic_report() {
     }
 
     // Depth-popcount correlation
-    let mut depths: HashMap<LexPrimitiva, usize> = HashMap::new();
+    let mut depths: BTreeMap<LexPrimitiva, usize> = BTreeMap::new();
     for &p in &LexPrimitiva::all() {
         depths.insert(p, compute_depth(p));
     }

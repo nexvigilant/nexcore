@@ -9,7 +9,7 @@
 //! - Uncertainty (sigma) decreases monotonically with information gain
 //! - Status transitions follow the Signal Confirmation Axiom
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use super::evidence::Evidence;
@@ -128,7 +128,7 @@ pub struct Cell {
     /// Number of evidence updates applied
     pub evidence_count: usize,
     /// Last update timestamp
-    pub last_updated: DateTime<Utc>,
+    pub last_updated: DateTime,
 }
 
 impl Cell {
@@ -153,7 +153,7 @@ impl Cell {
             belief: BeliefState::default(),
             status: CellStatus::default(),
             evidence_count: 0,
-            last_updated: Utc::now(),
+            last_updated: DateTime::now(),
         }
     }
 
@@ -190,7 +190,7 @@ impl Cell {
         let lr = evidence.compute_likelihood_ratio();
         self.belief.update(lr);
         self.evidence_count += 1;
-        self.last_updated = Utc::now();
+        self.last_updated = DateTime::now();
         self.update_status();
         lr
     }

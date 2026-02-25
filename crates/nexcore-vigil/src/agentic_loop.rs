@@ -48,7 +48,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 
@@ -197,7 +197,7 @@ pub struct CycleResult {
     /// Cycle ID
     pub cycle_id: String,
     /// Timestamp
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Signals detected (PAMPs + DAMPs)
     pub signals: Vec<SignalSummary>,
     /// Risk score computed
@@ -503,7 +503,7 @@ impl AgenticLoop {
         if let Some(guardian_bridge) = &self.guardian_bridge {
             let iteration_result = LoopIterationResult {
                 iteration_id: cycle_id.clone(),
-                timestamp: Utc::now(),
+                timestamp: DateTime::now(),
                 signals_detected: signals.len(),
                 actions_taken: action_summaries.len(),
                 results: Vec::new(),
@@ -553,7 +553,7 @@ impl AgenticLoop {
 
         Ok(CycleResult {
             cycle_id,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             signals: signal_summaries,
             risk_score,
             actions: action_summaries,
@@ -620,10 +620,10 @@ impl AgenticLoop {
         }
 
         ThreatSignal {
-            id: format!("{}_{}", sensor.tool_name, Utc::now().timestamp()),
+            id: format!("{}_{}", sensor.tool_name, DateTime::now().timestamp()),
             pattern: sensor.tool_name.clone(),
             severity,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             source: sensor.source.clone(),
             confidence: nexcore_vigilance::primitives::Measured::certain(1.0),
             metadata,

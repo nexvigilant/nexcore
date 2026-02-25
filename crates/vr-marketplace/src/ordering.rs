@@ -4,7 +4,7 @@
 //! Commission rates depend on order value and provider type, using a sliding scale
 //! for CRO services.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use vr_core::{Money, OrderId, ProgramId, ProviderId, TenantId, VrError};
 
@@ -60,9 +60,9 @@ pub struct Order {
     /// Platform commission on this order.
     pub commission: Option<Money>,
     /// When the order was submitted.
-    pub submitted_at: Option<DateTime<Utc>>,
+    pub submitted_at: Option<DateTime>,
     /// When the order was completed.
-    pub completed_at: Option<DateTime<Utc>>,
+    pub completed_at: Option<DateTime>,
 }
 
 impl Order {

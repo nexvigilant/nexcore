@@ -85,7 +85,7 @@ fn truncate(s: &str, max: usize) -> String {
 mod tests {
     use super::*;
     use crate::core::*;
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     fn make_results() -> Vec<DetectionResult> {
         vec![DetectionResult {
@@ -102,7 +102,7 @@ mod tests {
             ebgm: Some(Ebgm(2.5)),
             chi_square: ChiSquare(12.0),
             strength: SignalStrength::Strong,
-            detected_at: Utc::now(),
+            detected_at: DateTime::now(),
         }]
     }
 

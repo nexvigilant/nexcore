@@ -14,7 +14,7 @@
 //! | Genomic Imprinting | User-confirmed beliefs — parent-of-origin bias |
 //! | Transgenerational | Memory files that persist across all future sessions |
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// Type of epigenetic mark.
@@ -46,7 +46,7 @@ pub struct EpigeneticMark {
     /// Strength of the mark (0.0 = no effect, 1.0 = fully expressed/suppressed).
     pub strength: f64,
     /// When this mark was established.
-    pub established: DateTime<Utc>,
+    pub established: DateTime,
     /// Source of the mark (user directive, learned behavior, system default).
     pub source: MarkSource,
     /// Number of sessions this mark has survived.
@@ -81,7 +81,7 @@ pub struct Epigenome {
     /// Session generation (how many sessions since the first mark).
     pub generation: u32,
     /// Timestamp of last epigenome update.
-    pub last_updated: DateTime<Utc>,
+    pub last_updated: DateTime,
 }
 
 impl Epigenome {
@@ -90,14 +90,14 @@ impl Epigenome {
         Self {
             marks: Vec::new(),
             generation: 0,
-            last_updated: Utc::now(),
+            last_updated: DateTime::now(),
         }
     }
 
     /// Adds a mark to the epigenome.
     pub fn add_mark(&mut self, mark: EpigeneticMark) {
         self.marks.push(mark);
-        self.last_updated = Utc::now();
+        self.last_updated = DateTime::now();
     }
 
     /// Returns all marks affecting a specific gene.
@@ -168,7 +168,7 @@ impl Epigenome {
 
         // Erase marks that have decayed below threshold
         self.marks.retain(|m| m.strength >= 0.05);
-        self.last_updated = Utc::now();
+        self.last_updated = DateTime::now();
     }
 
     /// Returns the count of active marks by type.
@@ -227,7 +227,7 @@ mod tests {
             gene: gene.into(),
             mark_type,
             strength,
-            established: Utc::now(),
+            established: DateTime::now(),
             source: MarkSource::SystemDefault,
             generations_survived: 0,
         }

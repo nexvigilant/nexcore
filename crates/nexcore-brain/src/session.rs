@@ -3,7 +3,7 @@
 //! Each session represents a working memory context for a Claude Code session.
 //! Sessions contain artifacts (task.md, plan.md, etc.) that can be versioned.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -45,7 +45,7 @@ pub enum SessionEventKind {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionEvent {
     /// When this event occurred
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Event classification
     pub kind: SessionEventKind,
     /// Human-readable description
@@ -60,7 +60,7 @@ impl SessionEvent {
     #[must_use]
     pub fn new(kind: SessionEventKind, description: impl Into<String>) -> Self {
         Self {
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             kind,
             description: description.into(),
             metadata: None,
@@ -75,7 +75,7 @@ impl SessionEvent {
         metadata: serde_json::Value,
     ) -> Self {
         Self {
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             kind,
             description: description.into(),
             metadata: Some(metadata),
@@ -90,7 +90,7 @@ pub struct SessionEntry {
     pub id: String,
 
     /// When the session was created
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Optional project name/path
     pub project: Option<String>,
@@ -109,7 +109,7 @@ pub struct BrainSession {
     pub id: String,
 
     /// When the session was created
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Optional associated project
     pub project: Option<String>,
@@ -145,7 +145,7 @@ impl BrainSession {
         initialize_directories()?;
 
         let id = NexId::v4().to_string();
-        let created_at = Utc::now();
+        let created_at = DateTime::now();
         let session_dir = brain_dir().join("sessions").join(&id);
 
         // Create session directory
@@ -273,8 +273,8 @@ impl BrainSession {
         let created_at = fs::metadata(path)
             .ok()
             .and_then(|m| m.modified().ok())
-            .map(DateTime::<Utc>::from)
-            .unwrap_or_else(Utc::now);
+            .map(DateTime::from)
+            .unwrap_or_else(|| DateTime::now());
 
         let session = Self {
             id,
@@ -457,12 +457,12 @@ impl BrainSession {
         }
     }
 
-    fn get_artifact_mtime(&self, path: &Path) -> DateTime<Utc> {
+    fn get_artifact_mtime(&self, path: &Path) -> DateTime {
         fs::metadata(path)
             .ok()
             .and_then(|m| m.modified().ok())
-            .map(DateTime::<Utc>::from)
-            .unwrap_or_else(Utc::now)
+            .map(DateTime::from)
+            .unwrap_or_else(|| DateTime::now())
     }
 
     fn get_artifact_type(&self, name: &str) -> ArtifactType {
@@ -754,7 +754,7 @@ mod tests {
     fn test_session_entry_serialization() {
         let entry = SessionEntry {
             id: NexId::v4().to_string(),
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             project: Some("test-project".into()),
             git_commit: Some("abc123".into()),
             description: Some("Test session".into()),
@@ -786,7 +786,7 @@ mod tests {
     fn test_session_entry_all_fields_none() {
         let entry = SessionEntry {
             id: NexId::v4().to_string(),
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             project: None,
             git_commit: None,
             description: None,
@@ -805,7 +805,7 @@ mod tests {
     fn test_session_entry_unicode_fields() {
         let entry = SessionEntry {
             id: NexId::v4().to_string(),
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             project: Some("项目名称 🚀".into()),
             git_commit: Some("abc123".into()),
             description: Some("Описание сессии с Unicode 日本語".into()),
@@ -823,7 +823,7 @@ mod tests {
         let long_desc = "x".repeat(10000);
         let entry = SessionEntry {
             id: NexId::v4().to_string(),
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             project: None,
             git_commit: None,
             description: Some(long_desc.clone()),
@@ -839,7 +839,7 @@ mod tests {
     fn test_brain_session_struct_fields() {
         // Test that BrainSession has the expected fields
         let id = NexId::v4().to_string();
-        let created_at = Utc::now();
+        let created_at = DateTime::now();
         let session_dir = PathBuf::from("/tmp/test");
 
         let session = BrainSession {
@@ -859,7 +859,7 @@ mod tests {
     fn test_brain_session_dir_method() {
         let session = BrainSession {
             id: NexId::v4().to_string(),
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             project: None,
             git_commit: None,
             session_dir: PathBuf::from("/home/test/.claude/brain/sessions/abc"),
@@ -885,14 +885,14 @@ mod tests {
         let entries = vec![
             SessionEntry {
                 id: NexId::v4().to_string(),
-                created_at: Utc::now(),
+                created_at: DateTime::now(),
                 project: Some("project1".into()),
                 git_commit: None,
                 description: None,
             },
             SessionEntry {
                 id: NexId::v4().to_string(),
-                created_at: Utc::now(),
+                created_at: DateTime::now(),
                 project: Some("project2".into()),
                 git_commit: Some("def456".into()),
                 description: Some("Second session".into()),
@@ -914,7 +914,7 @@ mod tests {
 
         let entry1 = SessionEntry {
             id: NexId::v4().to_string(),
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             project: None,
             git_commit: None,
             description: None,
@@ -924,7 +924,7 @@ mod tests {
 
         let entry2 = SessionEntry {
             id: NexId::v4().to_string(),
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             project: None,
             git_commit: None,
             description: None,
@@ -952,7 +952,7 @@ mod tests {
     fn test_session_entry_clone() {
         let entry = SessionEntry {
             id: NexId::v4().to_string(),
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             project: Some("test".into()),
             git_commit: Some("abc".into()),
             description: Some("desc".into()),
@@ -969,7 +969,7 @@ mod tests {
         fs::create_dir_all(dir).unwrap();
         BrainSession {
             id: NexId::v4().to_string(),
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             project: None,
             git_commit: None,
             session_dir: dir.to_path_buf(),

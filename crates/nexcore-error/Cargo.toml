@@ -19,13 +19,5 @@ default = ["std", "derive"]
 std = []
 derive = ["dep:nexcore-error-derive"]
 
-[lints.rust]
-unsafe_code = "forbid"
-
-[lints.clippy]
-all = "warn"
-pedantic = "warn"
-nursery = "warn"
-unwrap_used = "deny"
-expect_used = "deny"
-panic = "deny"
+[lints]
+workspace = true

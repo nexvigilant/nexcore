@@ -35,7 +35,7 @@ static FORGE_SESSION: Mutex<Option<ForgeHarness>> = Mutex::new(None);
 pub fn forge_init(params: ForgeInitParams) -> Result<CallToolResult, McpError> {
     let session_id = params
         .session_id
-        .unwrap_or_else(|| format!("forge-{}", chrono::Utc::now().timestamp()));
+        .unwrap_or_else(|| format!("forge-{}", nexcore_chrono::DateTime::now().timestamp()));
 
     let harness = ForgeHarness::new(&session_id);
 

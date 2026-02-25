@@ -1,6 +1,6 @@
 //! # GCP Cloud Integrations
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_error::Result;
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;
@@ -29,7 +29,7 @@ pub struct CostSummary {
     pub period: String,
     pub total_cost: f64,
     pub currency: String,
-    pub last_updated: DateTime<Utc>,
+    pub last_updated: DateTime,
 }
 
 /// GCP cost tracking client.
@@ -128,7 +128,7 @@ impl CostTracker {
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.0),
             currency: row["currency"].as_str().unwrap_or("USD").to_string(),
-            last_updated: Utc::now(),
+            last_updated: DateTime::now(),
         })
     }
 }

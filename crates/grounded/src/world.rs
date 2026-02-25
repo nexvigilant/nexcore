@@ -4,7 +4,7 @@
 
 use std::process::Command;
 
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 
 use crate::GroundedError;
 use crate::feedback::{Experiment, Outcome, World};
@@ -67,7 +67,7 @@ impl World for BashWorld {
                 "success": success,
                 "command": experiment.description,
             }),
-            observed_at: Utc::now(),
+            observed_at: DateTime::now(),
         })
     }
 }
@@ -94,7 +94,7 @@ impl MockWorld {
             observation: "success".into(),
             conclusive: true,
             evidence: serde_json::json!({"mock": true}),
-            observed_at: Utc::now(),
+            observed_at: DateTime::now(),
         }])
     }
 
@@ -104,7 +104,7 @@ impl MockWorld {
             observation: "failure".into(),
             conclusive: true,
             evidence: serde_json::json!({"mock": true, "success": false}),
-            observed_at: Utc::now(),
+            observed_at: DateTime::now(),
         }])
     }
 }
@@ -142,7 +142,7 @@ mod tests {
             observation: String::new(),
             conclusive: false,
             evidence: serde_json::Value::Null,
-            observed_at: Utc::now(),
+            observed_at: DateTime::now(),
         });
         assert_eq!(outcome.observation, "hello");
         assert!(outcome.conclusive);
@@ -163,7 +163,7 @@ mod tests {
             observation: String::new(),
             conclusive: false,
             evidence: serde_json::Value::Null,
-            observed_at: Utc::now(),
+            observed_at: DateTime::now(),
         });
         assert!(outcome.observation.contains("FAILED"));
     }
@@ -175,13 +175,13 @@ mod tests {
                 observation: "first".into(),
                 conclusive: true,
                 evidence: serde_json::json!({}),
-                observed_at: Utc::now(),
+                observed_at: DateTime::now(),
             },
             Outcome {
                 observation: "second".into(),
                 conclusive: false,
                 evidence: serde_json::json!({}),
-                observed_at: Utc::now(),
+                observed_at: DateTime::now(),
             },
         ]);
 
@@ -196,7 +196,7 @@ mod tests {
             observation: String::new(),
             conclusive: false,
             evidence: serde_json::Value::Null,
-            observed_at: Utc::now(),
+            observed_at: DateTime::now(),
         });
         assert_eq!(o1.observation, "first");
 
@@ -204,7 +204,7 @@ mod tests {
             observation: String::new(),
             conclusive: false,
             evidence: serde_json::Value::Null,
-            observed_at: Utc::now(),
+            observed_at: DateTime::now(),
         });
         assert_eq!(o2.observation, "second");
     }

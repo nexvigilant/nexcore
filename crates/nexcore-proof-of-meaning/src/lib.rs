@@ -377,7 +377,7 @@ mod tests {
                 absorption: ordered_float::OrderedFloat(0.8),
                 line_width: ordered_float::OrderedFloat(0.1),
             }],
-            recorded_at: chrono::Utc::now(),
+            recorded_at: nexcore_chrono::DateTime::now(),
         };
         let s2 = spectrum::Spectrum {
             atom_id: nexcore_id::NexId::v4(),
@@ -386,7 +386,7 @@ mod tests {
                 absorption: ordered_float::OrderedFloat(0.8),
                 line_width: ordered_float::OrderedFloat(0.1),
             }],
-            recorded_at: chrono::Utc::now(),
+            recorded_at: nexcore_chrono::DateTime::now(),
         };
         let dist = s1.distance(&s2);
         if let spectrum::SpectralDistance::Measured { interpretation, .. } = dist {
@@ -402,7 +402,7 @@ mod tests {
         let s1 = spectrum::Spectrum {
             atom_id: nexcore_id::NexId::v4(),
             lines: vec![],
-            recorded_at: chrono::Utc::now(),
+            recorded_at: nexcore_chrono::DateTime::now(),
         };
         let s2 = spectrum::Spectrum {
             atom_id: nexcore_id::NexId::v4(),
@@ -411,7 +411,7 @@ mod tests {
                 absorption: ordered_float::OrderedFloat(0.5),
                 line_width: ordered_float::OrderedFloat(0.2),
             }],
-            recorded_at: chrono::Utc::now(),
+            recorded_at: nexcore_chrono::DateTime::now(),
         };
         let dist = s1.distance(&s2);
         assert!(matches!(

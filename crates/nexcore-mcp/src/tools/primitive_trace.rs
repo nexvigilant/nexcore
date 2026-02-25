@@ -8,7 +8,7 @@
 //!
 //! Tier: T2-C (μ Mapping + κ Comparison + Σ Sum + σ Sequence)
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 use nexcore_lex_primitiva::molecular_weight::{AtomicMass, MolecularFormula};
 use nexcore_lex_primitiva::primitiva::LexPrimitiva;
@@ -49,7 +49,7 @@ pub fn primitive_trace(params: PrimitiveTraceParams) -> Result<CallToolResult, M
     }
 
     let concept = params.concept.as_deref().unwrap_or("unnamed");
-    let prim_set: HashSet<LexPrimitiva> = primitives.iter().copied().collect();
+    let prim_set: BTreeSet<LexPrimitiva> = primitives.iter().copied().collect();
 
     // --- Molecular Weight ---
     let formula = MolecularFormula::new(concept).with_all(&primitives);

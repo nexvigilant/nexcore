@@ -28,7 +28,7 @@
 
 use std::sync::Arc;
 
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
@@ -583,7 +583,7 @@ impl GuardianBridge {
                 "signals_detected": result.signals_detected,
                 "actions_taken": result.actions_taken,
                 "duration_ms": result.duration_ms,
-                "timestamp": Utc::now().to_rfc3339(),
+                "timestamp": DateTime::now().to_rfc3339(),
             }),
             priority,
             correlation_id,
@@ -845,7 +845,7 @@ mod tests {
 
         let result = crate::agentic_loop::LoopIterationResult {
             iteration_id: "test-iter-1".to_string(),
-            timestamp: chrono::Utc::now(),
+            timestamp: nexcore_chrono::DateTime::now(),
             signals_detected: 3,
             actions_taken: 1,
             results: Vec::new(),

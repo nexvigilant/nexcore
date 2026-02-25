@@ -641,7 +641,7 @@ pub async fn qbr_therapeutic_window(
     let tw = compute_therapeutic_window(&efficacy, &toxicity, &bounds).map_err(qbr_error_to_api)?;
 
     // Compute component AUCs for transparency
-    let n = if bounds.intervals % 2 != 0 {
+    let n = if !bounds.intervals.is_multiple_of(2) {
         bounds.intervals + 1
     } else {
         bounds.intervals

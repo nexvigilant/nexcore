@@ -3,7 +3,7 @@
 //! Every billable action on the platform emits a [`MeterEvent`]. Events are
 //! aggregated into [`UsageAggregation`] records for billing period totals.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -19,7 +19,7 @@ pub struct MeterEvent {
     /// User who triggered the event.
     pub user_id: UserId,
     /// When the event occurred.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// What type of usage this represents.
     pub meter_type: MeterType,
     /// Numeric quantity (e.g., 1.0 for a single API call, bytes for storage).
@@ -84,9 +84,9 @@ pub struct UsageAggregation {
     /// Tenant these totals belong to.
     pub tenant_id: TenantId,
     /// Start of the billing period (inclusive).
-    pub period_start: DateTime<Utc>,
+    pub period_start: DateTime,
     /// End of the billing period (exclusive).
-    pub period_end: DateTime<Utc>,
+    pub period_end: DateTime,
     /// Total compounds scored.
     pub compounds_scored: u64,
     /// Total ML predictions run.
@@ -130,7 +130,7 @@ pub fn aggregate_events(events: &[MeterEvent]) -> UsageAggregation {
         }
         (first.tenant_id, earliest, latest)
     } else {
-        let now = Utc::now();
+        let now = DateTime::now();
         (TenantId::new(), now, now)
     };
 
@@ -197,14 +197,15 @@ pub fn aggregate_events(events: &[MeterEvent]) -> UsageAggregation {
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
-    use chrono::TimeZone;
+    use nexcore_chrono::DateTime;
 
     fn make_event(tenant_id: TenantId, meter_type: MeterType, quantity: f64) -> MeterEvent {
         MeterEvent {
             event_id: NexId::v4(),
             tenant_id,
             user_id: UserId::new(),
-            timestamp: Utc.with_ymd_and_hms(2025, 6, 15, 12, 0, 0).unwrap(),
+            timestamp: DateTime::from_ymd_hms(2025, 6, 15, 12, 0, 0)
+                .unwrap_or_else(|_| DateTime::now()),
             meter_type,
             quantity,
             metadata: HashMap::new(),
@@ -362,18 +363,20 @@ mod tests {
     fn aggregate_period_bounds_from_timestamps() {
         let tid = TenantId::new();
         let mut e1 = make_event(tid, MeterType::CompoundScored, 1.0);
-        e1.timestamp = Utc.with_ymd_and_hms(2025, 6, 1, 0, 0, 0).unwrap();
+        e1.timestamp =
+            DateTime::from_ymd_hms(2025, 6, 1, 0, 0, 0).unwrap_or_else(|_| DateTime::now());
         let mut e2 = make_event(tid, MeterType::CompoundScored, 1.0);
-        e2.timestamp = Utc.with_ymd_and_hms(2025, 6, 30, 23, 59, 59).unwrap();
+        e2.timestamp =
+            DateTime::from_ymd_hms(2025, 6, 30, 23, 59, 59).unwrap_or_else(|_| DateTime::now());
 
         let agg = aggregate_events(&[e1, e2]);
         assert_eq!(
             agg.period_start,
-            Utc.with_ymd_and_hms(2025, 6, 1, 0, 0, 0).unwrap()
+            DateTime::from_ymd_hms(2025, 6, 1, 0, 0, 0).unwrap_or_else(|_| DateTime::now())
         );
         assert_eq!(
             agg.period_end,
-            Utc.with_ymd_and_hms(2025, 6, 30, 23, 59, 59).unwrap()
+            DateTime::from_ymd_hms(2025, 6, 30, 23, 59, 59).unwrap_or_else(|_| DateTime::now())
         );
     }
 }

@@ -8,7 +8,7 @@
 //! Alert is a state machine with defined transitions.
 
 use crate::core::{Alert, AlertState, Alertable, DetectionResult, Result, SignalError, Threshold};
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 
 /// Creates alerts from detection results that pass a threshold.
@@ -38,8 +38,8 @@ impl<T: Threshold> Alertable for AlertGenerator<T> {
             id: NexId::v4(),
             detection: result.clone(),
             state: AlertState::New,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+            created_at: DateTime::now(),
+            updated_at: DateTime::now(),
             notes: Vec::new(),
         })
     }
@@ -68,14 +68,14 @@ impl AlertTransitions {
             )));
         }
         alert.state = new_state;
-        alert.updated_at = Utc::now();
+        alert.updated_at = DateTime::now();
         Ok(())
     }
 
     /// Add a note to an alert.
     pub fn add_note(alert: &mut Alert, note: impl Into<String>) {
         alert.notes.push(note.into());
-        alert.updated_at = Utc::now();
+        alert.updated_at = DateTime::now();
     }
 }
 
@@ -106,7 +106,7 @@ mod tests {
             ebgm: Some(Ebgm(2.0)),
             chi_square: ChiSquare(10.0),
             strength: SignalStrength::Strong,
-            detected_at: Utc::now(),
+            detected_at: DateTime::now(),
         }
     }
 

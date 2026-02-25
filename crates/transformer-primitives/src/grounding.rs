@@ -1,6 +1,6 @@
 //! T1 primitive grounding for the transformer attention pipeline.
 //!
-//! This crate is function-oriented (operates on polars `LazyFrame`s) rather than
+//! This crate is function-oriented (operates on `DataFrame`s) rather than
 //! type-oriented, so GroundsTo impls attach to a pipeline description marker.
 //!
 //! | Stage | Primitives | Rationale |

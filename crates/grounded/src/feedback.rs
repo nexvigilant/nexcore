@@ -13,7 +13,7 @@
 //!
 //! Grounds to: ρ(Recursion) + →(Causality) + π(Persistence) + ς(State)
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::GroundedError;
@@ -32,7 +32,7 @@ pub struct Hypothesis {
     /// What would falsify this hypothesis?
     pub falsification_criteria: String,
     /// When was this hypothesis generated?
-    pub generated_at: DateTime<Utc>,
+    pub generated_at: DateTime,
 }
 
 /// A concrete test that can produce observable outcomes.
@@ -62,7 +62,7 @@ pub struct Outcome {
     /// Raw data or evidence.
     pub evidence: serde_json::Value,
     /// When was this observed?
-    pub observed_at: DateTime<Utc>,
+    pub observed_at: DateTime,
 }
 
 /// Knowledge gained from comparing hypothesis to outcome.
@@ -80,7 +80,7 @@ pub struct Learning {
     pub hypothesis_claim: String,
     pub observation: String,
     /// When was this learning generated?
-    pub learned_at: DateTime<Utc>,
+    pub learned_at: DateTime,
 }
 
 /// The result of comparing prediction to reality.
@@ -282,7 +282,7 @@ mod tests {
                 prior: Confidence::new(0.5)
                     .map_err(|e| GroundedError::ExperimentFailed(e.to_string()))?,
                 falsification_criteria: "outcome != expected".into(),
-                generated_at: Utc::now(),
+                generated_at: DateTime::now(),
             })
         }
 
@@ -313,7 +313,7 @@ mod tests {
                 verdict,
                 hypothesis_claim: h.claim.clone(),
                 observation: o.observation.clone(),
-                learned_at: Utc::now(),
+                learned_at: DateTime::now(),
             })
         }
 
@@ -331,7 +331,7 @@ mod tests {
                 observation: "experiment produced expected result".into(),
                 conclusive: true,
                 evidence: serde_json::json!({"result": "pass"}),
-                observed_at: Utc::now(),
+                observed_at: DateTime::now(),
             })
         }
     }
@@ -386,7 +386,7 @@ mod tests {
             verdict: Verdict::Supported,
             hypothesis_claim: "the sky is blue".into(),
             observation: "looked up, saw blue".into(),
-            learned_at: Utc::now(),
+            learned_at: DateTime::now(),
         };
         let _ = store.persist(&learning);
 

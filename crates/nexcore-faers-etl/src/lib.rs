@@ -27,13 +27,13 @@ pub mod ndc;
 pub mod spatial_bridge;
 pub mod types;
 
+use nexcore_dataframe::{Column, Counter, DataFrame, DataFrameError, DataType, Scalar};
 use nexcore_error::{Context, Result};
 use nexcore_vigilance::pv::faers::parse_quarterly_linked;
 use nexcore_vigilance::pv::signals::batch::{
     BatchContingencyTables, CompleteSignalResult, batch_complete_parallel,
 };
 use nexcore_vigilance::pv::signals::core::newtypes::{Ebgm, Ic, Prr, Ror};
-use polars::prelude::*;
 use rayon::prelude::*;
 use std::collections::HashMap;
 use std::env;
@@ -267,24 +267,24 @@ impl IngestColumns {
 
     fn into_dataframe(self) -> Result<DataFrame> {
         DataFrame::new(vec![
-            Series::new(columns::CASE_ID.into(), self.case_ids).into(),
-            Series::new(columns::DRUG.into(), self.drugs).into(),
-            Series::new(columns::EVENT.into(), self.events).into(),
-            Series::new(columns::AGE_YEARS.into(), self.age_years).into(),
-            Series::new(columns::AGE_GROUP.into(), self.age_groups).into(),
-            Series::new(columns::SEX.into(), self.sexes).into(),
-            Series::new(columns::WEIGHT_KG.into(), self.weights).into(),
-            Series::new(columns::REPORTER_COUNTRY.into(), self.reporter_countries).into(),
-            Series::new(columns::OCCR_COUNTRY.into(), self.occr_countries).into(),
-            Series::new(columns::MFR_SNDR.into(), self.mfr_sndrs).into(),
-            Series::new(columns::OCCP_COD.into(), self.occp_cods).into(),
-            Series::new(columns::MFR_NUM.into(), self.mfr_nums).into(),
-            Series::new(columns::FDA_DT.into(), self.fda_dts).into(),
-            Series::new(columns::EVENT_DT.into(), self.event_dts).into(),
-            Series::new(columns::ROLE_CODE.into(), self.role_codes).into(),
-            Series::new(columns::REPORT_SOURCES.into(), self.report_sources).into(),
-            Series::new(columns::OUTCOMES.into(), self.outcomes).into(),
-            Series::new(columns::THERAPY_SUMMARY.into(), self.therapy).into(),
+            Column::from_u64s(columns::CASE_ID, self.case_ids),
+            Column::from_strings(columns::DRUG, self.drugs),
+            Column::from_strings(columns::EVENT, self.events),
+            Column::new_f64(columns::AGE_YEARS, self.age_years),
+            Column::new_string(columns::AGE_GROUP, self.age_groups),
+            Column::new_string(columns::SEX, self.sexes),
+            Column::new_f64(columns::WEIGHT_KG, self.weights),
+            Column::new_string(columns::REPORTER_COUNTRY, self.reporter_countries),
+            Column::new_string(columns::OCCR_COUNTRY, self.occr_countries),
+            Column::new_string(columns::MFR_SNDR, self.mfr_sndrs),
+            Column::new_string(columns::OCCP_COD, self.occp_cods),
+            Column::new_string(columns::MFR_NUM, self.mfr_nums),
+            Column::new_string(columns::FDA_DT, self.fda_dts),
+            Column::new_string(columns::EVENT_DT, self.event_dts),
+            Column::new_string(columns::ROLE_CODE, self.role_codes),
+            Column::new_string(columns::REPORT_SOURCES, self.report_sources),
+            Column::new_string(columns::OUTCOMES, self.outcomes),
+            Column::new_string(columns::THERAPY_SUMMARY, self.therapy),
         ])
         .context("Failed to create high-resolution DataFrame")
     }
@@ -333,86 +333,94 @@ fn select_drugs(
 // =============================================================================
 
 /// Transform: normalize drug and event names (no-op, already uppercased).
-pub fn transform_normalize_names(df: LazyFrame) -> Result<LazyFrame> {
+pub fn transform_normalize_names(df: DataFrame) -> Result<DataFrame> {
     Ok(df)
 }
 
 /// Transform: aggregate drug-event pairs into counts.
-pub fn transform_count_drug_events(df: LazyFrame) -> Result<LazyFrame> {
+pub fn transform_count_drug_events(df: DataFrame) -> Result<DataFrame> {
     transform_count_drug_events_stratified(df, vec![])
 }
 
 /// Transform: aggregate with stratification.
 pub fn transform_count_drug_events_stratified(
-    df: LazyFrame,
+    df: DataFrame,
     strata: Vec<&str>,
-) -> Result<LazyFrame> {
-    let mut group_by = vec![col(columns::DRUG), col(columns::EVENT)];
-    for s in strata {
-        group_by.push(col(s));
-    }
-    Ok(df
-        .group_by(group_by)
-        .agg([col(columns::CASE_ID).count().alias(columns::N)]))
+) -> Result<DataFrame> {
+    let mut group_cols: Vec<&str> = vec![columns::DRUG, columns::EVENT];
+    group_cols.extend(strata);
+
+    let counter =
+        Counter::from_dataframe(&df, &group_cols).context("Failed to count drug-event pairs")?;
+    let counted = counter
+        .into_dataframe()
+        .context("Failed to build count DataFrame")?;
+    // Counter produces "count" column — rename to match pipeline convention "n"
+    counted
+        .rename_column("count", columns::N)
+        .context("Failed to rename count column")
 }
 
 /// Transform: filter to minimum case count (default 3).
-pub fn transform_filter_minimum(df: LazyFrame) -> Result<LazyFrame> {
+pub fn transform_filter_minimum(df: DataFrame) -> Result<DataFrame> {
     transform_filter_minimum_n(df, 3)
 }
 
 /// Transform: filter to minimum case count with custom threshold.
-pub fn transform_filter_minimum_n(df: LazyFrame, min_cases: i64) -> Result<LazyFrame> {
-    Ok(df.filter(col(columns::N).gt_eq(lit(min_cases))))
+pub fn transform_filter_minimum_n(df: DataFrame, min_cases: i64) -> Result<DataFrame> {
+    let threshold = if min_cases < 0 {
+        0u64
+    } else {
+        min_cases as u64
+    };
+    df.filter_by(columns::N, |v| v.as_u64().is_some_and(|n| n >= threshold))
+        .context("Failed to filter by minimum count")
 }
 
 // =============================================================================
 // SINKS
 // =============================================================================
 
-/// Sink: Write DataFrame to Parquet file (default path).
-pub fn sink_parquet_output(df: LazyFrame) -> Result<RowCount> {
-    sink_parquet_output_to(df, "output/drug_event_counts.parquet")
+/// Sink: Write DataFrame to JSON file (default path).
+pub fn sink_output(df: DataFrame) -> Result<RowCount> {
+    sink_output_to(df, "output/drug_event_counts.json")
 }
 
-/// Sink: Write DataFrame to specified Parquet file path.
-pub fn sink_parquet_output_to(df: LazyFrame, path_template: &str) -> Result<RowCount> {
-    let mut output_df = df.collect().context("Failed to collect DataFrame")?;
-    let row_count = RowCount(output_df.height() as u64);
-    if row_count.value() == 0 {
-        return Ok(RowCount(0));
-    }
-    let path = chrono::Utc::now().format(path_template).to_string();
-    write_parquet(&mut output_df, &path, Some(1_000_000))?;
-    Ok(row_count)
-}
-
-/// Sink: Write signal detection results to Parquet.
-pub fn sink_signals_parquet(results: &[SignalDetectionResult], path: &Path) -> Result<RowCount> {
-    let mut df = signals_to_dataframe(results)?;
+/// Sink: Write DataFrame to specified JSON file path.
+pub fn sink_output_to(df: DataFrame, path_template: &str) -> Result<RowCount> {
     let row_count = RowCount(df.height() as u64);
     if row_count.value() == 0 {
         return Ok(RowCount(0));
     }
-    write_parquet(&mut df, &path.display().to_string(), None)?;
+    let path = nexcore_chrono::DateTime::now()
+        .format(path_template)
+        .unwrap_or_default();
+    write_json(&df, &path)?;
     Ok(row_count)
 }
 
-/// Shared Parquet writer — creates parent dirs, writes with Snappy.
-fn write_parquet(df: &mut DataFrame, path: &str, rg_size: Option<usize>) -> Result<()> {
-    if let Some(parent) = Path::new(path).parent() {
-        std::fs::create_dir_all(parent)
-            .with_context(|| format!("Failed to create dir: {}", parent.display()))?;
+/// Sink: Write signal detection results to JSON.
+pub fn sink_signals(results: &[SignalDetectionResult], path: &Path) -> Result<RowCount> {
+    let df = signals_to_dataframe(results)?;
+    let row_count = RowCount(df.height() as u64);
+    if row_count.value() == 0 {
+        return Ok(RowCount(0));
     }
-    let file =
-        std::fs::File::create(path).with_context(|| format!("Failed to create file: {path}"))?;
-    let mut w = ParquetWriter::new(file).with_compression(ParquetCompression::Snappy);
-    if let Some(size) = rg_size {
-        w = w.with_row_group_size(Some(size));
+    write_json(&df, &path.display().to_string())?;
+    Ok(row_count)
+}
+
+/// Shared JSON writer — creates parent dirs, writes row-oriented JSON.
+fn write_json(df: &DataFrame, path: &str) -> Result<()> {
+    let p = Path::new(path);
+    if let Some(parent) = p.parent() {
+        if !parent.as_os_str().is_empty() && !parent.exists() {
+            std::fs::create_dir_all(parent)
+                .with_context(|| format!("Failed to create dir: {}", parent.display()))?;
+        }
     }
-    w.finish(df)
-        .with_context(|| format!("Failed to write: {path}"))?;
-    Ok(())
+    df.to_json_file(p)
+        .with_context(|| format!("Failed to write: {path}"))
 }
 
 // =============================================================================
@@ -463,30 +471,34 @@ pub fn build_contingency_tables_from_counts(df: &DataFrame) -> Result<Contingenc
     ))
 }
 
-fn extract_str_column<'a>(df: &'a DataFrame, name: &str) -> Result<&'a StringChunked> {
-    df.column(name)
-        .with_context(|| format!("Missing '{name}'"))?
-        .str()
-        .with_context(|| format!("'{name}' not string"))
+fn extract_str_column<'a>(df: &'a DataFrame, name: &str) -> Result<&'a Column> {
+    let col = df
+        .column(name)
+        .with_context(|| format!("Missing '{name}'"))?;
+    if col.dtype() != DataType::Utf8 {
+        nexcore_error::bail!("'{name}' is not a string column");
+    }
+    Ok(col)
 }
 
 fn extract_counts_column(df: &DataFrame) -> Result<Vec<u64>> {
     let n_col = df.column(columns::N).context("Missing 'n'")?;
-    if let Ok(c) = n_col.u32() {
-        return Ok(c.iter().map(|v| u64::from(v.unwrap_or(0))).collect());
+    let mut counts = Vec::with_capacity(df.height());
+    for i in 0..df.height() {
+        let val = match n_col.get(i) {
+            Some(Scalar::UInt64(n)) => n,
+            Some(Scalar::Int64(n)) => n as u64,
+            Some(Scalar::Float64(n)) => n as u64,
+            _ => 0,
+        };
+        counts.push(val);
     }
-    if let Ok(c) = n_col.u64() {
-        return Ok(c.iter().map(|v| v.unwrap_or(0)).collect());
-    }
-    if let Ok(c) = n_col.i64() {
-        return Ok(c.iter().map(|v| v.unwrap_or(0) as u64).collect());
-    }
-    nexcore_error::bail!("'n' column must be u32, u64, or i64")
+    Ok(counts)
 }
 
 fn compute_marginal_totals(
-    drugs: &StringChunked,
-    events: &StringChunked,
+    drugs: &Column,
+    events: &Column,
     counts: &[u64],
     n: usize,
 ) -> (HashMap<String, u64>, HashMap<String, u64>, u64) {
@@ -494,8 +506,18 @@ fn compute_marginal_totals(
     let mut et: HashMap<String, u64> = HashMap::new();
     let mut total: u64 = 0;
     for i in 0..n {
-        let d = drugs.get(i).unwrap_or_default().to_string();
-        let e = events.get(i).unwrap_or_default().to_string();
+        let d = drugs
+            .get_str(i)
+            .ok()
+            .flatten()
+            .unwrap_or_default()
+            .to_string();
+        let e = events
+            .get_str(i)
+            .ok()
+            .flatten()
+            .unwrap_or_default()
+            .to_string();
         *dt.entry(d).or_insert(0) += counts[i];
         *et.entry(e).or_insert(0) += counts[i];
         total += counts[i];
@@ -504,8 +526,8 @@ fn compute_marginal_totals(
 }
 
 fn build_tables_from_marginals(
-    drugs: &StringChunked,
-    events: &StringChunked,
+    drugs: &Column,
+    events: &Column,
     counts: &[u64],
     dt: &HashMap<String, u64>,
     et: &HashMap<String, u64>,
@@ -520,15 +542,25 @@ fn build_tables_from_marginals(
     let mut dv = Vec::with_capacity(n);
 
     for i in 0..n {
-        let d = drugs.get(i).unwrap_or_default().to_string();
-        let e = events.get(i).unwrap_or_default().to_string();
+        let d = drugs
+            .get_str(i)
+            .ok()
+            .flatten()
+            .unwrap_or_default()
+            .to_string();
+        let e = events
+            .get_str(i)
+            .ok()
+            .flatten()
+            .unwrap_or_default()
+            .to_string();
         let a = counts[i];
         let d_tot = *dt.get(&d).unwrap_or(&0);
         let e_tot = *et.get(&e).unwrap_or(&0);
-        av.push(u64::from(a));
-        bv.push(u64::from(d_tot.saturating_sub(a)));
-        cv.push(u64::from(e_tot.saturating_sub(a)));
-        dv.push(u64::from(total.saturating_sub(d_tot + e_tot - a)));
+        av.push(a);
+        bv.push(d_tot.saturating_sub(a));
+        cv.push(e_tot.saturating_sub(a));
+        dv.push(total.saturating_sub(d_tot + e_tot - a));
         dn.push(DrugName(d));
         en.push(EventName(e));
     }
@@ -583,59 +615,78 @@ pub fn filter_signals(results: &[SignalDetectionResult]) -> Vec<&SignalDetection
     results.iter().filter(|r| r.is_any_signal()).collect()
 }
 
-/// Convert signal detection results to DataFrame (flat Parquet schema).
+/// Convert signal detection results to DataFrame.
 pub fn signals_to_dataframe(results: &[SignalDetectionResult]) -> Result<DataFrame> {
     DataFrame::new(vec![
-        col_str(columns::DRUG, results, |r| r.drug.as_str()),
-        col_str(columns::EVENT, results, |r| r.event.as_str()),
-        col_u64(columns::N, results, |r| r.case_count.value()),
-        col_f64(columns::PRR, results, |r| r.prr.point.value()),
-        col_f64(columns::PRR_LOWER_CI, results, |r| r.prr.lower_ci),
-        col_f64(columns::PRR_UPPER_CI, results, |r| {
-            r.prr.upper_ci.unwrap_or(0.0)
-        }),
-        col_bool(columns::PRR_SIGNAL, results, |r| r.prr.is_signal),
-        col_f64(columns::ROR, results, |r| r.ror.point.value()),
-        col_f64(columns::ROR_LOWER_CI, results, |r| r.ror.lower_ci),
-        col_bool(columns::ROR_SIGNAL, results, |r| r.ror.is_signal),
-        col_f64(columns::IC, results, |r| r.ic.point.value()),
-        col_f64(columns::IC025, results, |r| r.ic.lower_ci),
-        col_bool(columns::IC_SIGNAL, results, |r| r.ic.is_signal),
-        col_f64(columns::EBGM, results, |r| r.ebgm.point.value()),
-        col_f64(columns::EB05, results, |r| r.ebgm.lower_ci),
-        col_bool(columns::EBGM_SIGNAL, results, |r| r.ebgm.is_signal),
+        Column::from_strings(
+            columns::DRUG,
+            results.iter().map(|r| r.drug.0.clone()).collect(),
+        ),
+        Column::from_strings(
+            columns::EVENT,
+            results.iter().map(|r| r.event.0.clone()).collect(),
+        ),
+        Column::from_u64s(
+            columns::N,
+            results.iter().map(|r| r.case_count.value()).collect(),
+        ),
+        Column::from_f64s(
+            columns::PRR,
+            results.iter().map(|r| r.prr.point.value()).collect(),
+        ),
+        Column::from_f64s(
+            columns::PRR_LOWER_CI,
+            results.iter().map(|r| r.prr.lower_ci).collect(),
+        ),
+        Column::from_f64s(
+            columns::PRR_UPPER_CI,
+            results
+                .iter()
+                .map(|r| r.prr.upper_ci.unwrap_or(0.0))
+                .collect(),
+        ),
+        Column::from_bools(
+            columns::PRR_SIGNAL,
+            results.iter().map(|r| r.prr.is_signal).collect(),
+        ),
+        Column::from_f64s(
+            columns::ROR,
+            results.iter().map(|r| r.ror.point.value()).collect(),
+        ),
+        Column::from_f64s(
+            columns::ROR_LOWER_CI,
+            results.iter().map(|r| r.ror.lower_ci).collect(),
+        ),
+        Column::from_bools(
+            columns::ROR_SIGNAL,
+            results.iter().map(|r| r.ror.is_signal).collect(),
+        ),
+        Column::from_f64s(
+            columns::IC,
+            results.iter().map(|r| r.ic.point.value()).collect(),
+        ),
+        Column::from_f64s(
+            columns::IC025,
+            results.iter().map(|r| r.ic.lower_ci).collect(),
+        ),
+        Column::from_bools(
+            columns::IC_SIGNAL,
+            results.iter().map(|r| r.ic.is_signal).collect(),
+        ),
+        Column::from_f64s(
+            columns::EBGM,
+            results.iter().map(|r| r.ebgm.point.value()).collect(),
+        ),
+        Column::from_f64s(
+            columns::EB05,
+            results.iter().map(|r| r.ebgm.lower_ci).collect(),
+        ),
+        Column::from_bools(
+            columns::EBGM_SIGNAL,
+            results.iter().map(|r| r.ebgm.is_signal).collect(),
+        ),
     ])
     .context("Failed to create signal results DataFrame")
-}
-
-// Column builder helpers for signals_to_dataframe
-fn col_str<'a>(
-    name: &str,
-    r: &'a [SignalDetectionResult],
-    f: impl Fn(&'a SignalDetectionResult) -> &'a str,
-) -> Column {
-    Series::new(name.into(), r.iter().map(f).collect::<Vec<_>>()).into()
-}
-fn col_u64(
-    name: &str,
-    r: &[SignalDetectionResult],
-    f: impl Fn(&SignalDetectionResult) -> u64,
-) -> Column {
-    Series::new(name.into(), r.iter().map(f).collect::<Vec<_>>()).into()
-}
-fn col_f64(
-    name: &str,
-    r: &[SignalDetectionResult],
-    f: impl Fn(&SignalDetectionResult) -> f64,
-) -> Column {
-    Series::new(name.into(), r.iter().map(f).collect::<Vec<_>>()).into()
-}
-fn col_bool(
-    name: &str,
-    r: &[SignalDetectionResult],
-    f: impl Fn(&SignalDetectionResult) -> bool,
-) -> Column {
-    Series::new(name.into(), r.iter().map(f).collect::<Vec<_>>()).into()
 }
 
 /// Run complete signal detection pipeline on aggregated counts.
@@ -644,7 +695,7 @@ pub fn run_signal_detection_pipeline(counts_df: &DataFrame) -> Result<Vec<Signal
     run_signal_detection(&batch)
 }
 
-/// End-to-end pipeline result (opaque to callers that don't use Polars).
+/// End-to-end pipeline result.
 pub struct PipelineOutput {
     /// All signal detection results
     pub results: Vec<SignalDetectionResult>,
@@ -654,8 +705,7 @@ pub struct PipelineOutput {
 
 /// Run the full ETL pipeline: ingest → normalize → count → filter → detect.
 ///
-/// This is the main entry point for callers that don't want Polars types.
-/// All Polars operations are contained within this function.
+/// This is the main entry point for callers that don't need intermediate DataFrames.
 pub fn run_full_pipeline(
     faers_dir: &Path,
     include_all_roles: bool,
@@ -669,14 +719,11 @@ pub fn run_full_pipeline(
         });
     }
 
-    let lazy = transform_normalize_names(df.lazy())?;
-    let counted = transform_count_drug_events(lazy)?;
-    let filtered = transform_filter_minimum_n(counted, min_cases)?;
-    let counts_df = filtered
-        .collect()
-        .context("Failed to collect filtered counts")?;
-    let total_pairs = counts_df.height();
-    let results = run_signal_detection_pipeline(&counts_df)?;
+    let df = transform_normalize_names(df)?;
+    let df = transform_count_drug_events(df)?;
+    let df = transform_filter_minimum_n(df, min_cases)?;
+    let total_pairs = df.height();
+    let results = run_signal_detection_pipeline(&df)?;
 
     Ok(PipelineOutput {
         results,
@@ -728,51 +775,50 @@ mod tests {
     #[test]
     fn test_count_drug_events() {
         let df = DataFrame::new(vec![
-            Series::new(columns::CASE_ID.into(), vec![1u64, 2, 3, 4]).into(),
-            Series::new(columns::DRUG.into(), vec!["ASP", "ASP", "ASP", "MET"]).into(),
-            Series::new(columns::EVENT.into(), vec!["HA", "HA", "HA", "NA"]).into(),
+            Column::from_u64s(columns::CASE_ID, vec![1, 2, 3, 4]),
+            Column::from_strs(columns::DRUG, &["ASP", "ASP", "ASP", "MET"]),
+            Column::from_strs(columns::EVENT, &["HA", "HA", "HA", "NA"]),
         ])
         .unwrap_or_else(|e| panic!("{e}"));
 
-        let c = transform_count_drug_events(df.lazy())
-            .unwrap_or_else(|e| panic!("{e}"))
-            .collect()
-            .unwrap_or_else(|e| panic!("{e}"));
+        let c = transform_count_drug_events(df).unwrap_or_else(|e| panic!("{e}"));
 
-        let ah = c
-            .clone()
-            .lazy()
-            .filter(
-                col(columns::DRUG)
-                    .eq(lit("ASP"))
-                    .and(col(columns::EVENT).eq(lit("HA"))),
-            )
-            .collect()
-            .unwrap_or_else(|e| panic!("{e}"));
-        assert_eq!(ah.height(), 1);
+        // ASP+HA should have count 3 — find the row
+        let mut found = false;
+        for i in 0..c.height() {
+            let d = c
+                .column(columns::DRUG)
+                .ok()
+                .and_then(|col| col.get_str(i).ok().flatten().map(|s| s.to_string()));
+            let e = c
+                .column(columns::EVENT)
+                .ok()
+                .and_then(|col| col.get_str(i).ok().flatten().map(|s| s.to_string()));
+            if d.as_deref() == Some("ASP") && e.as_deref() == Some("HA") {
+                found = true;
+            }
+        }
+        assert!(found, "ASP+HA pair not found in counted DataFrame");
     }
 
     #[test]
     fn test_filter_minimum() {
         let df = DataFrame::new(vec![
-            Series::new(columns::DRUG.into(), vec!["A", "B"]).into(),
-            Series::new(columns::EVENT.into(), vec!["X", "Y"]).into(),
-            Series::new(columns::N.into(), vec![5u32, 2]).into(),
+            Column::from_strs(columns::DRUG, &["A", "B"]),
+            Column::from_strs(columns::EVENT, &["X", "Y"]),
+            Column::from_u64s(columns::N, vec![5, 2]),
         ])
         .unwrap_or_else(|e| panic!("{e}"));
-        let c = transform_filter_minimum(df.lazy())
-            .unwrap_or_else(|e| panic!("{e}"))
-            .collect()
-            .unwrap_or_else(|e| panic!("{e}"));
+        let c = transform_filter_minimum(df).unwrap_or_else(|e| panic!("{e}"));
         assert_eq!(c.height(), 1);
     }
 
     #[test]
     fn test_contingency_tables() {
         let df = DataFrame::new(vec![
-            Series::new(columns::DRUG.into(), vec!["DA", "DA", "DB"]).into(),
-            Series::new(columns::EVENT.into(), vec!["EX", "EY", "EX"]).into(),
-            Series::new(columns::N.into(), vec![10u32, 5, 8]).into(),
+            Column::from_strs(columns::DRUG, &["DA", "DA", "DB"]),
+            Column::from_strs(columns::EVENT, &["EX", "EY", "EX"]),
+            Column::from_u64s(columns::N, vec![10, 5, 8]),
         ])
         .unwrap_or_else(|e| panic!("{e}"));
         let b = build_contingency_tables_from_counts(&df).unwrap_or_else(|e| panic!("{e}"));
@@ -786,9 +832,9 @@ mod tests {
     #[test]
     fn test_pipeline_end_to_end() {
         let df = DataFrame::new(vec![
-            Series::new(columns::DRUG.into(), vec!["A", "A", "B", "B", "C", "C"]).into(),
-            Series::new(columns::EVENT.into(), vec!["X", "Y", "X", "Y", "X", "Y"]).into(),
-            Series::new(columns::N.into(), vec![50u32, 5, 10, 100, 20, 500]).into(),
+            Column::from_strs(columns::DRUG, &["A", "A", "B", "B", "C", "C"]),
+            Column::from_strs(columns::EVENT, &["X", "Y", "X", "Y", "X", "Y"]),
+            Column::from_u64s(columns::N, vec![50, 5, 10, 100, 20, 500]),
         ])
         .unwrap_or_else(|e| panic!("{e}"));
         let r = run_signal_detection_pipeline(&df).unwrap_or_else(|e| panic!("{e}"));

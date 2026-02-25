@@ -7,7 +7,7 @@ use axum::{
     Json, Router,
     routing::{get, post},
 };
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use vr_core::tenant::SubscriptionTier;
@@ -91,7 +91,7 @@ pub async fn get_current_tenant(tenant: VerifiedTenant) -> Json<TenantInfoRespon
         org_name: "Unknown Organization".to_string(),
         tier: tier_display_name(*ctx.tier()).to_string(),
         data_classification: "unknown".to_string(),
-        verified_at: Utc::now().to_rfc3339(),
+        verified_at: DateTime::now().to_rfc3339(),
     })
 }
 
@@ -208,6 +208,7 @@ fn tier_display_name(tier: SubscriptionTier) -> &'static str {
         SubscriptionTier::Accelerator => "Accelerator",
         SubscriptionTier::Enterprise => "Enterprise",
         SubscriptionTier::Custom => "Custom",
+        _ => "Unknown",
     }
 }
 
@@ -229,5 +230,6 @@ fn api_rate_limit_for_tier(tier: &SubscriptionTier) -> u32 {
         SubscriptionTier::Accelerator => 600,
         SubscriptionTier::Enterprise => 2_000,
         SubscriptionTier::Custom => 5_000,
+        _ => 60,
     }
 }

@@ -24,7 +24,7 @@
 //! - **Receptor recycling**: After processing, capacity is restored
 
 use crate::{Cytokine, CytokineFamily, ThreatLevel};
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 
@@ -101,7 +101,7 @@ impl InternalizationPolicy {
 
         // Age check
         if self.max_age_secs > 0 {
-            let age = Utc::now()
+            let age = DateTime::now()
                 .signed_duration_since(signal.emitted_at)
                 .num_seconds();
             if age > i64::from(self.max_age_secs) {
@@ -126,7 +126,7 @@ pub struct Vesicle {
     pub signal: Cytokine,
 
     /// When the signal was internalized
-    pub internalized_at: DateTime<Utc>,
+    pub internalized_at: DateTime,
 
     /// Processing state
     pub state: VesicleState,
@@ -157,7 +157,7 @@ impl Vesicle {
     pub fn new(signal: Cytokine) -> Self {
         Self {
             signal,
-            internalized_at: Utc::now(),
+            internalized_at: DateTime::now(),
             state: VesicleState::EarlyEndosome,
             processing_depth: 0,
         }
@@ -185,7 +185,7 @@ impl Vesicle {
 
     /// Time since internalization in seconds.
     pub fn age_secs(&self) -> i64 {
-        Utc::now()
+        DateTime::now()
             .signed_duration_since(self.internalized_at)
             .num_seconds()
     }

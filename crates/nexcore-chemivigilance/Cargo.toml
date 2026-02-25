@@ -13,15 +13,10 @@ nexcore-molcore = { path = "../nexcore-molcore" }
 nexcore-structural-alerts = { path = "../nexcore-structural-alerts" }
 nexcore-qsar = { path = "../nexcore-qsar" }
 nexcore-metabolite = { path = "../nexcore-metabolite" }
-chrono = { workspace = true }
+nexcore-chrono = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 
-[lints.rust]
-dead_code = "allow"
-unused_imports = "allow"
 
-[lints.clippy]
-unwrap_used = "deny"
-expect_used = "deny"
-panic = "deny"
+[lints]
+workspace = true

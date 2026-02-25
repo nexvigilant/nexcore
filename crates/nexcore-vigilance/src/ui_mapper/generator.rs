@@ -17,7 +17,7 @@ impl UiMappingGenerator {
 
     /// Export mappings to YAML string
     pub fn to_yaml(mappings: &[UiMapping]) -> Result<String> {
-        serde_yaml::to_string(mappings).map_err(|e| e.into())
+        serde_yml::to_string(mappings).map_err(|e| e.into())
     }
 
     /// Export mappings to JSON file

@@ -534,7 +534,7 @@ pub async fn emit_event(Json(req): Json<EmitEventRequest>) -> ApiResult<EmitEven
         .map(|d| d.as_nanos())
         .unwrap_or(0);
     let event_id = format!("{:032x}", ts);
-    let timestamp = chrono::Utc::now().to_rfc3339();
+    let timestamp = nexcore_chrono::DateTime::now().to_rfc3339();
     let priority = req.priority.unwrap_or_else(|| "Normal".to_string());
 
     let event_payload = serde_json::json!({

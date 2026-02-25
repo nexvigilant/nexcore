@@ -2,7 +2,7 @@
 //!
 //! User models for healthcare professionals with FHIR R4 alignment.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -56,12 +56,12 @@ pub struct User {
     pub npi_number: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tenant_id: Option<String>,
-    #[serde(default = "Utc::now")]
-    pub created_at: DateTime<Utc>,
-    #[serde(default = "Utc::now")]
-    pub updated_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub created_at: DateTime,
+    #[serde(default = "DateTime::now")]
+    pub updated_at: DateTime,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub last_login: Option<DateTime<Utc>>,
+    pub last_login: Option<DateTime>,
     #[serde(default)]
     pub mfa_enabled: bool,
     /// Security clearance level (1-5).
@@ -75,9 +75,9 @@ pub struct User {
     #[serde(default)]
     pub access_permissions: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub last_audit: Option<DateTime<Utc>>,
+    pub last_audit: Option<DateTime>,
     #[serde(default)]
-    pub consent_agreements: HashMap<String, DateTime<Utc>>,
+    pub consent_agreements: HashMap<String, DateTime>,
 }
 
 fn default_clearance() -> i32 {
@@ -106,8 +106,8 @@ impl User {
             license_number: None,
             npi_number: None,
             tenant_id: None,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+            created_at: DateTime::now(),
+            updated_at: DateTime::now(),
             last_login: None,
             mfa_enabled: false,
             security_clearance: 1,

@@ -10,7 +10,7 @@
 //! than naive substring search. Patterns support T1 primitive grounding
 //! and time-based confidence decay.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
@@ -142,7 +142,7 @@ pub struct Preference {
     pub confidence: f64,
 
     /// When this preference was last updated
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
 
     /// Number of times this preference was reinforced
     pub reinforcement_count: u32,
@@ -157,7 +157,7 @@ impl Preference {
             value,
             description: None,
             confidence: 0.5, // Start neutral
-            updated_at: Utc::now(),
+            updated_at: DateTime::now(),
             reinforcement_count: 1,
         }
     }
@@ -167,7 +167,7 @@ impl Preference {
         self.reinforcement_count += 1;
         // Asymptotically approach 1.0
         self.confidence = 1.0 - (1.0 / (self.reinforcement_count as f64 + 1.0));
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Weaken this preference (decrease confidence)
@@ -180,7 +180,7 @@ impl Preference {
         } else {
             1.0 - (1.0 / (self.reinforcement_count as f64 + 1.0))
         };
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Effective confidence after time-based decay.
@@ -189,12 +189,12 @@ impl Preference {
     /// Reinforcing resets `updated_at`, restarting the decay clock.
     #[must_use]
     pub fn effective_confidence(&self) -> f64 {
-        self.effective_confidence_at(Utc::now())
+        self.effective_confidence_at(DateTime::now())
     }
 
     /// Effective confidence at a specific point in time (for testing/analysis).
     #[must_use]
-    pub fn effective_confidence_at(&self, now: DateTime<Utc>) -> f64 {
+    pub fn effective_confidence_at(&self, now: DateTime) -> f64 {
         let days_elapsed = now.signed_duration_since(self.updated_at).num_hours() as f64 / 24.0;
         if days_elapsed <= 0.0 {
             return self.confidence;
@@ -226,11 +226,11 @@ pub struct Pattern {
     pub examples: Vec<String>,
 
     /// When this pattern was detected
-    pub detected_at: DateTime<Utc>,
+    pub detected_at: DateTime,
 
     /// When this pattern was last reinforced (for decay calculation)
-    #[serde(default = "Utc::now")]
-    pub updated_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub updated_at: DateTime,
 
     /// Confidence level (0.0 to 1.0) — raw, before decay
     pub confidence: f64,
@@ -256,8 +256,8 @@ impl Pattern {
             pattern_type: pattern_type.into(),
             description: description.into(),
             examples: Vec::new(),
-            detected_at: Utc::now(),
-            updated_at: Utc::now(),
+            detected_at: DateTime::now(),
+            updated_at: DateTime::now(),
             confidence: 0.5,
             occurrence_count: 1,
             t1_grounding: None,
@@ -268,7 +268,7 @@ impl Pattern {
     pub fn add_example(&mut self, example: impl Into<String>) {
         self.examples.push(example.into());
         self.occurrence_count += 1;
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
         // Increase confidence with more examples
         self.confidence =
             (self.occurrence_count as f64 / (self.occurrence_count as f64 + 2.0)).min(0.95);
@@ -277,7 +277,7 @@ impl Pattern {
     /// Set the T1 primitive this pattern is grounded to
     pub fn set_grounding(&mut self, primitive: T1Primitive) {
         self.t1_grounding = Some(primitive);
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Effective confidence after time-based decay.
@@ -286,7 +286,7 @@ impl Pattern {
     /// Patterns reinforced recently keep full confidence; stale ones decay toward 0.
     #[must_use]
     pub fn effective_confidence(&self) -> f64 {
-        let days_elapsed = (Utc::now() - self.updated_at).num_hours() as f64 / 24.0;
+        let days_elapsed = (DateTime::now() - self.updated_at).num_hours() as f64 / 24.0;
         if days_elapsed <= 0.0 {
             return self.confidence;
         }
@@ -312,7 +312,7 @@ pub struct Correction {
     pub context: Option<String>,
 
     /// When this correction was learned
-    pub learned_at: DateTime<Utc>,
+    pub learned_at: DateTime,
 
     /// Number of times this correction was applied
     pub application_count: u32,
@@ -322,8 +322,8 @@ pub struct Correction {
     pub confidence: f64,
 
     /// When this correction was last reinforced (applied or confirmed).
-    #[serde(default = "Utc::now")]
-    pub updated_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub updated_at: DateTime,
 }
 
 fn default_correction_confidence() -> f64 {
@@ -334,7 +334,7 @@ impl Correction {
     /// Create a new correction
     #[must_use]
     pub fn new(mistake: impl Into<String>, correction: impl Into<String>) -> Self {
-        let now = Utc::now();
+        let now = DateTime::now();
         Self {
             mistake: mistake.into(),
             correction: correction.into(),
@@ -350,18 +350,18 @@ impl Correction {
     pub fn mark_applied(&mut self) {
         self.application_count += 1;
         self.confidence = 1.0 - (0.2 / (self.application_count as f64 + 1.0));
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Effective confidence after time-based decay.
     #[must_use]
     pub fn effective_confidence(&self) -> f64 {
-        self.effective_confidence_at(Utc::now())
+        self.effective_confidence_at(DateTime::now())
     }
 
     /// Effective confidence at a specific point in time.
     #[must_use]
-    pub fn effective_confidence_at(&self, now: DateTime<Utc>) -> f64 {
+    pub fn effective_confidence_at(&self, now: DateTime) -> f64 {
         let days_elapsed = now.signed_duration_since(self.updated_at).num_hours() as f64 / 24.0;
         if days_elapsed <= 0.0 {
             return self.confidence;
@@ -414,15 +414,15 @@ impl fmt::Display for EvidenceType {
 }
 
 fn default_evidence_id() -> String {
-    format!("ev-{}", Utc::now().timestamp_millis())
+    format!("ev-{}", DateTime::now().timestamp_millis())
 }
 
 fn default_evidence_type() -> EvidenceType {
     EvidenceType::Observation
 }
 
-fn default_recorded_at() -> DateTime<Utc> {
-    Utc::now()
+fn default_recorded_at() -> DateTime {
+    DateTime::now()
 }
 
 /// Reference to evidence supporting or contradicting a belief.
@@ -451,7 +451,7 @@ pub struct EvidenceRef {
 
     /// When this evidence was recorded (accepts legacy "observed_at" alias)
     #[serde(default = "default_recorded_at", alias = "observed_at")]
-    pub recorded_at: DateTime<Utc>,
+    pub recorded_at: DateTime,
 
     /// Optional link to artifact or external resource
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -481,7 +481,7 @@ impl EvidenceRef {
             description: description.into(),
             weight: 1.0,
             source: source.into(),
-            recorded_at: Utc::now(),
+            recorded_at: DateTime::now(),
             artifact_ref: None,
             execution_id: None,
             hypothesis_id: None,
@@ -502,7 +502,7 @@ impl EvidenceRef {
             description: description.into(),
             weight: -1.0,
             source: source.into(),
-            recorded_at: Utc::now(),
+            recorded_at: DateTime::now(),
             artifact_ref: None,
             execution_id: None,
             hypothesis_id: None,
@@ -524,7 +524,7 @@ impl EvidenceRef {
             description: description.into(),
             weight: weight.clamp(-1.0, 1.0),
             source: source.into(),
-            recorded_at: Utc::now(),
+            recorded_at: DateTime::now(),
             artifact_ref: None,
             execution_id: None,
             hypothesis_id: None,
@@ -547,7 +547,7 @@ impl EvidenceRef {
             description: description.into(),
             weight: weight.clamp(-1.0, 1.0),
             source: "execution".into(),
-            recorded_at: Utc::now(),
+            recorded_at: DateTime::now(),
             artifact_ref: None,
             execution_id: Some(execution_id.into()),
             hypothesis_id,
@@ -607,10 +607,10 @@ pub struct Belief {
     pub t1_grounding: Option<T1Primitive>,
 
     /// When this belief was first formed
-    pub formed_at: DateTime<Utc>,
+    pub formed_at: DateTime,
 
     /// When this belief was last updated (for decay calculation)
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
 
     /// Number of times this belief was tested/validated
     pub validation_count: u32,
@@ -638,8 +638,8 @@ impl Belief {
             confidence: 0.5, // Start neutral (prior)
             evidence: Vec::new(),
             t1_grounding: None,
-            formed_at: Utc::now(),
-            updated_at: Utc::now(),
+            formed_at: DateTime::now(),
+            updated_at: DateTime::now(),
             validation_count: 0,
             user_confirmed: false,
         }
@@ -661,14 +661,14 @@ impl Belief {
     pub fn add_evidence(&mut self, evidence: EvidenceRef) {
         self.evidence.push(evidence);
         self.recompute_confidence();
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Add multiple pieces of evidence at once
     pub fn add_evidence_batch(&mut self, evidence: Vec<EvidenceRef>) {
         self.evidence.extend(evidence);
         self.recompute_confidence();
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Recompute confidence from evidence weights
@@ -697,7 +697,7 @@ impl Belief {
     /// Uses same exponential decay as Pattern: `confidence × 0.5^(days / half_life)`
     #[must_use]
     pub fn effective_confidence(&self) -> f64 {
-        let days_elapsed = (Utc::now() - self.updated_at).num_hours() as f64 / 24.0;
+        let days_elapsed = (DateTime::now() - self.updated_at).num_hours() as f64 / 24.0;
         if days_elapsed <= 0.0 {
             return self.confidence;
         }
@@ -708,7 +708,7 @@ impl Belief {
     /// Record a validation attempt (successful test of the belief)
     pub fn record_validation(&mut self, success: bool) {
         self.validation_count += 1;
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
 
         // Add implicit evidence from validation
         let evidence = if success {
@@ -736,11 +736,11 @@ impl Belief {
     /// Mark belief as confirmed by user (prevents decay below threshold)
     pub fn confirm(&mut self) {
         self.user_confirmed = true;
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
 
         // Add user confirmation evidence
         let evidence = EvidenceRef::supporting(
-            format!("user_confirm_{}", Utc::now().timestamp()),
+            format!("user_confirm_{}", DateTime::now().timestamp()),
             EvidenceType::UserFeedback,
             "User explicitly confirmed this belief",
             "user:explicit",
@@ -752,11 +752,11 @@ impl Belief {
     /// Mark belief as rejected by user
     pub fn reject(&mut self) {
         self.user_confirmed = false;
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
 
         // Add user rejection evidence
         let evidence = EvidenceRef::contradicting(
-            format!("user_reject_{}", Utc::now().timestamp()),
+            format!("user_reject_{}", DateTime::now().timestamp()),
             EvidenceType::UserFeedback,
             "User explicitly rejected this belief",
             "user:explicit",
@@ -768,7 +768,7 @@ impl Belief {
     /// Set T1 primitive grounding
     pub fn set_grounding(&mut self, primitive: T1Primitive) {
         self.t1_grounding = Some(primitive);
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Check if belief is stale (effective confidence below threshold)
@@ -809,9 +809,9 @@ pub struct TrustAccumulator {
     /// Number of failures or mistakes
     pub failures: u32,
     /// When this accumulator was created
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// When last updated
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
     /// Optional T1 primitive grounding for the domain
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub t1_grounding: Option<T1Primitive>,
@@ -825,8 +825,8 @@ impl TrustAccumulator {
             domain: domain.into(),
             demonstrations: 0,
             failures: 0,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+            created_at: DateTime::now(),
+            updated_at: DateTime::now(),
             t1_grounding: None,
         }
     }
@@ -834,13 +834,13 @@ impl TrustAccumulator {
     /// Record a successful demonstration
     pub fn record_success(&mut self) {
         self.demonstrations += 1;
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Record a failure
     pub fn record_failure(&mut self) {
         self.failures += 1;
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Compute earned trust score: demonstrations / (demonstrations + failures + 1)
@@ -899,7 +899,7 @@ pub struct BeliefImplication {
     /// Strength of implication
     pub strength: ImplicationStrength,
     /// When this implication was established
-    pub established_at: DateTime<Utc>,
+    pub established_at: DateTime,
 }
 
 /// Belief dependency graph for inter-belief causality.
@@ -927,7 +927,7 @@ impl BeliefGraph {
             from: from.into(),
             to: to.into(),
             strength,
-            established_at: Utc::now(),
+            established_at: DateTime::now(),
         };
         self.implications.push(imp);
     }
@@ -1629,7 +1629,7 @@ impl ImplicitKnowledge {
         // Check if pattern already exists — merge if so
         if let Some(existing) = self.patterns.iter_mut().find(|p| p.id == id) {
             existing.occurrence_count = existing.occurrence_count.saturating_add(occurrence_count);
-            existing.updated_at = Utc::now();
+            existing.updated_at = DateTime::now();
             if existing.t1_grounding.is_none() {
                 existing.t1_grounding = t1_grounding;
             }
@@ -1717,7 +1717,7 @@ impl ImplicitKnowledge {
                             "crystallization:correction:{}",
                             mistake_text.chars().take(30).collect::<String>()
                         ),
-                        recorded_at: Utc::now(),
+                        recorded_at: DateTime::now(),
                         artifact_ref: None,
                         execution_id: None,
                         hypothesis_id: None,
@@ -1739,7 +1739,7 @@ impl ImplicitKnowledge {
                     "crystallization:correction:{}",
                     mistake_text.chars().take(30).collect::<String>()
                 ),
-                recorded_at: Utc::now(),
+                recorded_at: DateTime::now(),
                 artifact_ref: None,
                 execution_id: None,
                 hypothesis_id: None,
@@ -2136,7 +2136,7 @@ mod tests {
         let mut pattern = Pattern::new("test", "workflow", "Old pattern");
         pattern.confidence = 0.9;
         // Simulate 30 days ago (one half-life)
-        pattern.updated_at = Utc::now() - chrono::Duration::days(30);
+        pattern.updated_at = DateTime::now() - nexcore_chrono::Duration::days(30);
 
         let eff = pattern.effective_confidence();
         // Should be ~0.45 (0.9 * 0.5)
@@ -2149,7 +2149,7 @@ mod tests {
         let mut pattern = Pattern::new("test", "workflow", "Ancient");
         pattern.confidence = 0.95;
         // 90 days = 3 half-lives → 0.95 * 0.125 ≈ 0.119
-        pattern.updated_at = Utc::now() - chrono::Duration::days(90);
+        pattern.updated_at = DateTime::now() - nexcore_chrono::Duration::days(90);
 
         let eff = pattern.effective_confidence();
         assert!(eff < 0.15);
@@ -2342,7 +2342,7 @@ mod tests {
     fn test_belief_effective_confidence_stale() {
         let mut belief = Belief::new("test", "Stale belief", "test");
         belief.confidence = 0.8;
-        belief.updated_at = Utc::now() - chrono::Duration::days(30);
+        belief.updated_at = DateTime::now() - nexcore_chrono::Duration::days(30);
 
         let eff = belief.effective_confidence();
         // After one half-life, should be ~0.4
@@ -2354,7 +2354,7 @@ mod tests {
     fn test_belief_is_stale() {
         let mut belief = Belief::new("test", "Test", "test");
         belief.confidence = 0.5;
-        belief.updated_at = Utc::now() - chrono::Duration::days(60);
+        belief.updated_at = DateTime::now() - nexcore_chrono::Duration::days(60);
 
         // After 2 half-lives: 0.5 * 0.25 = 0.125
         assert!(belief.is_stale(0.2));
@@ -2366,7 +2366,7 @@ mod tests {
         let mut belief = Belief::new("test", "Confirmed belief", "test");
         belief.confirm();
         belief.confidence = 0.8;
-        belief.updated_at = Utc::now() - chrono::Duration::days(30); // 1 half-life
+        belief.updated_at = DateTime::now() - nexcore_chrono::Duration::days(30); // 1 half-life
 
         // Effective confidence ≈ 0.4 (0.8 * 0.5)
         // Confirmed beliefs use min(threshold, 0.1) as floor
@@ -2376,7 +2376,7 @@ mod tests {
         // Unconfirmed belief with same decay WOULD be stale at threshold 0.5
         let mut unconfirmed = Belief::new("test2", "Not confirmed", "test");
         unconfirmed.confidence = 0.8;
-        unconfirmed.updated_at = Utc::now() - chrono::Duration::days(30);
+        unconfirmed.updated_at = DateTime::now() - nexcore_chrono::Duration::days(30);
         assert!(unconfirmed.is_stale(0.5)); // 0.4 < 0.5 → stale
     }
 

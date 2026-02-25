@@ -11,11 +11,12 @@ use crate::constants::MathConstant;
 use crate::state_mode::StateMode;
 use crate::symbols::*;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 /// The 16 irreducible Lex Primitiva symbols.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[non_exhaustive]
 pub enum LexPrimitiva {
     /// σ (sigma) - Ordered succession. Rust: Iterator, method chains, `?`.
     #[serde(rename = "sequence")]
@@ -274,6 +275,7 @@ impl std::fmt::Display for LexPrimitiva {
 
 /// A composition of primitives that grounds a higher-tier type.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct PrimitiveComposition {
     /// The primitives that compose this type.
     pub primitives: Vec<LexPrimitiva>,
@@ -319,7 +321,7 @@ impl PrimitiveComposition {
 
     /// Returns unique primitives as a set.
     #[must_use]
-    pub fn unique(&self) -> HashSet<LexPrimitiva> {
+    pub fn unique(&self) -> BTreeSet<LexPrimitiva> {
         self.primitives.iter().copied().collect()
     }
 
@@ -349,7 +351,7 @@ mod tests {
     fn test_all_16_primitives() {
         let all = LexPrimitiva::all();
         assert_eq!(all.len(), 16);
-        let symbols: HashSet<_> = all.iter().map(|p| p.symbol()).collect();
+        let symbols: BTreeSet<_> = all.iter().map(|p| p.symbol()).collect();
         assert_eq!(symbols.len(), 16);
     }
 

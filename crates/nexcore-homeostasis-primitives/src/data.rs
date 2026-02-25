@@ -4,7 +4,7 @@
 //! that prevent import coupling between sensing, response, and core modules.
 
 use crate::enums::{ActionType, SensorType};
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tokio::time::Instant;
@@ -17,7 +17,7 @@ pub struct SensorReading {
     /// The observed value.
     pub value: f64,
     /// Wall-clock timestamp of the reading.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Whether the value is anomalous.
     pub is_anomalous: bool,
     /// Severity of the anomaly, 0–1 scale.
@@ -38,7 +38,7 @@ impl SensorReading {
     pub fn normal(value: f64, sensor_name: impl Into<String>, sensor_type: SensorType) -> Self {
         Self {
             value,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             is_anomalous: false,
             anomaly_severity: 0.0,
             anomaly_confidence: 0.0,
@@ -58,7 +58,7 @@ impl SensorReading {
     ) -> Self {
         Self {
             value,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             is_anomalous: true,
             anomaly_severity: severity.clamp(0.0, 1.0),
             anomaly_confidence: confidence.clamp(0.0, 1.0),
@@ -84,7 +84,7 @@ pub struct ActionData {
     #[serde(default)]
     pub metadata: HashMap<String, serde_json::Value>,
     /// Wall-clock timestamp when the action was decided.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
 }
 
 impl ActionData {
@@ -99,7 +99,7 @@ impl ActionData {
             target_response_level,
             reason: reason.into(),
             metadata: HashMap::new(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         }
     }
 }

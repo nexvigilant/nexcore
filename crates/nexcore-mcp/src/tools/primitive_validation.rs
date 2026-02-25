@@ -14,7 +14,7 @@
 //! | 4 | Expert generation (model knowledge) | 0.6 | No external citation |
 
 use crate::params::{PrimitiveCiteParams, PrimitiveValidateBatchParams, PrimitiveValidateParams};
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 use serde::{Deserialize, Serialize};
@@ -103,7 +103,7 @@ pub struct Citation {
     /// Confidence score (0.0-1.0)
     pub confidence: f64,
     /// Validation timestamp
-    pub validated_at: DateTime<Utc>,
+    pub validated_at: DateTime,
     /// Source URL
     pub url: Option<String>,
 }
@@ -130,7 +130,7 @@ pub struct ValidationResult {
     /// Domain context
     pub domain: String,
     /// Validation timestamp
-    pub validated_at: DateTime<Utc>,
+    pub validated_at: DateTime,
 }
 
 // ============================================================================
@@ -400,7 +400,7 @@ fn check_ich_glossary(term: &str) -> Option<(String, Citation)> {
             doi: Some("https://doi.org/10.56759/eftb6868".to_string()),
             tier: ValidationTier::Authoritative,
             confidence: 1.0,
-            validated_at: Utc::now(),
+            validated_at: DateTime::now(),
             url: Some(format!(
                 "https://www.ich.org/page/{}",
                 ich_term.source.guideline_id.to_lowercase()
@@ -424,7 +424,7 @@ fn check_ich_glossary(term: &str) -> Option<(String, Citation)> {
                 doi: Some("https://doi.org/10.56759/eftb6868".to_string()),
                 tier: ValidationTier::Authoritative,
                 confidence: result.score,
-                validated_at: Utc::now(),
+                validated_at: DateTime::now(),
                 url: None,
             };
             return Some((result.term.definition.to_string(), citation));
@@ -464,7 +464,7 @@ pub async fn validate(params: PrimitiveValidateParams) -> Result<CallToolResult,
             doi: None,
             tier: ValidationTier::Authoritative,
             confidence: 0.95, // High confidence for standard ontologies
-            validated_at: Utc::now(),
+            validated_at: DateTime::now(),
             url: Some(format!(
                 "https://bioportal.bioontology.org/ontologies/{}",
                 ontology
@@ -490,7 +490,7 @@ pub async fn validate(params: PrimitiveValidateParams) -> Result<CallToolResult,
                 doi: article.doi.clone(),
                 tier: ValidationTier::PeerReviewed,
                 confidence: 0.9,
-                validated_at: Utc::now(),
+                validated_at: DateTime::now(),
                 url: Some(format!("https://pubmed.ncbi.nlm.nih.gov/{}/", article.uid)),
             };
             citations.push(citation);
@@ -517,7 +517,7 @@ pub async fn validate(params: PrimitiveValidateParams) -> Result<CallToolResult,
         definition,
         citations: citations.into_iter().take(params.max_citations).collect(),
         domain: params.domain,
-        validated_at: Utc::now(),
+        validated_at: DateTime::now(),
     };
 
     // Format output

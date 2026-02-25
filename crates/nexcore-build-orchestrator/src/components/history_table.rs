@@ -35,7 +35,7 @@ pub fn HistoryTable(
                             {runs.into_iter().map(|run| {
                                 let status_class = format!("status-{}", format!("{:?}", run.status).to_lowercase());
                                 let duration = run.total_duration.map(|d| d.display()).unwrap_or_else(|| "-".to_string());
-                                let date = run.started_at.format("%Y-%m-%d %H:%M").to_string();
+                                let date = run.started_at.format("%Y-%m-%d %H:%M").unwrap_or_default();
                                 view! {
                                     <tr class="border-t border-gray-700 hover:bg-gray-750">
                                         <td class="px-4 py-2 font-mono text-xs">{run.id.0.clone()}</td>

@@ -1,5 +1,5 @@
-use chrono::{DateTime, Utc};
 use dashmap::DashMap;
+use nexcore_chrono::DateTime;
 use nexcore_error::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -12,7 +12,7 @@ pub struct Project {
     pub name: String,
     pub path: PathBuf,
     pub priority: u8,
-    pub last_active: DateTime<Utc>,
+    pub last_active: DateTime,
     pub status: ProjectStatus,
     pub focus: Option<String>,
 }
@@ -61,7 +61,7 @@ impl ProjectRegistry {
     pub async fn update_status(&self, name: &str, status: ProjectStatus) -> Result<()> {
         if let Some(mut project) = self.projects.get_mut(name) {
             project.status = status;
-            project.last_active = Utc::now();
+            project.last_active = DateTime::now();
             drop(project);
             self.save().await?;
         }

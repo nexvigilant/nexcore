@@ -12,7 +12,7 @@ use crate::params::{
     NlmListSessionsParams, NlmReAuthParams, NlmRemoveNotebookParams, NlmResetSessionParams,
     NlmSearchNotebooksParams, NlmSelectNotebookParams, NlmSetupAuthParams, NlmUpdateNotebookParams,
 };
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_notebooklm::{HealthStatus, Library, Notebook, SessionStore};
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
@@ -52,7 +52,7 @@ fn slugify(name: &str) -> String {
 pub fn add_notebook(params: NlmAddNotebookParams) -> Result<CallToolResult, McpError> {
     let mut lib = Library::load().map_err(|e| McpError::internal_error(format!("{e}"), None))?;
 
-    let now = Utc::now();
+    let now = DateTime::now();
     let id = slugify(&params.name);
 
     let notebook = Notebook {

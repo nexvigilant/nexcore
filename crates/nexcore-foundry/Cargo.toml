@@ -10,6 +10,9 @@ license.workspace = true
 [dependencies]
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-chrono = { workspace = true }
+nexcore-chrono = { workspace = true }
 nexcore-lex-primitiva = { workspace = true }
 nexcore-error = { workspace = true }
+
+[lints]
+workspace = true

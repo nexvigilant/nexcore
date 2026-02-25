@@ -4,7 +4,7 @@
 //! compliant disaster recovery operations including backup configuration,
 //! recovery plans, and system health monitoring.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -120,8 +120,8 @@ impl BackupConfiguration {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackupMetadata {
     pub backup_id: String,
-    #[serde(default = "Utc::now")]
-    pub timestamp: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub timestamp: DateTime,
     pub backup_type: BackupType,
     pub size_bytes: i64,
     pub file_count: i64,
@@ -138,7 +138,7 @@ pub struct BackupMetadata {
     #[serde(default)]
     pub geographic_locations: Vec<String>,
     pub verification_status: String,
-    pub retention_until: DateTime<Utc>,
+    pub retention_until: DateTime,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tenant_id: Option<String>,
 }
@@ -151,7 +151,7 @@ impl BackupMetadata {
 
     /// Check if backup has expired.
     pub fn is_expired(&self) -> bool {
-        Utc::now() > self.retention_until
+        DateTime::now() > self.retention_until
     }
 }
 
@@ -176,7 +176,7 @@ pub struct RecoveryPlan {
     #[serde(default)]
     pub contact_information: Vec<HashMap<String, String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub last_tested: Option<DateTime<Utc>>,
+    pub last_tested: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub test_results: Option<HashMap<String, serde_json::Value>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -188,7 +188,7 @@ impl RecoveryPlan {
     pub fn needs_testing(&self) -> bool {
         match self.last_tested {
             Some(last) => {
-                let days_since = (Utc::now() - last).num_days();
+                let days_since = (DateTime::now() - last).num_days();
                 days_since > 90
             }
             None => true,
@@ -220,8 +220,8 @@ pub struct RecoveryOperation {
     pub operation_id: String,
     pub plan_id: String,
     pub initiated_by: String,
-    #[serde(default = "Utc::now")]
-    pub initiated_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub initiated_at: DateTime,
     #[serde(default)]
     pub status: RecoveryStatus,
     #[serde(default)]
@@ -229,10 +229,10 @@ pub struct RecoveryOperation {
     #[serde(default)]
     pub data_classifications: Vec<DataClassification>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub estimated_completion: Option<DateTime<Utc>>,
+    pub estimated_completion: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub actual_completion: Option<DateTime<Utc>>,
-    pub recovery_point: DateTime<Utc>,
+    pub actual_completion: Option<DateTime>,
+    pub recovery_point: DateTime,
     #[serde(default)]
     pub progress_percentage: f64,
     #[serde(default)]
@@ -274,8 +274,8 @@ impl RecoveryOperation {
 /// System health monitoring for disaster recovery.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemHealth {
-    #[serde(default = "Utc::now")]
-    pub timestamp: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub timestamp: DateTime,
     /// CPU usage percentage (0-100).
     pub cpu_usage: f64,
     /// Memory usage percentage (0-100).
@@ -328,8 +328,8 @@ impl SystemHealth {
 pub struct DRTestResult {
     pub test_id: String,
     pub plan_id: String,
-    #[serde(default = "Utc::now")]
-    pub test_date: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub test_date: DateTime,
     pub test_type: String, // full, tabletop, partial
     pub conducted_by: String,
     /// Actual RTO achieved in hours.
@@ -430,13 +430,13 @@ mod tests {
             operation_id: "op-1".to_string(),
             plan_id: "plan-1".to_string(),
             initiated_by: "user-123".to_string(),
-            initiated_at: Utc::now(),
+            initiated_at: DateTime::now(),
             status: RecoveryStatus::RecoveryInProgress,
             target_systems: vec!["EHR".to_string()],
             data_classifications: vec![DataClassification::CriticalPatientData],
             estimated_completion: None,
             actual_completion: None,
-            recovery_point: Utc::now(),
+            recovery_point: DateTime::now(),
             progress_percentage: 50.0,
             status_message: "Restoring database".to_string(),
             compliance_validated: false,
@@ -450,7 +450,7 @@ mod tests {
     #[test]
     fn test_system_health_status() {
         let health = SystemHealth {
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             cpu_usage: 45.0,
             memory_usage: 60.0,
             disk_usage: 70.0,
@@ -469,7 +469,7 @@ mod tests {
     #[test]
     fn test_system_health_critical() {
         let health = SystemHealth {
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             cpu_usage: 95.0,
             memory_usage: 92.0,
             disk_usage: 98.0,

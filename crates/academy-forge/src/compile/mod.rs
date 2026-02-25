@@ -56,6 +56,7 @@ use crate::error::{ForgeError, ForgeResult};
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// Parameters for the compile operation.
+#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct CompileParams {
     /// Path to the source pathway JSON file (e.g. `content/pathways/tov-01.json`).
@@ -69,7 +70,34 @@ pub struct CompileParams {
     pub overwrite: bool,
 }
 
+impl CompileParams {
+    /// Construct a new [`CompileParams`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use academy_forge::CompileParams;
+    /// use std::path::PathBuf;
+    ///
+    /// let params = CompileParams::new(
+    ///     PathBuf::from("content/pathways/tov-01.json"),
+    ///     PathBuf::from("output/tov-01"),
+    ///     false,
+    /// );
+    /// assert_eq!(params.overwrite, false);
+    /// ```
+    #[must_use]
+    pub fn new(input_path: PathBuf, output_dir: PathBuf, overwrite: bool) -> Self {
+        Self {
+            input_path,
+            output_dir,
+            overwrite,
+        }
+    }
+}
+
 /// Result of a successful compile operation.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize)]
 pub struct CompileResult {
     /// Absolute paths of all TypeScript files written.
@@ -136,8 +164,9 @@ pub fn compile(params: &CompileParams) -> ForgeResult<CompileResult> {
             message: e.to_string(),
         })?;
 
-    let stages = pathway["stages"]
-        .as_array()
+    let stages = pathway
+        .get("stages")
+        .and_then(|v| v.as_array())
         .ok_or_else(|| ForgeError::ParseError {
             file: params.input_path.display().to_string(),
             message: "pathway JSON missing 'stages' array".to_string(),
@@ -156,11 +185,14 @@ pub fn compile(params: &CompileParams) -> ForgeResult<CompileResult> {
 
     // ── 3. Compile each stage ───────────────────────────────────────────────
     for (idx, stage) in stages.iter().enumerate() {
-        let stage_num = idx + 1;
+        let stage_num = idx.saturating_add(1);
         let var_name = format!("stage{stage_num:02}");
 
         // Derive slug from stage title
-        let title = stage["title"].as_str().unwrap_or("stage");
+        let title = stage
+            .get("title")
+            .and_then(|v| v.as_str())
+            .unwrap_or("stage");
         let slug = typescript::slugify(title);
         let file_stem = format!("{stage_num:02}-{slug}");
         let ts_path = stages_dir.join(format!("{file_stem}.ts"));

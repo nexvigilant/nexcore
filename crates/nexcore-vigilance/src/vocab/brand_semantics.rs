@@ -706,7 +706,9 @@ impl BrandDecomposition {
     pub fn new(brand_name: impl Into<String>) -> Self {
         Self {
             brand_name: brand_name.into(),
-            extraction_date: chrono::Utc::now().format("%Y-%m-%d").to_string(),
+            extraction_date: nexcore_chrono::DateTime::now()
+                .format("%Y-%m-%d")
+                .unwrap_or_default(),
             source_mode: None,
             source_warning: None,
             roots: Vec::new(),
@@ -803,13 +805,13 @@ impl BrandDecomposition {
     }
 
     /// Serialize to YAML.
-    pub fn to_yaml(&self) -> Result<String, serde_yaml::Error> {
-        serde_yaml::to_string(self)
+    pub fn to_yaml(&self) -> Result<String, serde_yml::Error> {
+        serde_yml::to_string(self)
     }
 
     /// Deserialize from YAML.
-    pub fn from_yaml(yaml: &str) -> Result<Self, serde_yaml::Error> {
-        serde_yaml::from_str(yaml)
+    pub fn from_yaml(yaml: &str) -> Result<Self, serde_yml::Error> {
+        serde_yml::from_str(yaml)
     }
 }
 

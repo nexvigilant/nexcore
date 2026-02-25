@@ -1,6 +1,6 @@
 //! Skill metrics and invocation CRUD operations.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 
@@ -18,7 +18,7 @@ pub struct MetricRow {
     /// Current value
     pub value: f64,
     /// Last updated
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
 }
 
 /// A row from the `skill_invocations` table.
@@ -35,7 +35,7 @@ pub struct InvocationRow {
     /// Duration in milliseconds
     pub duration_ms: Option<i64>,
     /// When the invocation occurred
-    pub invoked_at: DateTime<Utc>,
+    pub invoked_at: DateTime,
 }
 
 /// Upsert a metric row.
@@ -175,8 +175,8 @@ pub fn count_invocations(conn: &Connection, skill_name: &str) -> Result<i64> {
     Ok(c)
 }
 
-fn parse_dt(s: String) -> DateTime<Utc> {
-    s.parse::<DateTime<Utc>>().unwrap_or_else(|_| Utc::now())
+fn parse_dt(s: String) -> DateTime {
+    s.parse::<DateTime>().unwrap_or_else(|_| DateTime::now())
 }
 
 #[cfg(test)]
@@ -195,7 +195,7 @@ mod tests {
                 metric: "invocations".to_string(),
                 metric_type: "counter".to_string(),
                 value: 42.0,
-                updated_at: Utc::now(),
+                updated_at: DateTime::now(),
             };
             upsert_metric(conn, &m)?;
             let got = get_metric(conn, "test-skill", "invocations")?;
@@ -217,7 +217,7 @@ mod tests {
                 trigger_type: Some("slash".to_string()),
                 session_id: Some("sess-1".to_string()),
                 duration_ms: Some(150),
-                invoked_at: Utc::now(),
+                invoked_at: DateTime::now(),
             };
             record_invocation(conn, &inv)?;
             record_invocation(conn, &inv)?;

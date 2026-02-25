@@ -2,7 +2,7 @@
 //!
 //! Target: signup to first compound registration in under 15 minutes.
 
-use chrono::{DateTime, Duration, Utc};
+use nexcore_chrono::{DateTime, Duration};
 use serde::{Deserialize, Serialize};
 use vr_core::{SubscriptionTier, Tenant, TenantId, TenantStatus, UserId};
 
@@ -23,7 +23,7 @@ pub struct ProvisioningPlan {
     pub tenant_id: TenantId,
     pub admin_user_id: UserId,
     pub tier: SubscriptionTier,
-    pub trial_ends_at: DateTime<Utc>,
+    pub trial_ends_at: DateTime,
     pub storage_prefix: String,
     pub steps: Vec<ProvisioningStep>,
 }
@@ -69,7 +69,7 @@ pub fn generate_slug(name: &str) -> String {
 pub fn create_provisioning_plan(request: &SignupRequest) -> ProvisioningPlan {
     let tenant_id = TenantId::new();
     let admin_user_id = UserId::new();
-    let now = Utc::now();
+    let now = DateTime::now();
     let trial_duration = Duration::days(14);
     let trial_ends_at = now + trial_duration;
 
@@ -121,22 +121,22 @@ pub fn create_provisioning_plan(request: &SignupRequest) -> ProvisioningPlan {
 
 /// Build the initial Tenant record from a provisioning plan.
 pub fn build_tenant_record(plan: &ProvisioningPlan, request: &SignupRequest) -> Tenant {
-    let now = Utc::now();
-    Tenant {
-        id: plan.tenant_id,
-        name: request.organization_name.clone(),
-        slug: generate_slug(&request.organization_name),
-        tier: plan.tier,
-        status: TenantStatus::Trial,
-        trial_ends_at: Some(plan.trial_ends_at),
-        settings: serde_json::json!({
+    let now = DateTime::now();
+    Tenant::new(
+        plan.tenant_id,
+        request.organization_name.clone(),
+        generate_slug(&request.organization_name),
+        plan.tier,
+        TenantStatus::Trial,
+        Some(plan.trial_ends_at),
+        serde_json::json!({
             "therapeutic_area": request.therapeutic_area,
             "team_size_estimate": request.team_size_estimate,
             "onboarding_completed": false,
         }),
-        created_at: now,
-        updated_at: now,
-    }
+        now,
+        now,
+    )
 }
 
 /// Check if a trial has expired.
@@ -145,7 +145,7 @@ pub fn is_trial_expired(tenant: &Tenant) -> bool {
         return false;
     }
     match tenant.trial_ends_at {
-        Some(ends_at) => Utc::now() > ends_at,
+        Some(ends_at) => DateTime::now() > ends_at,
         None => false,
     }
 }
@@ -175,10 +175,10 @@ mod tests {
         let plan = create_provisioning_plan(&request);
         assert_eq!(plan.steps.len(), 6);
         assert_eq!(plan.tier, SubscriptionTier::Accelerator);
-        assert!(plan.trial_ends_at > Utc::now());
+        assert!(plan.trial_ends_at > DateTime::now());
 
         // Trial should be ~14 days from now
-        let duration = plan.trial_ends_at - Utc::now();
+        let duration = plan.trial_ends_at - DateTime::now();
         assert!(duration.num_days() >= 13 && duration.num_days() <= 14);
     }
 
@@ -210,16 +210,16 @@ mod tests {
             slug: "test".into(),
             tier: SubscriptionTier::Accelerator,
             status: TenantStatus::Trial,
-            trial_ends_at: Some(Utc::now() - Duration::days(1)),
+            trial_ends_at: Some(DateTime::now() - Duration::days(1)),
             settings: serde_json::json!({}),
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+            created_at: DateTime::now(),
+            updated_at: DateTime::now(),
         };
 
         assert!(is_trial_expired(&tenant));
 
         // Future trial — not expired
-        tenant.trial_ends_at = Some(Utc::now() + Duration::days(7));
+        tenant.trial_ends_at = Some(DateTime::now() + Duration::days(7));
         assert!(!is_trial_expired(&tenant));
 
         // Active tenant — not a trial

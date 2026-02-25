@@ -9,13 +9,14 @@
 //! once revoked, are irreversibly (∝) invalidated. This module manages
 //! the OS-level certificate store used by all secure network connections.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Certificate trust level.
 ///
 /// Tier: T2-P (κ Comparison — ordered trust)
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum TrustLevel {
     /// Certificate is explicitly distrusted.
@@ -48,6 +49,7 @@ impl TrustLevel {
 /// Certificate status.
 ///
 /// Tier: T2-P (ς State)
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CertStatus {
     /// Certificate is valid and active.
@@ -80,7 +82,7 @@ impl CertStatus {
 /// A certificate fingerprint (SHA-256 of DER encoding).
 ///
 /// Tier: T2-P (∃ Existence — unique identity)
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct CertFingerprint(String);
 
 impl CertFingerprint {
@@ -98,6 +100,7 @@ impl CertFingerprint {
 /// A certificate entry in the trust store.
 ///
 /// Tier: T2-C (∂ + π + ∝ — persistent trust boundary with revocation)
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Certificate {
     /// Certificate fingerprint (SHA-256).
@@ -107,27 +110,31 @@ pub struct Certificate {
     /// Issuer common name.
     pub issuer: String,
     /// Not valid before this date.
-    pub not_before: DateTime<Utc>,
+    pub not_before: DateTime,
     /// Not valid after this date.
-    pub not_after: DateTime<Utc>,
+    pub not_after: DateTime,
     /// Trust level.
     pub trust_level: TrustLevel,
     /// Current status.
     pub status: CertStatus,
     /// When this certificate was added to the store.
-    pub added_at: DateTime<Utc>,
+    pub added_at: DateTime,
     /// Optional revocation reason.
     pub revocation_reason: Option<String>,
 }
 
 impl Certificate {
     /// Create a new valid certificate.
+    #[allow(
+        clippy::too_many_arguments,
+        reason = "certificate construction requires all fields; a builder pattern would add complexity without reducing argument count for the mandatory fields"
+    )]
     pub fn new(
         fingerprint: impl Into<String>,
         subject: impl Into<String>,
         issuer: impl Into<String>,
-        not_before: DateTime<Utc>,
-        not_after: DateTime<Utc>,
+        not_before: DateTime,
+        not_after: DateTime,
         trust_level: TrustLevel,
     ) -> Self {
         Self {
@@ -138,14 +145,14 @@ impl Certificate {
             not_after,
             trust_level,
             status: CertStatus::Valid,
-            added_at: Utc::now(),
+            added_at: DateTime::now(),
             revocation_reason: None,
         }
     }
 
     /// Check if the certificate is currently valid (time-wise).
     pub fn is_time_valid(&self) -> bool {
-        let now = Utc::now();
+        let now = DateTime::now();
         now >= self.not_before && now <= self.not_after
     }
 
@@ -165,7 +172,7 @@ impl Certificate {
         if self.status == CertStatus::Revoked {
             return; // Revocation is irreversible
         }
-        let now = Utc::now();
+        let now = DateTime::now();
         if now < self.not_before {
             self.status = CertStatus::NotYetValid;
         } else if now > self.not_after {
@@ -177,7 +184,12 @@ impl Certificate {
 
     /// Days until expiration (negative if expired).
     pub fn days_until_expiry(&self) -> i64 {
-        (self.not_after - Utc::now()).num_days()
+        #[allow(
+            clippy::arithmetic_side_effects,
+            reason = "Duration subtraction between two DateTime values cannot overflow in practice for certificate date ranges"
+        )]
+        let duration = self.not_after - DateTime::now();
+        duration.num_days()
     }
 
     /// Summary string.
@@ -198,7 +210,7 @@ impl Certificate {
 #[derive(Debug, Default)]
 pub struct CertStore {
     /// Certificates keyed by fingerprint.
-    certs: HashMap<CertFingerprint, Certificate>,
+    certs: BTreeMap<CertFingerprint, Certificate>,
 }
 
 impl CertStore {
@@ -283,16 +295,16 @@ impl CertStore {
 
     /// Count by trust level.
     pub fn count_by_trust(&self) -> (usize, usize, usize, usize) {
-        let mut system = 0;
-        let mut user = 0;
-        let mut unknown = 0;
-        let mut distrusted = 0;
+        let mut system = 0usize;
+        let mut user = 0usize;
+        let mut unknown = 0usize;
+        let mut distrusted = 0usize;
         for cert in self.certs.values() {
             match cert.trust_level {
-                TrustLevel::SystemTrusted => system += 1,
-                TrustLevel::UserTrusted => user += 1,
-                TrustLevel::Unknown => unknown += 1,
-                TrustLevel::Distrusted => distrusted += 1,
+                TrustLevel::SystemTrusted => system = system.saturating_add(1),
+                TrustLevel::UserTrusted => user = user.saturating_add(1),
+                TrustLevel::Unknown => unknown = unknown.saturating_add(1),
+                TrustLevel::Distrusted => distrusted = distrusted.saturating_add(1),
             }
         }
         (system, user, unknown, distrusted)
@@ -315,15 +327,15 @@ impl CertStore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Duration;
+    use nexcore_chrono::Duration;
 
     fn make_cert(subject: &str, trust: TrustLevel) -> Certificate {
         Certificate::new(
             format!("fp_{subject}"),
             subject,
             "Test CA",
-            Utc::now() - Duration::days(30),
-            Utc::now() + Duration::days(335),
+            DateTime::now() - Duration::days(30),
+            DateTime::now() + Duration::days(335),
             trust,
         )
     }
@@ -333,8 +345,8 @@ mod tests {
             format!("fp_{subject}"),
             subject,
             "Test CA",
-            Utc::now() - Duration::days(400),
-            Utc::now() - Duration::days(35),
+            DateTime::now() - Duration::days(400),
+            DateTime::now() - Duration::days(35),
             TrustLevel::SystemTrusted,
         )
     }
@@ -452,8 +464,8 @@ mod tests {
             "fp_soon",
             "soon.com",
             "CA",
-            Utc::now() - Duration::days(355),
-            Utc::now() + Duration::days(10),
+            DateTime::now() - Duration::days(355),
+            DateTime::now() + Duration::days(10),
             TrustLevel::SystemTrusted,
         );
         store.add(cert);

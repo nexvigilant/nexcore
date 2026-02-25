@@ -10,8 +10,8 @@
 //! Grounds to: T1 primitives (String, u16, u64, DateTime)
 
 use axum::{extract::Request, middleware::Next, response::Response};
-use chrono::{DateTime, Utc};
 use hmac::{Hmac, Mac};
+use nexcore_chrono::DateTime;
 use nexcore_codec::hex;
 use nexcore_fs::dirs;
 use serde::Serialize;
@@ -30,7 +30,7 @@ use tokio::sync::mpsc;
 #[derive(Debug, Clone, Serialize)]
 pub struct ApiAuditRecord {
     /// ISO-8601 timestamp
-    pub ts: DateTime<Utc>,
+    pub ts: DateTime,
     /// HTTP method
     pub method: String,
     /// Request URI
@@ -172,7 +172,7 @@ pub async fn audit_layer(req: Request, next: Next) -> Response {
     let response = next.run(req).await;
 
     let mut record = ApiAuditRecord {
-        ts: Utc::now(),
+        ts: DateTime::now(),
         method,
         uri,
         status: response.status().as_u16(),
@@ -193,7 +193,7 @@ mod tests {
     #[test]
     fn test_api_audit_record_serialization() {
         let record = ApiAuditRecord {
-            ts: Utc::now(),
+            ts: DateTime::now(),
             method: "POST".to_string(),
             uri: "/api/v1/pv/signal/prr".to_string(),
             status: 200,

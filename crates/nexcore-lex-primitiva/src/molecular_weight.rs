@@ -91,6 +91,7 @@ const FREQUENCIES: [u32; 16] = [
 ///
 /// Tier: T2-P (Quantity + Mapping)
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct AtomicMass {
     primitive: LexPrimitiva,
     bits: f64,
@@ -102,7 +103,8 @@ impl AtomicMass {
     #[must_use]
     pub fn of(primitive: LexPrimitiva) -> Self {
         let idx = primitive_index(primitive);
-        let freq = FREQUENCIES[idx];
+        // SAFETY: primitive_index returns 0..=15 for all 16 enum variants; FREQUENCIES has 16 elements
+        let freq = FREQUENCIES.get(idx).copied().unwrap_or(1);
         let p = f64::from(freq) / TOTAL_REFERENCES;
         let bits = -p.log2();
 
@@ -169,6 +171,7 @@ impl std::fmt::Display for AtomicMass {
 ///
 /// Tier: T2-P (Sum + Quantity)
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct MolecularWeight {
     daltons: f64,
     primitive_count: usize,
@@ -193,7 +196,12 @@ impl MolecularWeight {
         if self.primitive_count == 0 {
             return 0.0;
         }
-        self.daltons / self.primitive_count as f64
+        #[allow(
+            clippy::as_conversions,
+            reason = "primitive_count bounded by 16; safe cast to f64"
+        )]
+        let count = self.primitive_count as f64;
+        self.daltons / count
     }
 
     /// Classify the weight into a transfer tier.
@@ -282,7 +290,12 @@ impl MolecularWeight {
             return 0.95; // Pure primitives have ~95% transfer
         }
         let steepness = 0.20;
-        let midpoint = 11.5 + 0.5 * self.primitive_count as f64;
+        #[allow(
+            clippy::as_conversions,
+            reason = "primitive_count bounded by 16; safe cast to f64"
+        )]
+        let count_f64 = self.primitive_count as f64;
+        let midpoint = 11.5 + 0.5 * count_f64;
         let raw = 1.0 / (1.0 + (steepness * (self.daltons - midpoint)).exp());
         raw.clamp(0.05, 0.98)
     }
@@ -308,6 +321,7 @@ impl std::fmt::Display for MolecularWeight {
 ///
 /// Tier: T2-P (Comparison + Boundary)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum TransferClass {
     /// MW < 11 Da — high cross-domain transferability (T2-P behavior)
     Light,
@@ -335,6 +349,7 @@ impl std::fmt::Display for TransferClass {
 ///
 /// Tier: T2-P (Comparison + Boundary)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum TierPrediction {
     /// Single primitive — pure T1, universal
     T1,
@@ -368,6 +383,7 @@ impl std::fmt::Display for TierPrediction {
 ///
 /// Tier: T2-C (Sequence + Mapping + Quantity + Sum)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct MolecularFormula {
     /// Name of the concept/word
     name: String,

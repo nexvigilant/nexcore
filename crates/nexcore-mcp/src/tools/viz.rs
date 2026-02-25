@@ -13,7 +13,7 @@ use rmcp::model::CallToolResult;
 
 use crate::params::{
     VizBoundsParams, VizCompositionParams, VizConfidenceParams, VizDagParams, VizLoopParams,
-    VizTaxonomyParams,
+    VizNodeConfidenceParams, VizTaxonomyParams,
 };
 
 /// Generate STEM taxonomy sunburst SVG.
@@ -152,6 +152,70 @@ pub fn dag(params: VizDagParams) -> Result<CallToolResult, McpError> {
     let svg = nexcore_viz::render_dag(&nodes, &edges, &title, &nexcore_viz::Theme::default());
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
         svg,
+    )]))
+}
+
+/// Compute node confidence for Observatory graph nodes.
+///
+/// Returns Measured<f64> — confidence score with calibration metadata.
+// CALIBRATION: Matches TypeScript Observatory frontends exactly.
+pub fn node_confidence(params: VizNodeConfidenceParams) -> Result<CallToolResult, McpError> {
+    use nexcore_viz::node_confidence::{ConfidenceSource, compute_confidence};
+
+    let source = match params.source.to_lowercase().as_str() {
+        "chi_squared" => {
+            let chi_sq = params.chi_squared.ok_or_else(|| {
+                McpError::invalid_params("chi_squared field required for chi_squared source", None)
+            })?;
+            ConfidenceSource::ChiSquared {
+                chi_squared: chi_sq,
+                fdr_rejected: params.fdr_rejected.unwrap_or(true),
+            }
+        }
+        "signal_strength" => {
+            let prr = params.prr.ok_or_else(|| {
+                McpError::invalid_params("prr field required for signal_strength source", None)
+            })?;
+            ConfidenceSource::SignalStrength {
+                prr,
+                signal_detected: params.signal_detected.unwrap_or(false),
+            }
+        }
+        "severity" => {
+            let sev = params.severity.ok_or_else(|| {
+                McpError::invalid_params("severity field required for severity source", None)
+            })?;
+            ConfidenceSource::Severity { severity: sev }
+        }
+        "relevance_score" => {
+            let sc = params.score.ok_or_else(|| {
+                McpError::invalid_params("score field required for relevance_score source", None)
+            })?;
+            ConfidenceSource::RelevanceScore { score: sc }
+        }
+        "structural_certainty" => ConfidenceSource::StructuralCertainty {
+            api_derived: params.api_derived.unwrap_or(false),
+        },
+        other => {
+            return Err(McpError::invalid_params(
+                format!(
+                    "Unknown source: {other}. Use: chi_squared, signal_strength, severity, relevance_score, structural_certainty"
+                ),
+                None,
+            ));
+        }
+    };
+
+    let result = compute_confidence(&source);
+    let json = serde_json::json!({
+        "confidence": result.value,
+        "confidence_meta": result.confidence.value(),
+        "source": params.source,
+        "measured": true,
+    });
+
+    Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+        json.to_string(),
     )]))
 }
 

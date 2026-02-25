@@ -3,7 +3,7 @@
 //! Real calculations for tier limit checking, usage tracking,
 //! and soft/hard limit enforcement.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use vr_core::{SubscriptionTier, TenantId, VrError, VrResult};
 
@@ -18,7 +18,7 @@ pub struct TenantUsage {
     pub compounds_scored_this_month: u64,
     pub ml_predictions_this_month: u64,
     pub api_calls_this_month: u64,
-    pub snapshot_at: DateTime<Utc>,
+    pub snapshot_at: DateTime,
 }
 
 /// Result of a limit check — either allowed, warning, or blocked.

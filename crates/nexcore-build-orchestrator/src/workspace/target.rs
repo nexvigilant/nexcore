@@ -38,7 +38,7 @@ pub struct WorkspaceScan {
     /// Per-crate build targets.
     pub targets: Vec<BuildTarget>,
     /// When the scan was performed.
-    pub scanned_at: chrono::DateTime<chrono::Utc>,
+    pub scanned_at: nexcore_chrono::DateTime,
 }
 
 impl WorkspaceScan {

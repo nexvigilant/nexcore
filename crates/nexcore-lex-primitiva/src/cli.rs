@@ -4,6 +4,12 @@
 //!
 //! ## Tier: T3-DomainSpecific (Application layer)
 
+// CLI output to stdout is intentional — this is the binary user interface.
+#![allow(
+    clippy::print_stdout,
+    reason = "CLI commands write output to stdout by design"
+)]
+
 use crate::composition::{CompositionAlgebra, CompositionBuilder};
 use crate::dossier::DossierGenerator;
 use crate::extraction::PrimitiveExtractor;
@@ -20,6 +26,7 @@ use clap::{Parser, Subcommand};
 #[command(author = "Matthew Campion, PharmD; NexVigilant")]
 #[command(version = "0.1.0")]
 #[command(about = "Analyze and manipulate computational primitives")]
+#[non_exhaustive]
 pub struct Cli {
     /// Subcommand to execute.
     #[command(subcommand)]
@@ -28,6 +35,7 @@ pub struct Cli {
 
 /// Available commands.
 #[derive(Subcommand, Debug)]
+#[non_exhaustive]
 pub enum Commands {
     /// List all primitives.
     List {
@@ -272,7 +280,9 @@ fn print_ascii_graph() {
     let mut levels: Vec<Vec<LexPrimitiva>> = vec![Vec::new(); 7];
     for p in LexPrimitiva::all() {
         let depth = compute_depth(p);
-        levels[depth].push(p);
+        if let Some(level) = levels.get_mut(depth) {
+            level.push(p);
+        }
     }
     for (i, level) in levels.iter().enumerate() {
         if level.is_empty() {
@@ -290,12 +300,12 @@ fn compute_depth(p: LexPrimitiva) -> usize {
     if p.is_root() {
         return 0;
     }
-    1 + p
-        .derives_from()
+    p.derives_from()
         .iter()
         .map(|d| compute_depth(*d))
         .max()
         .unwrap_or(0)
+        .saturating_add(1)
 }
 
 fn cmd_compose(primitives: &str, dominant: Option<&str>) -> Result<(), String> {

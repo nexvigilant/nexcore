@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 /// Stream direction.
 ///
 /// Tier: T2-P (Σ Sum — flow direction)
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum StreamDirection {
     /// Output (playback) — buffer → device.
@@ -43,6 +44,7 @@ impl std::fmt::Display for StreamDirection {
 ///    ↓        ↓          ↓
 ///  Stopped  Stopped   Stopped
 /// ```
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum StreamState {
     /// Stream created but not yet started.
@@ -227,8 +229,17 @@ impl AudioStream {
         let written = self.buffer.write(data);
         let bpf = self.spec.bytes_per_frame();
         if bpf > 0 {
-            self.frames_processed += (written / bpf) as u64;
-            self.position += (written / bpf) as u64;
+            // written / bpf is a frame count (usize); cast to u64 for the lifetime counter.
+            // usize fits in u64 on all supported platforms (usize <= u64).
+            #[allow(
+                clippy::as_conversions,
+                clippy::arithmetic_side_effects,
+                reason = "usize frame count cast to u64 for cumulative counter; usize <= u64 on all supported targets; division guarded by bpf > 0"
+            )]
+            {
+                self.frames_processed += (written / bpf) as u64;
+                self.position += (written / bpf) as u64;
+            }
         }
         Ok(written)
     }
@@ -253,8 +264,17 @@ impl AudioStream {
         let read_bytes = self.buffer.read(output);
         let bpf = self.spec.bytes_per_frame();
         if bpf > 0 {
-            self.frames_processed += (read_bytes / bpf) as u64;
-            self.position += (read_bytes / bpf) as u64;
+            // read_bytes / bpf is a frame count (usize); cast to u64 for the lifetime counter.
+            // usize fits in u64 on all supported platforms (usize <= u64).
+            #[allow(
+                clippy::as_conversions,
+                clippy::arithmetic_side_effects,
+                reason = "usize frame count cast to u64 for cumulative counter; usize <= u64 on all supported targets; division guarded by bpf > 0"
+            )]
+            {
+                self.frames_processed += (read_bytes / bpf) as u64;
+                self.position += (read_bytes / bpf) as u64;
+            }
         }
         Ok(read_bytes)
     }
@@ -301,7 +321,14 @@ impl AudioStream {
         if rate == 0 {
             return 0.0;
         }
-        self.position as f64 / f64::from(rate)
+        // u64 → f64: sufficient precision for stream position expressed as frame count.
+        #[allow(
+            clippy::as_conversions,
+            reason = "u64 position cast to f64 for duration calculation; f64 has 53-bit mantissa sufficient for frame counts in audio streams"
+        )]
+        {
+            self.position as f64 / f64::from(rate)
+        }
     }
 
     /// Buffer health check.

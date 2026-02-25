@@ -18,7 +18,7 @@
 //!
 //! ## Primitive Grounding: nu(Frequency) + sigma(Sequence) + N(Quantity)
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// Stall detection signals.
@@ -29,7 +29,7 @@ pub enum StallSignal {
     /// No meaningful progress — same checkpoint repeated.
     NoProgress {
         /// When the stall was first detected.
-        stalled_since: DateTime<Utc>,
+        stalled_since: DateTime,
         /// The checkpoint name being repeated.
         repeated_checkpoint: String,
         /// How many times it was repeated.
@@ -90,7 +90,7 @@ pub struct ExecutionObservation {
     /// Current confidence score.
     pub confidence: f64,
     /// When this observation was recorded.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
 }
 
 /// The RQC stall detector — monitors pipeline execution for stall patterns.
@@ -306,7 +306,7 @@ mod tests {
             checkpoint_name: name.to_string(),
             tools_used: tools.into_iter().map(String::from).collect(),
             confidence,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         }
     }
 

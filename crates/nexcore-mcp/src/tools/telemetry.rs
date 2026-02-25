@@ -69,8 +69,8 @@ fn format_byte_stats(total_input: u64, total_output: u64) -> serde_json::Value {
 }
 
 fn format_time_range(
-    first_call: &Option<chrono::DateTime<chrono::Utc>>,
-    last_call: &Option<chrono::DateTime<chrono::Utc>>,
+    first_call: &Option<nexcore_chrono::DateTime>,
+    last_call: &Option<nexcore_chrono::DateTime>,
 ) -> serde_json::Value {
     json!({
         "first_call": first_call,
@@ -176,11 +176,10 @@ pub async fn telemetry_slow_calls(
 /// Returns matching audit records with tool name, input params, output, and timing.
 /// Filters: tool_name (exact match), since (ISO-8601 datetime), success_only, limit.
 pub async fn audit_trail(params: AuditTrailParams) -> Result<CallToolResult, McpError> {
-    let since_dt = params.since.as_ref().and_then(|s| {
-        chrono::DateTime::parse_from_rfc3339(s)
-            .ok()
-            .map(|dt| dt.with_timezone(&chrono::Utc))
-    });
+    let since_dt = params
+        .since
+        .as_ref()
+        .and_then(|s| nexcore_chrono::DateTime::parse_from_rfc3339(s).ok());
 
     let limit = params.limit.unwrap_or(50);
 

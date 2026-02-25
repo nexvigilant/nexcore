@@ -203,7 +203,7 @@ impl GuardianStore {
         plan: &str,
         status: &str,
     ) -> nexcore_error::Result<()> {
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = nexcore_chrono::DateTime::now().to_rfc3339();
         let limit = plan_query_limit(plan);
 
         self.conn.execute(
@@ -292,7 +292,7 @@ impl GuardianStore {
         stripe_customer_id: &str,
         status: &str,
     ) -> nexcore_error::Result<()> {
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = nexcore_chrono::DateTime::now().to_rfc3339();
         self.conn.execute(
             "UPDATE subscriptions SET status = ?1, updated_at = ?2 WHERE stripe_customer_id = ?3",
             params![status, now, stripe_customer_id],
@@ -306,7 +306,7 @@ impl GuardianStore {
         stripe_customer_id: &str,
         plan: &str,
     ) -> nexcore_error::Result<()> {
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = nexcore_chrono::DateTime::now().to_rfc3339();
         let limit = plan_query_limit(plan);
         self.conn.execute(
             "UPDATE subscriptions SET plan = ?1, query_limit = ?2, updated_at = ?3 WHERE stripe_customer_id = ?4",
@@ -317,7 +317,7 @@ impl GuardianStore {
 
     /// Increment usage counter. Returns (queries_used, query_limit) after increment.
     pub fn increment_usage(&self, user_id: &str) -> nexcore_error::Result<(i64, i64)> {
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = nexcore_chrono::DateTime::now().to_rfc3339();
         self.conn.execute(
             "UPDATE subscriptions SET queries_used = queries_used + 1, updated_at = ?1 WHERE user_id = ?2",
             params![now, user_id],
@@ -345,7 +345,7 @@ impl GuardianStore {
 
     /// Reset usage counters (call at period start)
     pub fn reset_usage(&self, user_id: &str) -> nexcore_error::Result<()> {
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = nexcore_chrono::DateTime::now().to_rfc3339();
         self.conn.execute(
             "UPDATE subscriptions SET queries_used = 0, period_start = ?1, updated_at = ?1 WHERE user_id = ?2",
             params![now, user_id],
@@ -365,7 +365,7 @@ impl GuardianStore {
         let raw_key = format!("grd_{}", generate_random_key());
         let key_hash = hash_api_key(&raw_key);
         let key_prefix = raw_key.chars().take(12).collect::<String>();
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = nexcore_chrono::DateTime::now().to_rfc3339();
 
         self.conn.execute(
             "INSERT INTO api_keys (id, user_id, name, key_hash, key_prefix, created_at, revoked)
@@ -379,7 +379,7 @@ impl GuardianStore {
     /// Validate an API key. Returns user_id if valid and not revoked.
     pub fn validate_api_key(&self, raw_key: &str) -> nexcore_error::Result<Option<String>> {
         let key_hash = hash_api_key(raw_key);
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = nexcore_chrono::DateTime::now().to_rfc3339();
 
         let mut stmt = self.conn.prepare(
             "SELECT ak.user_id FROM api_keys ak
@@ -449,7 +449,7 @@ impl GuardianStore {
         request_body: Option<&str>,
         response_body: Option<&str>,
     ) -> nexcore_error::Result<()> {
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = nexcore_chrono::DateTime::now().to_rfc3339();
         self.conn.execute(
             "INSERT INTO query_history (user_id, endpoint, request_body, response_body, created_at)
              VALUES (?1, ?2, ?3, ?4, ?5)",

@@ -25,6 +25,7 @@ use crate::primes::sieve_of_eratosthenes;
 ///
 /// Known values:
 /// - M(1) = 1, M(2) = 0, M(3) = -1, M(4) = -1, M(5) = -2, M(10) = -1
+#[non_exhaustive]
 pub struct MertensFunction;
 
 impl MertensFunction {
@@ -54,6 +55,7 @@ impl MertensFunction {
 ///
 /// Measures the "logarithmic density" of primes up to x.
 /// By the prime number theorem, θ(x) ~ x as x → ∞.
+#[non_exhaustive]
 pub struct ChebyshevTheta;
 
 impl ChebyshevTheta {
@@ -69,6 +71,10 @@ impl ChebyshevTheta {
     /// let computed = ChebyshevTheta::compute(10);
     /// assert!((computed - expected).abs() < 1e-10);
     /// ```
+    #[allow(
+        clippy::as_conversions,
+        reason = "u64 prime cast to f64 for floating-point logarithm; precision loss is acceptable for analytic number theory purposes"
+    )]
     pub fn compute(x: u64) -> f64 {
         sieve_of_eratosthenes(x)
             .iter()
@@ -86,6 +92,7 @@ impl ChebyshevTheta {
 /// Sum of the von Mangoldt function over 1..x.
 /// Counts prime powers (with logarithmic weights).
 /// By PNT: ψ(x) ~ x.
+#[non_exhaustive]
 pub struct ChebyshevPsi;
 
 impl ChebyshevPsi {

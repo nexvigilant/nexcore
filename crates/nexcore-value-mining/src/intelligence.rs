@@ -53,7 +53,7 @@
 //! | Cybersecurity | Multi-sensor alert → incident assessment → response |
 //! | Epidemiology | Surveillance signals → outbreak confirmation → intervention |
 
-use chrono::{DateTime, Duration, Utc};
+use nexcore_chrono::{DateTime, Duration};
 use serde::{Deserialize, Serialize};
 
 use crate::types::{SignalStrength, SignalType};
@@ -829,7 +829,7 @@ pub struct MonitoringDashboard {
     /// Time from first signal to current state (seconds).
     pub time_to_current_state: f64,
     /// Snapshot timestamp.
-    pub snapshot_at: DateTime<Utc>,
+    pub snapshot_at: DateTime,
 }
 
 impl MonitoringDashboard {
@@ -947,11 +947,11 @@ pub struct ValueIntelligence {
     /// Best signal strength observed.
     pub peak_strength: SignalStrength,
     /// When intelligence was first created.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// When intelligence was last updated.
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
     /// When intelligence expires if not refreshed.
-    pub expires_at: DateTime<Utc>,
+    pub expires_at: DateTime,
     /// Version counter (increments on each update).
     pub version: u32,
 }
@@ -1008,7 +1008,7 @@ impl ValueIntelligence {
             .fold(0.0f64, f64::max);
         let peak_strength = SignalStrength::from_confidence(peak_conf);
 
-        let now = Utc::now();
+        let now = DateTime::now();
         let expires_at = now + Duration::hours(ttl_hours);
 
         let id = format!("VI-{}-{}", entity.replace(' ', "_"), now.timestamp_millis());
@@ -1058,7 +1058,7 @@ impl ValueIntelligence {
     pub fn mark_stale(&mut self) {
         if self.state.can_transition_to(IntelligenceState::Stale) {
             self.state = IntelligenceState::Stale;
-            self.updated_at = Utc::now();
+            self.updated_at = DateTime::now();
             self.version += 1;
         }
     }
@@ -1067,14 +1067,14 @@ impl ValueIntelligence {
     pub fn mark_expired(&mut self) {
         if self.state.can_transition_to(IntelligenceState::Expired) {
             self.state = IntelligenceState::Expired;
-            self.updated_at = Utc::now();
+            self.updated_at = DateTime::now();
             self.version += 1;
         }
     }
 
     /// Check whether intelligence has expired based on TTL.
     pub fn is_expired(&self) -> bool {
-        Utc::now() > self.expires_at || self.state == IntelligenceState::Expired
+        DateTime::now() > self.expires_at || self.state == IntelligenceState::Expired
     }
 
     /// Generate a monitoring dashboard snapshot.
@@ -1097,7 +1097,7 @@ impl ValueIntelligence {
             false_positive_rate: 0.0, // Computed from historical data
             actionable_ratio: if self.state.is_actionable() { 1.0 } else { 0.0 },
             time_to_current_state,
-            snapshot_at: Utc::now(),
+            snapshot_at: DateTime::now(),
         }
     }
 }

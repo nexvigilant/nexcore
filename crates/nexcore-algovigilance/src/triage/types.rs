@@ -3,7 +3,7 @@
 //! Tier: T3 (domain-specific signal triage types)
 //! Grounds to: T1::Sequence (time-ordered decay)
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{Relevance, SignalId};
@@ -26,9 +26,9 @@ pub struct TriagedSignal {
     /// Current decay-adjusted relevance
     pub current_relevance: Relevance,
     /// When last reinforced with new evidence
-    pub last_reinforced: DateTime<Utc>,
+    pub last_reinforced: DateTime,
     /// When first detected
-    pub first_detected: DateTime<Utc>,
+    pub first_detected: DateTime,
     /// Number of reinforcement events
     pub reinforcement_count: u32,
 }

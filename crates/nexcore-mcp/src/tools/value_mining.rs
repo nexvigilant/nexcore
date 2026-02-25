@@ -165,7 +165,7 @@ pub fn create_baseline(params: ValueBaselineCreateParams) -> Result<CallToolResu
         "negative_rate": params.negative_rate,
         "avg_engagement": params.avg_engagement,
         "posts_per_hour": params.posts_per_hour,
-        "computed_at": chrono::Utc::now().to_rfc3339(),
+        "computed_at": nexcore_chrono::DateTime::now().to_rfc3339(),
         "sample_count": 0,
         "grounding": "Baseline → N (quantities) + π (persistence) + ν (frequency)",
     });

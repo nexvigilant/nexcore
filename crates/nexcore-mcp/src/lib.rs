@@ -1610,15 +1610,8 @@ impl NexCoreMcpServer {
         tools::skills::categories_compute_intensive()
     }
 
-    #[tool(
-        description = "Search skill knowledge by intent. Returns ranked skills with guidance sections, MCP tools for chaining, and related skills. Pre-populated index of all SKILL.md files. Use instead of reading individual skill files."
-    )]
-    async fn nexcore_assist(
-        &self,
-        Parameters(params): Parameters<params::skills::AssistParams>,
-    ) -> Result<CallToolResult, McpError> {
-        tools::assist::search(&self.assist_index, params)
-    }
+    // nexcore_assist: accessible via unified dispatcher nexcore(command="nexcore_assist")
+    // Standalone registration removed to eliminate tool-name collision with `nexcore` prefix.
 
     #[tool(
         description = "Analyze skills for orchestration patterns. Detects orchestrators (skills that spawn/delegate work), extracts triggers, and recommends subagent types with rationale. Accepts a path or glob pattern (e.g., '~/.claude/skills/forge' or '~/.claude/skills/*')."
@@ -5493,12 +5486,7 @@ Domains: Foundation, PV Signal Detection, Vigilance, Guardian, Vigil, Skills, Va
                 self.tool_router
                     .list_all()
                     .into_iter()
-                    .filter(|t| {
-                        matches!(
-                            t.name.as_ref(),
-                            "nexcore" | "nexcore_health_probe" | "nexcore_assist"
-                        )
-                    })
+                    .filter(|t| matches!(t.name.as_ref(), "nexcore" | "nexcore_health_probe"))
                     .collect()
             },
             meta: None,

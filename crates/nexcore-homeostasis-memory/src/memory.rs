@@ -25,7 +25,7 @@
 use crate::incident::{Incident, IncidentSeverity, IncidentSignature};
 use crate::playbook::{Playbook, PlaybookStep};
 use crate::store::{MemoryConfig, MemoryError, MemoryStats, MemoryStore, SimilarIncident};
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_homeostasis_primitives::enums::{ActionType, HealthStatus};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -105,7 +105,7 @@ impl IncidentMemory {
     ) -> String {
         let id = format!(
             "inc-{}-{:04}",
-            Utc::now().format("%Y%m%d%H%M%S"),
+            DateTime::now().format("%Y%m%d%H%M%S").unwrap_or_default(),
             self.incident_counter,
         );
         self.incident_counter += 1;

@@ -10,7 +10,7 @@
 //! - **R**elevant: Aligned with strategic objectives
 //! - **T**ime-bound: Clear deadlines and milestones
 
-use chrono::NaiveDate;
+use nexcore_chrono::Date;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -161,7 +161,7 @@ pub struct Milestone {
     /// Checkpoint description
     pub checkpoint: String,
     /// Target date
-    pub target_date: NaiveDate,
+    pub target_date: Date,
     /// Percentage complete at this milestone
     pub percentage_complete: u8,
 }
@@ -170,11 +170,11 @@ pub struct Milestone {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeBoundComponent {
     /// Final deadline
-    pub deadline: NaiveDate,
+    pub deadline: Date,
     /// Operational target date (if different)
-    pub operational_target: Option<NaiveDate>,
+    pub operational_target: Option<Date>,
     /// Date to trigger escalation
-    pub escalation_trigger_date: Option<NaiveDate>,
+    pub escalation_trigger_date: Option<Date>,
     /// Intermediate milestones
     pub milestones: Vec<Milestone>,
     /// Event that starts the clock
@@ -212,7 +212,7 @@ pub struct SmartSop {
     /// Version string
     pub version: String,
     /// Effective date
-    pub effective_date: NaiveDate,
+    pub effective_date: Date,
     /// Purpose statement
     pub purpose: String,
     /// Scope description

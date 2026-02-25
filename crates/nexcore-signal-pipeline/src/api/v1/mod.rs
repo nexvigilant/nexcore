@@ -10,6 +10,7 @@ use axum::{
 };
 
 /// Request body for single signal detection.
+#[non_exhaustive]
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct DetectRequest {
     /// Drug name.
@@ -27,6 +28,7 @@ pub struct DetectRequest {
 }
 
 /// Response body for signal detection.
+#[non_exhaustive]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct DetectResponse {
     /// Drug-event pair.
@@ -65,6 +67,7 @@ async fn detect_handler(Json(req): Json<DetectRequest>) -> Json<DetectResponse> 
 }
 
 /// Batch request body.
+#[non_exhaustive]
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct BatchRequest {
     /// List of detection requests.
@@ -72,6 +75,7 @@ pub struct BatchRequest {
 }
 
 /// Batch response body.
+#[non_exhaustive]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct BatchResponse {
     /// All results.
@@ -109,6 +113,7 @@ async fn batch_handler(Json(req): Json<BatchRequest>) -> Json<BatchResponse> {
 }
 
 /// Threshold configurations response.
+#[non_exhaustive]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct ThresholdsResponse {
     /// Evans defaults.

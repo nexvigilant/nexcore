@@ -181,6 +181,7 @@ mod pv_tests {
             table: test_table(),
             prr_threshold: 2.0,
             min_n: 3,
+            fdr_correction: false,
         };
         let result = pv::signal_complete(params);
         assert!(result.is_ok());

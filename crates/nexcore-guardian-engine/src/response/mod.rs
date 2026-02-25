@@ -110,7 +110,7 @@ pub mod actuator_priorities {
 }
 
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use super::sensing::ThreatLevel;
@@ -212,7 +212,7 @@ pub struct ActuatorResult {
     /// Result message
     pub message: String,
     /// Execution timestamp
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Execution duration in milliseconds
     pub duration_ms: u64,
     /// Additional result data
@@ -226,7 +226,7 @@ impl ActuatorResult {
         Self {
             success: true,
             message: message.into(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             duration_ms: 0,
             data: std::collections::HashMap::new(),
         }
@@ -238,7 +238,7 @@ impl ActuatorResult {
         Self {
             success: false,
             message: message.into(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             duration_ms: 0,
             data: std::collections::HashMap::new(),
         }
@@ -372,7 +372,7 @@ pub struct ResponseCeiling {
     alert_count: u32,
     escalation_count: u32,
     /// Last reset timestamp
-    last_reset: DateTime<Utc>,
+    last_reset: DateTime,
 }
 
 impl Default for ResponseCeiling {
@@ -384,7 +384,7 @@ impl Default for ResponseCeiling {
             block_count: 0,
             alert_count: 0,
             escalation_count: 0,
-            last_reset: Utc::now(),
+            last_reset: DateTime::now(),
         }
     }
 }
@@ -463,7 +463,7 @@ impl ResponseCeiling {
 
     /// Reset counts if enough time has passed
     fn maybe_reset(&mut self) {
-        let now = Utc::now();
+        let now = DateTime::now();
         let elapsed = now.signed_duration_since(self.last_reset);
 
         if elapsed.num_minutes() >= ceiling_limits::MINUTE_RESET_WINDOW {
@@ -841,7 +841,7 @@ pub struct EscalationRecord {
     /// Assigned to
     pub assigned_to: Option<String>,
     /// Timestamp
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Status (open, acknowledged, resolved)
     pub status: EscalationStatus,
 }
@@ -910,7 +910,7 @@ impl Actuator for EscalationActuator {
                     level: *level,
                     description: description.clone(),
                     assigned_to: assigned_to.clone(),
-                    timestamp: Utc::now(),
+                    timestamp: DateTime::now(),
                     status: EscalationStatus::Open,
                 };
 

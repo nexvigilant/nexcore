@@ -170,7 +170,7 @@ mod tests {
     use super::*;
     use crate::compiler::{CompileOptions, KnowledgeCompiler};
     use crate::ingest::{KnowledgeSource, RawKnowledge};
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     fn setup() -> (KnowledgeStore, QueryEngine) {
         let store = KnowledgeStore::temp().unwrap();
@@ -185,14 +185,14 @@ mod tests {
                     text: "Signal detection uses PRR for pharmacovigilance safety.".to_string(),
                     source: KnowledgeSource::FreeText,
                     domain: Some("pv".to_string()),
-                    timestamp: Utc::now(),
+                    timestamp: DateTime::now(),
                 },
                 RawKnowledge {
                     text: "Rust traits enable polymorphism through generics and dynamic dispatch."
                         .to_string(),
                     source: KnowledgeSource::FreeText,
                     domain: Some("rust".to_string()),
-                    timestamp: Utc::now(),
+                    timestamp: DateTime::now(),
                 },
             ],
         };

@@ -13,7 +13,7 @@
 use crate::neighbor::{Neighbor, NeighborRegistry};
 use crate::node::NodeState;
 use crate::routing::{Route, RoutingTable};
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
@@ -53,7 +53,7 @@ pub struct MeshSnapshot {
     /// Neighbor registry snapshot.
     pub neighbors: NeighborSnapshot,
     /// ISO 8601 timestamp when the snapshot was taken.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Snapshot format version for future compatibility.
     pub version: u32,
 }
@@ -75,7 +75,7 @@ impl MeshSnapshot {
             neighbors: NeighborSnapshot {
                 neighbors: neighbors.snapshot(),
             },
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             version: 1,
         }
     }
@@ -337,9 +337,9 @@ mod tests {
     fn snapshot_contains_timestamp() {
         let routing = RoutingTable::with_defaults();
         let registry = NeighborRegistry::new(10);
-        let before = Utc::now();
+        let before = DateTime::now();
         let snapshot = MeshSnapshot::capture("ts-node", NodeState::Active, &routing, &registry);
-        let after = Utc::now();
+        let after = DateTime::now();
 
         assert!(snapshot.timestamp >= before);
         assert!(snapshot.timestamp <= after);

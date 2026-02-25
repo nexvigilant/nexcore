@@ -2,7 +2,10 @@
 //!
 //! Provides a `Copy`-able complex number with full arithmetic and geometric operations.
 
-#![allow(clippy::module_name_repetitions)]
+#![allow(
+    clippy::module_name_repetitions,
+    reason = "ComplexField and ComplexError are the idiomatic names for these types despite sharing the 'Complex' prefix"
+)]
 
 use std::fmt;
 use std::ops::{Add, Mul, Neg, Sub};
@@ -21,6 +24,7 @@ use crate::error::ComplexError;
 /// let z = Complex::new(3.0, 4.0);
 /// assert!((z.abs() - 5.0).abs() < 1e-12);
 /// ```
+#[non_exhaustive]
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Complex {
     /// Real part.
@@ -104,7 +108,10 @@ impl Complex {
     /// For an approximate zero test, compare [`abs_sq`](Self::abs_sq) against an epsilon.
     #[inline]
     #[must_use]
-    #[allow(clippy::float_cmp)]
+    #[allow(
+        clippy::float_cmp,
+        reason = "exact comparison to 0.0 is intentional: this tests bit-exact zero, not approximate zero; callers are told to use abs_sq for approximate tests"
+    )]
     pub fn is_zero(self) -> bool {
         self.re == 0.0 && self.im == 0.0
     }
@@ -148,7 +155,10 @@ impl Complex {
     /// ```
     pub fn div(self, rhs: Self) -> Result<Self, ComplexError> {
         let denom = rhs.abs_sq();
-        #[allow(clippy::float_cmp)]
+        #[allow(
+            clippy::float_cmp,
+            reason = "exact comparison to 0.0 is intentional: abs_sq returns exactly 0.0 only when both re and im are bit-exact zero, which is the only valid zero-division guard"
+        )]
         if denom == 0.0 {
             return Err(ComplexError::DivisionByZero);
         }

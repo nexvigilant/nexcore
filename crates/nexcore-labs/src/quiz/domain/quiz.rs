@@ -3,7 +3,7 @@
 //! Defines quiz definitions, questions, and their variants.
 //! Migrated from Python Ormar Quiz model and Pydantic QuizQuestion.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 
@@ -25,10 +25,10 @@ pub struct Quiz {
     pub description: Option<String>,
 
     /// Creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Last update timestamp.
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
 
     /// Owner user ID.
     pub user_id: NexId,
@@ -70,7 +70,7 @@ pub struct Quiz {
 impl Quiz {
     /// Create a new quiz.
     pub fn new(user_id: NexId, title: String, description: Option<String>) -> Self {
-        let now = Utc::now();
+        let now = DateTime::now();
         Self {
             id: NexId::v4(),
             public: false,
@@ -101,7 +101,7 @@ impl Quiz {
     /// Add a question to the quiz.
     pub fn add_question(&mut self, question: QuizQuestion) {
         self.questions.push(question);
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Calculate total play time in seconds.

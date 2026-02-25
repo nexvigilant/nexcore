@@ -75,7 +75,10 @@ fn apply_degradation(
     belief.set_grounding(T1Primitive::Causality);
 
     let evidence = EvidenceRef::weighted(
-        format!("nmd_ev_{}", chrono::Utc::now().timestamp_millis()),
+        format!(
+            "nmd_ev_{}",
+            nexcore_chrono::DateTime::now().timestamp_millis()
+        ),
         EvidenceType::Observation,
         format!("NMD degradation in category '{category}'"),
         evidence_weight,
@@ -104,7 +107,10 @@ fn apply_threshold_adjustment(knowledge: &mut ImplicitKnowledge, adj: &Threshold
     belief.set_grounding(T1Primitive::Boundary);
 
     let evidence = EvidenceRef::weighted(
-        format!("nmd_adj_{}", chrono::Utc::now().timestamp_millis()),
+        format!(
+            "nmd_adj_{}",
+            nexcore_chrono::DateTime::now().timestamp_millis()
+        ),
         EvidenceType::Inference,
         format!(
             "Adaptive engine recommends {} → {} (confidence: {:.2})",

@@ -3,7 +3,7 @@
 //! Collects network requests/responses with bounded total size.
 //! When size limit is exceeded, oldest entries are evicted.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
@@ -99,9 +99,9 @@ pub struct NetworkEntry {
     /// Resource type (document, script, image, etc.)
     pub resource_type: Option<String>,
     /// Request start timestamp
-    pub started_at: DateTime<Utc>,
+    pub started_at: DateTime,
     /// Request completion timestamp
-    pub completed_at: Option<DateTime<Utc>>,
+    pub completed_at: Option<DateTime>,
     /// Page ID
     pub page_id: String,
 }
@@ -374,8 +374,8 @@ mod tests {
                 duration_ms: Some(50),
                 error: None,
                 resource_type: Some("document".to_string()),
-                started_at: Utc::now(),
-                completed_at: Some(Utc::now()),
+                started_at: DateTime::now(),
+                completed_at: Some(DateTime::now()),
                 page_id: "page_1".to_string(),
             });
         }
@@ -399,7 +399,7 @@ mod tests {
             duration_ms: None,
             error: None,
             resource_type: None,
-            started_at: Utc::now(),
+            started_at: DateTime::now(),
             completed_at: None,
             page_id: "page_1".to_string(),
         });
@@ -409,7 +409,7 @@ mod tests {
             entry.status_code = Some(200);
             entry.response_size = 1024;
             entry.duration_ms = Some(100);
-            entry.completed_at = Some(Utc::now());
+            entry.completed_at = Some(DateTime::now());
         });
 
         let entry = collector.get_by_id("req_1").expect("Entry should exist");
@@ -433,8 +433,8 @@ mod tests {
                 duration_ms: Some(50),
                 error: None,
                 resource_type: None,
-                started_at: Utc::now(),
-                completed_at: Some(Utc::now()),
+                started_at: DateTime::now(),
+                completed_at: Some(DateTime::now()),
                 page_id: "page_1".to_string(),
             });
         }
@@ -450,7 +450,7 @@ mod tests {
                 duration_ms: None,
                 error: Some("Connection refused".to_string()),
                 resource_type: None,
-                started_at: Utc::now(),
+                started_at: DateTime::now(),
                 completed_at: None,
                 page_id: "page_1".to_string(),
             });

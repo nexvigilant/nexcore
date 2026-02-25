@@ -7,13 +7,14 @@ use crate::bedrock::BedrockAtom;
 use crate::constants::MathConstant;
 use crate::primitiva::LexPrimitiva;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::BTreeSet;
 
 /// Mathematical foundation category grounding computational primitives.
 ///
 /// Each bedrock atom traces through one of these 10 foundational branches
 /// to reach its terminal mathematical constant.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum MathFoundation {
     /// Natural number construction (0, S(n), induction).
     PeanoAxioms,
@@ -102,6 +103,7 @@ impl MathFoundation {
 ///
 /// Captures the full path: `LexPrimitiva → BedrockAtom → MathFoundation → MathConstant`.
 #[derive(Debug, Clone, Serialize)]
+#[non_exhaustive]
 pub struct GroundingTrace {
     /// The top-level Lex Primitiva (e.g., Quantity, Causality).
     pub primitive: LexPrimitiva,
@@ -286,14 +288,15 @@ pub const fn foundations_for_primitive(primitive: LexPrimitiva) -> &'static [Mat
 
 /// The dependency graph.
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct DependencyGraph;
 
 impl DependencyGraph {
     /// Get all terminal constants reachable from a primitive.
     #[must_use]
-    pub fn constants_for_primitive(primitive: LexPrimitiva) -> HashSet<&'static str> {
+    pub fn constants_for_primitive(primitive: LexPrimitiva) -> BTreeSet<&'static str> {
         let foundations = foundations_for_primitive(primitive);
-        let mut constants = HashSet::new();
+        let mut constants = BTreeSet::new();
         for foundation in foundations {
             for c in foundation.terminal_constants() {
                 constants.insert(c.symbol);
@@ -355,9 +358,9 @@ mod tests {
 
     #[test]
     fn test_each_foundation_reaches_root() {
-        use std::collections::HashSet;
+        use std::collections::BTreeSet;
         for f in MathFoundation::all() {
-            let constants: HashSet<_> = f.terminal_constants().iter().map(|c| c.symbol).collect();
+            let constants: BTreeSet<_> = f.terminal_constants().iter().map(|c| c.symbol).collect();
             let has_root = constants.contains("0") || constants.contains("1");
             assert!(has_root, "{:?} has no root constant", f);
         }

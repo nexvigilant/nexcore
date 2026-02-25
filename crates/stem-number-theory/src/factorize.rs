@@ -24,6 +24,10 @@ use crate::primes::is_prime_miller_rabin;
 
 /// Euclidean GCD.
 #[inline]
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "GCD via Euclidean algorithm: remainder and assignment are mathematically well-defined and cannot overflow for u64"
+)]
 fn gcd(mut a: u64, mut b: u64) -> u64 {
     while b != 0 {
         let t = b;
@@ -35,6 +39,10 @@ fn gcd(mut a: u64, mut b: u64) -> u64 {
 
 /// Modular multiplication using Russian peasant to avoid overflow.
 #[inline]
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "Russian peasant multiplication: all operations are mod m so no overflow occurs; intermediate a*2 is kept < 2*m which fits u128"
+)]
 fn mul_mod(mut a: u128, mut b: u128, m: u128) -> u128 {
     let mut result: u128 = 0;
     a %= m;
@@ -65,6 +73,10 @@ fn mul_mod(mut a: u128, mut b: u128, m: u128) -> u128 {
 /// assert_eq!(trial_division(12), vec![(2, 2), (3, 1)]);
 /// assert_eq!(trial_division(1), vec![]);
 /// ```
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "Trial division: d*d, n/2, n/d, d+=2, exp+=1 are all bounded by the algorithm invariants; no overflow is possible for valid u64 inputs"
+)]
 pub fn trial_division(mut n: u64) -> Vec<(u64, u32)> {
     if n <= 1 {
         return vec![];
@@ -120,7 +132,18 @@ pub fn trial_division(mut n: u64) -> Vec<(u64, u32)> {
 ///     assert!(f == 3 || f == 5);
 /// }
 /// ```
-#[allow(clippy::many_single_char_names)]
+#[allow(
+    clippy::many_single_char_names,
+    reason = "Brent/Floyd cycle-detection variables follow standard cryptographic naming: x, y, r, q, d, k are conventional in the literature"
+)]
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "Pollard rho: all arithmetic is explicitly modulo n128 via mul_mod; r*=2 and k+=step are bounded by the cycle-length invariant"
+)]
+#[allow(
+    clippy::as_conversions,
+    reason = "n128 = n as u128 is lossless (u64 into u128). x as u64 and diff as u128 are safe: x and y are always < n128 <= u64::MAX, and abs_diff fits u64"
+)]
 pub fn pollard_rho(n: u64) -> Result<u64, NumberTheoryError> {
     if n <= 1 {
         return Err(NumberTheoryError::NonPositive(n));
@@ -206,6 +229,10 @@ pub fn pollard_rho(n: u64) -> Result<u64, NumberTheoryError> {
 /// assert_eq!(factorize(12), vec![(2, 2), (3, 1)]);
 /// assert_eq!(factorize(7), vec![(7, 1)]);
 /// ```
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "last.1 += 1 increments a prime exponent; for u64 the maximum exponent is 63 (2^63), which fits in u32 with margin"
+)]
 pub fn factorize(n: u64) -> Vec<(u64, u32)> {
     if n <= 1 {
         return vec![];
@@ -228,6 +255,10 @@ pub fn factorize(n: u64) -> Vec<(u64, u32)> {
         for &p in &[2u64, 3, 5, 7, 11, 13, 17, 19, 23] {
             if m % p == 0 {
                 prime_factors.push(p);
+                #[allow(
+                    clippy::arithmetic_side_effects,
+                    reason = "m % p == 0 guarantees exact division; m/p < m so no overflow"
+                )]
                 pending.push(m / p);
                 found = true;
                 break;
@@ -241,6 +272,10 @@ pub fn factorize(n: u64) -> Vec<(u64, u32)> {
         match pollard_rho(m) {
             Ok(d) => {
                 pending.push(d);
+                #[allow(
+                    clippy::arithmetic_side_effects,
+                    reason = "d is a proper divisor of m (1 < d < m) returned by pollard_rho; exact division is guaranteed"
+                )]
                 pending.push(m / d);
             }
             Err(_) => {

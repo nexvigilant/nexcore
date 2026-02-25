@@ -81,7 +81,15 @@ pub fn euler_totient(n: u64) -> u64 {
     let factors = factorize(n);
     let mut result = n;
     for &(p, _) in &factors {
-        result = result / p * (p - 1);
+        // Division before multiplication keeps result within u64; p divides result by
+        // the multiplicativity of φ, so exact division is guaranteed.
+        #[allow(
+            clippy::arithmetic_side_effects,
+            reason = "p always divides result by multiplicativity of Euler totient; no overflow possible"
+        )]
+        {
+            result = result / p * (p - 1);
+        }
     }
     result
 }
@@ -107,8 +115,19 @@ pub fn von_mangoldt(n: u64) -> f64 {
     }
     let factors = factorize(n);
     if factors.len() == 1 {
-        // n = p^k for some prime p
-        (factors[0].0 as f64).ln()
+        // n = p^k for some prime p; factors is non-empty so index 0 is safe.
+        #[allow(
+            clippy::indexing_slicing,
+            reason = "len == 1 is checked immediately above; index 0 is always present"
+        )]
+        let p = factors[0].0;
+        // u64 → f64: precision loss is acceptable for logarithm computation.
+        #[allow(
+            clippy::as_conversions,
+            reason = "u64 prime value cast to f64 for floating-point logarithm; precision loss is acceptable"
+        )]
+        let pf = p as f64;
+        pf.ln()
     } else {
         0.0
     }
@@ -187,7 +206,14 @@ pub fn omega(n: u64) -> u32 {
     if n <= 1 {
         return 0;
     }
-    factorize(n).len() as u32
+    // The number of distinct prime factors of a u64 is at most 15 (2*3*5*...*47 < 2^64),
+    // so len() always fits in u32.
+    #[allow(
+        clippy::as_conversions,
+        reason = "distinct prime factor count of u64 is at most 15, safely fits in u32"
+    )]
+    let count = factorize(n).len() as u32;
+    count
 }
 
 /// Ω(n): total prime factors counted with multiplicity.

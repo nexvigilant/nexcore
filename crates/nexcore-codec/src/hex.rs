@@ -22,16 +22,43 @@
 /// Hex character lookup table (lowercase).
 const HEX_CHARS_LOWER: &[u8; 16] = b"0123456789abcdef";
 
+/// Uppercase hex lookup table.
+const HEX_CHARS_UPPER: &[u8; 16] = b"0123456789ABCDEF";
+
+/// Look up a nibble (0..=15) in a hex character table.
+///
+/// `nibble` must be in 0..=15. For `encode` callers this is guaranteed by
+/// the bitwise operations `byte >> 4` (gives 0..=15) and `byte & 0x0f`
+/// (gives 0..=15).
+#[inline]
+fn hex_char(table: &[u8; 16], nibble: u8) -> char {
+    // SAFETY PROOF: `nibble` is always derived from `byte >> 4` or
+    // `byte & 0x0f`, so it is in 0..=15. The table has exactly 16 elements
+    // (indices 0..=15), making this indexing always in bounds. All values in
+    // the table are printable ASCII (< 128), so casting to `char` is valid.
+    #[allow(
+        clippy::indexing_slicing,
+        reason = "nibble is always byte >> 4 or byte & 0x0f, which is 0..=15; table has 16 elements"
+    )]
+    #[allow(
+        clippy::as_conversions,
+        reason = "table bytes are ASCII digits/letters (0-127); casting u8 to char is always valid here"
+    )]
+    (table[usize::from(nibble)] as char)
+}
+
 /// Encode bytes to a lowercase hex string.
 ///
 /// Equivalent to `hex::encode()`.
 #[must_use]
 pub fn encode(input: impl AsRef<[u8]>) -> String {
     let input = input.as_ref();
-    let mut out = String::with_capacity(input.len() * 2);
+    // Each byte expands to exactly 2 hex characters; saturating_mul is
+    // sufficient — inputs large enough to overflow usize would OOM first.
+    let mut out = String::with_capacity(input.len().saturating_mul(2));
     for &byte in input {
-        out.push(HEX_CHARS_LOWER[(byte >> 4) as usize] as char);
-        out.push(HEX_CHARS_LOWER[(byte & 0x0f) as usize] as char);
+        out.push(hex_char(HEX_CHARS_LOWER, byte >> 4));
+        out.push(hex_char(HEX_CHARS_LOWER, byte & 0x0f));
     }
     out
 }
@@ -40,18 +67,16 @@ pub fn encode(input: impl AsRef<[u8]>) -> String {
 #[must_use]
 pub fn encode_upper(input: impl AsRef<[u8]>) -> String {
     let input = input.as_ref();
-    let mut out = String::with_capacity(input.len() * 2);
+    let mut out = String::with_capacity(input.len().saturating_mul(2));
     for &byte in input {
-        out.push(HEX_CHARS_UPPER[(byte >> 4) as usize] as char);
-        out.push(HEX_CHARS_UPPER[(byte & 0x0f) as usize] as char);
+        out.push(hex_char(HEX_CHARS_UPPER, byte >> 4));
+        out.push(hex_char(HEX_CHARS_UPPER, byte & 0x0f));
     }
     out
 }
 
-/// Uppercase hex lookup table.
-const HEX_CHARS_UPPER: &[u8; 16] = b"0123456789ABCDEF";
-
 /// Error returned when decoding an invalid hex string.
+#[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DecodeError {
     /// Input has odd length (hex requires pairs).
@@ -86,19 +111,54 @@ pub fn decode(input: impl AsRef<[u8]>) -> Result<Vec<u8>, DecodeError> {
     }
     let mut out = Vec::with_capacity(input.len() / 2);
     for pair in input.chunks_exact(2) {
+        // chunks_exact(2) guarantees pair.len() == 2; indices 0 and 1 are
+        // always valid. The `hex_val` function returns 0..=15, so
+        // `(high << 4) | low` is at most 0xF0 | 0x0F = 0xFF, which fits in u8.
+        #[allow(
+            clippy::indexing_slicing,
+            reason = "chunks_exact(2) guarantees pair.len() == 2; indices 0 and 1 are always valid"
+        )]
         let high = hex_val(pair[0], 0)?;
+        #[allow(
+            clippy::indexing_slicing,
+            reason = "chunks_exact(2) guarantees pair.len() == 2; indices 0 and 1 are always valid"
+        )]
         let low = hex_val(pair[1], 1)?;
+        // `high` is 0..=15 from hex_val, so `high << 4` is 0..=240.
+        // `low` is 0..=15, so `(high << 4) | low` is 0..=255; fits in u8.
+        #[allow(
+            clippy::arithmetic_side_effects,
+            reason = "high is 0..=15 (from hex_val), so high << 4 is 0..=240; OR with low (0..=15) gives 0..=255; no overflow"
+        )]
         out.push((high << 4) | low);
     }
     Ok(out)
 }
 
-/// Convert a hex ASCII byte to its numeric value.
+/// Convert a hex ASCII byte to its numeric value (0..=15).
 #[inline]
 const fn hex_val(byte: u8, offset: usize) -> Result<u8, DecodeError> {
     match byte {
+        // Match arm guards prove safety for each arm:
+        // b'0'..=b'9': byte >= b'0', so byte - b'0' is in 0..=9.
+        // b'a'..=b'f': byte >= b'a', so byte - b'a' is in 0..=5;
+        //   adding 10 gives 10..=15, fitting in u8.
+        // b'A'..=b'F': byte >= b'A', so byte - b'A' is in 0..=5;
+        //   adding 10 gives 10..=15, fitting in u8.
+        #[allow(
+            clippy::arithmetic_side_effects,
+            reason = "match arm guard proves byte >= b'0'; subtraction gives 0..=9 which fits in u8"
+        )]
         b'0'..=b'9' => Ok(byte - b'0'),
+        #[allow(
+            clippy::arithmetic_side_effects,
+            reason = "match arm guard proves byte >= b'a' and byte - b'a' <= 5; adding 10 gives 10..=15, fitting in u8"
+        )]
         b'a'..=b'f' => Ok(byte - b'a' + 10),
+        #[allow(
+            clippy::arithmetic_side_effects,
+            reason = "match arm guard proves byte >= b'A' and byte - b'A' <= 5; adding 10 gives 10..=15, fitting in u8"
+        )]
         b'A'..=b'F' => Ok(byte - b'A' + 10),
         _ => Err(DecodeError::InvalidChar {
             index: offset,

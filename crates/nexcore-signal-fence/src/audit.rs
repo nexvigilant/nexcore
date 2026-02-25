@@ -5,7 +5,7 @@
 //! In signal theory terms, the audit log is the "experiment record" —
 //! every observation, its classification, and the rationale.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::policy::FenceDecision;
@@ -16,7 +16,7 @@ use crate::rule::FenceVerdict;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditEntry {
     /// When the decision was made.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Process name (or "<unknown>").
     pub process_name: String,
     /// Process PID (0 if unknown).
@@ -47,7 +47,7 @@ impl AuditEntry {
             .unwrap_or_else(|| ("<unknown>".to_string(), 0));
 
         Self {
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             process_name: proc_name,
             pid,
             local: format!("{}:{}", event.socket.local_addr, event.socket.local_port),

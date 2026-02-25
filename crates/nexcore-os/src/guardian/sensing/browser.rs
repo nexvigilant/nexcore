@@ -9,7 +9,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 
 use nexcore_primitives::measurement::Measured;
@@ -138,7 +138,7 @@ impl BrowserSensor {
                 samples,
             },
             severity,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             source: SignalSource::Pamp {
                 source_id: "browser_console".to_string(),
                 vector: "javascript_errors".to_string(),
@@ -183,7 +183,7 @@ impl BrowserSensor {
                 failed_urls,
             },
             severity,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             source: SignalSource::Pamp {
                 source_id: "browser_network".to_string(),
                 vector: "network_failures".to_string(),

@@ -10,3 +10,6 @@ description = "Downloads Intelligence Scanner - classifies files by NexVigilant 
 
 [dev-dependencies]
 tempfile = "3"
+
+[lints]
+workspace = true

@@ -1,7 +1,7 @@
 //! Base security scanner infrastructure.
 
 use crate::security::config::{ScanConfig, SeverityLevel};
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_fs::glob::Pattern;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -32,7 +32,7 @@ pub struct SecurityIssue {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScanResult {
     pub project_path: PathBuf,
-    pub scan_time: DateTime<Utc>,
+    pub scan_time: DateTime,
     pub issues: Vec<SecurityIssue>,
     pub files_scanned: usize,
     pub scan_duration_ms: u64,
@@ -363,7 +363,7 @@ impl SecurityScanner {
 
         ScanResult {
             project_path: self.root_path.clone(),
-            scan_time: Utc::now(),
+            scan_time: DateTime::now(),
             issues,
             files_scanned: files_count,
             scan_duration_ms: start_time.elapsed().as_millis() as u64,

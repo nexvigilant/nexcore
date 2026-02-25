@@ -1,6 +1,6 @@
 //! Active skills CRUD operations.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 
@@ -95,9 +95,9 @@ pub struct SkillRow {
 
     // --- Timestamps ---
     /// When the skill was last scanned
-    pub scanned_at: DateTime<Utc>,
+    pub scanned_at: DateTime,
     /// When the row was last updated
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
 }
 
 /// Column list for all active_skills queries (36 columns).
@@ -347,9 +347,9 @@ pub fn delete_all(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
-/// Parse an RFC3339/ISO8601 datetime string, falling back to `Utc::now()`.
-fn parse_dt(s: String) -> DateTime<Utc> {
-    s.parse::<DateTime<Utc>>().unwrap_or_else(|_| Utc::now())
+/// Parse an RFC3339/ISO8601 datetime string, falling back to `DateTime::now()`.
+fn parse_dt(s: String) -> DateTime {
+    s.parse::<DateTime>().unwrap_or_else(|_| DateTime::now())
 }
 
 #[cfg(test)]
@@ -393,8 +393,8 @@ mod tests {
             tags: None,
             chain_position: None,
             pipeline: None,
-            scanned_at: Utc::now(),
-            updated_at: Utc::now(),
+            scanned_at: DateTime::now(),
+            updated_at: DateTime::now(),
         }
     }
 

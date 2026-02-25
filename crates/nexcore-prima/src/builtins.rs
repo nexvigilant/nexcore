@@ -122,7 +122,7 @@ fn builtin_snapshot(args: &[Value]) -> PrimaResult<Value> {
     let mut map = HashMap::new();
     map.insert(
         "timestamp".into(),
-        Value::int(chrono::Utc::now().timestamp()),
+        Value::int(nexcore_chrono::DateTime::now().timestamp()),
     );
     Ok(Value::mapping(map))
 }

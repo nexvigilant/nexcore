@@ -2,7 +2,7 @@
 //!
 //! Training records, courses, and competency assessments for GMP compliance.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// Types of training courses.
@@ -73,10 +73,10 @@ pub struct TrainingCourse {
     #[serde(default)]
     pub required_for_roles: Vec<String>,
     pub created_by: String,
-    #[serde(default = "Utc::now")]
-    pub created_at: DateTime<Utc>,
-    #[serde(default = "Utc::now")]
-    pub updated_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub created_at: DateTime,
+    #[serde(default = "DateTime::now")]
+    pub updated_at: DateTime,
     pub tenant_id: String,
 }
 
@@ -97,15 +97,15 @@ pub struct TrainingRecord {
     pub course_id: String,
     pub course_title: String,
     pub course_version: String,
-    pub assigned_date: DateTime<Utc>,
+    pub assigned_date: DateTime,
     pub assigned_by: String,
-    pub due_date: DateTime<Utc>,
+    pub due_date: DateTime,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub started_date: Option<DateTime<Utc>>,
+    pub started_date: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub completed_date: Option<DateTime<Utc>>,
+    pub completed_date: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub expiration_date: Option<DateTime<Utc>>,
+    pub expiration_date: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub score: Option<i32>,
     #[serde(default)]
@@ -132,8 +132,8 @@ pub struct CompetencyAssessment {
     pub user_id: String,
     pub user_name: String,
     pub competency_type: String,
-    #[serde(default = "Utc::now")]
-    pub assessment_date: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub assessment_date: DateTime,
     pub assessor_id: String,
     pub assessor_name: String,
     pub result: CompetencyResult,
@@ -145,7 +145,7 @@ pub struct CompetencyAssessment {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub action_required: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub next_assessment_date: Option<DateTime<Utc>>,
+    pub next_assessment_date: Option<DateTime>,
     pub tenant_id: String,
 }
 

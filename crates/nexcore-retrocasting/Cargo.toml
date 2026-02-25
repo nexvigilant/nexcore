@@ -14,23 +14,17 @@ reqwest = { version = "0.12.5", features = ["json"] }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 tokio = { version = "1.38.0", features = ["full"] }
-chrono = { version = "0.4.38", features = ["serde"] }
+nexcore-chrono = { workspace = true }
 tracing = { version = "0.1.40" }
 
 [dev-dependencies]
-tokio = { version = "1.38.0", features = ["full", "test-util"] }
+tokio = { version = "1.38.0", features = ["full"] }
 
 [features]
 # Enable Tanimoto-based structural clustering using Morgan fingerprints.
 # Requires nexcore-molcore with the fingerprint module (Task 7).
 fingerprints = []
 
-[lints.rust]
-dead_code = "allow"
-unused_imports = "allow"
-unused_variables = "allow"
 
-[lints.clippy]
-unwrap_used = "deny"
-expect_used = "deny"
-panic = "deny"
+[lints]
+workspace = true

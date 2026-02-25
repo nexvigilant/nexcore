@@ -12,15 +12,15 @@ use serde_json::json;
 
 /// Convert a param snapshot to a domain snapshot.
 fn to_basis_snapshot(s: &CompoundDetectorSnapshot) -> BasisSnapshot {
-    BasisSnapshot {
-        session: s.session.clone(),
-        t1_count: s.t1_count,
-        t2_p_count: s.t2_p_count,
-        t2_c_count: s.t2_c_count,
-        t3_count: s.t3_count,
-        reused: s.reused,
-        total_needed: s.total_needed,
-    }
+    BasisSnapshot::new(
+        s.session.clone(),
+        s.t1_count,
+        s.t2_p_count,
+        s.t2_c_count,
+        s.t3_count,
+        s.reused,
+        s.total_needed,
+    )
 }
 
 /// Detect compound growth phase and bottleneck from time-series snapshots.

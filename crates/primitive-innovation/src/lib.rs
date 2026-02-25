@@ -46,7 +46,10 @@
 
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
-#![allow(dead_code)]
+#![allow(
+    dead_code,
+    reason = "exploration crate — types are defined for documentation and future use"
+)]
 
 /// P1: Location (lambda) primitive expansion — 5 new T2-C types.
 pub mod location;

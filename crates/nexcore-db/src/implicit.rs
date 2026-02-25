@@ -1,7 +1,7 @@
 //! Implicit knowledge CRUD: preferences, patterns, corrections, beliefs,
 //! trust accumulators, and belief implications.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 
@@ -23,7 +23,7 @@ pub struct PreferenceRow {
     /// Times reinforced
     pub reinforcement_count: u32,
     /// Last updated
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
 }
 
 /// Upsert a preference.
@@ -116,9 +116,9 @@ pub struct PatternRow {
     /// JSON array of example strings
     pub examples: String,
     /// When first detected
-    pub detected_at: DateTime<Utc>,
+    pub detected_at: DateTime,
     /// When last reinforced
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
     /// Raw confidence before decay
     pub confidence: f64,
     /// Occurrences observed
@@ -202,7 +202,7 @@ pub struct CorrectionRow {
     /// Context when this occurred
     pub context: Option<String>,
     /// When learned
-    pub learned_at: DateTime<Utc>,
+    pub learned_at: DateTime,
     /// Times applied
     pub application_count: u32,
 }
@@ -270,9 +270,9 @@ pub struct BeliefRow {
     /// T1 primitive grounding
     pub t1_grounding: Option<String>,
     /// When formed
-    pub formed_at: DateTime<Utc>,
+    pub formed_at: DateTime,
     /// When last updated
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
     /// Times validated
     pub validation_count: u32,
     /// User confirmed
@@ -355,9 +355,9 @@ pub struct TrustRow {
     /// Failure count
     pub failures: u32,
     /// When created
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// When last updated
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
     /// T1 grounding
     pub t1_grounding: Option<String>,
 }
@@ -425,7 +425,7 @@ pub struct ImplicationRow {
     /// Strength: strong, moderate, weak
     pub strength: String,
     /// When established
-    pub established_at: DateTime<Utc>,
+    pub established_at: DateTime,
 }
 
 /// Insert a belief implication.
@@ -471,10 +471,8 @@ pub fn list_implications(conn: &Connection) -> Result<Vec<ImplicationRow>> {
 }
 
 /// Parse an RFC3339 datetime string.
-fn parse_dt(s: String) -> DateTime<Utc> {
-    DateTime::parse_from_rfc3339(&s)
-        .map(|dt| dt.with_timezone(&Utc))
-        .unwrap_or_else(|_| Utc::now())
+fn parse_dt(s: String) -> DateTime {
+    DateTime::parse_from_rfc3339(&s).unwrap_or_else(|_| DateTime::now())
 }
 
 #[cfg(test)]
@@ -496,7 +494,7 @@ mod tests {
                 description: Some("Prefers functional style".into()),
                 confidence: 0.7,
                 reinforcement_count: 3,
-                updated_at: Utc::now(),
+                updated_at: DateTime::now(),
             };
             upsert_preference(conn, &pref)?;
 
@@ -520,8 +518,8 @@ mod tests {
                 pattern_type: "naming".into(),
                 description: "Uses snake_case".into(),
                 examples: r#"["fn_name", "var_name"]"#.into(),
-                detected_at: Utc::now(),
-                updated_at: Utc::now(),
+                detected_at: DateTime::now(),
+                updated_at: DateTime::now(),
                 confidence: 0.8,
                 occurrence_count: 5,
                 t1_grounding: Some("mapping".into()),
@@ -547,7 +545,7 @@ mod tests {
                     mistake: "used unwrap".into(),
                     correction: "use expect with message".into(),
                     context: Some("error handling".into()),
-                    learned_at: Utc::now(),
+                    learned_at: DateTime::now(),
                     application_count: 0,
                 },
             )?;
@@ -570,8 +568,8 @@ mod tests {
                 confidence: 0.9,
                 evidence: "[]".into(),
                 t1_grounding: Some("boundary".into()),
-                formed_at: Utc::now(),
-                updated_at: Utc::now(),
+                formed_at: DateTime::now(),
+                updated_at: DateTime::now(),
                 validation_count: 3,
                 user_confirmed: true,
             };
@@ -595,8 +593,8 @@ mod tests {
                     domain: "rust_dev".into(),
                     demonstrations: 10,
                     failures: 1,
-                    created_at: Utc::now(),
-                    updated_at: Utc::now(),
+                    created_at: DateTime::now(),
+                    updated_at: DateTime::now(),
                     t1_grounding: None,
                 },
             )?;

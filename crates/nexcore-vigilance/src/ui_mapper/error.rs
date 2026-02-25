@@ -42,7 +42,7 @@ pub enum MapperError {
     IoError(#[from] std::io::Error),
 
     #[error("YAML error: {0}")]
-    YamlError(#[from] serde_yaml::Error),
+    YamlError(#[from] serde_yml::Error),
 
     #[error("JSON error: {0}")]
     JsonError(#[from] serde_json::Error),

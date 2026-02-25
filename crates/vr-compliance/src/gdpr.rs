@@ -12,7 +12,7 @@
 //! supporting the "freely given, specific, informed, unambiguous" standard
 //! from Article 4(11).
 
-use chrono::{DateTime, Duration, Utc};
+use nexcore_chrono::{DateTime, Duration};
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use vr_core::TenantId;
@@ -73,11 +73,11 @@ pub struct DataSubjectRequest {
     /// Current processing status.
     pub status: RequestStatus,
     /// When the request was received.
-    pub requested_at: DateTime<Utc>,
+    pub requested_at: DateTime,
     /// Legal deadline: 30 calendar days from receipt per Article 12(3).
-    pub deadline_at: DateTime<Utc>,
+    pub deadline_at: DateTime,
     /// When the request was completed (if applicable).
-    pub completed_at: Option<DateTime<Utc>>,
+    pub completed_at: Option<DateTime>,
 }
 
 // ============================================================================
@@ -111,9 +111,9 @@ pub struct ConsentRecord {
     /// Whether consent is currently granted.
     pub granted: bool,
     /// When consent was granted.
-    pub granted_at: DateTime<Utc>,
+    pub granted_at: DateTime,
     /// When consent was revoked (None if still active).
-    pub revoked_at: Option<DateTime<Utc>>,
+    pub revoked_at: Option<DateTime>,
 }
 
 // ============================================================================
@@ -146,7 +146,7 @@ pub struct DeletionManifest {
 /// taken on a request [...] without undue delay and in any event within one
 /// month of receipt of the request."
 #[must_use]
-pub fn calculate_deadline(requested_at: DateTime<Utc>) -> DateTime<Utc> {
+pub fn calculate_deadline(requested_at: DateTime) -> DateTime {
     requested_at + Duration::days(30)
 }
 
@@ -159,7 +159,9 @@ pub fn calculate_deadline(requested_at: DateTime<Utc>) -> DateTime<Utc> {
 pub fn is_overdue(request: &DataSubjectRequest) -> bool {
     match request.status {
         RequestStatus::Completed | RequestStatus::Denied => false,
-        RequestStatus::Received | RequestStatus::Processing => Utc::now() > request.deadline_at,
+        RequestStatus::Received | RequestStatus::Processing => {
+            DateTime::now() > request.deadline_at
+        }
     }
 }
 
@@ -169,7 +171,7 @@ pub fn is_overdue(request: &DataSubjectRequest) -> bool {
 /// zero or negative if the deadline has passed.
 #[must_use]
 pub fn days_remaining(request: &DataSubjectRequest) -> i64 {
-    let remaining = request.deadline_at - Utc::now();
+    let remaining = request.deadline_at - DateTime::now();
     remaining.num_days()
 }
 
@@ -232,7 +234,7 @@ mod tests {
     use super::*;
 
     fn make_request(status: RequestStatus, days_ago: i64) -> DataSubjectRequest {
-        let requested_at = Utc::now() - Duration::days(days_ago);
+        let requested_at = DateTime::now() - Duration::days(days_ago);
         DataSubjectRequest {
             id: NexId::v4(),
             tenant_id: TenantId::new(),
@@ -247,7 +249,7 @@ mod tests {
 
     #[test]
     fn deadline_is_30_days_from_request() {
-        let now = Utc::now();
+        let now = DateTime::now();
         let deadline = calculate_deadline(now);
         let diff = deadline - now;
         assert_eq!(diff.num_days(), 30);
@@ -257,7 +259,7 @@ mod tests {
     fn is_overdue_returns_false_for_completed_requests() {
         // Even if deadline has passed, completed requests are not overdue
         let mut request = make_request(RequestStatus::Completed, 60);
-        request.completed_at = Some(Utc::now() - Duration::days(25));
+        request.completed_at = Some(DateTime::now() - Duration::days(25));
         assert!(!is_overdue(&request));
     }
 
@@ -352,7 +354,7 @@ mod tests {
             tenant_id: TenantId::new(),
             consent_type: ConsentType::DataProcessing,
             granted: true,
-            granted_at: Utc::now(),
+            granted_at: DateTime::now(),
             revoked_at: None,
         };
 

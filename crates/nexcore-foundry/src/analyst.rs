@@ -15,7 +15,7 @@
 //! All types are fully serialisable so they can cross process boundaries
 //! as JSON payloads carried in [`nexcore_brain`] artifacts.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 // ---------------------------------------------------------------------------
@@ -56,12 +56,12 @@ pub struct Metric {
 /// # Examples
 ///
 /// ```
-/// use chrono::Utc;
+/// use nexcore_chrono::DateTime;
 /// use nexcore_foundry::analyst::{Metric, MetricReport};
 ///
 /// let report = MetricReport {
 ///     source_station: "extractor-alpha".to_string(),
-///     timestamp: Utc::now(),
+///     timestamp: DateTime::now(),
 ///     metrics: vec![
 ///         Metric { name: "fn_count".to_string(), value: 23.0, unit: "functions".to_string() },
 ///     ],
@@ -74,7 +74,7 @@ pub struct MetricReport {
     pub source_station: String,
 
     /// Wall-clock time at which the report was generated.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
 
     /// All measurements captured during this station run.
     pub metrics: Vec<Metric>,
@@ -110,7 +110,7 @@ pub enum ComplexityRating {
 ///
 /// ```
 /// use nexcore_foundry::analyst::{AggregatedMetrics, ComplexityRating, MetricReport};
-/// use chrono::Utc;
+/// use nexcore_chrono::DateTime;
 ///
 /// let agg = AggregatedMetrics {
 ///     quality_score: 0.91,
@@ -336,7 +336,7 @@ mod tests {
         AggregatedMetrics, CausalEdge, CausalGraph, ComplexityRating, IntelligenceReport, Metric,
         MetricReport, PatternReport, RiskLevel,
     };
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     /// Serialise a `MetricReport` to JSON and deserialise it back; assert
     /// that all fields round-trip correctly.
@@ -344,7 +344,7 @@ mod tests {
     fn metric_report_roundtrip() {
         let original = MetricReport {
             source_station: "extractor-beta".to_string(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             metrics: vec![
                 Metric {
                     name: "fn_count".to_string(),

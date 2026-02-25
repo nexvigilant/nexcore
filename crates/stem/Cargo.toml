@@ -21,7 +21,7 @@ nexcore-hormones = { version = "1.0.0", path = "../nexcore-hormones", registry =
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 serde = { version = "1.0.204", features = ["derive"] }
 tracing = { version = "0.1.40" }
-tokio = { version = "1.38.0", features = ["full", "macros", "rt-multi-thread"] }
+tokio = { version = "1.38.0", features = ["full"] }
 
 [dev-dependencies]
 serde_json = { version = "1.0.120" }
@@ -30,3 +30,6 @@ criterion = { version = "0.5", features = ["html_reports"] }
 [[bench]]
 name = "stem_benchmarks"
 harness = false
+
+[lints]
+workspace = true

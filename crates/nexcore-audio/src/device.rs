@@ -39,6 +39,7 @@ impl std::fmt::Display for DeviceId {
 /// Device type (direction of audio flow).
 ///
 /// Tier: T2-P (Σ Sum — direction variants)
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum DeviceType {
     /// Audio output (speakers, headphones).
@@ -74,6 +75,7 @@ impl std::fmt::Display for DeviceType {
 /// Device state (lifecycle).
 ///
 /// Tier: T2-P (ς State — device lifecycle)
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum DeviceState {
     /// Device detected but not opened.
@@ -115,6 +117,7 @@ impl std::fmt::Display for DeviceState {
 /// Device capabilities — what formats/rates/layouts are supported.
 ///
 /// Tier: T2-C (Σ + N + ∂ — bounded set of supported configurations)
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeviceCapabilities {
     /// Supported sample formats.
@@ -130,6 +133,39 @@ pub struct DeviceCapabilities {
 }
 
 impl DeviceCapabilities {
+    /// Construct a new [`DeviceCapabilities`] with explicit values.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nexcore_audio::device::{DeviceCapabilities, SampleFormat, SampleRate, ChannelLayout};
+    ///
+    /// let caps = DeviceCapabilities::new(
+    ///     vec![SampleFormat::F32],
+    ///     vec![SampleRate::Hz48000],
+    ///     vec![ChannelLayout::Stereo],
+    ///     256,
+    ///     8192,
+    /// );
+    /// assert_eq!(caps.min_buffer_frames, 256);
+    /// ```
+    #[must_use]
+    pub fn new(
+        formats: Vec<SampleFormat>,
+        rates: Vec<SampleRate>,
+        layouts: Vec<ChannelLayout>,
+        min_buffer_frames: usize,
+        max_buffer_frames: usize,
+    ) -> Self {
+        Self {
+            formats,
+            rates,
+            layouts,
+            min_buffer_frames,
+            max_buffer_frames,
+        }
+    }
+
     /// Check if a spec is supported by this device.
     pub fn supports(&self, spec: &AudioSpec) -> bool {
         self.formats.contains(&spec.format)

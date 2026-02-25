@@ -16,7 +16,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 
@@ -356,12 +356,12 @@ impl DrugEventQuery {
 #[derive(Debug, Clone)]
 struct CacheEntry {
     response: DrugEventResponse,
-    fetched_at: DateTime<Utc>,
+    fetched_at: DateTime,
 }
 
 impl CacheEntry {
     fn is_valid(&self) -> bool {
-        let age = Utc::now().signed_duration_since(self.fetched_at);
+        let age = DateTime::now().signed_duration_since(self.fetched_at);
         age.num_seconds() < (CACHE_TTL_SECS as i64)
     }
 }
@@ -444,7 +444,7 @@ impl OpenFdaClient {
                     url,
                     CacheEntry {
                         response: response.clone(),
-                        fetched_at: Utc::now(),
+                        fetched_at: DateTime::now(),
                     },
                 );
                 Ok(response)
@@ -455,7 +455,7 @@ impl OpenFdaClient {
                 if let Some(entry) = cache.get(&url) {
                     tracing::warn!(
                         error = %e,
-                        cache_age_secs = (Utc::now() - entry.fetched_at).num_seconds(),
+                        cache_age_secs = (DateTime::now() - entry.fetched_at).num_seconds(),
                         "API failed, using stale cache (V33 contingency)"
                     );
                     return Ok(entry.response.clone());
@@ -646,7 +646,7 @@ mod tests {
                 },
                 results: Vec::<AdverseEvent>::new(),
             },
-            fetched_at: Utc::now(),
+            fetched_at: DateTime::now(),
         };
 
         assert!(entry.is_valid());

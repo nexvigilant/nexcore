@@ -232,7 +232,7 @@ impl Epidermis {
         AuthResult {
             identity: identity.to_string(),
             authorized: !identity.is_empty(),
-            authenticated_at: chrono::Utc::now().to_rfc3339(),
+            authenticated_at: nexcore_chrono::DateTime::now().to_rfc3339(),
         }
     }
 

@@ -14,7 +14,7 @@
 
 use std::time::Duration;
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 // =============================================================================
@@ -463,7 +463,7 @@ impl Exclusion {
 
         // Parse termination date and compare to now
         if let Ok(term) = DateTime::parse_from_rfc3339(term_date) {
-            term.with_timezone(&Utc) > Utc::now()
+            term > DateTime::now()
         } else {
             // If unparseable, assume active for safety
             true

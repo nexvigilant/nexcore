@@ -14,9 +14,12 @@ nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", 
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 tracing = { version = "0.1.40" }
-chrono = { version = "0.4.38", features = ["serde"] }
+nexcore-chrono = { workspace = true }
 nexcore-id = { workspace = true }
 dashmap = { version = "6.0.1" }
 
 [dev-dependencies]
 tempfile = { version = "3.10.1" }
+
+[lints]
+workspace = true

@@ -98,6 +98,7 @@ pub fn mw_compute(params: MwComputeParams) -> Result<CallToolResult, McpError> {
             TransferClass::Light => "Light molecule — high cross-domain transferability (T2-P behavior)",
             TransferClass::Medium => "Medium molecule — moderate transferability (T2-C behavior)",
             TransferClass::Heavy => "Heavy molecule — domain-locked, low transferability (T3 behavior)",
+            _ => "Unknown transfer class",
         },
     });
 

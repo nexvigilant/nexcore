@@ -23,6 +23,7 @@ use serde::{Deserialize, Serialize};
 /// ## Tier: T1-Universal
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[non_exhaustive]
 pub enum StateMode {
     /// Value changing freely in place. Reversible.
     /// Rust: `Cell<T>`, `Mutex<T>`, `String`, `Vec<T>`, `HashMap<K,V>`

@@ -2,7 +2,7 @@
 //!
 //! Vendor risk assessment and compliance mapping.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -67,13 +67,13 @@ pub struct Vendor {
     #[serde(default)]
     pub handling_phi: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub last_assessed: Option<DateTime<Utc>>,
+    pub last_assessed: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tenant_id: Option<String>,
-    #[serde(default = "Utc::now")]
-    pub created_at: DateTime<Utc>,
-    #[serde(default = "Utc::now")]
-    pub updated_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub created_at: DateTime,
+    #[serde(default = "DateTime::now")]
+    pub updated_at: DateTime,
 }
 
 /// Control mapping to HIPAA/HITRUST requirements.
@@ -98,8 +98,8 @@ pub struct QuestionnaireResponse {
     pub response_id: String,
     pub vendor_id: String,
     pub answers: HashMap<String, serde_json::Value>,
-    #[serde(default = "Utc::now")]
-    pub submitted_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub submitted_at: DateTime,
 }
 
 /// Vendor assessment record.
@@ -116,8 +116,8 @@ pub struct VendorAssessment {
     pub risk_level: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub notes: Option<String>,
-    #[serde(default = "Utc::now")]
-    pub assessed_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub assessed_at: DateTime,
 }
 
 fn default_risk_level() -> String {
@@ -166,7 +166,7 @@ mod tests {
             score: 150.0, // Over max
             risk_level: "low".to_string(),
             notes: None,
-            assessed_at: Utc::now(),
+            assessed_at: DateTime::now(),
         };
 
         assert_eq!(assessment.normalized_score(), 100.0);

@@ -7,35 +7,43 @@ use crate::core::{
     ChiSquare, ContingencyTable, Detect, DetectionResult, DrugEventPair, Ebgm, Ic, NormalizedEvent,
     Prr, Result, Ror, SignalStrength,
 };
-use chrono::Utc;
-use std::collections::HashMap;
+use nexcore_chrono::DateTime;
+use std::collections::BTreeMap;
 
 /// Builds contingency tables from normalized events and computes metrics.
+#[non_exhaustive]
 pub struct TableDetector;
 
 impl TableDetector {
     /// Build contingency tables for all drug-event pairs in the dataset.
-    pub fn build_tables(events: &[NormalizedEvent]) -> HashMap<DrugEventPair, ContingencyTable> {
+    #[allow(
+        clippy::as_conversions,
+        reason = "usize->u64 cast for dataset length; dataset size never exceeds u64::MAX"
+    )]
+    pub fn build_tables(events: &[NormalizedEvent]) -> BTreeMap<DrugEventPair, ContingencyTable> {
         let total = events.len() as u64;
-        let mut drug_event_counts: HashMap<(String, String), u64> = HashMap::new();
-        let mut drug_counts: HashMap<String, u64> = HashMap::new();
-        let mut event_counts: HashMap<String, u64> = HashMap::new();
+        let mut drug_event_counts: BTreeMap<(String, String), u64> = BTreeMap::new();
+        let mut drug_counts: BTreeMap<String, u64> = BTreeMap::new();
+        let mut event_counts: BTreeMap<String, u64> = BTreeMap::new();
 
         for ev in events {
-            *drug_event_counts
+            let de_count = drug_event_counts
                 .entry((ev.drug.clone(), ev.event.clone()))
-                .or_default() += 1;
-            *drug_counts.entry(ev.drug.clone()).or_default() += 1;
-            *event_counts.entry(ev.event.clone()).or_default() += 1;
+                .or_default();
+            *de_count = de_count.saturating_add(1);
+            let d_count = drug_counts.entry(ev.drug.clone()).or_default();
+            *d_count = d_count.saturating_add(1);
+            let e_count = event_counts.entry(ev.event.clone()).or_default();
+            *e_count = e_count.saturating_add(1);
         }
 
-        let mut tables = HashMap::new();
+        let mut tables = BTreeMap::new();
         for ((drug, event), a) in &drug_event_counts {
             let drug_total = drug_counts.get(drug).copied().unwrap_or(0);
             let event_total = event_counts.get(event).copied().unwrap_or(0);
             let b = drug_total.saturating_sub(*a);
             let c = event_total.saturating_sub(*a);
-            let d = total.saturating_sub(*a + b + c);
+            let d = total.saturating_sub(a.saturating_add(b).saturating_add(c));
             tables.insert(
                 DrugEventPair::new(drug, event),
                 ContingencyTable { a: *a, b, c, d },
@@ -46,6 +54,11 @@ impl TableDetector {
 }
 
 impl Detect for TableDetector {
+    #[allow(
+        clippy::as_conversions,
+        clippy::cast_precision_loss,
+        reason = "u64->f64 cast is intentional for statistical computation; saturating ops prevent overflow"
+    )]
     fn detect(&self, events: &[NormalizedEvent]) -> Result<Vec<DetectionResult>> {
         let tables = Self::build_tables(events);
         let mut results = Vec::with_capacity(tables.len());
@@ -55,7 +68,7 @@ impl Detect for TableDetector {
             let ror = table.ror().map(Ror);
             let n = table.total() as f64;
             let expected = if n > 0.0 {
-                (table.a + table.b) as f64 * (table.a + table.c) as f64 / n
+                table.a.saturating_add(table.b) as f64 * table.a.saturating_add(table.c) as f64 / n
             } else {
                 0.0
             };
@@ -77,7 +90,7 @@ impl Detect for TableDetector {
                 ebgm,
                 chi_square: chi_sq,
                 strength,
-                detected_at: Utc::now(),
+                detected_at: DateTime::now(),
             });
         }
         results.sort_by(|a, b| b.strength.cmp(&a.strength));
@@ -99,7 +112,7 @@ mod tests {
                 event: event.into(),
                 meddra_pt: None,
                 meddra_soc: None,
-                report_date: Utc::now(),
+                report_date: DateTime::now(),
                 source: ReportSource::Faers,
             });
         }
@@ -144,7 +157,7 @@ mod tests {
                 event: "X".into(),
                 meddra_pt: None,
                 meddra_soc: None,
-                report_date: Utc::now(),
+                report_date: DateTime::now(),
                 source: ReportSource::Spontaneous,
             },
             NormalizedEvent {
@@ -153,7 +166,7 @@ mod tests {
                 event: "Y".into(),
                 meddra_pt: None,
                 meddra_soc: None,
-                report_date: Utc::now(),
+                report_date: DateTime::now(),
                 source: ReportSource::Spontaneous,
             },
         ];

@@ -120,7 +120,7 @@ pub fn generate_training_data(
         positive_count,
         negative_count,
         cohort_years: years,
-        generated_at: chrono::Utc::now(),
+        generated_at: nexcore_chrono::DateTime::now(),
         version: "v1.0-ngram".to_string(),
     })
 }
@@ -324,7 +324,7 @@ mod tests {
             structural_clusters: vec![],
             new_alert_candidates: vec![],
             confidence: 0.7,
-            analyzed_at: chrono::Utc::now(),
+            analyzed_at: nexcore_chrono::DateTime::now(),
         }
     }
 

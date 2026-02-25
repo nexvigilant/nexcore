@@ -3,7 +3,7 @@
 //! Defines live game sessions, players, and answer tracking.
 //! These types are stored in Redis during active games.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 
@@ -224,7 +224,7 @@ pub struct GameResults {
     pub user_id: NexId,
 
     /// Completion timestamp.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
 
     /// Number of players.
     pub player_count: i32,
@@ -264,7 +264,7 @@ impl GameResults {
             id: NexId::v4(),
             quiz_id: game.quiz_id,
             user_id: game.user_id,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             player_count: 0, // Should be calculated from unique usernames
             note: None,
             answers,

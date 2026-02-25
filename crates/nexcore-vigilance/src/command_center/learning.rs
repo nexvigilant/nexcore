@@ -1,6 +1,6 @@
 //! Learning domain types: progress tracking and onboarding quizzes.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
@@ -41,11 +41,11 @@ pub struct LearningProgress {
 
     /// When the user started.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub started_at: Option<DateTime<Utc>>,
+    pub started_at: Option<DateTime>,
 
     /// When the user completed.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub completed_at: Option<DateTime<Utc>>,
+    pub completed_at: Option<DateTime>,
 
     /// Time spent in minutes.
     #[serde(default)]
@@ -65,7 +65,7 @@ pub struct LearningProgress {
 
     /// Last access time.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub last_accessed_at: Option<DateTime<Utc>>,
+    pub last_accessed_at: Option<DateTime>,
 
     /// Number of accesses.
     #[serde(default)]
@@ -104,11 +104,11 @@ pub struct LearningProgress {
     pub custom_data: Option<Value>,
 
     /// Creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Last update timestamp.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime>,
 }
 
 impl LearningProgress {
@@ -140,7 +140,7 @@ impl LearningProgress {
             notes: None,
             module_version: None,
             custom_data: None,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             updated_at: None,
         }
     }
@@ -165,8 +165,8 @@ impl LearningProgress {
     pub fn start(&mut self) {
         if self.status == ModuleStatus::NotStarted {
             self.status = ModuleStatus::InProgress;
-            self.started_at = Some(Utc::now());
-            self.updated_at = Some(Utc::now());
+            self.started_at = Some(DateTime::now());
+            self.updated_at = Some(DateTime::now());
         }
     }
 
@@ -174,21 +174,21 @@ impl LearningProgress {
     pub fn complete(&mut self) {
         self.status = ModuleStatus::Completed;
         self.progress_percentage = 100;
-        self.completed_at = Some(Utc::now());
-        self.updated_at = Some(Utc::now());
+        self.completed_at = Some(DateTime::now());
+        self.updated_at = Some(DateTime::now());
     }
 
     /// Record a module access.
     pub fn record_access(&mut self) {
         self.access_count += 1;
-        self.last_accessed_at = Some(Utc::now());
-        self.updated_at = Some(Utc::now());
+        self.last_accessed_at = Some(DateTime::now());
+        self.updated_at = Some(DateTime::now());
     }
 
     /// Add time spent.
     pub fn add_time(&mut self, minutes: i32) {
         self.time_spent_minutes += minutes;
-        self.updated_at = Some(Utc::now());
+        self.updated_at = Some(DateTime::now());
     }
 }
 
@@ -253,11 +253,11 @@ pub struct OnboardingQuiz {
     pub source: Option<String>,
 
     /// Creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Last update timestamp.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime>,
 }
 
 fn default_quiz_version() -> String {
@@ -284,7 +284,7 @@ impl OnboardingQuiz {
             recommended_tier: None,
             completion_time_seconds: None,
             source: None,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             updated_at: None,
         }
     }
@@ -325,7 +325,7 @@ impl OnboardingQuiz {
                 Some(scores.iter().skip(1).take(2).map(|(v, _)| *v).collect());
         }
 
-        self.updated_at = Some(Utc::now());
+        self.updated_at = Some(DateTime::now());
     }
 }
 

@@ -285,7 +285,7 @@ pub struct ResourceMetrics {
 
 /// Get current timestamp in milliseconds.
 fn current_timestamp_ms() -> u64 {
-    chrono::Utc::now().timestamp_millis() as u64
+    nexcore_chrono::DateTime::now().timestamp_millis() as u64
 }
 
 #[cfg(test)]

@@ -219,6 +219,7 @@ pub mod bridge {
             GroundingTier::T1Universal => PrimitiveTier::T1Universal,
             GroundingTier::T2Primitive | GroundingTier::T2Composite => PrimitiveTier::T2CrossDomain,
             GroundingTier::T3DomainSpecific => PrimitiveTier::T3DomainSpecific,
+            _ => PrimitiveTier::T3DomainSpecific,
         }
     }
 

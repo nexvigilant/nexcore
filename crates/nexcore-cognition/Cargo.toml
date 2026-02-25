@@ -9,3 +9,6 @@ description = "Typed cognitive engine — transformer algorithm as strict Rust. 
 [dependencies]
 nexcore-error = { workspace = true }
 rand = { workspace = true }
+
+[lints]
+workspace = true

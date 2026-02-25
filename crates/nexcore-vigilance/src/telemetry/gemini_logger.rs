@@ -3,7 +3,7 @@
 //! Appends JSONL entries to ~/.claude/logs/gemini_telemetry.jsonl for
 //! unified monitoring via Watchtower MCP tools.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_fs::dirs;
 use serde::{Deserialize, Serialize};
 use std::fs::{self, OpenOptions};
@@ -14,7 +14,7 @@ use std::path::PathBuf;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeminiLogEntry {
     /// ISO 8601 timestamp
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Session identifier (e.g., "vigil-abc123")
     pub session_id: String,
     /// Source system (e.g., "vigil", "nexbet")
@@ -59,7 +59,7 @@ impl GeminiLogEntry {
         output_tokens: u64,
     ) -> Self {
         Self {
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             session_id: session_id.into(),
             source: source.into(),
             flow_name: flow_name.into(),
@@ -84,7 +84,7 @@ impl GeminiLogEntry {
         error_msg: impl Into<String>,
     ) -> Self {
         Self {
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             session_id: session_id.into(),
             source: source.into(),
             flow_name: flow_name.into(),

@@ -19,7 +19,7 @@
 //! - Load checkpoint: < 2ms
 //! - List checkpoints: < 50ms for 1000 files
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_error::Error;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -114,7 +114,7 @@ pub struct StepResult {
     /// Duration in milliseconds (T1: u64 — raw measurement)
     pub duration_ms: u64,
     /// Timestamp when step completed
-    pub completed_at: DateTime<Utc>,
+    pub completed_at: DateTime,
 }
 
 /// An execution context representing a pipeline run.
@@ -144,9 +144,9 @@ pub struct ExecutionContext {
     /// Results for each step
     pub step_results: HashMap<String, StepResult>,
     /// When execution started
-    pub started_at: DateTime<Utc>,
+    pub started_at: DateTime,
     /// When last updated
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
     /// Arbitrary metadata/artifacts
     pub artifacts: HashMap<String, Value>,
     /// Parent context ID (for nested executions)
@@ -159,7 +159,7 @@ impl ExecutionContext {
     /// Create a new execution context
     #[must_use]
     pub fn new(name: &str, total_steps: usize) -> Self {
-        let now = Utc::now();
+        let now = DateTime::now();
         Self {
             id: nexcore_id::NexId::v4().to_string(),
             name: name.to_string(),
@@ -206,7 +206,7 @@ impl ExecutionContext {
     /// Mark a step as started
     pub fn start_step(&mut self, _step: usize) {
         self.status = ExecutionStatus::Running;
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Mark a step as completed
@@ -215,7 +215,7 @@ impl ExecutionContext {
             self.completed_steps.push(step);
         }
         self.step_results.insert(step.to_string(), result);
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
 
         if self.is_complete() {
             self.status = if self.failed_steps.is_empty() {
@@ -232,7 +232,7 @@ impl ExecutionContext {
             self.failed_steps.push(step);
         }
         self.step_results.insert(step.to_string(), result);
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
 
         if self.is_complete() {
             self.status = ExecutionStatus::Failed("One or more steps failed".to_string());
@@ -252,16 +252,16 @@ impl ExecutionContext {
                 message: format!("Skipped: {reason}"),
                 output: Value::Null,
                 duration_ms: 0,
-                completed_at: Utc::now(),
+                completed_at: DateTime::now(),
             },
         );
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Add an artifact
     pub fn add_artifact(&mut self, key: &str, value: Value) {
         self.artifacts.insert(key.to_string(), value);
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Add a tag
@@ -479,7 +479,7 @@ impl CheckpointManager {
     /// Returns `StateError` if listing or deletion fails.
     pub fn cleanup(&mut self, max_age_days: u32) -> Result<usize, StateError> {
         let mut removed = 0;
-        let cutoff = Utc::now() - chrono::Duration::days(i64::from(max_age_days));
+        let cutoff = DateTime::now() - nexcore_chrono::Duration::days(i64::from(max_age_days));
 
         let contexts = self.list()?;
 
@@ -565,7 +565,7 @@ pub fn mark_step_complete(
         message: "Completed".to_string(),
         output,
         duration_ms,
-        completed_at: Utc::now(),
+        completed_at: DateTime::now(),
     };
     context.complete_step(step, result);
 }
@@ -583,7 +583,7 @@ pub fn mark_step_failed(
         message: error.to_string(),
         output: Value::Null,
         duration_ms,
-        completed_at: Utc::now(),
+        completed_at: DateTime::now(),
     };
     context.fail_step(step, error, result);
 }
@@ -613,7 +613,7 @@ impl Checkpoint {
     pub fn new(id: &str) -> Self {
         Self {
             id: id.to_string(),
-            timestamp: Utc::now().to_rfc3339(),
+            timestamp: DateTime::now().to_rfc3339(),
             task_states: HashMap::new(),
             variables: HashMap::new(),
             metadata: HashMap::new(),

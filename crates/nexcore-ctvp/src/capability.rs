@@ -5,7 +5,7 @@
 //! capability achievement.
 
 use crate::types::*;
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -324,7 +324,7 @@ pub struct CapabilityAchievementTracker {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AchievementMeasurement {
     /// When this was measured
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
 
     /// Whether capability was achieved
     pub achieved: bool,
@@ -370,7 +370,7 @@ impl CapabilityAchievementTracker {
         context: HashMap<String, String>,
     ) {
         self.measurements.push(AchievementMeasurement {
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             achieved,
             effect_value,
             context,
@@ -420,7 +420,7 @@ impl CapabilityAchievementTracker {
     }
 
     /// Returns measurements from a time window
-    pub fn get_measurements_since(&self, since: DateTime<Utc>) -> Vec<&AchievementMeasurement> {
+    pub fn get_measurements_since(&self, since: DateTime) -> Vec<&AchievementMeasurement> {
         self.measurements
             .iter()
             .filter(|m| m.timestamp >= since)

@@ -3,7 +3,7 @@
 //! This module contains the fundamental types used throughout the CTVP library,
 //! including validation phases, outcomes, severity levels, and evidence types.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -312,7 +312,7 @@ pub struct Evidence {
     pub description: String,
 
     /// When this evidence was collected
-    pub collected_at: DateTime<Utc>,
+    pub collected_at: DateTime,
 
     /// Source of the evidence (file, tool, etc.)
     pub source: String,
@@ -333,7 +333,7 @@ impl Evidence {
             id: NexId::v4(),
             evidence_type,
             description: description.into(),
-            collected_at: Utc::now(),
+            collected_at: DateTime::now(),
             source: source.into(),
             metadata: HashMap::new(),
         }
@@ -368,7 +368,7 @@ pub struct ValidationResult {
     pub duration: std::time::Duration,
 
     /// When validation was performed
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
 
     /// Additional notes
     #[serde(default)]
@@ -390,7 +390,7 @@ impl ValidationResult {
             evidence: Vec::new(),
             evidence_quality,
             duration: std::time::Duration::ZERO,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             notes: Vec::new(),
         }
     }

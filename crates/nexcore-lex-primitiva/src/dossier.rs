@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 
 /// A complete dossier for a primitive or composition.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Dossier {
     /// Title of the dossier.
     pub title: String,
@@ -29,6 +30,7 @@ pub struct Dossier {
 
 /// Subject of a dossier.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum DossierSubject {
     /// Single primitive.
     Primitive(LexPrimitiva),
@@ -40,6 +42,7 @@ pub enum DossierSubject {
 
 /// Summary section of a dossier.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Summary {
     /// One-line description.
     pub headline: String,
@@ -55,6 +58,7 @@ pub struct Summary {
 
 /// Structural analysis section.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct StructureAnalysis {
     /// Symbol(s) used.
     pub symbols: Vec<String>,
@@ -70,6 +74,7 @@ pub struct StructureAnalysis {
 
 /// Grounding analysis section.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct GroundingAnalysis {
     /// Bedrock atoms.
     pub atoms: Vec<AtomEntry>,
@@ -83,6 +88,7 @@ pub struct GroundingAnalysis {
 
 /// Entry for a bedrock atom.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct AtomEntry {
     /// Atom name.
     pub name: String,
@@ -92,6 +98,7 @@ pub struct AtomEntry {
 
 /// Generator for dossiers.
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct DossierGenerator {
     /// Whether to include full traces.
     pub include_traces: bool,
@@ -176,7 +183,7 @@ impl DossierGenerator {
             .map(|d| d.symbol().to_string())
             .collect();
         let dependents = self.find_dependents(p);
-        let depth = self.compute_depth(p);
+        let depth = Self::compute_depth(p);
         StructureAnalysis {
             symbols: vec![p.symbol().to_string()],
             dependencies: deps,
@@ -248,7 +255,7 @@ impl DossierGenerator {
             .iter()
             .map(|p| p.symbol().to_string())
             .collect();
-        let mut dep_set = std::collections::HashSet::new();
+        let mut dep_set = std::collections::BTreeSet::new();
         for p in &comp.primitives {
             for d in p.derives_from() {
                 dep_set.insert(d.symbol().to_string());
@@ -258,7 +265,7 @@ impl DossierGenerator {
         let max_depth = comp
             .primitives
             .iter()
-            .map(|p| self.compute_depth(*p))
+            .map(|p| Self::compute_depth(*p))
             .max()
             .unwrap_or(0);
         StructureAnalysis {
@@ -271,8 +278,8 @@ impl DossierGenerator {
     }
 
     fn composition_grounding(&self, comp: &PrimitiveComposition) -> GroundingAnalysis {
-        let mut all_constants = std::collections::HashSet::new();
-        let mut all_foundations = std::collections::HashSet::new();
+        let mut all_constants = std::collections::BTreeSet::new();
+        let mut all_foundations = std::collections::BTreeSet::new();
         for p in &comp.primitives {
             for c in DependencyGraph::constants_for_primitive(*p) {
                 all_constants.insert(c.to_string());
@@ -330,22 +337,27 @@ impl DossierGenerator {
             .collect()
     }
 
-    fn compute_depth(&self, p: LexPrimitiva) -> usize {
-        if p.is_root() {
-            return 0;
-        }
-        1 + p
-            .derives_from()
-            .iter()
-            .map(|d| self.compute_depth(*d))
-            .max()
-            .unwrap_or(0)
+    fn compute_depth(p: LexPrimitiva) -> usize {
+        primitive_depth(p)
     }
 
     fn timestamp() -> String {
         // Simple timestamp without chrono dependency
         "2026-02-04T00:00:00Z".to_string()
     }
+}
+
+/// Compute derivation depth for a primitive (free function to avoid self-only-in-recursion lint).
+fn primitive_depth(p: LexPrimitiva) -> usize {
+    if p.is_root() {
+        return 0;
+    }
+    p.derives_from()
+        .iter()
+        .map(|d| primitive_depth(*d))
+        .max()
+        .unwrap_or(0)
+        .saturating_add(1)
 }
 
 impl Dossier {
@@ -407,7 +419,7 @@ impl Dossier {
     /// Render as JSON.
     #[must_use]
     pub fn to_json(&self) -> String {
-        serde_json::to_string_pretty(self).unwrap_or_else(|_| "{}".to_string())
+        serde_json::to_string_pretty(self).unwrap_or_else(|_| String::from("{}"))
     }
 }
 

@@ -16,7 +16,7 @@
 //! - σ Sequence: Ordered boot log entries
 //! - ∃ Existence: State file existence validation
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_pal::Storage;
 use serde::{Deserialize, Serialize};
 
@@ -41,7 +41,7 @@ pub struct ServiceSnapshot {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OsStateSnapshot {
     /// When the snapshot was taken.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// OS version string.
     pub version: String,
     /// Platform name.
@@ -209,7 +209,7 @@ pub fn snapshot_os_state(
     clean_shutdown: bool,
 ) -> OsStateSnapshot {
     OsStateSnapshot {
-        timestamp: Utc::now(),
+        timestamp: DateTime::now(),
         version: env!("CARGO_PKG_VERSION").to_string(),
         platform: platform_name.to_string(),
         boot_phase: boot_phase.to_string(),

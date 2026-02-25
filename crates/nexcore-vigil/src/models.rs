@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -78,7 +78,7 @@ pub struct Event {
     /// Processing urgency of the event.
     pub priority: Urgency,
     /// Time when the event was generated.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Optional ID to track related events.
     pub correlation_id: Option<String>,
 }
@@ -91,7 +91,7 @@ impl Default for Event {
             event_type: String::new(),
             payload: serde_json::Value::Object(serde_json::Map::new()),
             priority: Urgency::Normal,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             correlation_id: None,
         }
     }
@@ -129,7 +129,7 @@ pub struct Interaction {
     pub event: Event,
     pub prompt: String,
     pub response: String,
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     pub tokens_used: i32,
     pub contains_learning: bool,
     pub actions_taken: Vec<String>,

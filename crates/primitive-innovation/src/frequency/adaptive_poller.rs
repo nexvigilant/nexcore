@@ -83,13 +83,17 @@ impl AdaptivePoller {
 
     /// Record a poll result: did the data change?
     pub fn record(&mut self, data_changed: bool) {
-        self.poll_count += 1;
+        self.poll_count = self.poll_count.saturating_add(1);
         if data_changed {
-            self.change_count += 1;
+            self.change_count = self.change_count.saturating_add(1);
         }
 
         // Adapt every window_size polls
-        if self.poll_count.is_multiple_of(self.window_size) {
+        #[allow(
+            clippy::arithmetic_side_effects,
+            reason = "modulo check for window boundary; window_size is max(1) so no division by zero"
+        )]
+        if self.window_size > 0 && self.poll_count % self.window_size == 0 {
             self.adapt();
         }
     }
@@ -102,6 +106,10 @@ impl AdaptivePoller {
 
     /// Get the current change rate (0.0 to 1.0).
     #[must_use]
+    #[allow(
+        clippy::as_conversions,
+        reason = "u64 to f64 for ratio calculation; counts fit safely in f64"
+    )]
     pub fn change_rate(&self) -> f64 {
         if self.poll_count == 0 {
             return 0.0;
@@ -111,6 +119,10 @@ impl AdaptivePoller {
 
     /// Get the current polling frequency in Hz.
     #[must_use]
+    #[allow(
+        clippy::as_conversions,
+        reason = "u64 to f64 for frequency calculation; interval fits safely in f64"
+    )]
     pub fn frequency_hz(&self) -> f64 {
         if self.current_interval_ms == 0 {
             return 0.0;
@@ -140,6 +152,10 @@ impl AdaptivePoller {
     }
 
     /// Internal: adapt the polling interval based on recent change rate.
+    #[allow(
+        clippy::as_conversions,
+        reason = "u64 to/from f64 for interval scaling; values are bounded by poll bounds"
+    )]
     fn adapt(&mut self) {
         let rate = self.change_rate();
 

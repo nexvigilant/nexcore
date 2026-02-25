@@ -41,7 +41,7 @@ pub struct NamedInventory {
     /// Number of collisions detected and resolved.
     pub collisions_resolved: usize,
     /// Observation timestamp (carried forward).
-    pub observed_at: chrono::DateTime<chrono::Utc>,
+    pub observed_at: nexcore_chrono::DateTime,
 }
 
 // ============================================================================
@@ -184,7 +184,7 @@ fn resolve_with_suffix(path: &Path) -> PathBuf {
     }
 
     // Fallback: use timestamp
-    let ts = chrono::Utc::now().timestamp();
+    let ts = nexcore_chrono::DateTime::now().timestamp();
     parent.join(format!("{stem}_{ts}{ext}"))
 }
 

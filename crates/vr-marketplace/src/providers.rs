@@ -4,7 +4,7 @@
 //! through the marketplace. Each provider goes through a review process before
 //! becoming active, and maintains a rating based on customer reviews.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use vr_core::{ProviderId, VrError};
 
@@ -56,7 +56,7 @@ pub struct Provider {
     /// Primary contact email.
     pub contact_email: String,
     /// When the provider was registered.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 }
 
 impl Provider {
@@ -79,7 +79,7 @@ impl Provider {
             review_count: 0,
             status: ProviderStatus::PendingReview,
             contact_email,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
         }
     }
 

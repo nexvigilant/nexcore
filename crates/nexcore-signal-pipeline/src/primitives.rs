@@ -20,6 +20,7 @@ use nexcore_lex_primitiva::primitiva::LexPrimitiva;
 use serde::{Deserialize, Serialize};
 
 /// A pipeline stage and its dominant T1 primitive.
+#[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PipelineStagePrimitive {
     /// Stage name (e.g., "ingest", "normalize").
@@ -38,6 +39,7 @@ pub struct PipelineStagePrimitive {
 /// roundtrip through serde. Deserialization always yields an empty slice via
 /// `deserialize_static_str_slice`. Use serialization-only workflows or parse
 /// via `serde_json::Value` if the examples data is needed after deserialization.
+#[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(bound(deserialize = ""))]
 pub struct PrimitiveManifestation {
@@ -80,6 +82,7 @@ where
 }
 
 /// Full primitive manifest for the crate.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CratePrimitiveManifest {
     /// Crate name.

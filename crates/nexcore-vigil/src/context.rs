@@ -1,7 +1,7 @@
 use crate::memory::MemoryLayer;
 use crate::models::Event;
 use crate::projects::ProjectRegistry;
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use std::fmt::Write;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -80,7 +80,7 @@ impl ContextAssembler {
 
         // 5. System State & Current Event
         writeln!(context, "\n# Current State")?;
-        writeln!(context, "- Time: {}", Utc::now().to_rfc3339())?;
+        writeln!(context, "- Time: {}", DateTime::now().to_rfc3339())?;
         writeln!(context, "- Source: {}", event.source)?;
         writeln!(context, "- Type: {}\n", event.event_type)?;
 

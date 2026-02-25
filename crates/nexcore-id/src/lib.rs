@@ -14,10 +14,10 @@
 //!
 //! | Platform | Entropy Source | CSPRNG |
 //! |----------|----------------|--------|
-//! | Unix (Linux, macOS, BSD) | `/dev/urandom` | ✅ Yes |
-//! | Windows (Vista+) | `BCryptGenRandom` | ✅ Yes |
-//! | WASM | Timestamp + xorshift | ❌ **No** |
-//! | Other | Timestamp + xorshift | ❌ **No** |
+//! | Unix (Linux, macOS, BSD) | `/dev/urandom` | Yes |
+//! | Windows (Vista+) | `BCryptGenRandom` | Yes |
+//! | WASM | Timestamp + xorshift | No |
+//! | Other | Timestamp + xorshift | No |
 //!
 //! **WARNING:** On WASM and unsupported platforms, UUIDs are generated using a
 //! timestamp-seeded xorshift64 PRNG that is **NOT cryptographically secure**.
@@ -116,6 +116,7 @@ impl<'de> serde::Deserialize<'de> for NexId {
 }
 
 /// Error returned when parsing a UUID string fails.
+#[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParseError {
     /// Input has wrong length (expected 36 chars with hyphens or 32 without)
@@ -173,14 +174,24 @@ impl NexId {
     /// Returns true if this is the nil UUID.
     #[must_use]
     pub const fn is_nil(&self) -> bool {
-        let mut i = 0;
-        while i < 16 {
-            if self.0[i] != 0 {
-                return false;
-            }
-            i += 1;
-        }
-        true
+        // Explicit comparison of all 16 bytes avoids indexing in const context.
+        // `const fn` cannot use iterators, so each byte is checked individually.
+        self.0[0] == 0
+            && self.0[1] == 0
+            && self.0[2] == 0
+            && self.0[3] == 0
+            && self.0[4] == 0
+            && self.0[5] == 0
+            && self.0[6] == 0
+            && self.0[7] == 0
+            && self.0[8] == 0
+            && self.0[9] == 0
+            && self.0[10] == 0
+            && self.0[11] == 0
+            && self.0[12] == 0
+            && self.0[13] == 0
+            && self.0[14] == 0
+            && self.0[15] == 0
     }
 
     /// Generates a new random v4 UUID.
@@ -232,23 +243,38 @@ impl NexId {
     /// Valid until year 10889 (48-bit millisecond counter from Unix epoch).
     #[cfg(feature = "std")]
     #[must_use]
-    #[allow(clippy::cast_possible_truncation)] // Intentional: extracting bytes from u64
     pub fn v7() -> Self {
         let mut bytes = [0u8; 16];
 
-        // Get timestamp in milliseconds (truncation intentional - 48 bits is sufficient for ~8000 years)
-        let ts = std::time::SystemTime::now()
+        // Get timestamp in milliseconds.
+        // as_millis() returns u128; we truncate to u64 which holds ~584 million years
+        // of milliseconds — far beyond the UUID v7 spec's 48-bit (year 10889) range.
+        // Saturating at u64::MAX is safe: the upper bits are masked off anyway.
+        let ts_millis: u128 = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_millis() as u64)
+            .map(|d| d.as_millis())
             .unwrap_or(0);
+        // Clamp to u64: values beyond u64::MAX (~584M years) are saturated safely.
+        #[allow(
+            clippy::as_conversions,
+            reason = "ts_millis fits in u64 for any realistic timestamp: u64::MAX ms ~= 584 million years; saturating lossy cast is intentional"
+        )]
+        let ts = ts_millis as u64;
 
-        // First 48 bits: timestamp (intentional byte extraction via truncation)
-        bytes[0] = (ts >> 40) as u8;
-        bytes[1] = (ts >> 32) as u8;
-        bytes[2] = (ts >> 24) as u8;
-        bytes[3] = (ts >> 16) as u8;
-        bytes[4] = (ts >> 8) as u8;
-        bytes[5] = ts as u8;
+        // First 48 bits: timestamp bytes extracted by right-shift then truncation to u8.
+        // Each shift isolates exactly 8 bits; the `as u8` discards upper bits deliberately.
+        #[allow(
+            clippy::as_conversions,
+            reason = "byte extraction: right-shift isolates the target octet, as u8 discards upper bits intentionally"
+        )]
+        {
+            bytes[0] = (ts >> 40) as u8;
+            bytes[1] = (ts >> 32) as u8;
+            bytes[2] = (ts >> 24) as u8;
+            bytes[3] = (ts >> 16) as u8;
+            bytes[4] = (ts >> 8) as u8;
+            bytes[5] = ts as u8;
+        }
 
         // Fill remaining with random
         let mut rand_bytes = [0u8; 10];
@@ -283,8 +309,11 @@ impl NexId {
             if i == 4 || i == 6 || i == 8 || i == 10 {
                 s.push('-');
             }
-            s.push(HEX_CHARS[(byte >> 4) as usize]);
-            s.push(HEX_CHARS[(byte & 0x0f) as usize]);
+            // nibble >> 4 and nibble & 0x0f are both in 0..=15, within HEX_CHARS bounds.
+            let hi = usize::from(byte >> 4);
+            let lo = usize::from(byte & 0x0f);
+            s.push(HEX_CHARS.get(hi).copied().unwrap_or('?'));
+            s.push(HEX_CHARS.get(lo).copied().unwrap_or('?'));
         }
         s
     }
@@ -294,8 +323,10 @@ impl NexId {
     pub fn to_string_simple(&self) -> String {
         let mut s = String::with_capacity(32);
         for byte in &self.0 {
-            s.push(HEX_CHARS[(byte >> 4) as usize]);
-            s.push(HEX_CHARS[(byte & 0x0f) as usize]);
+            let hi = usize::from(byte >> 4);
+            let lo = usize::from(byte & 0x0f);
+            s.push(HEX_CHARS.get(hi).copied().unwrap_or('?'));
+            s.push(HEX_CHARS.get(lo).copied().unwrap_or('?'));
         }
         s
     }
@@ -335,13 +366,18 @@ impl FromStr for NexId {
 fn parse_hyphenated(s: &str) -> Result<NexId, ParseError> {
     let bytes = s.as_bytes();
 
-    // Verify hyphen positions: 8-4-4-4-12
-    if bytes[8] != b'-' || bytes[13] != b'-' || bytes[18] != b'-' || bytes[23] != b'-' {
+    // Verify hyphen positions: 8-4-4-4-12.
+    // These indices are always valid: s.len() == 36 is checked by the caller.
+    let b8 = bytes.get(8).copied().ok_or(ParseError::InvalidFormat)?;
+    let b13 = bytes.get(13).copied().ok_or(ParseError::InvalidFormat)?;
+    let b18 = bytes.get(18).copied().ok_or(ParseError::InvalidFormat)?;
+    let b23 = bytes.get(23).copied().ok_or(ParseError::InvalidFormat)?;
+    if b8 != b'-' || b13 != b'-' || b18 != b'-' || b23 != b'-' {
         return Err(ParseError::InvalidFormat);
     }
 
     let mut result = [0u8; 16];
-    let mut byte_idx = 0;
+    let mut byte_idx: usize = 0;
 
     for (i, chunk) in s.split('-').enumerate() {
         let expected_len = match i {
@@ -356,10 +392,11 @@ fn parse_hyphenated(s: &str) -> Result<NexId, ParseError> {
         }
 
         for pair in chunk.as_bytes().chunks(2) {
-            let high = hex_digit(pair[0])?;
-            let low = hex_digit(pair[1])?;
-            result[byte_idx] = (high << 4) | low;
-            byte_idx += 1;
+            let high = hex_digit(pair.first().copied().ok_or(ParseError::InvalidFormat)?)?;
+            let low = hex_digit(pair.get(1).copied().ok_or(ParseError::InvalidFormat)?)?;
+            let slot = result.get_mut(byte_idx).ok_or(ParseError::InvalidFormat)?;
+            *slot = (high << 4) | low;
+            byte_idx = byte_idx.saturating_add(1);
         }
     }
 
@@ -373,9 +410,10 @@ fn parse_simple(s: &str) -> Result<NexId, ParseError> {
         if pair.len() != 2 {
             return Err(ParseError::InvalidLength);
         }
-        let high = hex_digit(pair[0])?;
-        let low = hex_digit(pair[1])?;
-        result[i] = (high << 4) | low;
+        let high = hex_digit(pair.first().copied().ok_or(ParseError::InvalidFormat)?)?;
+        let low = hex_digit(pair.get(1).copied().ok_or(ParseError::InvalidFormat)?)?;
+        let slot = result.get_mut(i).ok_or(ParseError::InvalidFormat)?;
+        *slot = (high << 4) | low;
     }
 
     Ok(NexId(result))
@@ -383,8 +421,24 @@ fn parse_simple(s: &str) -> Result<NexId, ParseError> {
 
 const fn hex_digit(c: u8) -> Result<u8, ParseError> {
     match c {
+        // Subtractions are bounded by match arm guards: c >= b'0' and c <= b'9',
+        // so c - b'0' is in 0..=9 with no underflow possible.
+        #[allow(
+            clippy::arithmetic_side_effects,
+            reason = "match arm guarantees c >= b'0' and c <= b'9', so subtraction cannot underflow"
+        )]
         b'0'..=b'9' => Ok(c - b'0'),
+        // c >= b'a' and c <= b'f', so c - b'a' is in 0..=5; adding 10 gives 10..=15, no overflow.
+        #[allow(
+            clippy::arithmetic_side_effects,
+            reason = "match arm guarantees c in b'a'..=b'f', so c - b'a' is 0..=5 and adding 10 gives 10..=15, no overflow"
+        )]
         b'a'..=b'f' => Ok(c - b'a' + 10),
+        // c >= b'A' and c <= b'F', so c - b'A' is in 0..=5; adding 10 gives 10..=15, no overflow.
+        #[allow(
+            clippy::arithmetic_side_effects,
+            reason = "match arm guarantees c in b'A'..=b'F', so c - b'A' is 0..=5 and adding 10 gives 10..=15, no overflow"
+        )]
         b'A'..=b'F' => Ok(c - b'A' + 10),
         _ => Err(ParseError::InvalidCharacter),
     }
@@ -472,6 +526,14 @@ fn fill_random_windows(buf: &mut [u8]) {
     // STATUS_SUCCESS = 0x00000000
     const STATUS_SUCCESS: i32 = 0;
 
+    // buf.len() is the byte count of a small stack buffer (16 or 10 bytes max);
+    // it always fits in u32 (max value 4_294_967_295). The cast is safe.
+    #[allow(
+        clippy::as_conversions,
+        reason = "buf is always 16 or 10 bytes (UUID-sized), well within u32::MAX; truncation is impossible"
+    )]
+    let buf_len = buf.len() as u32;
+
     // SAFETY: BCryptGenRandom is a well-documented Windows API.
     // We pass a valid buffer and length, NULL algorithm handle with the
     // BCRYPT_USE_SYSTEM_PREFERRED_RNG flag as documented.
@@ -480,7 +542,7 @@ fn fill_random_windows(buf: &mut [u8]) {
         BCryptGenRandom(
             core::ptr::null_mut(),
             buf.as_mut_ptr(),
-            buf.len() as u32,
+            buf_len,
             BCRYPT_USE_SYSTEM_PREFERRED_RNG,
         )
     };
@@ -510,10 +572,19 @@ fn fill_random_unix(buf: &mut [u8]) {
 
 /// Fallback random using timestamp and counter (not cryptographically secure).
 #[cfg(feature = "std")]
-#[allow(clippy::cast_possible_truncation)] // Intentional: seeding and byte extraction
+#[allow(
+    clippy::cast_possible_truncation,
+    reason = "intentional: as_nanos() truncates u128 to u64 for xorshift seed (nanosecond precision, upper bits discarded); byte extraction via >> 56 then as u8 isolates the top byte deliberately"
+)]
 fn fallback_random(buf: &mut [u8]) {
     use std::time::{SystemTime, UNIX_EPOCH};
 
+    // as_nanos() returns u128; truncating to u64 for the xorshift seed is intentional —
+    // we only need nanosecond-granularity entropy, not the full 128-bit range.
+    #[allow(
+        clippy::as_conversions,
+        reason = "truncating u128 nanoseconds to u64 for xorshift PRNG seed; upper bits are discarded intentionally as the lower 64 bits provide sufficient entropy variation"
+    )]
     let seed = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_nanos() as u64)
@@ -526,7 +597,14 @@ fn fallback_random(buf: &mut [u8]) {
         state ^= state >> 12;
         state ^= state << 25;
         state ^= state >> 27;
-        *byte = (state.wrapping_mul(0x2545_f491_4f6c_dd1d) >> 56) as u8;
+        // >> 56 on a u64 isolates the top 8 bits into positions 0..=7; as u8 is exact.
+        #[allow(
+            clippy::as_conversions,
+            reason = "state >> 56 produces a value in 0..=255 (top byte of u64), so as u8 is a lossless truncation"
+        )]
+        {
+            *byte = (state.wrapping_mul(0x2545_f491_4f6c_dd1d) >> 56) as u8;
+        }
     }
 }
 
@@ -716,7 +794,13 @@ mod nist_math {
         let y = x - 1.0;
         let mut sum = 1.000_000_000_190_015;
         for (i, &coef) in c.iter().enumerate() {
-            sum += coef / (y + (i as f64) + 1.0);
+            // i is 0..=5 (array length 6), converting to f64 is exact and lossless.
+            #[allow(
+                clippy::as_conversions,
+                reason = "i is 0..=5 from a fixed-length array iteration; f64 represents all integers up to 2^53 exactly"
+            )]
+            let i_f64 = i as f64;
+            sum += coef / (y + i_f64 + 1.0);
         }
         let t = y + 5.5;
         0.5 * (2.0 * core::f64::consts::PI).ln() + (y + 0.5) * t.ln() - t + sum.ln()
@@ -741,7 +825,13 @@ mod nist_math {
         let mut sum = 1.0 / a;
         let mut term = sum;
         for n in 1..200 {
-            term *= x / (a + n as f64);
+            // n is 1..200 (i32 range); converting to f64 is exact for all values <= 2^53.
+            #[allow(
+                clippy::as_conversions,
+                reason = "n is 1..200, well within f64's exact integer range of 2^53"
+            )]
+            let n_f64 = n as f64;
+            term *= x / (a + n_f64);
             sum += term;
             if term.abs() < sum.abs() * 1e-14 {
                 break;
@@ -755,7 +845,13 @@ mod nist_math {
         let mut c = 1e-30_f64;
         for n in 1..200 {
             let an = compute_an(n, a);
-            let bn = x + (n as f64) - a;
+            // n is 1..200; converting to f64 is exact for all values <= 2^53.
+            #[allow(
+                clippy::as_conversions,
+                reason = "n is 1..200, well within f64's exact integer range of 2^53"
+            )]
+            let n_f64 = n as f64;
+            let bn = x + n_f64 - a;
             let d = clamp_small(1.0 / clamp_small(bn + an / f));
             c = clamp_small(bn + an / c);
             let delta = c * d;
@@ -768,6 +864,11 @@ mod nist_math {
     }
 
     fn compute_an(n: i32, a: f64) -> f64 {
+        // n is 1..200 (i32); converting to f64 is exact.
+        #[allow(
+            clippy::as_conversions,
+            reason = "n is 1..200 (i32), converting to f64 is exact; all values <= 2^53"
+        )]
         if n % 2 == 1 {
             (n as f64 + 1.0) / 2.0
         } else {
@@ -825,11 +926,21 @@ mod nist_sp800_22 {
     }
 
     fn frequency_monobit_pvalue(bits: &[u8]) -> f64 {
+        // bits.len() is at most SAMPLE_BITS = 100_000, losslessly representable in f64.
+        #[allow(
+            clippy::as_conversions,
+            reason = "bits.len() <= 100_000 which is exactly representable in f64 (< 2^53)"
+        )]
         let n = bits.len() as f64;
         let s_n: i64 = bits
             .iter()
             .map(|&b| if b == 1 { 1i64 } else { -1i64 })
             .sum();
+        // s_n is in -100_000..=100_000; converting to f64 is exact.
+        #[allow(
+            clippy::as_conversions,
+            reason = "s_n is bounded by bits.len() <= 100_000, well within f64's exact integer range"
+        )]
         let s_obs = (s_n as f64).abs() / n.sqrt();
         erfc(s_obs / core::f64::consts::SQRT_2)
     }
@@ -844,17 +955,39 @@ mod nist_sp800_22 {
     fn block_frequency_pvalue(bits: &[u8], block_size: usize) -> f64 {
         let n_blocks = bits.len() / block_size;
         let chi_sq = block_chi_squared(bits, block_size, n_blocks);
-        igamc(n_blocks as f64 / 2.0, chi_sq / 2.0)
+        // n_blocks <= 1_000 (100_000 / 100), exactly representable in f64.
+        #[allow(
+            clippy::as_conversions,
+            reason = "n_blocks <= 1_000, well within f64's exact integer range of 2^53"
+        )]
+        let n_blocks_f64 = n_blocks as f64;
+        igamc(n_blocks_f64 / 2.0, chi_sq / 2.0)
     }
 
     fn block_chi_squared(bits: &[u8], m: usize, n: usize) -> f64 {
         let mut chi_sq = 0.0;
         for i in 0..n {
-            let ones: usize = bits[i * m..(i + 1) * m].iter().map(|&b| b as usize).sum();
+            let ones: usize = bits
+                .get(i.saturating_mul(m)..i.saturating_mul(m).saturating_add(m))
+                .map(|sl| sl.iter().map(|&b| usize::from(b)).sum())
+                .unwrap_or(0);
+            // ones <= m <= SAMPLE_BITS = 100_000, exactly representable in f64.
+            // m <= SAMPLE_BITS = 100_000, exactly representable in f64.
+            #[allow(
+                clippy::as_conversions,
+                reason = "ones and m are both bounded by SAMPLE_BITS = 100_000, well within f64's exact integer range"
+            )]
             let pi = ones as f64 / m as f64;
             chi_sq += (pi - 0.5).powi(2);
         }
-        chi_sq * 4.0 * m as f64
+        // m <= 100_000, exactly representable in f64.
+        #[allow(
+            clippy::as_conversions,
+            reason = "m <= SAMPLE_BITS = 100_000, well within f64's exact integer range of 2^53"
+        )]
+        {
+            chi_sq * 4.0 * m as f64
+        }
     }
 
     #[test]
@@ -867,22 +1000,44 @@ mod nist_sp800_22 {
     }
 
     fn runs_pvalue(bits: &[u8]) -> Option<f64> {
+        // bits.len() <= 100_000, exactly representable in f64.
+        #[allow(
+            clippy::as_conversions,
+            reason = "bits.len() <= 100_000, well within f64's exact integer range of 2^53"
+        )]
         let n = bits.len() as f64;
-        let ones: usize = bits.iter().map(|&b| b as usize).sum();
+        let ones: usize = bits.iter().map(|&b| usize::from(b)).sum();
+        // ones <= 100_000, exactly representable in f64.
+        #[allow(
+            clippy::as_conversions,
+            reason = "ones <= bits.len() <= 100_000, well within f64's exact integer range"
+        )]
         let pi = ones as f64 / n;
         let tau = 2.0 / n.sqrt();
         if (pi - 0.5).abs() >= tau {
             return None;
         }
-        let v_obs = count_transitions(bits) + 1;
+        let v_obs = count_transitions(bits).saturating_add(1);
         let expected = 2.0 * n * pi * (1.0 - pi) + 1.0;
         let variance = 2.0 * n * pi * (1.0 - pi);
+        // v_obs <= SAMPLE_BITS + 1 = 100_001, exactly representable in f64.
+        #[allow(
+            clippy::as_conversions,
+            reason = "v_obs <= SAMPLE_BITS + 1 = 100_001, well within f64's exact integer range of 2^53"
+        )]
         let z = (v_obs as f64 - expected).abs() / (2.0 * variance).sqrt();
         Some(erfc(z / core::f64::consts::SQRT_2))
     }
 
     fn count_transitions(bits: &[u8]) -> u64 {
-        bits.windows(2).filter(|w| w[0] != w[1]).count() as u64
+        // count() returns usize; on any realistic platform this fits in u64.
+        #[allow(
+            clippy::as_conversions,
+            reason = "transition count is bounded by bits.len() <= 100_000, well within u64::MAX"
+        )]
+        {
+            bits.windows(2).filter(|w| w[0] != w[1]).count() as u64
+        }
     }
 
     #[test]
@@ -894,6 +1049,11 @@ mod nist_sp800_22 {
 
     fn independence_pvalue(bits: &[u8]) -> f64 {
         let counts = count_bit_pairs(bits);
+        // bits.len() - 1 is at most 99_999, exactly representable in f64.
+        #[allow(
+            clippy::as_conversions,
+            reason = "bits.len() <= 100_000, so bits.len() - 1 <= 99_999, well within f64's exact integer range"
+        )]
         let total = (bits.len() - 1) as f64;
         let expected = total / 4.0;
         let chi_sq = chi_squared_from_counts(&counts, expected);
@@ -903,7 +1063,12 @@ mod nist_sp800_22 {
     fn count_bit_pairs(bits: &[u8]) -> [u64; 4] {
         let mut c = [0u64; 4];
         for w in bits.windows(2) {
-            c[w[0] as usize * 2 + w[1] as usize] += 1;
+            // w[0] and w[1] are bits (0 or 1); index is 0*2+0=0, 0*2+1=1, 1*2+0=2, 1*2+1=3.
+            // These are known safe: w is always length 2 from windows(2).
+            let idx = usize::from(w[0]) * 2 + usize::from(w[1]);
+            if let Some(slot) = c.get_mut(idx) {
+                *slot = slot.saturating_add(1);
+            }
         }
         c
     }
@@ -911,7 +1076,12 @@ mod nist_sp800_22 {
     fn chi_squared_from_counts(counts: &[u64; 4], expected: f64) -> f64 {
         counts
             .iter()
-            .map(|&c| (c as f64 - expected).powi(2) / expected)
+            // c is a u64 count bounded by SAMPLE_BITS; converting to f64 is exact.
+            .map(|&c| {
+                #[allow(clippy::as_conversions, reason = "c is a window count bounded by SAMPLE_BITS = 100_000, well within f64's exact integer range of 2^53")]
+                let c_f64 = c as f64;
+                (c_f64 - expected).powi(2) / expected
+            })
             .sum()
     }
 }

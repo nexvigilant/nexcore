@@ -117,6 +117,10 @@ impl DampedOscillator {
     ///
     /// Uses the damped harmonic oscillator equation:
     /// x'' + 2*zeta*omega_n*x' + omega_n^2*(x - target) = 0
+    #[allow(
+        clippy::arithmetic_side_effects,
+        reason = "damped harmonic oscillator math; intentional f64 arithmetic"
+    )]
     pub fn step(&mut self) -> OscillatorState {
         let displacement = self.current - self.target;
         let omega_n = self.natural_frequency;
@@ -128,7 +132,7 @@ impl DampedOscillator {
         // Euler integration (simple but effective for discrete steps)
         self.velocity += acceleration;
         self.current += self.velocity;
-        self.iteration += 1;
+        self.iteration = self.iteration.saturating_add(1);
 
         let state = OscillatorState {
             value: self.current,
@@ -153,7 +157,7 @@ impl DampedOscillator {
             }
         }
 
-        self.iteration - start
+        self.iteration.saturating_sub(start)
     }
 
     /// Whether the oscillator has converged.

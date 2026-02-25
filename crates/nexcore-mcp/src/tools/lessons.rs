@@ -8,7 +8,7 @@
 use crate::params::{
     LessonAddParams, LessonByContextParams, LessonByTagParams, LessonGetParams, LessonSearchParams,
 };
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_fs::dirs;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
@@ -47,7 +47,7 @@ struct Lesson {
     context: String,
     tags: Vec<String>,
     primitives: Vec<ExtractedPrimitive>,
-    created_at: DateTime<Utc>,
+    created_at: DateTime,
     #[serde(default)]
     source: String,
 }
@@ -195,7 +195,7 @@ pub fn lesson_add(params: LessonAddParams) -> Result<CallToolResult, McpError> {
         context: params.context,
         tags: params.tags.unwrap_or_default(),
         primitives,
-        created_at: Utc::now(),
+        created_at: DateTime::now(),
         source: params.source.unwrap_or_default(),
     };
 

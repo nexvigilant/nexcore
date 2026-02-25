@@ -17,10 +17,11 @@ use crate::state_mode::StateMode;
 use crate::tier::Tier;
 use crate::weighted::WeightedComposition;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 /// Result of a composition operation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct CompositionResult {
     /// The resulting composition.
     pub composition: PrimitiveComposition,
@@ -34,6 +35,7 @@ pub struct CompositionResult {
 
 /// Composition operation types.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum CompositionOp {
     /// Union: A ∪ B
     Union,
@@ -65,6 +67,7 @@ impl std::fmt::Display for CompositionOp {
 
 /// Algebra for primitive compositions.
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct CompositionAlgebra;
 
 impl CompositionAlgebra {
@@ -153,7 +156,7 @@ impl CompositionAlgebra {
     /// Project to specific primitives.
     #[must_use]
     pub fn project(&self, comp: &PrimitiveComposition, keep: &[LexPrimitiva]) -> CompositionResult {
-        let keep_set: HashSet<_> = keep.iter().copied().collect();
+        let keep_set: BTreeSet<_> = keep.iter().copied().collect();
         let projected: Vec<LexPrimitiva> = comp
             .primitives
             .iter()
@@ -240,9 +243,9 @@ impl CompositionAlgebra {
     /// Normalize: deduplicate and sort.
     #[must_use]
     pub fn normalize(&self, comp: &PrimitiveComposition) -> PrimitiveComposition {
-        let unique: HashSet<_> = comp.unique();
+        let unique: BTreeSet<_> = comp.unique();
         let mut sorted: Vec<_> = unique.into_iter().collect();
-        sorted.sort_by_key(|p| p.symbol());
+        sorted.sort_by_key(|p: &LexPrimitiva| p.symbol());
         let mut result = PrimitiveComposition::new(sorted);
         if let Some(dom) = comp.dominant {
             result = result.with_dominant(dom, comp.confidence);
@@ -274,24 +277,28 @@ impl CompositionAlgebra {
         let graph = InteractionGraph::canonical();
         let unique: Vec<LexPrimitiva> = comp.unique().into_iter().collect();
         let pair_count = if unique.len() > 1 {
-            unique.len() * (unique.len() - 1)
+            unique.len().saturating_mul(unique.len().saturating_sub(1))
         } else {
             1 // Single primitive is trivially coherent
         };
 
         // Count how many primitive pairs have defined interactions
-        let mut interaction_count = 0;
+        let mut interaction_count: usize = 0;
         for &src in &unique {
             for &tgt in &unique {
                 if src == tgt {
                     continue;
                 }
                 if graph.lookup(src, tgt).is_some() {
-                    interaction_count += 1;
+                    interaction_count = interaction_count.saturating_add(1);
                 }
             }
         }
 
+        #[allow(
+            clippy::as_conversions,
+            reason = "interaction_count and pair_count bounded by 16*15=240, safe cast to f64"
+        )]
         let interaction_coverage = interaction_count as f64 / pair_count as f64;
 
         // Check for pattern match
@@ -342,9 +349,17 @@ impl CompositionAlgebra {
         let total = comp.primitives.len().max(1);
 
         // Expressiveness: unique count / 16 (max possible)
+        #[allow(
+            clippy::as_conversions,
+            reason = "unique_count bounded by 16, safe cast to f64"
+        )]
         let expressiveness = unique_count as f64 / 16.0;
 
         // Compactness: unique / total (1.0 = no duplicates)
+        #[allow(
+            clippy::as_conversions,
+            reason = "unique_count and total bounded by primitive count, safe cast to f64"
+        )]
         let compactness = unique_count as f64 / total as f64;
 
         // Coherence from semantic validation
@@ -372,6 +387,7 @@ impl CompositionAlgebra {
 
 /// Result of validation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ValidationResult {
     /// Whether the composition is valid.
     pub valid: bool,
@@ -383,6 +399,7 @@ pub struct ValidationResult {
 ///
 /// Tier: T2-C (Comparison + Quantity + Mapping)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct SemanticValidation {
     /// Overall coherence score (0.0-1.0).
     pub coherence: f64,
@@ -412,6 +429,7 @@ impl std::fmt::Display for SemanticValidation {
 ///
 /// Tier: T2-P (Quantity + Comparison)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct CompositionScore {
     /// Breadth of primitives used (0.0-1.0, where 1.0 = all 16).
     pub expressiveness: f64,
@@ -435,6 +453,7 @@ impl std::fmt::Display for CompositionScore {
 
 /// Builder for creating compositions fluently.
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct CompositionBuilder {
     primitives: Vec<LexPrimitiva>,
     dominant: Option<LexPrimitiva>,

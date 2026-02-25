@@ -3,7 +3,7 @@
 //! Bridges Chrome DevTools MCP tools to nexcore-browser collectors for Guardian sensing.
 //! Tier: T2-C (Composed bridge between T3 domains)
 
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_error::Error;
 use serde::{Deserialize, Serialize};
 use tokio::sync::broadcast;
@@ -92,7 +92,7 @@ fn mcp_to_console_entry(msg: McpConsoleMessage, page_id: &str) -> ConsoleEntry {
         url: msg.url,
         line: msg.line,
         column: msg.column,
-        timestamp: Utc::now(),
+        timestamp: DateTime::now(),
         page_id: page_id.to_string(),
     }
 }
@@ -110,7 +110,7 @@ fn mcp_to_network_entry(req: McpNetworkRequest, page_id: &str, idx: usize) -> Ne
         .req_id
         .map_or_else(|| format!("mcp_{idx}"), |id| format!("mcp_{id}"));
     let status = derive_network_status(&req);
-    let now = Utc::now();
+    let now = DateTime::now();
 
     NetworkEntry {
         request_id,

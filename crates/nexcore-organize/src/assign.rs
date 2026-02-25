@@ -42,7 +42,7 @@ pub struct AssignedInventory {
     /// All assignments.
     pub assignments: Vec<Assignment>,
     /// Observation timestamp (carried forward).
-    pub observed_at: chrono::DateTime<chrono::Utc>,
+    pub observed_at: nexcore_chrono::DateTime,
 }
 
 // ============================================================================
@@ -120,7 +120,7 @@ mod tests {
     use crate::group::{Group, GroupedInventory};
     use crate::observe::EntryMeta;
     use crate::rank::{RankedEntry, ScoreBreakdown};
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     fn make_assignment_entry(name: &str, ext: &str) -> RankedEntry {
         RankedEntry {
@@ -128,7 +128,7 @@ mod tests {
                 path: PathBuf::from(format!("/tmp/{name}.{ext}")),
                 is_dir: false,
                 size_bytes: 500,
-                modified: Utc::now(),
+                modified: DateTime::now(),
                 extension: ext.to_string(),
                 depth: 1,
                 name: format!("{name}.{ext}"),
@@ -159,7 +159,7 @@ mod tests {
         let grouped = GroupedInventory {
             root: PathBuf::from("/tmp"),
             groups,
-            observed_at: Utc::now(),
+            observed_at: DateTime::now(),
         };
 
         let config = OrganizeConfig::default_for("/tmp");
@@ -187,7 +187,7 @@ mod tests {
         let grouped = GroupedInventory {
             root: PathBuf::from("/tmp"),
             groups,
-            observed_at: Utc::now(),
+            observed_at: DateTime::now(),
         };
 
         let config = OrganizeConfig::default_for("/tmp");
@@ -223,7 +223,7 @@ mod tests {
                     target_dir: None,
                 },
             ],
-            observed_at: Utc::now(),
+            observed_at: DateTime::now(),
         };
 
         let counts = assigned.count_by_action();

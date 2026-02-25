@@ -3,7 +3,7 @@
 //! Data models for privacy regulations and data subject rights management.
 //! Supports comprehensive privacy compliance and data subject rights tracking.
 
-use chrono::{DateTime, Duration, Utc};
+use nexcore_chrono::{DateTime, Duration};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -125,10 +125,10 @@ pub struct DataSubject {
     pub jurisdiction: Option<PrivacyRegulation>,
     #[serde(default = "default_language")]
     pub preferred_language: String,
-    #[serde(default = "Utc::now")]
-    pub created_at: DateTime<Utc>,
-    #[serde(default = "Utc::now")]
-    pub last_updated: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub created_at: DateTime,
+    #[serde(default = "DateTime::now")]
+    pub last_updated: DateTime,
 }
 
 fn default_language() -> String {
@@ -138,7 +138,7 @@ fn default_language() -> String {
 impl DataSubject {
     /// Create a new data subject with required fields.
     pub fn new(subject_id: impl Into<String>, email: impl Into<String>) -> Self {
-        let now = Utc::now();
+        let now = DateTime::now();
         Self {
             subject_id: subject_id.into(),
             email: email.into(),
@@ -165,11 +165,11 @@ pub struct ConsentRecord {
     pub data_categories: Vec<DataCategory>,
     pub status: ConsentStatus,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub granted_at: Option<DateTime<Utc>>,
+    pub granted_at: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub withdrawn_at: Option<DateTime<Utc>>,
+    pub withdrawn_at: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub expires_at: Option<DateTime<Utc>>,
+    pub expires_at: Option<DateTime>,
     #[serde(default)]
     pub lawful_basis: ProcessingLawfulBasis,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -193,7 +193,7 @@ impl ConsentRecord {
             return false;
         }
         if let Some(expires) = self.expires_at {
-            return Utc::now() < expires;
+            return DateTime::now() < expires;
         }
         true
     }
@@ -207,8 +207,8 @@ pub struct PrivacyRequest {
     pub request_type: DataSubjectRight,
     #[serde(default)]
     pub status: RequestStatus,
-    #[serde(default = "Utc::now")]
-    pub submitted_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub submitted_at: DateTime,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     #[serde(default = "default_verification_status")]
@@ -216,9 +216,9 @@ pub struct PrivacyRequest {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub assigned_to: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub due_date: Option<DateTime<Utc>>,
+    pub due_date: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub completed_at: Option<DateTime<Utc>>,
+    pub completed_at: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rejection_reason: Option<String>,
     #[serde(default)]
@@ -241,7 +241,7 @@ fn default_verification_status() -> String {
 
 impl PrivacyRequest {
     /// Calculate default due date based on regulation (GDPR: 30 days, CCPA: 45 days).
-    pub fn calculate_due_date(&self) -> DateTime<Utc> {
+    pub fn calculate_due_date(&self) -> DateTime {
         let days = if self
             .applicable_regulations
             .contains(&PrivacyRegulation::Gdpr)
@@ -264,9 +264,9 @@ impl PrivacyRequest {
             return false;
         }
         if let Some(due) = self.due_date {
-            return Utc::now() > due;
+            return DateTime::now() > due;
         }
-        Utc::now() > self.calculate_due_date()
+        DateTime::now() > self.calculate_due_date()
     }
 }
 
@@ -289,10 +289,10 @@ pub struct DataProcessingRecord {
     pub international_transfers: Vec<String>,
     #[serde(default)]
     pub safeguards: Vec<String>,
-    #[serde(default = "Utc::now")]
-    pub created_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub created_at: DateTime,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub last_reviewed: Option<DateTime<Utc>>,
+    pub last_reviewed: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub risk_assessment: Option<String>,
     #[serde(default)]
@@ -307,8 +307,8 @@ pub struct DataProcessingRecord {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivacyDataBreach {
     pub breach_id: String,
-    pub incident_date: DateTime<Utc>,
-    pub discovered_date: DateTime<Utc>,
+    pub incident_date: DateTime,
+    pub discovered_date: DateTime,
     /// Type: unauthorized_access, data_loss, system_compromise, etc.
     pub breach_type: String,
     pub affected_subjects_count: i64,
@@ -323,7 +323,7 @@ pub struct PrivacyDataBreach {
     #[serde(default)]
     pub notification_subjects: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub notification_sent_at: Option<DateTime<Utc>>,
+    pub notification_sent_at: Option<DateTime>,
     #[serde(default)]
     pub remediation_steps: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -335,9 +335,9 @@ pub struct PrivacyDataBreach {
     pub regulatory_reporting_required: bool,
     /// GDPR requires notification within 72 hours.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub reporting_deadline: Option<DateTime<Utc>>,
+    pub reporting_deadline: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub reported_at: Option<DateTime<Utc>>,
+    pub reported_at: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tenant_id: Option<String>,
 }
@@ -352,7 +352,7 @@ fn default_true() -> bool {
 
 impl PrivacyDataBreach {
     /// Calculate GDPR reporting deadline (72 hours from discovery).
-    pub fn gdpr_reporting_deadline(&self) -> DateTime<Utc> {
+    pub fn gdpr_reporting_deadline(&self) -> DateTime {
         self.discovered_date + Duration::hours(72)
     }
 
@@ -362,9 +362,9 @@ impl PrivacyDataBreach {
             return false;
         }
         if let Some(deadline) = self.reporting_deadline {
-            return Utc::now() > deadline;
+            return DateTime::now() > deadline;
         }
-        Utc::now() > self.gdpr_reporting_deadline()
+        DateTime::now() > self.gdpr_reporting_deadline()
     }
 }
 
@@ -393,7 +393,7 @@ pub struct DataInventoryItem {
     #[serde(default = "default_risk_level")]
     pub risk_level: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub last_assessed: Option<DateTime<Utc>>,
+    pub last_assessed: Option<DateTime>,
     /// Status: compliant, non_compliant, under_review.
     #[serde(default = "default_compliance_status")]
     pub compliance_status: String,
@@ -417,10 +417,10 @@ pub struct PrivacyComplianceReport {
     pub report_id: String,
     /// Type: monthly, quarterly, annual, incident, audit.
     pub report_type: String,
-    pub period_start: DateTime<Utc>,
-    pub period_end: DateTime<Utc>,
-    #[serde(default = "Utc::now")]
-    pub generated_at: DateTime<Utc>,
+    pub period_start: DateTime,
+    pub period_end: DateTime,
+    #[serde(default = "DateTime::now")]
+    pub generated_at: DateTime,
     #[serde(default)]
     pub regulations_covered: Vec<PrivacyRegulation>,
     #[serde(default)]
@@ -440,7 +440,7 @@ pub struct PrivacyComplianceReport {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub approved_by: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub approved_at: Option<DateTime<Utc>>,
+    pub approved_at: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tenant_id: Option<String>,
 }
@@ -465,9 +465,9 @@ mod tests {
             purpose: "marketing".to_string(),
             data_categories: vec![DataCategory::BasicIdentity],
             status: ConsentStatus::Given,
-            granted_at: Some(Utc::now()),
+            granted_at: Some(DateTime::now()),
             withdrawn_at: None,
-            expires_at: Some(Utc::now() + Duration::days(365)),
+            expires_at: Some(DateTime::now() + Duration::days(365)),
             lawful_basis: ProcessingLawfulBasis::Consent,
             consent_text: None,
             withdrawal_reason: None,
@@ -485,9 +485,9 @@ mod tests {
             purpose: "marketing".to_string(),
             data_categories: vec![],
             status: ConsentStatus::Given,
-            granted_at: Some(Utc::now() - Duration::days(400)),
+            granted_at: Some(DateTime::now() - Duration::days(400)),
             withdrawn_at: None,
-            expires_at: Some(Utc::now() - Duration::days(1)), // Expired yesterday
+            expires_at: Some(DateTime::now() - Duration::days(1)), // Expired yesterday
             lawful_basis: ProcessingLawfulBasis::Consent,
             consent_text: None,
             withdrawal_reason: None,
@@ -504,7 +504,7 @@ mod tests {
             subject_id: "sub-123".to_string(),
             request_type: DataSubjectRight::Access,
             status: RequestStatus::Submitted,
-            submitted_at: Utc::now(),
+            submitted_at: DateTime::now(),
             description: None,
             verification_status: "pending".to_string(),
             assigned_to: None,
@@ -528,8 +528,8 @@ mod tests {
     fn test_breach_notification_deadline() {
         let breach = PrivacyDataBreach {
             breach_id: "breach-1".to_string(),
-            incident_date: Utc::now() - Duration::hours(48),
-            discovered_date: Utc::now(),
+            incident_date: DateTime::now() - Duration::hours(48),
+            discovered_date: DateTime::now(),
             breach_type: "unauthorized_access".to_string(),
             affected_subjects_count: 100,
             data_categories_affected: vec![DataCategory::HealthData],
@@ -549,7 +549,7 @@ mod tests {
         };
 
         let deadline = breach.gdpr_reporting_deadline();
-        assert!(deadline > Utc::now());
+        assert!(deadline > DateTime::now());
         assert!(!breach.is_notification_overdue());
     }
 

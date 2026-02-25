@@ -13,9 +13,12 @@ path = "src/main.rs"
 [dependencies]
 nexcore-error = { workspace = true }
 serde = { version = "1.0", features = ["derive"] }
-serde_yaml = "0.9"
+serde_yml = "0.0.12"
 nexcore-fs = { workspace = true }
 console = "0.15"
 indicatif = "0.17"
 rand = "0.8"
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+
+[lints]
+workspace = true

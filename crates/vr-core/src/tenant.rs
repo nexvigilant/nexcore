@@ -5,7 +5,7 @@
 //! a compile error, not a runtime bug.
 
 use crate::ids::{TenantId, UserId};
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 // ============================================================================
@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 // ============================================================================
 
 /// Platform subscription tiers with monthly pricing (cents).
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SubscriptionTier {
@@ -43,6 +44,10 @@ impl SubscriptionTier {
 
     /// Annual price with 16.7% discount (10 months for 12).
     #[must_use]
+    #[allow(
+        clippy::arithmetic_side_effects,
+        reason = "monthly * 10 overflows only above u64::MAX / 10 ≈ 1.8e18 cents, which no subscription tier approaches"
+    )]
     pub fn annual_price_cents(&self) -> u64 {
         let monthly = self.monthly_price_cents();
         // 10 months for the price of 12 = 16.67% discount
@@ -145,6 +150,7 @@ impl SubscriptionTier {
 // ============================================================================
 
 /// Role within a tenant organization. Determines permissions.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum UserRole {
@@ -212,6 +218,7 @@ impl UserRole {
 // ============================================================================
 
 /// Actions that can be performed on resources.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Action {
@@ -221,9 +228,11 @@ pub enum Action {
     Delete,
     Export,
     Admin,
+    Execute,
 }
 
 /// Resources that can be acted upon.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Resource {
@@ -238,6 +247,8 @@ pub enum Resource {
     Settings,
     ApiKey,
     AuditLog,
+    Terminal,
+    TerminalAi,
 }
 
 /// Permission set — evaluated at runtime from role + tier.
@@ -289,6 +300,9 @@ impl Permissions {
                 (Delete, ApiKey),
                 (Read, AuditLog),
                 (Admin, Settings),
+                (Execute, Terminal),
+                (Execute, TerminalAi),
+                (Admin, Terminal),
             ],
             UserRole::Admin => vec![
                 (Create, Program),
@@ -318,6 +332,9 @@ impl Permissions {
                 (Create, ApiKey),
                 (Read, ApiKey),
                 (Read, AuditLog),
+                (Execute, Terminal),
+                (Execute, TerminalAi),
+                (Admin, Terminal),
             ],
             UserRole::Scientist => vec![
                 (Create, Program),
@@ -333,6 +350,8 @@ impl Permissions {
                 (Create, Order),
                 (Read, Order),
                 (Read, Settings),
+                (Execute, Terminal),
+                (Execute, TerminalAi),
             ],
             UserRole::BusinessDev => vec![
                 (Read, Program),
@@ -346,6 +365,8 @@ impl Permissions {
                 (Update, Asset),
                 (Read, Order),
                 (Read, Settings),
+                (Execute, Terminal),
+                (Execute, TerminalAi),
             ],
             UserRole::Viewer => vec![
                 (Read, Program),
@@ -505,6 +526,7 @@ impl<T> TenantScoped<T> {
 // ============================================================================
 
 /// Lifecycle status of a tenant.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum TenantStatus {
@@ -541,6 +563,7 @@ impl TenantStatus {
 // ============================================================================
 
 /// Full tenant record as stored in the database.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Tenant {
     pub id: TenantId,
@@ -548,10 +571,38 @@ pub struct Tenant {
     pub slug: String,
     pub tier: SubscriptionTier,
     pub status: TenantStatus,
-    pub trial_ends_at: Option<DateTime<Utc>>,
+    pub trial_ends_at: Option<DateTime>,
     pub settings: serde_json::Value,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub created_at: DateTime,
+    pub updated_at: DateTime,
+}
+
+impl Tenant {
+    /// Construct a new Tenant record.
+    #[must_use]
+    pub fn new(
+        id: TenantId,
+        name: String,
+        slug: String,
+        tier: SubscriptionTier,
+        status: TenantStatus,
+        trial_ends_at: Option<DateTime>,
+        settings: serde_json::Value,
+        created_at: DateTime,
+        updated_at: DateTime,
+    ) -> Self {
+        Self {
+            id,
+            name,
+            slug,
+            tier,
+            status,
+            trial_ends_at,
+            settings,
+            created_at,
+            updated_at,
+        }
+    }
 }
 
 #[cfg(test)]

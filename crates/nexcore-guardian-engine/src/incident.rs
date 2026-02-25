@@ -16,7 +16,7 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::response::ResponseAction;
@@ -34,7 +34,7 @@ pub struct IncidentRecord {
     /// Unique incident identifier
     pub id: String,
     /// When the incident was detected
-    pub detected_at: DateTime<Utc>,
+    pub detected_at: DateTime,
     /// Homeostasis loop iteration that produced this incident
     pub iteration_id: String,
     /// The threat signal that triggered this incident
@@ -59,7 +59,7 @@ pub struct IncidentSignal {
     /// Threat severity
     pub severity: ThreatLevel,
     /// Detection timestamp
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Signal source classification
     pub source: SignalSource,
     /// Confidence value
@@ -103,9 +103,9 @@ pub struct LessonLearned {
     /// Confidence in the lesson (0.0-1.0)
     pub confidence: f64,
     /// When first observed
-    pub first_seen: DateTime<Utc>,
+    pub first_seen: DateTime,
     /// When last reinforced
-    pub last_seen: DateTime<Utc>,
+    pub last_seen: DateTime,
     /// Source severity distribution
     pub severity_distribution: HashMap<String, u32>,
 }
@@ -130,9 +130,9 @@ pub struct RecallQuery {
     /// Maximum results to return
     pub limit: Option<usize>,
     /// Only incidents after this time
-    pub after: Option<DateTime<Utc>>,
+    pub after: Option<DateTime>,
     /// Only incidents before this time
-    pub before: Option<DateTime<Utc>>,
+    pub before: Option<DateTime>,
 }
 
 // =============================================================================
@@ -531,13 +531,13 @@ mod tests {
     fn make_incident(pattern: &str, severity: ThreatLevel, success: bool) -> IncidentRecord {
         IncidentRecord {
             id: format!("inc-{}", pattern.replace(' ', "-")),
-            detected_at: Utc::now(),
+            detected_at: DateTime::now(),
             iteration_id: "iter-1".to_string(),
             signal: IncidentSignal {
                 id: "sig-1".to_string(),
                 pattern: pattern.to_string(),
                 severity,
-                timestamp: Utc::now(),
+                timestamp: DateTime::now(),
                 source: SignalSource::Damp {
                     subsystem: "test".to_string(),
                     damage_type: "test-damage".to_string(),

@@ -12,7 +12,7 @@ use crate::artifact::{ArtifactMetadata, ArtifactType};
 use crate::error::Result;
 use crate::session::SessionEntry;
 use crate::{brain_dir, config};
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 
 /// Result of a recovery operation
@@ -202,8 +202,8 @@ fn create_recovered_entry(id: NexId, path: &Path) -> SessionEntry {
     let created_at = fs::metadata(path)
         .ok()
         .and_then(|m| m.modified().ok())
-        .map(DateTime::<Utc>::from)
-        .unwrap_or_else(Utc::now);
+        .map(DateTime::from)
+        .unwrap_or_else(|| DateTime::now());
 
     // Try to infer project name from artifacts
     let project = infer_project_from_artifacts(path);

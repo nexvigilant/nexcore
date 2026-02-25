@@ -256,7 +256,7 @@ pub fn qbr_therapeutic_window(p: QbrTherapeuticWindowParams) -> Result<CallToolR
     };
 
     // Compute component AUCs
-    let n = if bounds.intervals % 2 != 0 {
+    let n = if !bounds.intervals.is_multiple_of(2) {
         bounds.intervals + 1
     } else {
         bounds.intervals

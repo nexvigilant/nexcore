@@ -32,8 +32,8 @@
 
 pub mod grounding;
 
-use chrono::{DateTime, Utc};
 use dashmap::DashMap;
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -225,7 +225,7 @@ pub struct Antigen {
     /// Epitopes exposed on this antigen (binding sites).
     pub epitopes: Vec<Epitope>,
     /// When this antigen was first detected.
-    pub detected_at: DateTime<Utc>,
+    pub detected_at: DateTime,
     /// Source system that reported this antigen.
     pub source: String,
 }
@@ -270,9 +270,9 @@ pub struct Antibody {
     /// Number of successful bindings (maturation metric).
     pub binding_count: u64,
     /// When this antibody was created.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// Last successful binding time.
-    pub last_bound_at: Option<DateTime<Utc>>,
+    pub last_bound_at: Option<DateTime>,
 }
 
 // ─── Binding Result ───────────────────────────────────────────────────────
@@ -295,7 +295,7 @@ pub struct BindingResult {
     /// Recommended action (if bound).
     pub action: Option<NeutralizationAction>,
     /// Timestamp of binding attempt.
-    pub attempted_at: DateTime<Utc>,
+    pub attempted_at: DateTime,
 }
 
 // ─── Antibody Repertoire ──────────────────────────────────────────────────
@@ -359,7 +359,7 @@ impl AntibodyRepertoire {
     /// Grounding: κ (Comparison) drives the matching, → (Causality) produces actions.
     pub fn bind(&self, antigen: &Antigen) -> Vec<BindingResult> {
         let mut results = Vec::new();
-        let now = Utc::now();
+        let now = DateTime::now();
 
         for epitope in &antigen.epitopes {
             // Look up antibodies whose paratope matches this epitope's signature
@@ -494,7 +494,7 @@ mod tests {
             name: name.to_string(),
             severity,
             epitopes,
-            detected_at: Utc::now(),
+            detected_at: DateTime::now(),
             source: "test".to_string(),
         }
     }
@@ -509,7 +509,7 @@ mod tests {
                 reason: format!("neutralize {name}"),
             },
             binding_count: 0,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             last_bound_at: None,
         }
     }

@@ -107,7 +107,7 @@ pub fn parse_frontmatter(content: &str) -> SkillFrontmatter {
         None => return SkillFrontmatter::default(),
     };
 
-    serde_yaml::from_str(yaml).unwrap_or_default()
+    serde_yml::from_str(yaml).unwrap_or_default()
 }
 
 pub fn check_required_fields(fm: &SkillFrontmatter, issues: &mut Vec<Issue>) {

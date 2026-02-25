@@ -43,7 +43,7 @@ impl GitMonitor {
 
         let timestamp_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
         let timestamp: i64 = timestamp_str.parse().unwrap_or(0);
-        let now = chrono::Utc::now().timestamp();
+        let now = nexcore_chrono::DateTime::now().timestamp();
 
         let days_since = (now - timestamp) / (24 * 3600);
 

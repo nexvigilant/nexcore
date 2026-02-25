@@ -438,7 +438,7 @@ impl EngineRequest {
             request_id,
             step,
             payload,
-            timestamp: chrono::Utc::now().to_rfc3339(),
+            timestamp: nexcore_chrono::DateTime::now().to_rfc3339(),
             correlation_id: None,
             metadata: HashMap::new(),
         }

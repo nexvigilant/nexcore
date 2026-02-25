@@ -7,7 +7,7 @@ use crate::ApiState;
 use crate::persistence::{EnrollmentRecord, KsbDomainRecord};
 use axum::extract::{Json, State};
 use axum::routing::{get, post};
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
@@ -29,8 +29,8 @@ pub struct Enrollment {
     pub user_id: String,
     pub course_id: String,
     pub progress: f64,
-    pub enrolled_at: DateTime<Utc>,
-    pub completed_at: Option<DateTime<Utc>>,
+    pub enrolled_at: DateTime,
+    pub completed_at: Option<DateTime>,
 }
 
 /// Request to enroll in a course
@@ -138,7 +138,7 @@ pub async fn enroll(
         user_id: req.user_id,
         course_id: req.course_id,
         progress: 0.0,
-        enrolled_at: Utc::now(),
+        enrolled_at: DateTime::now(),
         completed_at: None,
     };
 

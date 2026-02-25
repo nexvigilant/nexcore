@@ -6,7 +6,7 @@
 use crate::error::NotebookLmError;
 use crate::persistence;
 use crate::types::Session;
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 
 /// In-memory session store — persisted to JSON.
@@ -30,7 +30,7 @@ impl SessionStore {
 
     /// Create a new session for a notebook.
     pub fn create(&mut self, notebook_id: &str) -> Result<&Session, NotebookLmError> {
-        let now = Utc::now();
+        let now = DateTime::now();
         let session = Session {
             id: NexId::v4().to_string(),
             notebook_id: notebook_id.to_string(),
@@ -75,7 +75,7 @@ impl SessionStore {
             .ok_or_else(|| NotebookLmError::SessionNotFound(session_id.to_string()))?;
 
         session.message_count += 1;
-        session.last_activity = Utc::now();
+        session.last_activity = DateTime::now();
         self.save()
     }
 
@@ -101,7 +101,7 @@ impl SessionStore {
             .ok_or_else(|| NotebookLmError::SessionNotFound(id.to_string()))?;
 
         session.message_count = 0;
-        session.last_activity = Utc::now();
+        session.last_activity = DateTime::now();
         self.save()
     }
 

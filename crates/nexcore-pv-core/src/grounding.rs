@@ -85,6 +85,12 @@
 //! | BenefitRiskAssessment | Σ κ | Σ | T2-P | Ordered B/R assessment category |
 //! | ConclusionAction | Σ | Σ | T1 | Sum enum of conclusion actions |
 //! | DisproportionalityResult | ∃ N κ | ∃ | T2-P | Signal existence with numeric metrics |
+//! | SurvivalObservation | ∃ N | ∃ | T2-P | Event existence at a time point |
+//! | SurvivalPoint | N σ ∂ | N | T2-P | Numeric survival estimate with CI bounds |
+//! | KaplanMeierResult | σ N ∂ ∃ | σ | T2-C | Time-ordered survival curve |
+//! | CoxCoefficient | → N ∂ | → | T2-P | Causal hazard coefficient with CI |
+//! | CoxResult | → N κ σ | → | T2-C | Causal hazard regression result |
+//! | CumulativeIncidenceResult | σ N ∂ ∃ | σ | T2-C | Time-ordered cumulative event curve |
 
 use nexcore_lex_primitiva::grounding::GroundsTo;
 use nexcore_lex_primitiva::primitiva::{LexPrimitiva, PrimitiveComposition};
@@ -156,6 +162,13 @@ use crate::risk_management::{
 use crate::periodic_reporting::{
     BenefitRiskAssessment, ConclusionAction, PeriodicReport, PeriodicReportType, ReportSections,
     ReportState as PeriodicReportState, SignalStatus, SignalSummary,
+};
+
+// survival
+use crate::signals::survival::cox::{CoxCoefficient, CoxResult};
+use crate::signals::survival::cumulative_incidence::CumulativeIncidenceResult;
+use crate::signals::survival::kaplan_meier::{
+    KaplanMeierResult, SurvivalObservation, SurvivalPoint,
 };
 
 // ============================================================================
@@ -1280,6 +1293,114 @@ impl GroundsTo for PeriodicReport {
 }
 
 // ============================================================================
+// Survival Analysis Types
+// ============================================================================
+
+/// SurvivalObservation: A single time-to-event observation (event or censored).
+/// Tier: T2Primitive. Dominant: ∃ Existence.
+/// WHY: An observation records whether an event EXISTS at a given time.
+impl GroundsTo for SurvivalObservation {
+    fn primitive_composition() -> PrimitiveComposition {
+        PrimitiveComposition::new(vec![
+            LexPrimitiva::Existence, // ∃ -- event occurred or censored
+            LexPrimitiva::Quantity,  // N -- time value
+        ])
+        .with_dominant(LexPrimitiva::Existence, 0.80)
+    }
+}
+
+/// SurvivalPoint: A single point on the Kaplan-Meier curve.
+/// Tier: T2Primitive. Dominant: N Quantity.
+/// WHY: Numeric survival probability estimate at a time point with CI bounds.
+impl GroundsTo for SurvivalPoint {
+    fn primitive_composition() -> PrimitiveComposition {
+        PrimitiveComposition::new(vec![
+            LexPrimitiva::Quantity, // N -- survival probability, SE, n_risk
+            LexPrimitiva::Sequence, // σ -- ordered time point
+            LexPrimitiva::Boundary, // ∂ -- CI bounds
+        ])
+        .with_dominant(LexPrimitiva::Quantity, 0.80)
+    }
+}
+
+/// KaplanMeierResult: Complete non-parametric survival curve.
+/// Tier: T2Composite. Dominant: σ Sequence.
+/// WHY: An ordered sequence of survival probability estimates over time.
+/// The curve IS the sequence — time-ordered step function.
+impl GroundsTo for KaplanMeierResult {
+    fn primitive_composition() -> PrimitiveComposition {
+        PrimitiveComposition::new(vec![
+            LexPrimitiva::Sequence,  // σ -- time-ordered curve
+            LexPrimitiva::Quantity,  // N -- probabilities, counts
+            LexPrimitiva::Boundary,  // ∂ -- CI bounds
+            LexPrimitiva::Existence, // ∃ -- events vs censoring
+        ])
+        .with_dominant(LexPrimitiva::Sequence, 0.85)
+        .with_state_mode(StateMode::Accumulated)
+    }
+
+    fn state_mode() -> Option<StateMode> {
+        Some(StateMode::Accumulated)
+    }
+}
+
+/// CoxCoefficient: A single Cox regression coefficient with HR and CI.
+/// Tier: T2Primitive. Dominant: → Causality.
+/// WHY: A hazard ratio IS a causal effect estimate — drug → outcome.
+impl GroundsTo for CoxCoefficient {
+    fn primitive_composition() -> PrimitiveComposition {
+        PrimitiveComposition::new(vec![
+            LexPrimitiva::Causality, // → -- causal hazard effect
+            LexPrimitiva::Quantity,  // N -- numeric coefficient, HR, SE
+            LexPrimitiva::Boundary,  // ∂ -- CI bounds
+        ])
+        .with_dominant(LexPrimitiva::Causality, 0.80)
+    }
+}
+
+/// CoxResult: Complete Cox proportional hazards regression result.
+/// Tier: T2Composite. Dominant: → Causality.
+/// WHY: Cox regression estimates causal hazard relationships between
+/// covariates and time-to-event. Causality is the purpose of the model.
+impl GroundsTo for CoxResult {
+    fn primitive_composition() -> PrimitiveComposition {
+        PrimitiveComposition::new(vec![
+            LexPrimitiva::Causality,  // → -- causal hazard estimation
+            LexPrimitiva::Quantity,   // N -- coefficients, log-likelihood
+            LexPrimitiva::Comparison, // κ -- concordance, model fit
+            LexPrimitiva::Sequence,   // σ -- iterative convergence
+        ])
+        .with_dominant(LexPrimitiva::Causality, 0.80)
+        .with_state_mode(StateMode::Accumulated)
+    }
+
+    fn state_mode() -> Option<StateMode> {
+        Some(StateMode::Accumulated)
+    }
+}
+
+/// CumulativeIncidenceResult: Complement of Kaplan-Meier (1 - S(t)).
+/// Tier: T2Composite. Dominant: σ Sequence.
+/// WHY: Time-ordered cumulative probability curve. Same structure as KM
+/// but viewed from the event-occurrence perspective.
+impl GroundsTo for CumulativeIncidenceResult {
+    fn primitive_composition() -> PrimitiveComposition {
+        PrimitiveComposition::new(vec![
+            LexPrimitiva::Sequence,  // σ -- time-ordered curve
+            LexPrimitiva::Quantity,  // N -- incidence probabilities
+            LexPrimitiva::Boundary,  // ∂ -- CI bounds
+            LexPrimitiva::Existence, // ∃ -- event occurrence
+        ])
+        .with_dominant(LexPrimitiva::Sequence, 0.85)
+        .with_state_mode(StateMode::Accumulated)
+    }
+
+    fn state_mode() -> Option<StateMode> {
+        Some(StateMode::Accumulated)
+    }
+}
+
+// ============================================================================
 // T3 Domain-Specific (6+ unique primitives)
 // ============================================================================
 
@@ -1880,6 +2001,64 @@ mod tests {
             Some(LexPrimitiva::Sequence)
         );
         assert_eq!(PeriodicReport::tier(), Tier::T2Composite);
+    }
+
+    // ========================================================================
+    // Survival Analysis types
+    // ========================================================================
+
+    #[test]
+    fn test_survival_observation_grounding() {
+        assert_eq!(
+            SurvivalObservation::dominant_primitive(),
+            Some(LexPrimitiva::Existence)
+        );
+        assert_eq!(SurvivalObservation::tier(), Tier::T2Primitive);
+    }
+
+    #[test]
+    fn test_survival_point_grounding() {
+        assert_eq!(
+            SurvivalPoint::dominant_primitive(),
+            Some(LexPrimitiva::Quantity)
+        );
+        assert_eq!(SurvivalPoint::tier(), Tier::T2Primitive);
+    }
+
+    #[test]
+    fn test_kaplan_meier_result_grounding() {
+        assert_eq!(
+            KaplanMeierResult::dominant_primitive(),
+            Some(LexPrimitiva::Sequence)
+        );
+        assert_eq!(KaplanMeierResult::tier(), Tier::T2Composite);
+    }
+
+    #[test]
+    fn test_cox_coefficient_grounding() {
+        assert_eq!(
+            CoxCoefficient::dominant_primitive(),
+            Some(LexPrimitiva::Causality)
+        );
+        assert_eq!(CoxCoefficient::tier(), Tier::T2Primitive);
+    }
+
+    #[test]
+    fn test_cox_result_grounding() {
+        assert_eq!(
+            CoxResult::dominant_primitive(),
+            Some(LexPrimitiva::Causality)
+        );
+        assert_eq!(CoxResult::tier(), Tier::T2Composite);
+    }
+
+    #[test]
+    fn test_cumulative_incidence_result_grounding() {
+        assert_eq!(
+            CumulativeIncidenceResult::dominant_primitive(),
+            Some(LexPrimitiva::Sequence)
+        );
+        assert_eq!(CumulativeIncidenceResult::tier(), Tier::T2Composite);
     }
 
     // ========================================================================

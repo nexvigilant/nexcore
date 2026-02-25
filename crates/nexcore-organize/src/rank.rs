@@ -5,7 +5,7 @@
 //! Scores each entry by recency, size, extension relevance, and depth,
 //! then sorts by composite score (highest first).
 
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 
 use crate::config::{OrganizeConfig, RankingConfig};
 use crate::error::OrganizeResult;
@@ -53,7 +53,7 @@ pub struct RankedInventory {
     /// Entries sorted by composite score (descending).
     pub entries: Vec<RankedEntry>,
     /// Observation timestamp (carried forward).
-    pub observed_at: chrono::DateTime<Utc>,
+    pub observed_at: nexcore_chrono::DateTime,
 }
 
 // ============================================================================
@@ -62,7 +62,7 @@ pub struct RankedInventory {
 
 /// Rank all entries in the inventory by composite score.
 pub fn rank(inventory: Inventory, config: &OrganizeConfig) -> OrganizeResult<RankedInventory> {
-    let now = Utc::now();
+    let now = DateTime::now();
     let ranking = &config.ranking;
 
     // Compute max values for normalization
@@ -114,7 +114,7 @@ pub fn rank(inventory: Inventory, config: &OrganizeConfig) -> OrganizeResult<Ran
 fn compute_score(
     meta: &EntryMeta,
     ranking: &RankingConfig,
-    now: chrono::DateTime<Utc>,
+    now: nexcore_chrono::DateTime,
     max_size: u64,
     max_depth: usize,
 ) -> ScoreBreakdown {
@@ -138,7 +138,7 @@ fn compute_score(
 }
 
 /// Recency: exponential decay based on age in days.
-fn recency_score(meta: &EntryMeta, now: chrono::DateTime<Utc>) -> f64 {
+fn recency_score(meta: &EntryMeta, now: nexcore_chrono::DateTime) -> f64 {
     let age_days = (now - meta.modified).num_days().max(0) as f64;
     // Half-life of 30 days
     (-age_days / 30.0_f64).exp()
@@ -188,7 +188,7 @@ fn depth_score(meta: &EntryMeta, max_depth: usize) -> f64 {
 mod tests {
     use super::*;
     use crate::observe::EntryMeta;
-    use chrono::Duration;
+    use nexcore_chrono::Duration;
     use std::path::PathBuf;
 
     fn make_meta(name: &str, ext: &str, size: u64, days_old: i64, depth: usize) -> EntryMeta {
@@ -196,7 +196,7 @@ mod tests {
             path: PathBuf::from(format!("/tmp/{name}.{ext}")),
             is_dir: false,
             size_bytes: size,
-            modified: Utc::now() - Duration::days(days_old),
+            modified: DateTime::now() - Duration::days(days_old),
             extension: ext.to_string(),
             depth,
             name: format!("{name}.{ext}"),
@@ -206,14 +206,14 @@ mod tests {
     #[test]
     fn test_recency_score_recent() {
         let meta = make_meta("fresh", "rs", 100, 0, 1);
-        let score = recency_score(&meta, Utc::now());
+        let score = recency_score(&meta, DateTime::now());
         assert!(score > 0.9);
     }
 
     #[test]
     fn test_recency_score_old() {
         let meta = make_meta("old", "rs", 100, 90, 1);
-        let score = recency_score(&meta, Utc::now());
+        let score = recency_score(&meta, DateTime::now());
         assert!(score < 0.1);
     }
 
@@ -247,7 +247,7 @@ mod tests {
                 make_meta("fresh_rust", "rs", 1000, 0, 1),
             ],
             excluded_count: 0,
-            observed_at: Utc::now(),
+            observed_at: DateTime::now(),
         };
 
         let config = OrganizeConfig::default_for("/tmp");

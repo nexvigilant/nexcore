@@ -4,7 +4,7 @@ use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::sync::Mutex;
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use tokio::sync::Notify;
 
 use crate::error::{OrcError, OrcResult};
@@ -15,7 +15,7 @@ use crate::types::Priority;
 struct WorkItem<T> {
     payload: T,
     priority: Priority,
-    _enqueued_at: DateTime<Utc>,
+    _enqueued_at: DateTime,
     sequence: u64,
 }
 
@@ -129,7 +129,7 @@ impl<T: Send + 'static> BoundedPriorityQueue<T> {
         inner.heap.push(WorkItem {
             payload: item,
             priority,
-            _enqueued_at: Utc::now(),
+            _enqueued_at: DateTime::now(),
             sequence: seq,
         });
         drop(inner);

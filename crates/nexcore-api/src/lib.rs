@@ -109,11 +109,12 @@ fn setup_api_routes(state: ApiState) -> Router<ApiState> {
         .nest("/pv", routes::pv::router())
         .nest("/vigilance", routes::vigilance::router())
         .nest("/academy", routes::academy::router())
+        .nest("/circles", routes::circles::router())
+        .nest("/publications", routes::publications::router())
+        .nest("/collaborations", routes::publications::collab_router())
         .nest(
             "/community",
-            routes::community::router()
-                .nest("/circles", routes::circles::router())
-                .nest("/messages", routes::messages::router()),
+            routes::community::router().nest("/messages", routes::messages::router()),
         )
         .nest("/ventures", routes::ventures::router())
         .nest("/guardian", routes::guardian::router())
@@ -146,6 +147,10 @@ fn setup_api_routes(state: ApiState) -> Router<ApiState> {
         .route(
             "/guardian/ws/bridge",
             get(routes::guardian_ws::ws_bridge_handler),
+        )
+        .route(
+            "/terminal/ws",
+            get(routes::terminal_ws::ws_terminal_handler),
         )
         .layer(middleware::from_fn(metering::metering_layer))
         .layer(middleware::from_fn(auth::require_api_key))
@@ -357,8 +362,42 @@ async fn openapi_json_handler(Query(params): Query<OpenApiQuery>) -> Response {
         routes::community::list_posts,
         routes::community::create_post,
         // Circles
+        routes::circles::create_circle,
         routes::circles::list_circles,
+        routes::circles::get_circle,
+        routes::circles::update_circle,
+        routes::circles::archive_circle,
+        routes::circles::my_circles,
+        routes::circles::list_org_circles,
+        routes::circles::discover_circles,
         routes::circles::join_circle,
+        routes::circles::invite_members,
+        routes::circles::update_member,
+        routes::circles::remove_member,
+        routes::circles::list_members,
+        routes::circles::get_feed,
+        routes::circles::post_to_feed,
+        // Projects & Deliverables
+        routes::projects::create_project,
+        routes::projects::list_projects,
+        routes::projects::get_project,
+        routes::projects::update_project,
+        routes::projects::advance_stage,
+        routes::projects::create_deliverable,
+        routes::projects::list_deliverables,
+        routes::projects::update_deliverable,
+        routes::projects::review_deliverable,
+        // Project Tools (MCP integration)
+        routes::project_tools::signal_detect,
+        routes::project_tools::faers_query,
+        routes::project_tools::literature_search,
+        // Publications & Collaboration
+        routes::publications::publish_deliverable,
+        routes::publications::list_publications,
+        routes::publications::list_circle_publications,
+        routes::publications::request_collaboration,
+        routes::publications::list_collaborations,
+        routes::publications::update_collaboration,
         // Messages
         routes::messages::list_messages,
         routes::messages::send_message,
@@ -470,7 +509,14 @@ async fn openapi_json_handler(Query(params): Query<OpenApiQuery>) -> Response {
         routes::community::CreatePostRequest,
         // Circles
         routes::circles::Circle,
+        routes::circles::CreateCircleRequest,
+        routes::circles::UpdateCircleRequest,
+        routes::circles::CircleMember,
         routes::circles::JoinRequest,
+        routes::circles::InviteRequest,
+        routes::circles::UpdateMemberRequest,
+        routes::circles::FeedEntry,
+        routes::circles::CreateFeedEntryRequest,
         // Messages
         routes::messages::Message,
         routes::messages::SendMessageRequest,
@@ -660,6 +706,10 @@ async fn openapi_json_handler(Query(params): Query<OpenApiQuery>) -> Response {
         (name = "vigil", description = "Vigil orchestrator - event bus, memory, LLM stats"),
         (name = "skills", description = "Skill registry, validation, and taxonomy"),
         (name = "community", description = "Social networking and knowledge sharing"),
+        (name = "circles", description = "R&D circles — collaborative research working units"),
+        (name = "projects", description = "Projects & Deliverables — R&D workspaces within circles with stage gates"),
+        (name = "project-tools", description = "Project Tools — MCP tool integration (signal detection, FAERS, literature) within project context"),
+        (name = "publications", description = "Publications & Collaboration — inter-circle research sharing and cross-pollination"),
         (name = "ventures", description = "Strategic partnerships and investments"),
         (name = "brain", description = "Working memory - sessions, artifacts, code tracking"),
         (name = "pvdsl", description = "PVDSL - Pharmacovigilance Domain-Specific Language compiler and runtime"),

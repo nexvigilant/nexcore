@@ -53,7 +53,7 @@ pub mod response_durations {
 
 use std::sync::Arc;
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use tracing::{Instrument, instrument};
 
@@ -374,7 +374,7 @@ pub struct LoopIterationResult {
     /// Iteration ID
     pub iteration_id: String,
     /// Timestamp
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Number of signals detected
     pub signals_detected: usize,
     /// Number of actions taken
@@ -420,7 +420,7 @@ pub struct HomeostasisLoop {
     /// Iteration counter
     iteration_count: u64,
     /// Last tick timestamp
-    last_tick: Option<DateTime<Utc>>,
+    last_tick: Option<DateTime>,
     /// Meta-vigilance monitor
     pub meta_vigilance: MetaVigilance,
     /// Current loop state (Running, Paused, ShuttingDown, Stopped)
@@ -578,7 +578,7 @@ impl HomeostasisLoop {
                         LoopState::Running => "running", // unreachable but exhaustive
                     }
                 ),
-                timestamp: Utc::now(),
+                timestamp: DateTime::now(),
                 signals_detected: 0,
                 actions_taken: 0,
                 results: Vec::new(),
@@ -599,7 +599,7 @@ impl HomeostasisLoop {
     /// Inner implementation of tick, instrumented via `Instrument` trait.
     async fn tick_inner(&mut self) -> LoopIterationResult {
         let start = std::time::Instant::now();
-        let now = Utc::now();
+        let now = DateTime::now();
 
         // Decay amplification based on elapsed time
         if let Some(last) = self.last_tick {
@@ -746,7 +746,7 @@ impl HomeostasisLoop {
 
                 store.append(
                     &(super::feedback::FeedbackRecord {
-                        timestamp: chrono::Utc::now(),
+                        timestamp: nexcore_chrono::DateTime::now(),
                         signal_pattern,
                         severity,
                         decision: format!("{action:?}"),
@@ -853,7 +853,7 @@ impl HomeostasisLoop {
         if let Some(ref store) = self.feedback_store {
             store.append(
                 &(super::feedback::FeedbackRecord {
-                    timestamp: chrono::Utc::now(),
+                    timestamp: nexcore_chrono::DateTime::now(),
                     signal_pattern: "shutdown".to_string(),
                     severity: "Info".to_string(),
                     decision: "Shutdown".to_string(),

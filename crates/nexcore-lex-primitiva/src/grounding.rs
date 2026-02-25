@@ -291,6 +291,10 @@ impl<T> GroundsTo for std::sync::Mutex<T> {
     }
 }
 
+#[allow(
+    clippy::disallowed_types,
+    reason = "Implementing GroundsTo for std HashMap; this is a trait impl, not usage in our own code"
+)]
 impl<K, V> GroundsTo for std::collections::HashMap<K, V> {
     fn primitive_composition() -> PrimitiveComposition {
         PrimitiveComposition::new(vec![
@@ -307,6 +311,10 @@ impl<K, V> GroundsTo for std::collections::HashMap<K, V> {
     }
 }
 
+#[allow(
+    clippy::disallowed_types,
+    reason = "Implementing GroundsTo for std HashSet; this is a trait impl, not usage in our own code"
+)]
 impl<T> GroundsTo for std::collections::HashSet<T> {
     fn primitive_composition() -> PrimitiveComposition {
         PrimitiveComposition::new(vec![

@@ -15,9 +15,7 @@ use std::time::Instant;
 use nexcore_error::{Context, Result};
 use tracing;
 
-use nexcore_faers_etl::{
-    SignalDetectionResult, filter_signals, run_full_pipeline, sink_signals_parquet,
-};
+use nexcore_faers_etl::{SignalDetectionResult, filter_signals, run_full_pipeline, sink_signals};
 
 use crate::config::PharosConfig;
 use crate::report::{SignalEntry, SurveillanceReport};
@@ -227,15 +225,15 @@ impl PharosPipeline {
     ) -> Result<()> {
         std::fs::create_dir_all(&self.config.output_dir)?;
 
-        // Write all signals to Parquet
-        let parquet_path = self.config.output_dir.join("signals.parquet");
-        let row_count = sink_signals_parquet(all_results, &parquet_path)
-            .context("Failed to write signals Parquet")?;
+        // Write all signals to JSON
+        let signals_path = self.config.output_dir.join("signals.json");
+        let row_count =
+            sink_signals(all_results, &signals_path).context("Failed to write signals JSON")?;
 
         tracing::info!(
             rows = row_count.value(),
-            path = %parquet_path.display(),
-            "PHAROS Stage 6: Signals persisted to Parquet"
+            path = %signals_path.display(),
+            "PHAROS Stage 6: Signals persisted"
         );
 
         // Report will be saved by the caller after finalization

@@ -65,6 +65,64 @@ use nexcore_error::Error;
 use serde::{Deserialize, Serialize};
 
 // ============================================================================
+// Log Base
+// ============================================================================
+
+/// Logarithm base for entropy computation.
+///
+/// Controls the unit of information measurement. The canonical base is `Bits`
+/// (log₂, Shannon's original formulation). Other bases are unit conversions:
+/// 1 nat = 1/ln(2) bits ≈ 1.4427 bits.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum LogBase {
+    /// Log base 2 — Shannon entropy in bits (DEFAULT)
+    Bits,
+    /// Natural log — entropy in nats
+    Nats,
+    /// Log base 10 — entropy in hartleys/bans
+    Hartleys,
+}
+
+impl LogBase {
+    /// Compute the logarithm of `x` in this base.
+    #[must_use]
+    pub fn log(self, x: f64) -> f64 {
+        match self {
+            LogBase::Bits => x.log2(),
+            LogBase::Nats => x.ln(),
+            LogBase::Hartleys => x.log10(),
+        }
+    }
+
+    /// Unit name for display purposes.
+    #[must_use]
+    pub const fn unit_name(self) -> &'static str {
+        match self {
+            LogBase::Bits => "bits",
+            LogBase::Nats => "nats",
+            LogBase::Hartleys => "hartleys",
+        }
+    }
+
+    /// Conversion factor from bits to this base.
+    /// Multiply a bits value by this factor to convert.
+    #[must_use]
+    pub fn from_bits_factor(self) -> f64 {
+        match self {
+            LogBase::Bits => 1.0,
+            LogBase::Nats => std::f64::consts::LN_2,
+            LogBase::Hartleys => 2.0_f64.log10(),
+        }
+    }
+}
+
+impl Default for LogBase {
+    fn default() -> Self {
+        LogBase::Bits
+    }
+}
+
+// ============================================================================
 // Error Type
 // ============================================================================
 
@@ -504,20 +562,6 @@ pub fn joint_entropy(joint: &[Vec<f64>]) -> Result<f64, EntropyError> {
 /// # Errors
 ///
 /// Returns any error that [`joint_entropy`] would return.
-///
-/// # Examples
-///
-/// ```rust
-/// use nexcore_primitives::entropy::mutual_information;
-///
-/// // Independent 2×2 uniform → I ≈ 0
-/// let joint = vec![
-///     vec![0.25, 0.25],
-///     vec![0.25, 0.25],
-/// ];
-/// let mi = mutual_information(&joint).unwrap();
-/// assert!(mi.abs() < 1e-10);
-/// ```
 pub fn mutual_information(joint: &[Vec<f64>]) -> Result<f64, EntropyError> {
     // Validate the joint distribution (rectangularity + sum check) via joint_entropy.
     let h_xy = joint_entropy(joint)?;
@@ -550,6 +594,312 @@ pub fn mutual_information(joint: &[Vec<f64>]) -> Result<f64, EntropyError> {
 
     Ok(mi)
 }
+
+// ============================================================================
+// Log-Base Parameterized Variants (B.1)
+// ============================================================================
+
+/// Shannon entropy with configurable logarithm base.
+///
+/// Equivalent to [`shannon_entropy`] when `base` is [`LogBase::Bits`].
+/// The `normalized` field in the result is always computed using the same base.
+pub fn shannon_entropy_with_base(
+    probabilities: &[f64],
+    base: LogBase,
+) -> Result<EntropyResult, EntropyError> {
+    validate_distribution(probabilities)?;
+    entropy_core(probabilities, base)
+}
+
+/// KL divergence with configurable logarithm base.
+///
+/// Equivalent to [`kl_divergence`] when `base` is [`LogBase::Bits`].
+pub fn kl_divergence_with_base(p: &[f64], q: &[f64], base: LogBase) -> Result<f64, EntropyError> {
+    if p.len() != q.len() {
+        return Err(EntropyError::LengthMismatch(p.len(), q.len()));
+    }
+    validate_distribution(p)?;
+    validate_distribution(q)?;
+
+    let mut divergence = 0.0_f64;
+    for (index, (&pi, &qi)) in p.iter().zip(q.iter()).enumerate() {
+        if pi == 0.0 {
+            continue;
+        }
+        if qi == 0.0 {
+            return Err(EntropyError::KlUndefined { index });
+        }
+        divergence += pi * base.log(pi / qi);
+    }
+    Ok(divergence)
+}
+
+/// Joint entropy with configurable logarithm base.
+///
+/// Equivalent to [`joint_entropy`] when `base` is [`LogBase::Bits`].
+pub fn joint_entropy_with_base(joint: &[Vec<f64>], base: LogBase) -> Result<f64, EntropyError> {
+    if joint.is_empty() {
+        return Err(EntropyError::InvalidJoint);
+    }
+    let ncols = joint[0].len();
+    if ncols == 0 {
+        return Err(EntropyError::InvalidJoint);
+    }
+    if joint.iter().any(|row| row.len() != ncols) {
+        return Err(EntropyError::InvalidJoint);
+    }
+    let flat: Vec<f64> = joint.iter().flat_map(|row| row.iter().copied()).collect();
+    for &p in &flat {
+        if !(0.0..=1.0).contains(&p) {
+            return Err(EntropyError::InvalidProbability(p));
+        }
+    }
+    let total: f64 = flat.iter().sum();
+    if (total - 1.0).abs() > SUM_TOLERANCE {
+        return Err(EntropyError::InvalidDistribution(total));
+    }
+    let h = flat
+        .iter()
+        .filter(|&&p| p > 0.0)
+        .map(|&p| -p * base.log(p))
+        .sum::<f64>();
+    Ok(h)
+}
+
+/// Mutual information with configurable logarithm base.
+///
+/// Equivalent to [`mutual_information`] when `base` is [`LogBase::Bits`].
+pub fn mutual_information_with_base(
+    joint: &[Vec<f64>],
+    base: LogBase,
+) -> Result<f64, EntropyError> {
+    let h_xy = joint_entropy_with_base(joint, base)?;
+    let nrows = joint.len();
+    let ncols = joint[0].len();
+
+    let mut marginal_x: Vec<f64> = vec![0.0; nrows];
+    for (i, row) in joint.iter().enumerate() {
+        marginal_x[i] = row.iter().sum::<f64>();
+    }
+    let mut marginal_y: Vec<f64> = vec![0.0; ncols];
+    for row in joint {
+        for (j, &p) in row.iter().enumerate() {
+            marginal_y[j] += p;
+        }
+    }
+    let h_x = entropy_core_unchecked(&marginal_x, base)?.bits;
+    let h_y = entropy_core_unchecked(&marginal_y, base)?.bits;
+    let mi = (h_x + h_y - h_xy).max(0.0);
+    Ok(mi)
+}
+
+/// Entropy from counts with configurable logarithm base.
+///
+/// Equivalent to [`entropy_from_counts`] when `base` is [`LogBase::Bits`].
+pub fn entropy_from_counts_with_base(
+    counts: &[u64],
+    base: LogBase,
+) -> Result<EntropyResult, EntropyError> {
+    if counts.is_empty() {
+        return Err(EntropyError::EmptyCounts);
+    }
+    let total: u64 = counts.iter().sum();
+    if total == 0 {
+        return Err(EntropyError::EmptyCounts);
+    }
+    let total_f = total as f64;
+    let probabilities: Vec<f64> = counts.iter().map(|&c| c as f64 / total_f).collect();
+    entropy_core_unchecked(&probabilities, base)
+}
+
+/// Internal entropy computation with configurable base.
+fn entropy_core(probabilities: &[f64], base: LogBase) -> Result<EntropyResult, EntropyError> {
+    if probabilities.is_empty() {
+        return Err(EntropyError::EmptyDistribution);
+    }
+    let n = probabilities.len();
+    let h = probabilities
+        .iter()
+        .filter(|&&p| p > 0.0)
+        .map(|&p| -p * base.log(p))
+        .sum::<f64>();
+    let normalized = if n <= 1 {
+        0.0
+    } else {
+        let max_h = base.log(n as f64);
+        if max_h == 0.0 { 0.0 } else { h / max_h }
+    };
+    Ok(EntropyResult {
+        bits: h, // NOTE: field name is "bits" for backward compat, actual unit depends on base
+        normalized,
+        sample_count: n,
+    })
+}
+
+/// Internal entropy computation (unchecked) with configurable base.
+fn entropy_core_unchecked(
+    probabilities: &[f64],
+    base: LogBase,
+) -> Result<EntropyResult, EntropyError> {
+    if probabilities.is_empty() {
+        return Err(EntropyError::EmptyDistribution);
+    }
+    let n = probabilities.len();
+    let h = probabilities
+        .iter()
+        .filter(|&&p| p > 0.0)
+        .map(|&p| -p * base.log(p))
+        .sum::<f64>();
+    let normalized = if n <= 1 {
+        0.0
+    } else {
+        let max_h = base.log(n as f64);
+        if max_h == 0.0 { 0.0 } else { h / max_h }
+    };
+    Ok(EntropyResult {
+        bits: h,
+        normalized,
+        sample_count: n,
+    })
+}
+
+// ============================================================================
+// Missing Entropy Functions (B.2)
+// ============================================================================
+
+/// Cross-entropy: H(P,Q) = -Σ pᵢ·log(qᵢ)
+///
+/// Measures the average number of bits (or nats/hartleys) needed to encode
+/// samples from distribution P using a code optimized for distribution Q.
+///
+/// Cross-entropy is always >= H(P). The difference H(P,Q) - H(P) = D_KL(P||Q).
+///
+/// # Errors
+///
+/// - [`EntropyError::LengthMismatch`] — P and Q have different lengths.
+/// - [`EntropyError::KlUndefined`] — q[i] = 0 where p[i] > 0.
+/// - Standard distribution validation errors.
+pub fn cross_entropy(p: &[f64], q: &[f64], base: LogBase) -> Result<f64, EntropyError> {
+    if p.len() != q.len() {
+        return Err(EntropyError::LengthMismatch(p.len(), q.len()));
+    }
+    validate_distribution(p)?;
+    validate_distribution(q)?;
+
+    let mut ce = 0.0_f64;
+    for (index, (&pi, &qi)) in p.iter().zip(q.iter()).enumerate() {
+        if pi == 0.0 {
+            continue;
+        }
+        if qi == 0.0 {
+            return Err(EntropyError::KlUndefined { index });
+        }
+        ce -= pi * base.log(qi);
+    }
+    Ok(ce)
+}
+
+/// Conditional entropy: H(Y|X) = H(X,Y) - H(X)
+///
+/// Measures the remaining uncertainty about Y given knowledge of X.
+///
+/// Takes a joint probability matrix (rows = X, columns = Y) and uses the row
+/// marginals as the distribution of X.
+///
+/// # Errors
+///
+/// Returns any error that [`joint_entropy_with_base`] would return.
+pub fn conditional_entropy(joint: &[Vec<f64>], base: LogBase) -> Result<f64, EntropyError> {
+    let h_xy = joint_entropy_with_base(joint, base)?;
+
+    // Row marginals -> distribution of X
+    let marginal_x: Vec<f64> = joint.iter().map(|row| row.iter().sum::<f64>()).collect();
+    let h_x = entropy_core_unchecked(&marginal_x, base)?.bits;
+
+    // H(Y|X) = H(X,Y) - H(X), clamped to 0 for floating-point safety
+    Ok((h_xy - h_x).max(0.0))
+}
+
+/// Normalized entropy: H(X) / H_max = H(X) / log(n)
+///
+/// Returns a value in [0, 1] where 0 = perfectly ordered (deterministic)
+/// and 1 = maximum disorder (uniform distribution).
+///
+/// This is equivalent to `EntropyResult::normalized`, but provided as a
+/// standalone function for convenience when only the normalized value is needed.
+///
+/// # Errors
+///
+/// Standard distribution validation errors.
+pub fn normalized_entropy(distribution: &[f64], base: LogBase) -> Result<f64, EntropyError> {
+    let result = shannon_entropy_with_base(distribution, base)?;
+    Ok(result.normalized)
+}
+
+// ============================================================================
+// Measured Entropy (B.4)
+// ============================================================================
+
+/// Shannon entropy with confidence based on sample size.
+///
+/// Takes raw counts and returns `Measured<EntropyResult>` where confidence
+/// is calibrated by the ratio of total observations to category count:
+/// confidence = clamp(1.0 - k/total, 0.05, 0.99) where k = number of categories.
+///
+/// Rationale: need at least k observations for each category to have one
+/// expected count per bin. Small samples produce unreliable entropy estimates.
+///
+/// # Errors
+///
+/// Returns [`EntropyError::EmptyCounts`] if counts is empty or all zeros.
+pub fn shannon_entropy_measured(
+    counts: &[u64],
+) -> Result<crate::Measured<EntropyResult>, EntropyError> {
+    let result = entropy_from_counts(counts)?;
+    let total: u64 = counts.iter().sum();
+    let k = counts.len() as f64;
+    let confidence = (1.0 - k / total as f64).clamp(0.05, 0.99);
+    Ok(crate::Measured::new(
+        result,
+        crate::Confidence::new(confidence),
+    ))
+}
+
+/// Shannon entropy measured with configurable base.
+///
+/// Combines [`entropy_from_counts_with_base`] with sample-size confidence.
+pub fn shannon_entropy_measured_with_base(
+    counts: &[u64],
+    base: LogBase,
+) -> Result<crate::Measured<EntropyResult>, EntropyError> {
+    let result = entropy_from_counts_with_base(counts, base)?;
+    let total: u64 = counts.iter().sum();
+    let k = counts.len() as f64;
+    let confidence = (1.0 - k / total as f64).clamp(0.05, 0.99);
+    Ok(crate::Measured::new(
+        result,
+        crate::Confidence::new(confidence),
+    ))
+}
+
+// ============================================================================
+// PMI / Entropy Relationship Documentation (B.3)
+// ============================================================================
+
+// The Information Component (IC) used in BCPNN signal detection is
+// mathematically equivalent to Pointwise Mutual Information (PMI) with
+// Bayesian shrinkage (k=0.5 additive smoothing):
+//
+//   IC(drug, event) = log2((observed + 0.5) / (expected + 0.5))
+//
+// This is the pointwise form of mutual information. The aggregate MI computed
+// by `mutual_information()` is the expected value of PMI across all pairs:
+//
+//   I(X; Y) = E[PMI(x, y)] = sum p(x,y) * log2(p(x,y) / (p(x)*p(y)))
+//
+// The IC implementation in nexcore-pv-core/src/signals/bayesian/ic.rs
+// computes the per-pair pointwise form with signal detection-specific smoothing,
+// while this module computes the aggregate form from full distributions.
 
 // ============================================================================
 // Tests
@@ -927,5 +1277,257 @@ mod tests {
         // MI should be positive (correlation present) and less than H(X) = 1 bit
         assert!(mi > 0.0);
         assert!(mi < 1.0);
+    }
+
+    // ================================================================
+    // B.1 — LogBase parameterization tests
+    // ================================================================
+
+    #[test]
+    fn test_logbase_bits_matches_original() {
+        let dist = [0.5, 0.5];
+        let original = shannon_entropy(&dist).unwrap();
+        let with_base = shannon_entropy_with_base(&dist, LogBase::Bits).unwrap();
+        assert!((original.bits - with_base.bits).abs() < 1e-10);
+        assert!((original.normalized - with_base.normalized).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_logbase_nats_conversion() {
+        // 1 bit = ln(2) nats ≈ 0.6931
+        let dist = [0.5, 0.5];
+        let bits = shannon_entropy_with_base(&dist, LogBase::Bits).unwrap();
+        let nats = shannon_entropy_with_base(&dist, LogBase::Nats).unwrap();
+        let expected_nats = bits.bits * std::f64::consts::LN_2;
+        assert!(
+            (nats.bits - expected_nats).abs() < 1e-10,
+            "nats={}, expected={}",
+            nats.bits,
+            expected_nats
+        );
+    }
+
+    #[test]
+    fn test_logbase_hartleys_conversion() {
+        // 1 bit = log10(2) hartleys ≈ 0.3010
+        let dist = [0.5, 0.5];
+        let bits = shannon_entropy_with_base(&dist, LogBase::Bits).unwrap();
+        let hartleys = shannon_entropy_with_base(&dist, LogBase::Hartleys).unwrap();
+        let expected_hartleys = bits.bits * 2.0_f64.log10();
+        assert!(
+            (hartleys.bits - expected_hartleys).abs() < 1e-10,
+            "hartleys={}, expected={}",
+            hartleys.bits,
+            expected_hartleys
+        );
+    }
+
+    #[test]
+    fn test_logbase_normalized_invariant() {
+        // Normalized entropy should be the same regardless of base
+        let dist = [0.3, 0.7];
+        let bits_n = shannon_entropy_with_base(&dist, LogBase::Bits)
+            .unwrap()
+            .normalized;
+        let nats_n = shannon_entropy_with_base(&dist, LogBase::Nats)
+            .unwrap()
+            .normalized;
+        let hart_n = shannon_entropy_with_base(&dist, LogBase::Hartleys)
+            .unwrap()
+            .normalized;
+        assert!((bits_n - nats_n).abs() < 1e-10);
+        assert!((bits_n - hart_n).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_kl_divergence_with_base_nats() {
+        let p = vec![0.9, 0.1];
+        let q = vec![0.5, 0.5];
+        let kl_bits = kl_divergence(&p, &q).unwrap();
+        let kl_nats = kl_divergence_with_base(&p, &q, LogBase::Nats).unwrap();
+        let expected_nats = kl_bits * std::f64::consts::LN_2;
+        assert!((kl_nats - expected_nats).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_entropy_from_counts_with_base() {
+        let counts = [10u64, 10];
+        let bits = entropy_from_counts(&counts).unwrap();
+        let nats = entropy_from_counts_with_base(&counts, LogBase::Nats).unwrap();
+        let expected_nats = bits.bits * std::f64::consts::LN_2;
+        assert!((nats.bits - expected_nats).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_logbase_default_is_bits() {
+        assert_eq!(LogBase::default(), LogBase::Bits);
+    }
+
+    #[test]
+    fn test_logbase_unit_names() {
+        assert_eq!(LogBase::Bits.unit_name(), "bits");
+        assert_eq!(LogBase::Nats.unit_name(), "nats");
+        assert_eq!(LogBase::Hartleys.unit_name(), "hartleys");
+    }
+
+    #[test]
+    fn test_logbase_from_bits_factor() {
+        assert!((LogBase::Bits.from_bits_factor() - 1.0).abs() < 1e-10);
+        assert!((LogBase::Nats.from_bits_factor() - std::f64::consts::LN_2).abs() < 1e-10);
+        assert!((LogBase::Hartleys.from_bits_factor() - 2.0_f64.log10()).abs() < 1e-10);
+    }
+
+    // ================================================================
+    // B.2 — Missing entropy function tests
+    // ================================================================
+
+    #[test]
+    fn test_cross_entropy_identical_equals_shannon() {
+        // H(P,P) = H(P) for identical distributions
+        let p = vec![0.5, 0.5];
+        let ce = cross_entropy(&p, &p, LogBase::Bits).unwrap();
+        let h = shannon_entropy(&p).unwrap().bits;
+        assert!((ce - h).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_cross_entropy_ge_shannon() {
+        // H(P,Q) >= H(P) always (Gibbs inequality)
+        let p = vec![0.9, 0.1];
+        let q = vec![0.5, 0.5];
+        let ce = cross_entropy(&p, &q, LogBase::Bits).unwrap();
+        let h = shannon_entropy(&p).unwrap().bits;
+        assert!(ce >= h - 1e-10, "cross_entropy={ce} < shannon={h}");
+    }
+
+    #[test]
+    fn test_cross_entropy_minus_shannon_equals_kl() {
+        // H(P,Q) - H(P) = D_KL(P||Q)
+        let p = vec![0.9, 0.1];
+        let q = vec![0.5, 0.5];
+        let ce = cross_entropy(&p, &q, LogBase::Bits).unwrap();
+        let h = shannon_entropy(&p).unwrap().bits;
+        let kl = kl_divergence(&p, &q).unwrap();
+        assert!((ce - h - kl).abs() < 1e-10, "CE-H={}, KL={kl}", ce - h);
+    }
+
+    #[test]
+    fn test_cross_entropy_with_nats() {
+        let p = vec![0.5, 0.5];
+        let ce_bits = cross_entropy(&p, &p, LogBase::Bits).unwrap();
+        let ce_nats = cross_entropy(&p, &p, LogBase::Nats).unwrap();
+        let expected_nats = ce_bits * std::f64::consts::LN_2;
+        assert!((ce_nats - expected_nats).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_cross_entropy_length_mismatch() {
+        let p = vec![0.5, 0.5];
+        let q = vec![0.33, 0.33, 0.34];
+        let err = cross_entropy(&p, &q, LogBase::Bits).unwrap_err();
+        assert_eq!(err, EntropyError::LengthMismatch(2, 3));
+    }
+
+    #[test]
+    fn test_conditional_entropy_independent() {
+        // Independent: H(Y|X) = H(Y)
+        let joint = vec![vec![0.25, 0.25], vec![0.25, 0.25]];
+        let h_yx = conditional_entropy(&joint, LogBase::Bits).unwrap();
+        // H(Y) = 1.0 bit for Bernoulli(0.5)
+        assert!((h_yx - 1.0).abs() < 1e-10, "H(Y|X) = {h_yx}");
+    }
+
+    #[test]
+    fn test_conditional_entropy_perfectly_correlated() {
+        // Perfectly correlated: H(Y|X) = 0
+        let joint = vec![vec![0.5, 0.0], vec![0.0, 0.5]];
+        let h_yx = conditional_entropy(&joint, LogBase::Bits).unwrap();
+        assert!(h_yx.abs() < 1e-10, "H(Y|X) should be 0, got {h_yx}");
+    }
+
+    #[test]
+    fn test_conditional_entropy_chain_rule() {
+        // Chain rule: H(X,Y) = H(X) + H(Y|X)
+        let joint = vec![vec![0.4, 0.1], vec![0.1, 0.4]];
+        let h_xy = joint_entropy(&joint).unwrap();
+        let marginal_x: Vec<f64> = joint.iter().map(|row| row.iter().sum::<f64>()).collect();
+        let h_x = shannon_entropy_unchecked(&marginal_x).unwrap().bits;
+        let h_yx = conditional_entropy(&joint, LogBase::Bits).unwrap();
+        assert!((h_xy - h_x - h_yx).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_normalized_entropy_uniform_is_one() {
+        let uniform = vec![0.25, 0.25, 0.25, 0.25];
+        let n = normalized_entropy(&uniform, LogBase::Bits).unwrap();
+        assert!((n - 1.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_normalized_entropy_deterministic_is_zero() {
+        let det = vec![1.0, 0.0, 0.0, 0.0];
+        let n = normalized_entropy(&det, LogBase::Bits).unwrap();
+        assert_eq!(n, 0.0);
+    }
+
+    #[test]
+    fn test_normalized_entropy_base_invariant() {
+        let dist = vec![0.3, 0.7];
+        let n_bits = normalized_entropy(&dist, LogBase::Bits).unwrap();
+        let n_nats = normalized_entropy(&dist, LogBase::Nats).unwrap();
+        assert!((n_bits - n_nats).abs() < 1e-10);
+    }
+
+    // ================================================================
+    // B.4 — Measured entropy tests
+    // ================================================================
+
+    #[test]
+    fn test_measured_entropy_value() {
+        let counts = vec![50u64, 50];
+        let m = shannon_entropy_measured(&counts).unwrap();
+        assert!((m.value.bits - 1.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_measured_entropy_high_confidence_many_samples() {
+        // 1000 obs, 2 categories -> confidence = 1.0 - 2/1000 = 0.998 -> clamped to 0.99
+        let counts = vec![500u64, 500];
+        let m = shannon_entropy_measured(&counts).unwrap();
+        assert!((m.confidence.value() - 0.99).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_measured_entropy_low_confidence_few_samples() {
+        // 3 obs, 2 categories -> confidence = 1.0 - 2/3 = 0.333
+        let counts = vec![2u64, 1];
+        let m = shannon_entropy_measured(&counts).unwrap();
+        assert!(
+            (m.confidence.value() - (1.0 - 2.0 / 3.0)).abs() < 1e-10,
+            "confidence = {}",
+            m.confidence.value()
+        );
+    }
+
+    #[test]
+    fn test_measured_entropy_minimum_confidence() {
+        // 1 obs, 1 category -> confidence = 1.0 - 1/1 = 0.0 -> clamped to 0.05
+        let counts = vec![1u64];
+        let m = shannon_entropy_measured(&counts).unwrap();
+        assert!((m.confidence.value() - 0.05).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_measured_entropy_with_base() {
+        let counts = vec![50u64, 50];
+        let m = shannon_entropy_measured_with_base(&counts, LogBase::Nats).unwrap();
+        let expected_nats = std::f64::consts::LN_2; // 1 bit in nats
+        assert!((m.value.bits - expected_nats).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_measured_entropy_empty_counts_error() {
+        let err = shannon_entropy_measured(&[]).unwrap_err();
+        assert_eq!(err, EntropyError::EmptyCounts);
     }
 }

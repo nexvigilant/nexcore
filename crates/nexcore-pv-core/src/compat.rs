@@ -156,12 +156,7 @@ pub fn fisher_exact_test(table: &PvTable) -> FisherResult {
 /// Lossless: pv-core u64 → signal crate u64 (same width).
 impl From<SigTable> for SignalCrateTable {
     fn from(t: SigTable) -> Self {
-        Self {
-            a: t.a,
-            b: t.b,
-            c: t.c,
-            d: t.d,
-        }
+        Self::new(t.a, t.b, t.c, t.d)
     }
 }
 
@@ -188,12 +183,7 @@ mod cross_type_tests {
 
     #[test]
     fn from_signal_crate_to_vigilance() {
-        let sig = SignalCrateTable {
-            a: 5,
-            b: 10,
-            c: 15,
-            d: 20,
-        };
+        let sig = SignalCrateTable::new(5, 10, 15, 20);
         let t: SigTable = sig.into();
         assert_eq!(t.a, 5u64);
         assert_eq!(t.b, 10u64);

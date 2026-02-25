@@ -195,7 +195,7 @@ mod tests {
     use crate::name::{NamedInventory, RenameOp};
     use crate::observe::EntryMeta;
     use crate::rank::{RankedEntry, ScoreBreakdown};
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     fn make_named_inventory(actions: Vec<FileOp>) -> NamedInventory {
         let operations = actions
@@ -210,7 +210,7 @@ mod tests {
                                 path: path.clone(),
                                 is_dir: false,
                                 size_bytes: 100,
-                                modified: Utc::now(),
+                                modified: DateTime::now(),
                                 extension: "txt".to_string(),
                                 depth: 1,
                                 name: format!("file_{i}.txt"),
@@ -237,7 +237,7 @@ mod tests {
             root: PathBuf::from("/tmp"),
             operations,
             collisions_resolved: 0,
-            observed_at: Utc::now(),
+            observed_at: DateTime::now(),
         }
     }
 

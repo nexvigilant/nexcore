@@ -7,7 +7,7 @@ use crate::core::{
     ChiSquare, ContingencyTable, Detect, DetectionResult, DrugEventPair, Ebgm, Ic, NormalizedEvent,
     Prr, Result, Ror, SignalStrength,
 };
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use std::collections::HashMap;
 
 /// Builds contingency tables from normalized events and computes metrics.
@@ -77,7 +77,7 @@ impl Detect for TableDetector {
                 ebgm,
                 chi_square: chi_sq,
                 strength,
-                detected_at: Utc::now(),
+                detected_at: DateTime::now(),
             });
         }
         results.sort_by(|a, b| b.strength.cmp(&a.strength));
@@ -99,7 +99,7 @@ mod tests {
                 event: event.into(),
                 meddra_pt: None,
                 meddra_soc: None,
-                report_date: Utc::now(),
+                report_date: DateTime::now(),
                 source: ReportSource::Faers,
             });
         }
@@ -144,7 +144,7 @@ mod tests {
                 event: "X".into(),
                 meddra_pt: None,
                 meddra_soc: None,
-                report_date: Utc::now(),
+                report_date: DateTime::now(),
                 source: ReportSource::Spontaneous,
             },
             NormalizedEvent {
@@ -153,7 +153,7 @@ mod tests {
                 event: "Y".into(),
                 meddra_pt: None,
                 meddra_soc: None,
-                report_date: Utc::now(),
+                report_date: DateTime::now(),
                 source: ReportSource::Spontaneous,
             },
         ];

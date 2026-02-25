@@ -67,6 +67,10 @@ impl ResourceMetrics {
     }
 
     /// Fold an iterator of metrics into one aggregate.
+    #[allow(
+        clippy::as_conversions,
+        reason = "usize to f64 for average calculation; count fits safely in f64"
+    )]
     pub fn fold_all(metrics: impl Iterator<Item = Self>) -> Self {
         let collected: Vec<Self> = metrics.collect();
         let count = collected.len();
@@ -239,6 +243,10 @@ impl CloudResourceGraph {
 
     /// Summarize metrics at each hierarchy level.
     #[must_use]
+    #[allow(
+        clippy::as_conversions,
+        reason = "usize to f64 for average calculation; node counts fit safely in f64"
+    )]
     pub fn level_summaries(&self) -> Vec<LevelSummary> {
         let mut by_kind: BTreeMap<ResourceKind, Vec<&ResourceNode>> = BTreeMap::new();
 
@@ -304,10 +312,24 @@ impl CloudResourceGraph {
 
             costs.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(core::cmp::Ordering::Equal));
 
-            let n = costs.len();
-            let q1 = costs[n / 4].1;
-            let q3 = costs[3 * n / 4].1;
+            let len = costs.len();
+            #[allow(
+                clippy::arithmetic_side_effects,
+                reason = "IQR index calculation: n/4 and 3*n/4 are standard quartile indices"
+            )]
+            let q1_idx = len / 4;
+            #[allow(
+                clippy::arithmetic_side_effects,
+                reason = "IQR index calculation: n/4 and 3*n/4 are standard quartile indices"
+            )]
+            let q3_idx = 3 * len / 4;
+            let q1 = costs.get(q1_idx).map(|(_, v)| *v).unwrap_or(0.0);
+            let q3 = costs.get(q3_idx).map(|(_, v)| *v).unwrap_or(0.0);
             let iqr = q3 - q1;
+            #[allow(
+                clippy::arithmetic_side_effects,
+                reason = "IQR fence calculation: standard statistical formula"
+            )]
             let upper_fence = q3 + 1.5 * iqr;
 
             for &(rid, cost) in &costs {
@@ -315,7 +337,7 @@ impl CloudResourceGraph {
                     let name = self
                         .nodes
                         .get(&rid)
-                        .map(|n| n.name.clone())
+                        .map(|resource_node| resource_node.name.clone())
                         .unwrap_or_default();
 
                     outliers.push(Outlier {
@@ -394,7 +416,7 @@ impl CloudResourceGraph {
             .max()
             .unwrap_or(0);
 
-        1 + max_child
+        max_child.saturating_add(1)
     }
 }
 

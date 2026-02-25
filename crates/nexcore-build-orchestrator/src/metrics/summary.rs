@@ -97,8 +97,8 @@ mod tests {
             definition_name: "test".into(),
             status,
             stages: vec![],
-            started_at: chrono::Utc::now(),
-            ended_at: Some(chrono::Utc::now()),
+            started_at: nexcore_chrono::DateTime::now(),
+            ended_at: Some(nexcore_chrono::DateTime::now()),
             total_duration: Some(BuildDuration {
                 millis: duration_ms,
             }),

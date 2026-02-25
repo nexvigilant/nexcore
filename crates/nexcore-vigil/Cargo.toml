@@ -17,7 +17,7 @@ path = "src/main.rs"
 tokio = { version = "1.36", features = ["full", "tracing"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-chrono = { version = "0.4", features = ["serde"] }
+nexcore-chrono = { workspace = true }
 nexcore-id = { version = "0.1.0", path = "../nexcore-id", features = ["serde"], registry = "nexcore"}
 async-trait = "0.1.77"
 tracing = "0.1"
@@ -61,3 +61,6 @@ criterion = { version = "0.5", features = ["async_tokio"] }
 [[bench]]
 name = "event_bus_bench"
 harness = false
+
+[lints]
+workspace = true

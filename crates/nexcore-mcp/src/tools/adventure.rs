@@ -10,7 +10,7 @@ use crate::params::{
     AdventureMeasureParams, AdventureMilestoneParams, AdventureSkillParams, AdventureStartParams,
     AdventureTaskParams,
 };
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 use serde::Serialize;
@@ -57,7 +57,7 @@ fn status_icon(s: &str) -> &'static str {
 /// Start a new adventure session.
 pub fn adventure_start(params: AdventureStartParams) -> Result<CallToolResult, McpError> {
     let name = params.name;
-    let now = Utc::now();
+    let now = DateTime::now();
     let state = AdventureState {
         session_id: format!("adv-{}", now.timestamp()),
         name: name.clone(),
@@ -87,7 +87,7 @@ pub fn adventure_task(params: AdventureTaskParams) -> Result<CallToolResult, Mcp
         id: params.id.clone(),
         subject: params.subject.clone(),
         status: params.status.clone(),
-        timestamp: Utc::now().to_rfc3339(),
+        timestamp: DateTime::now().to_rfc3339(),
     };
     let icon = status_icon(&t.status);
     let msg = format!("{} Task #{}: {} [{}]", icon, t.id, t.subject, t.status);

@@ -57,7 +57,7 @@ impl AgentRegistry {
             .get_mut(id)
             .ok_or_else(|| OrcError::AgentNotFound(id.clone()))?;
         entry.state = new_state;
-        entry.updated_at = chrono::Utc::now();
+        entry.updated_at = nexcore_chrono::DateTime::now();
         Ok(())
     }
 
@@ -68,7 +68,7 @@ impl AgentRegistry {
             .get_mut(id)
             .ok_or_else(|| OrcError::AgentNotFound(id.clone()))?;
         entry.result = Some(result);
-        entry.updated_at = chrono::Utc::now();
+        entry.updated_at = nexcore_chrono::DateTime::now();
         Ok(())
     }
 
@@ -79,7 +79,7 @@ impl AgentRegistry {
             .get_mut(id)
             .ok_or_else(|| OrcError::AgentNotFound(id.clone()))?;
         entry.error = Some(error);
-        entry.updated_at = chrono::Utc::now();
+        entry.updated_at = nexcore_chrono::DateTime::now();
         Ok(())
     }
 

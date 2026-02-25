@@ -13,7 +13,7 @@
 
 use crate::primitiva::{LexPrimitiva, PrimitiveComposition};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // INTERACTION MODEL
@@ -25,7 +25,8 @@ use std::collections::HashMap;
 /// across 553+ GroundsTo implementations.
 ///
 /// Tier: T2-P (Comparison + Causality)
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum InteractionType {
     /// Source primitive protects/gates the target.
     /// Example: ∂ Guards κ in ThresholdGate (boundary guards comparison)
@@ -109,6 +110,7 @@ impl std::fmt::Display for InteractionType {
 ///
 /// Tier: T2-P (Causality + Comparison)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Interaction {
     /// Source primitive.
     pub source: LexPrimitiva,
@@ -176,7 +178,7 @@ impl std::fmt::Display for Interaction {
 #[derive(Debug, Clone)]
 pub struct InteractionGraph {
     /// Adjacency stored as (source_index, target_index) -> Interaction.
-    edges: HashMap<(usize, usize), InteractionType>,
+    edges: BTreeMap<(usize, usize), InteractionType>,
 }
 
 impl InteractionGraph {
@@ -184,7 +186,7 @@ impl InteractionGraph {
     #[must_use]
     pub fn canonical() -> Self {
         use LexPrimitiva::*;
-        let mut edges = HashMap::new();
+        let mut edges = BTreeMap::new();
 
         // Helper to insert by primitive pair
         let mut add = |src: LexPrimitiva, tgt: LexPrimitiva, rel: InteractionType| {
@@ -265,9 +267,13 @@ impl InteractionGraph {
 
         for (&(si, ti), &rel) in &self.edges {
             if si == pi {
-                result.push(Interaction::new(primitive, all_prims[ti], rel));
+                if let Some(&target) = all_prims.get(ti) {
+                    result.push(Interaction::new(primitive, target, rel));
+                }
             } else if ti == pi {
-                result.push(Interaction::new(all_prims[si], primitive, rel));
+                if let Some(&source) = all_prims.get(si) {
+                    result.push(Interaction::new(source, primitive, rel));
+                }
             }
         }
         result
@@ -305,6 +311,7 @@ impl Default for InteractionGraph {
 ///
 /// Tier: T2-C (Mapping + Comparison + Sequence + Product)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Pattern {
     /// Canonical name (e.g., "Gatekeeper", "Pipeline").
     pub name: String,
@@ -349,7 +356,12 @@ impl Pattern {
             return 0.0;
         }
 
-        (missing + extra) as f64 / total as f64
+        #[allow(
+            clippy::as_conversions,
+            reason = "missing+extra bounded by 16, total bounded by 16; safe cast to f64"
+        )]
+        let result = missing.saturating_add(extra) as f64 / total as f64;
+        result
     }
 }
 
@@ -374,8 +386,10 @@ impl std::fmt::Display for Pattern {
 ///
 /// Tier: T2-C (Mapping + Sequence + Persistence + Existence)
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct PatternRegistry {
-    patterns: HashMap<String, Pattern>,
+    /// Registered patterns keyed by name.
+    pub patterns: BTreeMap<String, Pattern>,
 }
 
 impl PatternRegistry {
@@ -383,7 +397,7 @@ impl PatternRegistry {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            patterns: HashMap::new(),
+            patterns: BTreeMap::new(),
         }
     }
 
@@ -701,7 +715,7 @@ impl PatternRegistry {
     #[must_use]
     pub fn names(&self) -> Vec<&str> {
         let mut names: Vec<&str> = self.patterns.keys().map(String::as_str).collect();
-        names.sort();
+        names.sort_unstable();
         names
     }
 
@@ -727,7 +741,12 @@ impl PatternRegistry {
                     if denom == 0 {
                         0.0
                     } else {
-                        p.composition.unique().len() as f64 / denom as f64
+                        #[allow(
+                            clippy::as_conversions,
+                            reason = "unique().len() bounded by 16; safe cast to f64"
+                        )]
+                        let result = p.composition.unique().len() as f64 / denom as f64;
+                        result
                     }
                 })
                 .unwrap_or(0.0)
@@ -754,7 +773,12 @@ impl PatternRegistry {
             return 0.0;
         }
         let unique = comp.unique().len();
-        1.0 - (unique as f64 / total as f64)
+        #[allow(
+            clippy::as_conversions,
+            reason = "unique and total bounded by 16; safe cast to f64"
+        )]
+        let result = 1.0 - (unique as f64 / total as f64);
+        result
     }
 
     /// Generate optimization hints.
@@ -808,7 +832,7 @@ impl PatternRegistry {
         }
 
         // Duplicate warning
-        let dupes = comp.primitives.len() - comp.unique().len();
+        let dupes = comp.primitives.len().saturating_sub(comp.unique().len());
         if dupes > 0 {
             hints.push(format!(
                 "{} duplicate primitive(s) — consider deduplication",
@@ -830,6 +854,7 @@ impl Default for PatternRegistry {
 ///
 /// Tier: T2-C (Quantity + Comparison + Mapping)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct CompressionMetrics {
     /// Distance to nearest canonical pattern (0.0 = exact match).
     pub canonical_distance: f64,
@@ -898,10 +923,16 @@ mod tests {
         let registry = PatternRegistry::canonical();
         let gatekeeper = registry.get("Gatekeeper");
         assert!(gatekeeper.is_some());
-        let gk = gatekeeper.unwrap_or_else(|| {
-            // Can't panic in test, use first pattern as fallback
-            registry.patterns.values().next().expect("empty")
-        });
+        let gk = match gatekeeper {
+            Some(p) => p,
+            None => {
+                // Can't panic in test — if gatekeeper missing, use first pattern
+                match registry.patterns.values().next() {
+                    Some(p) => p,
+                    None => return,
+                }
+            }
+        };
         assert_eq!(gk.frequency, 12);
         assert!(gk.composition.unique().contains(&Boundary));
         assert!(gk.composition.unique().contains(&Comparison));

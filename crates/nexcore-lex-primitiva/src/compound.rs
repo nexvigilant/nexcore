@@ -19,6 +19,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Tier: T2-C (sigma + varsigma + N -- Sequence + State + Quantity)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct BasisSnapshot {
     /// Session identifier (e.g. "session-001")
     pub session: String,
@@ -37,10 +38,39 @@ pub struct BasisSnapshot {
 }
 
 impl BasisSnapshot {
+    /// Construct a new [`BasisSnapshot`].
+    #[must_use]
+    #[allow(
+        clippy::too_many_arguments,
+        reason = "BasisSnapshot captures all primitive tier counts in one constructor"
+    )]
+    pub fn new(
+        session: String,
+        t1_count: u32,
+        t2_p_count: u32,
+        t2_c_count: u32,
+        t3_count: u32,
+        reused: u32,
+        total_needed: u32,
+    ) -> Self {
+        Self {
+            session,
+            t1_count,
+            t2_p_count,
+            t2_c_count,
+            t3_count,
+            reused,
+            total_needed,
+        }
+    }
+
     /// Total number of primitives across all tiers.
     #[must_use]
     pub fn basis_size(&self) -> u32 {
-        self.t1_count + self.t2_p_count + self.t2_c_count + self.t3_count
+        self.t1_count
+            .saturating_add(self.t2_p_count)
+            .saturating_add(self.t2_c_count)
+            .saturating_add(self.t3_count)
     }
 
     /// Reuse rate: fraction of needed primitives that were reused.
@@ -51,7 +81,12 @@ impl BasisSnapshot {
         if self.total_needed == 0 {
             return 0.0;
         }
-        self.reused as f64 / self.total_needed as f64
+        #[allow(
+            clippy::as_conversions,
+            reason = "reused and total_needed are u32; safe cast to f64"
+        )]
+        let result = self.reused as f64 / self.total_needed as f64;
+        result
     }
 
     /// Weighted transfer efficiency across all tiers.
@@ -72,28 +107,40 @@ impl BasisSnapshot {
             return 0.0;
         }
 
+        #[allow(
+            clippy::as_conversions,
+            reason = "count values are u32; safe cast to f64"
+        )]
         let weighted_sum: f64 = counts
             .iter()
             .map(|(c, t)| *c as f64 * t.transfer_multiplier())
             .sum();
 
-        weighted_sum / total as f64
+        #[allow(clippy::as_conversions, reason = "total is u32; safe cast to f64")]
+        let result = weighted_sum / total as f64;
+        result
     }
 
     /// Compound velocity: V = B x eta x r.
     #[must_use]
     pub fn velocity(&self) -> f64 {
-        self.basis_size() as f64 * self.transfer_efficiency() * self.reuse_rate()
+        #[allow(
+            clippy::as_conversions,
+            reason = "basis_size() returns u32; safe cast to f64"
+        )]
+        let basis_f64 = self.basis_size() as f64;
+        basis_f64 * self.transfer_efficiency() * self.reuse_rate()
     }
 
     /// Raw component triple: (basis_size, transfer_efficiency, reuse_rate).
     #[must_use]
     pub fn component_triple(&self) -> (f64, f64, f64) {
-        (
-            self.basis_size() as f64,
-            self.transfer_efficiency(),
-            self.reuse_rate(),
-        )
+        #[allow(
+            clippy::as_conversions,
+            reason = "basis_size() returns u32; safe cast to f64"
+        )]
+        let basis_f64 = self.basis_size() as f64;
+        (basis_f64, self.transfer_efficiency(), self.reuse_rate())
     }
 }
 
@@ -105,6 +152,7 @@ impl BasisSnapshot {
 ///
 /// Tier: T3 (Domain-specific compound growth tracker)
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct CompoundTracker {
     snapshots: Vec<BasisSnapshot>,
 }
@@ -167,7 +215,11 @@ impl CompoundTracker {
 
         velocities
             .windows(2)
-            .map(|w| if w[0] == 0.0 { 0.0 } else { w[1] / w[0] })
+            .map(|w| {
+                let prev = w.first().copied().unwrap_or(0.0);
+                let next = w.get(1).copied().unwrap_or(0.0);
+                if prev == 0.0 { 0.0 } else { next / prev }
+            })
             .collect()
     }
 
@@ -184,7 +236,12 @@ impl CompoundTracker {
         }
 
         let log_sum: f64 = positive.iter().map(|r| r.ln()).sum();
-        (log_sum / positive.len() as f64).exp()
+        #[allow(
+            clippy::as_conversions,
+            reason = "positive.len() bounded by snapshot count; safe cast to f64"
+        )]
+        let len_f64 = positive.len() as f64;
+        (log_sum / len_f64).exp()
     }
 
     /// Project the effect of adding `count` primitives to a given tier.
@@ -200,21 +257,30 @@ impl CompoundTracker {
 
         let mut projected = latest.clone();
         match tier {
-            Tier::T1Universal => projected.t1_count += count,
-            Tier::T2Primitive => projected.t2_p_count += count,
-            Tier::T2Composite => projected.t2_c_count += count,
-            Tier::T3DomainSpecific => projected.t3_count += count,
+            Tier::T1Universal => {
+                projected.t1_count = projected.t1_count.saturating_add(count);
+            }
+            Tier::T2Primitive => {
+                projected.t2_p_count = projected.t2_p_count.saturating_add(count);
+            }
+            Tier::T2Composite => {
+                projected.t2_c_count = projected.t2_c_count.saturating_add(count);
+            }
+            Tier::T3DomainSpecific => {
+                projected.t3_count = projected.t3_count.saturating_add(count);
+            }
         }
 
         let projected_velocity = projected.velocity();
         let efficiency_delta = projected.transfer_efficiency() - latest.transfer_efficiency();
+        let velocity_gain = projected_velocity - current_velocity;
 
         Some(ProjectionResult {
             tier: tier.code().to_string(),
             count,
             current_velocity,
             projected_velocity,
-            velocity_gain: projected_velocity - current_velocity,
+            velocity_gain,
             efficiency_delta,
         })
     }
@@ -234,6 +300,7 @@ impl CompoundTracker {
 ///
 /// Tier: T2-C (varsigma + N + proportional -- State + Quantity + Proportion)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ProjectionResult {
     /// Tier code (e.g. "T1", "T2-P")
     pub tier: String,

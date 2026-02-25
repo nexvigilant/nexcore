@@ -16,7 +16,7 @@ impl CliParser {
 
     /// Parse CLI spec from YAML string
     pub fn from_yaml_str(yaml: &str) -> Result<CliCommand> {
-        serde_yaml::from_str(yaml).map_err(|e| e.into())
+        serde_yml::from_str(yaml).map_err(|e| e.into())
     }
 
     /// Parse CLI spec from JSON file

@@ -20,9 +20,9 @@ pub struct HistoryQuery {
     /// Maximum number of results.
     pub limit: Option<usize>,
     /// Filter: runs after this time.
-    pub after: Option<chrono::DateTime<chrono::Utc>>,
+    pub after: Option<nexcore_chrono::DateTime>,
     /// Filter: runs before this time.
-    pub before: Option<chrono::DateTime<chrono::Utc>>,
+    pub before: Option<nexcore_chrono::DateTime>,
 }
 
 impl HistoryQuery {

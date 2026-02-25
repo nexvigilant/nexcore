@@ -6,7 +6,7 @@
 use crate::ApiState;
 use axum::extract::{Json, Query, State};
 use axum::routing::get;
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 
@@ -64,7 +64,7 @@ pub struct EngagementResponse {
     pub expert_id: String,
     pub status: String,
     pub platform_commission_percent: f64,
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 }
 
 /// Search experts in the marketplace
@@ -178,7 +178,7 @@ pub async fn create_engagement(
         expert_id: req.expert_id,
         status: "requested".to_string(),
         platform_commission_percent: 15.0,
-        created_at: Utc::now(),
+        created_at: DateTime::now(),
     }))
 }
 

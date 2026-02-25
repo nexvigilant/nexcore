@@ -160,12 +160,11 @@ impl ClaudeKnowledgeMcpServer {
                     "Missing SKILL.md".to_string()
                 };
 
-                if let Some(tag) = &params.tag {
-                    if !intent.to_lowercase().contains(&tag.to_lowercase())
-                        && !name.to_lowercase().contains(&tag.to_lowercase())
-                    {
-                        continue;
-                    }
+                if let Some(tag) = &params.tag
+                    && !intent.to_lowercase().contains(&tag.to_lowercase())
+                    && !name.to_lowercase().contains(&tag.to_lowercase())
+                {
+                    continue;
                 }
 
                 skills.push(json!({
@@ -197,25 +196,24 @@ impl ClaudeKnowledgeMcpServer {
         }
 
         let mut results = Vec::new();
-        let mut it = nexcore_fs::walk::WalkDir::new(search_path)
+        let it = nexcore_fs::walk::WalkDir::new(search_path)
             .into_iter()
             .filter_map(|e| e.ok());
 
-        while let Some(entry) = it.next() {
+        for entry in it {
             if entry.file_type().is_file() {
                 let path = entry.path();
-                if let Ok(content) = std::fs::read_to_string(path) {
-                    if content
+                if let Ok(content) = std::fs::read_to_string(path)
+                    && content
                         .to_lowercase()
                         .contains(&params.query.to_lowercase())
-                    {
-                        results.push(json!({
-                            "path": path.to_string_lossy(),
-                            "preview": content.chars().take(200).collect::<String>()
-                        }));
-                        if results.len() >= 20 {
-                            break;
-                        }
+                {
+                    results.push(json!({
+                        "path": path.to_string_lossy(),
+                        "preview": content.chars().take(200).collect::<String>()
+                    }));
+                    if results.len() >= 20 {
+                        break;
                     }
                 }
             }
@@ -268,6 +266,12 @@ impl ClaudeKnowledgeMcpServer {
     }
 }
 
+impl Default for ClaudeKnowledgeMcpServer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ServerHandler for ClaudeKnowledgeMcpServer {
     fn get_info(&self) -> ServerInfo {
         ServerInfo {
@@ -286,15 +290,13 @@ impl ServerHandler for ClaudeKnowledgeMcpServer {
         }
     }
 
-    fn call_tool(
+    async fn call_tool(
         &self,
         request: CallToolRequestParams,
         context: RequestContext<RoleServer>,
-    ) -> impl std::future::Future<Output = Result<CallToolResult, McpError>> + Send + '_ {
-        async move {
-            let tcc = ToolCallContext::new(self, request, context);
-            self.tool_router.call(tcc).await
-        }
+    ) -> Result<CallToolResult, McpError> {
+        let tcc = ToolCallContext::new(self, request, context);
+        self.tool_router.call(tcc).await
     }
 
     fn list_tools(

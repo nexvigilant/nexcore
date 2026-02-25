@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::persistence::{Persistence, ReportRecord, firestore::MockPersistence};
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     #[tokio::test]
     async fn test_mock_persistence() -> nexcore_error::Result<()> {
@@ -10,7 +10,7 @@ mod tests {
         let report = ReportRecord {
             id: "test-id".to_string(),
             report_type: "signal_summary".to_string(),
-            generated_at: Utc::now(),
+            generated_at: DateTime::now(),
             content: "Test content".to_string(),
             status: "completed".to_string(),
             user_id: None,

@@ -1,6 +1,6 @@
 //! Artifact and artifact version CRUD operations.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 
@@ -28,9 +28,9 @@ pub struct ArtifactRow {
     /// JSON custom metadata
     pub custom_meta: String,
     /// When created
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// When last updated
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
 }
 
 /// An immutable resolved version of an artifact.
@@ -47,7 +47,7 @@ pub struct ArtifactVersionRow {
     /// Snapshot content
     pub content: String,
     /// When resolved
-    pub resolved_at: DateTime<Utc>,
+    pub resolved_at: DateTime,
 }
 
 /// Insert or update an artifact (upsert by session_id + name).
@@ -230,10 +230,8 @@ pub fn list_versions(
 }
 
 /// Parse an RFC3339 datetime string, falling back to now on failure.
-fn parse_datetime(s: String) -> DateTime<Utc> {
-    DateTime::parse_from_rfc3339(&s)
-        .map(|dt| dt.with_timezone(&Utc))
-        .unwrap_or_else(|_| Utc::now())
+fn parse_datetime(s: String) -> DateTime {
+    DateTime::parse_from_rfc3339(&s).unwrap_or_else(|_| DateTime::now())
 }
 
 #[cfg(test)]
@@ -252,7 +250,7 @@ mod tests {
                     project: "test".into(),
                     git_commit: None,
                     description: "Test".into(),
-                    created_at: Utc::now(),
+                    created_at: DateTime::now(),
                 },
             )
         })
@@ -274,8 +272,8 @@ mod tests {
                 current_version: 0,
                 tags: "[]".into(),
                 custom_meta: "null".into(),
-                created_at: Utc::now(),
-                updated_at: Utc::now(),
+                created_at: DateTime::now(),
+                updated_at: DateTime::now(),
             };
             upsert(conn, &art)?;
 
@@ -301,8 +299,8 @@ mod tests {
                 current_version: 0,
                 tags: "[]".into(),
                 custom_meta: "null".into(),
-                created_at: Utc::now(),
-                updated_at: Utc::now(),
+                created_at: DateTime::now(),
+                updated_at: DateTime::now(),
             };
             upsert(conn, &art)?;
 
@@ -332,7 +330,7 @@ mod tests {
                     artifact_name: "task.md".into(),
                     version: 1,
                     content: "Resolved v1".into(),
-                    resolved_at: Utc::now(),
+                    resolved_at: DateTime::now(),
                 },
             )?;
             insert_version(
@@ -343,7 +341,7 @@ mod tests {
                     artifact_name: "task.md".into(),
                     version: 2,
                     content: "Resolved v2".into(),
-                    resolved_at: Utc::now(),
+                    resolved_at: DateTime::now(),
                 },
             )?;
 

@@ -43,7 +43,10 @@ pub fn parse_error_attr(attrs: &[Attribute]) -> Result<Option<ErrorAttr>> {
                     "expected #[error(\"...\")]  or #[error(transparent)]",
                 ));
             }
-            _ => {
+            // Meta::Path and Meta::NameValue are never valid for #[error]; both
+            // are caught here so the exhaustive match is explicit rather than using
+            // a wildcard that would silently absorb future syn variants.
+            Meta::Path(_) | Meta::NameValue(_) => {
                 return Err(syn::Error::new_spanned(attr, "expected #[error(\"...\")]"));
             }
         }

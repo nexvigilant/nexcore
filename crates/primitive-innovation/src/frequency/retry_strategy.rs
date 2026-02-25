@@ -115,7 +115,7 @@ impl RetryStrategy {
         }
 
         let delay = self.compute_delay();
-        self.current_attempt += 1;
+        self.current_attempt = self.current_attempt.saturating_add(1);
 
         RetryDecision::RetryAfter(delay)
     }
@@ -145,6 +145,10 @@ impl RetryStrategy {
 
     /// Current retry frequency (retries per second, accounting for delay).
     #[must_use]
+    #[allow(
+        clippy::as_conversions,
+        reason = "u64 to f64 for frequency calculation; delay fits safely in f64"
+    )]
     pub fn current_frequency_hz(&self) -> f64 {
         let delay = self.compute_delay();
         if delay == 0 {
@@ -154,6 +158,14 @@ impl RetryStrategy {
     }
 
     /// Compute the delay for the current attempt.
+    #[allow(
+        clippy::as_conversions,
+        reason = "numeric casts for backoff math: u64/u32/f64 interop in delay calculation"
+    )]
+    #[allow(
+        clippy::arithmetic_side_effects,
+        reason = "base_delay_ms * multiplier^n: intentional backoff arithmetic"
+    )]
     fn compute_delay(&self) -> u64 {
         let raw = match self.backoff {
             BackoffKind::Constant => self.base_delay_ms,

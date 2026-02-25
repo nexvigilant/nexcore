@@ -152,7 +152,24 @@ pub fn signal_complete(params: SignalCompleteParams) -> Result<CallToolResult, M
         ),
     ];
 
-    let json = json!({
+    // FDR metadata (Directive 003 Phase B)
+    let fdr_metadata = if params.fdr_correction {
+        Some(json!({
+            "note": "Single-pair query: no cross-pair FDR correction applied. Use pv_core_fdr_adjust for batch correction.",
+            "frequentist_methods": {
+                "PRR": { "p_value": chi_sq_p, "correctable": true, "explanation": "Frequentist method — requires FDR correction in batch" },
+                "ROR": { "p_value": chi_sq_p, "correctable": true, "explanation": "Frequentist method — requires FDR correction in batch" },
+            },
+            "bayesian_methods": {
+                "IC": { "correctable": false, "explanation": "Bayesian method — uses built-in shrinkage, no FDR correction needed" },
+                "EBGM": { "correctable": false, "explanation": "Bayesian method — uses built-in MGPS shrinkage, no FDR correction needed" },
+            },
+        }))
+    } else {
+        None
+    };
+
+    let mut json = json!({
         "prr": prr_enriched,
         "ror": ror_enriched,
         "ic": ic_enriched,
@@ -176,6 +193,10 @@ pub fn signal_complete(params: SignalCompleteParams) -> Result<CallToolResult, M
         },
         "pareto_frontier": pareto_frontier,
     });
+
+    if let Some(fdr) = fdr_metadata {
+        json["fdr_correction"] = fdr;
+    }
 
     let detecting = [
         result.prr.is_signal,

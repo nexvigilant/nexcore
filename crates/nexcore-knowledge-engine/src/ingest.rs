@@ -1,6 +1,6 @@
 //! Raw knowledge ingestion — converts diverse sources into fragments.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 
@@ -38,7 +38,7 @@ pub struct RawKnowledge {
     pub text: String,
     pub source: KnowledgeSource,
     pub domain: Option<String>,
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
 }
 
 /// A processed knowledge fragment — the unit of knowledge in a pack.
@@ -51,7 +51,7 @@ pub struct KnowledgeFragment {
     pub concepts: Vec<ExtractedConcept>,
     pub primitives: Vec<ExtractedPrimitive>,
     pub score: ScoreResult,
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 }
 
 /// Ingest raw text into a knowledge fragment.
@@ -94,7 +94,7 @@ mod tests {
             text: "Signal detection uses PRR for disproportionality analysis.".to_string(),
             source: KnowledgeSource::FreeText,
             domain: None,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         };
         let frag = ingest(raw).unwrap();
         assert_eq!(frag.domain, "pv");
@@ -108,7 +108,7 @@ mod tests {
             text: "  ".to_string(),
             source: KnowledgeSource::FreeText,
             domain: None,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         };
         assert!(ingest(raw).is_err());
     }
@@ -119,7 +119,7 @@ mod tests {
             text: "Homeostasis control loop monitors system health.".to_string(),
             source: KnowledgeSource::BrainArtifact,
             domain: Some("guardian".to_string()),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         };
         let frag = ingest(raw).unwrap();
         assert_eq!(frag.domain, "guardian");

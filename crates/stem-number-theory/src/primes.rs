@@ -24,6 +24,10 @@ use crate::NumberTheoryError;
 ///
 /// Computes `(a * b) mod m` safely for large values near u128::MAX.
 #[inline]
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "Russian peasant multiplication: all operations are mod m so intermediate values stay < 2*m which fits u128; halving b terminates"
+)]
 fn mul_mod(mut a: u128, mut b: u128, m: u128) -> u128 {
     let mut result: u128 = 0;
     a %= m;
@@ -41,6 +45,10 @@ fn mul_mod(mut a: u128, mut b: u128, m: u128) -> u128 {
 ///
 /// Uses u128 to avoid overflow; falls back to `mul_mod` for large intermediates.
 #[inline]
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "mod_pow: base %= modulus keeps base < modulus; exp /= 2 is exact halving; checked_mul guards squaring; v % modulus prevents overflow"
+)]
 fn mod_pow(mut base: u128, mut exp: u128, modulus: u128) -> u128 {
     if modulus == 1 {
         return 0;
@@ -64,7 +72,14 @@ fn mod_pow(mut base: u128, mut exp: u128, modulus: u128) -> u128 {
 /// Miller-Rabin witness test for a single witness `a` against `n`.
 ///
 /// Writes `n-1 = 2^s * d` and checks the sequence `a^d, a^(2d), ..., a^(n-1)`.
-#[allow(clippy::many_single_char_names)]
+#[allow(
+    clippy::many_single_char_names,
+    reason = "Miller-Rabin witness variables x, d, s, a follow standard cryptographic naming convention from the literature"
+)]
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "s - 1 is safe: the caller ensures s >= 1 by the structure of n-1 = 2^s * d with n odd and n >= 3; n - 1 is safe since n >= 3"
+)]
 #[inline]
 fn miller_rabin_witness(n: u128, d: u128, s: u32, a: u128) -> bool {
     let mut x = mod_pow(a % n, d, n);
@@ -96,6 +111,18 @@ fn miller_rabin_witness(n: u128, d: u128, s: u32, a: u128) -> bool {
 /// assert_eq!(sieve_of_eratosthenes(10), vec![2, 3, 5, 7]);
 /// assert_eq!(sieve_of_eratosthenes(1), vec![]);
 /// ```
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "Sieve of Eratosthenes: i*i and j+=i are bounded by n (limit as usize); i*i <= n guards the outer loop; j steps by i so no overflow within usize for realistic sieve sizes"
+)]
+#[allow(
+    clippy::as_conversions,
+    reason = "limit as usize: sieve is memory-constrained so limit fits comfortably in usize on 64-bit targets; p as u64 is lossless since p <= n <= limit < usize::MAX"
+)]
+#[allow(
+    clippy::indexing_slicing,
+    reason = "is_composite indices are constructed to be within [0, n]: i and j are bounded by n; (j - lo) is bounded by len in segmented_sieve"
+)]
 pub fn sieve_of_eratosthenes(limit: u64) -> Vec<u64> {
     if limit < 2 {
         return vec![];
@@ -139,7 +166,18 @@ pub fn sieve_of_eratosthenes(limit: u64) -> Vec<u64> {
 /// assert!(!is_prime_miller_rabin(9));
 /// assert!(!is_prime_miller_rabin(1));
 /// ```
-#[allow(clippy::many_single_char_names)]
+#[allow(
+    clippy::many_single_char_names,
+    reason = "Miller-Rabin variables d, s, w follow standard cryptographic naming from the literature"
+)]
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "n - 1: n is odd and >= 3 at this point (0|1|even branches return early), so n - 1 >= 2 and cannot underflow; d /= 2 and s += 1 are bounded by the bit-width of n"
+)]
+#[allow(
+    clippy::as_conversions,
+    reason = "n as u128 is lossless (u64 into u128); d as u128 is lossless (d <= n - 1 <= u64::MAX); w as u128 is lossless (witnesses are small constants <= 37)"
+)]
 pub fn is_prime_miller_rabin(n: u64) -> bool {
     match n {
         0 | 1 => return false,
@@ -184,6 +222,10 @@ pub fn is_prime_miller_rabin(n: u64) -> bool {
 /// assert_eq!(prime_counting(10), 4);
 /// assert_eq!(prime_counting(100), 25);
 /// ```
+#[allow(
+    clippy::as_conversions,
+    reason = "sieve length (number of primes <= x) is bounded by x < u64::MAX so it fits in u64"
+)]
 pub fn prime_counting(x: u64) -> u64 {
     sieve_of_eratosthenes(x).len() as u64
 }
@@ -202,6 +244,18 @@ pub fn prime_counting(x: u64) -> u64 {
 /// assert_eq!(nth_prime(1).ok(), Some(2));
 /// assert_eq!(nth_prime(25).ok(), Some(97));
 /// ```
+#[allow(
+    clippy::as_conversions,
+    reason = "n as f64 for PNT estimate: precision loss at very large n is acceptable since we add a safety margin; est as u64 rounds down the over-estimate safely; n as usize is safe for indexing since sieve size is memory-constrained"
+)]
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "est as u64 + 10: est is an over-estimate of the n-th prime; the +10 safety margin cannot overflow since est is bounded by the PNT formula for valid n"
+)]
+#[allow(
+    clippy::indexing_slicing,
+    reason = "primes[n as usize - 1]: guarded by len >= n check immediately above; n >= 1 so index is non-negative"
+)]
 pub fn nth_prime(n: u64) -> Result<u64, NumberTheoryError> {
     if n == 0 {
         return Err(NumberTheoryError::NonPositive(0));
@@ -222,10 +276,14 @@ pub fn nth_prime(n: u64) -> Result<u64, NumberTheoryError> {
 
     let primes = sieve_of_eratosthenes(limit);
     if primes.len() >= n as usize {
-        // Safety: we checked len >= n, and n >= 1
+        // Safety: len >= n >= 1 ensures index n-1 is within bounds.
         Ok(primes[n as usize - 1])
     } else {
         // Fallback: grow the sieve if estimate was too tight
+        #[allow(
+            clippy::arithmetic_side_effects,
+            reason = "limit * 2 + 100: limit is bounded by the PNT estimate; doubling and adding 100 stays within u64 for all practical n"
+        )]
         let extended = sieve_of_eratosthenes(limit * 2 + 100);
         if extended.len() >= n as usize {
             Ok(extended[n as usize - 1])
@@ -246,6 +304,18 @@ pub fn nth_prime(n: u64) -> Result<u64, NumberTheoryError> {
 ///
 /// assert_eq!(segmented_sieve(10, 30), vec![11, 13, 17, 19, 23, 29]);
 /// ```
+#[allow(
+    clippy::as_conversions,
+    reason = "hi as f64 for sqrt estimate: precision is acceptable for an upper bound; sqrt result as u64 truncates safely; (hi - lo + 1) as usize: the range fits in usize on 64-bit targets since it is memory-constrained; (j - lo) as usize: j >= lo by construction so subtraction is safe, and the result < len fits in usize; i as u64 is lossless from usize on 64-bit targets"
+)]
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "Segmented sieve: hi - lo + 1 is guarded by hi >= lo (early return otherwise); p*p checked against lo before subtraction; lo + p - rem and j += p are bounded by hi; sqrt_hi + 1 is safe since hi < u64::MAX for practical inputs"
+)]
+#[allow(
+    clippy::indexing_slicing,
+    reason = "is_composite[(j - lo) as usize]: j is in [start, hi] with start >= lo so the index is in [0, len); is_composite[i]: i is in [0, len) by the loop bound"
+)]
 pub fn segmented_sieve(lo: u64, hi: u64) -> Vec<u64> {
     if hi < 2 || lo > hi {
         return vec![];

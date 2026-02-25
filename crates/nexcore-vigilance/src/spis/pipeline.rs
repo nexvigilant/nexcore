@@ -2,7 +2,7 @@
 //!
 //! Data structures for defining and tracking data pipelines.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
@@ -31,16 +31,16 @@ pub struct Pipeline {
     /// Current status
     pub status: String,
     /// Creation timestamp
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// Last update timestamp
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
 }
 
 impl Pipeline {
     /// Create a new pipeline with default timestamps.
     #[must_use]
     pub fn new(name: String, purpose: String, pipeline_type: String) -> Self {
-        let now = Utc::now();
+        let now = DateTime::now();
         Self {
             id: NexId::v4(),
             name,
@@ -78,9 +78,9 @@ pub struct PipelineComponent {
     /// Dependencies on other components
     pub depends_on: Option<serde_json::Value>,
     /// Creation timestamp
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// Last update timestamp
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
 }
 
 /// A pipeline execution record.
@@ -105,9 +105,9 @@ pub struct PipelineExecution {
     /// Execution metrics
     pub metrics: Option<serde_json::Value>,
     /// Start timestamp
-    pub started_at: DateTime<Utc>,
+    pub started_at: DateTime,
     /// Completion timestamp
-    pub completed_at: Option<DateTime<Utc>>,
+    pub completed_at: Option<DateTime>,
 }
 
 #[cfg(test)]

@@ -44,12 +44,7 @@ fn metrics_to_json(m: &signal::stats::SignalMetrics) -> serde_json::Value {
 /// Compute all disproportionality metrics (PRR, ROR, IC, EBGM, Chi-square) from
 /// a 2x2 contingency table.
 pub fn pipeline_compute_all(p: PipelineComputeAllParams) -> Result<CallToolResult, McpError> {
-    let table = ContingencyTable {
-        a: p.a,
-        b: p.b,
-        c: p.c,
-        d: p.d,
-    };
+    let table = ContingencyTable::new(p.a, p.b, p.c, p.d);
     let metrics = signal::stats::compute_all(&table);
     ok_json(serde_json::json!({
         "table": { "a": p.a, "b": p.b, "c": p.c, "d": p.d, "total": table.total() },
@@ -64,12 +59,7 @@ pub fn pipeline_batch_compute(p: PipelineBatchComputeParams) -> Result<CallToolR
         .iter()
         .map(|item| {
             let pair = DrugEventPair::new(&item.drug, &item.event);
-            let table = ContingencyTable {
-                a: item.a,
-                b: item.b,
-                c: item.c,
-                d: item.d,
-            };
+            let table = ContingencyTable::new(item.a, item.b, item.c, item.d);
             (pair, table)
         })
         .collect();
@@ -104,40 +94,30 @@ pub fn pipeline_batch_compute(p: PipelineBatchComputeParams) -> Result<CallToolR
 
 /// Detect a signal for a drug-event pair with configurable thresholds.
 pub fn pipeline_detect(p: PipelineDetectParams) -> Result<CallToolResult, McpError> {
-    let table = ContingencyTable {
-        a: p.a,
-        b: p.b,
-        c: p.c,
-        d: p.d,
-    };
+    let table = ContingencyTable::new(p.a, p.b, p.c, p.d);
     let metrics = signal::stats::compute_all(&table);
 
     let prr_min = p.prr_min.unwrap_or(2.0);
     let chi_square_min = p.chi_square_min.unwrap_or(3.841);
     let case_count_min = p.case_count_min.unwrap_or(3);
 
-    let config = ThresholdConfig {
-        prr_min,
-        chi_square_min,
-        case_count_min,
-        ..ThresholdConfig::default()
-    };
+    let config = ThresholdConfig::with_mins(prr_min, chi_square_min, case_count_min);
 
     let threshold = signal::threshold::EvansThreshold::with_config(config);
     let pair = DrugEventPair::new(&p.drug, &p.event);
-    let now = chrono::Utc::now();
+    let now = nexcore_chrono::DateTime::now();
 
-    let detection = DetectionResult {
+    let detection = DetectionResult::new(
         pair,
         table,
-        prr: metrics.prr.clone(),
-        ror: metrics.ror.clone(),
-        ic: Some(metrics.ic),
-        ebgm: Some(metrics.ebgm),
-        chi_square: metrics.chi_square,
-        strength: metrics.strength,
-        detected_at: now,
-    };
+        metrics.prr.clone(),
+        metrics.ror.clone(),
+        Some(metrics.ic),
+        Some(metrics.ebgm),
+        metrics.chi_square,
+        metrics.strength,
+        now,
+    );
 
     let passes = <signal::threshold::EvansThreshold as signal::core::Threshold>::apply(
         &threshold, &detection,
@@ -158,12 +138,7 @@ pub fn pipeline_detect(p: PipelineDetectParams) -> Result<CallToolResult, McpErr
 
 /// Validate a detection result against multiple quality checks.
 pub fn pipeline_validate(p: PipelineValidateParams) -> Result<CallToolResult, McpError> {
-    let table = ContingencyTable {
-        a: p.a,
-        b: p.b,
-        c: p.c,
-        d: p.d,
-    };
+    let table = ContingencyTable::new(p.a, p.b, p.c, p.d);
     let metrics = signal::stats::compute_all(&table);
     let pair = DrugEventPair::new(&p.drug, &p.event);
 
@@ -174,17 +149,17 @@ pub fn pipeline_validate(p: PipelineValidateParams) -> Result<CallToolResult, Mc
     };
 
     let validator = signal::validate::StandardValidator::with_config(config);
-    let detection = DetectionResult {
-        pair: pair.clone(),
+    let detection = DetectionResult::new(
+        pair.clone(),
         table,
-        prr: metrics.prr.clone(),
-        ror: metrics.ror.clone(),
-        ic: Some(metrics.ic),
-        ebgm: Some(metrics.ebgm),
-        chi_square: metrics.chi_square,
-        strength: metrics.strength,
-        detected_at: chrono::Utc::now(),
-    };
+        metrics.prr.clone(),
+        metrics.ror.clone(),
+        Some(metrics.ic),
+        Some(metrics.ebgm),
+        metrics.chi_square,
+        metrics.strength,
+        nexcore_chrono::DateTime::now(),
+    );
 
     match <signal::validate::StandardValidator as signal::core::Validate>::validate(
         &validator, &detection,
@@ -239,12 +214,7 @@ pub fn pipeline_report(p: PipelineReportParams) -> Result<CallToolResult, McpErr
         .map(|item| {
             (
                 DrugEventPair::new(&item.drug, &item.event),
-                ContingencyTable {
-                    a: item.a,
-                    b: item.b,
-                    c: item.c,
-                    d: item.d,
-                },
+                ContingencyTable::new(item.a, item.b, item.c, item.d),
             )
         })
         .collect();
@@ -255,23 +225,25 @@ pub fn pipeline_report(p: PipelineReportParams) -> Result<CallToolResult, McpErr
     let detections: Vec<DetectionResult> = pairs_tables
         .iter()
         .zip(results.iter())
-        .map(|((pair, table), (_, metrics))| DetectionResult {
-            pair: pair.clone(),
-            table: *table,
-            prr: metrics.prr.clone(),
-            ror: metrics.ror.clone(),
-            ic: Some(metrics.ic),
-            ebgm: Some(metrics.ebgm),
-            chi_square: metrics.chi_square,
-            strength: metrics.strength,
-            detected_at: chrono::Utc::now(),
+        .map(|((pair, table), (_, metrics))| {
+            DetectionResult::new(
+                pair.clone(),
+                *table,
+                metrics.prr.clone(),
+                metrics.ror.clone(),
+                Some(metrics.ic),
+                Some(metrics.ebgm),
+                metrics.chi_square,
+                metrics.strength,
+                nexcore_chrono::DateTime::now(),
+            )
         })
         .collect();
 
     let format = p.format.as_deref().unwrap_or("json");
     let reporter: Box<dyn signal::core::Report> = match format {
-        "table" => Box::new(signal::report::TableReporter),
-        _ => Box::new(signal::report::JsonReporter),
+        "table" => Box::new(signal::report::TableReporter::new()),
+        _ => Box::new(signal::report::JsonReporter::new()),
     };
 
     match reporter.report(&detections) {

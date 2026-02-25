@@ -7,7 +7,7 @@ use std::path::PathBuf;
 pub struct VerifyContext {
     skill_path: PathBuf,
     skill_md_path: PathBuf,
-    frontmatter: Option<serde_yaml::Value>,
+    frontmatter: Option<serde_yml::Value>,
     verbose: bool,
 }
 
@@ -38,7 +38,7 @@ impl VerifyContext {
         self.verbose
     }
 
-    pub fn frontmatter(&mut self) -> Result<&serde_yaml::Value, VerifyError> {
+    pub fn frontmatter(&mut self) -> Result<&serde_yml::Value, VerifyError> {
         if self.frontmatter.is_none() {
             self.frontmatter = Some(self.load_frontmatter()?);
         }
@@ -49,7 +49,7 @@ impl VerifyContext {
             })
     }
 
-    fn load_frontmatter(&self) -> Result<serde_yaml::Value, VerifyError> {
+    fn load_frontmatter(&self) -> Result<serde_yml::Value, VerifyError> {
         let content =
             std::fs::read_to_string(&self.skill_md_path).map_err(|e| VerifyError::ReadError {
                 path: self.skill_md_path.display().to_string(),
@@ -67,7 +67,7 @@ impl VerifyContext {
         let yaml_lines: Vec<&str> = lines.take_while(|l| *l != "---").collect();
         let yaml_str = yaml_lines.join("\n");
 
-        serde_yaml::from_str(&yaml_str).map_err(|e| VerifyError::InvalidYaml {
+        serde_yml::from_str(&yaml_str).map_err(|e| VerifyError::InvalidYaml {
             message: e.to_string(),
         })
     }

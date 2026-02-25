@@ -2,7 +2,7 @@
 //!
 //! Evidence enables the GROUNDED hypothesis → test → belief integration loop.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -63,7 +63,7 @@ pub struct EvidenceRef {
     pub source: String,
 
     /// When this evidence was recorded
-    pub recorded_at: DateTime<Utc>,
+    pub recorded_at: DateTime,
 
     /// Optional link to artifact or external resource
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -93,7 +93,7 @@ impl EvidenceRef {
             description: description.into(),
             weight: 1.0,
             source: source.into(),
-            recorded_at: Utc::now(),
+            recorded_at: DateTime::now(),
             artifact_ref: None,
             execution_id: None,
             hypothesis_id: None,
@@ -114,7 +114,7 @@ impl EvidenceRef {
             description: description.into(),
             weight: -1.0,
             source: source.into(),
-            recorded_at: Utc::now(),
+            recorded_at: DateTime::now(),
             artifact_ref: None,
             execution_id: None,
             hypothesis_id: None,
@@ -136,7 +136,7 @@ impl EvidenceRef {
             description: description.into(),
             weight: weight.clamp(-1.0, 1.0),
             source: source.into(),
-            recorded_at: Utc::now(),
+            recorded_at: DateTime::now(),
             artifact_ref: None,
             execution_id: None,
             hypothesis_id: None,
@@ -159,7 +159,7 @@ impl EvidenceRef {
             description: description.into(),
             weight: weight.clamp(-1.0, 1.0),
             source: "execution".into(),
-            recorded_at: Utc::now(),
+            recorded_at: DateTime::now(),
             artifact_ref: None,
             execution_id: Some(execution_id.into()),
             hypothesis_id,

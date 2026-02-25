@@ -54,6 +54,7 @@ impl fmt::Display for DeletionReason {
 ///
 /// Innovation: fills the Void x Persistence gap.
 /// Void CAN persist — as proof that something was intentionally removed.
+#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct Tombstone {
     /// Unique tombstone ID.
@@ -211,6 +212,10 @@ impl TombstoneRegistry {
 
     /// All deletion reasons with counts.
     #[must_use]
+    #[allow(
+        clippy::arithmetic_side_effects,
+        reason = "incrementing a counter by 1; usize count cannot overflow in practice"
+    )]
     pub fn reason_summary(&self) -> BTreeMap<String, usize> {
         let mut counts = BTreeMap::new();
         for t in self.tombstones.values() {

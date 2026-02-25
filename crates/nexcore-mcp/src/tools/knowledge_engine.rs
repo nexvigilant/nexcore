@@ -8,7 +8,7 @@ use crate::params::knowledge_engine::{
     KnowledgeExtractPrimitivesParams, KnowledgeIngestParams, KnowledgeQueryParams,
     KnowledgeScoreCompendiousParams, KnowledgeStatsParams,
 };
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_knowledge_engine::extraction::ConceptExtractor;
 use nexcore_knowledge_engine::scoring::CompendiousScorer;
 use nexcore_knowledge_engine::{
@@ -114,7 +114,7 @@ pub fn compile(params: KnowledgeCompileParams) -> Result<CallToolResult, McpErro
             text,
             source: KnowledgeSource::FreeText,
             domain: None,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         })
         .collect();
 

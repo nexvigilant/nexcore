@@ -5,7 +5,7 @@
 
 use std::path::{Path, PathBuf};
 
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_fs::walk::WalkDir;
 use rusqlite::Connection;
 use serde_json::Value as JsonValue;
@@ -88,7 +88,7 @@ pub fn scan_skills(conn: &Connection, skills_dir: &Path) -> Result<usize> {
         )));
     }
 
-    let now = Utc::now();
+    let now = DateTime::now();
     let mut count = 0;
 
     for entry in WalkDir::new(skills_dir)
@@ -291,7 +291,7 @@ pub fn scan_agents(conn: &Connection, agents_dir: &Path) -> Result<usize> {
         )));
     }
 
-    let now = Utc::now();
+    let now = DateTime::now();
     let mut count = 0;
 
     for entry in WalkDir::new(agents_dir)
@@ -370,7 +370,7 @@ fn parse_frontmatter(content: &str) -> serde_json::Map<String, JsonValue> {
 
     let yaml_str = &rest[..end_idx];
 
-    match serde_yaml::from_str::<JsonValue>(yaml_str) {
+    match serde_yml::from_str::<JsonValue>(yaml_str) {
         Ok(JsonValue::Object(map)) => map,
         _ => serde_json::Map::new(),
     }

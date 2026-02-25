@@ -3,7 +3,7 @@
 //! Defines user accounts, authentication methods, and session tracking.
 //! Migrated from Python Ormar User model.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 
@@ -34,7 +34,7 @@ pub struct User {
     pub verify_key: Option<String>,
 
     /// Account creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Authentication method used.
     pub auth_type: UserAuthType,
@@ -74,7 +74,7 @@ impl User {
             password_hash: Some(password_hash),
             verified: false,
             verify_key: Some(generate_verify_key()),
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             auth_type: UserAuthType::Local,
             google_uid: None,
             github_user_id: None,
@@ -100,7 +100,7 @@ impl User {
             password_hash: None,
             verified: true, // OAuth users are pre-verified
             verify_key: None,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             auth_type,
             google_uid: if auth_type == UserAuthType::Google {
                 provider_uid.clone()
@@ -195,7 +195,7 @@ pub struct UserSession {
     pub session_key: String,
 
     /// Session creation time.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// IP address of the client.
     pub ip_address: Option<String>,
@@ -204,13 +204,13 @@ pub struct UserSession {
     pub user_agent: Option<String>,
 
     /// Last activity timestamp.
-    pub last_seen: DateTime<Utc>,
+    pub last_seen: DateTime,
 }
 
 impl UserSession {
     /// Create a new session for a user.
     pub fn new(user_id: NexId, ip_address: Option<String>, user_agent: Option<String>) -> Self {
-        let now = Utc::now();
+        let now = DateTime::now();
         Self {
             id: NexId::v4(),
             user_id,

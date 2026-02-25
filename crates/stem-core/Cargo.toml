@@ -19,5 +19,8 @@ serde = { version = "1.0.204", features = ["derive"] }
 tracing = { version = "0.1.40" }
 
 [dev-dependencies]
-tokio = { version = "1.38.0", features = ["full", "macros", "rt-multi-thread"] }
+tokio = { version = "1.38.0", features = ["full"] }
 serde_json = { version = "1.0.120" }
+
+[lints]
+workspace = true

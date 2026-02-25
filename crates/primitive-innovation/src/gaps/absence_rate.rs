@@ -90,6 +90,10 @@ impl AbsenceRateDetector {
     }
 
     /// Record a data arrival.
+    #[allow(
+        clippy::as_conversions,
+        reason = "u64 to f64 for threshold calculation; interval values fit safely in f64"
+    )]
     pub fn record_arrival(&mut self, timestamp: u64) {
         // Check for absence gap before this arrival
         if let Some(&last) = self.arrivals.last() {
@@ -119,6 +123,10 @@ impl AbsenceRateDetector {
 
     /// Check for absence at a given timestamp (no data arrived since expected).
     #[must_use]
+    #[allow(
+        clippy::as_conversions,
+        reason = "u64 to f64 for threshold calculation; interval values fit safely in f64"
+    )]
     pub fn check_absence(&self, now: u64) -> bool {
         if let Some(&last) = self.arrivals.last() {
             let gap = now.saturating_sub(last);
@@ -132,19 +140,27 @@ impl AbsenceRateDetector {
 
     /// Absence rate: fraction of expected intervals that were missed.
     #[must_use]
+    #[allow(
+        clippy::as_conversions,
+        reason = "usize/u64 to f64 for rate calculation; counts fit safely in f64"
+    )]
     pub fn absence_rate(&self) -> f64 {
         if self.arrivals.len() < 2 {
             return 0.0;
         }
 
-        let first = self.arrivals[0];
-        let last = self.arrivals[self.arrivals.len() - 1];
+        let first = self.arrivals.first().copied().unwrap_or(0);
+        let last = self.arrivals.last().copied().unwrap_or(0);
         let total_duration = last.saturating_sub(first);
 
         if total_duration == 0 || self.expected_interval_ms == 0 {
             return 0.0;
         }
 
+        #[allow(
+            clippy::arithmetic_side_effects,
+            reason = "integer division for expected interval count; both values are non-zero at this point"
+        )]
         let expected_count = total_duration / self.expected_interval_ms;
         let actual_count = self.arrivals.len().saturating_sub(1) as u64;
 
@@ -186,6 +202,10 @@ impl AbsenceRateDetector {
 
     /// Mean absence duration (ms).
     #[must_use]
+    #[allow(
+        clippy::as_conversions,
+        reason = "u64/usize to f64 for mean calculation; durations fit safely in f64"
+    )]
     pub fn mean_absence_duration(&self) -> f64 {
         if self.absences.is_empty() {
             return 0.0;
@@ -195,13 +215,17 @@ impl AbsenceRateDetector {
 
     /// Absence frequency: absences per expected interval.
     #[must_use]
+    #[allow(
+        clippy::as_conversions,
+        reason = "u64/usize to f64 for frequency calculation; counts and durations fit safely in f64"
+    )]
     pub fn absence_frequency_hz(&self) -> f64 {
         if self.arrivals.len() < 2 || self.expected_interval_ms == 0 {
             return 0.0;
         }
 
-        let first = self.arrivals[0];
-        let last = self.arrivals[self.arrivals.len() - 1];
+        let first = self.arrivals.first().copied().unwrap_or(0);
+        let last = self.arrivals.last().copied().unwrap_or(0);
         let duration_sec = (last.saturating_sub(first)) as f64 / 1000.0;
 
         if duration_sec <= 0.0 {

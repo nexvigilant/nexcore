@@ -8,10 +8,10 @@ description = "STEM visualization engine — SVG diagrams for taxonomy, type com
 license = "LicenseRef-Proprietary"
 
 [dependencies]
+nexcore-constants = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 
-[lints.clippy]
-unwrap_used = "deny"
-expect_used = "deny"
-panic = "deny"
+
+[lints]
+workspace = true

@@ -311,7 +311,7 @@ impl Heart {
                 let priority = calculate_priority(cell);
                 Enriched {
                     cell: cell.clone(),
-                    enriched_at: chrono::Utc::now().to_rfc3339(),
+                    enriched_at: nexcore_chrono::DateTime::now().to_rfc3339(),
                     priority,
                 }
             })
@@ -349,7 +349,7 @@ impl Heart {
             enriched: enriched_count,
             distributed,
             pressure,
-            timestamp: chrono::Utc::now().to_rfc3339(),
+            timestamp: nexcore_chrono::DateTime::now().to_rfc3339(),
         }
     }
 

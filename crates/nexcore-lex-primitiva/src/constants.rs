@@ -51,6 +51,7 @@ pub const OMEGA_SENTINEL: u64 = u64::MAX;
 /// Note: This type uses `&'static str` for compile-time constant definitions,
 /// so it only implements Serialize (not Deserialize).
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)]
+#[non_exhaustive]
 pub struct MathConstant {
     /// The numeric value (if finite).
     pub value: Option<f64>,
@@ -199,6 +200,7 @@ impl std::fmt::Display for MathConstant {
 /// Grounds to: {-1, 0, +1}.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[repr(i8)]
+#[non_exhaustive]
 pub enum Trichotomy {
     /// Less than: -1
     Less = -1,
@@ -222,6 +224,10 @@ impl Trichotomy {
 
     /// Convert to i8.
     #[must_use]
+    #[allow(
+        clippy::as_conversions,
+        reason = "repr(i8) enum with values -1/0/1 only; safe conversion"
+    )]
     pub const fn as_i8(self) -> i8 {
         self as i8
     }

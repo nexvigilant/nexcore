@@ -3,7 +3,7 @@
 //! Patterns support T1 primitive grounding and time-based confidence decay.
 //! Confidence decays exponentially with a 30-day half-life unless reinforced.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use super::t1::T1Primitive;
@@ -28,11 +28,11 @@ pub struct Pattern {
     pub examples: Vec<String>,
 
     /// When this pattern was detected
-    pub detected_at: DateTime<Utc>,
+    pub detected_at: DateTime,
 
     /// When this pattern was last reinforced (for decay calculation)
-    #[serde(default = "Utc::now")]
-    pub updated_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub updated_at: DateTime,
 
     /// Confidence level (0.0 to 1.0) — raw, before decay
     pub confidence: f64,
@@ -58,8 +58,8 @@ impl Pattern {
             pattern_type: pattern_type.into(),
             description: description.into(),
             examples: Vec::new(),
-            detected_at: Utc::now(),
-            updated_at: Utc::now(),
+            detected_at: DateTime::now(),
+            updated_at: DateTime::now(),
             confidence: 0.5,
             occurrence_count: 1,
             t1_grounding: None,
@@ -70,7 +70,7 @@ impl Pattern {
     pub fn add_example(&mut self, example: impl Into<String>) {
         self.examples.push(example.into());
         self.occurrence_count += 1;
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
         // Increase confidence with more examples
         self.confidence =
             (f64::from(self.occurrence_count) / (f64::from(self.occurrence_count) + 2.0)).min(0.95);
@@ -79,7 +79,7 @@ impl Pattern {
     /// Set the T1 primitive this pattern is grounded to
     pub fn set_grounding(&mut self, primitive: T1Primitive) {
         self.t1_grounding = Some(primitive);
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Effective confidence after time-based decay.
@@ -88,7 +88,7 @@ impl Pattern {
     /// Patterns reinforced recently keep full confidence; stale ones decay toward 0.
     #[must_use]
     pub fn effective_confidence(&self) -> f64 {
-        let days_elapsed = (Utc::now() - self.updated_at).num_hours() as f64 / 24.0;
+        let days_elapsed = (DateTime::now() - self.updated_at).num_hours() as f64 / 24.0;
         if days_elapsed <= 0.0 {
             return self.confidence;
         }
@@ -175,7 +175,7 @@ mod tests {
         let mut pattern = Pattern::new("test", "workflow", "Old pattern");
         pattern.confidence = 0.9;
         // Simulate 30 days ago (one half-life)
-        pattern.updated_at = Utc::now() - chrono::Duration::days(30);
+        pattern.updated_at = DateTime::now() - nexcore_chrono::Duration::days(30);
 
         let eff = pattern.effective_confidence();
         // Should be ~0.45 (0.9 * 0.5)
@@ -188,7 +188,7 @@ mod tests {
         let mut pattern = Pattern::new("test", "workflow", "Ancient");
         pattern.confidence = 0.95;
         // 90 days = 3 half-lives → 0.95 * 0.125 ≈ 0.119
-        pattern.updated_at = Utc::now() - chrono::Duration::days(90);
+        pattern.updated_at = DateTime::now() - nexcore_chrono::Duration::days(90);
 
         let eff = pattern.effective_confidence();
         assert!(eff < 0.15);

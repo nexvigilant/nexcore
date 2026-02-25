@@ -119,5 +119,5 @@ pub struct TranscriptExpectation {
     pub generator_version: String,
 
     /// Timestamp of generation
-    pub generated_at: chrono::DateTime<chrono::Utc>,
+    pub generated_at: nexcore_chrono::DateTime,
 }

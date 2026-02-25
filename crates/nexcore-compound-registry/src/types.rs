@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 /// chemical compound, regardless of which source provided it.
 ///
 /// ## Tier: T2-C (π + μ + ∃)
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompoundRecord {
     /// Primary name used for resolution (query term).
@@ -36,13 +37,14 @@ pub struct CompoundRecord {
     /// Which source resolved this record.
     pub source: ResolutionSource,
     /// UTC timestamp of resolution.
-    pub resolved_at: chrono::DateTime<chrono::Utc>,
+    pub resolved_at: nexcore_chrono::DateTime,
 }
 
 /// Where a compound record was resolved from.
 ///
 /// ## Tier: T2-P (λ + ∃)
 /// Location (λ) where existence (∃) was confirmed.
+#[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ResolutionSource {
     /// Found in local SQLite cache.
@@ -118,7 +120,7 @@ mod tests {
             chembl_id: Some("CHEMBL25".to_string()),
             synonyms: vec!["Aspirin".to_string(), "Acetylsalicylic acid".to_string()],
             source: ResolutionSource::PubChem,
-            resolved_at: chrono::Utc::now(),
+            resolved_at: nexcore_chrono::DateTime::now(),
         };
 
         let json = serde_json::to_string(&record);

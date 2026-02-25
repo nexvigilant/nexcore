@@ -19,7 +19,7 @@ pub enum PolicyError {
     IoError(#[from] std::io::Error),
     /// Failed to parse policy YAML
     #[error("Failed to parse policy YAML: {0}")]
-    ParseError(#[from] serde_yaml::Error),
+    ParseError(#[from] serde_yml::Error),
     /// Policy file not found
     #[error("Policy file not found: {0:?}")]
     NotFound(PathBuf),
@@ -139,7 +139,7 @@ impl PolicyFile {
         }
 
         let content = fs::read_to_string(path)?;
-        let policy: PolicyFile = serde_yaml::from_str(&content)?;
+        let policy: PolicyFile = serde_yml::from_str(&content)?;
         Ok(policy)
     }
 

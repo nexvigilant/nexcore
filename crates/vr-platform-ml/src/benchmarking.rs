@@ -3,7 +3,7 @@
 //! Provides standardized benchmark datasets, metrics calculation (F1, MCC),
 //! and composite scoring for model ranking.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// A standardized benchmark dataset for model evaluation.
@@ -50,7 +50,7 @@ pub struct BenchmarkResult {
     /// The computed metrics.
     pub metrics: BenchmarkMetrics,
     /// When the evaluation was performed.
-    pub evaluated_at: DateTime<Utc>,
+    pub evaluated_at: DateTime,
 }
 
 /// Calculate F1 score from precision and recall.
@@ -126,7 +126,7 @@ pub fn rank_models(results: &[BenchmarkResult]) -> Vec<(String, f64)> {
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     #[test]
     fn f1_basic() {
@@ -217,7 +217,7 @@ mod tests {
                 rmse: None,
                 mae: None,
             },
-            evaluated_at: Utc::now(),
+            evaluated_at: DateTime::now(),
         }
     }
 

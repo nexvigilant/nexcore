@@ -3,7 +3,7 @@
 //! Manages model lifecycle from queued → training → evaluating → published/failed,
 //! with promotion gates based on metric improvement thresholds.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// Lifecycle status of a model version.
@@ -51,9 +51,9 @@ pub struct ModelVersion {
     /// Number of training samples used.
     pub training_data_size: u64,
     /// When training was started.
-    pub training_started_at: DateTime<Utc>,
+    pub training_started_at: DateTime,
     /// When training completed (None if still in progress or failed early).
-    pub training_completed_at: Option<DateTime<Utc>>,
+    pub training_completed_at: Option<DateTime>,
     /// Evaluation metrics (populated after evaluation phase).
     pub metrics: TrainingMetrics,
     /// Current lifecycle status.
@@ -95,7 +95,7 @@ pub fn training_data_sufficient(sample_count: u64, feature_count: u64) -> bool {
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     fn make_metrics(accuracy: f64, auc_roc: f64) -> TrainingMetrics {
         TrainingMetrics {
@@ -193,8 +193,8 @@ mod tests {
             model_type: "activity_prediction".to_string(),
             version_tag: "v1.0.0".to_string(),
             training_data_size: 50_000,
-            training_started_at: Utc::now(),
-            training_completed_at: Some(Utc::now()),
+            training_started_at: DateTime::now(),
+            training_completed_at: Some(DateTime::now()),
             metrics: make_metrics(0.92, 0.95),
             status: TrainingStatus::Published,
         };

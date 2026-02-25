@@ -1,6 +1,6 @@
 //! Tenant lifecycle management — suspend, reactivate, offboard, export.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use vr_core::{Tenant, TenantId, TenantStatus, VrError, VrResult};
 
@@ -12,7 +12,7 @@ pub struct LifecycleTransition {
     pub to_status: TenantStatus,
     pub reason: String,
     pub initiated_by: String,
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
 }
 
 /// Valid state transitions for tenant lifecycle.
@@ -66,7 +66,7 @@ pub fn create_transition(
         to_status,
         reason: reason.to_string(),
         initiated_by: initiated_by.to_string(),
-        timestamp: Utc::now(),
+        timestamp: DateTime::now(),
     })
 }
 
@@ -108,6 +108,11 @@ impl RetentionPolicy {
             TenantStatus::Deprovisioned => Self {
                 retention_days: 0,
                 export_available: false,
+                read_only: true,
+            },
+            _ => Self {
+                retention_days: 30,
+                export_available: true,
                 read_only: true,
             },
         }
@@ -186,8 +191,8 @@ mod tests {
             status,
             trial_ends_at: None,
             settings: serde_json::json!({}),
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+            created_at: DateTime::now(),
+            updated_at: DateTime::now(),
         }
     }
 

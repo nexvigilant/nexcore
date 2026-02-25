@@ -85,6 +85,7 @@ define_id!(InvoiceId, "inv");
 define_id!(SignalId, "sig");
 define_id!(DealId, "deal");
 define_id!(AssetId, "ast");
+define_id!(TerminalSessionId, "tsn");
 
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]

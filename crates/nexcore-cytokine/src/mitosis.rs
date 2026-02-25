@@ -23,7 +23,7 @@
 //! - **Population cap**: Maximum concurrent agents enforced
 //! - **Lineage tracking**: Parent→child chain for accountability
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// Unique identifier for a cell/agent in the population.
@@ -45,7 +45,7 @@ pub struct LineageRecord {
     /// Generation number (0 for root)
     pub generation: u32,
     /// When this cell was created
-    pub born_at: DateTime<Utc>,
+    pub born_at: DateTime,
 }
 
 /// Result of a spawn attempt.
@@ -114,7 +114,7 @@ impl PopulationController {
             cell_id: cell_id.clone(),
             parent_id: None,
             generation: 0,
-            born_at: Utc::now(),
+            born_at: DateTime::now(),
         });
         self.total_spawned += 1;
         cell_id
@@ -146,7 +146,7 @@ impl PopulationController {
             cell_id: child_id.clone(),
             parent_id: Some(parent_id.to_string()),
             generation: parent_gen + 1,
-            born_at: Utc::now(),
+            born_at: DateTime::now(),
         });
 
         self.total_spawned += 1;

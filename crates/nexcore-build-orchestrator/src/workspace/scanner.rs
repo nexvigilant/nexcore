@@ -73,6 +73,6 @@ pub fn scan_workspace(workspace_root: &Path) -> BuildOrcResult<WorkspaceScan> {
         workspace_hash,
         crate_count: targets.len(),
         targets,
-        scanned_at: chrono::Utc::now(),
+        scanned_at: nexcore_chrono::DateTime::now(),
     })
 }

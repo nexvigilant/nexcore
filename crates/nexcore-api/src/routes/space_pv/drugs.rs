@@ -60,8 +60,8 @@ async fn create_drug(
         dosage_form: req.dosage_form,
         strength: req.strength,
         description: req.description,
-        created_at: chrono::Utc::now(),
-        updated_at: chrono::Utc::now(),
+        created_at: nexcore_chrono::DateTime::now(),
+        updated_at: nexcore_chrono::DateTime::now(),
     };
     Ok((StatusCode::CREATED, Json(drug)))
 }

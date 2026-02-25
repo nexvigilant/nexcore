@@ -8,10 +8,11 @@
 //! - **Sequence (σ)**: Iterative processing of drug/event combinations within the pipeline stage.
 
 use crate::core::{Normalize, NormalizedEvent, RawReport, Result};
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 
 /// Basic normalizer that lowercases and trims drug/event names.
+#[non_exhaustive]
 pub struct BasicNormalizer;
 
 impl Normalize for BasicNormalizer {
@@ -25,7 +26,7 @@ impl Normalize for BasicNormalizer {
                     event: event.trim().to_lowercase(),
                     meddra_pt: Some(event.trim().to_lowercase()),
                     meddra_soc: None,
-                    report_date: report.report_date.unwrap_or_else(Utc::now),
+                    report_date: report.report_date.unwrap_or_else(|| DateTime::now()),
                     source: report.source.clone(),
                 });
             }
@@ -62,7 +63,7 @@ impl Normalize for SynonymNormalizer {
                     event: event.trim().to_lowercase(),
                     meddra_pt: Some(event.trim().to_lowercase()),
                     meddra_soc: None,
-                    report_date: report.report_date.unwrap_or_else(Utc::now),
+                    report_date: report.report_date.unwrap_or_else(|| DateTime::now()),
                     source: report.source.clone(),
                 });
             }
@@ -81,7 +82,7 @@ mod tests {
             id: "test-1".into(),
             drug_names: vec!["Aspirin".into(), "ASA".into()],
             event_terms: vec!["GI Bleeding".into()],
-            report_date: Some(Utc::now()),
+            report_date: Some(DateTime::now()),
             source: ReportSource::Faers,
             metadata: serde_json::Value::Null,
         }

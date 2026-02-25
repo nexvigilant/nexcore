@@ -11,7 +11,7 @@
 
 use std::collections::HashMap;
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 // ── Custom serde for HashMap<(String,String), u64> ──────────────────
@@ -71,7 +71,7 @@ pub struct Observation {
     /// Optional numeric value for threshold comparisons.
     pub numeric_value: Option<f64>,
     /// When this observation was made.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Optional tags for grouping.
     pub tags: Vec<String>,
 }
@@ -84,7 +84,7 @@ impl Observation {
             key: key.into(),
             value: value.into(),
             numeric_value: None,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             tags: Vec::new(),
         }
     }
@@ -96,7 +96,7 @@ impl Observation {
             key: key.into(),
             value: format!("{value}"),
             numeric_value: Some(value),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             tags: Vec::new(),
         }
     }

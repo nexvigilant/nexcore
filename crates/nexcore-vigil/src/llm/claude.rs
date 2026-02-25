@@ -1,7 +1,7 @@
 use crate::llm::LLMClient;
 use crate::models::{Event, Interaction};
 use async_trait::async_trait;
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use reqwest::{Client, header};
 use serde_json::json;
 use tracing::info;
@@ -63,7 +63,7 @@ impl LLMClient for ClaudeClient {
             event: event.clone(),
             prompt: context.to_string(),
             response: text.to_string(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             tokens_used: resp_json["usage"]["total_tokens"].as_i64().unwrap_or(0) as i32,
             contains_learning: text.contains("[LEARNING]"),
             actions_taken: self.extract_actions(text),

@@ -7,7 +7,7 @@
 //! - **ClassificationTag**: T2-C, Dominant: μ Mapping (μ + ς + π)
 
 use crate::level::ClassificationLevel;
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -82,7 +82,7 @@ pub struct ClassificationTag {
     /// Who assigned this classification.
     pub assigned_by: String,
     /// When the classification was assigned.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Reason for this classification.
     pub reason: String,
     /// Whether downgrade is permitted without dual-auth.
@@ -102,7 +102,7 @@ impl ClassificationTag {
             target,
             level,
             assigned_by: assigned_by.into(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             reason: reason.into(),
             downgrade_permitted: false,
         }

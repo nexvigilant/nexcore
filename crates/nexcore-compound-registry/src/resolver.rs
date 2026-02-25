@@ -31,6 +31,14 @@ use crate::types::{CompoundRecord, ResolutionSource};
 /// - `RegistryError::ResolutionExhausted` if all sources find nothing
 /// - `RegistryError::Database` on cache access failure
 /// - `RegistryError::Http` / `RegistryError::InvalidResponse` on API errors
+///
+/// # Note on `Send`
+/// This future is `!Send` because `rusqlite::Connection` uses `RefCell` internally.
+/// Use one `CacheStore` per async task; wrap in `tokio::sync::Mutex` for shared access.
+#[allow(
+    clippy::future_not_send,
+    reason = "rusqlite::Connection wraps RefCell and is intentionally !Send; callers must not share CacheStore across tasks without a Mutex"
+)]
 pub async fn resolve(
     name: &str,
     store: &CacheStore,
@@ -102,6 +110,14 @@ pub async fn resolve(
 /// rather than short-circuiting the batch.
 ///
 /// Returns a `Vec<(name, result)>` preserving input order.
+///
+/// # Note on `Send`
+/// This future is `!Send` for the same reason as [`resolve`]: `rusqlite::Connection`
+/// is `!Send`. Use one `CacheStore` per async task.
+#[allow(
+    clippy::future_not_send,
+    reason = "rusqlite::Connection wraps RefCell and is intentionally !Send; callers must not share CacheStore across tasks without a Mutex"
+)]
 pub async fn resolve_batch(
     names: &[&str],
     store: &CacheStore,
@@ -132,7 +148,7 @@ mod tests {
             chembl_id: Some("CHEMBL25".to_string()),
             synonyms: vec!["Acetylsalicylic acid".to_string()],
             source: ResolutionSource::LocalCache,
-            resolved_at: chrono::Utc::now(),
+            resolved_at: nexcore_chrono::DateTime::now(),
         }
     }
 
@@ -198,7 +214,7 @@ mod tests {
                 chembl_id: None,
                 synonyms: Vec::new(),
                 source: ResolutionSource::LocalCache,
-                resolved_at: chrono::Utc::now(),
+                resolved_at: nexcore_chrono::DateTime::now(),
             };
             assert!(store.put(&aspirin).is_ok());
             assert!(store.put(&ibuprofen).is_ok());

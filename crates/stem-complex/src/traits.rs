@@ -1,6 +1,9 @@
 //! Abstract traits for complex field arithmetic and analytic functions.
 
-#![allow(clippy::module_name_repetitions)]
+#![allow(
+    clippy::module_name_repetitions,
+    reason = "ComplexField and AnalyticFunction are idiomatic names for these traits despite the 'Complex' module prefix"
+)]
 
 use crate::complex::Complex;
 use crate::error::ComplexError;

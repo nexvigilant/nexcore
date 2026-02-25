@@ -12,12 +12,13 @@
 //! - Guardian security anomaly detection
 
 use crate::interface::InterfaceId;
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// Traffic counters for a single interface.
 ///
 /// Tier: T2-P (N Quantity — byte counts)
+#[non_exhaustive]
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TrafficCounters {
     /// Bytes sent.
@@ -37,43 +38,54 @@ pub struct TrafficCounters {
 impl TrafficCounters {
     /// Total bytes (sent + received).
     pub fn total_bytes(&self) -> u64 {
-        self.bytes_sent + self.bytes_received
+        self.bytes_sent.saturating_add(self.bytes_received)
     }
 
     /// Total packets (sent + received).
     pub fn total_packets(&self) -> u64 {
-        self.packets_sent + self.packets_received
+        self.packets_sent.saturating_add(self.packets_received)
     }
 
     /// Packet loss rate (0.0 - 1.0).
     pub fn packet_loss_rate(&self) -> f64 {
-        let total = self.total_packets() + self.packets_dropped;
+        let total = self.total_packets().saturating_add(self.packets_dropped);
         if total == 0 {
             return 0.0;
         }
-        self.packets_dropped as f64 / total as f64
+        // u64→f64: packet counters fit exactly in f64 mantissa for any realistic traffic volume
+        #[allow(
+            clippy::as_conversions,
+            reason = "u64 packet counts fit exactly in f64 mantissa for any realistic traffic volume"
+        )]
+        let dropped = self.packets_dropped as f64;
+        #[allow(
+            clippy::as_conversions,
+            reason = "u64 packet counts fit exactly in f64 mantissa for any realistic traffic volume"
+        )]
+        let total_f = total as f64;
+        dropped / total_f
     }
 
     /// Record bytes sent.
     pub fn record_sent(&mut self, bytes: u64) {
-        self.bytes_sent += bytes;
-        self.packets_sent += 1;
+        self.bytes_sent = self.bytes_sent.saturating_add(bytes);
+        self.packets_sent = self.packets_sent.saturating_add(1);
     }
 
     /// Record bytes received.
     pub fn record_received(&mut self, bytes: u64) {
-        self.bytes_received += bytes;
-        self.packets_received += 1;
+        self.bytes_received = self.bytes_received.saturating_add(bytes);
+        self.packets_received = self.packets_received.saturating_add(1);
     }
 
     /// Record a dropped packet.
     pub fn record_dropped(&mut self) {
-        self.packets_dropped += 1;
+        self.packets_dropped = self.packets_dropped.saturating_add(1);
     }
 
     /// Record an error.
     pub fn record_error(&mut self) {
-        self.errors += 1;
+        self.errors = self.errors.saturating_add(1);
     }
 
     /// Reset all counters.
@@ -98,6 +110,11 @@ fn format_bytes(bytes: u64) -> String {
     const MB: u64 = 1024 * 1024;
     const GB: u64 = 1024 * 1024 * 1024;
 
+    // u64→f64: these are display-only divisions; precision loss beyond 2^53 is acceptable
+    #[allow(
+        clippy::as_conversions,
+        reason = "display-only conversion; precision loss beyond 2^53 bytes (~8 exabytes) is acceptable for human-readable formatting"
+    )]
     if bytes >= GB {
         format!("{:.1} GB", bytes as f64 / GB as f64)
     } else if bytes >= MB {
@@ -112,17 +129,19 @@ fn format_bytes(bytes: u64) -> String {
 /// A latency measurement sample.
 ///
 /// Tier: T2-P (N Quantity + ν Frequency)
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LatencySample {
     /// Round-trip time in microseconds.
     pub rtt_us: u64,
     /// When this measurement was taken.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
 }
 
 /// Connection quality assessment.
 ///
 /// Tier: T2-C (N + κ — quantified comparison)
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum ConnectionQuality {
     /// Connection is unusable.
@@ -168,6 +187,7 @@ impl ConnectionQuality {
 /// Per-interface traffic monitor.
 ///
 /// Tier: T2-C (N + ν + σ — quantified periodic measurement sequence)
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InterfaceMonitor {
     /// Interface being monitored.
@@ -179,7 +199,7 @@ pub struct InterfaceMonitor {
     /// Maximum latency samples to keep.
     pub max_samples: usize,
     /// When monitoring started.
-    pub started_at: DateTime<Utc>,
+    pub started_at: DateTime,
 }
 
 impl InterfaceMonitor {
@@ -190,7 +210,7 @@ impl InterfaceMonitor {
             counters: TrafficCounters::default(),
             latency_samples: Vec::new(),
             max_samples: 100,
-            started_at: Utc::now(),
+            started_at: DateTime::now(),
         }
     }
 
@@ -201,7 +221,7 @@ impl InterfaceMonitor {
         }
         self.latency_samples.push(LatencySample {
             rtt_us,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         });
     }
 
@@ -211,7 +231,15 @@ impl InterfaceMonitor {
             return None;
         }
         let sum: u64 = self.latency_samples.iter().map(|s| s.rtt_us).sum();
-        Some(sum / self.latency_samples.len() as u64)
+        // usize→u64: sample count is bounded by max_samples (100 by default), well within u64
+        let count = u64::try_from(self.latency_samples.len())
+            .unwrap_or(1)
+            .max(1);
+        #[allow(
+            clippy::arithmetic_side_effects,
+            reason = "count is derived from try_from with a minimum of 1, so division is always safe — no division by zero, no overflow"
+        )]
+        Some(sum / count)
     }
 
     /// Average latency in milliseconds.

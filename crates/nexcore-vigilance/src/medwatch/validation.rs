@@ -75,10 +75,22 @@ pub fn is_not_future_date(date: Option<&str>) -> bool {
     };
 
     // Compare with current date
-    let now = chrono::Utc::now();
-    let current_year = now.format("%Y").to_string().parse::<i32>().unwrap_or(2026);
-    let current_month = now.format("%m").to_string().parse::<u32>().unwrap_or(1);
-    let current_day = now.format("%d").to_string().parse::<u32>().unwrap_or(1);
+    let now = nexcore_chrono::DateTime::now();
+    let current_year = now
+        .format("%Y")
+        .unwrap_or_default()
+        .parse::<i32>()
+        .unwrap_or(2026);
+    let current_month = now
+        .format("%m")
+        .unwrap_or_default()
+        .parse::<u32>()
+        .unwrap_or(1);
+    let current_day = now
+        .format("%d")
+        .unwrap_or_default()
+        .parse::<u32>()
+        .unwrap_or(1);
 
     if year > current_year {
         return false;

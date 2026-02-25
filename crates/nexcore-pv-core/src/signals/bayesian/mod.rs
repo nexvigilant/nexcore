@@ -21,12 +21,19 @@
 pub mod bcpnn;
 pub mod ebgm;
 pub mod ic;
+pub mod measured;
 pub mod omega_shrinkage;
+pub mod update;
 
 // Re-export main functions at module level
 pub use bcpnn::{calculate_bcpnn, calculate_ic025, is_bcpnn_signal};
 pub use ebgm::{MGPSPriors, calculate_ebgm, calculate_ebgm_with_priors, eb05, ebgm_only};
 pub use ic::{calculate_ic, ic_only, ic025};
+pub use measured::{bcpnn_measured, ebgm_measured, ic_measured, omega_measured};
 pub use omega_shrinkage::{
     DDITable, OmegaConfig, OmegaResult, calculate_omega, calculate_omega_interaction,
+};
+pub use update::{
+    BayesianUpdate, BetaParams, BinomialEvidence, ConjugateBetaBinomial, GammaParams,
+    GammaPoissonMixture, PoissonEvidence,
 };

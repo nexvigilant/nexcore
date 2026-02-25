@@ -46,6 +46,7 @@ struct ChemblSynonym {
 }
 
 /// A ChEMBL-specific compound record with bioactivity metadata.
+#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct ChemblRecord {
     /// ChEMBL molecule identifier (e.g. "CHEMBL25").
@@ -181,7 +182,7 @@ fn chembl_record_to_compound(name: &str, chembl: ChemblRecord) -> CompoundRecord
         chembl_id: Some(chembl.chembl_id),
         synonyms: chembl.synonyms,
         source: ResolutionSource::ChEMBL,
-        resolved_at: chrono::Utc::now(),
+        resolved_at: nexcore_chrono::DateTime::now(),
     }
 }
 

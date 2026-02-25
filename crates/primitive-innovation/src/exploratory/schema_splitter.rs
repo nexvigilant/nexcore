@@ -178,6 +178,10 @@ impl SchemaGuidedSplitter {
     /// For numeric fields: evenly-spaced points within [min, max].
     /// For categorical: one split per category (binary: is/isn't this category).
     #[must_use]
+    #[allow(
+        clippy::as_conversions,
+        reason = "usize to f64 for candidate spacing math; num_candidates and indices fit safely in f64"
+    )]
     pub fn generate_candidates(&self, field: &str) -> Vec<f64> {
         match self.schema.field_type(field) {
             Some(SchemaFieldType::Numeric { min, max }) => {
@@ -207,6 +211,14 @@ impl SchemaGuidedSplitter {
     /// Uses Gini impurity reduction as the gain metric.
     /// Labels are binary: 0.0 or 1.0.
     #[must_use]
+    #[allow(
+        clippy::as_conversions,
+        reason = "usize to f64 for weight calculation; label counts fit safely in f64"
+    )]
+    #[allow(
+        clippy::arithmetic_side_effects,
+        reason = "counter increments for evaluated/rejected splits"
+    )]
     pub fn evaluate_field(&self, field: &str, data: &[DataRow], labels: &[f64]) -> SplitEvaluation {
         let candidates = self.generate_candidates(field);
         let mut best: Option<SplitCandidate> = None;
@@ -234,22 +246,22 @@ impl SchemaGuidedSplitter {
                 }
                 let val = row.get(field).copied().unwrap_or(0.0);
                 if val <= *threshold {
-                    left_labels.push(labels[i]);
+                    left_labels.push(labels.get(i).copied().unwrap_or(0.0));
                 } else {
-                    right_labels.push(labels[i]);
+                    right_labels.push(labels.get(i).copied().unwrap_or(0.0));
                 }
             }
 
             // Calculate Gini gain
             let parent_gini = gini_impurity(labels);
-            let n = labels.len() as f64;
+            let label_count = labels.len() as f64;
 
-            if n == 0.0 {
+            if label_count == 0.0 {
                 continue;
             }
 
-            let left_weight = left_labels.len() as f64 / n;
-            let right_weight = right_labels.len() as f64 / n;
+            let left_weight = left_labels.len() as f64 / label_count;
+            let right_weight = right_labels.len() as f64 / label_count;
             let weighted_child_gini = left_weight * gini_impurity(&left_labels)
                 + right_weight * gini_impurity(&right_labels);
 
@@ -276,6 +288,10 @@ impl SchemaGuidedSplitter {
 
     /// Find the best split across all fields.
     #[must_use]
+    #[allow(
+        clippy::arithmetic_side_effects,
+        reason = "accumulating candidate counts across fields; bounded by input size"
+    )]
     pub fn find_best_split(&self, data: &[DataRow], labels: &[f64]) -> SplitEvaluation {
         let mut global_best: Option<SplitCandidate> = None;
         let mut total_evaluated = 0_usize;
@@ -304,6 +320,14 @@ impl SchemaGuidedSplitter {
     ///
     /// Counts how many rows have values within schema-defined bounds.
     #[must_use]
+    #[allow(
+        clippy::as_conversions,
+        reason = "f64 to usize for category index; usize to f64 for conformance rate calculation"
+    )]
+    #[allow(
+        clippy::arithmetic_side_effects,
+        reason = "violation counter and total_checks: bounded by data size"
+    )]
     pub fn score_schema_quality(&self, data: &[DataRow]) -> SchemaQuality {
         let mut violations = 0_usize;
         let mut violating_fields: BTreeMap<String, bool> = BTreeMap::new();
@@ -317,6 +341,10 @@ impl SchemaGuidedSplitter {
                             let idx = value as usize;
                             idx < categories.len()
                         }
+                        #[allow(
+                            clippy::float_cmp,
+                            reason = "boolean field validation: value must be exactly 0.0 or 1.0 by schema definition"
+                        )]
                         SchemaFieldType::Boolean => value == 0.0 || value == 1.0,
                     };
 
@@ -344,6 +372,10 @@ impl SchemaGuidedSplitter {
 
     /// Check if a threshold is valid for a given field.
     #[must_use]
+    #[allow(
+        clippy::as_conversions,
+        reason = "f64 to usize for category index validation; threshold is non-negative by schema construction"
+    )]
     pub fn is_valid_threshold(&self, field: &str, threshold: f64) -> bool {
         match self.schema.field_type(field) {
             Some(SchemaFieldType::Numeric { min, max }) => threshold >= *min && threshold <= *max,
@@ -369,6 +401,14 @@ impl SchemaGuidedSplitter {
 }
 
 /// Calculate Gini impurity for binary labels (0.0 or 1.0).
+#[allow(
+    clippy::as_conversions,
+    reason = "usize to f64 for probability calculation; counts fit safely in f64"
+)]
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "Gini impurity formula: intentional f64 arithmetic for p0*p0 + p1*p1"
+)]
 fn gini_impurity(labels: &[f64]) -> f64 {
     let n = labels.len();
     if n == 0 {

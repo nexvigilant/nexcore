@@ -2,7 +2,7 @@ use crate::llm::LLMClient;
 use crate::models::{Event, Interaction};
 use crate::sources::webhook::get_llm_stats;
 use async_trait::async_trait;
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_vigilance::telemetry::{GeminiLogEntry, append_log};
 use reqwest::Client;
 use serde_json::json;
@@ -166,18 +166,18 @@ Available actions:
             if stats.provider.is_empty() {
                 stats.provider = "gemini".to_string();
                 stats.model = self.model.clone();
-                stats.session_start = Some(Utc::now());
+                stats.session_start = Some(DateTime::now());
             }
             stats.total_calls += 1;
             stats.total_tokens += tokens_used as u64;
             stats.input_tokens += input_tokens;
             stats.output_tokens += output_tokens;
-            stats.last_call = Some(Utc::now());
+            stats.last_call = Some(DateTime::now());
         }
 
         // Log to Watchtower telemetry
         let latency_ms = start.elapsed().as_millis() as u64;
-        let session_id = format!("vigil-{}", Utc::now().timestamp_millis());
+        let session_id = format!("vigil-{}", DateTime::now().timestamp_millis());
         let log_entry = GeminiLogEntry::success(
             session_id,
             "vigil",
@@ -192,11 +192,11 @@ Available actions:
         }
 
         Ok(Interaction {
-            id: format!("gemini-{}", Utc::now().timestamp_millis()),
+            id: format!("gemini-{}", DateTime::now().timestamp_millis()),
             event: event.clone(),
             prompt: context.to_string(),
             response: text.to_string(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             tokens_used,
             contains_learning: text.contains("[LEARNING]"),
             actions_taken: self.extract_actions(text),

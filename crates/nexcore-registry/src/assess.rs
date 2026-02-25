@@ -3,7 +3,7 @@
 //! Computes compliance tier and SMST v2 score from database fields.
 //! Pure Rust, deterministic, no LLM — assessment is a function of metadata.
 
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 
@@ -158,7 +158,7 @@ pub fn assess_all(conn: &Connection) -> Result<Vec<Assessment>> {
 ///
 /// Returns an error on query failure.
 pub fn apply_assessments(conn: &Connection, assessments: &[Assessment]) -> Result<usize> {
-    let now = Utc::now().to_rfc3339();
+    let now = DateTime::now().to_rfc3339();
     let mut applied = 0usize;
 
     for a in assessments {
@@ -459,7 +459,7 @@ mod tests {
     use crate::pool::RegistryPool;
 
     fn make_skill(name: &str) -> SkillRow {
-        let now = Utc::now();
+        let now = DateTime::now();
         SkillRow {
             name: name.to_string(),
             path: format!("/skills/{name}/SKILL.md"),

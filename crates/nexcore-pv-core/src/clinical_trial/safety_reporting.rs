@@ -6,7 +6,7 @@
 //!
 //! Key requirement: Investigators must report SAEs "immediately" (≤1 calendar day)
 
-use chrono::{DateTime, Duration, Utc};
+use nexcore_chrono::{DateTime, Duration};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -92,8 +92,8 @@ pub struct SeriousAdverseEvent {
     pub id: String,
     pub event_term: String,
     pub seriousness_criteria: Vec<SeriousnessCriterion>,
-    pub onset_date: DateTime<Utc>,
-    pub awareness_date: DateTime<Utc>,
+    pub onset_date: DateTime,
+    pub awareness_date: DateTime,
     pub expected: bool,
     pub relatedness: Relatedness,
     pub outcome: EventOutcome,
@@ -130,9 +130,9 @@ impl SeriousAdverseEvent {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SafetyReportingTimeline {
     pub event: SeriousAdverseEvent,
-    pub awareness_time: DateTime<Utc>,
-    pub reported_to_sponsor: Option<DateTime<Utc>>,
-    pub reported_to_fda: Option<DateTime<Utc>>,
+    pub awareness_time: DateTime,
+    pub reported_to_sponsor: Option<DateTime>,
+    pub reported_to_fda: Option<DateTime>,
 }
 
 impl SafetyReportingTimeline {
@@ -148,22 +148,22 @@ impl SafetyReportingTimeline {
     }
 
     #[must_use]
-    pub fn investigator_deadline(&self) -> DateTime<Utc> {
+    pub fn investigator_deadline(&self) -> DateTime {
         self.awareness_time + Duration::days(1)
     }
 
     #[must_use]
-    pub fn sponsor_expedited_deadline(&self) -> DateTime<Utc> {
+    pub fn sponsor_expedited_deadline(&self) -> DateTime {
         self.awareness_time + Duration::days(7)
     }
 
     #[must_use]
-    pub fn sponsor_standard_deadline(&self) -> DateTime<Utc> {
+    pub fn sponsor_standard_deadline(&self) -> DateTime {
         self.awareness_time + Duration::days(15)
     }
 
     #[must_use]
-    pub fn applicable_fda_deadline(&self) -> DateTime<Utc> {
+    pub fn applicable_fda_deadline(&self) -> DateTime {
         if self.event.has_fatal_or_life_threatening() {
             self.sponsor_expedited_deadline()
         } else {
@@ -219,8 +219,8 @@ pub enum ComplianceStatus {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SafetyReport {
     pub report_type: SafetyReportType,
-    pub period_start: DateTime<Utc>,
-    pub period_end: DateTime<Utc>,
+    pub period_start: DateTime,
+    pub period_end: DateTime,
     pub subjects_exposed: usize,
     pub total_saes: usize,
     pub susars: usize,
@@ -268,8 +268,8 @@ mod tests {
             id: "SAE-001".into(),
             event_term: "Hepatotoxicity".into(),
             seriousness_criteria: vec![SeriousnessCriterion::Hospitalization],
-            onset_date: Utc::now(),
-            awareness_date: Utc::now(),
+            onset_date: DateTime::now(),
+            awareness_date: DateTime::now(),
             expected: false,
             relatedness: Relatedness::Probable,
             outcome: EventOutcome::Recovering,
@@ -285,8 +285,8 @@ mod tests {
             id: "SAE-002".into(),
             event_term: "Death".into(),
             seriousness_criteria: vec![SeriousnessCriterion::Death],
-            onset_date: Utc::now(),
-            awareness_date: Utc::now(),
+            onset_date: DateTime::now(),
+            awareness_date: DateTime::now(),
             expected: false,
             relatedness: Relatedness::Possible,
             outcome: EventOutcome::Fatal,

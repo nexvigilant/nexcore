@@ -17,7 +17,9 @@ impl PipelineId {
     /// Create a new pipeline ID from timestamp + random suffix.
     #[must_use]
     pub fn generate() -> Self {
-        let ts = chrono::Utc::now().format("%Y%m%d-%H%M%S");
+        let ts = nexcore_chrono::DateTime::now()
+            .format("%Y%m%d-%H%M%S")
+            .unwrap_or_default();
         let suffix: u16 = (std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map(|d| d.subsec_nanos())
@@ -101,7 +103,7 @@ pub struct LogChunk {
     /// Whether this is stderr (true) or stdout (false).
     pub is_stderr: bool,
     /// Timestamp of capture.
-    pub timestamp: chrono::DateTime<chrono::Utc>,
+    pub timestamp: nexcore_chrono::DateTime,
 }
 
 /// Stream of log chunks (type alias for collections).
@@ -184,7 +186,7 @@ mod tests {
             stage_id: StageId("test".into()),
             content: "hello world".into(),
             is_stderr: false,
-            timestamp: chrono::Utc::now(),
+            timestamp: nexcore_chrono::DateTime::now(),
         };
         let json = serde_json::to_string(&chunk);
         assert!(json.is_ok());

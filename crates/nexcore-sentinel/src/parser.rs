@@ -10,7 +10,7 @@
 use std::net::IpAddr;
 use std::sync::LazyLock;
 
-use chrono::{NaiveDateTime, Utc};
+use nexcore_chrono::{DateTime, parse_naive_with_format};
 use regex::Regex;
 
 use crate::error::{Result, SentinelError};
@@ -32,15 +32,15 @@ static INVALID_USER_RE: LazyLock<Regex> = LazyLock::new(|| {
     .unwrap_or_else(|_| Regex::new("^$").unwrap_or_else(|_| unreachable!()))
 });
 
-/// Parse a syslog timestamp like "Feb  4 14:23:01" into a `DateTime<Utc>`.
+/// Parse a syslog timestamp like "Feb  4 14:23:01" into a `DateTime`.
 ///
 /// Assumes the current year (syslog doesn't include year).
-fn parse_syslog_timestamp(ts: &str) -> Result<chrono::DateTime<Utc>> {
-    let year = Utc::now().format("%Y");
+fn parse_syslog_timestamp(ts: &str) -> Result<nexcore_chrono::DateTime> {
+    let year = DateTime::now().format("%Y").unwrap_or_default();
     let with_year = format!("{year} {ts}");
-    let naive = NaiveDateTime::parse_from_str(&with_year, "%Y %b %e %H:%M:%S")
-        .map_err(|e| SentinelError::Parse(format!("timestamp '{ts}': {e}")))?;
-    Ok(naive.and_utc())
+    let naive = parse_naive_with_format(&with_year, "%Y %b %e %H:%M:%S")
+        .map_err(|_| SentinelError::Parse(format!("timestamp '{ts}'")))?;
+    Ok(naive.to_datetime())
 }
 
 /// Parse a single auth log line into an `AuthEvent`, if it matches.
@@ -157,7 +157,7 @@ mod tests {
                 .unwrap_or(Some(AuthEvent::FailedPassword {
                     ip: IpAddr::V4(std::net::Ipv4Addr::LOCALHOST),
                     user: String::new(),
-                    timestamp: Utc::now(),
+                    timestamp: DateTime::now(),
                 }))
                 .is_none()
         );

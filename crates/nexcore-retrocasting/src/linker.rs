@@ -155,7 +155,7 @@ mod tests {
             chembl_id: None,
             synonyms: vec![],
             source: ResolutionSource::LocalCache,
-            resolved_at: chrono::Utc::now(),
+            resolved_at: nexcore_chrono::DateTime::now(),
         }
     }
 

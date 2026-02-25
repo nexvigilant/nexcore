@@ -142,19 +142,17 @@ fn save_store(store: &HitlStore) -> Result<(), McpError> {
 }
 
 fn now_iso() -> String {
-    chrono::Utc::now().to_rfc3339()
+    nexcore_chrono::DateTime::now().to_rfc3339()
 }
 
-fn parse_iso(s: &str) -> Option<chrono::DateTime<chrono::Utc>> {
-    chrono::DateTime::parse_from_rfc3339(s)
-        .ok()
-        .map(|dt| dt.with_timezone(&chrono::Utc))
+fn parse_iso(s: &str) -> Option<nexcore_chrono::DateTime> {
+    nexcore_chrono::DateTime::parse_from_rfc3339(s).ok()
 }
 
 fn hours_since(iso: &str) -> f64 {
     parse_iso(iso)
         .map(|dt| {
-            let elapsed = chrono::Utc::now().signed_duration_since(dt);
+            let elapsed = nexcore_chrono::DateTime::now().signed_duration_since(dt);
             elapsed.num_minutes() as f64 / 60.0
         })
         .unwrap_or(999.0)
@@ -178,13 +176,13 @@ fn priority_from_risk(risk_level: &str, risk_score: f64) -> u8 {
 
 /// Generate ISO timestamp for N hours in the future.
 fn expires_iso(hours: u64) -> String {
-    let expires = chrono::Utc::now() + chrono::Duration::hours(hours as i64);
+    let expires = nexcore_chrono::DateTime::now() + nexcore_chrono::Duration::hours(hours as i64);
     expires.to_rfc3339()
 }
 
 /// Expire any decisions past their expiration timestamp.
 fn expire_stale(store: &mut HitlStore) {
-    let now = chrono::Utc::now();
+    let now = nexcore_chrono::DateTime::now();
     for decision in &mut store.decisions {
         if decision.status == "pending" {
             if let Some(exp) = parse_iso(&decision.expires_at) {

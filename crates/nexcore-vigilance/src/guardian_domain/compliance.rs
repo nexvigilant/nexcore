@@ -3,7 +3,7 @@
 //! Electronic records and electronic signatures per FDA 21 CFR Part 11.
 //! Includes audit trails, breach notification, and validation records.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_codec::hex;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -114,8 +114,8 @@ pub struct ElectronicSignature {
     pub signer_name: String,
     /// Unique identifier of signer.
     pub signer_id: String,
-    #[serde(default = "Utc::now")]
-    pub signature_timestamp: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub signature_timestamp: DateTime,
     pub signature_meaning: SignatureMeaning,
     pub signature_method: SignatureMethod,
     /// Unique signature identifier (§11.100).
@@ -149,7 +149,7 @@ pub struct ElectronicSignature {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub invalidation_reason: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub invalidated_at: Option<DateTime<Utc>>,
+    pub invalidated_at: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub invalidated_by: Option<String>,
 }
@@ -193,8 +193,8 @@ impl ElectronicSignature {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceAuditEntry {
     pub id: String,
-    #[serde(default = "Utc::now")]
-    pub timestamp: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub timestamp: DateTime,
     pub user_id: String,
     pub user_name: String,
     pub action: AuditAction,
@@ -244,7 +244,7 @@ pub struct ComplianceAuditEntry {
     #[serde(default = "default_retention")]
     pub retention_years: i32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub archive_date: Option<DateTime<Utc>>,
+    pub archive_date: Option<DateTime>,
     #[serde(default)]
     pub is_validated: bool,
     #[serde(default)]
@@ -291,8 +291,8 @@ impl ComplianceAuditEntry {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemValidationRecord {
     pub id: String,
-    #[serde(default = "Utc::now")]
-    pub validation_date: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub validation_date: DateTime,
     pub validator_id: String,
     pub validator_name: String,
     #[serde(default)]
@@ -314,7 +314,7 @@ pub struct SystemValidationRecord {
     #[serde(default)]
     pub is_validated: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub validation_expiry: Option<DateTime<Utc>>,
+    pub validation_expiry: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub validation_report_path: Option<String>,
     #[serde(default)]
@@ -332,8 +332,8 @@ pub struct SystemValidationRecord {
 /// Compliance monitoring metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceMetrics {
-    #[serde(default = "Utc::now")]
-    pub metric_date: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub metric_date: DateTime,
     /// 21 CFR Part 11 compliance score (0-100).
     pub cfr_part_11_score: f64,
     /// HIPAA compliance score (0-100).
@@ -389,8 +389,8 @@ impl ComplianceMetrics {
 pub struct BreachAssessment {
     pub id: String,
     pub incident_id: String,
-    #[serde(default = "Utc::now")]
-    pub assessment_date: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub assessment_date: DateTime,
     pub assessed_by: String,
     pub assessed_by_name: String,
     // Factor 1: Nature and extent of PHI involved
@@ -430,7 +430,7 @@ pub struct BreachAssessment {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub approved_by_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub approved_at: Option<DateTime<Utc>>,
+    pub approved_at: Option<DateTime>,
     pub tenant_id: String,
 }
 
@@ -440,18 +440,18 @@ pub struct BreachNotification {
     pub id: String,
     pub breach_id: String,
     pub assessment_id: String,
-    pub discovery_date: DateTime<Utc>,
+    pub discovery_date: DateTime,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub occurrence_date: Option<DateTime<Utc>>,
+    pub occurrence_date: Option<DateTime>,
     pub affected_individuals: i64,
     #[serde(default)]
     pub phi_categories_involved: Vec<String>,
     /// Deadline for individual notification (60 days from discovery).
-    pub notification_deadline: DateTime<Utc>,
+    pub notification_deadline: DateTime,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub notification_started: Option<DateTime<Utc>>,
+    pub notification_started: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub notification_completed: Option<DateTime<Utc>>,
+    pub notification_completed: Option<DateTime>,
     #[serde(default)]
     pub notification_methods: Vec<NotificationMethod>,
     #[serde(default)]
@@ -467,14 +467,14 @@ pub struct BreachNotification {
     #[serde(default)]
     pub media_notice_outlets: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub media_notice_date: Option<DateTime<Utc>>,
+    pub media_notice_date: Option<DateTime>,
     #[serde(default = "default_true")]
     pub hhs_notification_required: bool,
     pub hhs_notification_type: NotificationMethod,
     #[serde(default)]
     pub hhs_notification_sent: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub hhs_notification_date: Option<DateTime<Utc>>,
+    pub hhs_notification_date: Option<DateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hhs_case_number: Option<String>,
     pub breach_description: String,
@@ -488,15 +488,15 @@ pub struct BreachNotification {
     pub notes: Option<String>,
     pub created_by: String,
     pub created_by_name: String,
-    #[serde(default = "Utc::now")]
-    pub created_at: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub created_at: DateTime,
     pub tenant_id: String,
 }
 
 impl BreachNotification {
     /// Check if notification deadline has passed.
     pub fn is_overdue(&self) -> bool {
-        Utc::now() > self.notification_deadline && self.notification_completed.is_none()
+        DateTime::now() > self.notification_deadline && self.notification_completed.is_none()
     }
 }
 
@@ -560,8 +560,8 @@ impl HipaaComplianceStatus {
 pub struct HipaaAuditEntry {
     // Base audit fields
     pub id: String,
-    #[serde(default = "Utc::now")]
-    pub timestamp: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub timestamp: DateTime,
     pub user_id: String,
     pub user_name: String,
     pub action: AuditAction,
@@ -684,13 +684,13 @@ pub struct BreachLog {
     #[serde(default)]
     pub submitted_to_hhs: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub submission_date: Option<DateTime<Utc>>,
+    pub submission_date: Option<DateTime>,
     /// 60 days after end of calendar year.
-    pub submission_deadline: DateTime<Utc>,
-    #[serde(default = "Utc::now")]
-    pub created_at: DateTime<Utc>,
-    #[serde(default = "Utc::now")]
-    pub updated_at: DateTime<Utc>,
+    pub submission_deadline: DateTime,
+    #[serde(default = "DateTime::now")]
+    pub created_at: DateTime,
+    #[serde(default = "DateTime::now")]
+    pub updated_at: DateTime,
 }
 
 #[cfg(test)]
@@ -703,7 +703,7 @@ mod tests {
             id: "sig-1".to_string(),
             signer_name: "John Doe".to_string(),
             signer_id: "user-123".to_string(),
-            signature_timestamp: Utc::now(),
+            signature_timestamp: DateTime::now(),
             signature_meaning: SignatureMeaning::Approval,
             signature_method: SignatureMethod::PasswordBased,
             unique_identifier: "unique-123456789012".to_string(),
@@ -743,7 +743,7 @@ mod tests {
     #[test]
     fn test_compliance_metrics_score() {
         let metrics = ComplianceMetrics {
-            metric_date: Utc::now(),
+            metric_date: DateTime::now(),
             cfr_part_11_score: 90.0,
             hipaa_score: 85.0,
             gdpr_score: 80.0,

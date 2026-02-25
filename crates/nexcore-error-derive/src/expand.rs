@@ -47,7 +47,9 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> Result<TokenStream>
                     Fields::Unnamed(fields) if fields.unnamed.len() == 1 => {
                         (quote! { #name::#var_ident(__0) }, quote! { __0 })
                     }
-                    _ => {
+                    // Named, Unit, and multi-field Unnamed are all rejected — enumerate
+                    // them explicitly so any new syn::Fields variant is caught at compile time.
+                    Fields::Named(_) | Fields::Unnamed(_) | Fields::Unit => {
                         return Err(syn::Error::new_spanned(
                             variant,
                             "#[error(transparent)] requires exactly one unnamed field",
@@ -121,7 +123,14 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> Result<TokenStream>
                                 }
                                 quote! { #name::#var_ident { #(#fields_init),* } }
                             }
-                            Fields::Unit => unreachable!(),
+                            // A unit variant cannot carry any fields, so `#[from]` on one
+                            // is a programmer error caught during derive expansion.
+                            Fields::Unit => {
+                                return Err(syn::Error::new_spanned(
+                                    variant,
+                                    "#[from] cannot be placed on a unit variant",
+                                ));
+                            }
                         };
 
                         from_impls.push(quote! {
@@ -264,37 +273,81 @@ fn build_display_arm(
 }
 
 /// Extract field names referenced in a format string.
-/// Parses `{name}`, `{name:?}`, `{name:<spec>}` etc.
-/// Returns the set of referenced field name strings.
-fn extract_format_references(fmt_str: &str) -> std::collections::HashSet<String> {
-    let mut refs = std::collections::HashSet::new();
-    let bytes = fmt_str.as_bytes();
-    let len = bytes.len();
-    let mut i = 0;
+///
+/// Parses `{name}`, `{name:?}`, `{name:<spec>}` etc. and returns the set of
+/// referenced field name strings.
+///
+/// The implementation uses a `char`-level state machine so it never performs
+/// raw byte indexing or integer arithmetic on string offsets, satisfying the
+/// `clippy::indexing_slicing` and `clippy::arithmetic_side_effects` lints.
+fn extract_format_references(fmt_str: &str) -> std::collections::BTreeSet<String> {
+    #[derive(PartialEq)]
+    enum State {
+        /// Normal text — scanning for `{`.
+        Outside,
+        /// Just saw `{`; the next char determines whether this is `{{` (escape)
+        /// or the start of a format argument.
+        AfterOpenBrace,
+        /// Inside a `{...}` argument, accumulating the identifier.
+        CollectingIdent,
+        /// Past the `:` format spec or hit `}` — drain until `}`.
+        SkippingSpec,
+    }
 
-    while i < len {
-        if bytes[i] == b'{' {
-            i += 1;
-            // Skip escaped `{{`
-            if i < len && bytes[i] == b'{' {
-                i += 1;
-                continue;
+    // BTreeSet is used instead of HashSet for deterministic iteration order,
+    // which satisfies the workspace `disallowed_types` policy.
+    let mut refs = std::collections::BTreeSet::new();
+    let mut state = State::Outside;
+    let mut ident = String::new();
+
+    for ch in fmt_str.chars() {
+        match state {
+            State::Outside => {
+                if ch == '{' {
+                    state = State::AfterOpenBrace;
+                }
+                // Any other character is uninteresting at this level.
             }
-            // Read the identifier until `:`, `}`, or end
-            let start = i;
-            while i < len && bytes[i] != b':' && bytes[i] != b'}' {
-                i += 1;
+            State::AfterOpenBrace => {
+                if ch == '{' {
+                    // `{{` is an escaped literal brace — back to normal.
+                    state = State::Outside;
+                } else if ch == '}' {
+                    // `{}` — positional placeholder with no name.
+                    state = State::Outside;
+                } else {
+                    // Start of an identifier.
+                    ident.clear();
+                    ident.push(ch);
+                    state = State::CollectingIdent;
+                }
             }
-            let name = &fmt_str[start..i];
-            if !name.is_empty() {
-                refs.insert(name.to_string());
+            State::CollectingIdent => {
+                if ch == ':' {
+                    // Transition to format spec; commit identifier.
+                    if !ident.is_empty() {
+                        refs.insert(ident.clone());
+                    }
+                    ident.clear();
+                    state = State::SkippingSpec;
+                } else if ch == '}' {
+                    // End of argument; commit identifier.
+                    if !ident.is_empty() {
+                        refs.insert(ident.clone());
+                    }
+                    ident.clear();
+                    state = State::Outside;
+                } else {
+                    ident.push(ch);
+                }
             }
-            // Skip to closing `}`
-            while i < len && bytes[i] != b'}' {
-                i += 1;
+            State::SkippingSpec => {
+                if ch == '}' {
+                    state = State::Outside;
+                }
+                // Everything else inside the spec is ignored.
             }
         }
-        i += 1;
     }
 
     refs
@@ -356,7 +409,8 @@ fn build_source_arm(
                         .map(|f| {
                             f.ident
                                 .as_ref()
-                                .map_or_else(|| format_ident!("_"), |i| i.clone())
+                                // `fi` avoids shadowing the outer loop index `i`.
+                                .map_or_else(|| format_ident!("_"), |fi| fi.clone())
                         })
                         .collect();
                     return quote! {

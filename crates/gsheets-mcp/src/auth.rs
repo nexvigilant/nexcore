@@ -11,8 +11,8 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use chrono::Utc;
 use jsonwebtoken::{Algorithm, EncodingKey, Header};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
@@ -128,7 +128,7 @@ impl AuthManager {
         {
             let guard = self.token.read().await;
             if let Some(ref cached) = *guard {
-                let now = Utc::now().timestamp();
+                let now = DateTime::now().timestamp();
                 if now < cached.expires_at - REFRESH_MARGIN_SECS {
                     return Ok(cached.access_token.clone());
                 }
@@ -140,7 +140,7 @@ impl AuthManager {
 
         // Double-check after acquiring write lock (another task may have refreshed).
         if let Some(ref cached) = *guard {
-            let now = Utc::now().timestamp();
+            let now = DateTime::now().timestamp();
             if now < cached.expires_at - REFRESH_MARGIN_SECS {
                 return Ok(cached.access_token.clone());
             }
@@ -150,7 +150,7 @@ impl AuthManager {
         let new_token = self.acquire_token().await?;
         let access_token = new_token.access_token.clone();
         let expires_in = new_token.expires_in.unwrap_or(3600);
-        let expires_at = Utc::now().timestamp() + expires_in;
+        let expires_at = DateTime::now().timestamp() + expires_in;
 
         *guard = Some(TokenCache {
             access_token: access_token.clone(),
@@ -171,7 +171,7 @@ impl AuthManager {
 
     /// Service Account flow: Build a signed JWT and exchange it for an access token.
     async fn exchange_jwt(&self, key: &ServiceAccountKey) -> Result<TokenResponse, AuthError> {
-        let now = Utc::now().timestamp();
+        let now = DateTime::now().timestamp();
         let claims = JwtClaims {
             iss: key.client_email.clone(),
             scope: SHEETS_SCOPE.to_string(),

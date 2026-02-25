@@ -30,7 +30,7 @@
 use crate::caba::Score;
 use crate::caba::domain::DomainRequirement;
 use crate::caba::proficiency::ProficiencyLevel;
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// The 8 Critical Practice Activities.
@@ -472,7 +472,7 @@ pub struct CPAExecutionPlan {
 
     /// Plan creation timestamp
     #[serde(default)]
-    pub created_at: Option<DateTime<Utc>>,
+    pub created_at: Option<DateTime>,
 }
 
 impl CPAExecutionPlan {
@@ -495,7 +495,7 @@ impl CPAExecutionPlan {
             milestones: Vec::new(),
             required_resources: Vec::new(),
             estimated_cost_usd: 0.0,
-            created_at: Some(Utc::now()),
+            created_at: Some(DateTime::now()),
         }
     }
 
@@ -542,13 +542,13 @@ pub struct CPAExecutionState {
     // Timeline
     /// When execution started
     #[serde(default)]
-    pub started_at: Option<DateTime<Utc>>,
+    pub started_at: Option<DateTime>,
     /// When state was last updated
     #[serde(default)]
-    pub last_updated: Option<DateTime<Utc>>,
+    pub last_updated: Option<DateTime>,
     /// When execution completed
     #[serde(default)]
-    pub completed_at: Option<DateTime<Utc>>,
+    pub completed_at: Option<DateTime>,
 
     // Domain progress
     /// Current proficiency levels per domain
@@ -586,7 +586,7 @@ impl CPAExecutionState {
             total_epas,
             percent_complete: 0.0,
             started_at: None,
-            last_updated: Some(Utc::now()),
+            last_updated: Some(DateTime::now()),
             completed_at: None,
             domain_proficiency: std::collections::HashMap::new(),
             epa_results: std::collections::HashMap::new(),
@@ -628,7 +628,7 @@ impl CPAExecutionState {
         self.epas_completed.push(epa_id.clone());
         self.epa_results.insert(epa_id, result);
         self.percent_complete = self.calculated_completion();
-        self.last_updated = Some(Utc::now());
+        self.last_updated = Some(DateTime::now());
     }
 }
 

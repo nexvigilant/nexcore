@@ -81,8 +81,8 @@ where
                 id: nexcore_id::NexId::v4(),
                 detection: result.clone(),
                 state: crate::core::AlertState::New,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
+                created_at: nexcore_chrono::DateTime::now(),
+                updated_at: nexcore_chrono::DateTime::now(),
                 notes: Vec::new(),
             };
             self.store.save_alert(&alert)?;

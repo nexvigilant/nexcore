@@ -132,18 +132,18 @@ impl SchemaImmuneSystem {
     ) {
         let pattern = pattern.into();
         let count = self.violation_history.entry(pattern.clone()).or_insert(0);
-        *count += 1;
+        *count = count.saturating_add(1);
 
         // Auto-generate antibody if threshold reached
         if *count == self.recurrence_threshold && !self.has_antibody_for(&pattern) {
             let id = format!("auto-{}", self.next_id);
-            self.next_id += 1;
+            self.next_id = self.next_id.saturating_add(1);
 
             self.antibodies.insert(
                 id.clone(),
                 DriftAntibody {
                     id,
-                    pattern: pattern.clone(),
+                    pattern,
                     threat_type,
                     response: self.default_response,
                     trigger_count: 0,
@@ -186,7 +186,7 @@ impl SchemaImmuneSystem {
     pub fn record_triggers(&mut self, antibody_ids: &[String]) {
         for id in antibody_ids {
             if let Some(ab) = self.antibodies.get_mut(id) {
-                ab.trigger_count += 1;
+                ab.trigger_count = ab.trigger_count.saturating_add(1);
             }
         }
     }

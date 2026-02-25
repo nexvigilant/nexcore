@@ -154,7 +154,7 @@ pub struct DecisionTreeAnalysis {
 /// Returns `ConfigError::YamlParse` if parsing fails.
 pub fn parse_yaml(content: &str) -> Result<ParseResult, ConfigError> {
     let data: JsonValue =
-        serde_yaml::from_str(content).map_err(|e| ConfigError::YamlParse(e.to_string()))?;
+        serde_yml::from_str(content).map_err(|e| ConfigError::YamlParse(e.to_string()))?;
 
     let keys = extract_top_level_keys(&data);
     let depth = calculate_depth(&data);
@@ -272,7 +272,7 @@ pub fn validate_schema(content: &str, schema_type: Option<&str>) -> ValidationRe
 /// Returns `ConfigError::YamlParse` if parsing fails.
 pub fn analyze_decision_tree(content: &str) -> Result<DecisionTreeAnalysis, ConfigError> {
     let data: JsonValue =
-        serde_yaml::from_str(content).map_err(|e| ConfigError::YamlParse(e.to_string()))?;
+        serde_yml::from_str(content).map_err(|e| ConfigError::YamlParse(e.to_string()))?;
 
     let name = data
         .get("name")
@@ -326,7 +326,7 @@ pub fn analyze_decision_tree(content: &str) -> Result<DecisionTreeAnalysis, Conf
 /// Returns `ConfigError::YamlParse` if parsing fails.
 pub fn extract_taxonomy_schema(content: &str) -> Result<TaxonomySchema, ConfigError> {
     let data: JsonValue =
-        serde_yaml::from_str(content).map_err(|e| ConfigError::YamlParse(e.to_string()))?;
+        serde_yml::from_str(content).map_err(|e| ConfigError::YamlParse(e.to_string()))?;
 
     let name = data
         .get("name")
@@ -388,7 +388,7 @@ pub fn parse_yaml_frontmatter(content: &str) -> Result<JsonValue, ConfigError> {
 
     if let Some(caps) = re.captures(content) {
         let frontmatter_content = &caps[1];
-        return serde_yaml::from_str(frontmatter_content)
+        return serde_yml::from_str(frontmatter_content)
             .map_err(|e| ConfigError::YamlParse(e.to_string()));
     }
 
@@ -404,7 +404,7 @@ pub fn parse_yaml_frontmatter(content: &str) -> Result<JsonValue, ConfigError> {
         }
         if let Some(end) = end_idx {
             let fm_content = lines[1..end].join("\n");
-            return serde_yaml::from_str(&fm_content)
+            return serde_yml::from_str(&fm_content)
                 .map_err(|e| ConfigError::YamlParse(e.to_string()));
         }
     }
@@ -902,10 +902,10 @@ created = 2025-01-13T10:00:00Z
 
     #[test]
     fn test_parse_yaml_injection_attempt() {
-        // YAML bomb attempt - should be handled by serde_yaml safely
+        // YAML bomb attempt - should be handled by serde_yml safely
         let yaml = "key: !!python/object/apply:os.system [echo pwned]";
         let result = parse_yaml(yaml);
-        // serde_yaml doesn't execute arbitrary code, so this just fails or parses safely
+        // serde_yml doesn't execute arbitrary code, so this just fails or parses safely
         assert!(result.is_ok() || result.is_err());
     }
 

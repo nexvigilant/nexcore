@@ -8,7 +8,7 @@
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_fs::walk::WalkDir;
 
 use crate::config::OrganizeConfig;
@@ -30,7 +30,7 @@ pub struct EntryMeta {
     /// Size in bytes (0 for directories at this stage).
     pub size_bytes: u64,
     /// Last modification time.
-    pub modified: DateTime<Utc>,
+    pub modified: DateTime,
     /// File extension (empty for directories or extensionless files).
     pub extension: String,
     /// Depth relative to the root.
@@ -51,7 +51,7 @@ pub struct Inventory {
     /// Number of entries excluded by filters.
     pub excluded_count: usize,
     /// Timestamp when observation started.
-    pub observed_at: DateTime<Utc>,
+    pub observed_at: DateTime,
 }
 
 // ============================================================================
@@ -73,7 +73,7 @@ pub fn observe(config: &OrganizeConfig) -> OrganizeResult<Inventory> {
     }
 
     let exclude_set: HashSet<&str> = config.exclude_patterns.iter().map(|s| s.as_str()).collect();
-    let observed_at = Utc::now();
+    let observed_at = DateTime::now();
 
     let mut walker = WalkDir::new(root).follow_links(false);
     if config.max_depth > 0 {
@@ -144,8 +144,8 @@ fn entry_meta_from_direntry(
 
     let modified = fs_meta
         .modified()
-        .map(DateTime::<Utc>::from)
-        .unwrap_or_else(|_| Utc::now());
+        .map(DateTime::from)
+        .unwrap_or_else(|_| DateTime::now());
 
     let extension = path
         .extension()
@@ -196,7 +196,7 @@ mod tests {
                 root: dir.path().to_path_buf(),
                 entries: vec![],
                 excluded_count: 0,
-                observed_at: Utc::now(),
+                observed_at: DateTime::now(),
             });
             assert!(inv.entries.is_empty());
         }

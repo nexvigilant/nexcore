@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use rusqlite::Connection;
 use serde::Deserialize;
 
@@ -249,7 +249,7 @@ fn migrate_session_artifacts(
         // Read per-artifact metadata: <name>.metadata.json
         let meta_path = session_dir.join(format!("{artifact_name}.metadata.json"));
         let meta: Option<ArtifactMeta> = read_json(&meta_path).ok();
-        let now = Utc::now();
+        let now = DateTime::now();
 
         let art = artifacts::ArtifactRow {
             id: None,
@@ -1115,7 +1115,7 @@ fn flush_antibody(
 
 #[derive(Debug, Deserialize)]
 struct JsonDecision {
-    timestamp: DateTime<Utc>,
+    timestamp: DateTime,
     session_id: String,
     tool: String,
     action: String,
@@ -1128,7 +1128,7 @@ struct JsonDecision {
 #[derive(Debug, Deserialize)]
 struct JsonJournalEntry {
     #[serde(alias = "ts")]
-    timestamp: DateTime<Utc>,
+    timestamp: DateTime,
     session_id: String,
     tool: String,
     target: String,
@@ -1193,7 +1193,7 @@ struct JsonTask {
 #[derive(Debug, Deserialize)]
 struct SessionEntry {
     id: String,
-    created_at: DateTime<Utc>,
+    created_at: DateTime,
     project: Option<String>,
     git_commit: Option<String>,
     description: Option<String>,
@@ -1203,8 +1203,8 @@ struct SessionEntry {
 struct ArtifactMeta {
     artifact_type: String,
     summary: Option<String>,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
+    created_at: DateTime,
+    updated_at: DateTime,
     current_version: u32,
     #[serde(default)]
     tags: Vec<String>,
@@ -1217,7 +1217,7 @@ struct JsonPreference {
     description: Option<String>,
     confidence: f64,
     reinforcement_count: u32,
-    updated_at: DateTime<Utc>,
+    updated_at: DateTime,
 }
 
 #[derive(Debug, Deserialize)]
@@ -1227,9 +1227,9 @@ struct JsonPattern {
     description: String,
     #[serde(default)]
     examples: Vec<String>,
-    detected_at: DateTime<Utc>,
-    #[serde(default = "Utc::now")]
-    updated_at: DateTime<Utc>,
+    detected_at: DateTime,
+    #[serde(default = "DateTime::now")]
+    updated_at: DateTime,
     confidence: f64,
     occurrence_count: u32,
     t1_grounding: Option<serde_json::Value>,
@@ -1240,7 +1240,7 @@ struct JsonCorrection {
     mistake: String,
     correction: String,
     context: Option<String>,
-    learned_at: DateTime<Utc>,
+    learned_at: DateTime,
     application_count: u32,
 }
 
@@ -1253,8 +1253,8 @@ struct JsonBelief {
     #[serde(default)]
     evidence: Vec<serde_json::Value>,
     t1_grounding: Option<serde_json::Value>,
-    formed_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
+    formed_at: DateTime,
+    updated_at: DateTime,
     #[serde(default)]
     validation_count: u32,
     #[serde(default)]
@@ -1265,8 +1265,8 @@ struct JsonBelief {
 struct JsonTrust {
     demonstrations: u32,
     failures: u32,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
+    created_at: DateTime,
+    updated_at: DateTime,
     t1_grounding: Option<serde_json::Value>,
 }
 
@@ -1281,7 +1281,7 @@ struct JsonImplication {
     from: String,
     to: String,
     strength: serde_json::Value,
-    established_at: DateTime<Utc>,
+    established_at: DateTime,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -1301,8 +1301,8 @@ struct TrackedFileJson {
     content_hash: String,
     #[serde(default)]
     size: u64,
-    tracked_at: DateTime<Utc>,
-    mtime: DateTime<Utc>,
+    tracked_at: DateTime,
+    mtime: DateTime,
 }
 
 /// Read a JSON file and deserialize it.

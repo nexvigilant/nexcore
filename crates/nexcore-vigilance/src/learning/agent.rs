@@ -2,7 +2,7 @@
 
 use super::models::{AgentSession, Intervention, Observation, ObservationEventType};
 use async_trait::async_trait;
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_error::Result;
 use std::collections::HashMap;
 
@@ -74,8 +74,8 @@ impl TeachableAgent {
         let session = AgentSession {
             id: session_id.clone(),
             agent_name: self.config.name.clone(),
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+            created_at: DateTime::now(),
+            updated_at: DateTime::now(),
             status: "active".to_string(),
             todos: Vec::new(),
             metadata: HashMap::new(),
@@ -98,7 +98,7 @@ impl TeachableAgent {
     pub async fn notify_teachers(&self, event_type: ObservationEventType, data: serde_json::Value) {
         let observation = Observation {
             id: nexcore_id::NexId::v4(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             event_type,
             agent_id: self.config.name.clone(),
             session_id: self

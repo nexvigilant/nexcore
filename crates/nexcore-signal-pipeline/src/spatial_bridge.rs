@@ -87,12 +87,18 @@ pub const CONTINGENCY_DIMENSION: Dimension = Dimension::SPACE_3D;
 /// This captures how differently two drug-event pairs report relative to background.
 ///
 /// Tier: T2-C (N Quantity + kappa Comparison + mu Mapping + partial Boundary)
+#[non_exhaustive]
 pub struct ContingencyMetric;
 
 impl ContingencyMetric {
     /// Compute PRR from a contingency table's cells.
     ///
     /// PRR = [a/(a+b)] / [c/(c+d)]
+    #[allow(
+        clippy::as_conversions,
+        clippy::cast_precision_loss,
+        reason = "u64->f64 cast is intentional for statistical computation; values bounded by dataset size"
+    )]
     fn prr(table: &ContingencyTable) -> f64 {
         let a = table.a as f64;
         let b = table.b as f64;
@@ -126,6 +132,7 @@ impl Metric for ContingencyMetric {
 /// A complete signal detection threshold profile expressed as neighborhoods.
 ///
 /// Each metric has its own closed neighborhood defining the signal boundary.
+#[non_exhaustive]
 pub struct ThresholdProfile {
     /// PRR signal boundary
     pub prr: Neighborhood,
@@ -164,6 +171,11 @@ impl ThresholdProfile {
     }
 
     /// Check if a signal (prr, `chi_sq`, n) passes all thresholds.
+    #[allow(
+        clippy::as_conversions,
+        clippy::cast_precision_loss,
+        reason = "u64->f64 cast is intentional; case count fits in f64 for threshold comparison"
+    )]
     pub fn is_signal(&self, prr: f64, chi_sq: f64, n: u64) -> bool {
         prr_is_signal(prr, &self.prr)
             && prr_is_signal(chi_sq, &self.chi_square)

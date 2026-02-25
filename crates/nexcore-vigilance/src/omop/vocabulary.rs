@@ -8,7 +8,7 @@
 //!
 //! Reference: <https://ohdsi.github.io/CommonDataModel/cdm54.html#vocabulary-tables>
 
-use chrono::NaiveDate;
+use nexcore_chrono::Date;
 use serde::{Deserialize, Serialize};
 
 // ─── Concept ─────────────────────────────────────────────────────────────────
@@ -34,9 +34,9 @@ pub struct Concept {
     /// Source code within the vocabulary (e.g., "1234567" for RxNorm).
     pub concept_code: String,
     /// Date the concept became valid.
-    pub valid_start_date: NaiveDate,
+    pub valid_start_date: Date,
     /// Date the concept became invalid (9999-12-31 if still valid).
-    pub valid_end_date: NaiveDate,
+    pub valid_end_date: Date,
     /// Reason the concept is invalid: "D" = deleted, "U" = upgraded, None = valid.
     pub invalid_reason: Option<String>,
 }
@@ -56,9 +56,9 @@ pub struct ConceptRelationship {
     /// Type of relationship (e.g., "Maps to", "Is a", "RxNorm has ing").
     pub relationship_id: String,
     /// Date the relationship became valid.
-    pub valid_start_date: NaiveDate,
+    pub valid_start_date: Date,
     /// Date the relationship became invalid (9999-12-31 if still valid).
-    pub valid_end_date: NaiveDate,
+    pub valid_end_date: Date,
     /// Reason the relationship is invalid: "D" = deleted, "U" = upgraded, None = valid.
     pub invalid_reason: Option<String>,
 }

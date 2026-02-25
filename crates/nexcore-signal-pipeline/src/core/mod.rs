@@ -25,13 +25,14 @@
 //! let strength = table.prr().map(SignalStrength::from_prr);
 //! ```
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 
 // ─── Error Types ────────────────────────────────────────────
 
 /// Unified error type for the signal detection pipeline.
+#[non_exhaustive]
 #[derive(Debug, nexcore_error::Error)]
 pub enum SignalError {
     /// Data ingestion stage failure.
@@ -71,26 +72,32 @@ pub type Result<T> = std::result::Result<T, SignalError>;
 // ─── T2-P: Newtypes (Cross-Domain Primitives) ──────────────
 
 /// Proportional Reporting Ratio — no naked f64.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub struct Prr(pub f64);
 
 /// Reporting Odds Ratio.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub struct Ror(pub f64);
 
 /// Information Component (Bayesian).
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub struct Ic(pub f64);
 
 /// Empirical Bayesian Geometric Mean.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub struct Ebgm(pub f64);
 
 /// Chi-square statistic.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub struct ChiSquare(pub f64);
 
 /// Confidence interval bounds.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct ConfidenceInterval {
     /// Lower bound of the interval.
@@ -102,6 +109,7 @@ pub struct ConfidenceInterval {
 }
 
 /// Signal strength classification.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum SignalStrength {
     /// No signal detected.
@@ -138,6 +146,7 @@ impl SignalStrength {
 /// Drug+     |   a    |    b    |
 /// Drug-     |   c    |    d    |
 /// ```
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ContingencyTable {
     /// Drug+ Event+ (cases of interest).
@@ -151,16 +160,30 @@ pub struct ContingencyTable {
 }
 
 impl ContingencyTable {
+    /// Create a new 2x2 contingency table.
+    #[must_use]
+    pub fn new(a: u64, b: u64, c: u64, d: u64) -> Self {
+        Self { a, b, c, d }
+    }
+
     /// Total reports in the table.
     pub fn total(&self) -> u64 {
-        self.a + self.b + self.c + self.d
+        self.a
+            .saturating_add(self.b)
+            .saturating_add(self.c)
+            .saturating_add(self.d)
     }
 
     /// Proportional Reporting Ratio.
     /// PRR = (a / (a+b)) / (c / (c+d))
+    #[allow(
+        clippy::as_conversions,
+        clippy::cast_precision_loss,
+        reason = "u64->f64 cast is intentional for statistical computation; values bounded by dataset size"
+    )]
     pub fn prr(&self) -> Option<f64> {
-        let drug_total = (self.a + self.b) as f64;
-        let ref_total = (self.c + self.d) as f64;
+        let drug_total = self.a.saturating_add(self.b) as f64;
+        let ref_total = self.c.saturating_add(self.d) as f64;
         if drug_total == 0.0 || ref_total == 0.0 {
             return None;
         }
@@ -175,31 +198,42 @@ impl ContingencyTable {
 
     /// Reporting Odds Ratio.
     /// ROR = (a*d) / (b*c)
+    #[allow(
+        clippy::as_conversions,
+        clippy::cast_precision_loss,
+        reason = "u64->f64 cast is intentional for statistical computation; saturating mul prevents overflow"
+    )]
     pub fn ror(&self) -> Option<f64> {
-        let denom = (self.b * self.c) as f64;
+        let denom = self.b.saturating_mul(self.c) as f64;
         if denom == 0.0 {
             None
         } else {
-            Some((self.a * self.d) as f64 / denom)
+            Some(self.a.saturating_mul(self.d) as f64 / denom)
         }
     }
 
     /// Chi-square statistic (Yates correction).
+    #[allow(
+        clippy::as_conversions,
+        clippy::cast_precision_loss,
+        reason = "u64->f64 cast is intentional for statistical computation; saturating ops prevent overflow"
+    )]
     pub fn chi_square(&self) -> f64 {
         let n = self.total() as f64;
         let ad = self.a as f64 * self.d as f64;
         let bc = self.b as f64 * self.c as f64;
         let num = n * (ad - bc).abs().powi(2);
-        let denom = (self.a + self.b) as f64
-            * (self.c + self.d) as f64
-            * (self.a + self.c) as f64
-            * (self.b + self.d) as f64;
+        let denom = self.a.saturating_add(self.b) as f64
+            * self.c.saturating_add(self.d) as f64
+            * self.a.saturating_add(self.c) as f64
+            * self.b.saturating_add(self.d) as f64;
         if denom == 0.0 { 0.0 } else { num / denom }
     }
 }
 
 /// A drug-event pair identifier.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct DrugEventPair {
     /// Drug name or substance identifier.
     pub drug: String,
@@ -220,6 +254,7 @@ impl DrugEventPair {
 // ─── T3: Domain-Specific Types ──────────────────────────────
 
 /// A raw adverse event report (pre-normalization).
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RawReport {
     /// Unique report identifier.
@@ -229,7 +264,7 @@ pub struct RawReport {
     /// Event terms as reported (pre-normalization).
     pub event_terms: Vec<String>,
     /// Date the report was submitted.
-    pub report_date: Option<DateTime<Utc>>,
+    pub report_date: Option<DateTime>,
     /// Originating data source.
     pub source: ReportSource,
     /// Arbitrary metadata from the source system.
@@ -237,6 +272,7 @@ pub struct RawReport {
 }
 
 /// Source of a report.
+#[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ReportSource {
     /// FDA Adverse Event Reporting System.
@@ -256,6 +292,7 @@ pub enum ReportSource {
 }
 
 /// A normalized event after standardization.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NormalizedEvent {
     /// Unique identifier for this normalized event.
@@ -269,12 +306,13 @@ pub struct NormalizedEvent {
     /// `MedDRA` System Organ Class (if mapped).
     pub meddra_soc: Option<String>,
     /// Date of the original report.
-    pub report_date: DateTime<Utc>,
+    pub report_date: DateTime,
     /// Originating data source.
     pub source: ReportSource,
 }
 
 /// Full detection result for a drug-event pair.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DetectionResult {
     /// The drug-event pair analyzed.
@@ -294,10 +332,43 @@ pub struct DetectionResult {
     /// Overall signal strength classification.
     pub strength: SignalStrength,
     /// Timestamp of detection.
-    pub detected_at: DateTime<Utc>,
+    pub detected_at: DateTime,
+}
+
+impl DetectionResult {
+    /// Create a new detection result.
+    ///
+    /// Provides a stable constructor for use outside the defining crate, where
+    /// `#[non_exhaustive]` prevents direct struct literal construction.
+    #[must_use]
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        pair: DrugEventPair,
+        table: ContingencyTable,
+        prr: Option<Prr>,
+        ror: Option<Ror>,
+        ic: Option<Ic>,
+        ebgm: Option<Ebgm>,
+        chi_square: ChiSquare,
+        strength: SignalStrength,
+        detected_at: nexcore_chrono::DateTime,
+    ) -> Self {
+        Self {
+            pair,
+            table,
+            prr,
+            ror,
+            ic,
+            ebgm,
+            chi_square,
+            strength,
+            detected_at,
+        }
+    }
 }
 
 /// Alert lifecycle states.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AlertState {
     /// Newly created alert, not yet reviewed.
@@ -315,6 +386,7 @@ pub enum AlertState {
 }
 
 /// A signal alert.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Alert {
     /// Unique alert identifier.
@@ -324,9 +396,9 @@ pub struct Alert {
     /// Current lifecycle state.
     pub state: AlertState,
     /// When the alert was created.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// When the alert was last modified.
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
     /// Reviewer notes and comments.
     pub notes: Vec<String>,
 }
@@ -386,6 +458,7 @@ pub trait Report {
 }
 
 /// Validation report for a detection result.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationReport {
     /// The drug-event pair that was validated.
@@ -397,6 +470,7 @@ pub struct ValidationReport {
 }
 
 /// Individual validation check.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationCheck {
     /// Check name (e.g., "`minimum_case_count`").
@@ -410,6 +484,7 @@ pub struct ValidationCheck {
 // ─── Threshold Configuration ────────────────────────────────
 
 /// Evans criteria thresholds for signal detection.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThresholdConfig {
     /// Minimum PRR value.
@@ -441,6 +516,21 @@ impl Default for ThresholdConfig {
 }
 
 impl ThresholdConfig {
+    /// Create a config overriding only the three most commonly tuned parameters;
+    /// all other fields keep their Evans defaults.
+    ///
+    /// Useful from outside the crate where struct update syntax is blocked by
+    /// `#[non_exhaustive]`.
+    #[must_use]
+    pub fn with_mins(prr_min: f64, chi_square_min: f64, case_count_min: u64) -> Self {
+        Self {
+            prr_min,
+            chi_square_min,
+            case_count_min,
+            ..Self::default()
+        }
+    }
+
     /// Strict thresholds (fewer false positives).
     pub fn strict() -> Self {
         Self {

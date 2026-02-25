@@ -79,7 +79,7 @@ pub fn load_state(path: &Path) -> Result<Option<SentinelState>> {
 mod tests {
     use super::*;
     use crate::types::{BanRecord, FailureRecord};
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
     use std::net::IpAddr;
 
     fn parse_ip(s: &str) -> IpAddr {
@@ -96,12 +96,12 @@ mod tests {
         };
         let path = dir.join("state.json");
 
-        let now = Utc::now();
+        let now = DateTime::now();
         let state = SentinelState {
             bans: vec![BanRecord {
                 ip: parse_ip("10.0.0.1"),
                 banned_at: now,
-                expires_at: now + chrono::Duration::seconds(3600),
+                expires_at: now + nexcore_chrono::Duration::seconds(3600),
                 failure_count: 3,
             }],
             failures: vec![FailureRecord::new(parse_ip("10.0.0.2"), now)],

@@ -3,7 +3,7 @@
 //! Collects console messages (log, warn, error, etc.) with a bounded size.
 //! When capacity is exceeded, oldest messages are evicted.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
@@ -123,7 +123,7 @@ pub struct ConsoleEntry {
     /// Column number
     pub column: Option<u32>,
     /// Collection timestamp
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Page ID that emitted this message
     pub page_id: String,
 }
@@ -316,7 +316,7 @@ mod tests {
                 url: None,
                 line: None,
                 column: None,
-                timestamp: Utc::now(),
+                timestamp: DateTime::now(),
                 page_id: "page_1".to_string(),
             });
         }
@@ -341,7 +341,7 @@ mod tests {
             url: None,
             line: None,
             column: None,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             page_id: "page_1".to_string(),
         });
 
@@ -351,7 +351,7 @@ mod tests {
             url: None,
             line: None,
             column: None,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             page_id: "page_1".to_string(),
         });
 
@@ -361,7 +361,7 @@ mod tests {
             url: None,
             line: None,
             column: None,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             page_id: "page_1".to_string(),
         });
 

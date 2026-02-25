@@ -11,7 +11,7 @@
 use std::collections::HashMap;
 use std::net::IpAddr;
 
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 
 use crate::config::SentinelConfig;
 use crate::types::{
@@ -86,7 +86,8 @@ impl Tracker {
             let ban = BanRecord {
                 ip,
                 banned_at: when,
-                expires_at: when + self.ban_duration.as_duration(),
+                expires_at: when
+                    + nexcore_chrono::Duration::from_std(self.ban_duration.as_duration()),
                 failure_count: count,
             };
             self.bans.insert(ip, ban);
@@ -100,7 +101,7 @@ impl Tracker {
 
     /// Check for expired bans and return IPs to unban.
     pub fn tick_unbans(&mut self) -> Vec<IpAddr> {
-        let now = Utc::now();
+        let now = DateTime::now();
         let expired: Vec<IpAddr> = self
             .bans
             .iter()
@@ -147,7 +148,7 @@ impl Tracker {
 
     /// Restore state from persistence.
     pub fn restore(&mut self, bans: Vec<BanRecord>, failures: Vec<FailureRecord>) {
-        let now = Utc::now();
+        let now = DateTime::now();
         // Only restore non-expired bans
         for ban in bans {
             if !ban.is_expired(now) {
@@ -210,12 +211,12 @@ mod tests {
         let wl = test_whitelist();
         let mut tracker = Tracker::new(&config, wl);
         let ip = parse_ip("10.0.0.1");
-        let now = Utc::now();
+        let now = DateTime::now();
 
         let action = tracker.record_failure(ip, now);
         assert_eq!(action, EngineAction::RecordFailure(ip));
 
-        let action = tracker.record_failure(ip, now + chrono::Duration::seconds(1));
+        let action = tracker.record_failure(ip, now + nexcore_chrono::Duration::seconds(1));
         assert_eq!(action, EngineAction::RecordFailure(ip));
 
         assert!(!tracker.is_banned(ip));
@@ -228,11 +229,11 @@ mod tests {
         let wl = test_whitelist();
         let mut tracker = Tracker::new(&config, wl);
         let ip = parse_ip("10.0.0.1");
-        let now = Utc::now();
+        let now = DateTime::now();
 
         tracker.record_failure(ip, now);
-        tracker.record_failure(ip, now + chrono::Duration::seconds(1));
-        let action = tracker.record_failure(ip, now + chrono::Duration::seconds(2));
+        tracker.record_failure(ip, now + nexcore_chrono::Duration::seconds(1));
+        let action = tracker.record_failure(ip, now + nexcore_chrono::Duration::seconds(2));
 
         assert_eq!(action, EngineAction::Ban(ip));
         assert!(tracker.is_banned(ip));
@@ -246,14 +247,14 @@ mod tests {
         let wl = test_whitelist();
         let mut tracker = Tracker::new(&config, wl);
         let ip = parse_ip("10.0.0.1");
-        let now = Utc::now();
+        let now = DateTime::now();
 
         // Two failures within window
         tracker.record_failure(ip, now);
-        tracker.record_failure(ip, now + chrono::Duration::seconds(1));
+        tracker.record_failure(ip, now + nexcore_chrono::Duration::seconds(1));
 
         // Third failure WAY outside window (700 seconds later, window is 600)
-        let action = tracker.record_failure(ip, now + chrono::Duration::seconds(700));
+        let action = tracker.record_failure(ip, now + nexcore_chrono::Duration::seconds(700));
 
         // Should not ban — old entries pruned, only 1 remaining in window
         assert_eq!(action, EngineAction::RecordFailure(ip));
@@ -266,10 +267,10 @@ mod tests {
         let wl = test_whitelist();
         let mut tracker = Tracker::new(&config, wl);
         let ip = parse_ip("127.0.0.1");
-        let now = Utc::now();
+        let now = DateTime::now();
 
         for i in 0..10 {
-            let action = tracker.record_failure(ip, now + chrono::Duration::seconds(i));
+            let action = tracker.record_failure(ip, now + nexcore_chrono::Duration::seconds(i));
             assert_eq!(action, EngineAction::None);
         }
 
@@ -285,10 +286,10 @@ mod tests {
         let ip = parse_ip("10.0.0.1");
 
         // Use a timestamp far in the past so the ban is already expired
-        let past = Utc::now() - chrono::Duration::seconds(100);
+        let past = DateTime::now() - nexcore_chrono::Duration::seconds(100);
         tracker.record_failure(ip, past);
-        tracker.record_failure(ip, past + chrono::Duration::seconds(1));
-        tracker.record_failure(ip, past + chrono::Duration::seconds(2));
+        tracker.record_failure(ip, past + nexcore_chrono::Duration::seconds(1));
+        tracker.record_failure(ip, past + nexcore_chrono::Duration::seconds(2));
         assert!(tracker.is_banned(ip));
 
         // Ban expires_at = past+2s + 1s = past+3s, which is ~97s ago
@@ -303,11 +304,11 @@ mod tests {
         let wl = test_whitelist();
         let mut tracker = Tracker::new(&config, wl);
         let ip = parse_ip("10.0.0.1");
-        let now = Utc::now();
+        let now = DateTime::now();
 
         tracker.record_failure(ip, now);
-        tracker.record_failure(ip, now + chrono::Duration::seconds(1));
-        tracker.record_failure(ip, now + chrono::Duration::seconds(2));
+        tracker.record_failure(ip, now + nexcore_chrono::Duration::seconds(1));
+        tracker.record_failure(ip, now + nexcore_chrono::Duration::seconds(2));
         assert!(tracker.is_banned(ip));
 
         assert!(tracker.unban(ip));
@@ -320,11 +321,11 @@ mod tests {
         let wl = test_whitelist();
         let mut tracker = Tracker::new(&config, wl);
         let ip = parse_ip("10.0.0.1");
-        let now = Utc::now();
+        let now = DateTime::now();
 
         tracker.record_failure(ip, now);
-        tracker.record_failure(ip, now + chrono::Duration::seconds(1));
-        tracker.record_failure(ip, now + chrono::Duration::seconds(2));
+        tracker.record_failure(ip, now + nexcore_chrono::Duration::seconds(1));
+        tracker.record_failure(ip, now + nexcore_chrono::Duration::seconds(2));
 
         let (bans, failures) = tracker.export_state();
         assert_eq!(bans.len(), 1);

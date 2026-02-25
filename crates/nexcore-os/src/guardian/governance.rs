@@ -33,7 +33,7 @@
 //! Governance answers "what SHOULD this entity be allowed to do?" (authorization).
 //! The gap between CAN and SHOULD is where Guardian lives.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::guardian::OriginatorType;
@@ -263,19 +263,19 @@ pub struct ConsentRecord {
     pub status: ConsentStatus,
 
     /// When consent was first requested
-    pub requested_at: DateTime<Utc>,
+    pub requested_at: DateTime,
 
     /// When consent was granted (if applicable)
-    pub granted_at: Option<DateTime<Utc>>,
+    pub granted_at: Option<DateTime>,
 
     /// When consent was activated (if applicable)
-    pub activated_at: Option<DateTime<Utc>>,
+    pub activated_at: Option<DateTime>,
 
     /// When consent expires and must be reconfirmed
-    pub expires_at: Option<DateTime<Utc>>,
+    pub expires_at: Option<DateTime>,
 
     /// When consent was revoked (if applicable)
-    pub revoked_at: Option<DateTime<Utc>>,
+    pub revoked_at: Option<DateTime>,
 
     /// Reason for revocation (audit trail)
     pub revocation_reason: Option<String>,
@@ -298,7 +298,7 @@ impl ConsentRecord {
         grantee_originator: OriginatorType,
         description: impl Into<String>,
     ) -> Self {
-        let now = Utc::now();
+        let now = DateTime::now();
         Self {
             id: id.into(),
             grantor: grantor.into(),
@@ -328,12 +328,13 @@ impl ConsentRecord {
             });
         }
 
-        let now = Utc::now();
+        let now = DateTime::now();
         match new_status {
             ConsentStatus::Granted => {
                 self.granted_at = Some(now);
-                self.expires_at =
-                    Some(now + chrono::Duration::seconds(CONSENT_RECONFIRMATION_WINDOW as i64));
+                self.expires_at = Some(
+                    now + nexcore_chrono::Duration::seconds(CONSENT_RECONFIRMATION_WINDOW as i64),
+                );
             }
             ConsentStatus::Active => {
                 self.activated_at = Some(now);
@@ -364,7 +365,7 @@ impl ConsentRecord {
 
         // Check expiration
         if let Some(expires) = self.expires_at {
-            if Utc::now() > expires {
+            if DateTime::now() > expires {
                 return false;
             }
         }
@@ -377,7 +378,7 @@ impl ConsentRecord {
     pub fn is_expired(&self) -> bool {
         if let Some(expires) = self.expires_at {
             matches!(self.status, ConsentStatus::Active | ConsentStatus::Granted)
-                && Utc::now() > expires
+                && DateTime::now() > expires
         } else {
             false
         }
@@ -386,7 +387,7 @@ impl ConsentRecord {
     /// Get the age of this consent record in seconds.
     #[must_use]
     pub fn age_seconds(&self) -> i64 {
-        (Utc::now() - self.requested_at).num_seconds()
+        (DateTime::now() - self.requested_at).num_seconds()
     }
 }
 
@@ -446,10 +447,10 @@ pub struct AuthorityDelegation {
     pub depth: usize,
 
     /// When this delegation was created
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// When this delegation expires
-    pub expires_at: Option<DateTime<Utc>>,
+    pub expires_at: Option<DateTime>,
 
     /// Whether this delegation has been revoked
     pub revoked: bool,
@@ -479,7 +480,7 @@ impl AuthorityDelegation {
             consent_id: None,
             parent_delegation_id: None,
             depth: 0,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             expires_at: None,
             revoked: false,
             rate_limit: None,
@@ -515,7 +516,7 @@ impl AuthorityDelegation {
             consent_id,
             parent_delegation_id: Some(self.id.clone()),
             depth: new_depth,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             expires_at: self.expires_at, // Inherit parent expiration
             revoked: false,
             rate_limit: self.rate_limit, // Inherit parent rate limit
@@ -529,7 +530,7 @@ impl AuthorityDelegation {
             return false;
         }
         if let Some(expires) = self.expires_at {
-            if Utc::now() > expires {
+            if DateTime::now() > expires {
                 return false;
             }
         }
@@ -588,7 +589,7 @@ pub struct EvidenceItem {
     pub threshold: Option<f64>,
 
     /// When this evidence was collected
-    pub observed_at: DateTime<Utc>,
+    pub observed_at: DateTime,
 }
 
 /// The evidentiary basis for a Guardian action.
@@ -614,7 +615,7 @@ pub struct EvidenceBasis {
     pub evaluated_by: String,
 
     /// Timestamp of the evaluation
-    pub evaluated_at: DateTime<Utc>,
+    pub evaluated_at: DateTime,
 }
 
 impl EvidenceBasis {
@@ -625,7 +626,7 @@ impl EvidenceBasis {
             items: Vec::new(),
             summary: summary.into(),
             evaluated_by: evaluated_by.into(),
-            evaluated_at: Utc::now(),
+            evaluated_at: DateTime::now(),
         }
     }
 
@@ -647,7 +648,7 @@ impl EvidenceBasis {
             source: source.into(),
             value: Some(value),
             threshold: Some(threshold),
-            observed_at: Utc::now(),
+            observed_at: DateTime::now(),
         });
     }
 
@@ -1116,7 +1117,7 @@ pub struct EvidencedAction {
     pub authorized_by: String,
 
     /// When the decision was made
-    pub decided_at: DateTime<Utc>,
+    pub decided_at: DateTime,
 
     /// The legitimacy verdict (if governance check was performed)
     pub legitimacy: Option<LegitimacyVerdict>,
@@ -1138,7 +1139,7 @@ impl EvidencedAction {
             action,
             evidence,
             authorized_by: authorized_by.into(),
-            decided_at: Utc::now(),
+            decided_at: DateTime::now(),
             legitimacy: None,
             scope,
         }

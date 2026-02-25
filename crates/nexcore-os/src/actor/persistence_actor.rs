@@ -88,7 +88,7 @@ mod tests {
 
     fn test_snapshot(clean: bool) -> OsStateSnapshot {
         OsStateSnapshot {
-            timestamp: chrono::Utc::now(),
+            timestamp: nexcore_chrono::DateTime::now(),
             version: "0.1.0".to_string(),
             platform: "test".to_string(),
             boot_phase: "Running".to_string(),

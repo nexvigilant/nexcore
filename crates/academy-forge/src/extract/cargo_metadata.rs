@@ -5,6 +5,7 @@ use std::path::Path;
 use crate::error::ForgeError;
 
 /// Metadata extracted from Cargo.toml.
+#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct CargoMetadata {
     /// Crate name.

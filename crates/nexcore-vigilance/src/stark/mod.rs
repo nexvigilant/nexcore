@@ -40,7 +40,7 @@ pub use audit_confidence::{
 pub use cognitive_event::CognitiveEvent;
 pub use cognitive_power::CognitivePowerAnalyzer;
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 
@@ -79,7 +79,7 @@ pub struct AtomResult {
     /// Output data (JSON-serializable)
     pub output: Option<serde_json::Value>,
     /// When the verification was performed
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Optional rollback command if this operation needs reversal
     pub rollback_command: Option<String>,
     /// Error message if verification failed
@@ -93,7 +93,7 @@ impl AtomResult {
             atom_id: atom_id.to_string(),
             status: AtomStatus::Success,
             output: Some(output),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             rollback_command: None,
             error: None,
         }
@@ -105,7 +105,7 @@ impl AtomResult {
             atom_id: atom_id.to_string(),
             status: AtomStatus::Failure,
             output: None,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             rollback_command: None,
             error: Some(error),
         }
@@ -117,7 +117,7 @@ impl AtomResult {
             atom_id: atom_id.to_string(),
             status: AtomStatus::Skipped,
             output: Some(serde_json::json!({ "reason": reason })),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             rollback_command: None,
             error: None,
         }
@@ -138,7 +138,7 @@ pub struct ExecutionContext {
     /// All atom results recorded in this context
     pub results: Vec<AtomResult>,
     /// When the context was created
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 }
 
 impl ExecutionContext {
@@ -150,7 +150,7 @@ impl ExecutionContext {
             dry_run,
             workflow_id: None,
             results: Vec::new(),
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
         }
     }
 
@@ -217,7 +217,7 @@ impl ExecutionContext {
                 .count(),
             all_passed: self.no_failures(),
             created_at: self.created_at,
-            completed_at: Utc::now(),
+            completed_at: DateTime::now(),
             failed_atoms: self.failed_atoms().into_iter().map(String::from).collect(),
         }
     }
@@ -243,9 +243,9 @@ pub struct VerificationAudit {
     /// Whether all atoms passed
     pub all_passed: bool,
     /// When verification started
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// When verification completed
-    pub completed_at: DateTime<Utc>,
+    pub completed_at: DateTime,
     /// List of failed atom IDs
     pub failed_atoms: Vec<String>,
 }

@@ -52,7 +52,7 @@ reqwest = { version = "0.12.5", features = ["json"] }
 rusqlite = { version = "0.32", features = ["bundled", "serde_json"] }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.120"
-serde_yaml = "0.9.34"
+serde_yml = "0.0.12"
 sha2 = "0.10.8"
 hmac = "0.12.1"
 # slint = "1.9"
@@ -104,6 +104,7 @@ nexcore-browser = { path = "crates/nexcore-browser" }
 nexcore-caesura = { path = "crates/nexcore-caesura" }
 nexcore-cardiovascular = { path = "crates/nexcore-cardiovascular" }
 nexcore-ccp = { path = "crates/nexcore-ccp" }
+nexcore-chrono = { path = "crates/nexcore-chrono", features = ["serde"] }
 nexcore-circulatory = { path = "crates/nexcore-circulatory" }
 nexcore-codec = { path = "crates/nexcore-codec" }
 nexcore-clearance = { path = "crates/nexcore-clearance" }
@@ -209,6 +210,7 @@ nexcore-statemind = { path = "crates/nexcore-statemind" }
 nexcore-synapse = { path = "crates/nexcore-synapse" }
 nexcore-synth = { path = "crates/nexcore-synth" }
 nexcore-telemetry-core = { path = "crates/nexcore-telemetry-core" }
+nexcore-terminal = { path = "crates/nexcore-terminal" }
 nexcore-tov = { path = "crates/nexcore-tov" }
 nexcore-tov-grounded = { path = "crates/nexcore-tov-grounded" }
 nexcore-tov-proofs = { path = "crates/nexcore-tov-proofs" }
@@ -263,6 +265,30 @@ cargo = { level = "warn", priority = -1 }
 unwrap_used = "deny"
 expect_used = "deny"
 panic = "deny"
+# Panic prevention: close remaining panic vectors
+indexing_slicing = "deny"
+arithmetic_side_effects = "deny"
+string_slice = "deny"
+panic_in_result_fn = "deny"
+unwrap_in_result = "deny"
+exit = "deny"
+# Determinism: eliminate non-deterministic behavior
+float_cmp = "deny"
+lossy_float_literal = "deny"
+as_conversions = "deny"
+# Error handling strictness: no silent error loss
+map_err_ignore = "deny"
+let_underscore_must_use = "deny"
+wildcard_enum_match_arm = "deny"
+# API boundary control: semver safety + audit trail
+allow_attributes_without_reason = "deny"
+exhaustive_enums = "deny"
+exhaustive_structs = "deny"
+# Code hygiene: no debug artifacts in production
+dbg_macro = "deny"
+print_stdout = "deny"
+print_stderr = "deny"
+shadow_unrelated = "deny"
 # Ergonomic allows (common false positives)
 map_unwrap_or = "allow"
 manual_map = "allow"
@@ -280,9 +306,9 @@ cast_sign_loss = "allow"
 cast_lossless = "allow"
 option_if_let_else = "allow"
 significant_drop_tightening = "allow"
-todo = "allow"
-unimplemented = "allow"
-unreachable = "allow"
+todo = "deny"
+unimplemented = "deny"
+unreachable = "deny"
 multiple_crate_versions = "allow"
 # New Rust 1.93 pedantic lints (mass migration deferred)
 format_push_string = "allow"
@@ -304,7 +330,7 @@ field_reassign_with_default = "allow"
 redundant_pattern_matching = "allow"
 let_and_return = "allow"
 match_like_matches_macro = "allow"
-iter_over_hash_type = "allow"
+iter_over_hash_type = "deny"
 manual_is_ascii_check = "allow"
 io_other_error = "allow"
 manual_saturating_arithmetic = "allow"

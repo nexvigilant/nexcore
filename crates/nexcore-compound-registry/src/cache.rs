@@ -154,7 +154,7 @@ impl CacheStore {
                 record.inchi,
                 record.inchi_key,
                 record.cas_number,
-                record.pubchem_cid.map(|v| v as i64),
+                record.pubchem_cid.and_then(|v| i64::try_from(v).ok()),
                 record.chembl_id,
                 synonyms_json,
                 source,
@@ -182,9 +182,10 @@ impl CacheStore {
              LIMIT ?2",
         )?;
 
-        let rows = stmt.query_map(params![pattern, limit as i64], |row| {
-            Ok(row_to_record_rusqlite(row))
-        })?;
+        let rows = stmt.query_map(
+            params![pattern, i64::try_from(limit).unwrap_or(i64::MAX)],
+            |row| Ok(row_to_record_rusqlite(row)),
+        )?;
 
         let mut records = Vec::new();
         for row_result in rows {
@@ -203,7 +204,7 @@ impl CacheStore {
         let count: i64 = self
             .conn
             .query_row("SELECT COUNT(*) FROM compounds", [], |row| row.get(0))?;
-        Ok(count as u64)
+        Ok(u64::try_from(count).unwrap_or(0))
     }
 }
 
@@ -222,9 +223,8 @@ fn row_to_record(row: &rusqlite::Row<'_>) -> RegistryResult<CompoundRecord> {
 
     let synonyms: Vec<String> = serde_json::from_str(&synonyms_json).unwrap_or_default();
     let source = ResolutionSource::from_str(&source_str).unwrap_or(ResolutionSource::LocalCache);
-    let resolved_at = chrono::DateTime::parse_from_rfc3339(&resolved_at_str)
-        .map(|dt| dt.with_timezone(&chrono::Utc))
-        .unwrap_or_else(|_| chrono::Utc::now());
+    let resolved_at = nexcore_chrono::DateTime::parse_from_rfc3339(&resolved_at_str)
+        .unwrap_or_else(|_| nexcore_chrono::DateTime::now());
 
     Ok(CompoundRecord {
         name,
@@ -232,7 +232,7 @@ fn row_to_record(row: &rusqlite::Row<'_>) -> RegistryResult<CompoundRecord> {
         inchi,
         inchi_key,
         cas_number,
-        pubchem_cid: pubchem_cid_raw.map(|v| v as u64),
+        pubchem_cid: pubchem_cid_raw.and_then(|v| u64::try_from(v).ok()),
         chembl_id,
         synonyms,
         source,
@@ -260,7 +260,7 @@ mod tests {
             chembl_id: Some("CHEMBL25".to_string()),
             synonyms: vec!["Aspirin".to_string(), "Acetylsalicylic acid".to_string()],
             source: ResolutionSource::PubChem,
-            resolved_at: chrono::Utc::now(),
+            resolved_at: nexcore_chrono::DateTime::now(),
         }
     }
 
@@ -365,7 +365,7 @@ mod tests {
                 chembl_id: None,
                 synonyms: Vec::new(),
                 source: ResolutionSource::PubChem,
-                resolved_at: chrono::Utc::now(),
+                resolved_at: nexcore_chrono::DateTime::now(),
             };
             let _ = store.put(&ibuprofen);
 

@@ -12,7 +12,7 @@
 //! - ν Frequency: temporal frequency drives decay rate
 //! - ∝ Irreversibility: aging is one-directional
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 
 use crate::engram::Engram;
 
@@ -47,7 +47,7 @@ impl Default for DecayConfig {
 /// - `access_boost = ln(1 + access_count) × access_weight` — frequency resistance
 /// - `recency_boost = 0.5^(since_last_access / (2 × half_life))` — recent access bonus
 #[must_use]
-pub fn decay_score(engram: &Engram, now: DateTime<Utc>, config: &DecayConfig) -> f64 {
+pub fn decay_score(engram: &Engram, now: DateTime, config: &DecayConfig) -> f64 {
     let age_days = (now - engram.created_at).num_seconds() as f64 / 86400.0;
 
     // Exponential decay based on age
@@ -66,7 +66,7 @@ pub fn decay_score(engram: &Engram, now: DateTime<Utc>, config: &DecayConfig) ->
 
 /// Check if an engram is stale (below the configured threshold).
 #[must_use]
-pub fn is_stale(engram: &Engram, now: DateTime<Utc>, config: &DecayConfig) -> bool {
+pub fn is_stale(engram: &Engram, now: DateTime, config: &DecayConfig) -> bool {
     decay_score(engram, now, config) < config.stale_threshold
 }
 
@@ -74,12 +74,12 @@ pub fn is_stale(engram: &Engram, now: DateTime<Utc>, config: &DecayConfig) -> bo
 mod tests {
     use super::*;
     use crate::engram::EngramSource;
-    use chrono::Duration;
+    use nexcore_chrono::Duration;
 
     #[test]
     fn test_fresh_engram_high_relevance() {
         let e = Engram::new(1, "Fresh", "Content", EngramSource::Memory);
-        let score = decay_score(&e, Utc::now(), &DecayConfig::default());
+        let score = decay_score(&e, DateTime::now(), &DecayConfig::default());
         assert!(
             score > 0.9,
             "Fresh engram should have high relevance: {score}"
@@ -89,9 +89,9 @@ mod tests {
     #[test]
     fn test_old_engram_decays() {
         let mut e = Engram::new(1, "Old", "Content", EngramSource::Memory);
-        e.created_at = Utc::now() - Duration::days(30);
+        e.created_at = DateTime::now() - Duration::days(30);
         e.last_accessed = e.created_at;
-        let score = decay_score(&e, Utc::now(), &DecayConfig::default());
+        let score = decay_score(&e, DateTime::now(), &DecayConfig::default());
         assert!(
             score < 0.5,
             "30-day-old engram should have decayed: {score}"
@@ -101,8 +101,8 @@ mod tests {
     #[test]
     fn test_accessed_engram_resists_decay() {
         let mut accessed = Engram::new(1, "Accessed", "Content", EngramSource::Memory);
-        accessed.created_at = Utc::now() - Duration::days(30);
-        accessed.last_accessed = Utc::now();
+        accessed.created_at = DateTime::now() - Duration::days(30);
+        accessed.last_accessed = DateTime::now();
         accessed.access_count = 10;
 
         let mut unaccessed = accessed.clone();
@@ -110,8 +110,8 @@ mod tests {
         unaccessed.last_accessed = unaccessed.created_at;
 
         let config = DecayConfig::default();
-        let accessed_score = decay_score(&accessed, Utc::now(), &config);
-        let unaccessed_score = decay_score(&unaccessed, Utc::now(), &config);
+        let accessed_score = decay_score(&accessed, DateTime::now(), &config);
+        let unaccessed_score = decay_score(&unaccessed, DateTime::now(), &config);
 
         assert!(
             accessed_score > unaccessed_score,
@@ -122,22 +122,22 @@ mod tests {
     #[test]
     fn test_stale_detection() {
         let mut e = Engram::new(1, "Ancient", "Content", EngramSource::Memory);
-        e.created_at = Utc::now() - Duration::days(365);
+        e.created_at = DateTime::now() - Duration::days(365);
         e.last_accessed = e.created_at;
-        assert!(is_stale(&e, Utc::now(), &DecayConfig::default()));
+        assert!(is_stale(&e, DateTime::now(), &DecayConfig::default()));
     }
 
     #[test]
     fn test_fresh_not_stale() {
         let e = Engram::new(1, "Fresh", "Content", EngramSource::Memory);
-        assert!(!is_stale(&e, Utc::now(), &DecayConfig::default()));
+        assert!(!is_stale(&e, DateTime::now(), &DecayConfig::default()));
     }
 
     #[test]
     fn test_decay_score_clamped() {
         let mut e = Engram::new(1, "Boosted", "Content", EngramSource::Memory);
         e.access_count = 1_000_000; // extreme access count
-        let score = decay_score(&e, Utc::now(), &DecayConfig::default());
+        let score = decay_score(&e, DateTime::now(), &DecayConfig::default());
         assert!(score <= 1.0, "Score should be clamped to 1.0: {score}");
     }
 }

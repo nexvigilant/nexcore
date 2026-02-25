@@ -1,7 +1,7 @@
 //! Intervention generation for coaching.
 
 use super::models::{AndonSignal, Intervention, InterventionType};
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 
 /// Alert from monitoring system.
@@ -51,7 +51,7 @@ impl InterventionGenerator {
 
         Intervention {
             id: NexId::v4(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             trigger: format!("{}: {}", alert.alert_type, alert.message),
             intervention_type,
             signal: alert.severity,

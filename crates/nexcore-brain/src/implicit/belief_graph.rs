@@ -2,7 +2,7 @@
 //!
 //! Supports implication edges with cycle detection and DFS reachability.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// Edge type for belief implications
@@ -39,7 +39,7 @@ pub struct BeliefImplication {
     /// Strength of implication
     pub strength: ImplicationStrength,
     /// When this implication was established
-    pub established_at: DateTime<Utc>,
+    pub established_at: DateTime,
 }
 
 /// Belief dependency graph for inter-belief causality.
@@ -67,7 +67,7 @@ impl BeliefGraph {
             from: from.into(),
             to: to.into(),
             strength,
-            established_at: Utc::now(),
+            established_at: DateTime::now(),
         };
         self.implications.push(imp);
     }

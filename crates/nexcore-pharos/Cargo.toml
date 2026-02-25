@@ -31,7 +31,7 @@ tracing-subscriber = { workspace = true, features = ["env-filter"] }
 clap = { workspace = true, features = ["derive", "cargo", "env"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-chrono = { workspace = true, features = ["serde"] }
+nexcore-chrono = { workspace = true }
 nexcore-id = { workspace = true }
 reqwest = { workspace = true, features = ["json"] }
 toml = { workspace = true }

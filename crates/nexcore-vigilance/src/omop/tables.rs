@@ -1,11 +1,11 @@
 //! OHDSI OMOP CDM v5.4 — Core Clinical Table Types
 //!
 //! Implements the 10 core clinical tables from the OMOP Common Data Model v5.4.
-//! All IDs use `i64` (SQL BIGINT), dates use `chrono::NaiveDate`.
+//! All IDs use `i64` (SQL BIGINT), dates use `chrono::Date`.
 //!
 //! Reference: <https://ohdsi.github.io/CommonDataModel/cdm54.html>
 
-use chrono::{NaiveDate, NaiveDateTime};
+use nexcore_chrono::{Date, DateTime};
 use serde::{Deserialize, Serialize};
 
 // ─── Person ──────────────────────────────────────────────────────────────────
@@ -27,7 +27,7 @@ pub struct Person {
     /// Day of birth (1–31), nullable.
     pub day_of_birth: Option<i32>,
     /// Full birth datetime, nullable.
-    pub birth_datetime: Option<NaiveDateTime>,
+    pub birth_datetime: Option<DateTime>,
     /// FK to Concept → Race domain.
     pub race_concept_id: i64,
     /// FK to Concept → Ethnicity domain.
@@ -66,9 +66,9 @@ pub struct ObservationPeriod {
     /// FK to Person.
     pub person_id: i64,
     /// Start of the observation period.
-    pub observation_period_start_date: NaiveDate,
+    pub observation_period_start_date: Date,
     /// End of the observation period.
-    pub observation_period_end_date: NaiveDate,
+    pub observation_period_end_date: Date,
     /// FK to Concept → Type of observation period (e.g., insurance enrollment).
     pub period_type_concept_id: i64,
 }
@@ -87,13 +87,13 @@ pub struct VisitOccurrence {
     /// FK to Concept → Visit domain (e.g., inpatient, outpatient).
     pub visit_concept_id: i64,
     /// Start date of the visit.
-    pub visit_start_date: NaiveDate,
+    pub visit_start_date: Date,
     /// Start datetime of the visit, nullable.
-    pub visit_start_datetime: Option<NaiveDateTime>,
+    pub visit_start_datetime: Option<DateTime>,
     /// End date of the visit.
-    pub visit_end_date: NaiveDate,
+    pub visit_end_date: Date,
     /// End datetime of the visit, nullable.
-    pub visit_end_datetime: Option<NaiveDateTime>,
+    pub visit_end_datetime: Option<DateTime>,
     /// FK to Concept → Type of visit record.
     pub visit_type_concept_id: i64,
     /// FK to Provider.
@@ -130,13 +130,13 @@ pub struct ConditionOccurrence {
     /// FK to Concept → Condition domain (SNOMED-CT standard).
     pub condition_concept_id: i64,
     /// Start date of the condition.
-    pub condition_start_date: NaiveDate,
+    pub condition_start_date: Date,
     /// Start datetime, nullable.
-    pub condition_start_datetime: Option<NaiveDateTime>,
+    pub condition_start_datetime: Option<DateTime>,
     /// End date of the condition, nullable.
-    pub condition_end_date: Option<NaiveDate>,
+    pub condition_end_date: Option<Date>,
     /// End datetime, nullable.
-    pub condition_end_datetime: Option<NaiveDateTime>,
+    pub condition_end_datetime: Option<DateTime>,
     /// FK to Concept → how the condition was recorded (EHR diagnosis, etc.).
     pub condition_type_concept_id: i64,
     /// FK to Concept → clinical status of the condition.
@@ -171,15 +171,15 @@ pub struct DrugExposure {
     /// FK to Concept → Drug domain (RxNorm standard).
     pub drug_concept_id: i64,
     /// Start date of drug exposure.
-    pub drug_exposure_start_date: NaiveDate,
+    pub drug_exposure_start_date: Date,
     /// Start datetime, nullable.
-    pub drug_exposure_start_datetime: Option<NaiveDateTime>,
+    pub drug_exposure_start_datetime: Option<DateTime>,
     /// End date of drug exposure.
-    pub drug_exposure_end_date: NaiveDate,
+    pub drug_exposure_end_date: Date,
     /// End datetime, nullable.
-    pub drug_exposure_end_datetime: Option<NaiveDateTime>,
+    pub drug_exposure_end_datetime: Option<DateTime>,
     /// Verbatim end date from the source, nullable.
-    pub verbatim_end_date: Option<NaiveDate>,
+    pub verbatim_end_date: Option<Date>,
     /// FK to Concept → how the drug record was constructed (prescription, admin, etc.).
     pub drug_type_concept_id: i64,
     /// Reason the drug was stopped, nullable.
@@ -226,13 +226,13 @@ pub struct ProcedureOccurrence {
     /// FK to Concept → Procedure domain.
     pub procedure_concept_id: i64,
     /// Date of the procedure.
-    pub procedure_date: NaiveDate,
+    pub procedure_date: Date,
     /// Datetime of the procedure, nullable.
-    pub procedure_datetime: Option<NaiveDateTime>,
+    pub procedure_datetime: Option<DateTime>,
     /// End date of the procedure, nullable.
-    pub procedure_end_date: Option<NaiveDate>,
+    pub procedure_end_date: Option<Date>,
     /// End datetime of the procedure, nullable.
-    pub procedure_end_datetime: Option<NaiveDateTime>,
+    pub procedure_end_datetime: Option<DateTime>,
     /// FK to Concept → how the procedure was recorded.
     pub procedure_type_concept_id: i64,
     /// FK to Concept → procedure modifier (e.g., laterality).
@@ -267,9 +267,9 @@ pub struct Measurement {
     /// FK to Concept → Measurement domain (LOINC standard).
     pub measurement_concept_id: i64,
     /// Date of the measurement.
-    pub measurement_date: NaiveDate,
+    pub measurement_date: Date,
     /// Datetime of the measurement, nullable.
-    pub measurement_datetime: Option<NaiveDateTime>,
+    pub measurement_datetime: Option<DateTime>,
     /// Time of the measurement as a string (HH:MM:SS), nullable.
     pub measurement_time: Option<String>,
     /// FK to Concept → how the measurement was obtained.
@@ -323,9 +323,9 @@ pub struct Observation {
     /// FK to Concept → Observation domain.
     pub observation_concept_id: i64,
     /// Date of the observation.
-    pub observation_date: NaiveDate,
+    pub observation_date: Date,
     /// Datetime of the observation, nullable.
-    pub observation_datetime: Option<NaiveDateTime>,
+    pub observation_datetime: Option<DateTime>,
     /// FK to Concept → how the observation was recorded.
     pub observation_type_concept_id: i64,
     /// Numeric result of the observation, nullable.
@@ -370,9 +370,9 @@ pub struct Death {
     /// FK to Person (one death record per person).
     pub person_id: i64,
     /// Date of death.
-    pub death_date: NaiveDate,
+    pub death_date: Date,
     /// Datetime of death, nullable.
-    pub death_datetime: Option<NaiveDateTime>,
+    pub death_datetime: Option<DateTime>,
     /// FK to Concept → how the death was recorded.
     pub death_type_concept_id: Option<i64>,
     /// FK to Concept → cause of death (ICD concept).
@@ -397,13 +397,13 @@ pub struct DeviceExposure {
     /// FK to Concept → Device domain.
     pub device_concept_id: i64,
     /// Start date of the device exposure.
-    pub device_exposure_start_date: NaiveDate,
+    pub device_exposure_start_date: Date,
     /// Start datetime, nullable.
-    pub device_exposure_start_datetime: Option<NaiveDateTime>,
+    pub device_exposure_start_datetime: Option<DateTime>,
     /// End date of the device exposure, nullable.
-    pub device_exposure_end_date: Option<NaiveDate>,
+    pub device_exposure_end_date: Option<Date>,
     /// End datetime, nullable.
-    pub device_exposure_end_datetime: Option<NaiveDateTime>,
+    pub device_exposure_end_datetime: Option<DateTime>,
     /// FK to Concept → how the device record was constructed.
     pub device_type_concept_id: i64,
     /// UDI (Unique Device Identifier), nullable.

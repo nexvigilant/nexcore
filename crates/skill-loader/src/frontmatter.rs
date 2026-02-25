@@ -56,7 +56,7 @@ fn default_compliance() -> String {
 /// Parse frontmatter from SKILL.md content
 pub fn parse_frontmatter(content: &str) -> Result<SkillFrontmatter, FrontmatterError> {
     let yaml = extract_yaml(content)?;
-    serde_yaml::from_str(&yaml).map_err(|e| FrontmatterError::InvalidYaml(e.to_string()))
+    serde_yml::from_str(&yaml).map_err(|e| FrontmatterError::InvalidYaml(e.to_string()))
 }
 
 fn extract_yaml(content: &str) -> Result<String, FrontmatterError> {

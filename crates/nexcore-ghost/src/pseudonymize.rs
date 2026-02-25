@@ -99,7 +99,7 @@ impl HmacPseudonymizer {
 impl Pseudonymizer for HmacPseudonymizer {
     fn pseudonymize(&self, domain: &str, value: &str) -> Result<PseudonymHandle> {
         let token = self.compute(domain, value);
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = nexcore_chrono::DateTime::now().to_rfc3339();
         Ok(PseudonymHandle {
             token,
             domain: domain.to_string(),

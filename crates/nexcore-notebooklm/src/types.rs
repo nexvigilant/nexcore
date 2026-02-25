@@ -2,7 +2,7 @@
 //!
 //! Grounding: ∃(Existence) + κ(Comparison) — typed entities for library and sessions.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// A notebook in the library.
@@ -29,9 +29,9 @@ pub struct Notebook {
     #[serde(default)]
     pub tags: Vec<String>,
     /// When added to library.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// Last modified.
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
 }
 
 /// A chat session with a notebook.
@@ -44,9 +44,9 @@ pub struct Session {
     /// Number of messages exchanged.
     pub message_count: u32,
     /// When the session was created.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// Last activity time.
-    pub last_activity: DateTime<Utc>,
+    pub last_activity: DateTime,
 }
 
 /// Health status of the NotebookLM subsystem.
@@ -70,7 +70,7 @@ pub struct AuthState {
     /// Whether the last auth attempt was successful.
     pub authenticated: bool,
     /// When auth last succeeded (ISO 8601).
-    pub last_authenticated: Option<DateTime<Utc>>,
+    pub last_authenticated: Option<DateTime>,
     /// Google account email (if detected).
     pub account_email: Option<String>,
 }
@@ -83,7 +83,7 @@ impl AuthState {
         }
         match self.last_authenticated {
             Some(ts) => {
-                let age = Utc::now().signed_duration_since(ts);
+                let age = DateTime::now().signed_duration_since(ts);
                 age.num_days() < 30
             }
             None => false,

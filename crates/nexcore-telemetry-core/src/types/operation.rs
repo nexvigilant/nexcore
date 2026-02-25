@@ -2,7 +2,7 @@
 //!
 //! Represents tool calls made during telemetry sessions.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -57,7 +57,7 @@ pub struct Operation {
     #[serde(default)]
     pub result: Vec<serde_json::Value>,
     pub status: OperationStatus,
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     #[serde(default, rename = "resultDisplay")]
     pub result_display: Option<String>,
     #[serde(default, rename = "displayName")]
@@ -115,7 +115,7 @@ impl Operation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     fn make_operation(name: &str, args: HashMap<String, serde_json::Value>) -> Operation {
         Operation {
@@ -124,7 +124,7 @@ mod tests {
             args,
             result: Vec::new(),
             status: OperationStatus::Success,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             result_display: None,
             display_name: None,
             description: None,

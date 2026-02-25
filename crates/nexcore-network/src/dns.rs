@@ -9,13 +9,14 @@
 //! TTL-based expiry (ν frequency of refresh).
 
 use crate::interface::IpAddr;
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// A single DNS record.
 ///
 /// Tier: T2-P (μ Mapping — name to address)
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DnsRecord {
     /// The domain name.
@@ -25,7 +26,7 @@ pub struct DnsRecord {
     /// Time-to-live in seconds.
     pub ttl_seconds: u32,
     /// When this record was cached.
-    pub cached_at: DateTime<Utc>,
+    pub cached_at: DateTime,
 }
 
 impl DnsRecord {
@@ -35,16 +36,21 @@ impl DnsRecord {
             name: name.into(),
             addresses,
             ttl_seconds,
-            cached_at: Utc::now(),
+            cached_at: DateTime::now(),
         }
     }
 
     /// Whether this record has expired.
     pub fn is_expired(&self) -> bool {
-        let elapsed = Utc::now()
+        let elapsed = DateTime::now()
             .signed_duration_since(self.cached_at)
             .num_seconds();
-        elapsed < 0 || elapsed as u32 >= self.ttl_seconds
+        if elapsed < 0 {
+            return true;
+        }
+        // elapsed is non-negative here; safe to convert to u32 for comparison
+        let elapsed_secs = u32::try_from(elapsed).unwrap_or(u32::MAX);
+        elapsed_secs >= self.ttl_seconds
     }
 
     /// Get the first address (most common use case).
@@ -54,19 +60,22 @@ impl DnsRecord {
 
     /// Remaining TTL in seconds (0 if expired).
     pub fn remaining_ttl(&self) -> u32 {
-        let elapsed = Utc::now()
+        let elapsed = DateTime::now()
             .signed_duration_since(self.cached_at)
             .num_seconds();
         if elapsed < 0 {
             return 0;
         }
-        self.ttl_seconds.saturating_sub(elapsed as u32)
+        // elapsed is non-negative; safe to convert
+        let elapsed_secs = u32::try_from(elapsed).unwrap_or(u32::MAX);
+        self.ttl_seconds.saturating_sub(elapsed_secs)
     }
 }
 
 /// DNS cache statistics.
 ///
 /// Tier: T2-P (N Quantity)
+#[non_exhaustive]
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DnsCacheStats {
     /// Total lookups performed.
@@ -87,7 +96,18 @@ impl DnsCacheStats {
         if self.total_lookups == 0 {
             return 0.0;
         }
-        self.cache_hits as f64 / self.total_lookups as f64 * 100.0
+        // u64→f64 conversion: values up to 2^53 are exact; DNS counters will never reach that
+        #[allow(
+            clippy::as_conversions,
+            reason = "u64 DNS counters fit exactly in f64 mantissa for any realistic lookup count"
+        )]
+        let hits = self.cache_hits as f64;
+        #[allow(
+            clippy::as_conversions,
+            reason = "u64 DNS counters fit exactly in f64 mantissa for any realistic lookup count"
+        )]
+        let total = self.total_lookups as f64;
+        hits / total * 100.0
     }
 }
 
@@ -97,7 +117,7 @@ impl DnsCacheStats {
 #[derive(Debug)]
 pub struct DnsResolver {
     /// Cached DNS records keyed by domain name.
-    cache: HashMap<String, DnsRecord>,
+    cache: BTreeMap<String, DnsRecord>,
     /// Maximum cache entries.
     max_entries: usize,
     /// Statistics.
@@ -116,7 +136,7 @@ impl DnsResolver {
     /// Create a new resolver with default settings.
     pub fn new() -> Self {
         Self {
-            cache: HashMap::new(),
+            cache: BTreeMap::new(),
             max_entries: 1000,
             upstream_servers: vec![
                 IpAddr::v4(8, 8, 8, 8), // Google DNS
@@ -145,18 +165,18 @@ impl DnsResolver {
     ///
     /// Returns `Some(record)` if cached and not expired, `None` otherwise.
     pub fn lookup_cached(&mut self, name: &str) -> Option<&DnsRecord> {
-        self.stats.total_lookups += 1;
+        self.stats.total_lookups = self.stats.total_lookups.saturating_add(1);
 
         // Check if cached and not expired
         if let Some(record) = self.cache.get(name) {
             if !record.is_expired() {
-                self.stats.cache_hits += 1;
+                self.stats.cache_hits = self.stats.cache_hits.saturating_add(1);
                 return Some(record);
             }
             // Expired — will be evicted on next cleanup
         }
 
-        self.stats.cache_misses += 1;
+        self.stats.cache_misses = self.stats.cache_misses.saturating_add(1);
         None
     }
 
@@ -185,8 +205,10 @@ impl DnsResolver {
     pub fn evict_expired(&mut self) {
         let before = self.cache.len();
         self.cache.retain(|_, record| !record.is_expired());
-        let evicted = before - self.cache.len();
-        self.stats.evictions += evicted as u64;
+        let evicted = before.saturating_sub(self.cache.len());
+        // usize→u64: evicted count is bounded by cache capacity, well within u64
+        let evicted_u64 = u64::try_from(evicted).unwrap_or(u64::MAX);
+        self.stats.evictions = self.stats.evictions.saturating_add(evicted_u64);
         self.stats.entries = self.cache.len();
     }
 
@@ -199,7 +221,7 @@ impl DnsResolver {
             .map(|(k, _)| k.clone())
         {
             self.cache.remove(&oldest_key);
-            self.stats.evictions += 1;
+            self.stats.evictions = self.stats.evictions.saturating_add(1);
         }
     }
 
@@ -277,10 +299,10 @@ mod tests {
         let mut r = DnsResolver::new();
         r.cache_address("test.com", IpAddr::v4(1, 2, 3, 4), 3600);
 
-        // 1 hit
-        let _ = r.lookup_cached("test.com");
-        // 1 miss
-        let _ = r.lookup_cached("other.com");
+        // Trigger a hit by asserting the lookup succeeds
+        assert!(r.lookup_cached("test.com").is_some());
+        // Trigger a miss
+        assert!(r.lookup_cached("other.com").is_none());
 
         assert_eq!(r.stats().total_lookups, 2);
         assert_eq!(r.stats().cache_hits, 1);
@@ -318,8 +340,8 @@ mod tests {
     #[test]
     fn max_entries_eviction() {
         let mut r = DnsResolver::new().with_max_entries(3);
-        for i in 0..5 {
-            r.cache_address(format!("host{i}.com"), IpAddr::v4(10, 0, 0, i as u8), 3600);
+        for i in 0..5_u8 {
+            r.cache_address(format!("host{i}.com"), IpAddr::v4(10, 0, 0, i), 3600);
         }
         assert!(r.cache_size() <= 3);
     }

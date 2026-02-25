@@ -16,13 +16,13 @@ use std::fmt;
 use std::net::IpAddr;
 use std::time::Duration;
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 // ── T1: Primitive aliases ──────────────────────────────────────────
 
 /// Tier: T1 — A moment in time (State primitive).
-pub type Timestamp = DateTime<Utc>;
+pub type Timestamp = DateTime;
 
 /// Tier: T1 — Cardinality count (Sequence primitive).
 pub type Count = u32;
@@ -97,7 +97,7 @@ impl FailureRecord {
 
     /// Prune timestamps outside the sliding window.
     pub fn prune(&mut self, window: FindWindow, now: Timestamp) {
-        let cutoff = now - window.as_duration();
+        let cutoff = now - nexcore_chrono::Duration::from_std(window.as_duration());
         self.timestamps.retain(|&t| t >= cutoff);
     }
 
@@ -238,11 +238,11 @@ mod tests {
         let ip: IpAddr = "192.168.1.1"
             .parse()
             .unwrap_or(IpAddr::V4(std::net::Ipv4Addr::LOCALHOST));
-        let now = Utc::now();
+        let now = DateTime::now();
         let window = FindWindow::from_secs(600);
 
-        let mut rec = FailureRecord::new(ip, now - chrono::Duration::seconds(700));
-        rec.record_failure(now - chrono::Duration::seconds(300));
+        let mut rec = FailureRecord::new(ip, now - nexcore_chrono::Duration::seconds(700));
+        rec.record_failure(now - nexcore_chrono::Duration::seconds(300));
         rec.record_failure(now);
 
         assert_eq!(rec.count(), 3);
@@ -252,13 +252,13 @@ mod tests {
 
     #[test]
     fn ban_record_expiry() {
-        let now = Utc::now();
+        let now = DateTime::now();
         let ban = BanRecord {
             ip: "10.0.0.1"
                 .parse()
                 .unwrap_or(IpAddr::V4(std::net::Ipv4Addr::LOCALHOST)),
-            banned_at: now - chrono::Duration::seconds(100),
-            expires_at: now - chrono::Duration::seconds(1),
+            banned_at: now - nexcore_chrono::Duration::seconds(100),
+            expires_at: now - nexcore_chrono::Duration::seconds(1),
             failure_count: 3,
         };
         assert!(ban.is_expired(now));
@@ -269,7 +269,7 @@ mod tests {
         let ip: IpAddr = "1.2.3.4"
             .parse()
             .unwrap_or(IpAddr::V4(std::net::Ipv4Addr::LOCALHOST));
-        let ts = Utc::now();
+        let ts = DateTime::now();
         let evt = AuthEvent::FailedPassword {
             ip,
             user: "root".to_string(),

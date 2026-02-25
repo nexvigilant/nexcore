@@ -7,10 +7,11 @@
 use crate::primitiva::{LexPrimitiva, PrimitiveComposition};
 use crate::tier::Tier;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Result of extracting primitives from input.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ExtractionResult {
     /// The input that was analyzed.
     pub input: String,
@@ -26,6 +27,7 @@ pub struct ExtractionResult {
 
 /// A single extracted primitive with metadata.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ExtractedPrimitive {
     /// The primitive that was extracted.
     pub primitive: LexPrimitiva,
@@ -39,8 +41,10 @@ pub struct ExtractedPrimitive {
 
 /// Keyword patterns for primitive detection.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct PrimitivePatterns {
-    patterns: HashMap<LexPrimitiva, Vec<&'static str>>,
+    /// Keyword patterns keyed by primitive variant.
+    pub patterns: BTreeMap<LexPrimitiva, Vec<&'static str>>,
 }
 
 impl Default for PrimitivePatterns {
@@ -53,7 +57,7 @@ impl PrimitivePatterns {
     /// Creates the default pattern set.
     #[must_use]
     pub fn new() -> Self {
-        let mut patterns: HashMap<LexPrimitiva, Vec<&'static str>> = HashMap::new();
+        let mut patterns: BTreeMap<LexPrimitiva, Vec<&'static str>> = BTreeMap::new();
         Self::add_sequence_patterns(&mut patterns);
         Self::add_mapping_patterns(&mut patterns);
         Self::add_state_patterns(&mut patterns);
@@ -73,7 +77,7 @@ impl PrimitivePatterns {
         Self { patterns }
     }
 
-    fn add_sequence_patterns(p: &mut HashMap<LexPrimitiva, Vec<&'static str>>) {
+    fn add_sequence_patterns(p: &mut BTreeMap<LexPrimitiva, Vec<&'static str>>) {
         p.insert(
             LexPrimitiva::Sequence,
             vec![
@@ -84,7 +88,7 @@ impl PrimitivePatterns {
         );
     }
 
-    fn add_mapping_patterns(p: &mut HashMap<LexPrimitiva, Vec<&'static str>>) {
+    fn add_mapping_patterns(p: &mut BTreeMap<LexPrimitiva, Vec<&'static str>>) {
         p.insert(
             LexPrimitiva::Mapping,
             vec![
@@ -103,7 +107,7 @@ impl PrimitivePatterns {
         );
     }
 
-    fn add_state_patterns(p: &mut HashMap<LexPrimitiva, Vec<&'static str>>) {
+    fn add_state_patterns(p: &mut BTreeMap<LexPrimitiva, Vec<&'static str>>) {
         p.insert(
             LexPrimitiva::State,
             vec![
@@ -122,7 +126,7 @@ impl PrimitivePatterns {
         );
     }
 
-    fn add_recursion_patterns(p: &mut HashMap<LexPrimitiva, Vec<&'static str>>) {
+    fn add_recursion_patterns(p: &mut BTreeMap<LexPrimitiva, Vec<&'static str>>) {
         p.insert(
             LexPrimitiva::Recursion,
             vec![
@@ -139,7 +143,7 @@ impl PrimitivePatterns {
         );
     }
 
-    fn add_void_patterns(p: &mut HashMap<LexPrimitiva, Vec<&'static str>>) {
+    fn add_void_patterns(p: &mut BTreeMap<LexPrimitiva, Vec<&'static str>>) {
         p.insert(
             LexPrimitiva::Void,
             vec![
@@ -158,7 +162,7 @@ impl PrimitivePatterns {
         );
     }
 
-    fn add_boundary_patterns(p: &mut HashMap<LexPrimitiva, Vec<&'static str>>) {
+    fn add_boundary_patterns(p: &mut BTreeMap<LexPrimitiva, Vec<&'static str>>) {
         p.insert(
             LexPrimitiva::Boundary,
             vec![
@@ -178,7 +182,7 @@ impl PrimitivePatterns {
         );
     }
 
-    fn add_frequency_patterns(p: &mut HashMap<LexPrimitiva, Vec<&'static str>>) {
+    fn add_frequency_patterns(p: &mut BTreeMap<LexPrimitiva, Vec<&'static str>>) {
         p.insert(
             LexPrimitiva::Frequency,
             vec![
@@ -197,7 +201,7 @@ impl PrimitivePatterns {
         );
     }
 
-    fn add_existence_patterns(p: &mut HashMap<LexPrimitiva, Vec<&'static str>>) {
+    fn add_existence_patterns(p: &mut BTreeMap<LexPrimitiva, Vec<&'static str>>) {
         p.insert(
             LexPrimitiva::Existence,
             vec![
@@ -216,7 +220,7 @@ impl PrimitivePatterns {
         );
     }
 
-    fn add_persistence_patterns(p: &mut HashMap<LexPrimitiva, Vec<&'static str>>) {
+    fn add_persistence_patterns(p: &mut BTreeMap<LexPrimitiva, Vec<&'static str>>) {
         p.insert(
             LexPrimitiva::Persistence,
             vec![
@@ -235,7 +239,7 @@ impl PrimitivePatterns {
         );
     }
 
-    fn add_causality_patterns(p: &mut HashMap<LexPrimitiva, Vec<&'static str>>) {
+    fn add_causality_patterns(p: &mut BTreeMap<LexPrimitiva, Vec<&'static str>>) {
         p.insert(
             LexPrimitiva::Causality,
             vec![
@@ -255,7 +259,7 @@ impl PrimitivePatterns {
         );
     }
 
-    fn add_comparison_patterns(p: &mut HashMap<LexPrimitiva, Vec<&'static str>>) {
+    fn add_comparison_patterns(p: &mut BTreeMap<LexPrimitiva, Vec<&'static str>>) {
         p.insert(
             LexPrimitiva::Comparison,
             vec![
@@ -275,7 +279,7 @@ impl PrimitivePatterns {
         );
     }
 
-    fn add_quantity_patterns(p: &mut HashMap<LexPrimitiva, Vec<&'static str>>) {
+    fn add_quantity_patterns(p: &mut BTreeMap<LexPrimitiva, Vec<&'static str>>) {
         p.insert(
             LexPrimitiva::Quantity,
             vec![
@@ -294,7 +298,7 @@ impl PrimitivePatterns {
         );
     }
 
-    fn add_location_patterns(p: &mut HashMap<LexPrimitiva, Vec<&'static str>>) {
+    fn add_location_patterns(p: &mut BTreeMap<LexPrimitiva, Vec<&'static str>>) {
         p.insert(
             LexPrimitiva::Location,
             vec![
@@ -313,7 +317,7 @@ impl PrimitivePatterns {
         );
     }
 
-    fn add_irreversibility_patterns(p: &mut HashMap<LexPrimitiva, Vec<&'static str>>) {
+    fn add_irreversibility_patterns(p: &mut BTreeMap<LexPrimitiva, Vec<&'static str>>) {
         p.insert(
             LexPrimitiva::Irreversibility,
             vec![
@@ -332,7 +336,7 @@ impl PrimitivePatterns {
         );
     }
 
-    fn add_sum_patterns(p: &mut HashMap<LexPrimitiva, Vec<&'static str>>) {
+    fn add_sum_patterns(p: &mut BTreeMap<LexPrimitiva, Vec<&'static str>>) {
         p.insert(
             LexPrimitiva::Sum,
             vec![
@@ -351,7 +355,7 @@ impl PrimitivePatterns {
         );
     }
 
-    fn add_product_patterns(p: &mut HashMap<LexPrimitiva, Vec<&'static str>>) {
+    fn add_product_patterns(p: &mut BTreeMap<LexPrimitiva, Vec<&'static str>>) {
         p.insert(
             LexPrimitiva::Product,
             vec![
@@ -382,6 +386,7 @@ impl PrimitivePatterns {
 
 /// Primitive extractor for analyzing text.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct PrimitiveExtractor {
     patterns: PrimitivePatterns,
     /// Minimum confidence threshold for inclusion.
@@ -417,6 +422,10 @@ impl PrimitiveExtractor {
     #[must_use]
     pub fn extract(&self, input: &str) -> ExtractionResult {
         let lower = input.to_lowercase();
+        #[allow(
+            clippy::as_conversions,
+            reason = "word_count bounded by input length; safe cast to f64"
+        )]
         let word_count = lower.split_whitespace().count().max(1) as f64;
         let scores = self.score_all_primitives(&lower, word_count);
         let primitives = self.build_primitive_list(scores);
@@ -428,8 +437,8 @@ impl PrimitiveExtractor {
         &self,
         lower: &str,
         word_count: f64,
-    ) -> HashMap<LexPrimitiva, (f64, Vec<String>)> {
-        let mut scores = HashMap::new();
+    ) -> BTreeMap<LexPrimitiva, (f64, Vec<String>)> {
+        let mut scores = BTreeMap::new();
         for primitive in LexPrimitiva::all() {
             if let Some(score) = self.score_primitive(primitive, lower, word_count) {
                 scores.insert(primitive, score);
@@ -456,7 +465,15 @@ impl PrimitiveExtractor {
             return None;
         }
 
+        #[allow(
+            clippy::as_conversions,
+            reason = "matches.len() and patterns.len() bounded by small constants; safe cast to f64"
+        )]
         let match_score = matches.len() as f64 / patterns.len().max(1) as f64;
+        #[allow(
+            clippy::as_conversions,
+            reason = "matches.len() bounded by small constants; safe cast to f64"
+        )]
         let density_score = matches.len() as f64 / word_count;
         let confidence = (match_score * 0.6 + density_score * 0.4).min(1.0);
         Some((confidence, matches))
@@ -465,7 +482,7 @@ impl PrimitiveExtractor {
     /// Build sorted primitive list from scores.
     fn build_primitive_list(
         &self,
-        scores: HashMap<LexPrimitiva, (f64, Vec<String>)>,
+        scores: BTreeMap<LexPrimitiva, (f64, Vec<String>)>,
     ) -> Vec<ExtractedPrimitive> {
         let mut primitives: Vec<ExtractedPrimitive> = scores
             .iter()
@@ -493,6 +510,10 @@ impl PrimitiveExtractor {
     fn build_result(&self, input: &str, primitives: Vec<ExtractedPrimitive>) -> ExtractionResult {
         let prim_list: Vec<LexPrimitiva> = primitives.iter().map(|p| p.primitive).collect();
         let dominant = primitives.first().map(|p| p.primitive);
+        #[allow(
+            clippy::as_conversions,
+            reason = "primitives.len() bounded by 16; safe cast to f64"
+        )]
         let confidence =
             primitives.iter().map(|p| p.confidence).sum::<f64>() / primitives.len().max(1) as f64;
 

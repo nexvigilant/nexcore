@@ -8,7 +8,7 @@ use axum::{
     http::{HeaderMap, StatusCode},
     routing::{get, post},
 };
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, OnceLock};
@@ -26,9 +26,9 @@ pub struct LLMStats {
     /// Total output tokens
     pub output_tokens: u64,
     /// Session start time
-    pub session_start: Option<DateTime<Utc>>,
+    pub session_start: Option<DateTime>,
     /// Last call timestamp
-    pub last_call: Option<DateTime<Utc>>,
+    pub last_call: Option<DateTime>,
     /// LLM provider name
     pub provider: String,
     /// Model name
@@ -41,7 +41,7 @@ impl LLMStats {
         Self {
             provider: provider.to_string(),
             model: model.to_string(),
-            session_start: Some(Utc::now()),
+            session_start: Some(DateTime::now()),
             ..Default::default()
         }
     }
@@ -50,7 +50,7 @@ impl LLMStats {
     pub fn record_call(&mut self, tokens: u64) {
         self.total_calls += 1;
         self.total_tokens += tokens;
-        self.last_call = Some(Utc::now());
+        self.last_call = Some(DateTime::now());
     }
 
     /// Get average tokens per call

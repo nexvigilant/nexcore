@@ -236,7 +236,7 @@ mod tests {
             chembl_id: None,
             synonyms: vec![],
             source: ResolutionSource::Manual,
-            resolved_at: chrono::Utc::now(),
+            resolved_at: nexcore_chrono::DateTime::now(),
         };
         StructuredSignal {
             signal: SignalRecord {

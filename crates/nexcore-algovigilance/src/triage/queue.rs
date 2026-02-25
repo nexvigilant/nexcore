@@ -6,7 +6,7 @@
 //! Tier: T2-C (cross-domain composite — sorted collection + decay)
 //! Grounds to: T1::Sequence (ordered by relevance)
 
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 
 use super::decay;
 use super::types::{SignalInput, TriageConfig, TriagedSignal};
@@ -39,7 +39,7 @@ impl SignalQueue {
 
     /// Insert a new signal from raw input
     pub fn insert(&mut self, input: &SignalInput) {
-        let now = Utc::now();
+        let now = DateTime::now();
         let signal = TriagedSignal {
             signal_id: SignalId::from_pair(&input.drug, &input.event),
             drug: input.drug.clone(),

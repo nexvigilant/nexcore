@@ -222,7 +222,7 @@ impl TerminologyCrossRef {
             mappings: Vec::new(),
             confidence: 0.0,
             provenance,
-            timestamp: chrono::Utc::now().to_rfc3339(),
+            timestamp: nexcore_chrono::DateTime::now().to_rfc3339(),
         }
     }
 

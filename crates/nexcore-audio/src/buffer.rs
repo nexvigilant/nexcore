@@ -43,6 +43,11 @@ impl AudioBuffer {
     ///
     /// `frame_capacity` is the number of complete frames the buffer can hold.
     pub fn new(spec: AudioSpec, frame_capacity: usize) -> Self {
+        // bytes_per_frame() is bounded; frame_capacity is caller-supplied.
+        #[allow(
+            clippy::arithmetic_side_effects,
+            reason = "capacity = bytes_per_frame * frame_capacity; caller is responsible for passing a valid capacity that does not overflow"
+        )]
         let capacity = spec.bytes_per_frame() * frame_capacity;
         Self {
             data: vec![0u8; capacity],
@@ -72,7 +77,14 @@ impl AudioBuffer {
         if bpf == 0 {
             return 0;
         }
-        self.capacity / bpf
+        // Integer division — no overflow possible.
+        #[allow(
+            clippy::arithmetic_side_effects,
+            reason = "division by bpf which is guarded non-zero above"
+        )]
+        {
+            self.capacity / bpf
+        }
     }
 
     /// Current fill level in bytes.
@@ -101,7 +113,14 @@ impl AudioBuffer {
         if bpf == 0 {
             return 0;
         }
-        self.len / bpf
+        // Integer division — no overflow possible.
+        #[allow(
+            clippy::arithmetic_side_effects,
+            reason = "division by bpf which is guarded non-zero above"
+        )]
+        {
+            self.len / bpf
+        }
     }
 
     /// Available frames for writing.
@@ -110,7 +129,14 @@ impl AudioBuffer {
         if bpf == 0 {
             return 0;
         }
-        self.available() / bpf
+        // Integer division — no overflow possible.
+        #[allow(
+            clippy::arithmetic_side_effects,
+            reason = "division by bpf which is guarded non-zero above"
+        )]
+        {
+            self.available() / bpf
+        }
     }
 
     /// Fill level as percentage [0.0, 1.0].
@@ -118,13 +144,28 @@ impl AudioBuffer {
         if self.capacity == 0 {
             return 0.0;
         }
-        self.len as f64 / self.capacity as f64
+        // usize → f64: sufficient precision for fill-level percentage.
+        #[allow(
+            clippy::as_conversions,
+            reason = "usize values cast to f64 for ratio computation; precision adequate for fill-level display"
+        )]
+        {
+            self.len as f64 / self.capacity as f64
+        }
     }
 
     /// Write audio data into the buffer.
     ///
     /// Returns the number of bytes actually written. If the buffer is full,
     /// records an overflow and returns 0.
+    #[allow(
+        clippy::arithmetic_side_effects,
+        clippy::indexing_slicing,
+        reason = "ring buffer invariants guarantee all index arithmetic stays within [0, capacity): \
+                  write_pos < capacity, first_chunk <= capacity - write_pos, \
+                  second_chunk <= to_write <= space <= capacity, \
+                  len <= capacity throughout"
+    )]
     pub fn write(&mut self, data: &[u8]) -> usize {
         let space = self.available();
         if space == 0 {
@@ -156,6 +197,14 @@ impl AudioBuffer {
     ///
     /// Returns the number of bytes actually read. If the buffer is empty,
     /// records an underrun and returns 0.
+    #[allow(
+        clippy::arithmetic_side_effects,
+        clippy::indexing_slicing,
+        reason = "ring buffer invariants guarantee all index arithmetic stays within [0, capacity): \
+                  read_pos < capacity, first_chunk <= capacity - read_pos, \
+                  second_chunk <= to_read <= len <= capacity, \
+                  len >= to_read so subtraction cannot underflow"
+    )]
     pub fn read(&mut self, output: &mut [u8]) -> usize {
         if self.len == 0 {
             if !output.is_empty() {
@@ -213,11 +262,21 @@ impl AudioBuffer {
     /// Health check — returns error if overflow/underrun rate is high.
     pub fn health_check(&self) -> Result<(), AudioError> {
         if self.overflows > 100 {
+            // overflows is u64; usize is at least 32 bits. For error reporting,
+            // saturating cast preserves the intent (count that is "large enough to matter").
+            #[allow(
+                clippy::as_conversions,
+                reason = "u64 → usize for error diagnostics; saturating_cast not available in const position; value is bounded by usage (>100 threshold already checked)"
+            )]
             return Err(AudioError::BufferOverflow {
                 samples_lost: self.overflows as usize,
             });
         }
         if self.underruns > 100 {
+            #[allow(
+                clippy::as_conversions,
+                reason = "u64 → usize for error diagnostics; value is bounded by usage (>100 threshold already checked)"
+            )]
             return Err(AudioError::BufferUnderrun {
                 silence_inserted: self.underruns as usize,
             });

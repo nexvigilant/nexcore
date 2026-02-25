@@ -26,7 +26,7 @@
 use crate::BrainError;
 use crate::error::Result;
 use crate::implicit::Pattern;
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_fs::dirs;
 use nexcore_synapse::{
     Amplitude, AmplitudeConfig, ConsolidationStatus, LearningSignal, Synapse, SynapseBank,
@@ -59,7 +59,7 @@ pub struct PersistentSynapseBank {
     bank: SynapseBank,
 
     /// Last save timestamp.
-    pub last_saved: Option<DateTime<Utc>>,
+    pub last_saved: Option<DateTime>,
 }
 
 impl Default for PersistentSynapseBank {
@@ -97,7 +97,7 @@ impl PersistentSynapseBank {
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent)?;
         }
-        self.last_saved = Some(Utc::now());
+        self.last_saved = Some(DateTime::now());
         let content = serde_json::to_string_pretty(&self)
             .map_err(|e| BrainError::Serialization(e.to_string()))?;
         fs::write(&path, content)?;

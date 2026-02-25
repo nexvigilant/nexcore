@@ -23,6 +23,7 @@ use serde::{Deserialize, Serialize};
 ///       └──────────────┴──────────────┴──────────────┴───────────┘
 ///                              (any failure → Disconnected)
 /// ```
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ConnectionState {
     /// Not connected to any network.
@@ -77,6 +78,7 @@ impl ConnectionState {
 /// Reason for a connection failure.
 ///
 /// Tier: T2-P (Σ Sum — enumeration of failure modes)
+#[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum FailureReason {
     /// Network not found (SSID doesn't exist).
@@ -194,7 +196,11 @@ impl Connection {
                 self.last_failure = None;
                 Ok(())
             }
-            _ => Err(ConnectionError::InvalidTransition {
+            ConnectionState::Connecting
+            | ConnectionState::Authenticating
+            | ConnectionState::Configuring
+            | ConnectionState::Connected
+            | ConnectionState::Disconnecting => Err(ConnectionError::InvalidTransition {
                 from: self.state,
                 to: ConnectionState::Connecting,
             }),
@@ -274,7 +280,7 @@ impl Connection {
     pub fn fail(&mut self, reason: FailureReason) {
         self.last_failure = Some(reason);
         self.state = ConnectionState::Failed;
-        self.retry_count += 1;
+        self.retry_count = self.retry_count.saturating_add(1);
         self.address = None;
         self.gateway = None;
         self.dns_servers.clear();
@@ -318,6 +324,7 @@ impl Connection {
 /// Connection state machine errors.
 ///
 /// Tier: T2-P (∂ Boundary — constraint violations)
+#[non_exhaustive]
 #[derive(Debug, Clone, nexcore_error::Error)]
 pub enum ConnectionError {
     /// Invalid state transition attempted.

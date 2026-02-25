@@ -40,7 +40,7 @@ pub fn load_registry<P: AsRef<Path>>(path: P) -> ImmunityResult<AntibodyRegistry
     let content = std::fs::read_to_string(expanded_path)
         .map_err(|e| ImmunityError::LoadFailed(format!("{}: {}", expanded_path.display(), e)))?;
 
-    let registry: AntibodyRegistry = serde_yaml::from_str(&content)?;
+    let registry: AntibodyRegistry = serde_yml::from_str(&content)?;
 
     tracing::info!(
         "Loaded {} antibodies from {}",
@@ -66,7 +66,7 @@ pub fn load_default_registry() -> ImmunityResult<AntibodyRegistry> {
 ///
 /// Returns error if content cannot be parsed.
 pub fn load_from_str(content: &str) -> ImmunityResult<AntibodyRegistry> {
-    let registry: AntibodyRegistry = serde_yaml::from_str(content)?;
+    let registry: AntibodyRegistry = serde_yml::from_str(content)?;
     Ok(registry)
 }
 

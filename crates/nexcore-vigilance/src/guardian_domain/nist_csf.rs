@@ -3,7 +3,7 @@
 //! Data models for NIST CSF alignment including core functions, implementation
 //! tiers, maturity levels, and healthcare-specific compliance mappings.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -237,10 +237,10 @@ pub struct ControlAssessment {
     #[serde(default)]
     pub recommendations: Vec<String>,
     pub risk_level: NistRiskLevel,
-    #[serde(default = "Utc::now")]
-    pub last_assessed: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub last_assessed: DateTime,
     pub assessed_by: String,
-    pub next_assessment_due: DateTime<Utc>,
+    pub next_assessment_due: DateTime,
     #[serde(default)]
     pub related_controls: Vec<String>,
     /// Framework -> Control ID mapping.
@@ -253,7 +253,7 @@ pub struct ControlAssessment {
 impl ControlAssessment {
     /// Check if control needs reassessment (> 90 days).
     pub fn needs_reassessment(&self) -> bool {
-        Utc::now() > self.next_assessment_due
+        DateTime::now() > self.next_assessment_due
     }
 
     /// Calculate gap percentage.
@@ -281,8 +281,8 @@ pub struct FunctionAssessment {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub estimated_timeline_months: Option<i32>,
     pub assigned_owner: String,
-    #[serde(default = "Utc::now")]
-    pub last_updated: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub last_updated: DateTime,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tenant_id: Option<String>,
 }
@@ -323,10 +323,10 @@ pub struct OrganizationalProfile {
     pub critical_assets: Vec<String>,
     #[serde(default)]
     pub threat_landscape: Vec<String>,
-    #[serde(default = "Utc::now")]
-    pub created_date: DateTime<Utc>,
-    #[serde(default = "Utc::now")]
-    pub last_updated: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub created_date: DateTime,
+    #[serde(default = "DateTime::now")]
+    pub last_updated: DateTime,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tenant_id: Option<String>,
 }
@@ -348,8 +348,8 @@ impl OrganizationalProfile {
 pub struct GapAnalysis {
     pub analysis_id: String,
     pub organization_profile_id: String,
-    #[serde(default = "Utc::now")]
-    pub analysis_date: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub analysis_date: DateTime,
     /// Percentage gap to target.
     pub overall_maturity_gap: f64,
     /// Function -> gap percentage.
@@ -417,8 +417,8 @@ pub struct NistRiskAssessment {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timeline_to_implement: Option<i32>,
     pub risk_owner: String,
-    #[serde(default = "Utc::now")]
-    pub last_reviewed: DateTime<Utc>,
+    #[serde(default = "DateTime::now")]
+    pub last_reviewed: DateTime,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tenant_id: Option<String>,
 }
@@ -511,8 +511,8 @@ mod tests {
             regulatory_requirements: vec![NistComplianceFramework::Hipaa],
             critical_assets: vec![],
             threat_landscape: vec![],
-            created_date: Utc::now(),
-            last_updated: Utc::now(),
+            created_date: DateTime::now(),
+            last_updated: DateTime::now(),
             tenant_id: None,
         };
         assert_eq!(profile.tier_gap(), 2); // 4 - 2
@@ -524,7 +524,7 @@ mod tests {
         let gap = GapAnalysis {
             analysis_id: "gap-1".to_string(),
             organization_profile_id: "prof-1".to_string(),
-            analysis_date: Utc::now(),
+            analysis_date: DateTime::now(),
             overall_maturity_gap: 60.0,
             function_gaps: HashMap::new(),
             critical_gaps: vec!["Gap 1".to_string()],

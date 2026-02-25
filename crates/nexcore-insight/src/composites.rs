@@ -11,7 +11,7 @@
 //! | Compression | N + mu + kappa | T2-C |
 //! | Suddenness | sigma + boundary + N + kappa | T2-C |
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 
@@ -38,16 +38,16 @@ pub struct Pattern {
     /// Confidence that this is a real pattern (0.0-1.0).
     pub confidence: f64,
     /// When the pattern was first detected.
-    pub first_seen: DateTime<Utc>,
+    pub first_seen: DateTime,
     /// When the pattern was most recently confirmed.
-    pub last_seen: DateTime<Utc>,
+    pub last_seen: DateTime,
 }
 
 impl Pattern {
     /// Create a new pattern from initial member keys.
     #[must_use]
     pub fn new(label: impl Into<String>, members: Vec<String>) -> Self {
-        let now = Utc::now();
+        let now = DateTime::now();
         Self {
             id: NexId::v4(),
             label: label.into(),
@@ -62,7 +62,7 @@ impl Pattern {
     /// Record another occurrence, increasing confidence.
     pub fn record_occurrence(&mut self) {
         self.occurrence_count += 1;
-        self.last_seen = Utc::now();
+        self.last_seen = DateTime::now();
         // Asymptotic confidence growth: approaches 1.0 but never reaches it
         self.confidence = 1.0 - (1.0 / (self.occurrence_count as f64 + 1.0));
     }
@@ -106,7 +106,7 @@ pub struct Recognition {
     /// Match strength (0.0-1.0).
     pub match_strength: f64,
     /// When this recognition occurred.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
 }
 
 impl Recognition {
@@ -117,7 +117,7 @@ impl Recognition {
             recognized_key: recognized_key.into(),
             pattern_id,
             match_strength: match_strength.clamp(0.0, 1.0),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         }
     }
 
@@ -157,7 +157,7 @@ pub struct Novelty {
     /// Novelty score (0.0 = slightly novel, 1.0 = completely unprecedented).
     pub score: f64,
     /// When the novelty was detected.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
 }
 
 /// Reason an observation is considered novel.
@@ -191,7 +191,7 @@ impl Novelty {
             novel_key: key.into(),
             reason: NoveltyReason::NoMatchingPattern,
             score: 1.0,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         }
     }
 
@@ -210,7 +210,7 @@ impl Novelty {
                 actual: actual.into(),
             },
             score: score.clamp(0.0, 1.0),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         }
     }
 
@@ -254,7 +254,7 @@ pub struct Connection {
     /// Strength of the connection (0.0-1.0).
     pub strength: f64,
     /// When this connection was established.
-    pub established: DateTime<Utc>,
+    pub established: DateTime,
 }
 
 impl Connection {
@@ -272,7 +272,7 @@ impl Connection {
             to: to.into(),
             relation: relation.into(),
             strength: strength.clamp(0.0, 1.0),
-            established: Utc::now(),
+            established: DateTime::now(),
         }
     }
 
@@ -415,7 +415,7 @@ pub struct Suddenness {
     /// The value immediately before crossing.
     pub value_before: f64,
     /// When the crossing was detected.
-    pub detected_at: DateTime<Utc>,
+    pub detected_at: DateTime,
     /// Rate of change at the crossing point.
     pub rate_of_change: f64,
 }
@@ -439,7 +439,7 @@ impl Suddenness {
             threshold,
             value_at_crossing,
             value_before,
-            detected_at: Utc::now(),
+            detected_at: DateTime::now(),
             rate_of_change: rate,
         }
     }

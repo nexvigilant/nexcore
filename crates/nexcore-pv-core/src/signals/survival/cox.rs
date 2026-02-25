@@ -495,7 +495,11 @@ pub fn quick_hazard_ratio(
 
     let result = fit_cox(&observations, &CoxConfig::default())?;
 
-    Ok(result.coefficients.into_iter().next().unwrap())
+    result
+        .coefficients
+        .into_iter()
+        .next()
+        .ok_or_else(|| SignalError::InsufficientData("No coefficients produced".into()))
 }
 
 #[cfg(test)]

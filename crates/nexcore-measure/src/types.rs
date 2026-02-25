@@ -269,7 +269,7 @@ impl MeasureTimestamp {
     /// Current time.
     #[must_use]
     pub fn now() -> Self {
-        Self(chrono::Utc::now().timestamp())
+        Self(nexcore_chrono::DateTime::now().timestamp())
     }
 
     /// Raw epoch seconds.

@@ -33,9 +33,10 @@ use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::signals::bayesian::{ebgm, ic};
-use crate::signals::core::stats::Z_95;
+use crate::signals::core::stats::{Z_95, chi_square_p_value, chi_square_statistic};
 use crate::signals::core::types::{ContingencyTable, SignalCriteria, SignalResult};
 use crate::signals::disproportionality::{prr, ror};
+use crate::signals::{AdjustmentMethod, SignalEvaluationConfig};
 
 /// Structure-of-Arrays layout for contingency tables.
 ///
@@ -366,6 +367,190 @@ pub fn batch_complete_parallel(batch: &BatchContingencyTables) -> Vec<CompleteSi
 }
 
 // =============================================================================
+// BATCH COMPLETE WITH FDR CORRECTION
+// =============================================================================
+
+/// Metadata about FDR adjustment applied to a batch of signal evaluations.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BatchAdjustmentMetadata {
+    /// Which adjustment method was applied
+    pub method: AdjustmentMethod,
+    /// FDR level used
+    pub fdr_level: f64,
+    /// Number of PRR pairs tested
+    pub prr_pairs_tested: usize,
+    /// Number of PRR pairs still significant after correction
+    pub prr_pairs_rejected: usize,
+    /// Number of ROR pairs tested
+    pub ror_pairs_tested: usize,
+    /// Number of ROR pairs still significant after correction
+    pub ror_pairs_rejected: usize,
+}
+
+/// Complete signal results with FDR correction applied to frequentist methods.
+///
+/// Bayesian methods (IC, EBGM) are NEVER adjusted — they have built-in
+/// shrinkage that implicitly controls false discoveries.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BatchFdrResults {
+    /// Signal results (PRR/ROR is_signal updated if FDR applied)
+    pub results: Vec<CompleteSignalResult>,
+    /// Raw p-values derived from PRR chi-square statistics
+    pub prr_p_values: Vec<f64>,
+    /// Adjusted p-values for PRR (equals raw if no correction)
+    pub prr_adjusted_p_values: Vec<f64>,
+    /// Raw p-values derived from ROR chi-square statistics
+    pub ror_p_values: Vec<f64>,
+    /// Adjusted p-values for ROR (equals raw if no correction)
+    pub ror_adjusted_p_values: Vec<f64>,
+    /// Batch-level FDR metadata
+    pub metadata: BatchAdjustmentMetadata,
+}
+
+/// Calculate all four algorithms for batch with FDR correction on frequentist methods.
+///
+/// This is the recommended entry point for large-scale signal screening.
+/// FDR correction is ON by default when using `SignalEvaluationConfig::batch_default()`.
+///
+/// # Behavior
+///
+/// 1. Evaluates PRR, ROR, IC, EBGM for all pairs in parallel
+/// 2. Derives p-values from chi-square statistics for PRR and ROR
+/// 3. Applies chosen correction method (default: Benjamini-Hochberg)
+/// 4. Updates `is_signal` for PRR/ROR based on adjusted p-values
+/// 5. IC and EBGM results are NEVER modified (Bayesian shrinkage)
+#[must_use]
+pub fn batch_complete_with_fdr(
+    batch: &BatchContingencyTables,
+    config: &SignalEvaluationConfig,
+) -> BatchFdrResults {
+    use crate::signals::adjustment::{bh_adjust, bonferroni_adjust, holm_adjust, sidak_adjust};
+
+    let criteria = SignalCriteria::evans();
+    let n = batch.len();
+
+    // Step 1: Evaluate all pairs in parallel
+    let mut results = batch_complete_parallel(batch);
+
+    // Step 2: Derive p-values from chi-square statistics
+    // PRR uses simplified one-cell chi-square: (a - E[a])^2 / E[a]
+    // ROR uses full Pearson chi-square: Σ(O-E)^2/E across all 4 cells
+    let (prr_p_values, ror_p_values): (Vec<f64>, Vec<f64>) = (0..n)
+        .into_par_iter()
+        .map(|i| {
+            let a = batch.a[i] as f64;
+            let b = batch.b[i] as f64;
+            let c = batch.c[i] as f64;
+            let d = batch.d[i] as f64;
+            let total = a + b + c + d;
+
+            // PRR chi-square (one-cell form, matching prr.rs)
+            let expected_a = if total > 0.0 {
+                (a + b) * (a + c) / total
+            } else {
+                0.0
+            };
+            let prr_chi = if expected_a > 0.0 {
+                (a - expected_a).powi(2) / expected_a
+            } else {
+                0.0
+            };
+            let prr_p = chi_square_p_value(prr_chi);
+
+            // ROR chi-square (full Pearson, matching ror.rs)
+            let ror_chi = chi_square_statistic(a, b, c, d);
+            let ror_p = chi_square_p_value(ror_chi);
+
+            (prr_p, ror_p)
+        })
+        .unzip();
+
+    // Step 3: Apply correction if enabled
+    let (prr_adjusted, ror_adjusted, prr_rejected_count, ror_rejected_count) =
+        if config.fdr_correction && n > 1 {
+            let (prr_adj, prr_rej) =
+                apply_adjustment(&prr_p_values, config.fdr_level, &config.adjustment_method);
+            let (ror_adj, ror_rej) =
+                apply_adjustment(&ror_p_values, config.fdr_level, &config.adjustment_method);
+
+            // Step 4: Update is_signal for frequentist methods only
+            // A pair is significant after FDR only if:
+            // (a) it was significant by original criteria, AND
+            // (b) its adjusted p-value passes the FDR threshold
+            for i in 0..n {
+                if prr_adj[i] > config.fdr_level {
+                    results[i].prr.is_signal = false;
+                }
+                if ror_adj[i] > config.fdr_level {
+                    results[i].ror.is_signal = false;
+                }
+                // IC and EBGM: NEVER touched — Bayesian methods have built-in shrinkage
+            }
+
+            (prr_adj, ror_adj, prr_rej, ror_rej)
+        } else {
+            // No correction: adjusted = raw, count from original is_signal
+            let prr_rej = results.iter().filter(|r| r.prr.is_signal).count();
+            let ror_rej = results.iter().filter(|r| r.ror.is_signal).count();
+            (prr_p_values.clone(), ror_p_values.clone(), prr_rej, ror_rej)
+        };
+
+    let method = if config.fdr_correction && n > 1 {
+        config.adjustment_method
+    } else {
+        AdjustmentMethod::None
+    };
+
+    BatchFdrResults {
+        results,
+        prr_p_values,
+        prr_adjusted_p_values: prr_adjusted,
+        ror_p_values,
+        ror_adjusted_p_values: ror_adjusted,
+        metadata: BatchAdjustmentMetadata {
+            method,
+            fdr_level: config.fdr_level,
+            prr_pairs_tested: n,
+            prr_pairs_rejected: prr_rejected_count,
+            ror_pairs_tested: n,
+            ror_pairs_rejected: ror_rejected_count,
+        },
+    }
+}
+
+/// Apply the chosen adjustment method and return (adjusted_p_values, n_rejected).
+fn apply_adjustment(
+    p_values: &[f64],
+    fdr_level: f64,
+    method: &AdjustmentMethod,
+) -> (Vec<f64>, usize) {
+    use crate::signals::adjustment::{bh_adjust, bonferroni_adjust, holm_adjust, sidak_adjust};
+
+    match method {
+        AdjustmentMethod::BenjaminiHochberg => {
+            let r = bh_adjust(p_values, fdr_level);
+            (r.q_values, r.n_rejected)
+        }
+        AdjustmentMethod::Bonferroni => {
+            let r = bonferroni_adjust(p_values, fdr_level);
+            (r.adjusted_p_values, r.n_rejected)
+        }
+        AdjustmentMethod::Holm => {
+            let r = holm_adjust(p_values, fdr_level);
+            (r.adjusted_p_values, r.n_rejected)
+        }
+        AdjustmentMethod::Sidak => {
+            let r = sidak_adjust(p_values, fdr_level);
+            (r.adjusted_p_values, r.n_rejected)
+        }
+        AdjustmentMethod::None => {
+            let n_rej = p_values.iter().filter(|&&p| p <= fdr_level).count();
+            (p_values.to_vec(), n_rej)
+        }
+    }
+}
+
+// =============================================================================
 // BATCH EBGM WITH CUSTOM PRIORS
 // =============================================================================
 
@@ -687,5 +872,181 @@ mod tests {
         );
 
         assert_eq!(batch.len(), 1000);
+    }
+
+    // =========================================================================
+    // FDR BATCH TESTS
+    // =========================================================================
+
+    #[test]
+    fn test_batch_fdr_no_correction_matches_original() {
+        // Regression: default config (no FDR) should match batch_complete_parallel exactly
+        let batch = BatchContingencyTables::new(
+            vec![10, 20, 30],
+            vec![90, 80, 70],
+            vec![100, 200, 300],
+            vec![9800, 9700, 9600],
+        );
+
+        let original = batch_complete_parallel(&batch);
+        let fdr = batch_complete_with_fdr(&batch, &SignalEvaluationConfig::default());
+
+        assert_eq!(fdr.results.len(), original.len());
+        for (o, f) in original.iter().zip(&fdr.results) {
+            assert_eq!(o.prr.is_signal, f.prr.is_signal);
+            assert_eq!(o.ror.is_signal, f.ror.is_signal);
+            assert_eq!(o.ic.is_signal, f.ic.is_signal);
+            assert_eq!(o.ebgm.is_signal, f.ebgm.is_signal);
+        }
+        assert_eq!(fdr.metadata.method, AdjustmentMethod::None);
+    }
+
+    #[test]
+    fn test_batch_fdr_reduces_false_positives() {
+        // Mix of strong signals and noise — FDR should reduce PRR/ROR false positives
+        // Strong signals: a=50, weak: a=3
+        let batch = BatchContingencyTables::new(
+            vec![
+                50, 3, 3, 3, 50, 3, 3, 3, 50, 3, 50, 3, 3, 3, 50, 3, 3, 3, 3, 3,
+            ],
+            vec![
+                50, 97, 97, 97, 50, 97, 97, 97, 50, 97, 50, 97, 97, 97, 50, 97, 97, 97, 97, 97,
+            ],
+            vec![
+                100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+                100, 100, 100, 100,
+            ],
+            vec![
+                9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800, 9800,
+                9800, 9800, 9800, 9800, 9800, 9800,
+            ],
+        );
+
+        let no_fdr = batch_complete_with_fdr(&batch, &SignalEvaluationConfig::default());
+        let with_fdr = batch_complete_with_fdr(&batch, &SignalEvaluationConfig::batch_default());
+
+        let prr_no_fdr = no_fdr.results.iter().filter(|r| r.prr.is_signal).count();
+        let prr_with_fdr = with_fdr.results.iter().filter(|r| r.prr.is_signal).count();
+
+        // FDR should reject fewer or equal PRR signals
+        assert!(prr_with_fdr <= prr_no_fdr);
+
+        // Adjusted p-values >= raw p-values (correction never makes MORE significant)
+        for i in 0..batch.len() {
+            assert!(
+                with_fdr.prr_adjusted_p_values[i] >= with_fdr.prr_p_values[i] - 1e-12,
+                "Adjusted p-value should be >= raw p-value"
+            );
+            assert!(
+                with_fdr.ror_adjusted_p_values[i] >= with_fdr.ror_p_values[i] - 1e-12,
+                "Adjusted p-value should be >= raw p-value"
+            );
+        }
+    }
+
+    #[test]
+    fn test_batch_fdr_bayesian_untouched() {
+        // Verify IC and EBGM results are identical with and without FDR
+        let batch = BatchContingencyTables::new(
+            vec![10, 20, 5],
+            vec![90, 80, 95],
+            vec![100, 200, 100],
+            vec![9800, 9700, 9800],
+        );
+
+        let no_fdr = batch_complete_with_fdr(&batch, &SignalEvaluationConfig::default());
+        let with_fdr = batch_complete_with_fdr(&batch, &SignalEvaluationConfig::batch_default());
+
+        for i in 0..batch.len() {
+            // IC must be identical
+            assert_eq!(
+                no_fdr.results[i].ic.point_estimate,
+                with_fdr.results[i].ic.point_estimate
+            );
+            assert_eq!(
+                no_fdr.results[i].ic.is_signal,
+                with_fdr.results[i].ic.is_signal
+            );
+            // EBGM must be identical
+            assert_eq!(
+                no_fdr.results[i].ebgm.point_estimate,
+                with_fdr.results[i].ebgm.point_estimate
+            );
+            assert_eq!(
+                no_fdr.results[i].ebgm.is_signal,
+                with_fdr.results[i].ebgm.is_signal
+            );
+        }
+    }
+
+    #[test]
+    fn test_batch_fdr_metadata_accuracy() {
+        let batch = BatchContingencyTables::new(
+            vec![10, 20],
+            vec![90, 80],
+            vec![100, 200],
+            vec![9800, 9700],
+        );
+
+        let fdr = batch_complete_with_fdr(&batch, &SignalEvaluationConfig::batch_default());
+
+        assert_eq!(fdr.metadata.prr_pairs_tested, 2);
+        assert_eq!(fdr.metadata.ror_pairs_tested, 2);
+        assert!(fdr.metadata.prr_pairs_rejected <= fdr.metadata.prr_pairs_tested);
+        assert!(fdr.metadata.ror_pairs_rejected <= fdr.metadata.ror_pairs_tested);
+        assert_eq!(fdr.metadata.method, AdjustmentMethod::BenjaminiHochberg);
+    }
+
+    #[test]
+    fn test_batch_fdr_bonferroni_more_conservative() {
+        // Same batch through BH vs Bonferroni — Bonferroni should have fewer rejections
+        let batch = BatchContingencyTables::new(
+            vec![10, 20, 5, 15, 8],
+            vec![90, 80, 95, 85, 92],
+            vec![100, 200, 100, 150, 100],
+            vec![9800, 9700, 9800, 9750, 9800],
+        );
+
+        let bh_config = SignalEvaluationConfig {
+            fdr_correction: true,
+            fdr_level: 0.05,
+            adjustment_method: AdjustmentMethod::BenjaminiHochberg,
+        };
+        let bonf_config = SignalEvaluationConfig {
+            fdr_correction: true,
+            fdr_level: 0.05,
+            adjustment_method: AdjustmentMethod::Bonferroni,
+        };
+
+        let bh = batch_complete_with_fdr(&batch, &bh_config);
+        let bonf = batch_complete_with_fdr(&batch, &bonf_config);
+
+        // Bonferroni should reject <= BH (more conservative)
+        assert!(bonf.metadata.prr_pairs_rejected <= bh.metadata.prr_pairs_rejected);
+    }
+
+    #[test]
+    fn test_batch_fdr_empty() {
+        let batch = BatchContingencyTables::new(vec![], vec![], vec![], vec![]);
+        let fdr = batch_complete_with_fdr(&batch, &SignalEvaluationConfig::batch_default());
+
+        assert!(fdr.results.is_empty());
+        assert!(fdr.prr_p_values.is_empty());
+        assert_eq!(fdr.metadata.prr_pairs_tested, 0);
+    }
+
+    #[test]
+    fn test_batch_fdr_single_pair() {
+        // Single pair — FDR correction is trivial (n <= 1 bypasses correction)
+        let batch = BatchContingencyTables::new(vec![10], vec![90], vec![100], vec![9800]);
+
+        let no_fdr = batch_complete_with_fdr(&batch, &SignalEvaluationConfig::default());
+        let with_fdr = batch_complete_with_fdr(&batch, &SignalEvaluationConfig::batch_default());
+
+        // Single pair: FDR is skipped (n <= 1)
+        assert_eq!(
+            no_fdr.results[0].prr.is_signal,
+            with_fdr.results[0].prr.is_signal
+        );
     }
 }

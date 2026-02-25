@@ -4,7 +4,7 @@
 //! and marketplace commissions into a single billing document with
 //! line-item detail.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use vr_core::{Currency, InvoiceId, Money, SubscriptionTier, TenantId};
 
@@ -48,9 +48,9 @@ pub struct Invoice {
     /// Tenant being billed.
     pub tenant_id: TenantId,
     /// Billing period start (inclusive).
-    pub period_start: DateTime<Utc>,
+    pub period_start: DateTime,
     /// Billing period end (exclusive).
-    pub period_end: DateTime<Utc>,
+    pub period_end: DateTime,
     /// Itemized charges.
     pub line_items: Vec<InvoiceLineItem>,
     /// Subscription subtotal.
@@ -64,9 +64,9 @@ pub struct Invoice {
     /// Current invoice status.
     pub status: InvoiceStatus,
     /// When the invoice was created.
-    pub issued_at: Option<DateTime<Utc>>,
+    pub issued_at: Option<DateTime>,
     /// Payment due date.
-    pub due_at: Option<DateTime<Utc>>,
+    pub due_at: Option<DateTime>,
 }
 
 /// Generate a complete invoice from subscription tier and usage data.
@@ -184,7 +184,7 @@ pub fn generate_invoice(
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
-    use chrono::TimeZone;
+    use nexcore_chrono::DateTime;
 
     fn make_aggregation(
         compounds: u64,
@@ -194,8 +194,10 @@ mod tests {
     ) -> UsageAggregation {
         UsageAggregation {
             tenant_id: TenantId::new(),
-            period_start: Utc.with_ymd_and_hms(2025, 7, 1, 0, 0, 0).unwrap(),
-            period_end: Utc.with_ymd_and_hms(2025, 7, 31, 23, 59, 59).unwrap(),
+            period_start: DateTime::from_ymd_hms(2025, 7, 1, 0, 0, 0)
+                .unwrap_or_else(|_| DateTime::now()),
+            period_end: DateTime::from_ymd_hms(2025, 7, 31, 23, 59, 59)
+                .unwrap_or_else(|_| DateTime::now()),
             compounds_scored: compounds,
             ml_predictions: ml,
             virtual_screens: 0,

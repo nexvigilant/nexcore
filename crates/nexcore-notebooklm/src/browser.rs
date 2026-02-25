@@ -238,7 +238,7 @@ pub fn has_auth_cookies() -> bool {
 pub fn record_auth_success(email: Option<String>) {
     let state = crate::AuthState {
         authenticated: true,
-        last_authenticated: Some(chrono::Utc::now()),
+        last_authenticated: Some(nexcore_chrono::DateTime::now()),
         account_email: email,
     };
 

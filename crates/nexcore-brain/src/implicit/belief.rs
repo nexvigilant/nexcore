@@ -4,7 +4,7 @@
 //! with confidence derived from accumulated evidence. Beliefs decay
 //! over time without reinforcing evidence (same decay model as Pattern).
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use super::evidence::{EvidenceRef, EvidenceType};
@@ -49,10 +49,10 @@ pub struct Belief {
     pub t1_grounding: Option<T1Primitive>,
 
     /// When this belief was first formed
-    pub formed_at: DateTime<Utc>,
+    pub formed_at: DateTime,
 
     /// When this belief was last updated (for decay calculation)
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
 
     /// Number of times this belief was tested/validated
     pub validation_count: u32,
@@ -77,8 +77,8 @@ impl Belief {
             confidence: 0.5, // Start neutral (prior)
             evidence: Vec::new(),
             t1_grounding: None,
-            formed_at: Utc::now(),
-            updated_at: Utc::now(),
+            formed_at: DateTime::now(),
+            updated_at: DateTime::now(),
             validation_count: 0,
             user_confirmed: false,
         }
@@ -100,14 +100,14 @@ impl Belief {
     pub fn add_evidence(&mut self, evidence: EvidenceRef) {
         self.evidence.push(evidence);
         self.recompute_confidence();
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Add multiple pieces of evidence at once
     pub fn add_evidence_batch(&mut self, evidence: Vec<EvidenceRef>) {
         self.evidence.extend(evidence);
         self.recompute_confidence();
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Recompute confidence from evidence weights
@@ -136,7 +136,7 @@ impl Belief {
     /// Uses same exponential decay as Pattern: `confidence × 0.5^(days / half_life)`
     #[must_use]
     pub fn effective_confidence(&self) -> f64 {
-        let days_elapsed = (Utc::now() - self.updated_at).num_hours() as f64 / 24.0;
+        let days_elapsed = (DateTime::now() - self.updated_at).num_hours() as f64 / 24.0;
         if days_elapsed <= 0.0 {
             return self.confidence;
         }
@@ -147,7 +147,7 @@ impl Belief {
     /// Record a validation attempt (successful test of the belief)
     pub fn record_validation(&mut self, success: bool) {
         self.validation_count += 1;
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
 
         // Add implicit evidence from validation
         let evidence = if success {
@@ -175,11 +175,11 @@ impl Belief {
     /// Mark belief as confirmed by user (prevents decay below threshold)
     pub fn confirm(&mut self) {
         self.user_confirmed = true;
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
 
         // Add user confirmation evidence
         let evidence = EvidenceRef::supporting(
-            format!("user_confirm_{}", Utc::now().timestamp()),
+            format!("user_confirm_{}", DateTime::now().timestamp()),
             EvidenceType::UserFeedback,
             "User explicitly confirmed this belief",
             "user:explicit",
@@ -191,11 +191,11 @@ impl Belief {
     /// Mark belief as rejected by user
     pub fn reject(&mut self) {
         self.user_confirmed = false;
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
 
         // Add user rejection evidence
         let evidence = EvidenceRef::contradicting(
-            format!("user_reject_{}", Utc::now().timestamp()),
+            format!("user_reject_{}", DateTime::now().timestamp()),
             EvidenceType::UserFeedback,
             "User explicitly rejected this belief",
             "user:explicit",
@@ -207,7 +207,7 @@ impl Belief {
     /// Set T1 primitive grounding
     pub fn set_grounding(&mut self, primitive: T1Primitive) {
         self.t1_grounding = Some(primitive);
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Check if belief is stale (effective confidence below threshold)
@@ -361,7 +361,7 @@ mod tests {
     fn test_belief_effective_confidence_stale() {
         let mut belief = Belief::new("test", "Stale belief", "test");
         belief.confidence = 0.8;
-        belief.updated_at = Utc::now() - chrono::Duration::days(30);
+        belief.updated_at = DateTime::now() - nexcore_chrono::Duration::days(30);
 
         let eff = belief.effective_confidence();
         // After one half-life, should be ~0.4
@@ -373,7 +373,7 @@ mod tests {
     fn test_belief_is_stale() {
         let mut belief = Belief::new("test", "Test", "test");
         belief.confidence = 0.5;
-        belief.updated_at = Utc::now() - chrono::Duration::days(60);
+        belief.updated_at = DateTime::now() - nexcore_chrono::Duration::days(60);
 
         // After 2 half-lives: 0.5 * 0.25 = 0.125
         assert!(belief.is_stale(0.2));
@@ -385,7 +385,7 @@ mod tests {
         let mut belief = Belief::new("test", "Confirmed belief", "test");
         belief.confirm();
         belief.confidence = 0.8;
-        belief.updated_at = Utc::now() - chrono::Duration::days(30); // 1 half-life
+        belief.updated_at = DateTime::now() - nexcore_chrono::Duration::days(30); // 1 half-life
 
         // Effective confidence ≈ 0.4 (0.8 * 0.5)
         // Confirmed beliefs use min(threshold, 0.1) as floor
@@ -395,7 +395,7 @@ mod tests {
         // Unconfirmed belief with same decay WOULD be stale at threshold 0.5
         let mut unconfirmed = Belief::new("test2", "Not confirmed", "test");
         unconfirmed.confidence = 0.8;
-        unconfirmed.updated_at = Utc::now() - chrono::Duration::days(30);
+        unconfirmed.updated_at = DateTime::now() - nexcore_chrono::Duration::days(30);
         assert!(unconfirmed.is_stale(0.5)); // 0.4 < 0.5 → stale
     }
 }

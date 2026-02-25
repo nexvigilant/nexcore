@@ -448,7 +448,7 @@ impl Stomach {
         nutrients.vitamins.kind = Some(fragment.kind);
         nutrients.vitamins.element_count =
             nutrients.proteins.len() + nutrients.carbs.len() + nutrients.fats.len();
-        nutrients.vitamins.digested_at = Some(chrono::Utc::now().to_rfc3339());
+        nutrients.vitamins.digested_at = Some(nexcore_chrono::DateTime::now().to_rfc3339());
 
         nutrients
     }

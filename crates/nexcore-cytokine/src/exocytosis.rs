@@ -24,7 +24,7 @@
 //! - **Acknowledgment**: Track which bundles were received
 
 use crate::Cytokine;
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// A bundle of signals packaged for release.
@@ -38,7 +38,7 @@ pub struct SignalBundle {
     /// Signals in this bundle
     pub signals: Vec<Cytokine>,
     /// When the bundle was created
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// Target recipient (None = broadcast)
     pub target: Option<String>,
     /// Bundle state
@@ -70,7 +70,7 @@ impl SignalBundle {
         Self {
             id: id.into(),
             signals: Vec::new(),
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             target: None,
             state: BundleState::Forming,
         }

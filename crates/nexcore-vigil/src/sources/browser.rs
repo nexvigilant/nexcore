@@ -210,7 +210,7 @@ impl Source for BrowserSource {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     #[test]
     fn test_map_console_error() {
@@ -220,7 +220,7 @@ mod tests {
             url: Some("https://example.com".to_string()),
             line: Some(10),
             column: Some(5),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             page_id: "page_1".to_string(),
         };
 
@@ -237,7 +237,7 @@ mod tests {
             method: "GET".to_string(),
             error: "Connection refused".to_string(),
             request_id: "req_1".to_string(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             page_id: "page_1".to_string(),
         };
 
@@ -251,7 +251,7 @@ mod tests {
         let browser_event = BrowserEvent::PageCrashed {
             page_id: "page_1".to_string(),
             error: Some("Out of memory".to_string()),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         };
 
         let vigil_event = BrowserSource::map_event(&browser_event);

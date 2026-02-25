@@ -239,7 +239,12 @@ pub fn immunity_propose(params: ImmunityProposeParams) -> Result<CallToolResult,
         .join(".claude/immunity/proposals.yaml");
 
     // Generate a new proposal ID
-    let id = format!("AUTO-{}", chrono::Utc::now().format("%Y%m%d%H%M%S"));
+    let id = format!(
+        "AUTO-{}",
+        nexcore_chrono::DateTime::now()
+            .format("%Y%m%d%H%M%S")
+            .unwrap_or_default()
+    );
 
     let severity = params
         .severity
@@ -260,7 +265,9 @@ pub fn immunity_propose(params: ImmunityProposeParams) -> Result<CallToolResult,
   severity: {severity}
   status: pending
 "#,
-        timestamp = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ"),
+        timestamp = nexcore_chrono::DateTime::now()
+            .format("%Y-%m-%dT%H:%M:%SZ")
+            .unwrap_or_default(),
         id = id,
         error_pattern = params.error_pattern.replace('"', r#"\""#),
         context = params.context.as_deref().unwrap_or("unknown"),

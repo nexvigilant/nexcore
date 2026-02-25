@@ -172,14 +172,16 @@ pub fn apply_volume_discounts(
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
-    use chrono::{TimeZone, Utc};
+    use nexcore_chrono::DateTime;
     use vr_core::TenantId;
 
     fn make_aggregation(compounds: u64, ml: u64, storage: u64, api: u64) -> UsageAggregation {
         UsageAggregation {
             tenant_id: TenantId::new(),
-            period_start: Utc.with_ymd_and_hms(2025, 6, 1, 0, 0, 0).unwrap(),
-            period_end: Utc.with_ymd_and_hms(2025, 6, 30, 23, 59, 59).unwrap(),
+            period_start: DateTime::from_ymd_hms(2025, 6, 1, 0, 0, 0)
+                .unwrap_or_else(|_| DateTime::now()),
+            period_end: DateTime::from_ymd_hms(2025, 6, 30, 23, 59, 59)
+                .unwrap_or_else(|_| DateTime::now()),
             compounds_scored: compounds,
             ml_predictions: ml,
             virtual_screens: 0,

@@ -146,7 +146,8 @@ impl<P: Platform> NexCoreOs<P> {
             stos: StateKernel::new(),
             services: ServiceManager::new(),
             ipc: EventBus::new("nexcore-os"),
-            security: SecurityMonitor::new(),
+            security: SecurityMonitor::new()
+                .map_err(|e| OsError::Security(format!("Runtime init: {e}")))?,
             clearance_gate: AppClearanceGate::new(),
             vault,
             network: NetworkManager::new(),

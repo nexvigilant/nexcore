@@ -1,6 +1,6 @@
 //! Audit log CRUD operations.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 
@@ -20,7 +20,7 @@ pub struct AuditRow {
     /// Actor (e.g., "vigil", "user", "hook", "scan")
     pub actor: Option<String>,
     /// When the action occurred
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 }
 
 /// Record an audit entry.
@@ -108,8 +108,8 @@ pub fn count(conn: &Connection) -> Result<i64> {
     Ok(c)
 }
 
-fn parse_dt(s: String) -> DateTime<Utc> {
-    s.parse::<DateTime<Utc>>().unwrap_or_else(|_| Utc::now())
+fn parse_dt(s: String) -> DateTime {
+    s.parse::<DateTime>().unwrap_or_else(|_| DateTime::now())
 }
 
 #[cfg(test)]
@@ -129,7 +129,7 @@ mod tests {
                 action: "created".to_string(),
                 details: Some("{\"source\":\"scan\"}".to_string()),
                 actor: Some("scan".to_string()),
-                created_at: Utc::now(),
+                created_at: DateTime::now(),
             };
             record(conn, &entry)?;
             let recent = list_recent(conn, 10)?;

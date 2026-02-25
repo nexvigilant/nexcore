@@ -1,6 +1,6 @@
 //! Gamification domain types: badges, achievements, and progression.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -32,7 +32,7 @@ pub struct UserBadge {
     pub badge_icon_url: Option<String>,
 
     /// When the badge was earned.
-    pub earned_at: DateTime<Utc>,
+    pub earned_at: DateTime,
 
     /// What triggered earning this badge.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -71,7 +71,7 @@ pub struct UserBadge {
     pub badge_data: Option<Value>,
 
     /// Creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 }
 
 fn default_tier() -> i32 {
@@ -82,7 +82,7 @@ impl UserBadge {
     /// Create a new user badge.
     #[must_use]
     pub fn new(user_profile_id: NexId, badge_type: BadgeType) -> Self {
-        let now = Utc::now();
+        let now = DateTime::now();
         Self {
             id: NexId::v4(),
             user_profile_id,
@@ -202,11 +202,11 @@ pub struct Achievement {
     pub icon_locked_url: Option<String>,
 
     /// Creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Last update timestamp.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime>,
 }
 
 fn default_true() -> bool {
@@ -238,7 +238,7 @@ impl Achievement {
             total_earned: 0,
             icon_url: None,
             icon_locked_url: None,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             updated_at: None,
         }
     }
@@ -264,14 +264,14 @@ impl Achievement {
             } else {
                 AchievementRarity::Legendary
             };
-            self.updated_at = Some(Utc::now());
+            self.updated_at = Some(DateTime::now());
         }
     }
 
     /// Increment earned count.
     pub fn record_earned(&mut self) {
         self.total_earned += 1;
-        self.updated_at = Some(Utc::now());
+        self.updated_at = Some(DateTime::now());
     }
 }
 

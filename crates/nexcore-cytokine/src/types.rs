@@ -7,7 +7,7 @@
 //! - `Scope` → λ (location, spatial extent)
 //! - `Cytokine` → ς (state carrier)
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -194,7 +194,7 @@ pub struct Cytokine {
     pub payload: serde_json::Value,
 
     /// Emission timestamp
-    pub emitted_at: DateTime<Utc>,
+    pub emitted_at: DateTime,
 
     /// Source component that emitted
     pub source: Option<String>,
@@ -219,7 +219,7 @@ impl Cytokine {
             severity: ThreatLevel::default(),
             scope: Scope::default(),
             payload: serde_json::Value::Null,
-            emitted_at: Utc::now(),
+            emitted_at: DateTime::now(),
             source: None,
             target: None,
             ttl_secs: 300, // 5 minute default
@@ -281,7 +281,7 @@ impl Cytokine {
         if self.ttl_secs == 0 {
             return false;
         }
-        let elapsed = Utc::now()
+        let elapsed = DateTime::now()
             .signed_duration_since(self.emitted_at)
             .num_seconds();
         elapsed > i64::from(self.ttl_secs)

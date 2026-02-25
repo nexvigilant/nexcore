@@ -5,7 +5,7 @@
 
 use crate::events::EventBus;
 use crate::models::{Event, Urgency};
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -125,7 +125,7 @@ impl WorkflowSource {
                     "original_event_id": event.id.to_string(),
                 }),
                 priority: Urgency::High,
-                timestamp: Utc::now(),
+                timestamp: DateTime::now(),
                 correlation_id: Some(event.id.to_string()),
             };
 

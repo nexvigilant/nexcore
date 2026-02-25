@@ -41,7 +41,7 @@ pub struct GroupedInventory {
     /// Named groups with their entries.
     pub groups: HashMap<String, Group>,
     /// Observation timestamp (carried forward).
-    pub observed_at: chrono::DateTime<chrono::Utc>,
+    pub observed_at: nexcore_chrono::DateTime,
 }
 
 // ============================================================================
@@ -159,7 +159,7 @@ mod tests {
     use super::*;
     use crate::observe::EntryMeta;
     use crate::rank::{RankedEntry, ScoreBreakdown};
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     fn make_ranked(name: &str, ext: &str) -> RankedEntry {
         RankedEntry {
@@ -167,7 +167,7 @@ mod tests {
                 path: PathBuf::from(format!("/tmp/{name}.{ext}")),
                 is_dir: false,
                 size_bytes: 100,
-                modified: Utc::now(),
+                modified: DateTime::now(),
                 extension: ext.to_string(),
                 depth: 1,
                 name: format!("{name}.{ext}"),
@@ -215,7 +215,7 @@ mod tests {
                 make_ranked("readme", "md"),
                 make_ranked("photo", "png"),
             ],
-            observed_at: Utc::now(),
+            observed_at: DateTime::now(),
         };
 
         let config = OrganizeConfig::default_for("/tmp");
@@ -231,7 +231,7 @@ mod tests {
         let ranked = RankedInventory {
             root: PathBuf::from("/tmp"),
             entries: vec![make_ranked("mystery", "xyz")],
-            observed_at: Utc::now(),
+            observed_at: DateTime::now(),
         };
 
         let config = OrganizeConfig::default_for("/tmp");

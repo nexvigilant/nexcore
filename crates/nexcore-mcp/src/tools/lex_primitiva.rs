@@ -18,7 +18,7 @@ use nexcore_vigilance::lex_primitiva::{
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 use serde_json::json;
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 
 // ============================================================================
 // Tool Implementations (σ: Sequence pattern - flat, no nesting)
@@ -2111,11 +2111,9 @@ pub fn reverse_compose(
     }
 
     let synth = RevSynthesizer::new();
-    let opts = SynthesisOpts {
-        target_tier: None,
-        pattern_hint: params.pattern_hint,
-        min_coherence: params.min_coherence.unwrap_or(0.0),
-    };
+    let mut opts = SynthesisOpts::default();
+    opts.pattern_hint = params.pattern_hint;
+    opts.min_coherence = params.min_coherence.unwrap_or(0.0);
 
     match synth.synthesize(primitives, opts) {
         Ok(result) => {
@@ -2218,7 +2216,7 @@ pub fn reverse_lookup(params: LexPrimitivaReverseLookupParams) -> Result<CallToo
         )]));
     }
 
-    let search_set: HashSet<LexPrimitiva> = primitives.iter().copied().collect();
+    let search_set: BTreeSet<LexPrimitiva> = primitives.iter().copied().collect();
     let mode = params.match_mode.as_deref().unwrap_or("superset");
 
     // Iterate KNOWN_TYPES and filter by primitive match
@@ -3452,6 +3450,7 @@ pub fn molecular_weight(
             weight.daltons(),
             pct
         ),
+        _ => format!("Unknown ({:.1} Da)", weight.daltons()),
     };
 
     let mut response = json!({
@@ -3692,6 +3691,7 @@ pub fn audit() -> Result<CallToolResult, McpError> {
             GroundingTier::T2Primitive => 1,
             GroundingTier::T2Composite => 2,
             GroundingTier::T3DomainSpecific => 3,
+            _ => 3,
         };
         tier_counts[tier_idx] += 1;
         types_by_tier[tier_idx].push(type_name.to_string());

@@ -200,6 +200,13 @@ const ALLOWED_TOOLS: &[&str] = &[
     "epi_kaplan_meier",
     "epi_smr",
     "epi_pv_mappings",
+    // PV Core — Survival analysis (Directive 002 Phase B)
+    "pv_core_kaplan_meier",
+    "pv_core_log_rank",
+    "pv_core_cumulative_incidence",
+    "pv_core_cox",
+    "pv_core_hazard_ratio",
+    "pv_core_fdr_adjust",
     // Foundry
     "foundry_validate_artifact",
     "foundry_cascade_validate",

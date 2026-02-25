@@ -6,6 +6,11 @@ pub mod billing;
 pub mod brain;
 pub mod circles;
 pub mod common;
+// Projects & Deliverables (R&D workspaces within circles)
+pub mod projects;
+// Project Tools (MCP tool integration within project context)
+pub mod project_tools;
+// Publications & Collaboration (inter-circle research sharing)
 pub mod community;
 pub mod core;
 pub mod core_api;
@@ -17,6 +22,7 @@ pub mod guardian_ws;
 pub mod health;
 pub mod mesh;
 pub mod messages;
+pub mod publications;
 pub mod pv;
 pub mod pvdsl;
 pub mod reporting;
@@ -60,3 +66,15 @@ pub mod tenant;
 pub mod regulatory_intelligence;
 // ICSR (Individual Case Safety Report construction + validation)
 pub mod icsr;
+
+// Terminal (multi-tenant AI-augmented terminal WebSocket)
+pub mod terminal_ws;
+
+#[cfg(test)]
+mod circles_tests;
+#[cfg(test)]
+mod project_tools_tests;
+#[cfg(test)]
+mod projects_tests;
+#[cfg(test)]
+mod publications_tests;

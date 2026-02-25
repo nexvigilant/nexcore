@@ -25,7 +25,7 @@
 //! let strength = table.prr().map(SignalStrength::from_prr);
 //! ```
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 
@@ -229,7 +229,7 @@ pub struct RawReport {
     /// Event terms as reported (pre-normalization).
     pub event_terms: Vec<String>,
     /// Date the report was submitted.
-    pub report_date: Option<DateTime<Utc>>,
+    pub report_date: Option<DateTime>,
     /// Originating data source.
     pub source: ReportSource,
     /// Arbitrary metadata from the source system.
@@ -269,7 +269,7 @@ pub struct NormalizedEvent {
     /// MedDRA System Organ Class (if mapped).
     pub meddra_soc: Option<String>,
     /// Date of the original report.
-    pub report_date: DateTime<Utc>,
+    pub report_date: DateTime,
     /// Originating data source.
     pub source: ReportSource,
 }
@@ -294,7 +294,7 @@ pub struct DetectionResult {
     /// Overall signal strength classification.
     pub strength: SignalStrength,
     /// Timestamp of detection.
-    pub detected_at: DateTime<Utc>,
+    pub detected_at: DateTime,
 }
 
 /// Alert lifecycle states.
@@ -324,9 +324,9 @@ pub struct Alert {
     /// Current lifecycle state.
     pub state: AlertState,
     /// When the alert was created.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// When the alert was last modified.
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
     /// Reviewer notes and comments.
     pub notes: Vec<String>,
 }

@@ -3,7 +3,7 @@
 //! Provides run-level state management with checkpoint markers.
 //! Integrates with BrainSession for persistence.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
@@ -16,13 +16,13 @@ pub struct PipelineRun {
     /// Unique identifier for this run
     pub id: String,
     /// When the run started
-    pub started: DateTime<Utc>,
+    pub started: DateTime,
     /// Current status of the run
     pub status: RunStatus,
     /// Checkpoints recorded during the run
     pub checkpoints: Vec<Checkpoint>,
     /// When the run completed (if finished)
-    pub completed: Option<DateTime<Utc>>,
+    pub completed: Option<DateTime>,
     /// EJC markers from spliceosome for NMD surveillance
     #[serde(default)]
     pub ejc_markers: Vec<serde_json::Value>,
@@ -50,7 +50,7 @@ pub struct Checkpoint {
     /// Name of the checkpoint
     pub name: String,
     /// When the checkpoint was recorded
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Arbitrary data associated with the checkpoint
     pub data: serde_json::Value,
 }
@@ -97,10 +97,11 @@ impl PipelineState {
 
     /// Start a new run
     pub fn start_run(&mut self, run_id: Option<String>) -> &PipelineRun {
-        let id = run_id.unwrap_or_else(|| Utc::now().format("%Y%m%d_%H%M%S").to_string());
+        let id =
+            run_id.unwrap_or_else(|| DateTime::now().format("%Y%m%d_%H%M%S").unwrap_or_default());
         let run = PipelineRun {
             id,
-            started: Utc::now(),
+            started: DateTime::now(),
             status: RunStatus::Running,
             checkpoints: Vec::new(),
             completed: None,
@@ -115,7 +116,7 @@ impl PipelineState {
     pub fn checkpoint(&mut self, name: impl Into<String>, data: serde_json::Value) -> Result<()> {
         let cp = Checkpoint {
             name: name.into(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             data,
         };
         self.last_checkpoint = Some(cp.clone());
@@ -131,7 +132,7 @@ impl PipelineState {
     pub fn complete_run(&mut self, status: RunStatus) -> Result<()> {
         if let Some(run) = self.runs.last_mut() {
             run.status = status;
-            run.completed = Some(Utc::now());
+            run.completed = Some(DateTime::now());
             Ok(())
         } else {
             Err(BrainError::ArtifactNotFound("No active run".into()))
@@ -153,7 +154,7 @@ impl PipelineState {
         self.checkpoint("nmd_abort", serde_json::json!({"reason": reason}))?;
         if let Some(run) = self.runs.last_mut() {
             run.status = RunStatus::Aborted;
-            run.completed = Some(Utc::now());
+            run.completed = Some(DateTime::now());
             Ok(())
         } else {
             Err(BrainError::ArtifactNotFound("No active run".into()))

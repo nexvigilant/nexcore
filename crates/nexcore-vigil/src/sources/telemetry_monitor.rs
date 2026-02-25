@@ -6,7 +6,7 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use notify::{Event as NotifyEvent, RecursiveMode, Watcher};
 use serde::{Deserialize, Serialize};
@@ -19,7 +19,7 @@ use crate::models::{Event, Urgency};
 /// Telemetry metrics tracked by the monitor
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TelemetrySnapshot {
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     pub session_count: u32,
     pub total_messages: u32,
     pub total_tokens: u64,
@@ -151,7 +151,7 @@ impl TelemetryMonitor {
             event_type: "telemetry_snapshot".to_string(),
             priority: Urgency::Low,
             payload: serde_json::to_value(&snapshot)?,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             correlation_id: None,
         };
 
@@ -173,7 +173,7 @@ impl TelemetryMonitor {
         };
 
         // Extract stats from cache
-        let today = Utc::now().format("%Y-%m-%d").to_string();
+        let today = DateTime::now().format("%Y-%m-%d").unwrap_or_default();
         let empty_obj = serde_json::json!({});
         let daily = stats.get(&today).unwrap_or(&empty_obj);
 
@@ -217,7 +217,7 @@ impl TelemetryMonitor {
         let estimated_cost_usd = input_cost + output_cost;
 
         Ok(TelemetrySnapshot {
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             session_count,
             total_messages,
             total_tokens,
@@ -246,7 +246,7 @@ impl TelemetryMonitor {
                         snapshot.total_tokens, self.thresholds.token_warning
                     )
                 }),
-                timestamp: Utc::now(),
+                timestamp: DateTime::now(),
                 correlation_id: None,
             };
             self.bus.emit(event).await;
@@ -268,7 +268,7 @@ impl TelemetryMonitor {
                         snapshot.estimated_cost_usd, self.thresholds.cost_alert
                     )
                 }),
-                timestamp: Utc::now(),
+                timestamp: DateTime::now(),
                 correlation_id: None,
             };
             self.bus.emit(event).await;
@@ -293,7 +293,7 @@ impl TelemetryMonitor {
                             cache_rate * 100.0, self.thresholds.cache_hit_rate_min * 100.0
                         )
                     }),
-                    timestamp: Utc::now(),
+                    timestamp: DateTime::now(),
                     correlation_id: None,
                 };
                 self.bus.emit(event).await;

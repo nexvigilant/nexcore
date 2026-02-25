@@ -17,7 +17,7 @@
 //! ```
 
 use crate::core::{Ingest, RawReport, ReportSource, Result, SignalError};
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 
 /// Ingests reports from a JSON string (FAERS-like format).
 pub struct JsonIngestor {
@@ -53,7 +53,7 @@ impl Ingest for JsonIngestor {
                 id: r.id,
                 drug_names: r.drugs,
                 event_terms: r.events,
-                report_date: Some(Utc::now()),
+                report_date: Some(DateTime::now()),
                 source: r.source.map_or(ReportSource::Faers, ReportSource::Unknown),
                 metadata: serde_json::Value::Null,
             })
@@ -87,7 +87,7 @@ impl Ingest for CsvIngestor {
                 id: format!("csv-{i}"),
                 drug_names: vec![parts[0].trim().to_owned()],
                 event_terms: vec![parts[1].trim().to_owned()],
-                report_date: Some(Utc::now()),
+                report_date: Some(DateTime::now()),
                 source: ReportSource::Spontaneous,
                 metadata: serde_json::Value::Null,
             });

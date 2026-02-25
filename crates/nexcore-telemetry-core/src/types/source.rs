@@ -2,7 +2,7 @@
 //!
 //! Represents telemetry sessions from external AI coding assistants.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 
@@ -55,7 +55,7 @@ pub struct TokenUsage {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SourceEntry {
     pub id: String,
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     #[serde(rename = "type")]
     pub entry_type: EntryType,
     pub content: String,
@@ -86,7 +86,7 @@ pub enum EntryType {
 pub struct Thought {
     pub subject: String,
     pub description: String,
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
 }
 
 /// A complete telemetry source session.
@@ -97,9 +97,9 @@ pub struct Source {
     #[serde(rename = "projectHash")]
     pub project_hash: String,
     #[serde(rename = "startTime")]
-    pub start_time: DateTime<Utc>,
+    pub start_time: DateTime,
     #[serde(rename = "lastUpdated")]
-    pub last_updated: DateTime<Utc>,
+    pub last_updated: DateTime,
     pub messages: Vec<SourceEntry>,
 }
 

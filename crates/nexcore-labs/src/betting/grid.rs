@@ -13,7 +13,7 @@
 //! - **Tier**: T2-C / T3
 //! - **Commandments**: I (Quantify), II (Classify), III (Ground), V (Wrap)
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -122,7 +122,7 @@ pub struct MarketCell {
     /// Current status.
     pub status: MarketStatus,
     /// Last update timestamp.
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
     /// Number of evidence points (e.g., sharp moves).
     pub evidence_count: u32,
 }
@@ -136,7 +136,7 @@ impl MarketCell {
             edge_score: 0.0,
             ecs: None,
             status: MarketStatus::Vacant,
-            updated_at: Utc::now(),
+            updated_at: DateTime::now(),
             evidence_count: 0,
         }
     }
@@ -170,7 +170,7 @@ impl MarketCell {
         };
 
         self.ecs = Some(ecs_res);
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
         self.evidence_count += 1;
     }
 
@@ -185,7 +185,7 @@ impl MarketCell {
             self.status = MarketStatus::HiddenAlpha;
         }
 
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 }
 

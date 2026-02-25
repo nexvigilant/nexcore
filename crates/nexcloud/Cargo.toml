@@ -18,7 +18,7 @@ path = "src/lib.rs"
 
 [dependencies]
 nexcore-error = { workspace = true }
-tokio = { version = "1.38.0", features = ["full", "process", "signal"] }
+tokio = { version = "1.38.0", features = ["full"] }
 hyper = { version = "1.5", features = ["http1", "http2", "server"] }
 hyper-util = { version = "0.1", features = ["tokio"] }
 http-body-util = "0.1.2"
@@ -34,7 +34,7 @@ tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
 dashmap = "6.0.1"
-chrono = { version = "0.4.38", features = ["serde"] }
+nexcore-chrono = { workspace = true }
 bytes = "1.6.1"
 http = "1.2"
 nix = { version = "0.29", features = ["signal", "process", "fs", "mount", "reboot", "hostname"] }
@@ -43,27 +43,6 @@ nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", 
 [dev-dependencies]
 tempfile = "3.10.1"
 
-[lints.rust]
-async_fn_in_trait = "allow"
-dead_code = "allow"
-unused_imports = "allow"
-unused_variables = "allow"
-unused_mut = "allow"
-unused_assignments = "allow"
-unused_must_use = "allow"
 
-[lints.clippy]
-all = "allow"
-pedantic = "allow"
-nursery = "allow"
-cargo = "allow"
-map_unwrap_or = "allow"
-manual_map = "allow"
-option_map_or_none = "allow"
-derivable_impls = "allow"
-unwrap_used = "allow"
-expect_used = "allow"
-panic = "allow"
-todo = "allow"
-unimplemented = "allow"
-unreachable = "allow"
+[lints]
+workspace = true

@@ -1,6 +1,6 @@
 //! Job domain types: STARK automation job queue.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -37,11 +37,11 @@ pub struct StarkJob {
 
     /// When execution started.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub started_at: Option<DateTime<Utc>>,
+    pub started_at: Option<DateTime>,
 
     /// When execution completed.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub completed_at: Option<DateTime<Utc>>,
+    pub completed_at: Option<DateTime>,
 
     /// Execution duration in milliseconds.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -68,11 +68,11 @@ pub struct StarkJob {
     pub max_retries: i32,
 
     /// Creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Last update timestamp.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime>,
 }
 
 fn default_max_retries() -> i32 {
@@ -99,7 +99,7 @@ impl StarkJob {
             error_trace: None,
             retry_count: 0,
             max_retries: 3,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             updated_at: None,
         }
     }
@@ -142,13 +142,13 @@ impl StarkJob {
     /// Start the job.
     pub fn start(&mut self) {
         self.status = JobStatus::Running;
-        self.started_at = Some(Utc::now());
-        self.updated_at = Some(Utc::now());
+        self.started_at = Some(DateTime::now());
+        self.updated_at = Some(DateTime::now());
     }
 
     /// Complete the job successfully.
     pub fn complete(&mut self, result: Option<Value>) {
-        let now = Utc::now();
+        let now = DateTime::now();
         self.status = JobStatus::Completed;
         self.completed_at = Some(now);
         self.result = result;
@@ -163,7 +163,7 @@ impl StarkJob {
 
     /// Mark job as failed.
     pub fn fail(&mut self, error: impl Into<String>, trace: Option<String>) {
-        let now = Utc::now();
+        let now = DateTime::now();
         self.status = JobStatus::Failed;
         self.completed_at = Some(now);
         self.error_message = Some(error.into());
@@ -180,8 +180,8 @@ impl StarkJob {
     /// Cancel the job.
     pub fn cancel(&mut self) {
         self.status = JobStatus::Cancelled;
-        self.completed_at = Some(Utc::now());
-        self.updated_at = Some(Utc::now());
+        self.completed_at = Some(DateTime::now());
+        self.updated_at = Some(DateTime::now());
     }
 
     /// Retry the job.
@@ -195,7 +195,7 @@ impl StarkJob {
             self.result = None;
             self.error_message = None;
             self.error_trace = None;
-            self.updated_at = Some(Utc::now());
+            self.updated_at = Some(DateTime::now());
         }
     }
 

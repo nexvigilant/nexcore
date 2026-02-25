@@ -59,6 +59,10 @@ pub fn ln(z: Complex) -> Result<Complex, ComplexError> {
 /// let result = functions::pow(Complex::ONE, Complex::new(2.0, 1.0));
 /// assert!(result.is_ok());
 /// ```
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "complex multiplication uses f64 arithmetic that saturates to ±inf on extreme inputs; this is standard z^w = exp(w·ln(z)) identity"
+)]
 pub fn pow(z: Complex, w: Complex) -> Result<Complex, ComplexError> {
     let ln_z = ln(z)?;
     Ok(exp(w * ln_z))
@@ -100,6 +104,10 @@ pub fn sqrt(z: Complex) -> Complex {
 /// assert!(result.im.abs() < 1e-12);
 /// ```
 #[must_use]
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "f64 division by 2.0 is exact and cannot overflow or produce NaN unless the input is already NaN/infinite; this is standard complex trig identity"
+)]
 pub fn sin(z: Complex) -> Complex {
     let iz = Complex::new(-z.im, z.re);
     let exp_iz = exp(iz);
@@ -123,6 +131,10 @@ pub fn sin(z: Complex) -> Complex {
 /// assert!(result.im.abs() < 1e-12);
 /// ```
 #[must_use]
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "f64 division by 2.0 is exact and cannot overflow; standard complex cosine identity via exponential form"
+)]
 pub fn cos(z: Complex) -> Complex {
     let iz = Complex::new(-z.im, z.re);
     let exp_iz = exp(iz);
@@ -144,6 +156,10 @@ pub fn cos(z: Complex) -> Complex {
 /// assert!(result.im.abs() < 1e-12);
 /// ```
 #[must_use]
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "f64 division by 2.0 is exact; standard complex hyperbolic sine identity"
+)]
 pub fn sinh(z: Complex) -> Complex {
     let diff = exp(z) - exp(-z);
     Complex::new(diff.re / 2.0, diff.im / 2.0)
@@ -162,6 +178,10 @@ pub fn sinh(z: Complex) -> Complex {
 /// assert!(result.im.abs() < 1e-12);
 /// ```
 #[must_use]
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "f64 division by 2.0 is exact; standard complex hyperbolic cosine identity"
+)]
 pub fn cosh(z: Complex) -> Complex {
     let sum = exp(z) + exp(-z);
     Complex::new(sum.re / 2.0, sum.im / 2.0)

@@ -242,7 +242,7 @@ fn extract_frontmatter(content: &str) -> SkillFrontmatter {
 
     let yaml_content = lines[1..end].join("\n");
 
-    // Simple parsing (could use serde_yaml for full parsing)
+    // Simple parsing (could use serde_yml for full parsing)
     let mut frontmatter = SkillFrontmatter::default();
 
     for line in yaml_content.lines() {

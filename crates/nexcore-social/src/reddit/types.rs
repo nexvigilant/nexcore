@@ -3,7 +3,7 @@
 
 //! Reddit API types.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// Reddit API configuration.
@@ -70,8 +70,8 @@ pub struct Post {
 
 impl Post {
     /// Get created timestamp as DateTime.
-    pub fn created_datetime(&self) -> DateTime<Utc> {
-        DateTime::from_timestamp(self.created_utc as i64, 0).unwrap_or_else(|| DateTime::UNIX_EPOCH)
+    pub fn created_datetime(&self) -> DateTime {
+        DateTime::from_timestamp(self.created_utc as i64)
     }
 
     /// Get full Reddit URL.
@@ -102,8 +102,8 @@ pub struct Comment {
 
 impl Comment {
     /// Get created timestamp as DateTime.
-    pub fn created_datetime(&self) -> DateTime<Utc> {
-        DateTime::from_timestamp(self.created_utc as i64, 0).unwrap_or_else(|| DateTime::UNIX_EPOCH)
+    pub fn created_datetime(&self) -> DateTime {
+        DateTime::from_timestamp(self.created_utc as i64)
     }
 }
 

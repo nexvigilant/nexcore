@@ -12,7 +12,7 @@ use crate::params::{
     VigilMemoryStatsParams, VigilSignalInjectionParams, VigilSourceControlParams,
     VigilStatusParams,
 };
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
 use serde_json::json;
@@ -162,7 +162,7 @@ pub async fn emit_event(params: VigilEmitEventParams) -> Result<CallToolResult, 
         .map(|d| d.as_nanos())
         .unwrap_or(0);
     let event_id = format!("{:032x}", ts);
-    let timestamp = Utc::now().to_rfc3339();
+    let timestamp = DateTime::now().to_rfc3339();
 
     // Clone values we need to use multiple times
     let source = params.source;
@@ -615,13 +615,13 @@ pub async fn source_control(params: VigilSourceControlParams) -> Result<CallTool
         "start" => json!({
             "status": "started",
             "source": &source,
-            "timestamp": Utc::now().to_rfc3339(),
+            "timestamp": DateTime::now().to_rfc3339(),
             "message": format!("Source '{}' started successfully", source),
         }),
         "stop" => json!({
             "status": "stopped",
             "source": &source,
-            "timestamp": Utc::now().to_rfc3339(),
+            "timestamp": DateTime::now().to_rfc3339(),
             "message": format!("Source '{}' stopped", source),
         }),
         "status" => json!({
@@ -668,7 +668,7 @@ pub async fn executor_control(
             json!({
                 "status": "configured",
                 "default_executor": &provider,
-                "timestamp": Utc::now().to_rfc3339(),
+                "timestamp": DateTime::now().to_rfc3339(),
                 "message": format!("Default executor set to {}", provider),
             })
         }
@@ -684,7 +684,7 @@ pub async fn executor_control(
                 "status": "routing_enabled",
                 "strategy": "complexity-based",
                 "thresholds": thresholds,
-                "timestamp": Utc::now().to_rfc3339(),
+                "timestamp": DateTime::now().to_rfc3339(),
             })
         }
         "list" => json!({
@@ -799,7 +799,7 @@ pub async fn context_assemble(params: serde_json::Value) -> Result<CallToolResul
              This tool assembles routing context, not live telemetry.",
             project_root
         ),
-        "timestamp": Utc::now().to_rfc3339(),
+        "timestamp": DateTime::now().to_rfc3339(),
     });
 
     Ok(CallToolResult::success(vec![Content::text(
@@ -844,7 +844,7 @@ pub async fn authority_verify(params: serde_json::Value) -> Result<CallToolResul
         },
         "estimated_tokens": 150,
         "estimated_latency_ms": 45,
-        "timestamp": Utc::now().to_rfc3339(),
+        "timestamp": DateTime::now().to_rfc3339(),
     });
 
     Ok(CallToolResult::success(vec![Content::text(
@@ -880,7 +880,7 @@ pub async fn webhook_test(params: serde_json::Value) -> Result<CallToolResult, M
             "security": {"sql_injection": false, "xss": false},
             "schema_match": 0.95,
         },
-        "timestamp": Utc::now().to_rfc3339(),
+        "timestamp": DateTime::now().to_rfc3339(),
     });
 
     Ok(CallToolResult::success(vec![Content::text(
@@ -946,7 +946,7 @@ pub async fn source_config(params: serde_json::Value) -> Result<CallToolResult, 
             "status": "configured",
             "source": source,
             "applied_config": params.get("config").cloned().unwrap_or(json!({})),
-            "timestamp": Utc::now().to_rfc3339(),
+            "timestamp": DateTime::now().to_rfc3339(),
         }),
         _ => json!({
             "status": "error",
@@ -982,7 +982,7 @@ pub async fn authority_config(
                 "status": "rule_updated",
                 "rule_type": &rule_type,
                 "value": value,
-                "timestamp": Utc::now().to_rfc3339(),
+                "timestamp": DateTime::now().to_rfc3339(),
                 "message": "Authority rule configured successfully",
             })
         }
@@ -1001,7 +1001,7 @@ pub async fn authority_config(
                 "status": "threshold_updated",
                 "threshold_type": &rule_type,
                 "new_value": value,
-                "timestamp": Utc::now().to_rfc3339(),
+                "timestamp": DateTime::now().to_rfc3339(),
             })
         }
         "list-config" => json!({
@@ -1061,7 +1061,7 @@ pub async fn decision_confidence(
             "rule_confidence": 0.98,
             "ambiguity_detected": false,
         },
-        "timestamp": Utc::now().to_rfc3339(),
+        "timestamp": DateTime::now().to_rfc3339(),
         "recommendation": "AutoApprove",
     });
 
@@ -1098,7 +1098,7 @@ pub async fn memory_persist(_params: VigilMemoryPersistParams) -> Result<CallToo
             "slo_target_ms": 100,
             "compliance": true,
         },
-        "timestamp": Utc::now().to_rfc3339(),
+        "timestamp": DateTime::now().to_rfc3339(),
         "next_refresh": "2026-02-09T14:30:00Z",
     });
 
@@ -1158,7 +1158,7 @@ pub async fn executor_benchmark(
             },
         ],
         "recommendation": "Route simple queries to Haiku, complex to Sonnet, balanced to Gemini",
-        "timestamp": Utc::now().to_rfc3339(),
+        "timestamp": DateTime::now().to_rfc3339(),
     });
 
     Ok(CallToolResult::success(vec![Content::text(
@@ -1210,7 +1210,7 @@ pub async fn context_cost_estimate(
             "margin": 0.320,
         },
         "recommendation": "Approved for execution. Use Gemini for cost efficiency.",
-        "timestamp": Utc::now().to_rfc3339(),
+        "timestamp": DateTime::now().to_rfc3339(),
     });
 
     Ok(CallToolResult::success(vec![Content::text(
@@ -1258,7 +1258,7 @@ pub async fn signal_injection(
             "edge_cases": "covered",
             "performance": "slo_compliant",
         },
-        "timestamp": Utc::now().to_rfc3339(),
+        "timestamp": DateTime::now().to_rfc3339(),
         "recommendation": "Ready for production",
     });
 

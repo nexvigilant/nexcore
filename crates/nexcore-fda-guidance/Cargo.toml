@@ -33,3 +33,6 @@ cli = ["dep:clap", "dep:reqwest", "dep:tokio"]
 name = "fda-guidance"
 path = "src/main.rs"
 required-features = ["cli"]
+
+[lints]
+workspace = true

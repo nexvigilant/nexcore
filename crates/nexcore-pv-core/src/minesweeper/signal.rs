@@ -67,7 +67,7 @@ pub mod temporal_config {
     pub const DECAY_RATE_PER_DAY: f64 = 0.02;
 }
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use super::belief::Cell;
@@ -247,8 +247,8 @@ pub fn cell_to_signal_score(cell: &Cell, grid: &CSPGrid) -> CampionSignalResult 
 /// Calculate temporal decay factor based on last update time.
 ///
 /// Uses exponential decay: T = e^(-0.02 × days_since_update)
-fn calculate_temporal_factor(last_updated: DateTime<Utc>) -> f64 {
-    let now = Utc::now();
+fn calculate_temporal_factor(last_updated: DateTime) -> f64 {
+    let now = DateTime::now();
     let duration = now.signed_duration_since(last_updated);
     let days = duration.num_days().max(0) as f64;
 

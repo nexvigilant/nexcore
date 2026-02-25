@@ -9,7 +9,6 @@ use nexcore_faers_etl::{
     SignalDetectionResult, columns, filter_signals, ingest_faers_quarterly_with_options,
     run_signal_detection_pipeline, transform_count_drug_events, transform_filter_minimum,
 };
-use polars::prelude::*;
 use std::path::Path;
 use std::time::Instant;
 
@@ -51,20 +50,19 @@ fn test_count_aggregation_real_data() {
 
     let df =
         ingest_faers_quarterly_with_options(Path::new(FAERS_DIR), false).expect("Ingest failed");
-    let counts = transform_count_drug_events(df.lazy())
-        .expect("Count failed")
-        .collect()
-        .expect("Collect failed");
+    let counts = transform_count_drug_events(df).expect("Count failed");
 
     assert!(counts.height() > 10_000, "Expected >10K pairs");
 
-    let dupixent = counts
-        .clone()
-        .lazy()
-        .filter(col(columns::DRUG).eq(lit("DUPIXENT")))
-        .collect()
-        .expect("Filter failed");
-    assert!(dupixent.height() > 0, "DUPIXENT not found");
+    // Verify DUPIXENT exists in counted data
+    let dupixent_found = (0..counts.height()).any(|i| {
+        counts
+            .column(columns::DRUG)
+            .ok()
+            .and_then(|col| col.get_str(i).ok().flatten())
+            == Some("DUPIXENT")
+    });
+    assert!(dupixent_found, "DUPIXENT not found");
 }
 
 #[test]
@@ -77,14 +75,8 @@ fn test_end_to_end_signal_detection() {
     let start = Instant::now();
     let df =
         ingest_faers_quarterly_with_options(Path::new(FAERS_DIR), false).expect("Ingest failed");
-    let counts = transform_count_drug_events(df.lazy())
-        .expect("Count failed")
-        .collect()
-        .expect("Collect failed");
-    let filtered = transform_filter_minimum(counts.lazy())
-        .expect("Filter failed")
-        .collect()
-        .expect("Collect failed");
+    let counts = transform_count_drug_events(df).expect("Count failed");
+    let filtered = transform_filter_minimum(counts).expect("Filter failed");
     let results = run_signal_detection_pipeline(&filtered).expect("Signal detection failed");
     eprintln!(
         "Pipeline done in {:.2?}: {} results",
@@ -119,14 +111,8 @@ fn test_known_signal_pairs() {
 
     let df =
         ingest_faers_quarterly_with_options(Path::new(FAERS_DIR), false).expect("Ingest failed");
-    let counts = transform_count_drug_events(df.lazy())
-        .expect("Count failed")
-        .collect()
-        .expect("Collect failed");
-    let filtered = transform_filter_minimum(counts.lazy())
-        .expect("Filter failed")
-        .collect()
-        .expect("Collect failed");
+    let counts = transform_count_drug_events(df).expect("Count failed");
+    let filtered = transform_filter_minimum(counts).expect("Filter failed");
     let results = run_signal_detection_pipeline(&filtered).expect("Signal detection failed");
 
     let known: Vec<(&str, &str, &str)> = vec![
@@ -162,14 +148,8 @@ fn test_pipeline_performance() {
     let start = Instant::now();
     let df =
         ingest_faers_quarterly_with_options(Path::new(FAERS_DIR), false).expect("Ingest failed");
-    let counts = transform_count_drug_events(df.lazy())
-        .expect("Count failed")
-        .collect()
-        .expect("Collect failed");
-    let filtered = transform_filter_minimum(counts.lazy())
-        .expect("Filter failed")
-        .collect()
-        .expect("Collect failed");
+    let counts = transform_count_drug_events(df).expect("Count failed");
+    let filtered = transform_filter_minimum(counts).expect("Filter failed");
     let _r = run_signal_detection_pipeline(&filtered).expect("Signal detection failed");
     let t = start.elapsed();
     eprintln!("TOTAL: {t:.2?}");

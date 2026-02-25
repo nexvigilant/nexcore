@@ -112,7 +112,7 @@ pub fn validate_batch(
 mod tests {
     use super::*;
     use crate::core::*;
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     fn strong_result() -> DetectionResult {
         DetectionResult {
@@ -129,7 +129,7 @@ mod tests {
             ebgm: Some(Ebgm(2.5)),
             chi_square: ChiSquare(12.0),
             strength: SignalStrength::Strong,
-            detected_at: Utc::now(),
+            detected_at: DateTime::now(),
         }
     }
 
@@ -148,7 +148,7 @@ mod tests {
             ebgm: Some(Ebgm(0.3)),
             chi_square: ChiSquare(0.1),
             strength: SignalStrength::None,
-            detected_at: Utc::now(),
+            detected_at: DateTime::now(),
         }
     }
 

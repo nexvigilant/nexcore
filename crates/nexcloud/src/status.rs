@@ -128,7 +128,7 @@ impl CloudStatus {
 
         Self {
             platform_name: platform_name.to_string(),
-            timestamp: chrono::Utc::now().to_rfc3339(),
+            timestamp: nexcore_chrono::DateTime::now().to_rfc3339(),
             services,
             overall_health,
             resource_snapshot: ResourceSnapshot {
@@ -191,7 +191,7 @@ fn derive_health(records: &[ServiceRecord]) -> OverallHealth {
 mod tests {
     use super::*;
     use crate::supervisor::registry::ProcessState;
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     fn make_record(name: &str, state: ProcessState, pid: Option<u32>) -> ServiceRecord {
         ServiceRecord {
@@ -200,9 +200,9 @@ mod tests {
             pid,
             port: 8080,
             restarts: 0,
-            started_at: Some(Utc::now()),
+            started_at: Some(DateTime::now()),
             last_health: if state == ProcessState::Healthy {
-                Some(Utc::now())
+                Some(DateTime::now())
             } else {
                 None
             },

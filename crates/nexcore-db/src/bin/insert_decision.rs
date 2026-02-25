@@ -42,9 +42,8 @@ fn main() {
         }
     };
 
-    let ts = chrono::DateTime::parse_from_rfc3339(timestamp)
-        .map(|dt| dt.with_timezone(&chrono::Utc))
-        .unwrap_or_else(|_| chrono::Utc::now());
+    let ts = nexcore_chrono::DateTime::parse_from_rfc3339(timestamp)
+        .unwrap_or_else(|_| nexcore_chrono::DateTime::now());
 
     let result = pool.with_conn(|conn| {
         nexcore_db::decisions::insert(

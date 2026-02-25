@@ -17,7 +17,7 @@
 //! | T2-C | CheckResult | `struct { passed, message }` |
 //! | T2-C | ValidationReport | `struct { skill, checks, passed }` |
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_error::Error;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
@@ -112,7 +112,7 @@ pub struct KsbValidation {
     /// Skill name (from path).
     pub skill_name: String,
     /// Timestamp of validation.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// All check results.
     pub checks: Vec<CheckResult>,
     /// Overall pass status.
@@ -437,7 +437,7 @@ fn build_validation(skill_name: String, checks: Vec<CheckResult>) -> KsbValidati
 
     KsbValidation {
         skill_name,
-        timestamp: Utc::now(),
+        timestamp: DateTime::now(),
         checks,
         passed,
         passed_count,

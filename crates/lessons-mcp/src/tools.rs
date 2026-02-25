@@ -2,7 +2,7 @@
 //! Tier: T2-C (composes storage, extraction)
 
 use crate::{extract, models, protocol::Response, storage};
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use serde_json::{Value, json};
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -119,7 +119,7 @@ fn handle_add(params: &Value) -> Result<Value, String> {
         context: context.into(),
         tags,
         primitives,
-        created_at: Utc::now(),
+        created_at: DateTime::now(),
         source,
     };
 

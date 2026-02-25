@@ -15,9 +15,9 @@
 pub mod parallel;
 
 pub use parallel::{
-    BatchContingencyTables, BatchResult, CompleteSignalResult, batch_chi_square_p_values,
-    batch_chi_square_p_values_sequential, batch_complete_parallel,
-    batch_ebgm_custom_priors_parallel, batch_ebgm_parallel, batch_ic_parallel, batch_prr_parallel,
-    batch_prr_vectorized, batch_ror_parallel, build_contingency_tables,
-    build_contingency_tables_parallel,
+    BatchAdjustmentMetadata, BatchContingencyTables, BatchFdrResults, BatchResult,
+    CompleteSignalResult, batch_chi_square_p_values, batch_chi_square_p_values_sequential,
+    batch_complete_parallel, batch_complete_with_fdr, batch_ebgm_custom_priors_parallel,
+    batch_ebgm_parallel, batch_ic_parallel, batch_prr_parallel, batch_prr_vectorized,
+    batch_ror_parallel, build_contingency_tables, build_contingency_tables_parallel,
 };

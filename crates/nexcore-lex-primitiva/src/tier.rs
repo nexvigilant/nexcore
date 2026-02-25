@@ -14,6 +14,7 @@ use std::fmt;
 /// Primitive tier classification per the Codex.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[repr(u8)]
+#[non_exhaustive]
 pub enum Tier {
     /// T1: Universal primitive (sequence, mapping, recursion, state, void, etc).
     T1Universal = 1,
@@ -103,6 +104,10 @@ impl fmt::Display for Tier {
 }
 
 impl From<Tier> for u8 {
+    #[allow(
+        clippy::as_conversions,
+        reason = "Tier has #[repr(u8)]; cast to u8 is defined and safe"
+    )]
     fn from(tier: Tier) -> u8 {
         tier as u8
     }

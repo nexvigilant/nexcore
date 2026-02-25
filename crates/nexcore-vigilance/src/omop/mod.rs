@@ -17,7 +17,7 @@
 //! ## OMOP CDM v5.4 Key Facts
 //!
 //! - All identifiers are `i64` (SQL BIGINT)
-//! - Dates use `chrono::NaiveDate`; datetimes use `chrono::NaiveDateTime`
+//! - Dates use `chrono::Date`; datetimes use `chrono::DateTime`
 //! - Nullable columns are `Option<T>`
 //! - Standard concepts have `domain_id`, `vocabulary_id`, `concept_class_id`
 //! - The drug vocabulary standard is RxNorm (Ingredient level)

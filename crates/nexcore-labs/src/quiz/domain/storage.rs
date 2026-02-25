@@ -2,7 +2,7 @@
 //!
 //! Defines file storage items and metadata.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 
@@ -13,7 +13,7 @@ pub struct StorageItem {
     pub id: NexId,
 
     /// Upload timestamp.
-    pub uploaded_at: DateTime<Utc>,
+    pub uploaded_at: DateTime,
 
     /// MIME type of the file.
     pub mime_type: String,
@@ -31,7 +31,7 @@ pub struct StorageItem {
     pub storage_path: Option<String>,
 
     /// Soft deletion timestamp.
-    pub deleted_at: Option<DateTime<Utc>>,
+    pub deleted_at: Option<DateTime>,
 
     /// Alt text for accessibility.
     pub alt_text: Option<String>,
@@ -54,7 +54,7 @@ impl StorageItem {
     pub fn new(user_id: NexId, mime_type: String, size: i64, storage_path: String) -> Self {
         Self {
             id: NexId::v4(),
-            uploaded_at: Utc::now(),
+            uploaded_at: DateTime::now(),
             mime_type,
             hash: None,
             user_id: Some(user_id),
@@ -76,7 +76,7 @@ impl StorageItem {
 
     /// Soft-delete the item.
     pub fn delete(&mut self) {
-        self.deleted_at = Some(Utc::now());
+        self.deleted_at = Some(DateTime::now());
     }
 
     /// Check if this is an image.
@@ -102,7 +102,7 @@ pub struct PublicStorageItem {
     pub id: NexId,
 
     /// Upload timestamp.
-    pub uploaded_at: DateTime<Utc>,
+    pub uploaded_at: DateTime,
 
     /// MIME type.
     pub mime_type: String,
@@ -114,7 +114,7 @@ pub struct PublicStorageItem {
     pub size: i64,
 
     /// Deletion timestamp.
-    pub deleted_at: Option<DateTime<Utc>>,
+    pub deleted_at: Option<DateTime>,
 
     /// Alt text.
     pub alt_text: Option<String>,

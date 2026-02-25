@@ -17,6 +17,7 @@
 use crate::core::{ChiSquare, ContingencyTable, Ebgm, Ic, Prr, Ror, SignalStrength};
 
 /// All computed metrics for a contingency table.
+#[non_exhaustive]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SignalMetrics {
     /// PRR value (None if denominator zero).
@@ -53,13 +54,19 @@ pub fn compute_all(table: &ContingencyTable) -> SignalMetrics {
 }
 
 /// Information Component: IC = log2(observed / expected).
+#[allow(
+    clippy::as_conversions,
+    clippy::cast_precision_loss,
+    reason = "u64->f64 cast is intentional for statistical computation; saturating ops prevent overflow"
+)]
 pub fn compute_ic(table: &ContingencyTable) -> Ic {
     let n = table.total() as f64;
     if n == 0.0 {
         return Ic(0.0);
     }
     let observed = table.a as f64;
-    let expected = (table.a + table.b) as f64 * (table.a + table.c) as f64 / n;
+    let expected =
+        table.a.saturating_add(table.b) as f64 * table.a.saturating_add(table.c) as f64 / n;
     if expected == 0.0 || observed == 0.0 {
         return Ic(0.0);
     }
@@ -68,12 +75,18 @@ pub fn compute_ic(table: &ContingencyTable) -> Ic {
 }
 
 /// Simplified EBGM: shrinkage estimate `(a + 0.5) / (E + 0.5)`.
+#[allow(
+    clippy::as_conversions,
+    clippy::cast_precision_loss,
+    reason = "u64->f64 cast is intentional for statistical computation; saturating ops prevent overflow"
+)]
 pub fn compute_ebgm(table: &ContingencyTable) -> Ebgm {
     let n = table.total() as f64;
     if n == 0.0 {
         return Ebgm(0.0);
     }
-    let expected = (table.a + table.b) as f64 * (table.a + table.c) as f64 / n;
+    let expected =
+        table.a.saturating_add(table.b) as f64 * table.a.saturating_add(table.c) as f64 / n;
     Ebgm((table.a as f64 + 0.5) / (expected + 0.5))
 }
 

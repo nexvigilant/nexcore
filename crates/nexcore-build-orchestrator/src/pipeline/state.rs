@@ -103,9 +103,9 @@ pub struct StageRunState {
     /// Captured log output.
     pub logs: LogStream,
     /// When execution started.
-    pub started_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub started_at: Option<nexcore_chrono::DateTime>,
     /// When execution ended.
-    pub ended_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub ended_at: Option<nexcore_chrono::DateTime>,
 }
 
 impl StageRunState {
@@ -126,7 +126,7 @@ impl StageRunState {
     /// Mark as running.
     pub fn start(&mut self) -> BuildOrcResult<()> {
         self.status = self.status.transition_to(RunStatus::Running)?;
-        self.started_at = Some(chrono::Utc::now());
+        self.started_at = Some(nexcore_chrono::DateTime::now());
         Ok(())
     }
 
@@ -139,9 +139,9 @@ impl StageRunState {
         };
         self.status = self.status.transition_to(next)?;
         self.exit_code = Some(exit_code);
-        self.ended_at = Some(chrono::Utc::now());
+        self.ended_at = Some(nexcore_chrono::DateTime::now());
         if let Some(start) = self.started_at {
-            let elapsed = chrono::Utc::now() - start;
+            let elapsed = nexcore_chrono::DateTime::now() - start;
             self.duration = Some(BuildDuration {
                 millis: elapsed.num_milliseconds().max(0) as u64,
             });
@@ -152,7 +152,7 @@ impl StageRunState {
     /// Mark as cancelled.
     pub fn cancel(&mut self) -> BuildOrcResult<()> {
         self.status = self.status.transition_to(RunStatus::Cancelled)?;
-        self.ended_at = Some(chrono::Utc::now());
+        self.ended_at = Some(nexcore_chrono::DateTime::now());
         Ok(())
     }
 
@@ -177,9 +177,9 @@ pub struct PipelineRunState {
     /// Per-stage states (σ: ordered sequence).
     pub stages: Vec<StageRunState>,
     /// When the pipeline started.
-    pub started_at: chrono::DateTime<chrono::Utc>,
+    pub started_at: nexcore_chrono::DateTime,
     /// When the pipeline ended.
-    pub ended_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub ended_at: Option<nexcore_chrono::DateTime>,
     /// Total duration.
     pub total_duration: Option<BuildDuration>,
     /// Source hash at start (∃: existence check).
@@ -200,7 +200,7 @@ impl PipelineRunState {
                 .iter()
                 .map(|id| StageRunState::new(id.clone()))
                 .collect(),
-            started_at: chrono::Utc::now(),
+            started_at: nexcore_chrono::DateTime::now(),
             ended_at: None,
             total_duration: None,
             source_hash: None,
@@ -241,8 +241,8 @@ impl PipelineRunState {
 
     /// Finalize the pipeline run.
     pub fn finalize(&mut self) {
-        self.ended_at = Some(chrono::Utc::now());
-        let elapsed = chrono::Utc::now() - self.started_at;
+        self.ended_at = Some(nexcore_chrono::DateTime::now());
+        let elapsed = nexcore_chrono::DateTime::now() - self.started_at;
         self.total_duration = Some(BuildDuration {
             millis: elapsed.num_milliseconds().max(0) as u64,
         });

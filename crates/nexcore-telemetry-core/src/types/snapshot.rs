@@ -2,7 +2,7 @@
 //!
 //! Represents versioned artifacts from external brain systems.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -38,7 +38,7 @@ pub struct SnapshotMetadata {
     pub artifact_type: String,
     pub summary: String,
     #[serde(rename = "updatedAt")]
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
 }
 
 /// A versioned snapshot.

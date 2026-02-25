@@ -17,6 +17,7 @@
 use crate::ir::{AxiomIR, DomainAnalysis, HarmTypeIR};
 
 /// Parameters for scaffold generation.
+#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct ScaffoldParams {
     /// Pathway ID prefix (e.g., "tov-01").
@@ -25,6 +26,22 @@ pub struct ScaffoldParams {
     pub title: String,
     /// Domain name (e.g., "vigilance").
     pub domain: String,
+}
+
+impl ScaffoldParams {
+    /// Create new scaffold parameters.
+    #[must_use]
+    pub fn new(
+        pathway_id: impl Into<String>,
+        title: impl Into<String>,
+        domain: impl Into<String>,
+    ) -> Self {
+        Self {
+            pathway_id: pathway_id.into(),
+            title: title.into(),
+            domain: domain.into(),
+        }
+    }
 }
 
 /// Bloom's taxonomy levels in ascending order.
@@ -46,22 +63,33 @@ const BLOOM_LEVELS: &[&str] = &[
 /// - Duration non-decreasing across stages
 /// - Quiz skeletons with TODO markers
 /// - Activity types pre-filled (reading, interactive, quiz per stage minimum)
+#[allow(
+    clippy::as_conversions,
+    clippy::cast_precision_loss,
+    reason = "u32->f32 cast for hours estimation; stage counts are small enough that f32 precision is sufficient"
+)]
 pub fn generate(domain: &DomainAnalysis, params: &ScaffoldParams) -> serde_json::Value {
     let mut stages = Vec::new();
     let mut stage_num = 0u32;
 
     // Compute total stage count upfront for Bloom level assignment
-    let total_stages = domain.axioms.len()
-        + usize::from(!domain.harm_types.is_empty())
-        + usize::from(!domain.conservation_laws.is_empty())
-        + usize::from(!domain.theorems.is_empty());
+    let total_stages = domain
+        .axioms
+        .len()
+        .saturating_add(usize::from(!domain.harm_types.is_empty()))
+        .saturating_add(usize::from(!domain.conservation_laws.is_empty()))
+        .saturating_add(usize::from(!domain.theorems.is_empty()));
 
     // Phase 1: Axiom stages (ordered by DAG depth, then ID)
     let mut axioms_sorted: Vec<&AxiomIR> = domain.axioms.iter().collect();
     axioms_sorted.sort_by(|a, b| a.depth.cmp(&b.depth).then(a.id.cmp(&b.id)));
 
     for axiom in &axioms_sorted {
-        stage_num += 1;
+        stage_num = stage_num.saturating_add(1);
+        #[allow(
+            clippy::as_conversions,
+            reason = "usize->u32 for total_stages: stage count never exceeds u32 max in practice"
+        )]
         let bloom = bloom_for_position(stage_num, total_stages as u32);
         stages.push(axiom_stage(
             &params.pathway_id,
@@ -75,7 +103,11 @@ pub fn generate(domain: &DomainAnalysis, params: &ScaffoldParams) -> serde_json:
 
     // Phase 2: Harm types stage (aggregated — 8 types in one stage)
     if !domain.harm_types.is_empty() {
-        stage_num += 1;
+        stage_num = stage_num.saturating_add(1);
+        #[allow(
+            clippy::as_conversions,
+            reason = "usize->u32 for total_stages: stage count never exceeds u32 max in practice"
+        )]
         let bloom = bloom_for_position(stage_num, total_stages as u32);
         stages.push(harm_types_stage(
             &params.pathway_id,
@@ -89,7 +121,11 @@ pub fn generate(domain: &DomainAnalysis, params: &ScaffoldParams) -> serde_json:
 
     // Phase 3: Conservation laws stage (aggregated — 11 laws in one stage)
     if !domain.conservation_laws.is_empty() {
-        stage_num += 1;
+        stage_num = stage_num.saturating_add(1);
+        #[allow(
+            clippy::as_conversions,
+            reason = "usize->u32 for total_stages: stage count never exceeds u32 max in practice"
+        )]
         let bloom = bloom_for_position(stage_num, total_stages as u32);
         let law_names: Vec<&str> = domain
             .conservation_laws
@@ -114,7 +150,11 @@ pub fn generate(domain: &DomainAnalysis, params: &ScaffoldParams) -> serde_json:
 
     // Phase 4: Theorems & Integration stage
     if !domain.theorems.is_empty() {
-        stage_num += 1;
+        stage_num = stage_num.saturating_add(1);
+        #[allow(
+            clippy::as_conversions,
+            reason = "usize->u32 for total_stages: stage count never exceeds u32 max in practice"
+        )]
         let bloom = bloom_for_position(stage_num, total_stages as u32);
         let theorem_names: Vec<&str> = domain.theorems.iter().map(|t| t.name.as_str()).collect();
         let theorem_descs: Vec<String> = domain
@@ -237,7 +277,7 @@ fn harm_types_stage(
     let mut act_num = 0u32;
 
     // Reading overview
-    act_num += 1;
+    act_num = act_num.saturating_add(1);
     activities.push(activity_reading(
         &stage_id,
         act_num,
@@ -247,7 +287,7 @@ fn harm_types_stage(
 
     // Interactive per pair of harm types
     for chunk in harm_types.chunks(2) {
-        act_num += 1;
+        act_num = act_num.saturating_add(1);
         let names: Vec<&str> = chunk.iter().map(|h| h.name.as_str()).collect();
         activities.push(activity_interactive(
             &stage_id,
@@ -258,7 +298,7 @@ fn harm_types_stage(
     }
 
     // Case study
-    act_num += 1;
+    act_num = act_num.saturating_add(1);
     activities.push(activity_case_study(
         &stage_id,
         act_num,
@@ -267,7 +307,7 @@ fn harm_types_stage(
     ));
 
     // Quiz
-    act_num += 1;
+    act_num = act_num.saturating_add(1);
     let questions: Vec<serde_json::Value> = harm_types
         .iter()
         .enumerate()
@@ -277,9 +317,14 @@ fn harm_types_stage(
                 Some(n) => format!("governed by Conservation Law {n}"),
                 None => "has no associated conservation law".to_string(),
             };
+            #[allow(
+                clippy::as_conversions,
+                reason = "usize->u32 for qi: enumerated index is always small (capped at 3)"
+            )]
+            let qi_u32 = qi as u32;
             quiz_mc(
                 &stage_id,
-                qi as u32 + 1,
+                qi_u32.saturating_add(1),
                 &format!(
                     "TODO: Write a question about {} harm (Type {}) — affects levels {:?}, {}.",
                     h.name, h.letter, h.hierarchy_levels, law_text
@@ -311,7 +356,10 @@ fn harm_types_stage(
 }
 
 /// Generate a stage for aggregated concepts (conservation laws, theorems).
-#[allow(clippy::too_many_arguments)]
+#[allow(
+    clippy::too_many_arguments,
+    reason = "all parameters are required to fully describe an aggregated stage"
+)]
 fn aggregated_stage(
     pathway_id: &str,
     num: u32,
@@ -336,9 +384,14 @@ fn aggregated_stage(
         .enumerate()
         .take(4)
         .map(|(qi, name)| {
+            #[allow(
+                clippy::as_conversions,
+                reason = "usize->u32 for qi: enumerated index is always small (capped at 4)"
+            )]
+            let qi_u32 = qi as u32;
             quiz_mc(
                 &stage_id,
-                qi as u32 + 1,
+                qi_u32.saturating_add(1),
                 &format!("TODO: Write a question about {name}."),
             )
         })
@@ -449,11 +502,18 @@ fn quiz_tf(stage_id: &str, num: u32, question_text: &str) -> serde_json::Value {
 
 /// Map global stage position to Bloom level, ensuring monotonic non-decreasing.
 /// Stage 1/N → Remember, Stage N/N → Create.
+#[allow(
+    clippy::as_conversions,
+    clippy::cast_precision_loss,
+    clippy::cast_sign_loss,
+    clippy::cast_possible_truncation,
+    reason = "u32/usize->f64->usize for Bloom index computation; values are small (max 6 levels, max practical stage count)"
+)]
 fn bloom_for_position(current_stage: u32, total_stages: u32) -> &'static str {
     if total_stages <= 1 {
         return BLOOM_LEVELS[0];
     }
-    let progress = (current_stage as f64 - 1.0) / (total_stages as f64 - 1.0);
+    let progress = (f64::from(current_stage) - 1.0) / (f64::from(total_stages) - 1.0);
     let idx = (progress * (BLOOM_LEVELS.len() - 1) as f64).round() as usize;
     BLOOM_LEVELS[idx.min(BLOOM_LEVELS.len() - 1)]
 }

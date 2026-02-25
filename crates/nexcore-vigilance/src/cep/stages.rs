@@ -81,7 +81,7 @@ pub struct StageOutput {
     /// Which stage produced this output.
     pub stage: StageId,
     /// Timestamp when completed.
-    pub timestamp: chrono::DateTime<chrono::Utc>,
+    pub timestamp: nexcore_chrono::DateTime,
     /// Confidence in the output (0.0-1.0).
     pub confidence: f64,
     /// Feedback signal for IMPROVE stage.

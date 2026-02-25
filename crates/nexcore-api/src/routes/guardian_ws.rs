@@ -33,7 +33,7 @@ use axum::{
     extract::ws::{Message, WebSocket, WebSocketUpgrade},
     response::IntoResponse,
 };
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_vigilance::guardian::event_bus::{EventBus, GuardianEvent};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, OnceLock};
@@ -135,7 +135,7 @@ fn map_event_to_ws_message(event: &GuardianEvent) -> WsMessage {
     WsMessage {
         msg_type: msg_type.to_string(),
         payload,
-        timestamp: Utc::now().to_rfc3339(),
+        timestamp: DateTime::now().to_rfc3339(),
     }
 }
 
@@ -170,7 +170,7 @@ async fn handle_bridge_socket(mut socket: WebSocket) {
             "bus_capacity": bus.capacity(),
             "active_receivers": bus.receiver_count(),
         }),
-        timestamp: Utc::now().to_rfc3339(),
+        timestamp: DateTime::now().to_rfc3339(),
     };
     if let Ok(json) = serde_json::to_string(&welcome) {
         if socket.send(Message::Text(json.into())).await.is_err() {
@@ -205,7 +205,7 @@ async fn handle_bridge_socket(mut socket: WebSocket) {
                                 "missed_events": n,
                                 "message": "Subscriber fell behind; some events were dropped",
                             }),
-                            timestamp: Utc::now().to_rfc3339(),
+                            timestamp: DateTime::now().to_rfc3339(),
                         };
                         if let Ok(json) = serde_json::to_string(&lag_msg) {
                             // Best-effort lag notification
@@ -268,7 +268,7 @@ async fn handle_client_command(text: &str, socket: &mut WebSocket) {
                     "message": "Invalid command format. Expected: {\"command\": \"pause|resume|status\"}",
                     "received": text,
                 }),
-                timestamp: Utc::now().to_rfc3339(),
+                timestamp: DateTime::now().to_rfc3339(),
             };
             if let Ok(json) = serde_json::to_string(&err_msg) {
                 let _ = socket.send(Message::Text(json.into())).await;
@@ -326,7 +326,7 @@ async fn handle_client_command(text: &str, socket: &mut WebSocket) {
     let response = WsMessage {
         msg_type: "command_response".to_string(),
         payload: response_payload,
-        timestamp: Utc::now().to_rfc3339(),
+        timestamp: DateTime::now().to_rfc3339(),
     };
     if let Ok(json) = serde_json::to_string(&response) {
         let _ = socket.send(Message::Text(json.into())).await;
@@ -424,7 +424,7 @@ mod tests {
     #[test]
     fn test_map_all_event_variants() {
         // Verify all GuardianEvent variants produce valid WsMessages
-        use chrono::Utc;
+        use nexcore_chrono::DateTime;
         use nexcore_primitives::measurement::Measured;
         use nexcore_vigilance::guardian::homeostasis::{
             ActuatorResultSummary as DomainActuatorSummary, LoopIterationResult, ThroughputMonitor,
@@ -436,7 +436,7 @@ mod tests {
         let events = vec![
             GuardianEvent::LoopTick(LoopIterationResult {
                 iteration_id: "iter-1".to_string(),
-                timestamp: Utc::now(),
+                timestamp: DateTime::now(),
                 signals_detected: 2,
                 actions_taken: 1,
                 results: vec![DomainActuatorSummary {
@@ -451,7 +451,7 @@ mod tests {
                 id: "sig-1".to_string(),
                 pattern: "test-pattern".to_string(),
                 severity: ThreatLevel::High,
-                timestamp: Utc::now(),
+                timestamp: DateTime::now(),
                 source: SignalSource::Damp {
                     subsystem: "test".to_string(),
                     damage_type: "test".to_string(),

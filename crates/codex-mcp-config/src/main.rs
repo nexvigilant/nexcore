@@ -119,7 +119,9 @@ fn install_symlink(codex_mcp: &Path, global_mcp: &Path) -> Result<()> {
     }
 
     if codex_mcp.exists() {
-        let stamp = chrono::Local::now().format("%Y%m%d-%H%M%S").to_string();
+        let stamp = nexcore_chrono::DateTime::now_local()
+            .format("%Y%m%d-%H%M%S")
+            .unwrap_or_default();
         let backup = codex_mcp.with_extension(format!("bak-{stamp}"));
         fs::rename(codex_mcp, &backup)
             .map_err(|err| nexerror!("failed to backup {}: {err}", codex_mcp.display()))?;
@@ -146,7 +148,9 @@ fn install_skills_symlink(agents_skills: &Path, codex_skills: &Path) -> Result<(
     }
 
     if agents_skills.exists() {
-        let stamp = chrono::Local::now().format("%Y%m%d-%H%M%S").to_string();
+        let stamp = nexcore_chrono::DateTime::now_local()
+            .format("%Y%m%d-%H%M%S")
+            .unwrap_or_default();
         let backup = agents_skills.with_extension(format!("bak-{stamp}"));
         fs::rename(agents_skills, &backup)
             .map_err(|err| nexerror!("failed to backup {}: {err}", agents_skills.display()))?;

@@ -173,7 +173,10 @@ impl VidsClient {
         height_emu: i64,
     ) -> Result<BatchUpdateResponse, ClientError> {
         // Generate a unique object ID
-        let new_id = format!("textbox_{}", chrono::Utc::now().timestamp_millis());
+        let new_id = format!(
+            "textbox_{}",
+            nexcore_chrono::DateTime::now().timestamp_millis()
+        );
 
         let requests = vec![
             // Create the shape

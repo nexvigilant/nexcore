@@ -10,8 +10,8 @@
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
-use chrono::Utc;
 use jsonwebtoken::{Algorithm, EncodingKey, Header};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tokio::sync::RwLock;
@@ -216,20 +216,20 @@ impl SheetsClient {
         {
             let guard = self.token.read().await;
             if let Some(ref cached) = *guard {
-                if Utc::now().timestamp() < cached.expires_at - REFRESH_MARGIN_SECS {
+                if DateTime::now().timestamp() < cached.expires_at - REFRESH_MARGIN_SECS {
                     return Ok(cached.access_token.clone());
                 }
             }
         }
         let mut guard = self.token.write().await;
         if let Some(ref cached) = *guard {
-            if Utc::now().timestamp() < cached.expires_at - REFRESH_MARGIN_SECS {
+            if DateTime::now().timestamp() < cached.expires_at - REFRESH_MARGIN_SECS {
                 return Ok(cached.access_token.clone());
             }
         }
         let token_resp = self.acquire_token().await?;
         let access_token = token_resp.access_token.clone();
-        let expires_at = Utc::now().timestamp() + token_resp.expires_in.unwrap_or(3600);
+        let expires_at = DateTime::now().timestamp() + token_resp.expires_in.unwrap_or(3600);
         *guard = Some(TokenCache {
             access_token: access_token.clone(),
             expires_at,
@@ -240,7 +240,7 @@ impl SheetsClient {
     async fn acquire_token(&self) -> Result<TokenResponse, AuthError> {
         match self.source.as_ref() {
             CredentialSource::ServiceAccount(key) => {
-                let now = Utc::now().timestamp();
+                let now = DateTime::now().timestamp();
                 let claims = JwtClaims {
                     iss: key.client_email.clone(),
                     scope: SHEETS_SCOPE.to_string(),

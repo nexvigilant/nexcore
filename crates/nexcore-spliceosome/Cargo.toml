@@ -9,8 +9,11 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-chrono = { workspace = true }
+nexcore-chrono = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+
+[lints]
+workspace = true

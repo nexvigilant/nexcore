@@ -43,7 +43,7 @@ pub mod hud;
 pub mod ribosome_damp;
 pub mod signal_health;
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_primitives::measurement::Measured;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
@@ -137,7 +137,7 @@ pub struct ThreatSignal<T> {
     /// Signal severity
     pub severity: ThreatLevel,
     /// Detection timestamp
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Signal source (PAMP/DAMP/Hybrid)
     pub source: SignalSource,
     /// Confidence score (0.0-1.0)
@@ -158,7 +158,7 @@ impl<T: Debug> ThreatSignal<T> {
             id: nexcore_id::NexId::v4().to_string(),
             pattern,
             severity,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             source,
             confidence: Measured::certain(1.0),
             metadata: std::collections::HashMap::new(),
@@ -1327,7 +1327,7 @@ pub struct HealthCheckResult {
     /// Current status.
     pub status: ApiStatus,
     /// Last check timestamp.
-    pub checked_at: DateTime<Utc>,
+    pub checked_at: DateTime,
     /// Response latency (if available).
     pub latency_ms: Option<u64>,
 }

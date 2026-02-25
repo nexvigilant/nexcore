@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// Top-level analysis result for a Rust crate.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrateAnalysis {
     /// Crate name from Cargo.toml.
@@ -41,6 +42,7 @@ pub struct CrateAnalysis {
 }
 
 /// Information about a module in the crate.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModuleInfo {
     /// Module path (e.g., "manifold::axiom4").
@@ -56,6 +58,7 @@ pub struct ModuleInfo {
 }
 
 /// Information about a public struct.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TypeInfo {
     /// Type name.
@@ -69,6 +72,7 @@ pub struct TypeInfo {
 }
 
 /// Information about a struct field.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FieldInfo {
     /// Field name (None for tuple struct fields).
@@ -80,6 +84,7 @@ pub struct FieldInfo {
 }
 
 /// Information about a public enum.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnumInfo {
     /// Enum name.
@@ -91,6 +96,7 @@ pub struct EnumInfo {
 }
 
 /// Information about an enum variant.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VariantInfo {
     /// Variant name.
@@ -102,6 +108,7 @@ pub struct VariantInfo {
 }
 
 /// Information about a public constant.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConstantInfo {
     /// Constant name.
@@ -115,6 +122,7 @@ pub struct ConstantInfo {
 }
 
 /// Information about a public trait.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TraitInfo {
     /// Trait name.
@@ -130,6 +138,7 @@ pub struct TraitInfo {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// \[OBS\] Graph topology for Observatory's force-directed/hierarchical layouts.
+#[non_exhaustive]
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct GraphTopology {
     /// Graph nodes.
@@ -139,6 +148,7 @@ pub struct GraphTopology {
 }
 
 /// A node in the graph.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GraphNode {
     /// Unique node ID.
@@ -154,6 +164,7 @@ pub struct GraphNode {
 }
 
 /// An edge in the graph.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GraphEdge {
     /// Source node ID.
@@ -171,6 +182,7 @@ pub struct GraphEdge {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// Domain-specific analysis produced by a domain plugin.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DomainAnalysis {
     /// Axioms from the Theory of Vigilance.
@@ -188,6 +200,7 @@ pub struct DomainAnalysis {
 }
 
 /// Axiom information for the IR.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AxiomIR {
     /// Axiom ID: "A1", "A2", etc.
@@ -209,6 +222,7 @@ pub struct AxiomIR {
 }
 
 /// Harm type information for the IR.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HarmTypeIR {
     /// Type letter: 'A' through 'H'.
@@ -224,6 +238,7 @@ pub struct HarmTypeIR {
 }
 
 /// Conservation law information for the IR.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConservationLawIR {
     /// Law number (1-11).
@@ -237,6 +252,7 @@ pub struct ConservationLawIR {
 }
 
 /// Principal theorem information for the IR.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TheoremIR {
     /// Theorem name.
@@ -248,6 +264,7 @@ pub struct TheoremIR {
 }
 
 /// Signal detection threshold values.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SignalThresholds {
     /// PRR threshold (>= signals).
@@ -282,6 +299,7 @@ impl Default for SignalThresholds {
 ///
 /// Each ALO covers exactly one concept in 2-15 minutes. ALOs connect
 /// via typed dependency edges to form a computable learning DAG.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AtomicLearningObject {
     /// Unique ALO identifier.
@@ -325,6 +343,7 @@ pub struct AtomicLearningObject {
 }
 
 /// ALO type classification.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum AloType {
     /// Curiosity trigger, 2-3 min, no prereqs.
@@ -370,6 +389,7 @@ impl AloType {
 }
 
 /// Bloom's taxonomy levels.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum BloomLevel {
     /// Recall facts and basic concepts.
@@ -414,6 +434,7 @@ impl BloomLevel {
 }
 
 /// Assessment embedded in a Reflection ALO.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AloAssessment {
     /// Minimum passing percentage (0-100).
@@ -427,6 +448,7 @@ pub struct AloAssessment {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// A typed dependency edge between two ALOs.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AloEdge {
     /// Source ALO ID (the prerequisite / reinforcing ALO).
@@ -440,6 +462,7 @@ pub struct AloEdge {
 }
 
 /// Edge type between ALOs.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum AloEdgeType {
     /// Hard prerequisite — must complete source before target.
@@ -459,6 +482,7 @@ pub enum AloEdgeType {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// A pathway decomposed into ALOs with intra-pathway dependency edges.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AtomizedPathway {
     /// Pathway identifier (same as source).
@@ -478,6 +502,7 @@ pub struct AtomizedPathway {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// A complete learning graph across one or more pathways.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LearningGraph {
     /// All ALOs across included pathways.
@@ -493,6 +518,7 @@ pub struct LearningGraph {
 }
 
 /// A cluster of ALOs covering the same concept across pathways.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OverlapCluster {
     /// Shared concept identifier (KSB ID or concept name).
@@ -506,6 +532,7 @@ pub struct OverlapCluster {
 }
 
 /// Graph-level metrics.
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GraphMetadata {
     /// Total ALO count.

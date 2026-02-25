@@ -20,7 +20,7 @@
 //! - [`EPAExecutionState`] - Real-time execution state tracking
 
 use crate::caba::Score;
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// EPA domain classifications aligned with compliance frameworks.
@@ -444,10 +444,10 @@ pub struct CompetencyDeploymentStep {
     // Execution timeline
     /// When deployment started (ISO 8601)
     #[serde(default)]
-    pub started_at: Option<DateTime<Utc>>,
+    pub started_at: Option<DateTime>,
     /// When deployment completed (ISO 8601)
     #[serde(default)]
-    pub completed_at: Option<DateTime<Utc>>,
+    pub completed_at: Option<DateTime>,
     /// Total duration in seconds
     #[serde(default)]
     pub duration_seconds: Option<f64>,
@@ -544,7 +544,7 @@ pub struct EPAExecutionPlan {
 
     /// Plan creation timestamp
     #[serde(default)]
-    pub created_at: Option<DateTime<Utc>>,
+    pub created_at: Option<DateTime>,
 }
 
 impl EPAExecutionPlan {
@@ -564,7 +564,7 @@ impl EPAExecutionPlan {
             estimated_cost_usd: None,
             risks: Vec::new(),
             preconditions: Vec::new(),
-            created_at: Some(Utc::now()),
+            created_at: Some(DateTime::now()),
         }
     }
 
@@ -614,13 +614,13 @@ pub struct EPAExecutionState {
     // Execution timeline
     /// When execution started
     #[serde(default)]
-    pub started_at: Option<DateTime<Utc>>,
+    pub started_at: Option<DateTime>,
     /// When state was last updated
     #[serde(default)]
-    pub last_updated: Option<DateTime<Utc>>,
+    pub last_updated: Option<DateTime>,
     /// When execution completed
     #[serde(default)]
-    pub completed_at: Option<DateTime<Utc>>,
+    pub completed_at: Option<DateTime>,
 
     // Competency-level tracking
     /// Status of each competency deployment (competency_id → status)
@@ -652,7 +652,7 @@ impl EPAExecutionState {
             total_steps,
             percent_complete: 0.0,
             started_at: None,
-            last_updated: Some(Utc::now()),
+            last_updated: Some(DateTime::now()),
             completed_at: None,
             competency_states: std::collections::HashMap::new(),
             errors: Vec::new(),

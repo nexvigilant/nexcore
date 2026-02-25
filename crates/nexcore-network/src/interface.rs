@@ -32,6 +32,7 @@ impl InterfaceId {
 /// Network interface type.
 ///
 /// Tier: T2-P (Σ Sum — enumeration of transport types)
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum InterfaceType {
     /// WiFi (802.11).
@@ -86,6 +87,7 @@ impl InterfaceType {
 /// IP address representation (supports IPv4 and IPv6).
 ///
 /// Tier: T2-P (λ Location — network address)
+#[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum IpAddr {
     /// IPv4 address (4 bytes).
@@ -135,8 +137,17 @@ impl IpAddr {
         match self {
             Self::V4(b) => format!("{}.{}.{}.{}", b[0], b[1], b[2], b[3]),
             Self::V6(b) => {
-                let parts: Vec<String> = (0..8)
-                    .map(|i| format!("{:x}", u16::from_be_bytes([b[i * 2], b[i * 2 + 1]])))
+                // b is exactly [u8; 16]; indices i*2 and i*2+1 for i in 0..8 are always valid
+                let parts: Vec<String> = (0_u8..8_u8)
+                    .map(|i| {
+                        let lo = usize::from(i.saturating_mul(2));
+                        let hi = usize::from(i.saturating_mul(2).saturating_add(1));
+                        let pair = [
+                            b.get(lo).copied().unwrap_or(0),
+                            b.get(hi).copied().unwrap_or(0),
+                        ];
+                        format!("{:x}", u16::from_be_bytes(pair))
+                    })
                     .collect();
                 parts.join(":")
             }
@@ -147,6 +158,7 @@ impl IpAddr {
 /// Network interface descriptor.
 ///
 /// Tier: T2-C (Σ + μ + ∃ + ς — typed, mapped, existent, stateful)
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Interface {
     /// Unique interface ID.
@@ -237,12 +249,12 @@ impl Interface {
     /// Effective routing priority (lower = preferred).
     pub fn effective_priority(&self) -> u16 {
         let base = u16::from(self.interface_type.default_priority());
-        let signal_penalty = match self.signal_strength {
+        let signal_penalty: u16 = match self.signal_strength {
             Some(s) if s < 30 => 50, // Weak signal
             Some(s) if s < 60 => 20, // Moderate signal
             _ => 0,
         };
-        base + signal_penalty
+        base.saturating_add(signal_penalty)
     }
 }
 

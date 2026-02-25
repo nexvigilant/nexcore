@@ -30,6 +30,7 @@ pub enum EnergyRegime {
 /// A transition with associated energy cost.
 ///
 /// ## Tier: T2-C (state + causality + N + kappa)
+#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct EnergeticTransition {
     /// Transition identifier.
@@ -51,6 +52,10 @@ pub struct EnergeticTransition {
 impl EnergeticTransition {
     /// Value efficiency: expected_value / cost.
     #[must_use]
+    #[allow(
+        clippy::as_conversions,
+        reason = "u64 to f64 for efficiency ratio; cost values fit safely in f64"
+    )]
     pub fn efficiency(&self) -> f64 {
         if self.cost == 0 {
             return f64::MAX;
@@ -88,6 +93,10 @@ impl TokenPool {
 
     /// Energy charge ratio (0.0 to 1.0).
     #[must_use]
+    #[allow(
+        clippy::as_conversions,
+        reason = "u64 to f64 for charge ratio; token counts fit safely in f64"
+    )]
     pub fn energy_charge(&self) -> f64 {
         if self.capacity == 0 {
             return 0.0;
@@ -113,7 +122,7 @@ impl TokenPool {
     /// Attempt to spend tokens. Returns true if successful.
     pub fn spend(&mut self, amount: u64) -> bool {
         if self.available >= amount {
-            self.available -= amount;
+            self.available = self.available.saturating_sub(amount);
             true
         } else {
             false
@@ -122,7 +131,7 @@ impl TokenPool {
 
     /// Replenish tokens.
     pub fn replenish(&mut self, amount: u64) {
-        self.available = (self.available + amount).min(self.capacity);
+        self.available = self.available.saturating_add(amount).min(self.capacity);
     }
 }
 
@@ -182,7 +191,7 @@ impl EnergeticExecutor {
                         .unwrap_or(core::cmp::Ordering::Equal)
                 });
             }
-            _ => {
+            EnergyRegime::Surplus | EnergyRegime::Normal => {
                 // Prefer value in abundant regimes
                 candidates.sort_by(|a, b| {
                     b.expected_value
@@ -205,8 +214,8 @@ impl EnergeticExecutor {
             .map(|t| t.cost)?;
 
         if self.pool.spend(cost) {
-            self.executed_count += 1;
-            self.total_spent += cost;
+            self.executed_count = self.executed_count.saturating_add(1);
+            self.total_spent = self.total_spent.saturating_add(cost);
             Some(transition_id)
         } else {
             None

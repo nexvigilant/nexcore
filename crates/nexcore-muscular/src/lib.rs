@@ -144,7 +144,7 @@ impl MotorUnit {
     /// Record an activation of this motor unit.
     pub fn activate(&mut self) {
         self.activation_count += 1;
-        self.last_activated = chrono::Utc::now().to_rfc3339();
+        self.last_activated = nexcore_chrono::DateTime::now().to_rfc3339();
     }
 }
 

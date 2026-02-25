@@ -13,7 +13,7 @@ vr-core = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 nexcore-id = { workspace = true }
-chrono = { workspace = true, features = ["serde"] }
+nexcore-chrono = { workspace = true }
 
 [dev-dependencies]
 proptest = { workspace = true }

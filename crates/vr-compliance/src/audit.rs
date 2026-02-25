@@ -4,7 +4,7 @@
 //! Events are immutable once created and can be queried via [`AuditQuery`]
 //! for compliance reporting, incident investigation, and SOC 2 evidence.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use vr_core::{TenantId, UserId};
@@ -57,7 +57,7 @@ pub struct AuditEvent {
     /// User who performed the action.
     pub user_id: UserId,
     /// When the event occurred.
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Classification of the event.
     pub event_type: AuditEventType,
     /// The type of resource acted upon (e.g., "compound", "program").
@@ -89,9 +89,9 @@ pub struct AuditQuery {
     /// Filter by event type(s). None matches all types.
     pub event_types: Option<Vec<AuditEventType>>,
     /// Filter events on or after this timestamp.
-    pub from_date: Option<DateTime<Utc>>,
+    pub from_date: Option<DateTime>,
     /// Filter events on or before this timestamp.
-    pub to_date: Option<DateTime<Utc>>,
+    pub to_date: Option<DateTime>,
     /// Filter by the user who performed the action.
     pub user_id: Option<UserId>,
     /// Filter by the type of resource acted upon.
@@ -187,14 +187,14 @@ pub fn filter_events<'a>(events: &'a [AuditEvent], query: &AuditQuery) -> Vec<&'
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
-    use chrono::Duration;
+    use nexcore_chrono::Duration;
 
     fn make_event(tenant_id: TenantId, user_id: UserId, event_type: AuditEventType) -> AuditEvent {
         AuditEvent {
             id: NexId::v4(),
             tenant_id,
             user_id,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             event_type,
             resource_type: "compound".to_string(),
             resource_id: NexId::v4().to_string(),
@@ -257,7 +257,7 @@ mod tests {
         let user = UserId::new();
 
         let mut event = make_event(tenant, user, AuditEventType::DataAccess);
-        let now = Utc::now();
+        let now = DateTime::now();
         event.timestamp = now;
 
         // Event is within range

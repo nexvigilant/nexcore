@@ -3,7 +3,7 @@
 //! Artifacts are the primary unit of work in the brain system. Each artifact
 //! has a current mutable state and can have multiple resolved (immutable) versions.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
@@ -125,10 +125,10 @@ pub struct ArtifactMetadata {
     pub summary: String,
 
     /// When the artifact was created
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// When the artifact was last updated
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
 
     /// Current resolved version (0 = never resolved)
     pub current_version: u32,
@@ -146,7 +146,7 @@ impl ArtifactMetadata {
     /// Create new metadata
     #[must_use]
     pub fn new(artifact_type: ArtifactType, summary: impl Into<String>) -> Self {
-        let now = Utc::now();
+        let now = DateTime::now();
         Self {
             artifact_type,
             summary: summary.into(),
@@ -160,13 +160,13 @@ impl ArtifactMetadata {
 
     /// Update the metadata timestamp
     pub fn touch(&mut self) {
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Increment version and update timestamp
     pub fn increment_version(&mut self) -> u32 {
         self.current_version += 1;
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
         self.current_version
     }
 }
@@ -192,7 +192,7 @@ pub struct Artifact {
     pub version: u32,
 
     /// When this artifact was last modified
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
 }
 
 impl Artifact {
@@ -208,7 +208,7 @@ impl Artifact {
             artifact_type,
             content: content.into(),
             version: 0,
-            updated_at: Utc::now(),
+            updated_at: DateTime::now(),
         }
     }
 
@@ -222,14 +222,14 @@ impl Artifact {
             artifact_type,
             content: content.into(),
             version: 0,
-            updated_at: Utc::now(),
+            updated_at: DateTime::now(),
         }
     }
 
     /// Update the artifact content
     pub fn update_content(&mut self, content: impl Into<String>) {
         self.content = content.into();
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Generate a summary from content (first non-empty line or first N chars)

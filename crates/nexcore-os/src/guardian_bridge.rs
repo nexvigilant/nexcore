@@ -132,7 +132,7 @@ impl GuardianBridge {
         meta: serde_json::Value,
     ) {
         let entry = SignalEntry {
-            ts: chrono::Utc::now().to_rfc3339(),
+            ts: nexcore_chrono::DateTime::now().to_rfc3339(),
             src: source.to_string(),
             sev: severity.to_string(),
             pat: pattern.to_string(),

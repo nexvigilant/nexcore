@@ -2,7 +2,7 @@
 //!
 //! Pipeline: Ingest → Extract → Compress → Graph → Pack
 
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_fs::dirs;
 
 use crate::compression::StructuralCompressor;
@@ -150,7 +150,7 @@ impl KnowledgeCompiler {
                                 text: content,
                                 source: KnowledgeSource::BrainDistillation,
                                 domain: None,
-                                timestamp: Utc::now(),
+                                timestamp: DateTime::now(),
                             });
                         }
                     }
@@ -190,7 +190,7 @@ impl KnowledgeCompiler {
                             text: content,
                             source: KnowledgeSource::BrainArtifact,
                             domain: None,
-                            timestamp: Utc::now(),
+                            timestamp: DateTime::now(),
                         });
                     }
                 }
@@ -220,7 +220,7 @@ impl KnowledgeCompiler {
                                 text: content,
                                 source: KnowledgeSource::ImplicitKnowledge,
                                 domain: None,
-                                timestamp: Utc::now(),
+                                timestamp: DateTime::now(),
                             });
                         }
                     }
@@ -240,7 +240,7 @@ impl KnowledgeCompiler {
             text: text.to_string(),
             source: source_type,
             domain,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         };
         ingest::ingest(raw)
     }
@@ -286,14 +286,14 @@ mod tests {
                     text: "Signal detection uses PRR for safety analysis.".to_string(),
                     source: KnowledgeSource::FreeText,
                     domain: Some("pv".to_string()),
-                    timestamp: Utc::now(),
+                    timestamp: DateTime::now(),
                 },
                 RawKnowledge {
                     text: "Rust traits enable polymorphism through trait objects and generics."
                         .to_string(),
                     source: KnowledgeSource::FreeText,
                     domain: Some("rust".to_string()),
-                    timestamp: Utc::now(),
+                    timestamp: DateTime::now(),
                 },
             ],
         };

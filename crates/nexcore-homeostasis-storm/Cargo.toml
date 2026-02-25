@@ -11,7 +11,6 @@ description = "Storm detection and prevention for the Homeostasis Machine"
 nexcore-homeostasis-primitives = { path = "../nexcore-homeostasis-primitives" }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-chrono = { workspace = true, features = ["serde"] }
 nexcore-error = { workspace = true }
 tracing = { workspace = true }
 tokio = { workspace = true, features = ["sync", "time"] }

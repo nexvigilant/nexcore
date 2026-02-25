@@ -14,7 +14,7 @@
 //! | Birth | Delivery | Deployment to target environment |
 //! | Postpartum | Neonatal care | Post-deployment monitoring |
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::Trimester;
@@ -46,7 +46,7 @@ pub struct GateResult {
     /// Whether all checks passed (gate is open).
     pub passed: bool,
     /// When the gate was executed.
-    pub executed_at: DateTime<Utc>,
+    pub executed_at: DateTime,
 }
 
 impl GateResult {
@@ -57,7 +57,7 @@ impl GateResult {
             trimester,
             checks,
             passed,
-            executed_at: Utc::now(),
+            executed_at: DateTime::now(),
         }
     }
 
@@ -105,9 +105,9 @@ pub struct Gestation {
     /// Gate results accumulated so far.
     pub gate_results: Vec<GateResult>,
     /// When gestation started.
-    pub conceived_at: DateTime<Utc>,
+    pub conceived_at: DateTime,
     /// When gestation ended (birth or miscarriage).
-    pub completed_at: Option<DateTime<Utc>>,
+    pub completed_at: Option<DateTime>,
 }
 
 impl Gestation {
@@ -117,7 +117,7 @@ impl Gestation {
             candidate,
             phase: GestationPhase::Conception,
             gate_results: Vec::new(),
-            conceived_at: Utc::now(),
+            conceived_at: DateTime::now(),
             completed_at: None,
         }
     }
@@ -133,7 +133,7 @@ impl Gestation {
 
         if !passed {
             self.phase = GestationPhase::Miscarriage { trimester };
-            self.completed_at = Some(Utc::now());
+            self.completed_at = Some(DateTime::now());
             return;
         }
 
@@ -148,7 +148,7 @@ impl Gestation {
     pub fn deliver(&mut self) {
         if self.phase == GestationPhase::Birth {
             self.phase = GestationPhase::Postpartum;
-            self.completed_at = Some(Utc::now());
+            self.completed_at = Some(DateTime::now());
         }
     }
 

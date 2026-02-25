@@ -21,7 +21,7 @@ use crate::primitiva::{LexPrimitiva, PrimitiveComposition};
 use crate::state_mode::StateMode;
 use crate::tier::Tier;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// A composition with per-interaction weights and contribution scoring.
 ///
@@ -31,6 +31,7 @@ use std::collections::HashSet;
 ///
 /// Tier: T2-C (Quantity + Mapping + Comparison + Product)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct WeightedComposition {
     /// The underlying primitives.
     pub primitives: Vec<LexPrimitiva>,
@@ -51,7 +52,7 @@ impl WeightedComposition {
     #[must_use]
     pub fn from_composition(comp: &PrimitiveComposition) -> Self {
         let graph = InteractionGraph::canonical();
-        let unique: HashSet<_> = comp.unique();
+        let unique: BTreeSet<_> = comp.unique();
         let mut interactions = Vec::new();
 
         // For each pair of primitives in the composition, check the graph
@@ -115,7 +116,12 @@ impl WeightedComposition {
         if self.interactions.is_empty() {
             return 0.0;
         }
-        self.total_weight() / self.interactions.len() as f64
+        #[allow(
+            clippy::as_conversions,
+            reason = "interactions.len() bounded by 16*15=240, safe cast to f64"
+        )]
+        let len = self.interactions.len() as f64;
+        self.total_weight() / len
     }
 
     /// Remove primitives with zero contribution (not involved in any interaction).
@@ -123,7 +129,7 @@ impl WeightedComposition {
     /// Preserves the dominant even if it has zero contribution.
     #[must_use]
     pub fn compress(&self) -> Self {
-        let mut keep: HashSet<LexPrimitiva> = HashSet::new();
+        let mut keep: BTreeSet<LexPrimitiva> = BTreeSet::new();
 
         // Keep all primitives involved in interactions
         for interaction in &self.interactions {
@@ -144,7 +150,7 @@ impl WeightedComposition {
             .collect();
 
         // Deduplicate
-        let mut seen = HashSet::new();
+        let mut seen: BTreeSet<LexPrimitiva> = BTreeSet::new();
         let deduped: Vec<LexPrimitiva> =
             compressed.into_iter().filter(|p| seen.insert(*p)).collect();
 
@@ -174,9 +180,9 @@ impl WeightedComposition {
         }
 
         // Not close to any pattern — return normalized version
-        let unique: HashSet<_> = comp.unique();
+        let unique: BTreeSet<_> = comp.unique();
         let mut sorted: Vec<_> = unique.into_iter().collect();
-        sorted.sort_by_key(|p| p.symbol());
+        sorted.sort_by_key(|p: &LexPrimitiva| p.symbol());
         let mut result = PrimitiveComposition::new(sorted);
         if let Some(dom) = self.dominant {
             result = result.with_dominant(dom, self.confidence);
@@ -199,7 +205,7 @@ impl WeightedComposition {
 
     /// Unique primitives as a set.
     #[must_use]
-    pub fn unique(&self) -> HashSet<LexPrimitiva> {
+    pub fn unique(&self) -> BTreeSet<LexPrimitiva> {
         self.primitives.iter().copied().collect()
     }
 
@@ -234,9 +240,10 @@ impl WeightedComposition {
     /// Count interactions by type.
     #[must_use]
     pub fn interaction_counts(&self) -> Vec<(InteractionType, usize)> {
-        let mut counts = std::collections::HashMap::new();
+        let mut counts: BTreeMap<InteractionType, usize> = BTreeMap::new();
         for interaction in &self.interactions {
-            *counts.entry(interaction.relation).or_insert(0) += 1;
+            let entry = counts.entry(interaction.relation).or_insert(0);
+            *entry = entry.saturating_add(1);
         }
         let mut result: Vec<_> = counts.into_iter().collect();
         result.sort_by(|a, b| b.1.cmp(&a.1));
@@ -261,6 +268,7 @@ impl std::fmt::Display for WeightedComposition {
 ///
 /// Tier: T2-P (Sequence + Mapping)
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct WeightedBuilder {
     primitives: Vec<LexPrimitiva>,
     interactions: Vec<Interaction>,
@@ -360,7 +368,7 @@ impl WeightedBuilder {
 
         if self.auto_interactions {
             let graph = InteractionGraph::canonical();
-            let unique: HashSet<_> = self.primitives.iter().copied().collect();
+            let unique: BTreeSet<_> = self.primitives.iter().copied().collect();
             let prims: Vec<_> = unique.iter().copied().collect();
 
             for &src in &prims {

@@ -1,6 +1,6 @@
 //! Orchestration events for Vigil EventBus integration.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::agent::AgentState;
@@ -20,7 +20,7 @@ pub enum OrcEvent {
         /// Optional group membership.
         group: Option<TaskGroupId>,
         /// When the agent was created.
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     },
 
     /// An agent's state changed.
@@ -32,7 +32,7 @@ pub enum OrcEvent {
         /// New state.
         to: AgentState,
         /// When the transition occurred.
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     },
 
     /// An agent completed successfully.
@@ -42,7 +42,7 @@ pub enum OrcEvent {
         /// Serialized result.
         result: serde_json::Value,
         /// When it completed.
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     },
 
     /// An agent failed.
@@ -52,7 +52,7 @@ pub enum OrcEvent {
         /// Error message.
         error: String,
         /// When it failed.
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     },
 
     /// An agent was cancelled.
@@ -60,7 +60,7 @@ pub enum OrcEvent {
         /// Agent identifier.
         id: AgentId,
         /// When it was cancelled.
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     },
 
     /// Consensus was reached (or failed) for a group.
@@ -74,7 +74,7 @@ pub enum OrcEvent {
         /// Total agents in the group.
         total: usize,
         /// When the consensus was evaluated.
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     },
 
     /// Queue saturation warning.
@@ -84,7 +84,7 @@ pub enum OrcEvent {
         /// Maximum capacity.
         capacity: usize,
         /// When detected.
-        timestamp: DateTime<Utc>,
+        timestamp: DateTime,
     },
 }
 
@@ -105,7 +105,7 @@ impl OrcEvent {
 
     /// Get the timestamp of this event.
     #[must_use]
-    pub fn timestamp(&self) -> DateTime<Utc> {
+    pub fn timestamp(&self) -> DateTime {
         match self {
             Self::AgentSpawned { timestamp, .. }
             | Self::AgentStateChanged { timestamp, .. }
@@ -129,7 +129,7 @@ mod tests {
             name: "test".to_string(),
             priority: Priority::Normal,
             group: None,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         };
         assert_eq!(evt.event_type(), "orc.agent.spawned");
     }
@@ -139,7 +139,7 @@ mod tests {
         let evt = OrcEvent::AgentFailed {
             id: AgentId::new(),
             error: "boom".to_string(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         };
         let json = serde_json::to_string(&evt);
         assert!(json.is_ok());
@@ -147,7 +147,7 @@ mod tests {
 
     #[test]
     fn event_timestamp_extraction() {
-        let now = Utc::now();
+        let now = DateTime::now();
         let evt = OrcEvent::QueueSaturation {
             current: 90,
             capacity: 100,

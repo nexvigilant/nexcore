@@ -15,7 +15,7 @@
 //! | Write to disk | Persistence | p |
 //! | Success/failure | Sum | S |
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -29,7 +29,7 @@ use crate::config::FeedbackConfig;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FeedbackRecord {
     /// Timestamp of the feedback
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// The signal pattern that triggered the decision
     pub signal_pattern: String,
     /// Signal severity level
@@ -172,7 +172,7 @@ mod tests {
 
     fn make_record(pattern: &str, success: bool) -> FeedbackRecord {
         FeedbackRecord {
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             signal_pattern: pattern.to_string(),
             severity: "High".to_string(),
             decision: "Alert".to_string(),

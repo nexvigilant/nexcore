@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 /// A routing table entry.
 ///
 /// Tier: T2-C (→ + κ + λ — causal path selection by location)
+#[non_exhaustive]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Route {
     /// Destination network address.
@@ -91,6 +92,11 @@ impl Route {
                 if self.prefix_len >= 32 {
                     return route_addr == pkt_addr;
                 }
+                // prefix_len is 1..=31; shift amount 32-prefix_len is 1..=31, safe for u32
+                #[allow(
+                    clippy::arithmetic_side_effects,
+                    reason = "prefix_len is validated to be 1..=31 above, so 32-prefix_len is 1..=31, no overflow possible"
+                )]
                 let mask = u32::MAX << (32 - self.prefix_len);
                 let route_net = u32::from_be_bytes(*route_addr) & mask;
                 let pkt_net = u32::from_be_bytes(*pkt_addr) & mask;
@@ -102,18 +108,28 @@ impl Route {
                     return true;
                 }
                 // Compare byte-by-byte up to prefix_len bits
-                let full_bytes = (self.prefix_len / 8) as usize;
+                // prefix_len is a u8 (0..=255); for IPv6, valid range is 0..=128
+                let full_bytes = usize::from(self.prefix_len / 8);
                 let remaining_bits = self.prefix_len % 8;
 
-                // Full bytes must match
-                if route_addr[..full_bytes] != pkt_addr[..full_bytes] {
+                // Full bytes must match; bounds are safe: full_bytes <= 16 for valid prefix
+                let route_slice = route_addr.get(..full_bytes).unwrap_or(&route_addr[..]);
+                let pkt_slice = pkt_addr.get(..full_bytes).unwrap_or(&pkt_addr[..]);
+                if route_slice != pkt_slice {
                     return false;
                 }
 
                 // Check remaining bits in the next byte
                 if remaining_bits > 0 && full_bytes < 16 {
-                    let mask = 0xFF << (8 - remaining_bits);
-                    if (route_addr[full_bytes] & mask) != (pkt_addr[full_bytes] & mask) {
+                    // remaining_bits is 1..=7; shift 8-remaining_bits is 1..=7, safe for u8
+                    #[allow(
+                        clippy::arithmetic_side_effects,
+                        reason = "remaining_bits is 1..=7 so 8-remaining_bits is 1..=7, no overflow possible for u8"
+                    )]
+                    let mask: u8 = 0xFF << (8 - remaining_bits);
+                    let rb = route_addr.get(full_bytes).copied().unwrap_or(0);
+                    let pb = pkt_addr.get(full_bytes).copied().unwrap_or(0);
+                    if (rb & mask) != (pb & mask) {
                         return false;
                     }
                 }

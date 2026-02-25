@@ -4,7 +4,7 @@
 //! from external creators. Revenue sharing differs: platform models generate
 //! 100% platform revenue, while third-party models split 75/25 in favor of the creator.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use vr_core::{ModelId, Money, ProviderId, VrError};
 
@@ -66,7 +66,7 @@ pub struct MarketplaceModel {
     /// Current listing status.
     pub status: ModelStatus,
     /// When the model was first published.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 }
 
 impl MarketplaceModel {
@@ -94,7 +94,7 @@ impl MarketplaceModel {
             usage_count: 0,
             rating: 0.0,
             status: ModelStatus::Active,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
         }
     }
 
@@ -123,7 +123,7 @@ impl MarketplaceModel {
             usage_count: 0,
             rating: 0.0,
             status: ModelStatus::PendingReview,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
         }
     }
 

@@ -490,7 +490,7 @@ pub fn intel_report(params: TelemetryIntelReportParams) -> Result<CallToolResult
 ///
 /// Returns the most recent operations across all telemetry sources.
 pub fn recent_activity(params: TelemetryRecentParams) -> Result<CallToolResult, McpError> {
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
     use nexcore_telemetry_core::parser::{discover_sources, parse_source};
 
     let limit = params.count.unwrap_or(20);
@@ -512,7 +512,7 @@ pub fn recent_activity(params: TelemetryRecentParams) -> Result<CallToolResult, 
     };
 
     // Collect all operations with timestamps
-    let mut all_ops: Vec<(chrono::DateTime<Utc>, String, serde_json::Value)> = Vec::new();
+    let mut all_ops: Vec<(nexcore_chrono::DateTime, String, serde_json::Value)> = Vec::new();
 
     for d in &discovered {
         if let Ok(source) = parse_source(&d.path) {

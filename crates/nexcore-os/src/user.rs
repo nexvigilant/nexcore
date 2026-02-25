@@ -28,8 +28,8 @@
 //!                      └──────────────┘
 //! ```
 
-use chrono::{DateTime, Utc};
 use core::fmt::Write as _;
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
@@ -137,9 +137,9 @@ pub struct UserRecord {
     /// Salt used for password hashing.
     salt: String,
     /// When the account was created.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// Last successful login.
-    pub last_login: Option<DateTime<Utc>>,
+    pub last_login: Option<DateTime>,
     /// Failed login attempt counter (resets on success).
     pub failed_attempts: u32,
 }
@@ -168,9 +168,9 @@ pub struct Session {
     /// Role at time of login.
     pub role: UserRole,
     /// When the session was created.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
     /// When the session expires.
-    pub expires_at: DateTime<Utc>,
+    pub expires_at: DateTime,
     /// Whether the session is still active.
     pub active: bool,
 }
@@ -181,7 +181,7 @@ impl Session {
 
     /// Check if the session has expired.
     pub fn is_expired(&self) -> bool {
-        Utc::now() > self.expires_at
+        DateTime::now() > self.expires_at
     }
 
     /// Check if the session is valid (active and not expired).
@@ -317,7 +317,7 @@ impl UserManager {
             status: AccountStatus::Active,
             password_hash,
             salt,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             last_login: None,
             failed_attempts: 0,
         };
@@ -385,7 +385,7 @@ impl UserManager {
 
         // Successful login — reset failure counter
         user.failed_attempts = 0;
-        user.last_login = Some(Utc::now());
+        user.last_login = Some(DateTime::now());
 
         let role = user.role;
         let display = user.display_name.clone();
@@ -590,7 +590,7 @@ impl UserManager {
     /// Create a new session for a user.
     fn create_session(&mut self, user_id: UserId, username: &str, role: UserRole) -> Session {
         self.session_counter += 1;
-        let now = Utc::now();
+        let now = DateTime::now();
 
         // Generate session token: SHA-256(user_id || counter || timestamp)
         let mut hasher = Sha256::new();
@@ -611,7 +611,7 @@ impl UserManager {
             username: username.to_string(),
             role,
             created_at: now,
-            expires_at: now + chrono::Duration::hours(Session::DEFAULT_TTL_HOURS),
+            expires_at: now + nexcore_chrono::Duration::hours(Session::DEFAULT_TTL_HOURS),
             active: true,
         };
 
@@ -664,7 +664,7 @@ pub struct UserSummary {
     /// Account status.
     pub status: AccountStatus,
     /// Last login time.
-    pub last_login: Option<DateTime<Utc>>,
+    pub last_login: Option<DateTime>,
 }
 
 #[cfg(test)]

@@ -1061,7 +1061,7 @@ fn parse_frontmatter(content: &str) -> (serde_json::Map<String, serde_json::Valu
     let yaml_content = parts[1].trim();
     let body = parts[2].to_string();
 
-    match serde_yaml::from_str::<serde_json::Value>(yaml_content) {
+    match serde_yml::from_str::<serde_json::Value>(yaml_content) {
         Ok(serde_json::Value::Object(map)) => (map, body),
         _ => (empty_map, content.to_string()),
     }

@@ -15,4 +15,6 @@ nexcore-foundry = { path = "../nexcore-foundry" }
 nexcore-error = { workspace = true }
 
 [dev-dependencies]
-chrono = { workspace = true }
+
+[lints]
+workspace = true

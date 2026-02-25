@@ -1,0 +1,24 @@
+# clippy.toml — NexCore workspace clippy configuration
+# Parameterized lint thresholds for strict, idiomatic, deterministic Rust.
+
+# Max cognitive complexity per function (clippy default: 25)
+cognitive-complexity-threshold = 15
+
+# Max function parameters (clippy default: 7)
+too-many-arguments-threshold = 5
+
+# Max function body lines (clippy default: 100)
+too-many-lines-threshold = 60
+
+# Large stack array threshold in bytes (clippy default: 512000)
+array-size-threshold = 512000
+
+# Enforce descriptive identifier names — min 2 chars
+min-ident-chars-threshold = 2
+allowed-idents-below-min-chars = ["_", "i", "j", "k", "n", "x", "y", "z", "w", "h", "r", "g", "b", "a", "e", "s", "t", "v"]
+
+# Ban non-deterministic HashMap for iteration — force BTreeMap or explicit justification
+disallowed-types = [
+    { path = "std::collections::HashMap", reason = "Use BTreeMap for deterministic iteration, or #[allow(clippy::disallowed_types)] with reason" },
+    { path = "std::collections::HashSet", reason = "Use BTreeSet for deterministic iteration, or #[allow(clippy::disallowed_types)] with reason" },
+]

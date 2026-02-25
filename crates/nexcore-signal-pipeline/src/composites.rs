@@ -23,6 +23,7 @@ use nexcore_lex_primitiva::tier::Tier;
 use serde::{Deserialize, Serialize};
 
 /// Descriptor for a composite type in the signal pipeline.
+#[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CompositeDescriptor {
     /// Type name (e.g., "NormalizedEvent").
@@ -241,6 +242,10 @@ pub fn composite_by_name(type_name: &str) -> Option<CompositeDescriptor> {
 
 /// Compute the average transfer potential across all composites.
 #[must_use]
+#[allow(
+    clippy::as_conversions,
+    reason = "usize->f64 cast for averaging; inventory size never exceeds f64 precision limits"
+)]
 pub fn average_transfer_potential() -> f64 {
     let inv = composite_inventory();
     if inv.is_empty() {

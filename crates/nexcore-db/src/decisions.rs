@@ -2,7 +2,7 @@
 //!
 //! Stores tool usage decisions captured by cognitive hooks.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 
@@ -14,7 +14,7 @@ pub struct DecisionRow {
     /// Auto-increment ID (None for new)
     pub id: Option<i64>,
     /// When the decision occurred
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Session in which the decision was made
     pub session_id: String,
     /// Tool used
@@ -121,10 +121,8 @@ pub fn list_by_session(conn: &Connection, session_id: &str) -> Result<Vec<Decisi
     Ok(rows)
 }
 
-fn parse_dt(s: String) -> DateTime<Utc> {
-    DateTime::parse_from_rfc3339(&s)
-        .map(|dt| dt.with_timezone(&Utc))
-        .unwrap_or_else(|_| Utc::now())
+fn parse_dt(s: String) -> DateTime {
+    DateTime::parse_from_rfc3339(&s).unwrap_or_else(|_| DateTime::now())
 }
 
 #[cfg(test)]
@@ -138,7 +136,7 @@ mod tests {
         db.with_conn(|conn| {
             let d = DecisionRow {
                 id: None,
-                timestamp: Utc::now(),
+                timestamp: DateTime::now(),
                 session_id: "test-session".into(),
                 tool: "Bash".into(),
                 action: "Bash operation".into(),

@@ -1,6 +1,6 @@
 //! Community domain types: Flarum integration and engagement tracking.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -34,11 +34,11 @@ pub struct FlarumUser {
 
     /// SSO token expiration.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub sso_token_expires_at: Option<DateTime<Utc>>,
+    pub sso_token_expires_at: Option<DateTime>,
 
     /// Last SSO login time.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub last_sso_login: Option<DateTime<Utc>>,
+    pub last_sso_login: Option<DateTime>,
 
     /// Sync status.
     #[serde(default)]
@@ -46,7 +46,7 @@ pub struct FlarumUser {
 
     /// Last sync time.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub last_sync_at: Option<DateTime<Utc>>,
+    pub last_sync_at: Option<DateTime>,
 
     /// Sync error message (if any).
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -54,18 +54,18 @@ pub struct FlarumUser {
 
     /// When account was created in Flarum.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub flarum_created_at: Option<DateTime<Utc>>,
+    pub flarum_created_at: Option<DateTime>,
 
     /// Full Flarum user object for reference.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub flarum_data: Option<Value>,
 
     /// Creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Last update timestamp.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime>,
 }
 
 impl FlarumUser {
@@ -86,7 +86,7 @@ impl FlarumUser {
             sync_error: None,
             flarum_created_at: None,
             flarum_data: None,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             updated_at: None,
         }
     }
@@ -95,7 +95,7 @@ impl FlarumUser {
     #[must_use]
     pub fn is_token_expired(&self) -> bool {
         match self.sso_token_expires_at {
-            Some(expires_at) => Utc::now() > expires_at,
+            Some(expires_at) => DateTime::now() > expires_at,
             None => true, // No token = expired
         }
     }
@@ -109,16 +109,16 @@ impl FlarumUser {
     /// Mark sync as successful.
     pub fn mark_synced(&mut self) {
         self.sync_status = FlarumSyncStatus::Synced;
-        self.last_sync_at = Some(Utc::now());
+        self.last_sync_at = Some(DateTime::now());
         self.sync_error = None;
-        self.updated_at = Some(Utc::now());
+        self.updated_at = Some(DateTime::now());
     }
 
     /// Mark sync as failed.
     pub fn mark_sync_failed(&mut self, error: impl Into<String>) {
         self.sync_status = FlarumSyncStatus::Failed;
         self.sync_error = Some(error.into());
-        self.updated_at = Some(Utc::now());
+        self.updated_at = Some(DateTime::now());
     }
 }
 
@@ -161,11 +161,11 @@ pub struct CommunityEngagement {
 
     /// Last post timestamp.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub last_post_at: Option<DateTime<Utc>>,
+    pub last_post_at: Option<DateTime>,
 
     /// Last discussion timestamp.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub last_discussion_at: Option<DateTime<Utc>>,
+    pub last_discussion_at: Option<DateTime>,
 
     /// Total days with activity.
     #[serde(default)]
@@ -212,15 +212,15 @@ pub struct CommunityEngagement {
     pub engagement_level: EngagementLevel,
 
     /// Creation timestamp.
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime,
 
     /// Last update timestamp.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime>,
 
     /// When metrics were last calculated.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub last_calculated_at: Option<DateTime<Utc>>,
+    pub last_calculated_at: Option<DateTime>,
 }
 
 impl CommunityEngagement {
@@ -230,7 +230,7 @@ impl CommunityEngagement {
         Self {
             id: NexId::v4(),
             flarum_user_id,
-            created_at: Utc::now(),
+            created_at: DateTime::now(),
             ..Default::default()
         }
     }
@@ -261,7 +261,7 @@ impl CommunityEngagement {
     /// Update engagement level based on current stats.
     pub fn update_engagement_level(&mut self) {
         self.engagement_level = self.calculate_engagement_level();
-        self.updated_at = Some(Utc::now());
+        self.updated_at = Some(DateTime::now());
     }
 
     /// Calculate reputation score.
@@ -284,8 +284,8 @@ impl CommunityEngagement {
     /// Update reputation score.
     pub fn update_reputation(&mut self) {
         self.reputation_score = self.calculate_reputation();
-        self.last_calculated_at = Some(Utc::now());
-        self.updated_at = Some(Utc::now());
+        self.last_calculated_at = Some(DateTime::now());
+        self.updated_at = Some(DateTime::now());
     }
 
     /// Get primary vertical based on post distribution.
@@ -310,11 +310,11 @@ impl CommunityEngagement {
         self.total_posts += 1;
         if is_discussion {
             self.total_discussions += 1;
-            self.last_discussion_at = Some(Utc::now());
+            self.last_discussion_at = Some(DateTime::now());
         } else {
             self.total_replies += 1;
         }
-        self.last_post_at = Some(Utc::now());
+        self.last_post_at = Some(DateTime::now());
         self.update_engagement_level();
     }
 
@@ -329,7 +329,7 @@ impl CommunityEngagement {
         } else {
             self.current_streak = 0;
         }
-        self.updated_at = Some(Utc::now());
+        self.updated_at = Some(DateTime::now());
     }
 }
 

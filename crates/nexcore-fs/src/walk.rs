@@ -239,7 +239,7 @@ impl WalkDirIter {
                         Ok(meta) => {
                             let child = DirEntry {
                                 path: de.path(),
-                                depth: entry.depth + 1,
+                                depth: entry.depth.saturating_add(1),
                                 file_type: meta.file_type(),
                             };
                             self.queue.push_back(Ok(child));

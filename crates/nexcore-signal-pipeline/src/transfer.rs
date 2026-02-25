@@ -22,6 +22,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Maps a source type in the signal pipeline to an analog concept
 /// in another domain, with a confidence score (0.0 to 1.0).
+#[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TransferMapping {
     /// The signal pipeline type name (e.g., "Pipeline", "ContingencyTable").
@@ -152,6 +153,10 @@ pub fn transfer_mappings() -> &'static [TransferMapping] {
 ///
 /// Returns `None` if no mappings exist for the source type.
 #[must_use]
+#[allow(
+    clippy::as_conversions,
+    reason = "usize->f64 cast for averaging; static table size never exceeds f64 precision limits"
+)]
 pub fn transfer_confidence(source_type: &str) -> Option<f64> {
     let matches: Vec<f64> = TRANSFER_TABLE
         .iter()

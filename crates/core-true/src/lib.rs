@@ -755,6 +755,7 @@ fn pass_8_cross_validate(statements: &[Statement], errors: &mut Vec<ValidationEr
             LexPrimitiva::Causality => 13,
             LexPrimitiva::Sequence => 14,
             LexPrimitiva::Existence => 15,
+            _ => 15, // non_exhaustive fallback
         }
     };
 

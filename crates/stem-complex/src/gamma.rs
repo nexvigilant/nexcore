@@ -3,6 +3,16 @@
 //! Uses g=7 Lanczos coefficients with the reflection formula for Re(z) < 0.5.
 //! Poles at non-positive integers are detected and return [`ComplexError::Undefined`].
 
+// All arithmetic in this module operates on f64-backed Complex values using the
+// Lanczos approximation. f64 arithmetic cannot overflow in the integer-overflow
+// sense — it saturates to ±infinity. Every operation follows the standard
+// numerical Gamma algorithm; the lint would require saturating wrappers that are
+// meaningless for floating-point types.
+#![allow(
+    clippy::arithmetic_side_effects,
+    reason = "Lanczos Gamma algorithm uses standard f64 arithmetic on Complex values; f64 cannot integer-overflow, only yield ±inf/NaN on extreme inputs, which is expected mathematical behaviour for this function near poles"
+)]
+
 use std::f64::consts::PI;
 
 use crate::complex::Complex;

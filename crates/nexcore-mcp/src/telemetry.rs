@@ -11,7 +11,7 @@
 //! Tier: T2-C (Cross-domain composite telemetry infrastructure)
 //! Grounds to: T1 primitives (String, bool, u64, Instant) via measurement types
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_fs::dirs;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -33,7 +33,7 @@ use tokio::sync::mpsc;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TelemetryRecord {
     /// ISO-8601 timestamp
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Tool name (e.g., "pv_signal_prr")
     pub tool: String,
     /// Duration in milliseconds
@@ -73,10 +73,10 @@ pub struct TelemetrySummary {
     pub total_output_bytes: u64,
     /// Time range start
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub first_call: Option<DateTime<Utc>>,
+    pub first_call: Option<DateTime>,
     /// Time range end
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub last_call: Option<DateTime<Utc>>,
+    pub last_call: Option<DateTime>,
 }
 
 impl Default for TelemetrySummary {
@@ -134,7 +134,7 @@ pub struct ToolStats {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SlowCall {
     /// Timestamp of the call
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Tool name
     pub tool: String,
     /// Duration in milliseconds
@@ -154,7 +154,7 @@ pub struct SlowCall {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditRecord {
     /// ISO-8601 timestamp
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     /// Tool name (e.g., "pv_signal_prr")
     pub tool: String,
     /// Serialized input parameters (JSON string, truncated at 4KB)
@@ -302,7 +302,7 @@ pub fn build_audit_record(
     error_msg: Option<String>,
 ) -> AuditRecord {
     AuditRecord {
-        timestamp: Utc::now(),
+        timestamp: DateTime::now(),
         tool: tool.to_string(),
         input_json: truncate_for_audit(input_json, AUDIT_MAX_JSON_LEN),
         output_json: truncate_for_audit(output_json, AUDIT_MAX_JSON_LEN),
@@ -341,7 +341,7 @@ impl CallMeasurement {
     pub fn finish(self, success: bool, output_bytes: usize) {
         let duration = self.start.elapsed();
         let record = TelemetryRecord {
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             tool: self.tool,
             duration_ms: duration.as_millis() as u64,
             success,
@@ -506,7 +506,7 @@ pub async fn read_all_audit_records() -> Vec<AuditRecord> {
 /// Query audit records with optional filters.
 pub async fn query_audit_trail(
     tool_filter: Option<&str>,
-    since: Option<DateTime<Utc>>,
+    since: Option<DateTime>,
     success_only: Option<bool>,
     limit: Option<usize>,
 ) -> Vec<AuditRecord> {
@@ -545,7 +545,7 @@ mod tests {
     #[test]
     fn test_telemetry_record_serialization() {
         let record = TelemetryRecord {
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             tool: "pv_signal_prr".to_string(),
             duration_ms: 12,
             success: true,
@@ -576,7 +576,7 @@ mod tests {
     #[test]
     fn test_audit_record_serialization() {
         let record = AuditRecord {
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             tool: "pv_signal_prr".to_string(),
             input_json: r#"{"a":15,"b":100}"#.to_string(),
             output_json: r#"{"prr":3.2}"#.to_string(),

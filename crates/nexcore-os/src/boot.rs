@@ -47,7 +47,7 @@ pub struct BootSequence {
     /// Boot log entries.
     log: Vec<BootLogEntry>,
     /// Boot start timestamp.
-    started_at: Option<chrono::DateTime<chrono::Utc>>,
+    started_at: Option<nexcore_chrono::DateTime>,
 }
 
 /// A single boot log entry.
@@ -62,7 +62,7 @@ pub struct BootLogEntry {
     /// Whether this was an error.
     pub is_error: bool,
     /// Timestamp.
-    pub timestamp: chrono::DateTime<chrono::Utc>,
+    pub timestamp: nexcore_chrono::DateTime,
 }
 
 impl BootSequence {
@@ -91,7 +91,7 @@ impl BootSequence {
             phase: self.phase,
             message: message.into(),
             is_error: false,
-            timestamp: chrono::Utc::now(),
+            timestamp: nexcore_chrono::DateTime::now(),
         });
     }
 
@@ -101,14 +101,14 @@ impl BootSequence {
             phase: self.phase,
             message: message.into(),
             is_error: true,
-            timestamp: chrono::Utc::now(),
+            timestamp: nexcore_chrono::DateTime::now(),
         });
     }
 
     /// Execute Phase 1: PAL initialization.
     pub fn init_pal(&mut self, platform_name: &str) -> Result<(), OsError> {
         self.phase = BootPhase::PalInit;
-        self.started_at = Some(chrono::Utc::now());
+        self.started_at = Some(nexcore_chrono::DateTime::now());
         self.log_message(format!("PAL init: {platform_name}"));
         self.log_message("Hardware subsystems probed");
         Ok(())
@@ -182,7 +182,7 @@ impl BootSequence {
         self.log_message("System fully booted");
 
         if let Some(start) = self.started_at {
-            let elapsed = chrono::Utc::now() - start;
+            let elapsed = nexcore_chrono::DateTime::now() - start;
             self.log_message(format!("Boot time: {}ms", elapsed.num_milliseconds()));
         }
 

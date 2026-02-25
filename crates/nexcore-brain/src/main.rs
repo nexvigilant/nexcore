@@ -333,7 +333,10 @@ fn list_sessions() -> nexcore_brain::error::Result<()> {
         println!(
             "{}\t{}\t{}\t{}",
             session.id,
-            session.created_at.format("%Y-%m-%d %H:%M"),
+            session
+                .created_at
+                .format("%Y-%m-%d %H:%M")
+                .unwrap_or_default(),
             project,
             desc
         );

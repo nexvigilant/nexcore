@@ -30,3 +30,6 @@ ndk = { version = "0.9", optional = true }
 
 [build-dependencies]
 slint-build = { version = "1", optional = true }
+
+[lints]
+workspace = true

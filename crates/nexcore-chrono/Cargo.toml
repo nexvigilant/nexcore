@@ -1,0 +1,24 @@
+[package]
+name = "nexcore-chrono"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Sovereign DateTime engine — UTC timestamps, calendar dates, durations with zero external dependencies"
+license = "MIT"
+repository = "https://github.com/nexvigilant/nexcore"
+keywords = ["datetime", "utc", "chrono", "sovereignty"]
+categories = ["date-and-time", "no-std"]
+
+[dependencies]
+nexcore-error = { workspace = true }
+serde = { workspace = true, optional = true }
+
+[features]
+default = ["serde"]
+serde = ["dep:serde"]
+
+[dev-dependencies]
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

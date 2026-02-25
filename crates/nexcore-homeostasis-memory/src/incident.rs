@@ -12,7 +12,7 @@
 //! | `IncidentSignature` | κ (Comparison) + μ (Mapping) |
 //! | `IncidentSeverity` | Σ (Sum) |
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_homeostasis_primitives::enums::{ActionType, HealthStatus, StormPhase};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -137,9 +137,9 @@ pub struct Incident {
     /// Unique identifier.
     pub id: String,
     /// When the incident was first detected.
-    pub detected_at: DateTime<Utc>,
+    pub detected_at: DateTime,
     /// When the incident was resolved (None if still active).
-    pub resolved_at: Option<DateTime<Utc>>,
+    pub resolved_at: Option<DateTime>,
     /// Compact signature for matching.
     pub signature: IncidentSignature,
     /// Health status at detection time.
@@ -163,7 +163,7 @@ impl Incident {
     pub fn new(id: impl Into<String>, signature: IncidentSignature, health: HealthStatus) -> Self {
         Self {
             id: id.into(),
-            detected_at: Utc::now(),
+            detected_at: DateTime::now(),
             resolved_at: None,
             signature,
             initial_health: health,
@@ -177,7 +177,7 @@ impl Incident {
 
     /// Mark the incident as resolved.
     pub fn resolve(&mut self, final_health: HealthStatus, effective: bool) {
-        let now = Utc::now();
+        let now = DateTime::now();
         self.resolved_at = Some(now);
         self.final_health = Some(final_health);
         self.response_effective = effective;

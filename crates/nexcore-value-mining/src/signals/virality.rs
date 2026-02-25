@@ -20,7 +20,7 @@
 use crate::error::MiningResult;
 use crate::signals::SignalDetector;
 use crate::types::{Baseline, SignalType, ValueSignal};
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_social::Post;
 
 /// Virality signal detector (exponential growth detection).
@@ -125,11 +125,11 @@ impl SignalDetector for ViralityDetector {
                 let window_start = sorted
                     .first()
                     .map(|p| p.created_datetime())
-                    .unwrap_or_else(Utc::now);
+                    .unwrap_or_else(|| DateTime::now());
                 let window_end = sorted
                     .last()
                     .map(|p| p.created_datetime())
-                    .unwrap_or_else(Utc::now);
+                    .unwrap_or_else(|| DateTime::now());
 
                 let signal = ValueSignal::new(
                     SignalType::Virality,

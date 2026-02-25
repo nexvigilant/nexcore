@@ -45,6 +45,12 @@ use crate::signals::core::types::{ContingencyTable, SignalCriteria, SignalMethod
 /// Uses a shrinkage estimator: IC = log2((a + 0.5) / (E + 0.5))
 /// where E is the expected count under independence.
 ///
+/// NOTE: IC is mathematically equivalent to pointwise mutual information (PMI)
+/// with Bayesian shrinkage (k=0.5 additive smoothing). The canonical entropy
+/// functions in `nexcore-primitives/src/entropy.rs` compute the aggregate form
+/// (`mutual_information` = expected value of PMI). This implementation computes
+/// the per-pair pointwise form with signal detection-specific smoothing.
+///
 /// # Complexity
 ///
 /// - **Time**: O(1) - constant-time arithmetic operations

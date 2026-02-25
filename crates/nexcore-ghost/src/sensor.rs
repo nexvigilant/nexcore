@@ -193,7 +193,7 @@ impl GhostSensor {
                 return Some(GhostSignal {
                     pattern: leak,
                     mode: self.mode,
-                    detected_at: chrono::Utc::now().to_rfc3339(),
+                    detected_at: nexcore_chrono::DateTime::now().to_rfc3339(),
                     context: format!("field '{name}' contains unscrubbed PII value"),
                 });
             }

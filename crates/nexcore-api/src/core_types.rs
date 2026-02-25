@@ -4,7 +4,7 @@
 //! nexcore-vigilance (Domain) and nexcore-brain (Orchestration), making them
 //! incompatible with Foundation placement. They belong in the Service layer.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use nexcore_id::NexId;
 use nexcore_vigilance::guardian::RiskContext;
 use nexcore_vigilance::guardian::homeostasis::evaluate_pv_risk;
@@ -20,7 +20,7 @@ pub struct SignalAnalysisResult {
     pub id: NexId,
     pub drug_name: String,
     pub event_name: String,
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
     pub metrics: SignalMetrics,
     pub risk_level: String,
     pub recommended_actions: Vec<String>,
@@ -59,7 +59,7 @@ impl SignalAnalysisResult {
             id: NexId::v4(),
             drug_name: drug.to_string(),
             event_name: event.to_string(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             metrics: SignalMetrics {
                 a,
                 b,

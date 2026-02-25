@@ -6,7 +6,7 @@
 
 use crate::error::{CtvpError, CtvpResult};
 use crate::types::*;
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
@@ -199,7 +199,7 @@ pub struct FiveProblemsAnalysis {
     pub deliverable: String,
 
     /// When the analysis was performed
-    pub analysis_timestamp: DateTime<Utc>,
+    pub analysis_timestamp: DateTime,
 
     /// The five discovered problems (exactly 5)
     pub problems: Vec<Problem>,
@@ -238,7 +238,7 @@ impl FiveProblemsAnalysis {
 
         Ok(Self {
             deliverable: deliverable.into(),
-            analysis_timestamp: Utc::now(),
+            analysis_timestamp: DateTime::now(),
             problems,
             overall_severity,
             remediation_roadmap: roadmap,

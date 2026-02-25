@@ -3,7 +3,7 @@
 //! Preferences are key-value pairs with confidence levels that
 //! increase through reinforcement and decrease through weakening.
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 /// A learned user preference
@@ -22,7 +22,7 @@ pub struct Preference {
     pub confidence: f64,
 
     /// When this preference was last updated
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: DateTime,
 
     /// Number of times this preference was reinforced
     pub reinforcement_count: u32,
@@ -37,7 +37,7 @@ impl Preference {
             value,
             description: None,
             confidence: 0.5, // Start neutral
-            updated_at: Utc::now(),
+            updated_at: DateTime::now(),
             reinforcement_count: 1,
         }
     }
@@ -47,7 +47,7 @@ impl Preference {
         self.reinforcement_count += 1;
         // Asymptotically approach 1.0
         self.confidence = 1.0 - (1.0 / (f64::from(self.reinforcement_count) + 1.0));
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Weaken this preference (decrease confidence)
@@ -60,7 +60,7 @@ impl Preference {
         } else {
             1.0 - (1.0 / (f64::from(self.reinforcement_count) + 1.0))
         };
-        self.updated_at = Utc::now();
+        self.updated_at = DateTime::now();
     }
 
     /// Half-life in days for confidence decay.
@@ -74,14 +74,14 @@ impl Preference {
     /// Reinforcing resets `updated_at`, restarting the decay clock.
     #[must_use]
     pub fn effective_confidence(&self) -> f64 {
-        self.effective_confidence_at(Utc::now())
+        self.effective_confidence_at(DateTime::now())
     }
 
     /// Compute effective confidence at a specific point in time.
     ///
     /// Useful for testing and historical analysis.
     #[must_use]
-    pub fn effective_confidence_at(&self, now: DateTime<Utc>) -> f64 {
+    pub fn effective_confidence_at(&self, now: DateTime) -> f64 {
         let elapsed = now.signed_duration_since(self.updated_at);
         let days = elapsed.num_seconds() as f64 / 86_400.0;
         if days <= 0.0 {
@@ -236,7 +236,7 @@ mod tests {
     fn test_effective_confidence_half_life_30_days() {
         let mut pref = Preference::new("test", serde_json::json!("value"));
         pref.confidence = 1.0;
-        let thirty_days_later = pref.updated_at + chrono::Duration::days(30);
+        let thirty_days_later = pref.updated_at + nexcore_chrono::Duration::days(30);
         let eff = pref.effective_confidence_at(thirty_days_later);
         // After 30 days, should be ~0.5
         assert!((eff - 0.5).abs() < 0.01, "expected ~0.5, got {eff}");
@@ -246,7 +246,7 @@ mod tests {
     fn test_effective_confidence_60_days() {
         let mut pref = Preference::new("test", serde_json::json!("value"));
         pref.confidence = 1.0;
-        let sixty_days_later = pref.updated_at + chrono::Duration::days(60);
+        let sixty_days_later = pref.updated_at + nexcore_chrono::Duration::days(60);
         let eff = pref.effective_confidence_at(sixty_days_later);
         // After 60 days (2 half-lives), should be ~0.25
         assert!((eff - 0.25).abs() < 0.01, "expected ~0.25, got {eff}");
@@ -256,7 +256,7 @@ mod tests {
     fn test_effective_confidence_reinforce_resets_decay() {
         let mut pref = Preference::new("test", serde_json::json!("value"));
         // Simulate 30 days passing
-        pref.updated_at = Utc::now() - chrono::Duration::days(30);
+        pref.updated_at = DateTime::now() - nexcore_chrono::Duration::days(30);
         let before_reinforce = pref.effective_confidence();
         // Reinforce resets updated_at to now
         pref.reinforce();
@@ -275,7 +275,7 @@ mod tests {
         let mut pref = Preference::new("test", serde_json::json!("value"));
         pref.confidence = 0.5;
         // 365 days without reinforcement: 0.5 * 0.5^(365/30) ≈ 0.00024
-        pref.updated_at = Utc::now() - chrono::Duration::days(365);
+        pref.updated_at = DateTime::now() - nexcore_chrono::Duration::days(365);
         assert!(!pref.is_active());
     }
 
@@ -283,7 +283,7 @@ mod tests {
     fn test_zero_confidence_stays_zero_after_decay() {
         let mut pref = Preference::new("test", serde_json::json!("value"));
         pref.confidence = 0.0;
-        let later = pref.updated_at + chrono::Duration::days(30);
+        let later = pref.updated_at + nexcore_chrono::Duration::days(30);
         assert_eq!(pref.effective_confidence_at(later), 0.0);
     }
 

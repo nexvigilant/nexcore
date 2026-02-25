@@ -93,20 +93,23 @@ pub fn slugify(title: &str) -> String {
 /// assert_eq!(parse_duration_minutes("unknown"), 0);
 /// ```
 pub fn parse_duration_minutes(s: &str) -> u32 {
-    let parts: Vec<&str> = s.splitn(2, ' ').collect();
-    if parts.len() < 2 {
+    let mut parts = s.splitn(2, ' ');
+    let Some(amount_str) = parts.next() else {
         return 0;
-    }
-
-    let Ok(amount) = parts[0].parse::<u32>() else {
+    };
+    let Some(unit_raw) = parts.next() else {
         return 0;
     };
 
-    let unit = parts[1].trim().to_lowercase();
+    let Ok(amount) = amount_str.parse::<u32>() else {
+        return 0;
+    };
+
+    let unit = unit_raw.trim().to_lowercase();
     if unit.starts_with("minute") {
         amount
     } else if unit.starts_with("hour") {
-        amount * 60
+        amount.saturating_mul(60)
     } else {
         0
     }
@@ -132,27 +135,19 @@ fn escape_ts_string(s: &str) -> String {
 ///
 /// Escapes backslash, backtick, and `${` interpolation sequences.
 fn escape_ts_template(s: &str) -> String {
-    let mut out = String::with_capacity(s.len() + 8);
-    let chars: Vec<char> = s.chars().collect();
-    let mut i = 0;
-    while i < chars.len() {
-        match chars[i] {
-            '\\' => {
-                out.push_str("\\\\");
-                i += 1;
+    let mut out = String::with_capacity(s.len().saturating_add(8));
+    let mut chars = s.chars().peekable();
+    while let Some(ch) = chars.next() {
+        match ch {
+            '\\' => out.push_str("\\\\"),
+            '`' => out.push_str("\\`"),
+            '$' if chars.peek() == Some(&'{') => {
+                // Consume the '{' we peeked at — it is always Some('{') here
+                if chars.next().is_some() {
+                    out.push_str("\\${");
+                }
             }
-            '`' => {
-                out.push_str("\\`");
-                i += 1;
-            }
-            '$' if i + 1 < chars.len() && chars[i + 1] == '{' => {
-                out.push_str("\\${");
-                i += 2;
-            }
-            c => {
-                out.push(c);
-                i += 1;
-            }
+            c => out.push(c),
         }
     }
     out

@@ -24,18 +24,5 @@ alloc = []
 grounding = ["dep:nexcore-lex-primitiva"]
 serde = ["dep:serde"]
 
-[lints.rust]
-unsafe_code = "forbid"
-
-[lints.clippy]
-all = "warn"
-pedantic = "warn"
-nursery = "warn"
-unwrap_used = "deny"
-expect_used = "deny"
-panic = "deny"
-missing_errors_doc = "allow"
-missing_panics_doc = "allow"
-must_use_candidate = "allow"
-module_name_repetitions = "allow"
-doc_markdown = "allow"
+[lints]
+workspace = true

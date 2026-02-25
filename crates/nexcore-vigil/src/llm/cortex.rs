@@ -13,7 +13,7 @@
 use crate::llm::LLMClient;
 use crate::models::{Event, Interaction};
 use async_trait::async_trait;
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_cortex::engine::InferenceEngine;
 use nexcore_cortex::generate::GenerateParams;
 use std::sync::Arc;
@@ -91,11 +91,11 @@ impl LLMClient for CortexClient {
         let actions = Self::extract_actions(&response);
 
         Ok(Interaction {
-            id: format!("cortex-{}", Utc::now().timestamp_millis()),
+            id: format!("cortex-{}", DateTime::now().timestamp_millis()),
             event: event.clone(),
             prompt,
             response: response.clone(),
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
             tokens_used: 0, // Local inference — no API token cost
             contains_learning: response.contains("[LEARNING]"),
             actions_taken: actions,

@@ -185,7 +185,7 @@ impl UrgencyClassifier {
 mod tests {
     use super::*;
     use crate::types::{Relevance, SignalId};
-    use chrono::Utc;
+    use nexcore_chrono::DateTime;
 
     fn make_signal(
         prr: f64,
@@ -202,8 +202,8 @@ mod tests {
             ror,
             original_confidence: conf,
             current_relevance: Relevance::new(relevance),
-            last_reinforced: Utc::now(),
-            first_detected: Utc::now(),
+            last_reinforced: DateTime::now(),
+            first_detected: DateTime::now(),
             reinforcement_count: reinforcements,
         }
     }

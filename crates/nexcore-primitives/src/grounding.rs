@@ -1001,6 +1001,57 @@ impl GroundsTo for crate::dynamics::Observer {
 }
 
 // ============================================================================
+// Entropy Module
+// ============================================================================
+
+/// EntropyResult: T2-P (Quantity + Irreversibility + Comparison)
+///
+/// Shannon entropy is a numerical measure of information (Quantity-dominant).
+/// Irreversibility grounds the one-way nature of entropy increase.
+/// Comparison grounds relative entropy and divergence operations.
+impl GroundsTo for crate::entropy::EntropyResult {
+    fn primitive_composition() -> PrimitiveComposition {
+        PrimitiveComposition::new(vec![
+            LexPrimitiva::Quantity,        // N — numerical entropy value
+            LexPrimitiva::Irreversibility, // ∝ — entropy increase is one-way
+            LexPrimitiva::Comparison,      // κ — normalized entropy compares to max
+        ])
+        .with_dominant(LexPrimitiva::Quantity, 0.80)
+    }
+}
+
+/// LogBase: T1 (Comparison) — unit selection for log base
+///
+/// Pure comparison: selects between bits/nats/hartleys.
+impl GroundsTo for crate::entropy::LogBase {
+    fn primitive_composition() -> PrimitiveComposition {
+        PrimitiveComposition::new(vec![LexPrimitiva::Comparison])
+            .with_dominant(LexPrimitiva::Comparison, 0.95)
+    }
+}
+
+/// EntropyError: T1 (Boundary) — constraint violation
+impl GroundsTo for crate::entropy::EntropyError {
+    fn primitive_composition() -> PrimitiveComposition {
+        PrimitiveComposition::new(vec![LexPrimitiva::Boundary])
+            .with_dominant(LexPrimitiva::Boundary, 0.95)
+    }
+}
+
+/// InformationLoss: T2-P (Irreversibility + Quantity)
+///
+/// Quantifies irreversible information loss between distributions.
+impl GroundsTo for crate::entropy::InformationLoss {
+    fn primitive_composition() -> PrimitiveComposition {
+        PrimitiveComposition::new(vec![
+            LexPrimitiva::Irreversibility, // ∝ — lost information cannot be recovered
+            LexPrimitiva::Quantity,        // N — measured in bits
+        ])
+        .with_dominant(LexPrimitiva::Irreversibility, 0.85)
+    }
+}
+
+// ============================================================================
 // Tests
 // ============================================================================
 
@@ -1333,5 +1384,21 @@ mod tests {
         assert_eq!(crate::transfer::CircuitBreaker::tier(), Tier::T2Composite);
         assert_eq!(crate::transfer::CodeGeneration::tier(), Tier::T2Composite);
         assert_eq!(crate::transfer::PrimitiveMining::tier(), Tier::T2Composite);
+    }
+
+    #[test]
+    fn entropy_types_grounding() {
+        use crate::entropy::{EntropyResult, LogBase};
+
+        // EntropyResult: T2-P (Quantity + Irreversibility + Comparison)
+        assert_eq!(EntropyResult::tier(), Tier::T2Primitive);
+        assert_eq!(
+            EntropyResult::dominant_primitive(),
+            Some(LexPrimitiva::Quantity)
+        );
+
+        // LogBase: T1 (Comparison) — pure unit selection
+        assert_eq!(LogBase::tier(), Tier::T1Universal);
+        assert!(LogBase::is_pure_primitive());
     }
 }

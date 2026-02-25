@@ -21,7 +21,7 @@ pub enum ImmunityError {
 
     /// Antibody YAML parsing failed.
     #[error("antibody parse error: {0}")]
-    ParseError(#[from] serde_yaml::Error),
+    ParseError(#[from] serde_yml::Error),
 
     /// Regex pattern compilation failed.
     #[error("invalid detection pattern '{pattern}': {reason}")]

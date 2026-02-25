@@ -9,7 +9,7 @@
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
 pub mod claude_code;
@@ -44,7 +44,7 @@ pub struct Impulse {
     /// Priority (0-255, higher = more urgent)
     pub priority: u8,
     /// When the impulse was generated
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime,
 }
 
 /// Fast local hook dispatch without brain involvement
@@ -240,7 +240,7 @@ mod tests {
             target: "motor".to_string(),
             payload: "data".to_string(),
             priority: 100,
-            timestamp: Utc::now(),
+            timestamp: DateTime::now(),
         };
 
         assert_eq!(impulse.source, "sensor");

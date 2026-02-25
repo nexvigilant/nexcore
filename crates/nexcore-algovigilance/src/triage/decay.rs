@@ -6,7 +6,7 @@
 //! Tier: T2-P (Cross-domain atomic transformation)
 //! Grounds to: T1 Persistence (π), Mapping (μ), and Quantity (N) (time-ordered transformation)
 
-use chrono::{DateTime, Utc};
+use nexcore_chrono::DateTime;
 
 use super::types::TriagedSignal;
 use crate::types::Relevance;
@@ -35,13 +35,13 @@ pub fn reinforce(signal: &mut TriagedSignal, new_cases: u32) {
         * (1.0 - 0.5_f64.powf(f64::from(new_cases)));
     let new_relevance = (signal.current_relevance.value() + boost).min(1.0);
     signal.current_relevance = Relevance::new(new_relevance);
-    signal.last_reinforced = Utc::now();
+    signal.last_reinforced = DateTime::now();
     signal.reinforcement_count += new_cases;
 }
 
 /// Compute elapsed days between two timestamps
 #[must_use]
-pub fn elapsed_days(from: DateTime<Utc>, to: DateTime<Utc>) -> f64 {
+pub fn elapsed_days(from: DateTime, to: DateTime) -> f64 {
     let duration = to.signed_duration_since(from);
     duration.num_seconds() as f64 / 86_400.0
 }
@@ -98,8 +98,8 @@ mod tests {
             ror: 2.5,
             original_confidence: 0.9,
             current_relevance: Relevance::new(0.3),
-            last_reinforced: Utc::now(),
-            first_detected: Utc::now(),
+            last_reinforced: DateTime::now(),
+            first_detected: DateTime::now(),
             reinforcement_count: 0,
         };
 

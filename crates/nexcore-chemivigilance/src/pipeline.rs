@@ -34,7 +34,7 @@
 
 use std::collections::HashMap;
 
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use nexcore_metabolite::predict::predict_metabolites;
 use nexcore_molcore::descriptor::calculate_descriptors;
 use nexcore_molcore::graph::MolGraph;
@@ -248,7 +248,7 @@ pub fn generate_safety_brief(
         risk_level,
         limitations,
         regulatory_flags,
-        generated_at: Utc::now(),
+        generated_at: DateTime::now(),
         model_versions,
     };
 
@@ -585,10 +585,10 @@ mod tests {
 
     #[test]
     fn test_generated_at_is_recent() {
-        let before = Utc::now();
+        let before = DateTime::now();
         let brief = generate_safety_brief("CCO", &default_config())
             .unwrap_or_else(|e| panic!("failed: {e}"));
-        let after = Utc::now();
+        let after = DateTime::now();
         assert!(
             brief.generated_at >= before && brief.generated_at <= after,
             "generated_at must be within the test window"

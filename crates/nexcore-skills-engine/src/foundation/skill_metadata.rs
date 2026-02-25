@@ -71,7 +71,7 @@ pub fn parse_frontmatter(content: &str) -> Result<SkillMetadata, String> {
 
     // Parse YAML directly (self-contained, no foundation dependency)
     let data: JsonValue =
-        serde_yaml::from_str(frontmatter).map_err(|e| format!("YAML parse error: {e}"))?;
+        serde_yml::from_str(frontmatter).map_err(|e| format!("YAML parse error: {e}"))?;
 
     // Helper to get string from multiple possible keys
     let get_str = |keys: &[&str]| -> Option<String> {

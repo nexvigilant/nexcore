@@ -158,8 +158,12 @@ fn cmd_list(config: &SentinelConfig) -> nexcore_error::Result<()> {
         println!(
             "{:<20} {:<25} {:<25} {}",
             ban.ip,
-            ban.banned_at.format("%Y-%m-%d %H:%M:%S"),
-            ban.expires_at.format("%Y-%m-%d %H:%M:%S"),
+            ban.banned_at
+                .format("%Y-%m-%d %H:%M:%S")
+                .unwrap_or_default(),
+            ban.expires_at
+                .format("%Y-%m-%d %H:%M:%S")
+                .unwrap_or_default(),
             ban.failure_count,
         );
     }

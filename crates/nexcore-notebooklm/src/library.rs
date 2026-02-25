@@ -6,7 +6,7 @@
 use crate::error::NotebookLmError;
 use crate::persistence;
 use crate::types::{LibraryStats, Notebook};
-use chrono::Utc;
+use nexcore_chrono::DateTime;
 use std::collections::HashSet;
 
 /// In-memory library state — Vec of notebooks serialized to JSON.
@@ -112,7 +112,7 @@ impl Library {
         if let Some(v) = tags {
             notebook.tags = v;
         }
-        notebook.updated_at = Utc::now();
+        notebook.updated_at = DateTime::now();
 
         self.save()?;
 
@@ -191,7 +191,7 @@ mod tests {
     use super::*;
 
     fn make_notebook(id: &str, name: &str) -> Notebook {
-        let now = Utc::now();
+        let now = DateTime::now();
         Notebook {
             id: id.to_string(),
             name: name.to_string(),

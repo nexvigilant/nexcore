@@ -119,9 +119,13 @@ async fn test_list_circles_filters_archived() {
     let state = test_state();
     let c1 = seed_circle(&state, "Active Circle", "user-1").await;
     let c2 = seed_circle(&state, "Soon Archived", "user-2").await;
-    archive_circle(State(state.clone()), Path(c2.id))
-        .await
-        .expect("archive");
+    archive_circle(
+        State(state.clone()),
+        Path(c2.id),
+        axum::extract::Query(std::collections::HashMap::new()),
+    )
+    .await
+    .expect("archive");
 
     let circles = list_circles(State(state)).await.expect("list").0;
     assert_eq!(circles.len(), 1);
@@ -152,6 +156,7 @@ async fn test_update_circle_partial() {
     let state = test_state();
     let circle = seed_circle(&state, "Original", "user-1").await;
     let update = UpdateCircleRequest {
+        updated_by: None,
         name: Some("Updated Name".to_string()),
         description: None,
         mission: Some("New mission".to_string()),
@@ -174,6 +179,7 @@ async fn test_update_circle_partial() {
 async fn test_update_circle_not_found() {
     let state = test_state();
     let update = UpdateCircleRequest {
+        updated_by: None,
         name: Some("X".to_string()),
         description: None,
         mission: None,
@@ -191,10 +197,14 @@ async fn test_update_circle_not_found() {
 async fn test_archive_circle() {
     let state = test_state();
     let circle = seed_circle(&state, "To Archive", "user-1").await;
-    let resp = archive_circle(State(state.clone()), Path(circle.id.clone()))
-        .await
-        .expect("archive")
-        .0;
+    let resp = archive_circle(
+        State(state.clone()),
+        Path(circle.id.clone()),
+        axum::extract::Query(std::collections::HashMap::new()),
+    )
+    .await
+    .expect("archive")
+    .0;
     assert_eq!(resp["status"], "archived");
 
     let fetched = get_circle(State(state), Path(circle.id))
@@ -207,7 +217,12 @@ async fn test_archive_circle() {
 #[tokio::test]
 async fn test_archive_circle_not_found() {
     let state = test_state();
-    let result = archive_circle(State(state), Path("nonexistent".to_string())).await;
+    let result = archive_circle(
+        State(state),
+        Path("nonexistent".to_string()),
+        axum::extract::Query(std::collections::HashMap::new()),
+    )
+    .await;
     assert_eq!(result.unwrap_err().code, "NOT_FOUND");
 }
 
@@ -269,9 +284,13 @@ async fn test_list_org_circles_filters_active() {
         .await
         .expect("create")
         .0;
-    archive_circle(State(state.clone()), Path(circle.id))
-        .await
-        .expect("archive");
+    archive_circle(
+        State(state.clone()),
+        Path(circle.id),
+        axum::extract::Query(std::collections::HashMap::new()),
+    )
+    .await
+    .expect("archive");
 
     let org = list_org_circles(State(state), Path("tenant-1".to_string()))
         .await
@@ -305,9 +324,13 @@ async fn test_discover_public_and_semi() {
 async fn test_discover_excludes_archived() {
     let state = test_state();
     let circle = seed_circle(&state, "To Archive", "user-1").await;
-    archive_circle(State(state.clone()), Path(circle.id))
-        .await
-        .expect("archive");
+    archive_circle(
+        State(state.clone()),
+        Path(circle.id),
+        axum::extract::Query(std::collections::HashMap::new()),
+    )
+    .await
+    .expect("archive");
 
     let discovered = discover_circles(State(state)).await.expect("discover").0;
     assert!(discovered.is_empty());

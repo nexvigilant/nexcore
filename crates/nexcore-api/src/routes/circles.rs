@@ -61,6 +61,7 @@ pub struct CreateCircleRequest {
 /// Update circle request
 #[derive(Debug, Clone, Deserialize, ToSchema)]
 pub struct UpdateCircleRequest {
+    pub updated_by: Option<String>,
     pub name: Option<String>,
     pub description: Option<String>,
     pub mission: Option<String>,
@@ -216,6 +217,25 @@ fn feed_to_api(e: FeedEntryRecord) -> FeedEntry {
 fn parse_enum<T: serde::de::DeserializeOwned + Default>(s: &str) -> T {
     let quoted = format!("\"{}\"", s);
     serde_json::from_str(&quoted).unwrap_or_default()
+}
+
+/// Require the caller to be a member with at least the given role.
+/// Returns the member record on success, or an ApiError on failure.
+async fn require_role(
+    persistence: &crate::persistence::Persistence,
+    circle_id: &str,
+    user_id: &str,
+    min_roles: &[CircleRole],
+) -> Result<CircleMemberRecord, ApiError> {
+    let member = persistence
+        .get_circle_member(circle_id, user_id)
+        .await
+        .map_err(|e| err("INTERNAL_ERROR", e.to_string()))?
+        .ok_or_else(|| err("FORBIDDEN", "Not a member of this circle"))?;
+    if !min_roles.contains(&member.role) {
+        return Err(err("FORBIDDEN", "Insufficient role for this action"));
+    }
+    Ok(member)
 }
 
 fn err(code: &str, msg: impl Into<String>) -> ApiError {
@@ -394,6 +414,17 @@ pub async fn update_circle(
     Path(id): Path<String>,
     Json(req): Json<UpdateCircleRequest>,
 ) -> Result<Json<Circle>, ApiError> {
+    // Require Lead+ role when caller identity is provided
+    if let Some(ref user_id) = req.updated_by {
+        require_role(
+            &state.persistence,
+            &id,
+            user_id,
+            &[CircleRole::Founder, CircleRole::Lead],
+        )
+        .await?;
+    }
+
     let mut record = state
         .persistence
         .get_circle(&id)
@@ -448,7 +479,13 @@ pub async fn update_circle(
 pub async fn archive_circle(
     State(state): State<ApiState>,
     Path(id): Path<String>,
+    axum::extract::Query(params): axum::extract::Query<std::collections::HashMap<String, String>>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
+    // Require Founder role when caller identity is provided
+    if let Some(user_id) = params.get("user_id") {
+        require_role(&state.persistence, &id, user_id, &[CircleRole::Founder]).await?;
+    }
+
     let mut record = state
         .persistence
         .get_circle(&id)

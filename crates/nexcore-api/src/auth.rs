@@ -140,7 +140,11 @@ async fn validate_guardian_key(key: &str) -> bool {
 }
 
 async fn verify_id_token(token: &str) -> bool {
-    // For now, in dev mode, we just check if it looks like a JWT
+    // TODO(D007-P0-3): Replace with real JWT verification (jsonwebtoken crate + JWKS).
+    // Currently safe because Studio proxy verifies Firebase tokens server-side
+    // (nexcore-proxy.ts:48 verifyIdToken) before forwarding. Direct API callers
+    // use API_KEY or grd_ keys instead. This is a defense-in-depth gap, not an
+    // active bypass — but must be closed before removing the Studio proxy layer.
     token.split('.').count() == 3
 }
 

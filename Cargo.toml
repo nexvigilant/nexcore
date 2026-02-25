@@ -104,6 +104,7 @@ nexcore-browser = { path = "crates/nexcore-browser" }
 nexcore-caesura = { path = "crates/nexcore-caesura" }
 nexcore-cardiovascular = { path = "crates/nexcore-cardiovascular" }
 nexcore-ccp = { path = "crates/nexcore-ccp" }
+nexcore-ccim = { path = "crates/nexcore-ccim" }
 nexcore-chrono = { path = "crates/nexcore-chrono", features = ["serde"] }
 nexcore-circulatory = { path = "crates/nexcore-circulatory" }
 nexcore-codec = { path = "crates/nexcore-codec" }

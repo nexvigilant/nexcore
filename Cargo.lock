@@ -8546,6 +8546,7 @@ dependencies = [
  "nexcore-build-orchestrator",
  "nexcore-caesura",
  "nexcore-cardiovascular",
+ "nexcore-ccim",
  "nexcore-ccp",
  "nexcore-chemivigilance",
  "nexcore-chrono",

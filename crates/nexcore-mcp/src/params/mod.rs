@@ -25,6 +25,7 @@ pub mod browser;
 pub mod ca;
 pub mod caesura;
 pub mod cargo;
+pub mod ccim;
 pub mod ccp;
 pub mod cep;
 pub mod chemistry;

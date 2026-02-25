@@ -28,6 +28,7 @@ signal = { workspace = true }
 stem-complex = { workspace = true }
 nexcore-forge-strategy = { workspace = true }
 nexcore-brain = { workspace = true }
+nexcore-ccim = { workspace = true }
 nexcore-oracle = { workspace = true }
 nexcore-db = { workspace = true }
 nexcore-synapse = { workspace = true }

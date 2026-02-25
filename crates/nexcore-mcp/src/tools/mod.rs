@@ -35,6 +35,7 @@ pub mod brain_db;
 pub mod brain_verify;
 pub mod brand_semantics;
 pub mod cargo;
+pub mod ccim;
 pub mod chemistry;
 pub mod commandments;
 pub mod compliance;

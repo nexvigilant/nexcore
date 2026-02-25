@@ -2348,6 +2348,14 @@ async fn dispatch_inner(
         "stoichiometry_is_isomer" => typed(params, tools::stoichiometry::is_isomer),
 
         // ====================================================================
+        // CCIM Tools (3) — Capability Compound Interest Machine
+        // T1 Grounding: ρ (recursion) + N (quantity) + → (causality) + κ (comparison)
+        // ====================================================================
+        "ccim_equation" => typed(params, tools::ccim::ccim_equation),
+        "ccim_assess" => typed(params, tools::ccim::ccim_assess),
+        "ccim_project" => typed(params, tools::ccim::ccim_project),
+
+        // ====================================================================
         // NotebookLM Tools (16) — Library, Sessions, Auth, Query
         // T1 Grounding: μ (mapping) + π (persistence) + ∂ (boundary)
         // ====================================================================
@@ -3031,6 +3039,7 @@ fn unified_catalog_data() -> serde_json::Value {
             "career": ["career_transitions"],
             "learning_dag": ["learning_dag_resolve"],
             "stoichiometry": ["stoichiometry_encode", "stoichiometry_decode", "stoichiometry_sisters", "stoichiometry_mass_state", "stoichiometry_dictionary", "stoichiometry_is_balanced", "stoichiometry_prove", "stoichiometry_is_isomer"],
+            "ccim": ["ccim_equation", "ccim_assess", "ccim_project"],
             "drift": ["drift_ks_test", "drift_psi", "drift_jsd", "drift_detect"],
             "rate_limit": ["rate_limit_token_bucket", "rate_limit_sliding_window", "rate_limit_status"],
             "rank_fusion": ["rank_fusion_rrf", "rank_fusion_hybrid", "rank_fusion_borda"],

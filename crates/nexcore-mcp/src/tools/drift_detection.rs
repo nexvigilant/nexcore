@@ -82,8 +82,7 @@ fn ks_pvalue(d: f64, n1: usize, n2: usize) -> f64 {
     (2.0 * p).clamp(0.0, 1.0)
 }
 
-/// Bin raw data into histogram proportions.
-/// Bin a single distribution into proportions using shared min/max edges.
+/// Bin a single distribution into proportions using explicit min/max bin edges.
 fn bin_data_with_range(data: &[f64], n_bins: usize, min_val: f64, max_val: f64) -> Vec<f64> {
     if data.is_empty() || n_bins == 0 {
         return vec![0.0; n_bins.max(1)];
@@ -532,9 +531,9 @@ mod tests {
     }
 
     fn drifted_samples() -> (Vec<f64>, Vec<f64>) {
-        // bin_data uses per-distribution min/max, so we need different *shapes* within
-        // the same range. Reference: concentrated low. Current: concentrated high.
-        // Both span [0..10] but with very different distributions.
+        // Both distributions span [1.0, 9.0] so bin_data_pair assigns them identical
+        // shared bin edges. Reference: 80% low / 20% high. Current: inverted — 20% low / 80% high.
+        // The extreme shape inversion triggers all 3 drift signals (DRIFT_CONFIRMED).
         let mut reference = Vec::with_capacity(200);
         for _ in 0..160 {
             reference.push(1.0);
@@ -623,6 +622,37 @@ mod tests {
         assert!(
             !is_error || true,
             "Mild drift may or may not trigger error depending on sample"
+        );
+    }
+
+    /// Regression test: non-overlapping distributions must be detected as drift.
+    /// Before the `bin_data_pair` fix, each distribution was binned independently
+    /// using its own min/max, making completely disjoint ranges look identical.
+    #[test]
+    fn test_drift_detect_non_overlapping_ranges() {
+        // Reference in [0.0, 1.0], current in [5.0, 6.0] — obviously drifted.
+        let reference: Vec<f64> = (0..100).map(|i| i as f64 / 100.0).collect();
+        let current: Vec<f64> = (0..100).map(|i| 5.0 + i as f64 / 100.0).collect();
+
+        let params = DriftDetectParams {
+            reference,
+            current,
+            bins: None,
+            alpha: None,
+            psi_threshold: None,
+        };
+        let result = drift_detect(params);
+        assert!(
+            result.is_ok(),
+            "drift_detect should succeed for valid input"
+        );
+        let ctr =
+            result.unwrap_or_else(|e| CallToolResult::error(vec![Content::text(format!("{e:?}"))]));
+        // Completely disjoint distributions → DRIFT_CONFIRMED → error
+        assert_eq!(
+            ctr.is_error,
+            Some(true),
+            "Non-overlapping distributions must trigger drift error"
         );
     }
 }

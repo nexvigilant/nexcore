@@ -5351,6 +5351,38 @@ impl NexCoreMcpServer {
     ) -> Result<CallToolResult, McpError> {
         tools::foundry::foundry_infer(params)
     }
+
+    // ── CTVP Tools (3) ─────────────────────────────────────────────────
+
+    #[tool(
+        description = "Score a deliverable against the 5-phase Clinical Trial Validation Paradigm (CTVP). Phases: Preclinical (∃), Safety (∂), Efficacy (κ), Confirmation (σ+ν), Surveillance (π+ν). Provide target path and optional phase (0-4 or 'all')."
+    )]
+    async fn ctvp_score(
+        &self,
+        Parameters(params): Parameters<params::ctvp::CtvpScoreParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ctvp::score(params)
+    }
+
+    #[tool(
+        description = "Run the Five Problems Protocol to discover testing gaps. Identifies: Testing Theater, Happy Path Bias, Integration Gaps, Boundary Blindness, Regression Amnesia. Provide target path and optional domain context."
+    )]
+    async fn ctvp_five_problems(
+        &self,
+        Parameters(params): Parameters<params::ctvp::CtvpFiveProblemsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ctvp::five_problems(params)
+    }
+
+    #[tool(
+        description = "Get CTVP phase definitions and scoring criteria. Returns all 5 phases with clinical analogs, questions, checks, and T1 primitive grounding."
+    )]
+    async fn ctvp_phases_list(
+        &self,
+        Parameters(params): Parameters<params::ctvp::CtvpPhasesListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ctvp::phases_list(params)
+    }
 }
 
 // ============================================================================

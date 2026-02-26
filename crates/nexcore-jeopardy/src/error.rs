@@ -23,13 +23,6 @@ pub enum JeopardyError {
         maximum: u64,
     },
 
-    /// Confidence value is out of the valid [0.0, 1.0] range.
-    ///
-    /// Deprecated: canonical `Confidence::new()` now clamps instead of rejecting.
-    /// This variant is retained for backward compatibility.
-    #[error("confidence {0} is out of range [0.0, 1.0]")]
-    InvalidConfidence(f64),
-
     /// Board dimensions are invalid (zero rows or zero categories).
     #[error("invalid board dimensions: {rows} rows x {cols} categories")]
     InvalidBoardDimensions {

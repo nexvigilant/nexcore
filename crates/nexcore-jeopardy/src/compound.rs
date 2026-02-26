@@ -10,8 +10,9 @@
 //! - r(t): reuse factor (how often prior work applies)
 
 use crate::state::AttemptRecord;
-use crate::types::Category;
+use crate::types::{Category, Confidence};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 /// Result of a single game.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,14 +36,14 @@ pub struct CompoundMetrics {
     pub games_played: u32,
     /// Accumulated primitive count B(t).
     pub basis: f64,
-    /// Current efficiency eta(t).
-    pub efficiency: f64,
-    /// Current reuse factor r(t).
-    pub reuse: f64,
+    /// Current efficiency eta(t) — clamped to [0.0, 1.0].
+    pub efficiency: Confidence,
+    /// Current reuse factor r(t) — clamped to [0.0, 1.0].
+    pub reuse: Confidence,
     /// Current velocity V(t) = B * eta * r.
     pub velocity: f64,
-    /// Per-category primitive counts.
-    pub category_primitives: Vec<(Category, u32)>,
+    /// Per-category primitive counts (deterministic ordering).
+    pub category_primitives: BTreeMap<Category, u32>,
     /// Triangular transfer cost: C(n) = 1.0 - T(n-1) * delta
     pub transfer_cost: f64,
 }
@@ -74,13 +75,14 @@ fn transfer_cost(n: u32) -> f64 {
 /// - r(t): Fraction of categories where prior correct answers exist.
 pub fn compound_velocity(history: &[GameResult]) -> CompoundMetrics {
     if history.is_empty() {
+        let empty_cats: BTreeMap<Category, u32> = Category::all().iter().map(|c| (*c, 0)).collect();
         return CompoundMetrics {
             games_played: 0,
             basis: 0.0,
-            efficiency: 0.0,
-            reuse: 0.0,
+            efficiency: Confidence::new(0.0),
+            reuse: Confidence::new(0.0),
             velocity: 0.0,
-            category_primitives: Category::all().iter().map(|c| (*c, 0)).collect(),
+            category_primitives: empty_cats,
             transfer_cost: 1.0,
         };
     }
@@ -88,20 +90,19 @@ pub fn compound_velocity(history: &[GameResult]) -> CompoundMetrics {
     let games_played = history.len() as u32;
 
     // Count primitives per category
-    let mut cat_counts: Vec<(Category, u32)> = Category::all().iter().map(|c| (*c, 0u32)).collect();
+    let mut cat_counts: BTreeMap<Category, u32> =
+        Category::all().iter().map(|c| (*c, 0u32)).collect();
 
     let mut total_correct = 0u32;
     let mut total_attempts = 0u32;
 
     for game in history {
         total_correct += game.correct_count;
-        total_attempts += game.correct_count + (game.attempts.len() as u32 - game.correct_count);
+        total_attempts += game.attempts.len() as u32;
 
         for cat in &game.categories_correct {
-            for (c, count) in &mut cat_counts {
-                if c == cat {
-                    *count += 1;
-                }
+            if let Some(count) = cat_counts.get_mut(cat) {
+                *count += 1;
             }
         }
     }
@@ -119,18 +120,20 @@ pub fn compound_velocity(history: &[GameResult]) -> CompoundMetrics {
         .sum();
 
     // eta(t): accuracy
-    let efficiency = if total_attempts > 0 {
+    let efficiency_raw = if total_attempts > 0 {
         f64::from(total_correct) / f64::from(total_attempts)
     } else {
         0.0
     };
+    let efficiency = Confidence::new(efficiency_raw);
 
     // r(t): reuse — fraction of categories with at least 1 primitive
-    let categories_with_prims = cat_counts.iter().filter(|(_, c)| *c > 0).count();
-    let reuse = categories_with_prims as f64 / cat_counts.len() as f64;
+    let categories_with_prims = cat_counts.values().filter(|c| **c > 0).count();
+    let reuse_raw = categories_with_prims as f64 / cat_counts.len() as f64;
+    let reuse = Confidence::new(reuse_raw);
 
     // V(t) = B * eta * r
-    let velocity = basis * efficiency * reuse;
+    let velocity = basis * efficiency.value() * reuse.value();
 
     // Transfer cost for the number of domains covered
     let tc = transfer_cost(categories_with_prims as u32);

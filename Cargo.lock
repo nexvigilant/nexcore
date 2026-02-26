@@ -8421,7 +8421,6 @@ dependencies = [
  "nexcore-constants",
  "nexcore-error",
  "nexcore-lex-primitiva",
- "proptest",
  "serde",
  "serde_json",
 ]

@@ -46,7 +46,7 @@
 //! // Clone the clue data before moving the board into GameState
 //! let clue = board.get(order[0]).and_then(|c| c.clue()).cloned().unwrap();
 //! let state = GameState::new(&["Alice", "Bob", "Carol"], board);
-//! let confidence = Confidence::new(0.8).unwrap();
+//! let confidence = Confidence::new(0.8);
 //! let decision = should_buzz(&clue, confidence, &state);
 //! ```
 

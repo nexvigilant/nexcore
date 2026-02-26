@@ -80,12 +80,7 @@ impl Board {
                 let is_dd = daily_double_positions.contains(&pos);
                 // Difficulty scales linearly with row (higher value = harder)
                 let difficulty = (row_idx as f64 + 1.0) / num_rows as f64;
-                row.push(Cell::Available(Clue {
-                    category: *cat,
-                    value: *value,
-                    difficulty,
-                    is_daily_double: is_dd,
-                }));
+                row.push(Cell::Available(Clue::new(*cat, *value, difficulty, is_dd)));
             }
             cells.push(row);
         }
@@ -190,7 +185,7 @@ impl Board {
             .filter(|pos| {
                 self.get(*pos)
                     .and_then(|c| c.clue())
-                    .map_or(false, |clue| clue.is_daily_double)
+                    .is_some_and(|clue| clue.is_daily_double)
             })
             .collect()
     }

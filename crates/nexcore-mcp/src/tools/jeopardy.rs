@@ -90,9 +90,9 @@ fn build_game_state(input: &JeopardyGameStateInput) -> Result<GameState, String>
     // Apply player state overrides
     for (i, p) in input.players.iter().enumerate() {
         if let Some(player) = state.players.get_mut(i) {
-            player.score = p.score;
-            player.correct = p.correct;
-            player.incorrect = p.incorrect;
+            player.set_score(p.score);
+            player.set_correct(p.correct);
+            player.set_incorrect(p.incorrect);
         }
     }
 

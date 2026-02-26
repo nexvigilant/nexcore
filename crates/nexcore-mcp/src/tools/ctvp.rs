@@ -16,6 +16,21 @@ use rmcp::model::{CallToolResult, Content};
 use serde_json::json;
 use std::path::Path;
 
+/// Resolve the cargo binary path, avoiding the systemd-run alias trap.
+/// Checks CARGO env var first (set by rustup), then absolute path, then PATH fallback.
+fn cargo_bin() -> std::path::PathBuf {
+    if let Ok(p) = std::env::var("CARGO") {
+        return std::path::PathBuf::from(p);
+    }
+    if let Ok(home) = std::env::var("HOME") {
+        let abs = std::path::PathBuf::from(home).join(".cargo/bin/cargo");
+        if abs.exists() {
+            return abs;
+        }
+    }
+    std::path::PathBuf::from("cargo")
+}
+
 struct Phase {
     number: u8,
     name: &'static str,
@@ -103,10 +118,18 @@ pub fn score(params: CtvpScoreParams) -> Result<CallToolResult, McpError> {
         ));
     }
 
-    let phase_filter: Option<u8> = params
-        .phase
-        .as_deref()
-        .and_then(|p| if p == "all" { None } else { p.parse().ok() });
+    let phase_filter: Option<u8> = match params.phase.as_deref() {
+        None | Some("all") => None,
+        Some(p) => match p.parse::<u8>() {
+            Ok(n) if n <= 4 => Some(n),
+            _ => {
+                return Err(McpError::invalid_params(
+                    format!("Invalid phase '{p}': must be 0-4 or 'all'"),
+                    None,
+                ));
+            }
+        },
+    };
 
     let mut phase_results = Vec::new();
     let mut total_score = 0.0f64;
@@ -154,7 +177,7 @@ pub fn score(params: CtvpScoreParams) -> Result<CallToolResult, McpError> {
         _ => "Not validated",
     };
 
-    Ok(CallToolResult::success(vec![Content::text(
+    let mut result = CallToolResult::success(vec![Content::text(
         json!({
             "target": params.target,
             "overall_score": (overall * 100.0).round() / 100.0,
@@ -163,7 +186,9 @@ pub fn score(params: CtvpScoreParams) -> Result<CallToolResult, McpError> {
             "phases": phase_results,
         })
         .to_string(),
-    )]))
+    )]);
+    crate::tooling::attach_forensic_meta(&mut result, overall, Some(overall >= 0.8), "ctvp_score");
+    Ok(crate::tooling::wrap_result(result))
 }
 
 /// Run Five Problems Protocol.
@@ -179,15 +204,33 @@ pub fn five_problems(params: CtvpFiveProblemsParams) -> Result<CallToolResult, M
     let domain = params.domain.as_deref().unwrap_or("rust-crate");
     let problems = discover_five_problems(&params.target, domain);
 
-    Ok(CallToolResult::success(vec![Content::text(
+    let high_count = problems
+        .iter()
+        .filter(|p| p.get("severity").and_then(|s| s.as_str()) == Some("high"))
+        .count();
+    let score = if high_count == 0 {
+        1.0
+    } else {
+        (1.0 - (high_count as f64 * 0.2)).max(0.0)
+    };
+
+    let mut result = CallToolResult::success(vec![Content::text(
         json!({
             "target": params.target,
             "domain": domain,
             "problems": problems,
+            "high_severity_count": high_count,
             "methodology": "Five Problems Protocol — systematic discovery of testing gaps",
         })
         .to_string(),
-    )]))
+    )]);
+    crate::tooling::attach_forensic_meta(
+        &mut result,
+        score,
+        Some(high_count == 0),
+        "ctvp_five_problems",
+    );
+    Ok(crate::tooling::wrap_result(result))
 }
 
 /// List CTVP phase definitions.
@@ -206,9 +249,9 @@ pub fn phases_list(_params: CtvpPhasesListParams) -> Result<CallToolResult, McpE
         })
         .collect();
 
-    Ok(CallToolResult::success(vec![Content::text(
-        json!({ "phases": phases, "count": phases.len() }).to_string(),
-    )]))
+    Ok(crate::tooling::wrap_result(CallToolResult::success(vec![
+        Content::text(json!({ "phases": phases, "count": phases.len() }).to_string()),
+    ])))
 }
 
 fn evaluate_phase(phase: &Phase, target: &str) -> (f64, Vec<serde_json::Value>) {
@@ -238,17 +281,33 @@ fn evaluate_phase(phase: &Phase, target: &str) -> (f64, Vec<serde_json::Value>) 
             }
 
             if is_crate {
-                let check_ok = std::process::Command::new("cargo")
+                let check_result = std::process::Command::new(cargo_bin())
                     .args(["check"])
                     .current_dir(target)
-                    .output()
-                    .map(|o| o.status.success())
-                    .unwrap_or(false);
-                passed += if check_ok { 1 } else { 0 };
-                findings.push(json!({"check": "cargo check", "status": if check_ok { "pass" } else { "fail" }}));
+                    .output();
+                match &check_result {
+                    Ok(out) if out.status.success() => {
+                        passed += 1;
+                        findings.push(json!({"check": "cargo check", "status": "pass"}));
+                        // Infer no syntax errors from successful cargo check
+                        passed += 1;
+                        findings.push(json!({"check": "No syntax errors", "status": "inferred"}));
+                    }
+                    Ok(_) => {
+                        findings.push(json!({"check": "cargo check", "status": "fail"}));
+                        findings.push(json!({"check": "No syntax errors", "status": "skipped", "reason": "cargo check failed"}));
+                    }
+                    Err(e) => {
+                        findings.push(json!({"check": "cargo check", "status": "error", "detail": format!("spawn failed: {e}")}));
+                        findings.push(json!({"check": "No syntax errors", "status": "skipped", "reason": "cargo not available"}));
+                    }
+                }
+            } else {
+                findings.push(
+                    json!({"check": "cargo check", "status": "skipped", "reason": "not a crate"}),
+                );
+                findings.push(json!({"check": "No syntax errors", "status": "skipped", "reason": "not a crate"}));
             }
-            passed += 1; // No syntax errors if cargo check passed
-            findings.push(json!({"check": "No syntax errors", "status": "inferred"}));
         }
         1 => {
             // Safety: no unsafe, no unwrap
@@ -272,16 +331,26 @@ fn evaluate_phase(phase: &Phase, target: &str) -> (f64, Vec<serde_json::Value>) 
 
             // Clippy
             if is_crate {
-                let clippy_ok = std::process::Command::new("cargo")
+                match std::process::Command::new(cargo_bin())
                     .args(["clippy", "--", "-D", "warnings"])
                     .current_dir(target)
                     .output()
-                    .map(|o| o.status.success())
-                    .unwrap_or(false);
-                if clippy_ok {
-                    passed += 1;
+                {
+                    Ok(out) if out.status.success() => {
+                        passed += 1;
+                        findings.push(json!({"check": "clippy clean", "status": "pass"}));
+                    }
+                    Ok(_) => {
+                        findings.push(json!({"check": "clippy clean", "status": "fail"}));
+                    }
+                    Err(e) => {
+                        findings.push(json!({"check": "clippy clean", "status": "error", "detail": format!("spawn failed: {e}")}));
+                    }
                 }
-                findings.push(json!({"check": "clippy clean", "status": if clippy_ok { "pass" } else { "fail" }}));
+            } else {
+                findings.push(
+                    json!({"check": "clippy clean", "status": "skipped", "reason": "not a crate"}),
+                );
             }
         }
         2 => {
@@ -294,17 +363,29 @@ fn evaluate_phase(phase: &Phase, target: &str) -> (f64, Vec<serde_json::Value>) 
             findings.push(json!({"check": "Unit tests exist", "status": if has_tests { "pass" } else { "fail" }}));
 
             if is_crate && has_tests {
-                let test_ok = std::process::Command::new("cargo")
+                match std::process::Command::new(cargo_bin())
                     .args(["test", "--lib"])
                     .current_dir(target)
                     .output()
-                    .map(|o| o.status.success())
-                    .unwrap_or(false);
-                if test_ok {
-                    passed += 1;
+                {
+                    Ok(out) if out.status.success() => {
+                        passed += 1;
+                        findings.push(json!({"check": "Tests pass", "status": "pass"}));
+                    }
+                    Ok(_) => {
+                        findings.push(json!({"check": "Tests pass", "status": "fail"}));
+                    }
+                    Err(e) => {
+                        findings.push(json!({"check": "Tests pass", "status": "error", "detail": format!("spawn failed: {e}")}));
+                    }
                 }
+            } else if !is_crate {
                 findings.push(
-                    json!({"check": "Tests pass", "status": if test_ok { "pass" } else { "fail" }}),
+                    json!({"check": "Tests pass", "status": "skipped", "reason": "not a crate"}),
+                );
+            } else {
+                findings.push(
+                    json!({"check": "Tests pass", "status": "skipped", "reason": "no tests found"}),
                 );
             }
 
@@ -426,21 +507,36 @@ fn has_pattern_in_dir(dir: &Path, pattern: &str) -> bool {
     false
 }
 
+/// Max recursion depth for directory walking (prevents symlink cycles and runaway scans).
+const MAX_WALK_DEPTH: u32 = 20;
+/// Max number of .rs files to collect (prevents OOM on workspace-level scans).
+const MAX_RS_FILES: usize = 500;
+
 fn collect_rs(dir: &Path) -> Result<Vec<std::path::PathBuf>, std::io::Error> {
     let mut files = Vec::new();
-    collect_rs_rec(dir, &mut files)?;
+    collect_rs_rec(dir, &mut files, 0)?;
     Ok(files)
 }
 
-fn collect_rs_rec(dir: &Path, files: &mut Vec<std::path::PathBuf>) -> Result<(), std::io::Error> {
-    if dir.is_dir() {
+fn collect_rs_rec(
+    dir: &Path,
+    files: &mut Vec<std::path::PathBuf>,
+    depth: u32,
+) -> Result<(), std::io::Error> {
+    if depth > MAX_WALK_DEPTH || files.len() >= MAX_RS_FILES {
+        return Ok(());
+    }
+    if dir.is_dir() && !dir.is_symlink() {
         for entry in std::fs::read_dir(dir)? {
             let entry = entry?;
             let path = entry.path();
-            if path.is_dir() {
-                collect_rs_rec(&path, files)?;
-            } else if path.extension().map_or(false, |e| e == "rs") {
+            if path.is_dir() && !path.is_symlink() {
+                collect_rs_rec(&path, files, depth.saturating_add(1))?;
+            } else if path.extension().is_some_and(|e| e == "rs") {
                 files.push(path);
+                if files.len() >= MAX_RS_FILES {
+                    return Ok(());
+                }
             }
         }
     }

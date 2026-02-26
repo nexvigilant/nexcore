@@ -24,7 +24,7 @@ pub struct Wager {
     /// Amount to wager (in score units).
     pub amount: u64,
     /// Confidence level backing this wager.
-    pub confidence: f64,
+    pub confidence: Confidence,
     /// Category the wager targets.
     pub category: Category,
 }
@@ -177,7 +177,7 @@ pub fn optimal_daily_double_wager(state: &GameState, confidence: Confidence) -> 
 
     Ok(Wager {
         amount: clamped,
-        confidence: conf,
+        confidence,
         category: active_category,
     })
 }
@@ -193,7 +193,7 @@ pub fn optimal_final_wager(state: &GameState, confidence: Confidence) -> Result<
     if score <= 0 {
         return Ok(Wager {
             amount: 0,
-            confidence: confidence.value(),
+            confidence,
             category: Category::SignalDetection,
         });
     }
@@ -227,7 +227,7 @@ pub fn optimal_final_wager(state: &GameState, confidence: Confidence) -> Result<
 
     Ok(Wager {
         amount,
-        confidence: conf,
+        confidence,
         category: Category::SignalDetection,
     })
 }
@@ -258,10 +258,10 @@ pub fn should_buzz(
     let base = 0.50;
 
     // Difficulty penalty: harder clues need more confidence
-    let difficulty_penalty = clue.difficulty * 0.15;
+    let difficulty_penalty = clue.difficulty() * 0.15;
 
     // Value penalty: higher-value clues are riskier (more to lose)
-    let max_value = match state.round {
+    let max_value = match state.round() {
         Round::Jeopardy => 1000.0,
         Round::DoubleJeopardy => 2000.0,
         Round::FinalJeopardy => 2000.0,
@@ -307,13 +307,11 @@ pub fn board_control_value(board: &Board, state: &GameState) -> f64 {
         return 0.0;
     }
 
-    let accuracy = state.active_player().map_or(0.5, |p| {
-        if p.accuracy() > 0.0 {
-            p.accuracy()
-        } else {
-            0.5
-        }
-    });
+    let accuracy = state
+        .active_player()
+        .map(|p| p.accuracy())
+        .filter(|&a| a > 0.0)
+        .unwrap_or(0.5);
 
     // Sum expected value of each remaining clue in optimal order,
     // with a decay factor (you won't necessarily keep control)
@@ -349,7 +347,7 @@ pub fn can_advance(state: &GameState) -> bool {
         return false;
     }
 
-    match state.round {
+    match state.round() {
         Round::Jeopardy => {
             // Must have non-negative score to advance
             state.active_score() >= 0

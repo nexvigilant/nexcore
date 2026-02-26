@@ -184,9 +184,9 @@ mod board_tests {
             let low = b.get(CluePosition::new(0, 0));
             let high = b.get(CluePosition::new(4, 0));
             if let (Some(Cell::Available(lo)), Some(Cell::Available(hi))) = (low, high) {
-                assert!(lo.difficulty < hi.difficulty);
-                assert!((lo.difficulty - 0.2).abs() < f64::EPSILON);
-                assert!((hi.difficulty - 1.0).abs() < f64::EPSILON);
+                assert!(lo.difficulty() < hi.difficulty());
+                assert!((lo.difficulty() - 0.2).abs() < f64::EPSILON);
+                assert!((hi.difficulty() - 1.0).abs() < f64::EPSILON);
             }
         }
     }
@@ -232,44 +232,34 @@ mod state_tests {
     fn initial_scores_are_zero() {
         let state = make_state();
         for player in &state.players {
-            assert_eq!(player.score, 0);
+            assert_eq!(player.score(), 0);
         }
     }
 
     #[test]
     fn first_player_has_control() {
         let state = make_state();
-        assert_eq!(state.active_player, 0);
+        assert_eq!(state.active_player_index(), 0);
         if let Some(p) = state.active_player() {
-            assert!(p.has_control);
+            assert!(p.has_control());
         }
     }
 
     #[test]
     fn record_correct_increases_score() {
         let mut state = make_state();
-        let clue = Clue {
-            category: Category::SignalDetection,
-            value: ClueValue(400),
-            difficulty: 0.4,
-            is_daily_double: false,
-        };
+        let clue = Clue::new(Category::SignalDetection, ClueValue(400), 0.4, false);
         let pos = CluePosition::new(1, 0);
-        state.record_correct(400, 0.8, &clue, pos, None);
+        state.record_correct(400, Confidence::new(0.8), &clue, pos, None);
         assert_eq!(state.active_score(), 400);
     }
 
     #[test]
     fn record_incorrect_decreases_score() {
         let mut state = make_state();
-        let clue = Clue {
-            category: Category::SignalDetection,
-            value: ClueValue(600),
-            difficulty: 0.6,
-            is_daily_double: false,
-        };
+        let clue = Clue::new(Category::SignalDetection, ClueValue(600), 0.6, false);
         let pos = CluePosition::new(2, 0);
-        state.record_incorrect(600, 0.4, &clue, pos, None);
+        state.record_incorrect(600, Confidence::new(0.4), &clue, pos, None);
         assert_eq!(state.active_score(), -600);
     }
 
@@ -277,22 +267,24 @@ mod state_tests {
     fn daily_double_wager_affects_score() {
         let mut state = make_state();
         // Give the player some score first
-        let clue1 = Clue {
-            category: Category::SignalDetection,
-            value: ClueValue(1000),
-            difficulty: 1.0,
-            is_daily_double: false,
-        };
-        state.record_correct(1000, 0.9, &clue1, CluePosition::new(4, 0), None);
+        let clue1 = Clue::new(Category::SignalDetection, ClueValue(1000), 1.0, false);
+        state.record_correct(
+            1000,
+            Confidence::new(0.9),
+            &clue1,
+            CluePosition::new(4, 0),
+            None,
+        );
 
         // Now a Daily Double with a wager of 2000
-        let dd_clue = Clue {
-            category: Category::PrimitiveExtraction,
-            value: ClueValue(800),
-            difficulty: 0.8,
-            is_daily_double: true,
-        };
-        state.record_correct(800, 0.9, &dd_clue, CluePosition::new(3, 1), Some(2000));
+        let dd_clue = Clue::new(Category::PrimitiveExtraction, ClueValue(800), 0.8, true);
+        state.record_correct(
+            800,
+            Confidence::new(0.9),
+            &dd_clue,
+            CluePosition::new(3, 1),
+            Some(2000),
+        );
         assert_eq!(state.active_score(), 3000); // 1000 + 2000 wager
     }
 
@@ -300,10 +292,10 @@ mod state_tests {
     fn transfer_control_updates_active_player() {
         let mut state = make_state();
         state.transfer_control(2);
-        assert_eq!(state.active_player, 2);
+        assert_eq!(state.active_player_index(), 2);
         if let Some(p) = state.active_player() {
-            assert!(p.has_control);
-            assert_eq!(p.name, "Carol");
+            assert!(p.has_control());
+            assert_eq!(p.name(), "Carol");
         }
     }
 
@@ -312,8 +304,8 @@ mod state_tests {
         let mut player = Player::new("Test");
         assert!((player.accuracy() - 0.0).abs() < f64::EPSILON);
 
-        player.correct = 3;
-        player.incorrect = 1;
+        player.set_correct(3);
+        player.set_incorrect(1);
         assert!((player.accuracy() - 0.75).abs() < f64::EPSILON);
     }
 
@@ -322,13 +314,14 @@ mod state_tests {
         let mut state = make_state();
         // Give Bob (player 1) 5000 points
         state.transfer_control(1);
-        let clue = Clue {
-            category: Category::CompoundGrowth,
-            value: ClueValue(1000),
-            difficulty: 1.0,
-            is_daily_double: false,
-        };
-        state.record_correct(1000, 1.0, &clue, CluePosition::new(4, 4), Some(5000));
+        let clue = Clue::new(Category::CompoundGrowth, ClueValue(1000), 1.0, false);
+        state.record_correct(
+            1000,
+            Confidence::new(1.0),
+            &clue,
+            CluePosition::new(4, 4),
+            Some(5000),
+        );
 
         // Switch back to Alice (player 0)
         state.transfer_control(0);
@@ -450,11 +443,11 @@ mod wager_tests {
         let mut state = GameState::new(&["Leader", "Trailer", "Mid"], board);
 
         // Leader: 15000, Trailer: 5000, Mid: 8000
-        state.players[0].score = 15000;
-        state.players[1].score = 5000;
-        state.players[2].score = 8000;
-        state.active_player = 0;
-        state.players[0].has_control = true;
+        state.players[0].set_score(15000);
+        state.players[1].set_score(5000);
+        state.players[2].set_score(8000);
+        state.set_active_player_index(0);
+        state.players[0].set_has_control(true);
         state
     }
 
@@ -468,11 +461,11 @@ mod wager_tests {
         let mut state = GameState::new(&["Trailer", "Leader", "Mid"], board);
 
         // Trailer: 3000, Leader: 12000, Mid: 7000
-        state.players[0].score = 3000;
-        state.players[1].score = 12000;
-        state.players[2].score = 7000;
-        state.active_player = 0;
-        state.players[0].has_control = true;
+        state.players[0].set_score(3000);
+        state.players[1].set_score(12000);
+        state.players[2].set_score(7000);
+        state.set_active_player_index(0);
+        state.players[0].set_has_control(true);
         state
     }
 
@@ -522,9 +515,9 @@ mod wager_tests {
             Err(_) => unreachable!(),
         };
         let mut state = GameState::new(&["Leader", "Second"], board);
-        state.players[0].score = 20000;
-        state.players[1].score = 12000;
-        state.active_player = 0;
+        state.players[0].set_score(20000);
+        state.players[1].set_score(12000);
+        state.set_active_player_index(0);
 
         // Answer all clues to enable advancement
         for row in 0..5 {
@@ -553,9 +546,9 @@ mod wager_tests {
             Err(_) => unreachable!(),
         };
         let mut state = GameState::new(&["Runaway", "Distant"], board);
-        state.players[0].score = 30000;
-        state.players[1].score = 5000;
-        state.active_player = 0;
+        state.players[0].set_score(30000);
+        state.players[1].set_score(5000);
+        state.set_active_player_index(0);
 
         for row in 0..5 {
             for col in 0..6 {
@@ -582,9 +575,9 @@ mod wager_tests {
             Err(_) => unreachable!(),
         };
         let mut state = GameState::new(&["Trailer", "Leader"], board);
-        state.players[0].score = 10000;
-        state.players[1].score = 15000;
-        state.active_player = 0;
+        state.players[0].set_score(10000);
+        state.players[1].set_score(15000);
+        state.set_active_player_index(0);
 
         for row in 0..5 {
             for col in 0..6 {
@@ -611,8 +604,8 @@ mod wager_tests {
             Err(_) => unreachable!(),
         };
         let mut state = GameState::new(&["Broke"], board);
-        state.players[0].score = -500;
-        state.active_player = 0;
+        state.players[0].set_score(-500);
+        state.set_active_player_index(0);
 
         let conf = Confidence::new(1.0);
         let wager = optimal_final_wager(&state, conf);
@@ -642,12 +635,7 @@ mod buzz_tests {
     #[test]
     fn high_confidence_easy_clue_buzzes() {
         let state = base_state();
-        let clue = Clue {
-            category: Category::SignalDetection,
-            value: ClueValue(200),
-            difficulty: 0.2,
-            is_daily_double: false,
-        };
+        let clue = Clue::new(Category::SignalDetection, ClueValue(200), 0.2, false);
         let conf = Confidence::new(0.9);
         let decision = should_buzz(&clue, conf, &state);
         assert_eq!(decision, BuzzDecision::Buzz);
@@ -656,12 +644,7 @@ mod buzz_tests {
     #[test]
     fn low_confidence_hard_clue_passes() {
         let state = base_state();
-        let clue = Clue {
-            category: Category::CrossDomainTransfer,
-            value: ClueValue(1000),
-            difficulty: 1.0,
-            is_daily_double: false,
-        };
+        let clue = Clue::new(Category::CrossDomainTransfer, ClueValue(1000), 1.0, false);
         let conf = Confidence::new(0.3);
         let decision = should_buzz(&clue, conf, &state);
         assert_eq!(decision, BuzzDecision::Pass);
@@ -670,12 +653,7 @@ mod buzz_tests {
     #[test]
     fn medium_confidence_medium_difficulty_threshold() {
         let state = base_state();
-        let clue = Clue {
-            category: Category::ValidationPhasing,
-            value: ClueValue(600),
-            difficulty: 0.6,
-            is_daily_double: false,
-        };
+        let clue = Clue::new(Category::ValidationPhasing, ClueValue(600), 0.6, false);
         // Threshold: 0.50 + 0.6*0.15 + (600/1000)*0.10 - 0 + 0
         //          = 0.50 + 0.09 + 0.06 = 0.65
         let just_above = Confidence::new(0.66);
@@ -694,16 +672,11 @@ mod buzz_tests {
             Err(_) => unreachable!(),
         };
         let mut state = GameState::new(&["Trailer", "Leader"], board);
-        state.players[0].score = 0;
-        state.players[1].score = 5000;
-        state.active_player = 0;
+        state.players[0].set_score(0);
+        state.players[1].set_score(5000);
+        state.set_active_player_index(0);
 
-        let clue = Clue {
-            category: Category::CompoundGrowth,
-            value: ClueValue(800),
-            difficulty: 0.8,
-            is_daily_double: false,
-        };
+        let clue = Clue::new(Category::CompoundGrowth, ClueValue(800), 0.8, false);
 
         // Normal threshold would be ~0.70, but urgency bonus lowers it
         let conf = Confidence::new(0.65);
@@ -723,15 +696,10 @@ mod buzz_tests {
             Err(_) => unreachable!(),
         };
         let mut state = GameState::new(&["Negative"], board);
-        state.players[0].score = -200;
-        state.active_player = 0;
+        state.players[0].set_score(-200);
+        state.set_active_player_index(0);
 
-        let clue = Clue {
-            category: Category::PipelineOrchestration,
-            value: ClueValue(200),
-            difficulty: 0.2,
-            is_daily_double: false,
-        };
+        let clue = Clue::new(Category::PipelineOrchestration, ClueValue(200), 0.2, false);
 
         // With single player at -200, gap_to_leader = -200 - 0 = -200
         // urgency = min((200/1000)*0.15, 0.15) = 0.03
@@ -786,12 +754,12 @@ mod control_tests {
         assert!(board_result.is_ok());
         if let Ok(b) = board_result {
             let mut state_high = GameState::new(&["Accurate"], b.clone());
-            state_high.players[0].correct = 9;
-            state_high.players[0].incorrect = 1;
+            state_high.players[0].set_correct(9);
+            state_high.players[0].set_incorrect(1);
 
             let mut state_low = GameState::new(&["Inaccurate"], b.clone());
-            state_low.players[0].correct = 3;
-            state_low.players[0].incorrect = 7;
+            state_low.players[0].set_correct(3);
+            state_low.players[0].set_incorrect(7);
 
             let value_high = board_control_value(&b, &state_high);
             let value_low = board_control_value(&b, &state_low);
@@ -852,7 +820,7 @@ mod transition_tests {
                 }
             }
             let mut state = GameState::new(&["Player"], b);
-            state.players[0].score = -100;
+            state.players[0].set_score(-100);
             assert!(!can_advance(&state));
         }
     }
@@ -884,7 +852,7 @@ mod transition_tests {
                 }
             }
             let mut state = GameState::new(&["Player"], b);
-            state.players[0].score = 100;
+            state.players[0].set_score(100);
             assert!(can_advance(&state));
         }
     }
@@ -900,8 +868,8 @@ mod transition_tests {
                 }
             }
             let mut state = GameState::new(&["Player"], b);
-            state.round = Round::FinalJeopardy;
-            state.players[0].score = 50000;
+            // round is already FinalJeopardy from board.round()
+            state.players[0].set_score(50000);
             assert!(!can_advance(&state));
         }
     }
@@ -936,7 +904,7 @@ mod compound_tests {
                     category: Category::SignalDetection,
                     value: ClueValue(200),
                     correct: true,
-                    confidence: 0.9,
+                    confidence: Confidence::new(0.9),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -945,7 +913,7 @@ mod compound_tests {
                     category: Category::PrimitiveExtraction,
                     value: ClueValue(400),
                     correct: true,
-                    confidence: 0.8,
+                    confidence: Confidence::new(0.8),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -954,7 +922,7 @@ mod compound_tests {
                     category: Category::SignalDetection,
                     value: ClueValue(600),
                     correct: true,
-                    confidence: 0.7,
+                    confidence: Confidence::new(0.7),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -963,7 +931,7 @@ mod compound_tests {
                     category: Category::PrimitiveExtraction,
                     value: ClueValue(800),
                     correct: true,
-                    confidence: 0.85,
+                    confidence: Confidence::new(0.85),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -973,8 +941,11 @@ mod compound_tests {
         let metrics = compound_velocity(&[game]);
         assert_eq!(metrics.games_played, 1);
         assert!(metrics.basis > 0.0, "Basis should be positive");
-        assert!(metrics.efficiency > 0.0, "Efficiency should be positive");
-        assert!(metrics.reuse > 0.0, "Reuse should be positive");
+        assert!(
+            metrics.efficiency.value() > 0.0,
+            "Efficiency should be positive"
+        );
+        assert!(metrics.reuse.value() > 0.0, "Reuse should be positive");
         assert!(
             metrics.velocity > 0.0,
             "Velocity should be positive: V = B * eta * r"
@@ -994,7 +965,7 @@ mod compound_tests {
                     category: Category::SignalDetection,
                     value: ClueValue(200),
                     correct: true,
-                    confidence: 1.0,
+                    confidence: Confidence::new(1.0),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -1003,7 +974,7 @@ mod compound_tests {
                     category: Category::SignalDetection,
                     value: ClueValue(400),
                     correct: true,
-                    confidence: 1.0,
+                    confidence: Confidence::new(1.0),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -1025,7 +996,7 @@ mod compound_tests {
                     category: Category::SignalDetection,
                     value: ClueValue(200),
                     correct: true,
-                    confidence: 1.0,
+                    confidence: Confidence::new(1.0),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -1034,7 +1005,7 @@ mod compound_tests {
                     category: Category::PrimitiveExtraction,
                     value: ClueValue(200),
                     correct: true,
-                    confidence: 1.0,
+                    confidence: Confidence::new(1.0),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -1043,7 +1014,7 @@ mod compound_tests {
                     category: Category::CompoundGrowth,
                     value: ClueValue(200),
                     correct: true,
-                    confidence: 1.0,
+                    confidence: Confidence::new(1.0),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -1075,7 +1046,7 @@ mod compound_tests {
                     category: Category::PrimitiveExtraction,
                     value: ClueValue(200),
                     correct: true,
-                    confidence: 1.0,
+                    confidence: Confidence::new(1.0),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -1084,7 +1055,7 @@ mod compound_tests {
                     category: Category::PrimitiveExtraction,
                     value: ClueValue(400),
                     correct: true,
-                    confidence: 1.0,
+                    confidence: Confidence::new(1.0),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -1102,7 +1073,7 @@ mod compound_tests {
                     category: Category::CompoundGrowth,
                     value: ClueValue(200),
                     correct: true,
-                    confidence: 1.0,
+                    confidence: Confidence::new(1.0),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -1111,7 +1082,7 @@ mod compound_tests {
                     category: Category::CompoundGrowth,
                     value: ClueValue(400),
                     correct: true,
-                    confidence: 1.0,
+                    confidence: Confidence::new(1.0),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -1147,7 +1118,7 @@ mod compound_tests {
                     category: Category::SignalDetection,
                     value: ClueValue(200),
                     correct: true,
-                    confidence: 1.0,
+                    confidence: Confidence::new(1.0),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -1156,7 +1127,7 @@ mod compound_tests {
                     category: Category::CompoundGrowth,
                     value: ClueValue(200),
                     correct: true,
-                    confidence: 1.0,
+                    confidence: Confidence::new(1.0),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -1188,7 +1159,7 @@ mod compound_tests {
                     category: Category::SignalDetection,
                     value: ClueValue(200),
                     correct: true,
-                    confidence: 0.9,
+                    confidence: Confidence::new(0.9),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -1197,7 +1168,7 @@ mod compound_tests {
                     category: Category::PrimitiveExtraction,
                     value: ClueValue(200),
                     correct: true,
-                    confidence: 0.8,
+                    confidence: Confidence::new(0.8),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -1206,7 +1177,7 @@ mod compound_tests {
                     category: Category::CrossDomainTransfer,
                     value: ClueValue(200),
                     correct: true,
-                    confidence: 0.7,
+                    confidence: Confidence::new(0.7),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -1215,7 +1186,7 @@ mod compound_tests {
                     category: Category::ValidationPhasing,
                     value: ClueValue(400),
                     correct: false,
-                    confidence: 0.5,
+                    confidence: Confidence::new(0.5),
                     was_daily_double: false,
                     wager: None,
                 },
@@ -1223,14 +1194,14 @@ mod compound_tests {
         };
 
         let metrics = compound_velocity(&[game]);
-        let expected_velocity = metrics.basis * metrics.efficiency * metrics.reuse;
+        let expected_velocity = metrics.basis * metrics.efficiency.value() * metrics.reuse.value();
         assert!(
             (metrics.velocity - expected_velocity).abs() < 1e-10,
             "V(t) = B*eta*r: {} != {} * {} * {}",
             metrics.velocity,
             metrics.basis,
-            metrics.efficiency,
-            metrics.reuse,
+            metrics.efficiency.value(),
+            metrics.reuse.value(),
         );
     }
 }
@@ -1258,12 +1229,7 @@ mod serde_tests {
 
     #[test]
     fn clue_round_trips_through_json() {
-        let clue = Clue {
-            category: Category::CompoundGrowth,
-            value: ClueValue(800),
-            difficulty: 0.8,
-            is_daily_double: true,
-        };
+        let clue = Clue::new(Category::CompoundGrowth, ClueValue(800), 0.8, true);
         let json = serde_json::to_string(&clue);
         assert!(json.is_ok());
         if let Ok(s) = json {
@@ -1276,7 +1242,7 @@ mod serde_tests {
     fn wager_round_trips_through_json() {
         let wager = crate::strategy::Wager {
             amount: 5000,
-            confidence: 0.85,
+            confidence: Confidence::new(0.85),
             category: Category::SignalDetection,
         };
         let json = serde_json::to_string(&wager);
@@ -1299,6 +1265,162 @@ mod serde_tests {
                 let back: std::result::Result<GameState, _> = serde_json::from_str(&s);
                 assert!(back.is_ok());
             }
+        }
+    }
+}
+
+// =========================================================================
+// Confidence Integration Tests (canonical Confidence from nexcore-constants)
+// =========================================================================
+
+mod confidence_integration_tests {
+    use super::*;
+
+    #[test]
+    fn clamped_confidence_flows_through_buzz_decision() {
+        // Confidence::new(1.5) clamps to 1.0 — should always buzz
+        let board = Board::new(Round::Jeopardy, &[]).unwrap();
+        let state = GameState::new(&["Alice", "Bob", "Carol"], board);
+        let clue = Clue::new(Category::SignalDetection, ClueValue(200), 0.5, false);
+        let clamped = Confidence::new(1.5); // clamps to 1.0
+        assert!((clamped.value() - 1.0).abs() < f64::EPSILON);
+        assert_eq!(should_buzz(&clue, clamped, &state), BuzzDecision::Buzz);
+    }
+
+    #[test]
+    fn clamped_negative_confidence_passes_buzz() {
+        // Confidence::new(-0.5) clamps to 0.0 — should always pass
+        let board = Board::new(Round::Jeopardy, &[]).unwrap();
+        let state = GameState::new(&["Alice", "Bob", "Carol"], board);
+        let clue = Clue::new(Category::SignalDetection, ClueValue(200), 0.5, false);
+        let clamped = Confidence::new(-0.5); // clamps to 0.0
+        assert!((clamped.value() - 0.0).abs() < f64::EPSILON);
+        assert_eq!(should_buzz(&clue, clamped, &state), BuzzDecision::Pass);
+    }
+
+    #[test]
+    fn zero_confidence_daily_double_wager_is_zero() {
+        let board = Board::new(Round::Jeopardy, &[CluePosition::new(4, 0)]).unwrap();
+        let state = GameState::new(&["Alice", "Bob", "Carol"], board);
+        let wager = optimal_daily_double_wager(&state, Confidence::new(0.0));
+        assert!(wager.is_ok());
+        if let Ok(w) = wager {
+            assert_eq!(w.amount, 0, "Zero confidence should produce zero wager");
+        }
+    }
+
+    #[test]
+    fn max_confidence_daily_double_wager_is_max() {
+        let board = Board::new(Round::Jeopardy, &[CluePosition::new(4, 0)]).unwrap();
+        let state = GameState::new(&["Alice", "Bob", "Carol"], board);
+        let wager = optimal_daily_double_wager(&state, Confidence::new(1.0));
+        assert!(wager.is_ok());
+        if let Ok(w) = wager {
+            assert!(w.amount > 0, "Max confidence should produce positive wager");
+        }
+    }
+
+    #[test]
+    fn confidence_round_trips_through_compound_metrics() {
+        let game = GameResult {
+            final_score: 2000,
+            categories_correct: vec![Category::SignalDetection, Category::PrimitiveExtraction],
+            accuracy: 0.8,
+            correct_count: 2,
+            attempts: vec![
+                AttemptRecord {
+                    position: CluePosition::new(0, 0),
+                    category: Category::SignalDetection,
+                    value: ClueValue(200),
+                    correct: true,
+                    confidence: Confidence::new(0.9),
+                    was_daily_double: false,
+                    wager: None,
+                },
+                AttemptRecord {
+                    position: CluePosition::new(0, 1),
+                    category: Category::PrimitiveExtraction,
+                    value: ClueValue(200),
+                    correct: true,
+                    confidence: Confidence::new(0.7),
+                    was_daily_double: false,
+                    wager: None,
+                },
+            ],
+        };
+
+        let metrics = compound_velocity(&[game]);
+        // efficiency and reuse are Confidence types — verify they're in [0, 1]
+        assert!(metrics.efficiency.value() >= 0.0 && metrics.efficiency.value() <= 1.0);
+        assert!(metrics.reuse.value() >= 0.0 && metrics.reuse.value() <= 1.0);
+    }
+
+    #[test]
+    fn confidence_value_preserved_in_attempt_record() {
+        let conf = Confidence::new(0.73);
+        let record = AttemptRecord {
+            position: CluePosition::new(2, 3),
+            category: Category::ValidationPhasing,
+            value: ClueValue(600),
+            correct: true,
+            confidence: conf,
+            was_daily_double: false,
+            wager: None,
+        };
+        assert!((record.confidence.value() - 0.73).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn confidence_serializes_as_f64() {
+        let conf = Confidence::new(0.85);
+        let json = serde_json::to_string(&conf);
+        assert!(json.is_ok());
+        if let Ok(s) = json {
+            // Should serialize as a plain f64
+            let val: std::result::Result<f64, _> = serde_json::from_str(&s);
+            assert!(val.is_ok());
+            if let Ok(v) = val {
+                assert!((v - 0.85).abs() < f64::EPSILON);
+            }
+        }
+    }
+
+    #[test]
+    fn confidence_round_trips_through_serde() {
+        // Derived Deserialize preserves exact value; clamping is only via new()
+        let original = Confidence::new(0.42);
+        let json = serde_json::to_string(&original);
+        assert!(json.is_ok());
+        if let Ok(s) = json {
+            let back: std::result::Result<Confidence, _> = serde_json::from_str(&s);
+            assert!(back.is_ok());
+            if let Ok(c) = back {
+                assert!((c.value() - 0.42).abs() < f64::EPSILON);
+            }
+        }
+    }
+
+    #[test]
+    fn compound_empty_history_uses_zero_confidence() {
+        let metrics = compound_velocity(&[]);
+        assert!((metrics.efficiency.value() - 0.0).abs() < f64::EPSILON);
+        assert!((metrics.reuse.value() - 0.0).abs() < f64::EPSILON);
+        assert!((metrics.velocity - 0.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn score_selections_returns_all_available() {
+        let board = Board::new(Round::Jeopardy, &[]).unwrap();
+        let expected_count = board.remaining_count();
+        let scores = score_selections(&board);
+        assert_eq!(
+            scores.len(),
+            expected_count,
+            "score_selections should return one entry per available clue"
+        );
+        // All scores should be positive
+        for s in &scores {
+            assert!(s.score > 0.0, "selection score should be positive");
         }
     }
 }

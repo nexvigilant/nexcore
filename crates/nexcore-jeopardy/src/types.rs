@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 /// Algorithm development categories mapped to Jeopardy board columns.
 ///
 /// Each category represents a domain of algorithm R&D investment.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum Category {
     /// PRR, ROR, IC, EBGM, Chi-squared signal detection algorithms.
     SignalDetection,
@@ -139,10 +139,42 @@ pub struct Clue {
     pub category: Category,
     /// Dollar value (investment units).
     pub value: ClueValue,
-    /// Difficulty rating from 0.0 (trivial) to 1.0 (extremely hard).
-    pub difficulty: f64,
+    /// Difficulty rating clamped to [0.0, 1.0].
+    #[serde(deserialize_with = "deserialize_clamped_unit")]
+    difficulty: f64,
     /// Whether this is a Daily Double (hidden high-wager opportunity).
     pub is_daily_double: bool,
+}
+
+/// Deserialize an f64, clamping to [0.0, 1.0].
+fn deserialize_clamped_unit<'de, D>(deserializer: D) -> std::result::Result<f64, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let v = f64::deserialize(deserializer)?;
+    Ok(v.clamp(0.0, 1.0))
+}
+
+impl Clue {
+    /// Create a new clue with difficulty clamped to [0.0, 1.0].
+    pub fn new(
+        category: Category,
+        value: ClueValue,
+        difficulty: f64,
+        is_daily_double: bool,
+    ) -> Self {
+        Clue {
+            category,
+            value,
+            difficulty: difficulty.clamp(0.0, 1.0),
+            is_daily_double,
+        }
+    }
+
+    /// Get the difficulty rating (always in [0.0, 1.0]).
+    pub fn difficulty(&self) -> f64 {
+        self.difficulty
+    }
 }
 
 /// Tier: T2-P (N + ∂ — bounded probability)

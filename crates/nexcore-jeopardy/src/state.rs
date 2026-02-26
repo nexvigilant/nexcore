@@ -4,6 +4,7 @@
 //! scores, current round, board, and history.
 
 use crate::board::Board;
+use crate::error::{JeopardyError, Result};
 use crate::types::{Category, CluePosition, ClueValue, Confidence, Round};
 use serde::{Deserialize, Serialize};
 
@@ -11,15 +12,15 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Player {
     /// Player identifier.
-    pub name: String,
+    name: String,
     /// Current score (can go negative from incorrect answers).
-    pub score: i64,
+    score: i64,
     /// Number of correct answers.
-    pub correct: u32,
+    correct: u32,
     /// Number of incorrect answers.
-    pub incorrect: u32,
+    incorrect: u32,
     /// Whether this player currently has board control.
-    pub has_control: bool,
+    has_control: bool,
 }
 
 impl Player {
@@ -34,6 +35,31 @@ impl Player {
         }
     }
 
+    /// Player name.
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Current score (can go negative).
+    pub fn score(&self) -> i64 {
+        self.score
+    }
+
+    /// Number of correct answers.
+    pub fn correct_count(&self) -> u32 {
+        self.correct
+    }
+
+    /// Number of incorrect answers.
+    pub fn incorrect_count(&self) -> u32 {
+        self.incorrect
+    }
+
+    /// Whether this player currently has board control.
+    pub fn has_control(&self) -> bool {
+        self.has_control
+    }
+
     /// Accuracy as a fraction in [0.0, 1.0]. Returns 0.0 if no attempts.
     pub fn accuracy(&self) -> f64 {
         let total = self.correct + self.incorrect;
@@ -41,6 +67,26 @@ impl Player {
             return 0.0;
         }
         f64::from(self.correct) / f64::from(total)
+    }
+
+    /// Set score directly (used by MCP tools for state restoration).
+    pub fn set_score(&mut self, score: i64) {
+        self.score = score;
+    }
+
+    /// Set correct count directly (used by MCP tools for state restoration).
+    pub fn set_correct(&mut self, count: u32) {
+        self.correct = count;
+    }
+
+    /// Set incorrect count directly (used by MCP tools for state restoration).
+    pub fn set_incorrect(&mut self, count: u32) {
+        self.incorrect = count;
+    }
+
+    /// Set board control directly (used by MCP tools for state restoration).
+    pub fn set_has_control(&mut self, control: bool) {
+        self.has_control = control;
     }
 }
 
@@ -56,7 +102,7 @@ pub struct AttemptRecord {
     /// Whether the answer was correct.
     pub correct: bool,
     /// Confidence at time of buzzing.
-    pub confidence: f64,
+    pub confidence: Confidence,
     /// Was this a Daily Double?
     pub was_daily_double: bool,
     /// If Daily Double, the wager amount.
@@ -66,18 +112,18 @@ pub struct AttemptRecord {
 /// Full game state — the composite ρ primitive.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameState {
-    /// Current round.
-    pub round: Round,
+    /// Current round (derived from board — use `.round()` accessor).
+    round: Round,
     /// The game board.
     pub board: Board,
     /// All players (typically 3 in Jeopardy).
     pub players: Vec<Player>,
     /// Index of the active player (has board control).
-    pub active_player: usize,
+    active_player: usize,
     /// History of all attempts in this game.
     pub history: Vec<AttemptRecord>,
     /// Number of clues answered in current round.
-    pub clues_answered_this_round: u32,
+    clues_answered_this_round: u32,
 }
 
 impl GameState {
@@ -96,6 +142,11 @@ impl GameState {
             history: Vec::new(),
             clues_answered_this_round: 0,
         }
+    }
+
+    /// The current round (always consistent with the board).
+    pub fn round(&self) -> Round {
+        self.round
     }
 
     /// The currently active player.
@@ -153,7 +204,7 @@ impl GameState {
     pub fn record_correct(
         &mut self,
         value: u64,
-        confidence: f64,
+        confidence: Confidence,
         clue: &crate::types::Clue,
         pos: CluePosition,
         wager: Option<u64>,
@@ -179,7 +230,7 @@ impl GameState {
     pub fn record_incorrect(
         &mut self,
         value: u64,
-        confidence: f64,
+        confidence: Confidence,
         clue: &crate::types::Clue,
         pos: CluePosition,
         wager: Option<u64>,
@@ -221,5 +272,74 @@ impl GameState {
             Round::DoubleJeopardy | Round::FinalJeopardy => 2000,
         };
         score.max(max_board)
+    }
+
+    /// Advance to the next round with a new board.
+    ///
+    /// Validates:
+    /// - Current board is fully answered.
+    /// - Score requirements are met for the next round.
+    /// - A next round exists (cannot advance past Final Jeopardy).
+    ///
+    /// Resets `clues_answered_this_round` and updates the round/board.
+    pub fn advance_round(&mut self, new_board: Board) -> Result<Round> {
+        if !self.board.is_empty() {
+            return Err(JeopardyError::CannotAdvance {
+                current_round: format!("{:?}", self.round),
+                reason: "board still has unanswered clues".into(),
+            });
+        }
+
+        let next = self
+            .round
+            .next()
+            .ok_or_else(|| JeopardyError::CannotAdvance {
+                current_round: format!("{:?}", self.round),
+                reason: "no round after Final Jeopardy".into(),
+            })?;
+
+        // Score requirements
+        match self.round {
+            Round::Jeopardy => {
+                if self.active_score() < 0 {
+                    return Err(JeopardyError::CannotAdvance {
+                        current_round: "Jeopardy".into(),
+                        reason: "active player has negative score".into(),
+                    });
+                }
+            }
+            Round::DoubleJeopardy => {
+                if self.active_score() <= 0 {
+                    return Err(JeopardyError::CannotAdvance {
+                        current_round: "DoubleJeopardy".into(),
+                        reason: "active player must have positive score for Final Jeopardy".into(),
+                    });
+                }
+            }
+            Round::FinalJeopardy => {
+                // Already handled by next() returning None
+            }
+        }
+
+        self.round = next;
+        self.board = new_board;
+        self.clues_answered_this_round = 0;
+        Ok(next)
+    }
+
+    /// Index of the currently active player.
+    pub fn active_player_index(&self) -> usize {
+        self.active_player
+    }
+
+    /// Number of clues answered in the current round.
+    pub fn clues_answered_this_round(&self) -> u32 {
+        self.clues_answered_this_round
+    }
+
+    /// Set active player index directly (test-only).
+    #[cfg(test)]
+    pub(crate) fn set_active_player_index(&mut self, index: usize) {
+        self.active_player = index;
     }
 }

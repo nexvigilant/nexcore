@@ -1,9 +1,10 @@
 //! Params for Clinical Trial Validation Paradigm (CTVP) tools.
 
+use rmcp::schemars::{self, JsonSchema};
 use serde::Deserialize;
 
 /// Score a deliverable against the 5-phase CTVP model.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, JsonSchema)]
 pub struct CtvpScoreParams {
     /// Path to file or crate to evaluate
     pub target: String,
@@ -12,7 +13,7 @@ pub struct CtvpScoreParams {
 }
 
 /// Run the Five Problems Protocol discovery.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, JsonSchema)]
 pub struct CtvpFiveProblemsParams {
     /// Path to file or crate to analyze
     pub target: String,
@@ -21,5 +22,5 @@ pub struct CtvpFiveProblemsParams {
 }
 
 /// Get CTVP phase definitions and scoring criteria.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, JsonSchema)]
 pub struct CtvpPhasesListParams {}

@@ -13,7 +13,20 @@ use serde_json::json;
 const VALID_QUALITIES: &[&str] = &["low", "medium", "high", "cinematic"];
 const VALID_THEMES: &[&str] = &["default", "warm", "clinical", "high-contrast"];
 const VALID_CVD_MODES: &[&str] = &["normal", "deuteranopia", "protanopia", "tritanopia"];
-const VALID_EXPLORERS: &[&str] = &["graph", "career", "learning", "state", "math"];
+const VALID_EXPLORERS: &[&str] = &[
+    "graph",
+    "career",
+    "learning",
+    "state",
+    "math",
+    "chemistry",
+    "regulatory",
+    "causality",
+    "timeline",
+    "epidemiology",
+    "molecule",
+    "atlas",
+];
 const VALID_LAYOUTS: &[&str] = &["force", "hierarchy", "radial", "grid"];
 const VALID_POST_PROCESSING: &[&str] = &["bloom", "ssao", "vignette"];
 
@@ -64,14 +77,39 @@ pub fn personalize_detect(params: PersonalizeDetectParams) -> Result<CallToolRes
         }
     }
 
+    // CVD hint: when active, recommend high-contrast theme and strip bloom
+    // (bloom can wash out shape-encoded CVD cues)
+    let cvd_hint_raw = params.cvd_hint.as_deref().unwrap_or("normal");
+    let (cvd_hint, cvd_warning): (&str, Option<String>) = if VALID_CVD_MODES.contains(&cvd_hint_raw)
+    {
+        (cvd_hint_raw, None)
+    } else {
+        (
+            "normal",
+            Some(format!(
+                "Unrecognized cvd_hint '{}' — defaulting to 'normal'. Valid: {}",
+                cvd_hint_raw,
+                VALID_CVD_MODES.join(", "),
+            )),
+        )
+    };
+    if cvd_hint != "normal" {
+        if theme == "default" {
+            theme = "high-contrast";
+        }
+        post_processing.retain(|e| e != "bloom");
+    }
+
     // Cinematic is never auto-selected — requires explicit user opt-in
     let result = json!({
         "recommended": {
             "quality": quality,
             "theme": theme,
+            "cvd_mode": cvd_hint,
             "post_processing": post_processing,
             "enable_worker_layout": enable_worker_layout,
         },
+        "warnings": cvd_warning.into_iter().collect::<Vec<_>>(),
         "detection_signals": {
             "gpu_renderer": params.gpu_renderer,
             "device_pixel_ratio": params.device_pixel_ratio,
@@ -79,6 +117,7 @@ pub fn personalize_detect(params: PersonalizeDetectParams) -> Result<CallToolRes
             "device_memory": params.device_memory,
             "prefers_reduced_motion": params.prefers_reduced_motion,
             "prefers_contrast": params.prefers_contrast,
+            "cvd_hint": cvd_hint,
         },
         "t1_grounding": "κ(Comparison) + ς(State) + ∂(Boundary)"
     });
@@ -307,6 +346,21 @@ pub fn personalize_validate(params: PersonalizeValidateParams) -> Result<CallToo
             "Explorer 'math' manages its own layout; the 'layout' setting will have no effect."
                 .to_string(),
         );
+    }
+
+    // CVD + theme cross-check: CVD users on default theme lose shape-encoding contrast
+    if cvd_mode != "normal" {
+        let theme_val: &str = params.theme.as_deref().unwrap_or("default");
+        if theme_val == "default" {
+            suggestions.push(
+                "CVD mode is active but theme is 'default'. Consider 'high-contrast' for better shape-encoding visibility.".to_string(),
+            );
+        }
+        if post_processing.iter().any(|e| e == "bloom") {
+            warnings.push(
+                "Bloom post-processing can wash out CVD shape cues. Consider removing 'bloom' when CVD mode is active.".to_string(),
+            );
+        }
     }
 
     // Quality / post-processing suggestions

@@ -290,6 +290,23 @@ pub fn markov_from_data(params: MarkovFromDataParams) -> Result<CallToolResult, 
         return Err(McpError::invalid_params("No sequences provided", None));
     }
 
+    // Pre-validate: reject out-of-bounds indices before they get silently dropped
+    let n = params.states.len();
+    for (seq_idx, seq) in params.sequences.iter().enumerate() {
+        for &state_idx in seq {
+            if state_idx >= n {
+                return Err(McpError::invalid_params(
+                    format!(
+                        "Sequence {seq_idx} contains state index {state_idx}, \
+                         but only {n} states declared (indices 0..{})",
+                        n.saturating_sub(1)
+                    ),
+                    None,
+                ));
+            }
+        }
+    }
+
     let mc =
         MarkovChain::from_observed_data(params.states, &params.sequences).ok_or_else(|| {
             McpError::invalid_params("Failed to estimate Markov chain from data", None)
@@ -558,6 +575,41 @@ mod tests {
             sequences: vec![vec![0, 1, 2, 0, 1], vec![0, 0, 1, 2]],
         };
         assert!(markov_from_data(params).is_ok());
+    }
+
+    #[test]
+    fn test_markov_from_data_oob_single_sequence() {
+        let params = MarkovFromDataParams {
+            states: vec!["A".to_string(), "B".to_string()],
+            // Index 5 is out of bounds for a 2-state chain (valid: 0..1)
+            sequences: vec![vec![0, 1, 5, 0]],
+        };
+        let result = markov_from_data(params);
+        assert!(result.is_err());
+        let err = format!("{:?}", result.unwrap_err());
+        assert!(
+            err.contains("5"),
+            "Error should identify OOB index 5: {err}"
+        );
+        assert!(
+            err.contains("Sequence 0"),
+            "Error should identify sequence index: {err}"
+        );
+    }
+
+    #[test]
+    fn test_markov_from_data_oob_second_sequence() {
+        let params = MarkovFromDataParams {
+            states: vec!["X".to_string(), "Y".to_string()],
+            sequences: vec![vec![0, 1], vec![1, 0, 2]], // index 2 OOB in seq 1
+        };
+        let result = markov_from_data(params);
+        assert!(result.is_err());
+        let err = format!("{:?}", result.unwrap_err());
+        assert!(
+            err.contains("Sequence 1"),
+            "Error should identify sequence 1: {err}"
+        );
     }
 
     #[test]

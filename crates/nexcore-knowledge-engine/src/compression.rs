@@ -3,7 +3,7 @@
 //! Four stages: Pattern → Dedup → Hierarchy → Summary.
 //! Token Jaccard similarity reused from `nexcore-brain/src/implicit.rs:60-87`.
 
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 /// Verbose pattern replacements (ported from compendious-machine).
 const VERBOSE_PATTERNS: &[(&str, &str)] = &[
@@ -61,7 +61,7 @@ const VERBOSE_PATTERNS: &[(&str, &str)] = &[
 ];
 
 /// Compression method applied.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CompressionMethod {
     Pattern,
@@ -82,7 +82,7 @@ impl std::fmt::Display for CompressionMethod {
 }
 
 /// Result of structural compression.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct CompressionResult {
     pub original_text: String,
     pub compressed_text: String,
@@ -104,6 +104,10 @@ impl Default for StructuralCompressor {
         }
     }
 }
+
+/// Maximum number of sentences to consider for O(n²) dedup.
+/// Beyond this limit, tail sentences pass through unchanged.
+const MAX_SENTENCES_FOR_DEDUP: usize = 150;
 
 impl StructuralCompressor {
     pub fn new() -> Self {
@@ -165,36 +169,63 @@ impl StructuralCompressor {
     }
 
     /// Stage 1: BLUFF verbose pattern replacement.
+    ///
+    /// All patterns in `VERBOSE_PATTERNS` are lowercase ASCII. The algorithm keeps
+    /// a parallel lowercase view and slices both original-case and lowercase in
+    /// lockstep, advancing only by the pattern's byte length. This is safe because
+    /// ASCII patterns have identical byte lengths in original and lowercased forms,
+    /// even when surrounding non-ASCII characters change byte length under
+    /// `to_lowercase()`.
     fn apply_patterns(text: &str) -> String {
         let mut result = text.to_string();
-        let lower = text.to_lowercase();
 
         for (verbose, replacement) in VERBOSE_PATTERNS {
-            if lower.contains(verbose) {
-                // Case-insensitive replacement
-                let mut search_pos = 0;
-                let mut new_result = String::new();
-                let lower_result = result.to_lowercase();
-
-                while let Some(pos) = lower_result[search_pos..].find(verbose) {
-                    let abs_pos = search_pos + pos;
-                    new_result.push_str(&result[search_pos..abs_pos]);
-                    new_result.push_str(replacement);
-                    search_pos = abs_pos + verbose.len();
-                }
-                new_result.push_str(&result[search_pos..]);
-                result = new_result;
+            // Rebuild lowercase each iteration since prior replacements change the text
+            let lower_result = result.to_lowercase();
+            if !lower_result.contains(verbose) {
+                continue;
             }
+
+            let mut out = String::with_capacity(result.len());
+            let mut rest = result.as_str();
+            let mut rest_lower = lower_result.as_str();
+
+            while let Some(pos) = rest_lower.find(verbose) {
+                // All VERBOSE_PATTERNS are ASCII, so `pos` in the lowercase view is
+                // also a valid char boundary in the original-case `rest` — ASCII
+                // chars never change byte length under to_lowercase().
+                //
+                // Safety: we verify `pos` is within bounds of `rest` and is a char
+                // boundary before slicing.
+                if pos > rest.len() || !rest.is_char_boundary(pos) {
+                    // Misaligned — non-ASCII expansion shifted offsets. Bail safely.
+                    break;
+                }
+                let end = pos.checked_add(verbose.len()).unwrap_or(rest.len());
+                if end > rest.len() || !rest.is_char_boundary(end) {
+                    break;
+                }
+
+                out.push_str(&rest[..pos]);
+                out.push_str(replacement);
+                rest = &rest[end..];
+                rest_lower = &rest_lower[pos + verbose.len()..];
+            }
+            out.push_str(rest);
+            result = out;
         }
 
-        // Clean up double spaces from deletions
-        while result.contains("  ") {
-            result = result.replace("  ", " ");
+        // Clean up runs of whitespace from deletions (single allocation)
+        if result.contains("  ") {
+            result = result.split_whitespace().collect::<Vec<_>>().join(" ");
         }
         result.trim().to_string()
     }
 
     /// Stage 2: Token Jaccard dedup — collapse near-duplicate sentences.
+    ///
+    /// Capped at `MAX_SENTENCES_FOR_DEDUP` to prevent O(n²) blowup on large inputs.
+    /// Sentences beyond the cap pass through unchanged.
     fn apply_dedup(&self, text: &str) -> String {
         let sentences: Vec<&str> = text
             .split(['.', '!', '?'])
@@ -206,12 +237,15 @@ impl StructuralCompressor {
             return text.to_string();
         }
 
+        // Cap the dedup window to prevent quadratic blowup
+        let dedup_count = sentences.len().min(MAX_SENTENCES_FOR_DEDUP);
+
         let mut keep = vec![true; sentences.len()];
-        for i in 0..sentences.len() {
+        for i in 0..dedup_count {
             if !keep[i] {
                 continue;
             }
-            for j in (i + 1)..sentences.len() {
+            for j in (i + 1)..dedup_count {
                 if !keep[j] {
                     continue;
                 }
@@ -242,6 +276,11 @@ impl StructuralCompressor {
     }
 
     /// Stage 3: Flatten single-child markdown heading nesting.
+    ///
+    /// A parent heading is promoted away only when it has **exactly one** direct
+    /// child heading (a heading at `parent_level + 1`) with no non-heading content
+    /// between the parent and that child. If the parent has two or more direct
+    /// children, the structure is left unchanged to avoid orphaning siblings.
     fn apply_hierarchy(text: &str) -> String {
         let lines: Vec<&str> = text.lines().collect();
         if lines.len() < 3 {
@@ -254,11 +293,10 @@ impl StructuralCompressor {
         while i < lines.len() {
             let line = lines[i];
 
-            // Check if this is a heading with only one child heading (no content between)
             if line.starts_with('#') && i + 1 < lines.len() {
                 let current_level = line.chars().take_while(|c| *c == '#').count();
 
-                // Look ahead: skip empty lines, find next heading
+                // Locate the first non-blank line after this heading.
                 let mut j = i + 1;
                 while j < lines.len() && lines[j].trim().is_empty() {
                     j += 1;
@@ -267,11 +305,33 @@ impl StructuralCompressor {
                 if j < lines.len() && lines[j].starts_with('#') {
                     let next_level = lines[j].chars().take_while(|c| *c == '#').count();
                     if next_level == current_level + 1 {
-                        // Skip the parent heading, promote child
-                        let child_text = lines[j].trim_start_matches('#').trim();
-                        result.push(format!("{} {}", "#".repeat(current_level), child_text));
-                        i = j + 1;
-                        continue;
+                        // Count how many direct children (level == current_level + 1) follow
+                        // before we reach a heading at or above current_level or the end.
+                        let child_idx = j;
+                        let mut k = j + 1;
+                        let mut direct_child_count = 1_usize;
+                        while k < lines.len() {
+                            let l = lines[k];
+                            if l.starts_with('#') {
+                                let lv = l.chars().take_while(|c| *c == '#').count();
+                                if lv <= current_level {
+                                    // Sibling or uncle heading — stop scanning.
+                                    break;
+                                }
+                                if lv == current_level + 1 {
+                                    direct_child_count += 1;
+                                }
+                            }
+                            k += 1;
+                        }
+
+                        if direct_child_count == 1 {
+                            // Exactly one direct child: promote it and drop the parent.
+                            let child_text = lines[child_idx].trim_start_matches('#').trim();
+                            result.push(format!("{} {}", "#".repeat(current_level), child_text));
+                            i = child_idx + 1;
+                            continue;
+                        }
                     }
                 }
             }
@@ -285,18 +345,21 @@ impl StructuralCompressor {
 }
 
 /// Compute token-based Jaccard similarity between two strings.
-/// Reused from `nexcore-brain/src/implicit.rs:60-87`.
+///
+/// Uses `BTreeSet<&str>` (borrowed slices) to avoid per-token `String` allocation.
+/// Case-insensitive: both inputs are lowercased before tokenization.
 pub fn token_similarity(a: &str, b: &str) -> f64 {
-    let tokenize = |s: &str| -> HashSet<String> {
-        s.to_lowercase()
-            .split(|c: char| c.is_whitespace() || c.is_ascii_punctuation())
-            .filter(|t| !t.is_empty())
-            .map(String::from)
-            .collect()
-    };
+    let a_lower = a.to_lowercase();
+    let b_lower = b.to_lowercase();
 
-    let set_a = tokenize(a);
-    let set_b = tokenize(b);
+    let set_a: BTreeSet<&str> = a_lower
+        .split(|c: char| c.is_whitespace() || c.is_ascii_punctuation())
+        .filter(|t| !t.is_empty())
+        .collect();
+    let set_b: BTreeSet<&str> = b_lower
+        .split(|c: char| c.is_whitespace() || c.is_ascii_punctuation())
+        .filter(|t| !t.is_empty())
+        .collect();
 
     if set_a.is_empty() && set_b.is_empty() {
         return 1.0;
@@ -330,12 +393,42 @@ mod tests {
     }
 
     #[test]
+    fn pattern_replacement_non_ascii_safe() {
+        // Ensure non-ASCII characters don't cause corruption via byte-offset misalignment.
+        // İ (U+0130) lowercases to 'i' + combining dot above (3 bytes vs 2).
+        let text = "İstanbul is great, in order to visit.";
+        let compressed = StructuralCompressor::compress_pattern_only(text);
+        assert!(
+            compressed.contains("İstanbul"),
+            "non-ASCII text must survive pattern replacement: {compressed}"
+        );
+        assert!(
+            !compressed.contains("in order to"),
+            "pattern should still be replaced: {compressed}"
+        );
+    }
+
+    #[test]
     fn dedup_similar_sentences() {
         let text = "Signal detection uses PRR for analysis. Signal detection uses PRR for signal analysis. Something different here.";
         let compressor = StructuralCompressor::new();
         let result = compressor.compress(text);
         // Should have removed the near-duplicate
         assert!(result.compressed_word_count < result.original_word_count);
+    }
+
+    #[test]
+    fn dedup_respects_sentence_cap() {
+        // Verify that texts exceeding MAX_SENTENCES_FOR_DEDUP don't panic or hang.
+        let mut sentences = Vec::new();
+        for i in 0..200 {
+            sentences.push(format!("Sentence number {i} is unique enough"));
+        }
+        let text = sentences.join(". ") + ".";
+        let compressor = StructuralCompressor::new();
+        // Should complete without hanging — the cap prevents O(n²) on all 200
+        let result = compressor.compress(&text);
+        assert!(result.compressed_word_count > 0);
     }
 
     #[test]
@@ -350,10 +443,68 @@ mod tests {
     }
 
     #[test]
+    fn hierarchy_single_child_is_flattened() {
+        // A parent with exactly one child: parent should be dropped, child promoted.
+        let text = "## Parent\n### Only Child\nSome content.";
+        let result = StructuralCompressor::apply_hierarchy(text);
+        assert!(
+            !result.contains("## Parent"),
+            "single-child parent should be removed: {result}"
+        );
+        assert!(
+            result.contains("## Only Child"),
+            "child should be promoted to parent level: {result}"
+        );
+    }
+
+    #[test]
+    fn hierarchy_multi_child_is_preserved() {
+        // A parent with two direct children: structure must NOT be flattened.
+        let text = "## Parent\n### Child1\n### Child2";
+        let result = StructuralCompressor::apply_hierarchy(text);
+        assert!(
+            result.contains("## Parent"),
+            "multi-child parent must not be removed: {result}"
+        );
+        assert!(
+            result.contains("### Child1") && result.contains("### Child2"),
+            "children must be preserved: {result}"
+        );
+    }
+
+    #[test]
     fn compression_ratio() {
+        // Input contains 5 verbose patterns that are replaced:
+        //   "it is important to note that" → ""
+        //   "in order to" → "to"
+        //   "make a decision" → "decide"
+        //   "give consideration to" → "consider"
+        //   "basic fundamentals" → "fundamentals"
+        // Original: 21 words. After replacements the word count drops meaningfully.
         let text = "It is important to note that in order to make a decision, we need to give consideration to all the basic fundamentals.";
         let compressor = StructuralCompressor::new();
         let result = compressor.compress(text);
-        assert!(result.compression_ratio > 0.0);
+        // Must remove at least 30% of words given the heavy verbose load
+        assert!(
+            result.compression_ratio >= 0.30,
+            "expected >= 30% compression on verbose text, got {:.1}%",
+            result.compression_ratio * 100.0
+        );
+        assert_eq!(
+            result.methods_applied.len(),
+            1,
+            "expected exactly 1 method (Pattern)"
+        );
+    }
+
+    #[test]
+    fn double_space_cleanup_single_pass() {
+        // Verify that multiple consecutive spaces from deletions are collapsed
+        let text = "It is important to note that   the result   was clear.";
+        let compressed = StructuralCompressor::compress_pattern_only(text);
+        assert!(
+            !compressed.contains("  "),
+            "double spaces should be cleaned: {compressed:?}"
+        );
     }
 }

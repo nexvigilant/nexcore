@@ -26,7 +26,9 @@ pub struct PersonalizeSetParams {
     /// CVD mode: "normal", "deuteranopia", "protanopia", "tritanopia"
     #[serde(default)]
     pub cvd_mode: Option<String>,
-    /// Default explorer: "graph", "career", "learning", "state", "math"
+    /// Default explorer (12 registered explorers):
+    /// "graph", "career", "learning", "state", "math", "chemistry",
+    /// "regulatory", "causality", "timeline", "epidemiology", "molecule", "atlas"
     #[serde(default)]
     pub default_explorer: Option<String>,
     /// Default layout: "force", "hierarchy", "radial", "grid"
@@ -62,13 +64,19 @@ pub struct PersonalizeDetectParams {
     /// User contrast preference: "no-preference", "more", "less"
     #[serde(default)]
     pub prefers_contrast: Option<String>,
+    /// CVD mode hint from client: "normal", "deuteranopia", "protanopia", "tritanopia".
+    /// When set, detection factors CVD into theme and post-processing recommendations.
+    #[serde(default)]
+    pub cvd_hint: Option<String>,
 }
 
 /// Parameters for `observatory_personalize_validate`
 #[derive(Debug, Deserialize, JsonSchema)]
 #[serde(crate = "rmcp::serde")]
 pub struct PersonalizeValidateParams {
-    /// Explorer type to validate against: "graph", "career", "learning", "state", "math"
+    /// Explorer type to validate against (12 registered explorers):
+    /// "graph", "career", "learning", "state", "math", "chemistry",
+    /// "regulatory", "causality", "timeline", "epidemiology", "molecule", "atlas"
     #[serde(default)]
     pub explorer: Option<String>,
     /// Quality preset

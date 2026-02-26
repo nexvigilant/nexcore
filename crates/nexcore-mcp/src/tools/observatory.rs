@@ -271,17 +271,41 @@ pub fn personalize_set(params: PersonalizeSetParams) -> Result<CallToolResult, M
         )]));
     }
 
+    // CVD cross-check: adjust defaults for accessibility coherence
+    let mut warnings: Vec<String> = Vec::new();
+    let cvd_mode = params.cvd_mode.as_deref().unwrap_or("normal");
+    let mut theme = params.theme.unwrap_or_else(|| "default".to_string());
+    let mut post_processing = params
+        .post_processing
+        .unwrap_or_else(|| vec!["bloom".to_string()]);
+
+    if cvd_mode != "normal" {
+        if theme == "default" {
+            theme = "high-contrast".to_string();
+            warnings.push(format!(
+                "CVD mode '{}' active — theme auto-promoted from 'default' to 'high-contrast'",
+                cvd_mode,
+            ));
+        }
+        if post_processing.iter().any(|e| e == "bloom") {
+            post_processing.retain(|e| e != "bloom");
+            warnings
+                .push("Bloom post-processing removed — can wash out CVD shape cues".to_string());
+        }
+    }
+
     let result = json!({
         "valid": true,
         "normalized": {
             "quality": params.quality.unwrap_or_else(|| "medium".to_string()),
-            "theme": params.theme.unwrap_or_else(|| "default".to_string()),
-            "cvd_mode": params.cvd_mode.unwrap_or_else(|| "normal".to_string()),
+            "theme": theme,
+            "cvd_mode": cvd_mode,
             "default_explorer": params.default_explorer.unwrap_or_else(|| "graph".to_string()),
             "default_layout": params.default_layout.unwrap_or_else(|| "force".to_string()),
             "enable_worker_layout": params.enable_worker_layout.unwrap_or(true),
-            "post_processing": params.post_processing.unwrap_or_else(|| vec!["bloom".to_string()]),
+            "post_processing": post_processing,
         },
+        "warnings": warnings,
         "t1_grounding": "ς(State) + κ(Comparison) + ∂(Boundary) + μ(Mapping)"
     });
 

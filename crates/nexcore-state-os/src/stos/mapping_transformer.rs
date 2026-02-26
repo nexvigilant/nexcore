@@ -13,7 +13,7 @@
 //! `MappingTransformer` is T2-C (μ + ς + σ) — mapping, state, sequence.
 
 use alloc::collections::BTreeMap;
-use alloc::string::String;
+use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
 use super::state_registry::StateId;

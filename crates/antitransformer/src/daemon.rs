@@ -126,7 +126,7 @@ async fn shutdown_signal() {
 async fn health() -> impl IntoResponse {
     Json(HealthResponse {
         status: "ok".to_string(),
-        version: "0.1.0".to_string(),
+        version: env!("CARGO_PKG_VERSION").to_string(),
     })
 }
 
@@ -137,7 +137,7 @@ async fn openapi_spec() -> impl IntoResponse {
         "info": {
             "title": "Antitransformer API",
             "description": "AI text detector via statistical fingerprints — Zipf deviation, entropy uniformity, burstiness dampening, perplexity consistency, TTR anomaly.",
-            "version": "0.1.0",
+            "version": env!("CARGO_PKG_VERSION").to_string(),
             "license": { "name": "Proprietary - NexVigilant" }
         },
         "paths": {
@@ -322,7 +322,7 @@ mod tests {
         let health: HealthResponse =
             serde_json::from_slice(&body).expect("failed to parse health response");
         assert_eq!(health.status, "ok");
-        assert_eq!(health.version, "0.1.0");
+        assert_eq!(health.version, env!("CARGO_PKG_VERSION"));
     }
 
     #[tokio::test]

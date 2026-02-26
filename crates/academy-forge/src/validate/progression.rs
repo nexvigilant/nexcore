@@ -1,8 +1,20 @@
 //! Difficulty progression validation rules (R20-R23).
+//!
+//! ## Implementation Status
+//!
+//! | Rule | Status | Description |
+//! |------|--------|-------------|
+//! | R20  | Not yet implemented | Bloom level increases across stages |
+//! | R21  | Implemented | Passing score non-decreasing across stages |
+//! | R22  | Not yet implemented | Activity count increases across stages |
+//! | R23  | Implemented | Stage duration non-decreasing (after stage 2) |
 
 use crate::validate::{Severity, ValidationFinding};
 
 /// Run progression validation rules R20-R23.
+///
+/// Currently implements R21 and R23.  R20 and R22 are reserved but not yet
+/// implemented — they return no findings until implemented.
 pub fn validate_progression(content: &serde_json::Value) -> Vec<ValidationFinding> {
     let mut findings = Vec::new();
 

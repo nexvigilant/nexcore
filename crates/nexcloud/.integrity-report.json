@@ -1,0 +1,124 @@
+{
+  "scan_timestamp": "2026-02-26T00:00:00Z",
+  "scope": "/home/matthew/Projects/nexcore/crates/nexcloud",
+  "status": "FAIL",
+  "summary": {
+    "critical": 3,
+    "high": 4,
+    "medium": 3,
+    "fixed": 0,
+    "deferred": 10
+  },
+  "findings": [
+    {
+      "id": 1,
+      "class": 1,
+      "class_name": "Testing Theater",
+      "severity": "P1",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcloud/src/composites.rs",
+      "lines": "497-518",
+      "description": "test_serde_composites serializes 5 types and asserts only !json.is_empty(). No deserialization round-trip. Passes for any non-empty output, including corrupt JSON.",
+      "status": "deferred",
+      "deferral_reason": "Read-only scan phase"
+    },
+    {
+      "id": 2,
+      "class": 1,
+      "class_name": "Testing Theater",
+      "severity": "P1",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcloud/src/primitives.rs",
+      "lines": "1109-1133",
+      "description": "test_serde_all_t2p serializes 14 types but only asserts !json.is_empty(). Comment says 'round-trip' but there is no deserialization step. Only test_serde_identity (lines 1076-1083) performs a genuine round-trip.",
+      "status": "deferred",
+      "deferral_reason": "Read-only scan phase"
+    },
+    {
+      "id": 3,
+      "class": 1,
+      "class_name": "Testing Theater",
+      "severity": "P2",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcloud/src/service_models.rs",
+      "lines": "327-347",
+      "description": "test_serde_service_models serializes 5 T3 types and only checks !json.is_empty(). No round-trip deserialization.",
+      "status": "deferred",
+      "deferral_reason": "Read-only scan phase"
+    },
+    {
+      "id": 4,
+      "class": 1,
+      "class_name": "Testing Theater",
+      "severity": "P2",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcloud/src/foundations.rs",
+      "lines": "780-841",
+      "description": "Coverage minimum thresholds are trivially satisfied: asserts computing >= 7 (actual 8), engineering >= 10 (actual 12), science >= 5 (actual 6). Tests cannot fail with any reasonable implementation. The assert-minimum pattern provides false confidence.",
+      "status": "deferred",
+      "deferral_reason": "Read-only scan phase"
+    },
+    {
+      "id": 5,
+      "class": 1,
+      "class_name": "Testing Theater",
+      "severity": "P2",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcloud/src/process/task.rs",
+      "lines": "237,323,340,355",
+      "description": "Four async tests guard the actual assertions with `if def.binary.exists()`. On a system where /usr/bin/sleep is absent, all four tests silently pass without verifying spawn/stop/log/pid behavior. The guard makes the tests conditional but they are reported as passing unconditionally.",
+      "status": "deferred",
+      "deferral_reason": "Read-only scan phase"
+    },
+    {
+      "id": 6,
+      "class": 3,
+      "class_name": "Doc-Implementation Drift",
+      "severity": "P0",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcloud/examples/nexcloud.toml",
+      "lines": "21,25",
+      "description": "Example manifest uses `host = \"...\"` in [[route]] sections. RouteDef in manifest.rs uses `match_host` (not `host`). Serde silently drops `host` (no deny_unknown_fields). Validation then rejects the route with 'no match_host or match_prefix'. The example manifest CANNOT be loaded by nexcloud — it fails validation. Any operator copying this example gets a broken platform.",
+      "status": "deferred",
+      "deferral_reason": "Read-only scan phase"
+    },
+    {
+      "id": 7,
+      "class": 3,
+      "class_name": "Doc-Implementation Drift",
+      "severity": "P2",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcloud/src/foundations.rs",
+      "lines": "46-47,162-163",
+      "description": "ComputingParadigm::GraphAlgorithms docstring says 'Topological Sort (Kahn, 1962)' and topo_sort() method comment says 'Topological Sort (Kahn, 1962)'. The actual implementation uses Vec::sort() + Vec::pop() (reverse-alphabetical LIFO stack), not Kahn's FIFO queue algorithm. The result is a valid topological order but the attributed algorithm is incorrect.",
+      "status": "deferred",
+      "deferral_reason": "Read-only scan phase"
+    },
+    {
+      "id": 8,
+      "class": 3,
+      "class_name": "Doc-Implementation Drift",
+      "severity": "P2",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcloud/src/foundations.rs",
+      "lines": "844-867",
+      "description": "test_process_state_fsm_grounded uses a convoluted workaround: calls assert!(fsm.is_some()) then immediately calls unwrap_or_else with a fallback DUMMY record to handle the case that can't happen. The comment says 'Safe: we just asserted is_some()' but the code uses the fallback anyway. This should use .expect() or restructure, but the current form is misleading.",
+      "status": "deferred",
+      "deferral_reason": "Read-only scan phase"
+    },
+    {
+      "id": 9,
+      "class": 2,
+      "class_name": "Incomplete Implementation",
+      "severity": "P0",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcloud/src/supervisor/mod.rs",
+      "lines": "355-357",
+      "description": "health_monitor_loop detects unhealthy services, updates state to Restarting, increments restart counter, emits RestartScheduled event, but then does NOT actually respawn the process. Comment reads: 'In Phase 1, we just track state. Full restart loop comes when the supervisor owns the process handles directly.' This is a critical operational gap: the platform claims auto-restart capability (RestartPolicyKind, max_restarts, backoff_ms) but never actually restarts a crashed service.",
+      "status": "deferred",
+      "deferral_reason": "Read-only scan phase"
+    },
+    {
+      "id": 10,
+      "class": 8,
+      "class_name": "Silent Failure / Wrong Behavior",
+      "severity": "P1",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcloud/src/proxy/mod.rs",
+      "lines": "359-370",
+      "description": "When incoming request body exceeds MAX_BODY_BYTES (10MB), the body is silently replaced with Bytes::new() and the request is forwarded to the backend with an empty body. This violates the documented intent ('prevent OOM via large payloads'): instead of rejecting the request with 413 Payload Too Large, it corrupts the request semantics. A POST with a 15MB body becomes a POST with empty body — the backend sees a malformed request. No test covers this behavior.",
+      "status": "deferred",
+      "deferral_reason": "Read-only scan phase"
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "scan_timestamp": "2026-02-26T02:00:00Z",
+  "scope": "/home/matthew/Projects/nexcore/crates/nexcore-knowledge-engine",
+  "mcp_layer_scanned": [
+    "/home/matthew/Projects/nexcore/crates/nexcore-mcp/src/tools/knowledge_engine.rs",
+    "/home/matthew/Projects/nexcore/crates/nexcore-mcp/src/params/knowledge_engine.rs",
+    "/home/matthew/Projects/nexcore/crates/nexcore-mcp/src/lib.rs",
+    "/home/matthew/Projects/nexcore/crates/nexcore-mcp/src/unified.rs"
+  ],
+  "status": "PASS",
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 2,
+    "low": 2,
+    "fixed": 4,
+    "deferred": 0
+  },
+  "findings": [
+    {
+      "id": 1,
+      "class": 3,
+      "class_name": "Documentation-Implementation Drift",
+      "severity": "MEDIUM",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-mcp/src/lib.rs",
+      "lines": "3474-3476",
+      "description": "Section comment read '// Knowledge Engine Tools (8)' but 10 #[tool] methods existed. Two tools (knowledge_delete and knowledge_prune) were added since the previous scan without updating the count. Comment now reads '(10)' with all four tool names listed.",
+      "status": "fixed",
+      "deferral_reason": null
+    },
+    {
+      "id": 2,
+      "class": 7,
+      "class_name": "Schema Drift — Missing Output Field",
+      "severity": "MEDIUM",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-mcp/src/tools/knowledge_engine.rs",
+      "lines": "178-190",
+      "description": "The knowledge_query MCP tool output omitted fragment_id from each result object despite QueryResult.fragment_id being populated. A caller receiving query results had no way to reference a specific fragment by ID (e.g., for targeted delete). Added 'fragment_id' key to the per-result JSON object. The ingest tool correctly includes fragment_id in its response — this was a gap in the query path only.",
+      "status": "fixed",
+      "deferral_reason": null
+    },
+    {
+      "id": 3,
+      "class": 3,
+      "class_name": "Documentation-Implementation Drift",
+      "severity": "LOW",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-knowledge-engine/CLAUDE.md",
+      "lines": "61, 79",
+      "description": "MCP tools table listed knowledge_compress as 'Compress text through all 4 stages' — but the Summary stage (stage 4) is not implemented (reserved). The params doc comment correctly says 'All three compression stages'. Fixed the table entry to '3 active stages (Pattern, Dedup, Hierarchy)'. Also added a 'MCP Tool Naming' section clarifying the dual-surface naming: #[tool] methods use knowledge_* while the unified dispatcher uses knowledge_engine_*. Added a note that query_merged() is an internal helper, not a missing MCP tool.",
+      "status": "fixed",
+      "deferral_reason": null
+    },
+    {
+      "id": 4,
+      "class": 9,
+      "class_name": "Dead Code — Unused Error Variant",
+      "severity": "LOW",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-knowledge-engine/src/error.rs",
+      "lines": "18-19",
+      "description": "FragmentNotFound error variant is defined in KnowledgeEngineError but never constructed anywhere (neither in the library nor the MCP layer). It would fire in a fragment-level lookup operation that doesn't yet exist. Not removed (stubs represent intent per crate management policy), but documented as 'Reserved for future fragment-level lookup operations (not yet wired)'.",
+      "status": "fixed",
+      "deferral_reason": null
+    }
+  ],
+  "tests": {
+    "total": 56,
+    "passed": 56,
+    "failed": 0,
+    "pre_fix": 56,
+    "post_fix": 56
+  },
+  "clean_scan_notes": {
+    "class_1_echo_theater": "PASS — All source files perform real computation. Theater ratio well below threshold. Every function reads input, processes with algorithm, returns derived output.",
+    "class_2_passthrough_theater": "PASS — No passthrough patterns. jq filters replaced by Rust typed processing. All param fields read by their handlers (previous phantom-param finding from F2 scan is now fixed).",
+    "class_3_doc_implementation_drift": "FIXED (F1, F3) — Two drift points fixed: lib.rs section count (8→10), CLAUDE.md compress stage description (4→3 active), plus new dual-naming and query_merged documentation added.",
+    "class_4_phantom_absence": "PASS — All pub mod declarations have source files. All pub use re-exports resolve. Verified with cargo check (clean).",
+    "class_5_unwired_hooks": "PASS — All 10 knowledge tools are on all three surfaces: #[tool] in lib.rs (knowledge_*), dispatch in unified.rs (knowledge_engine_*), toolbox_catalog in unified.rs. The name prefix difference is by architectural design (two call paths to same backend), not a wiring gap.",
+    "class_6_unguarded_json_type": "PASS — No serde_json::Value in library code. All persistent state uses fully typed serde structs. #[serde(default)] guards on PackStats.sources_attempted and sources_failed prevent deserialization failures on older pack files.",
+    "class_7_jq_dialect": "N/A — No shell scripts or jq in this crate.",
+    "class_8_jq_context_loss": "N/A — No shell scripts or jq in this crate.",
+    "class_9_dead_code": "FIXED (F4) — FragmentNotFound error variant documented as reserved. No other orphaned functions found. version_count() and list_versions() are private helpers used by prune_old_versions() and delete_version() — not orphans.",
+    "class_10_state_schema_drift": "PASS — PackStats.sources_attempted and sources_failed use #[serde(default)] for backward-compatible deserialization of older packs that lack these fields. All other fields are stable. KnowledgePack serialization round-trips verified by save_and_load test.",
+    "testing_theater_check": "PASS — All assertions test specific values or ranges derived from known inputs. No assert!(result.is_ok()) with no further checks. Key examples: prune_keeps_newest_versions checks 5 specific version states, ingest_free_text asserts score >= 2.0 with token-math derivation in comment, compression_ratio asserts >= 30% and exactly 1 method applied.",
+    "unicode_safety": "PASS — pattern_replacement_non_ascii_safe test verifies İstanbul (U+0130, 2→3 byte lowercase expansion) survives apply_patterns without corruption. The char_boundary guard in apply_patterns is verified by this test.",
+    "path_traversal": "PASS — validate_pack_name rejects ./ ../ null bytes and any char outside [a-zA-Z0-9_-]. path_traversal_rejected test confirms ../../../tmp/evil is rejected with InvalidPackName.",
+    "atomic_writes": "PASS — save_pack() writes pack.json.tmp then rename for pack.json, and index.json.tmp then rename for index.json. No bare fs::write on persistent paths.",
+    "btreemap_btreeset": "PASS — No HashMap or HashSet anywhere in src/. BTreeMap and BTreeSet used throughout for deterministic iteration.",
+    "polyglot_evasion": "N/A — No embedded Python, Node, or other inline language blocks.",
+    "query_merged_dead_capability": "DOCUMENTED — query_merged() exists in query.rs and is tested. The MCP knowledge_query tool without pack_name queries all packs and flattens results using query() not query_merged(). The difference: query() preserves per-pack metadata (pack_name, pack_version, total_matches) while query_merged() returns a single globally-sorted flat list. Current MCP output flattens results but retains pack-level grouping implicit in the iteration order. query_merged() is documented as available for future MCP wiring."
+  }
+}

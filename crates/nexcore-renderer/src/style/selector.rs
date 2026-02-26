@@ -3,7 +3,7 @@
 //! Implements W3C selector matching with specificity-ordered cascade.
 
 use crate::dom::{Arena, NodeId};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 // ── Specificity (T2-P: cross-domain orderable quantity) ────────────
 
@@ -201,7 +201,7 @@ impl SimpleSelector {
 }
 
 /// Check if an element's class attribute contains the given class name.
-fn has_class(attrs: &HashMap<String, String>, class_name: &str) -> bool {
+fn has_class(attrs: &BTreeMap<String, String>, class_name: &str) -> bool {
     attrs
         .get("class")
         .is_some_and(|classes| classes.split_whitespace().any(|c| c == class_name))
@@ -264,7 +264,7 @@ mod tests {
         let div = arena.alloc(
             NodeKind::Element {
                 tag: "div".to_string(),
-                attrs: HashMap::new(),
+                attrs: BTreeMap::new(),
             },
             Some(root),
         );
@@ -278,7 +278,7 @@ mod tests {
     fn selector_matches_class_arena() {
         let mut arena = Arena::default();
         let root = arena.alloc(NodeKind::Document, None);
-        let mut attrs = HashMap::new();
+        let mut attrs = BTreeMap::new();
         attrs.insert("class".to_string(), "foo bar".to_string());
         let div = arena.alloc(
             NodeKind::Element {
@@ -297,7 +297,7 @@ mod tests {
     fn selector_matches_id_arena() {
         let mut arena = Arena::default();
         let root = arena.alloc(NodeKind::Document, None);
-        let mut attrs = HashMap::new();
+        let mut attrs = BTreeMap::new();
         attrs.insert("id".to_string(), "main".to_string());
         let div = arena.alloc(
             NodeKind::Element {
@@ -317,7 +317,7 @@ mod tests {
         let span = arena.alloc(
             NodeKind::Element {
                 tag: "span".to_string(),
-                attrs: HashMap::new(),
+                attrs: BTreeMap::new(),
             },
             Some(root),
         );

@@ -1,0 +1,111 @@
+{
+  "scan_timestamp": "2026-02-26T00:00:00Z",
+  "scope": "/home/matthew/Projects/nexcore/crates/nexcore-state-os",
+  "scan_type": "verification-scan — post 10-change development pass",
+  "status": "PASS",
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "fixed": 6,
+    "deferred": 1
+  },
+  "prior_scan_status": "PASS (4 findings fixed, reported 2026-02-26)",
+  "development_pass_verified": {
+    "change_1": "Display impl on KernelError + std::error::Error behind std feature — VERIFIED",
+    "change_2": "Guard bypass: transition() rejects guarded transitions — VERIFIED, TOCTOU analysis CLEAN",
+    "change_3": "Vec::remove(0) -> VecDeque::pop_front() in persist_store, irreversibility_auditor, transition_engine — VERIFIED",
+    "change_4": "proptest removed from dev-deps, async feature stub removed — VERIFIED",
+    "change_5": "max_depth enforced in dfs_detect (recursion_detector) — VERIFIED, off-by-one analysis CLEAN",
+    "change_6": "Guard expression parser precedence fixed: || now lower than && — VERIFIED, edge cases traced",
+    "change_7": "Dual license/license-file removed from nexcore-state-os/Cargo.toml — VERIFIED",
+    "change_8": "Stub routing strategies (Random/Affinity) documented in location_router — VERIFIED",
+    "change_9": "Overflow guard added to StateRegistry::next_id — VERIFIED",
+    "change_10": "5 new tests added — VERIFIED (operator precedence test confirmed correct)"
+  },
+  "findings": [
+    {
+      "id": 1,
+      "class": 9,
+      "class_name": "Dead Code / Orphan Scripts",
+      "severity": "MEDIUM",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-state-os/src/stos/guard_evaluator.rs",
+      "lines": "169-175",
+      "description": "PredicateFn type alias is pub-exported but never stored, accepted, or used anywhere. Zero callers in nexcore-mcp, nexcore-api, nexcore-os. No method on GuardEvaluator accepts or stores a PredicateFn.",
+      "status": "fixed",
+      "deferral_reason": null,
+      "fix_applied": "Added doc comment clarifying PredicateFn is a reserved extension point for future programmatic predicate attachment that supplements the string-expression evaluator. Type alias retained as stable API extension surface."
+    },
+    {
+      "id": 2,
+      "class": 3,
+      "class_name": "Documentation-Implementation Drift",
+      "severity": "MEDIUM",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-state-os/src/stos/guard_evaluator.rs",
+      "lines": "314-361",
+      "description": "evaluate_expression() has a silent failure mode: variable names containing '&&' or '||' as substrings cause silent misparse. This constraint was not documented in the function-level doc, in GuardContext::set_bool, or anywhere else.",
+      "status": "fixed",
+      "deferral_reason": null,
+      "fix_applied": "Added '## Variable name constraint' section to evaluate_expression() rustdoc. Added '# Name constraint' section to GuardContext::set_bool rustdoc. Safe examples (ready, a, order_valid) vs unsafe (check&&ready, flag||true) explicitly documented."
+    },
+    {
+      "id": 3,
+      "class": 1,
+      "class_name": "Echo Theater (vacuous test setup)",
+      "severity": "HIGH",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-state-os/src/kernel.rs",
+      "lines": "1179, 1250",
+      "description": "Two unit tests used 'let _ = kernel.transition(mid, tid)' for setup transitions. If transition() returned Err, the test continued silently and subsequent assertions passed vacuously. The tests claimed to verify terminal/absorbing state blocking but never verified the precondition transition succeeded.",
+      "status": "fixed",
+      "deferral_reason": null,
+      "fix_applied": "Both 'let _ =' patterns replaced with 'assert!(kernel.transition(mid, tid).is_ok(), \"<descriptive message>\")' giving clear failure diagnostics."
+    },
+    {
+      "id": 4,
+      "class": 3,
+      "class_name": "Documentation-Implementation Drift (dependency)",
+      "severity": "MEDIUM",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-state-theory/Cargo.toml",
+      "lines": "unknown",
+      "description": "nexcore-state-theory/Cargo.toml contains both 'license' and 'license-file' fields, producing a Cargo warning on every build of nexcore-state-os.",
+      "status": "deferred",
+      "deferral_reason": "File is in nexcore-state-theory, a dependency crate outside the declared scan scope. Fix: remove the 'license' field from nexcore-state-theory/Cargo.toml, retain only 'license-file = \"LICENSE\"'."
+    },
+    {
+      "id": 5,
+      "class": 10,
+      "class_name": "State Schema Drift (test coverage gaps)",
+      "severity": "MEDIUM",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-state-os/src/stos/guard_evaluator.rs",
+      "lines": "tests module",
+      "description": "Three behaviors untested after the development pass: (1) double negation '!!a', (2) evaluate_by_name() returning None for unregistered guard, (3) evaluate_by_name() returning Some with correct result. Unit test count was 102 after development pass.",
+      "status": "fixed",
+      "deferral_reason": null,
+      "fix_applied": "Added test_double_negation, test_evaluate_by_name_not_found, test_evaluate_by_name_registered. Unit test count: 102 -> 105."
+    },
+    {
+      "id": 6,
+      "class": 1,
+      "class_name": "Echo Theater (broken no_std claim)",
+      "severity": "HIGH",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-state-os/src/lib.rs",
+      "lines": "1",
+      "description": "The crate declares '#![cfg_attr(not(feature = \"std\"), no_std)]' + 'extern crate alloc' claiming no_std compatibility, but 'cargo build --no-default-features' produced 7 compile errors: 'vec!' macro not in scope (recursion_detector.rs:96), 'ToString' trait not in scope (existence_validator.rs x4, mapping_transformer.rs x1, machine.rs x1). The claim was theater — it compiled under std where both are implicitly available but failed without std.",
+      "status": "fixed",
+      "deferral_reason": null,
+      "fix_applied": "Added 'use alloc::vec;' to recursion_detector.rs. Changed 'use alloc::string::String;' to 'use alloc::string::{String, ToString};' in existence_validator.rs, mapping_transformer.rs, and machine.rs. 'cargo build --no-default-features' now succeeds cleanly."
+    }
+  ],
+  "verification": {
+    "std_build": "PASS",
+    "no_std_build": "PASS — cargo build --no-default-features: 0 errors after Fix 6",
+    "unit_tests_before_fixes": 102,
+    "unit_tests_after_fixes": 105,
+    "integration_tests": 19,
+    "total_passing": 124,
+    "clippy_warnings_in_scope": 0,
+    "api_breakage_check": "NONE — history(), trail(), all() tuple-slice callers: 0 in nexcore-mcp, nexcore-api, nexcore-os",
+    "toctou_analysis": "CLEAN — guard bypass uses shared borrow before any mutation; single-threaded &mut self prevents concurrent access",
+    "parser_correctness": "VERIFIED — !a&&b, a&&!b, !a||b, a||!b&&c, !!a all produce correct results via trace analysis and new tests"
+  }
+}

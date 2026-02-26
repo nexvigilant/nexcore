@@ -6,12 +6,12 @@
 //!
 //! Tier: T2-S (Service boundary — λ Location + π Persistence + ∂ Boundary)
 
-use hmac::{Hmac, Mac};
 use nexcore_codec::hex;
 use nexcore_fs::dirs;
+use nexcore_hash::hmac::HmacSha256;
+use nexcore_hash::sha256::Sha256;
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
-use sha2::Sha256;
 use std::path::PathBuf;
 use std::sync::{Arc, OnceLock};
 use tokio::sync::Mutex;
@@ -490,13 +490,12 @@ impl GuardianStore {
 
 /// Hash an API key using HMAC-SHA256 with a server secret
 fn hash_api_key(raw_key: &str) -> String {
-    use sha2::Digest;
     let secret = std::env::var("API_KEY_SECRET")
         .unwrap_or_else(|_| "guardian-dev-secret-change-in-prod".to_string());
-    match Hmac::<Sha256>::new_from_slice(secret.as_bytes()) {
-        Ok(mut mac) => {
-            mac.update(raw_key.as_bytes());
-            hex::encode(mac.finalize().into_bytes())
+    match HmacSha256::new_from_slice(secret.as_bytes()) {
+        Ok(mut hmac) => {
+            hmac.update(raw_key.as_bytes());
+            hex::encode(hmac.finalize())
         }
         Err(_) => {
             // HMAC accepts any key size — unreachable in practice.

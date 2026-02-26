@@ -35,54 +35,42 @@
 pub mod grounding;
 
 use core::fmt;
+use nexcore_error::Error;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-/// Errors during endocrine operations
-/// Tier: T2-C (Grounded in T1 Recursion ρ)
-#[derive(Debug)]
+/// Errors during endocrine operations.
+///
+/// ## Primitive Grounding: ∂ (Boundary) + Σ (Sum)
+///
+/// ## Tier: T2-P (∂ + Σ)
+#[derive(Debug, Error)]
 pub enum EndocrineError {
-    /// Failed to read state file
-    ReadError(std::io::Error),
-    /// Failed to parse JSON
-    ParseError(serde_json::Error),
-    /// HOME not set
+    /// Failed to read state file.
+    #[error("failed to read hormone state: {0}")]
+    ReadError(#[from] std::io::Error),
+
+    /// Failed to parse JSON.
+    #[error("corrupted hormone state JSON: {0}")]
+    ParseError(#[from] serde_json::Error),
+
+    /// HOME not set.
+    #[error("HOME environment variable not set")]
     NoHomeDir,
+
+    /// Invalid hormone level value.
+    #[error("invalid hormone level {value}: must be in [0.0, 1.0]")]
+    InvalidLevel {
+        /// The invalid level value.
+        value: f64,
+    },
+
+    /// Invalid stimulus parameters.
+    #[error("invalid stimulus: {0}")]
+    InvalidStimulus(String),
 }
 
-impl fmt::Display for EndocrineError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::ReadError(e) => write!(f, "failed to read hormone state: {e}"),
-            Self::ParseError(e) => write!(f, "corrupted hormone state JSON: {e}"),
-            Self::NoHomeDir => write!(f, "HOME environment variable not set"),
-        }
-    }
-}
-
-impl std::error::Error for EndocrineError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::ReadError(e) => Some(e),
-            Self::ParseError(e) => Some(e),
-            Self::NoHomeDir => None,
-        }
-    }
-}
-
-impl From<std::io::Error> for EndocrineError {
-    fn from(e: std::io::Error) -> Self {
-        Self::ReadError(e)
-    }
-}
-
-impl From<serde_json::Error> for EndocrineError {
-    fn from(e: serde_json::Error) -> Self {
-        Self::ParseError(e)
-    }
-}
-
-/// Result type for endocrine operations
+/// Result type for endocrine operations.
 pub type EndocrineResult<T> = Result<T, EndocrineError>;
 
 /// Hormone level - bounded 0.0 to 1.0

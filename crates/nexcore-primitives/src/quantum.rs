@@ -166,18 +166,13 @@ pub mod wave {
             }
         }
         pub fn resultant_amplitude(&self) -> f64 {
-            let real: f64 = self
+            let (real, imag) = self
                 .amplitudes
                 .iter()
                 .zip(self.phases.iter())
-                .map(|(a, p)| a * p.cos())
-                .sum();
-            let imag: f64 = self
-                .amplitudes
-                .iter()
-                .zip(self.phases.iter())
-                .map(|(a, p)| a * p.sin())
-                .sum();
+                .fold((0.0_f64, 0.0_f64), |(r, i), (a, p)| {
+                    (r + a * p.cos(), i + a * p.sin())
+                });
             (real * real + imag * imag).sqrt()
         }
         pub fn max_amplitude(&self) -> f64 {
@@ -1221,11 +1216,11 @@ mod tests {
 
     #[test]
     fn test_amplitude_hash_consistent() {
-        use std::collections::HashSet;
+        use std::collections::BTreeSet;
         let a1 = Amplitude::new(1.0, 2.0);
         let a2 = Amplitude::new(1.0, 2.0);
         let a3 = Amplitude::new(1.0, 3.0);
-        let mut set = HashSet::new();
+        let mut set = BTreeSet::new();
         set.insert(a1.clone());
         assert!(set.contains(&a2));
         assert!(!set.contains(&a3));
@@ -1233,11 +1228,11 @@ mod tests {
 
     #[test]
     fn test_qubit_eq_hash() {
-        use std::collections::HashSet;
+        use std::collections::BTreeSet;
         let q1 = Qubit::zero();
         let q2 = Qubit::zero();
         let q3 = Qubit::one();
-        let mut set = HashSet::new();
+        let mut set = BTreeSet::new();
         set.insert(q1);
         assert!(set.contains(&q2));
         assert!(!set.contains(&q3));
@@ -1259,11 +1254,11 @@ mod tests {
 
     #[test]
     fn test_entanglement_hash() {
-        use std::collections::HashSet;
+        use std::collections::BTreeSet;
         let e1 = Entanglement::new("A", "B", 0.8);
         let e2 = Entanglement::new("A", "B", 0.8);
         let e3 = Entanglement::new("A", "B", 0.9);
-        let mut set = HashSet::new();
+        let mut set = BTreeSet::new();
         set.insert(e1);
         assert!(set.contains(&e2));
         assert!(!set.contains(&e3));

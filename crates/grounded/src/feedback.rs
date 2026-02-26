@@ -346,15 +346,42 @@ mod tests {
 
         let mut grounded = GroundedLoop::new(ctx, world, store);
         let result = grounded.iterate();
-        assert!(result.is_ok());
+        assert!(result.is_ok(), "iterate must succeed");
 
-        let learning = result.ok();
-        assert!(learning.is_some());
-        assert_eq!(grounded.iterations(), 1);
+        let uncertain_learning = result.unwrap_or_else(|_| {
+            Uncertain::new(
+                Learning {
+                    insight: String::new(),
+                    posterior: Confidence::NONE,
+                    verdict: Verdict::Inconclusive,
+                    hypothesis_claim: String::new(),
+                    observation: String::new(),
+                    learned_at: DateTime::now(),
+                },
+                Confidence::NONE,
+            )
+        });
+
+        // Verify the Learning content, not just that it exists
+        let learning = uncertain_learning.value();
         assert_eq!(
-            grounded.store().all_learnings().unwrap_or_default().len(),
-            1
+            learning.verdict,
+            Verdict::Supported,
+            "TestWorld is conclusive → Supported"
         );
+        assert!(
+            (learning.posterior.value() - 0.8).abs() < 1e-10,
+            "integrate gives 0.8 posterior for Supported"
+        );
+        assert!(
+            learning.insight.contains("hypothesis-0"),
+            "insight should reference the hypothesis"
+        );
+
+        assert_eq!(grounded.iterations(), 1);
+        let stored = grounded.store().all_learnings().unwrap_or_default();
+        assert_eq!(stored.len(), 1);
+        assert_eq!(stored[0].verdict, Verdict::Supported);
     }
 
     #[test]
@@ -388,7 +415,7 @@ mod tests {
             observation: "looked up, saw blue".into(),
             learned_at: DateTime::now(),
         };
-        let _ = store.persist(&learning);
+        assert!(store.persist(&learning).is_ok(), "persist must succeed");
 
         let found = store.learnings_for("sky").unwrap_or_default();
         assert_eq!(found.len(), 1);

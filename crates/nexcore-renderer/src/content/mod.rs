@@ -109,12 +109,7 @@ impl ContentRenderer for InternalRenderer {
     }
 
     fn viewport(&self) -> Rect {
-        Rect {
-            x: 0.0,
-            y: 0.0,
-            width: 1280.0,
-            height: 720.0,
-        }
+        self.browser.viewport()
     }
 }
 

@@ -13,13 +13,16 @@
 //!
 //! Given:
 //! - Threat sensor suite S = {s_1, ..., s_n}
-//! - Available countermeasures C = {c_1, ..., c_m}
+//! - Available countermeasures C = {c_1, ..., c_m}, m ≤ 20
 //! - Weight budget W (mass constraint in kg)
 //!
 //! Minimize: P_fused(S, target_with_countermeasures)
 //! Subject to: Σ w_i × x_i ≤ W, x_i ∈ {0,1}
 //!
-//! Solved via branch-and-bound for small instance sizes.
+//! Solved via exhaustive search over all 2^m subsets.
+//! Practical for m ≤ 20 (~1M combinations). Items beyond the first 20 are
+//! not considered — callers with more than 20 candidates should pre-rank and
+//! pass the 20 most promising countermeasures.
 //!
 //! ## Lex Primitiva Grounding
 //! - `FusionResult` → Σ (Sum) — combining sensor detections
@@ -96,14 +99,19 @@ pub struct OptimalLoadout {
     pub active_counters: Vec<CounterPrimitive>,
 }
 
-/// Find optimal countermeasure loadout via exhaustive search.
+/// Find optimal countermeasure loadout via exhaustive search over all 2^N subsets.
 ///
-/// For N countermeasures, evaluates 2^N combinations.
-/// Practical for N ≤ 20 (1M combinations).
+/// For N countermeasures (capped at 20), evaluates up to 2^20 ≈ 1M combinations.
+///
+/// ## Constraints
+/// - Only the first 20 countermeasures are considered. If `countermeasures.len() > 20`,
+///   items at indices 20+ are silently excluded. Callers should pass only the most
+///   promising candidates when the set is large.
+/// - Negative `weight_budget_kg` is treated as zero (see implementation note).
 ///
 /// ## Algorithm
 /// ```text
-/// for each subset S ⊆ countermeasures:
+/// for each subset S ⊆ countermeasures[0..min(N,20)]:
 ///   if weight(S) ≤ budget:
 ///     compute P_fused with counters(S)
 ///     if P_fused < best:
@@ -121,21 +129,31 @@ pub fn optimize_loadout(
     // Cap at 20 countermeasures to avoid combinatorial explosion
     let max_n = n.min(20);
 
+    // Clamp budget to 0 so the empty-loadout mask=0 always passes the weight check.
+    // A negative budget is not a meaningful constraint; treating it as zero means
+    // "only consider countermeasures with no weight (structural modifications)", which
+    // is the closest sensible interpretation. Without this clamp, best_prob stays
+    // f64::MAX and the returned OptimalLoadout.fused_probability is nonsensical.
+    let effective_budget = weight_budget_kg.max(0.0);
+
     let mut best_prob = f64::MAX;
     let mut best_mask: u32 = 0;
 
     for mask in 0..(1u32 << max_n) {
         // Check weight constraint
+        // SAFETY: i ∈ 0..max_n where max_n = n.min(20) ≤ n = countermeasures.len(),
+        // so countermeasures[i] is always in-bounds.
         let total_weight: f64 = (0..max_n)
             .filter(|i| mask & (1 << i) != 0)
             .map(|i| countermeasures[i].weight_kg)
             .sum();
 
-        if total_weight > weight_budget_kg {
+        if total_weight > effective_budget {
             continue;
         }
 
         // Collect active counter-primitives
+        // SAFETY: same invariant as above — i ∈ 0..max_n ≤ countermeasures.len().
         let counters: Vec<CounterPrimitive> = (0..max_n)
             .filter(|i| mask & (1 << i) != 0)
             .flat_map(|i| countermeasures[i].primary_counters.clone())
@@ -151,6 +169,7 @@ pub fn optimize_loadout(
     }
 
     // Reconstruct best loadout
+    // SAFETY: all indices in `selected` come from 0..max_n ≤ countermeasures.len().
     let selected: Vec<usize> = (0..max_n).filter(|i| best_mask & (1 << i) != 0).collect();
 
     let total_weight: f64 = selected.iter().map(|&i| countermeasures[i].weight_kg).sum();
@@ -275,6 +294,35 @@ mod tests {
         assert!(
             loadout.fused_probability <= unprotected.fused_probability,
             "Optimizer should reduce or maintain detection probability"
+        );
+    }
+
+    #[test]
+    fn optimizer_negative_budget_does_not_produce_inf_or_max() {
+        // A negative budget is not a valid mission constraint. The optimizer must not
+        // return fused_probability = f64::MAX (the uninitialized sentinel) when the
+        // empty-loadout mask is incorrectly skipped due to 0 > negative_budget.
+        let sensors = test_sensor_suite();
+        let cms = test_countermeasures();
+        let matrix = EffectivenessMatrix::default_physics();
+
+        let loadout = optimize_loadout(&sensors, &cms, &matrix, -10.0, 1000.0, 0.8);
+
+        assert!(
+            loadout.fused_probability.is_finite(),
+            "negative budget must not produce f64::MAX in fused_probability, got {}",
+            loadout.fused_probability
+        );
+        assert!(
+            (0.0..=1.0).contains(&loadout.fused_probability),
+            "fused_probability must be in [0, 1] even with negative budget, got {}",
+            loadout.fused_probability
+        );
+        // Weight of selected countermeasures must still be zero
+        // (structural/zero-weight items may be selected)
+        assert!(
+            loadout.total_weight_kg >= 0.0,
+            "total_weight_kg must be non-negative"
         );
     }
 }

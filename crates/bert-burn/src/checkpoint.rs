@@ -43,7 +43,12 @@ pub struct CheckpointManager {
 
 impl CheckpointManager {
     pub fn new(checkpoint_dir: &str) -> Self {
-        let _ = fs::create_dir_all(checkpoint_dir);
+        if let Err(e) = fs::create_dir_all(checkpoint_dir) {
+            eprintln!(
+                "Warning: could not create checkpoint directory '{}': {}",
+                checkpoint_dir, e
+            );
+        }
         Self {
             checkpoint_dir: checkpoint_dir.to_string(),
         }

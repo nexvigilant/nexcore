@@ -12,10 +12,11 @@ keywords = ["signal-detection", "network-security", "process-monitor", "firewall
 categories = ["network-programming", "os"]
 
 [dependencies]
-nexcore-signal-theory = { version = "0.1.0", path = "../nexcore-signal-theory", registry = "nexcore" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
-serde = { version = "1.0.204", features = ["derive"] }
-serde_json = { version = "1.0.120" }
+nexcore-signal-theory = { workspace = true }
+nexcore-signal-types = { workspace = true }
+nexcore-lex-primitiva = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
 nexcore-chrono = { workspace = true }
 ipnetwork = "0.20"
 tracing = { version = "0.1.40" }

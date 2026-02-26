@@ -133,4 +133,63 @@ mod tests {
             ConfidenceBand::Negligible
         );
     }
+
+    #[test]
+    fn confidence_band_exact_boundaries() {
+        // Exact boundary values — these are the thresholds where bands change
+        assert_eq!(Confidence::new(0.95).unwrap().band(), ConfidenceBand::High);
+        assert_eq!(
+            Confidence::new(0.9499999999).unwrap().band(),
+            ConfidenceBand::Medium
+        );
+        assert_eq!(
+            Confidence::new(0.80).unwrap().band(),
+            ConfidenceBand::Medium
+        );
+        assert_eq!(
+            Confidence::new(0.7999999999).unwrap().band(),
+            ConfidenceBand::Low
+        );
+        assert_eq!(Confidence::new(0.50).unwrap().band(), ConfidenceBand::Low);
+        assert_eq!(
+            Confidence::new(0.4999999999).unwrap().band(),
+            ConfidenceBand::Negligible
+        );
+    }
+
+    #[test]
+    fn confidence_extremes() {
+        assert_eq!(
+            Confidence::new(0.0).unwrap().band(),
+            ConfidenceBand::Negligible
+        );
+        assert_eq!(Confidence::new(1.0).unwrap().band(), ConfidenceBand::High);
+    }
+
+    #[test]
+    fn confidence_compose_identity() {
+        let c = Confidence::new(0.7).unwrap();
+        let composed = c.compose(Confidence::CERTAIN);
+        assert!(
+            (composed.value() - 0.7).abs() < 1e-10,
+            "compose with CERTAIN is identity"
+        );
+    }
+
+    #[test]
+    fn confidence_compose_zero() {
+        let c = Confidence::new(0.7).unwrap();
+        let composed = c.compose(Confidence::NONE);
+        assert!(
+            (composed.value()).abs() < 1e-10,
+            "compose with NONE is zero"
+        );
+    }
+
+    #[test]
+    fn confidence_display_formatting() {
+        let c = Confidence::new(0.5).unwrap();
+        assert_eq!(format!("{c}"), "50.0%");
+        assert_eq!(format!("{c:?}"), "Confidence(0.5000)");
+    }
 }

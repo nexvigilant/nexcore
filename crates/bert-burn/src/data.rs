@@ -2,7 +2,9 @@
 #[derive(Debug, Clone)]
 pub struct MLMBatch {
     pub input_ids: Vec<Vec<i64>>,
-    #[allow(dead_code)]
+    /// Padding mask: 1.0 for real tokens, 0.0 for [PAD].
+    /// Converted to `Tensor<B, 2, Bool>` in runner.rs and wired into
+    /// `MhaInput::mask_pad` so attention ignores padding positions.
     pub attention_mask: Vec<Vec<f32>>,
     pub masked_ids: Vec<Vec<i64>>,
     pub masked_positions: Vec<Vec<i64>>,
@@ -12,7 +14,10 @@ pub struct MLMBatch {
 /// Special tokens: [PAD]=0, [UNK]=1, [CLS]=2, [SEP]=3, [MASK]=4
 /// Nucleotides: A=5, T=6, G=7, C=8
 pub struct DnaVocabulary {
-    #[allow(dead_code)]
+    #[allow(
+        dead_code,
+        reason = "held for runtime introspection; constants are used directly"
+    )]
     pub vocab_size: usize,
 }
 
@@ -44,7 +49,7 @@ impl DnaVocabulary {
         }
     }
 
-    #[allow(dead_code)]
+    #[allow(dead_code, reason = "used in tests and future CLI decode display")]
     pub fn decode(&self, id: i64) -> char {
         match id {
             0 => '_', // PAD
@@ -210,7 +215,14 @@ impl TextDataset {
         (self.sequences.len() + self.batch_size - 1) / self.batch_size
     }
 
-    #[allow(dead_code)]
+    pub fn num_sequences(&self) -> usize {
+        self.sequences.len()
+    }
+
+    #[allow(
+        dead_code,
+        reason = "introspection helper for external callers; internal code uses VOCAB_SIZE constant"
+    )]
     pub fn vocab_size(&self) -> usize {
         self.vocab.vocab_size
     }
@@ -264,28 +276,54 @@ mod tests {
     #[test]
     fn test_batch_has_masks() {
         let ds = TextDataset::new(4, 64);
-        let batch = ds.get_batch(0).unwrap();
-        // At least some positions should be masked
-        let total_masks: usize = batch.masked_positions.iter().map(|p| p.len()).sum();
-        assert!(total_masks > 0, "Should have masked positions");
-        // masked_ids should match masked_positions count
-        let total_ids: usize = batch.masked_ids.iter().map(|p| p.len()).sum();
+        // Aggregate across all batches to eliminate probabilistic flake
+        // (P(zero masks in any single batch) ≈ 1.2e-8; across all batches ≈ 0)
+        let mut total_masks = 0_usize;
+        let mut total_ids = 0_usize;
+        for batch_idx in 0..ds.num_batches() {
+            if let Some(batch) = ds.get_batch(batch_idx) {
+                let batch_masks: usize = batch.masked_positions.iter().map(|p| p.len()).sum();
+                let batch_ids: usize = batch.masked_ids.iter().map(|p| p.len()).sum();
+                assert_eq!(
+                    batch_masks, batch_ids,
+                    "mask count must equal id count in batch {}",
+                    batch_idx
+                );
+                total_masks += batch_masks;
+                total_ids += batch_ids;
+            }
+        }
+        assert!(
+            total_masks > 0,
+            "Should have masked positions across all batches"
+        );
         assert_eq!(total_masks, total_ids);
     }
 
     #[test]
     fn test_masked_ids_are_nucleotides() {
+        // Aggregate across all batches: guarantees we actually check some IDs
+        // (single-batch tests risk tautology if mask_prob yields no masks by chance,
+        // even though P(zero masks in 4 seqs × 30 nucleotides) ≈ 5e-10).
         let ds = TextDataset::new(4, 64);
-        let batch = ds.get_batch(0).unwrap();
-        for ids in &batch.masked_ids {
-            for &id in ids {
-                assert!(
-                    id >= DnaVocabulary::A && id <= DnaVocabulary::C,
-                    "Masked IDs should be nucleotide tokens, got {}",
-                    id
-                );
+        let mut total_checked = 0_usize;
+        for batch_idx in 0..ds.num_batches() {
+            let batch = ds.get_batch(batch_idx).unwrap();
+            for ids in &batch.masked_ids {
+                for &id in ids {
+                    assert!(
+                        id >= DnaVocabulary::A && id <= DnaVocabulary::C,
+                        "Masked IDs should be nucleotide tokens (5-8), got {}",
+                        id
+                    );
+                    total_checked += 1;
+                }
             }
         }
+        assert!(
+            total_checked > 0,
+            "No masked IDs were checked — masking produced no output"
+        );
     }
 
     #[test]

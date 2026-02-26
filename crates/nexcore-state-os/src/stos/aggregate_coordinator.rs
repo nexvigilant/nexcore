@@ -119,7 +119,10 @@ impl AggregateStats {
 
     /// Percentage of healthy machines.
     #[must_use]
-    #[allow(clippy::cast_precision_loss)]
+    #[allow(
+        clippy::cast_precision_loss,
+        reason = "usize -> f64 for percentage computation; precision loss is acceptable at realistic machine counts"
+    )]
     pub fn health_percentage(&self) -> f64 {
         if self.total_machines == 0 {
             return 100.0;

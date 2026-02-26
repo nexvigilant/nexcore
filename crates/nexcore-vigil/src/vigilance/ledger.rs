@@ -7,8 +7,8 @@
 //! The ledger is the persistence backbone of the entire vigilance system.
 
 use crate::vigilance::error::{VigilError, VigilResult};
+use nexcore_hash::sha256::Sha256;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
@@ -72,8 +72,8 @@ impl LedgerEntry {
         prev_hash: &[u8; 32],
     ) -> [u8; 32] {
         let mut hasher = Sha256::new();
-        hasher.update(sequence.to_le_bytes());
-        hasher.update(timestamp.to_le_bytes());
+        hasher.update(&sequence.to_le_bytes());
+        hasher.update(&timestamp.to_le_bytes());
         hasher.update(entry_type.to_string().as_bytes());
         // Use compact JSON for deterministic hashing
         let payload_bytes = serde_json::to_vec(payload).unwrap_or_default();

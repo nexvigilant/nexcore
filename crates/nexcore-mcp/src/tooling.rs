@@ -483,39 +483,3 @@ fn truncate_snippet(text: &str, max_bytes: usize, max_lines: usize) -> Snippet {
 pub fn snippet_for(text: &str, limits: ScanLimits) -> Snippet {
     truncate_snippet(text, limits.max_snippet_bytes, limits.max_snippet_lines)
 }
-
-// ============================================================================
-// Unified Mode
-// ============================================================================
-
-/// Check if unified mode is enabled via `NEXCORE_MCP_UNIFIED_MODE=true|1`.
-pub fn is_unified_mode() -> bool {
-    static MODE: OnceLock<bool> = OnceLock::new();
-    *MODE.get_or_init(|| {
-        env::var("NEXCORE_MCP_UNIFIED_MODE")
-            .map(|v| v == "true" || v == "1")
-            .unwrap_or(false)
-    })
-}
-
-/// Build the unified tool descriptor for `list_tools`.
-pub fn unified_tool_descriptor() -> rmcp::model::Tool {
-    use std::sync::Arc;
-    rmcp::model::Tool::new(
-        "nexcore",
-        UNIFIED_DESCRIPTION,
-        Arc::new(serde_json::Map::new()),
-    )
-    .with_input_schema::<crate::params::UnifiedParams>()
-}
-
-const UNIFIED_DESCRIPTION: &str = "NexCore unified interface — 305 commands via single tool.\n\n\
-    USAGE: nexcore(command=\"CMD\", params={...})\n\
-    HELP:  nexcore(command=\"help\")\n\n\
-    CATEGORIES: Foundation(9) PV(8) Signal(3) PVDSL(4) Vigilance(4) Compliance(5) \
-    Hormone(4) Guardian(13) HUD(24) Docs(1) Vigil(13) PvPipeline(1) Skills(22) \
-    Guidelines(9) MESH(6) FAERS(5) GCloud(19) Wolfram(19) Principles(3) Validation(4) \
-    Brain(25) BrainDB(8) Hooks(4) Immunity(5) Regulatory(3) BrandSemantics(4) \
-    PrimitiveValidation(4) Chemistry(15) STEM(11) Watchtower(9) TelemetryIntel(6) \
-    PrimitiveScanner(2) Algovigilance(6) EditDistance(5) Measure(7) FDACredibility(11) \
-    CCP(6) SignalFence(3) VigilSystem(8) Reproductive(3)";

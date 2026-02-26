@@ -75,11 +75,16 @@ fn validate_id_naming(content: &serde_json::Value, findings: &mut Vec<Validation
 }
 
 /// R3: `componentCount` == actual count of activities across all stages.
+///
+/// Accepts the count at `metadata.componentCount` (authored content) or at the
+/// top-level `componentCount` key (scaffold output).  When both are present,
+/// `metadata.componentCount` takes precedence.
 fn validate_component_count(content: &serde_json::Value, findings: &mut Vec<ValidationFinding>) {
     let declared = content
         .get("metadata")
         .and_then(|m| m.get("componentCount"))
-        .and_then(|c| c.as_u64());
+        .and_then(|c| c.as_u64())
+        .or_else(|| content.get("componentCount").and_then(|c| c.as_u64()));
 
     if let Some(declared_count) = declared {
         let mut actual_count: u64 = 0;
@@ -105,11 +110,18 @@ fn validate_component_count(content: &serde_json::Value, findings: &mut Vec<Vali
 }
 
 /// R4: `estimatedDuration` == sum of activity durations.
+///
+/// Accepts the duration at `metadata.estimatedDuration` (authored content, as
+/// a `u64` of minutes) or at the top-level `estimatedDuration` key (scaffold
+/// output, also `u64` minutes).  String-form durations (e.g. `"8 hours"`) are
+/// intentionally skipped — the rule only fires when a numeric minute value is
+/// present so it can perform arithmetic comparison.
 fn validate_estimated_duration(content: &serde_json::Value, findings: &mut Vec<ValidationFinding>) {
     let declared = content
         .get("metadata")
         .and_then(|m| m.get("estimatedDuration"))
-        .and_then(|d| d.as_u64());
+        .and_then(|d| d.as_u64())
+        .or_else(|| content.get("estimatedDuration").and_then(|d| d.as_u64()));
 
     if let Some(declared_duration) = declared {
         let mut actual_duration: u64 = 0;

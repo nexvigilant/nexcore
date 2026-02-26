@@ -8,7 +8,7 @@
 //! - κ Comparison: rank ordering of frequencies
 //! - N Quantity: frequency counts and regression coefficients
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Tier: T2-C (domain composite)
 ///
@@ -28,7 +28,7 @@ pub struct ZipfResult {
 /// Performs log-log linear regression on (rank, frequency) pairs.
 /// Returns alpha (slope), R^2 (goodness of fit), and deviation from 1.0.
 #[must_use]
-pub fn zipf_analysis(frequencies: &HashMap<String, usize>) -> ZipfResult {
+pub fn zipf_analysis(frequencies: &BTreeMap<String, usize>) -> ZipfResult {
     if frequencies.len() < 2 {
         return ZipfResult {
             alpha: 0.0,
@@ -107,7 +107,7 @@ pub fn zipf_analysis(frequencies: &HashMap<String, usize>) -> ZipfResult {
 mod tests {
     use super::*;
 
-    fn make_freq_map(pairs: &[(&str, usize)]) -> HashMap<String, usize> {
+    fn make_freq_map(pairs: &[(&str, usize)]) -> BTreeMap<String, usize> {
         pairs.iter().map(|(k, v)| (k.to_string(), *v)).collect()
     }
 
@@ -137,7 +137,7 @@ mod tests {
 
     #[test]
     fn test_zipf_empty() {
-        let freqs: HashMap<String, usize> = HashMap::new();
+        let freqs: BTreeMap<String, usize> = BTreeMap::new();
         let result = zipf_analysis(&freqs);
         assert!((result.alpha).abs() < 1e-10);
         assert!((result.deviation - 1.0).abs() < 1e-10);

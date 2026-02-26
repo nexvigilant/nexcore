@@ -41,6 +41,7 @@
 
 pub mod adaptive_thresholds;
 pub mod composites;
+pub mod error;
 pub mod grounding;
 pub mod prelude;
 pub mod primitives;

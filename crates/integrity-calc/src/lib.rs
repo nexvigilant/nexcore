@@ -3,6 +3,10 @@
 //!
 //! Tier: T3 | Primitives: σ Sequence, → Causality, ∂ Boundary
 
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
+
 pub mod aggregation;
 pub mod bloom;
 pub mod burstiness;

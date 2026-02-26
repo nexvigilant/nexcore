@@ -4,6 +4,9 @@
 //! `confidence = (structural × 0.4) + (functional × 0.4) + (contextual × 0.2)`
 
 #![forbid(unsafe_code)]
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
 
 mod compute;
 pub mod grounding;

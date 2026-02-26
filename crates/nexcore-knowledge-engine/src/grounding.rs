@@ -6,10 +6,24 @@ use nexcore_lex_primitiva::grounding::GroundsTo;
 use nexcore_lex_primitiva::primitiva::{LexPrimitiva, PrimitiveComposition};
 
 use crate::{
-    CompendiousScorer, CompileOptions, CompressionResult, ConceptGraph, KnowledgeEngineError,
-    KnowledgeFragment, KnowledgePack, KnowledgeStore, QueryEngine, ScoreResult,
-    StructuralCompressor,
+    CompendiousScorer, CompileOptions, CompressionResult, ConceptGraph, DomainClassifier,
+    KnowledgeEngineError, KnowledgeFragment, KnowledgePack, KnowledgeStore, QueryEngine,
+    ScoreResult, StructuralCompressor,
 };
+
+// ---------------------------------------------------------------------------
+// Domain Classifier — μ + κ
+// ---------------------------------------------------------------------------
+
+impl GroundsTo for DomainClassifier {
+    fn primitive_composition() -> PrimitiveComposition {
+        PrimitiveComposition::new(vec![
+            LexPrimitiva::Mapping,    // μ — term → domain
+            LexPrimitiva::Comparison, // κ — keyword matching
+        ])
+        .with_dominant(LexPrimitiva::Mapping, 0.85)
+    }
+}
 
 // ---------------------------------------------------------------------------
 // Error — ∂ + Σ
@@ -178,9 +192,9 @@ mod tests {
 
     #[test]
     fn concept_graph_tier() {
-        // 3 primitives but Tier classification depends on lex-primitiva rules
-        let tier = ConceptGraph::tier();
-        assert!(tier == Tier::T2Primitive || tier == Tier::T2Composite);
+        // ConceptGraph grounds to 3 primitives: Mapping + Sequence + Recursion.
+        // Tier::classify maps unique_count 2-3 → T2Primitive (see tier.rs:81).
+        assert_eq!(ConceptGraph::tier(), Tier::T2Primitive);
     }
 
     #[test]
@@ -196,6 +210,7 @@ mod tests {
     #[test]
     fn all_confidences_valid() {
         let compositions = [
+            DomainClassifier::primitive_composition(),
             KnowledgeEngineError::primitive_composition(),
             ScoreResult::primitive_composition(),
             CompendiousScorer::primitive_composition(),

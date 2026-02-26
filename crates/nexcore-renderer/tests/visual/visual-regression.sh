@@ -19,7 +19,11 @@ BASELINES_DIR="${SCRIPT_DIR}/baselines"
 DIFFS_DIR="${SCRIPT_DIR}/diffs"
 SCREENSHOTS_DIR="${SCRIPT_DIR}/screenshots"
 
-NEXBROWSER="/home/matthew/nexcore/target/debug/nexbrowser"
+# Derive binary path relative to this script's location.
+# Script lives at: <workspace>/crates/nexcore-renderer/tests/visual/
+# Binary lives at: <workspace>/target/debug/nexbrowser
+# Allow override via NEXBROWSER env var for CI.
+NEXBROWSER="${NEXBROWSER:-$(cd "${SCRIPT_DIR}/../../../.." && pwd)/target/debug/nexbrowser}"
 DEBUG_PORT=9333
 SCREENSHOT_URL="http://localhost:${DEBUG_PORT}/screenshot.png"
 HEALTH_URL="http://localhost:${DEBUG_PORT}/health"

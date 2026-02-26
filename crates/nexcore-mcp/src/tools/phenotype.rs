@@ -101,7 +101,8 @@ pub fn phenotype_verify(params: PhenotypeVerifyParams) -> Result<CallToolResult,
         expected_drifts: vec![],
     };
 
-    let drift_detected = verify_with_threshold(&schema, &phenotype, threshold);
+    let drift_detected = verify_with_threshold(&schema, &phenotype, threshold)
+        .map_err(|e| McpError::internal_error(format!("Verification failed: {e}"), None))?;
 
     Ok(CallToolResult::success(vec![Content::text(
         json!({

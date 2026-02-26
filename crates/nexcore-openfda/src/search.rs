@@ -51,8 +51,84 @@ pub struct FanOutResults {
 
 impl FanOutResults {
     /// Number of endpoints that returned at least one result.
+    ///
+    /// An endpoint that succeeded (`Ok`) but returned zero records is NOT counted —
+    /// use `successful_calls()` if you need to count reachable-but-empty endpoints.
     #[must_use]
     pub fn successful_endpoints(&self) -> usize {
+        let mut count = 0usize;
+        if self
+            .drug_events
+            .as_ref()
+            .is_ok_and(|r| !r.results.is_empty())
+        {
+            count += 1;
+        }
+        if self
+            .drug_labels
+            .as_ref()
+            .is_ok_and(|r| !r.results.is_empty())
+        {
+            count += 1;
+        }
+        if self
+            .drug_recalls
+            .as_ref()
+            .is_ok_and(|r| !r.results.is_empty())
+        {
+            count += 1;
+        }
+        if self.drug_ndc.as_ref().is_ok_and(|r| !r.results.is_empty()) {
+            count += 1;
+        }
+        if self
+            .device_events
+            .as_ref()
+            .is_ok_and(|r| !r.results.is_empty())
+        {
+            count += 1;
+        }
+        if self
+            .device_recalls
+            .as_ref()
+            .is_ok_and(|r| !r.results.is_empty())
+        {
+            count += 1;
+        }
+        if self
+            .device_510k
+            .as_ref()
+            .is_ok_and(|r| !r.results.is_empty())
+        {
+            count += 1;
+        }
+        if self
+            .food_recalls
+            .as_ref()
+            .is_ok_and(|r| !r.results.is_empty())
+        {
+            count += 1;
+        }
+        if self
+            .food_events
+            .as_ref()
+            .is_ok_and(|r| !r.results.is_empty())
+        {
+            count += 1;
+        }
+        if self
+            .substances
+            .as_ref()
+            .is_ok_and(|r| !r.results.is_empty())
+        {
+            count += 1;
+        }
+        count
+    }
+
+    /// Number of endpoints that completed without error (including those returning zero records).
+    #[must_use]
+    pub fn successful_calls(&self) -> usize {
         let checks: [bool; 10] = [
             self.drug_events.is_ok(),
             self.drug_labels.is_ok(),
@@ -183,18 +259,150 @@ pub async fn fan_out_search(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::common::{OpenFdaMeta, ResultsMeta};
+
+    // Build an Ok response with `n` placeholder DrugEvent results (constructed field-by-field).
+    fn ok_drug_response(n: usize) -> nexcore_error::Result<OpenFdaResponse<DrugEvent>> {
+        let results: Vec<DrugEvent> = (0..n)
+            .map(|i| DrugEvent {
+                safetyreportid: format!("{i}"),
+                serious: "1".to_string(),
+                receiptdate: String::new(),
+                reporttype: String::new(),
+                seriousnessdeath: None,
+                seriousnesshospitalization: None,
+                seriousnessdisabling: None,
+                seriousnesscongenitalanomali: None,
+                seriousnesslifethreatening: None,
+                seriousnessother: None,
+                primarysource: None,
+                patient: None,
+            })
+            .collect();
+        Ok(OpenFdaResponse {
+            meta: OpenFdaMeta {
+                results: ResultsMeta {
+                    total: n as u64,
+                    limit: n as u32,
+                    skip: 0,
+                },
+                ..Default::default()
+            },
+            results,
+        })
+    }
+
+    fn err_response<T>() -> nexcore_error::Result<OpenFdaResponse<T>> {
+        Err(nexcore_error::nexerror!("test error"))
+    }
+
+    fn empty_ok<T>() -> nexcore_error::Result<OpenFdaResponse<T>> {
+        Ok(OpenFdaResponse {
+            meta: OpenFdaMeta::default(),
+            results: Vec::new(),
+        })
+    }
+
+    // Helper: build FanOutResults with all-Err arms (uses DrugEvent for homogeneous fields).
+    fn all_err_results() -> FanOutResults {
+        FanOutResults {
+            drug_events: err_response(),
+            drug_labels: err_response(),
+            drug_recalls: err_response(),
+            drug_ndc: err_response(),
+            device_events: err_response(),
+            device_recalls: err_response(),
+            device_510k: err_response(),
+            food_recalls: err_response(),
+            food_events: err_response(),
+            substances: err_response(),
+        }
+    }
 
     #[test]
-    fn fan_out_results_successful_endpoints_all_fail() {
-        // Construct a FanOutResults where all arms are Err.
-        let make_err = || -> nexcore_error::Result<OpenFdaResponse<DrugEvent>> {
-            Err(nexcore_error::nexerror!("test error"))
-        };
+    fn successful_endpoints_zero_when_all_fail() {
+        let results = all_err_results();
+        assert_eq!(results.successful_endpoints(), 0);
+        assert_eq!(results.successful_calls(), 0);
+        assert_eq!(results.total_results(), 0);
+    }
 
-        // We can't easily build FanOutResults without going through the real
-        // async path, so just test the counting logic with the helpers.
-        let _ = make_err();
-        // The constructor logic is covered by integration; unit-test builders.
+    #[test]
+    fn successful_calls_counts_ok_including_empty() {
+        // drug_events returns Ok with 0 records — should count for successful_calls but NOT successful_endpoints
+        let results = FanOutResults {
+            drug_events: empty_ok(),
+            drug_labels: err_response(),
+            drug_recalls: err_response(),
+            drug_ndc: err_response(),
+            device_events: err_response(),
+            device_recalls: err_response(),
+            device_510k: err_response(),
+            food_recalls: err_response(),
+            food_events: err_response(),
+            substances: err_response(),
+        };
+        assert_eq!(
+            results.successful_calls(),
+            1,
+            "empty-Ok endpoint is a successful call"
+        );
+        assert_eq!(
+            results.successful_endpoints(),
+            0,
+            "empty-Ok endpoint has no results — must not count"
+        );
+        assert_eq!(results.total_results(), 0);
+    }
+
+    #[test]
+    fn successful_endpoints_counts_only_non_empty_ok() {
+        // Only drug_events has actual results (3 records)
+        let results = FanOutResults {
+            drug_events: ok_drug_response(3),
+            drug_labels: empty_ok(),
+            drug_recalls: err_response(),
+            drug_ndc: err_response(),
+            device_events: err_response(),
+            device_recalls: err_response(),
+            device_510k: err_response(),
+            food_recalls: err_response(),
+            food_events: err_response(),
+            substances: err_response(),
+        };
+        assert_eq!(results.successful_endpoints(), 1);
+        assert_eq!(
+            results.successful_calls(),
+            2,
+            "drug_events + drug_labels (empty Ok)"
+        );
+        assert_eq!(results.total_results(), 3);
+    }
+
+    #[test]
+    fn total_results_sums_across_all_ok_arms() {
+        // drug_events has 5 results; drug_labels is Ok but empty (0 results).
+        // total_results counts all records across all Ok arms, so expect 5.
+        // successful_endpoints counts only non-empty Ok arms, so expect 1.
+        let results = FanOutResults {
+            drug_events: ok_drug_response(5),
+            drug_labels: empty_ok(),
+            drug_recalls: err_response(),
+            drug_ndc: err_response(),
+            device_events: err_response(),
+            device_recalls: err_response(),
+            device_510k: err_response(),
+            food_recalls: err_response(),
+            food_events: err_response(),
+            substances: err_response(),
+        };
+        assert_eq!(results.total_results(), 5);
+        assert_eq!(results.successful_endpoints(), 1);
+        assert_eq!(
+            results.successful_calls(),
+            2,
+            "drug_events (5 results) + drug_labels (empty Ok)"
+        );
     }
 
     #[test]

@@ -13,8 +13,16 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::sync::{Mutex, mpsc};
 
 pub use registry::ServiceRegistry as CloudServiceRegistry;
+
+/// A command sent from the health monitor to the restart executor.
+struct RestartCommand {
+    name: String,
+    backoff: Duration,
+    attempt: u32,
+}
 
 /// The cloud supervisor: orchestrates processes, proxy, and health monitoring.
 ///
@@ -24,10 +32,8 @@ pub struct CloudSupervisor {
     manifest: CloudManifest,
     registry: Arc<ServiceRegistry>,
     event_bus: EventBus,
-    processes: HashMap<String, ProcessTask>,
-    restart_policies: HashMap<String, RestartPolicy>,
+    processes: Arc<Mutex<HashMap<String, ProcessTask>>>,
     health_checker: HealthChecker,
-    log_dir: PathBuf,
 }
 
 impl CloudSupervisor {
@@ -46,20 +52,8 @@ impl CloudSupervisor {
             registry.register(svc.name.clone(), svc.port);
         }
 
-        // Build restart policies
-        let restart_policies = manifest
-            .services
-            .iter()
-            .map(|svc| {
-                (
-                    svc.name.clone(),
-                    RestartPolicy::new(svc.max_restarts, svc.backoff_ms),
-                )
-            })
-            .collect();
-
         // Build process tasks
-        let processes = manifest
+        let processes: HashMap<String, ProcessTask> = manifest
             .services
             .iter()
             .map(|svc| {
@@ -74,10 +68,8 @@ impl CloudSupervisor {
             manifest,
             registry,
             event_bus,
-            processes,
-            restart_policies,
+            processes: Arc::new(Mutex::new(processes)),
             health_checker: HealthChecker::default(),
-            log_dir,
         })
     }
 
@@ -106,14 +98,33 @@ impl CloudSupervisor {
             at: nexcore_chrono::DateTime::now(),
         });
 
-        // Start health monitoring loop
+        // Restart channel: health monitor sends commands, restart executor receives
+        let (restart_tx, restart_rx) = mpsc::channel::<RestartCommand>(32);
+
+        // Start restart executor (has access to process handles)
+        let restart_processes = Arc::clone(&self.processes);
+        let restart_registry = Arc::clone(&self.registry);
+        let restart_bus = self.event_bus.clone();
+        tokio::spawn(async move {
+            restart_executor_loop(restart_processes, restart_registry, restart_bus, restart_rx)
+                .await;
+        });
+
+        // Start health monitoring loop (sends restart commands via channel)
         let registry = Arc::clone(&self.registry);
         let event_bus = self.event_bus.clone();
         let health_checker = HealthChecker::default();
         let manifest_services = self.manifest.services.clone();
 
         tokio::spawn(async move {
-            health_monitor_loop(registry, event_bus, health_checker, &manifest_services).await;
+            health_monitor_loop(
+                registry,
+                event_bus,
+                health_checker,
+                &manifest_services,
+                restart_tx,
+            )
+            .await;
         });
 
         // Build routing table
@@ -171,12 +182,12 @@ impl CloudSupervisor {
 
     /// Start a single service by name.
     async fn start_service(&mut self, name: &str) -> Result<()> {
-        let process =
-            self.processes
-                .get_mut(name)
-                .ok_or_else(|| NexCloudError::ServiceNotFound {
-                    name: name.to_string(),
-                })?;
+        let mut processes = self.processes.lock().await;
+        let process = processes
+            .get_mut(name)
+            .ok_or_else(|| NexCloudError::ServiceNotFound {
+                name: name.to_string(),
+            })?;
 
         self.registry.update_state(name, ProcessState::Starting);
 
@@ -237,7 +248,8 @@ impl CloudSupervisor {
     async fn stop_service(&mut self, name: &str) -> Result<()> {
         self.registry.update_state(name, ProcessState::Stopping);
 
-        if let Some(process) = self.processes.get_mut(name) {
+        let mut processes = self.processes.lock().await;
+        if let Some(process) = processes.get_mut(name) {
             process.stop(Duration::from_secs(10)).await?;
         }
 
@@ -284,6 +296,7 @@ async fn health_monitor_loop(
     event_bus: EventBus,
     checker: HealthChecker,
     services: &[crate::manifest::ServiceDef],
+    restart_tx: mpsc::Sender<RestartCommand>,
 ) {
     let check_interval = Duration::from_secs(10);
     let mut restart_policies: HashMap<String, RestartPolicy> = services
@@ -368,9 +381,18 @@ async fn health_monitor_loop(
                                 "restart scheduled"
                             );
 
-                            // Note: actual restart would re-spawn the process here.
-                            // In Phase 1, we just track state. Full restart loop comes
-                            // when the supervisor owns the process handles directly.
+                            // Send restart command to the executor (which owns process handles)
+                            if let Err(e) = restart_tx.try_send(RestartCommand {
+                                name: svc.name.clone(),
+                                backoff,
+                                attempt,
+                            }) {
+                                tracing::error!(
+                                    service = %svc.name,
+                                    error = %e,
+                                    "failed to send restart command — channel full or closed"
+                                );
+                            }
                         } else {
                             registry.update_state(&svc.name, ProcessState::Failed);
                             tracing::error!(
@@ -383,4 +405,81 @@ async fn health_monitor_loop(
             }
         }
     }
+}
+
+/// Background loop that receives restart commands and executes process restarts.
+///
+/// Separated from health_monitor_loop to keep health checking non-blocking:
+/// the monitor detects and sends, the executor waits and restarts.
+async fn restart_executor_loop(
+    processes: Arc<Mutex<HashMap<String, ProcessTask>>>,
+    registry: Arc<ServiceRegistry>,
+    event_bus: EventBus,
+    mut restart_rx: mpsc::Receiver<RestartCommand>,
+) {
+    while let Some(cmd) = restart_rx.recv().await {
+        // Wait the backoff duration before restarting
+        tokio::time::sleep(cmd.backoff).await;
+
+        tracing::info!(
+            service = %cmd.name,
+            attempt = cmd.attempt,
+            backoff_ms = cmd.backoff.as_millis() as u64,
+            "executing restart"
+        );
+
+        let mut procs = processes.lock().await;
+        let Some(process) = procs.get_mut(&cmd.name) else {
+            tracing::error!(service = %cmd.name, "restart failed — process not found in registry");
+            registry.update_state(&cmd.name, ProcessState::Failed);
+            continue;
+        };
+
+        // Stop the old process (graceful with 10s timeout)
+        if let Err(e) = process.stop(Duration::from_secs(10)).await {
+            tracing::error!(
+                service = %cmd.name,
+                error = %e,
+                "failed to stop process during restart"
+            );
+        }
+
+        // Re-spawn
+        match process.spawn() {
+            Ok(pid) => {
+                registry.mark_started(&cmd.name, pid);
+
+                event_bus.emit(CloudEvent::ServiceStarted {
+                    name: cmd.name.clone(),
+                    pid,
+                    at: nexcore_chrono::DateTime::now(),
+                });
+
+                tracing::info!(
+                    service = %cmd.name,
+                    pid = pid,
+                    attempt = cmd.attempt,
+                    "restart successful"
+                );
+            }
+            Err(e) => {
+                registry.update_state(&cmd.name, ProcessState::Failed);
+
+                event_bus.emit(CloudEvent::HealthCheckFailed {
+                    name: cmd.name.clone(),
+                    reason: format!("restart spawn failed: {e}"),
+                    at: nexcore_chrono::DateTime::now(),
+                });
+
+                tracing::error!(
+                    service = %cmd.name,
+                    error = %e,
+                    attempt = cmd.attempt,
+                    "restart failed — could not spawn process"
+                );
+            }
+        }
+    }
+
+    tracing::debug!("restart executor shutting down — channel closed");
 }

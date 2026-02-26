@@ -2,6 +2,9 @@
 // All Rights Reserved. See LICENSE file for details.
 
 #![allow(warnings)]
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
 
 pub mod guardian;
 //

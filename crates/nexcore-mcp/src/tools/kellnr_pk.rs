@@ -30,7 +30,13 @@ pub fn compute_pk_auc(params: KellnrPkAucParams) -> Result<CallToolResult, McpEr
     for i in 1..times.len() {
         let dt = times[i] - times[i - 1];
         if dt <= 0.0 {
-            continue;
+            return Ok(json_result(json!({
+                "success": false,
+                "error": format!(
+                    "Time points must be strictly increasing: times[{}]={} <= times[{}]={}",
+                    i, times[i], i - 1, times[i - 1]
+                )
+            })));
         }
         let area = match method {
             "log-linear" | "log_linear"

@@ -10,6 +10,9 @@
 //! - `perplexity_regulatory` — FDA/EMA/ICH/WHO pre-filtered search
 
 #![forbid(unsafe_code)]
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
 
 use nexcore_perplexity::client::PerplexityClient;
 use nexcore_perplexity::research::{

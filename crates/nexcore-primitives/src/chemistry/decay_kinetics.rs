@@ -10,6 +10,8 @@
 //! **PV Application**: Signal persistence after intervention.
 
 use nexcore_error::Error;
+use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// Errors for decay calculations.
 #[derive(Debug, Error, PartialEq, Clone)]
@@ -32,10 +34,16 @@ pub enum DecayError {
 pub const LN_2: f64 = 0.693_147_180_559_945_3;
 
 /// Decay kinetics configuration.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DecayKinetics {
     /// Half-life (time for 50% decay)
     pub half_life: f64,
+}
+
+impl fmt::Display for DecayKinetics {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Decay(t\u{00BD}={:.2})", self.half_life)
+    }
 }
 
 impl DecayKinetics {

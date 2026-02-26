@@ -44,7 +44,7 @@ pub struct RawKnowledge {
 /// A processed knowledge fragment — the unit of knowledge in a pack.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KnowledgeFragment {
-    pub id: String,
+    pub id: crate::KnowledgeId,
     pub text: String,
     pub source: KnowledgeSource,
     pub domain: String,
@@ -55,6 +55,27 @@ pub struct KnowledgeFragment {
 }
 
 /// Ingest raw text into a knowledge fragment.
+///
+/// Extracts concepts, primitives, and computes the Compendious Score.
+/// Domain is auto-classified from concepts if not provided.
+///
+/// ```
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// use nexcore_knowledge_engine::ingest::{ingest, RawKnowledge, KnowledgeSource};
+/// use nexcore_chrono::DateTime;
+///
+/// let raw = RawKnowledge {
+///     text: "Signal detection uses PRR for safety analysis.".to_string(),
+///     source: KnowledgeSource::FreeText,
+///     domain: None,
+///     timestamp: DateTime::now(),
+/// };
+/// let frag = ingest(raw)?;
+/// assert_eq!(frag.domain, "pv");
+/// assert!(frag.score.compendious_score > 0.0);
+/// # Ok(())
+/// # }
+/// ```
 pub fn ingest(raw: RawKnowledge) -> crate::error::Result<KnowledgeFragment> {
     if raw.text.trim().is_empty() {
         return Err(crate::error::KnowledgeEngineError::EmptyInput);
@@ -98,8 +119,20 @@ mod tests {
         };
         let frag = ingest(raw).unwrap();
         assert_eq!(frag.domain, "pv");
-        assert!(!frag.concepts.is_empty());
-        assert!(frag.score.compendious_score > 0.0);
+        // The text has 7 unique non-stopword tokens in 8 words: I = 7*4 = 28, E = 8
+        // density = 3.5, C = 1.0, R = 1.0 → Cs ≥ 2.0 (Efficient or better)
+        assert!(
+            frag.score.compendious_score >= 2.0,
+            "dense PV text should score >= 2.0, got {:.3}",
+            frag.score.compendious_score
+        );
+        // "signal" and "detection" must be extracted as concepts
+        let terms: Vec<&str> = frag.concepts.iter().map(|c| c.term.as_str()).collect();
+        assert!(
+            terms.contains(&"signal") || terms.contains(&"detection"),
+            "expected pv-domain concepts in: {:?}",
+            terms
+        );
     }
 
     #[test]

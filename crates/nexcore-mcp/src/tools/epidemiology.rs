@@ -29,9 +29,21 @@ fn err_text(msg: &str) -> Result<CallToolResult, McpError> {
     )]))
 }
 
+fn validate_2x2(a: f64, b: f64, c: f64, d: f64) -> Option<Result<CallToolResult, McpError>> {
+    if a < 0.0 || b < 0.0 || c < 0.0 || d < 0.0 {
+        return Some(err_text(
+            "Error: contingency table values (a, b, c, d) must be non-negative",
+        ));
+    }
+    None
+}
+
 /// RR = [a/(a+b)] / [c/(c+d)]
 pub fn relative_risk(params: EpiRelativeRiskParams) -> Result<CallToolResult, McpError> {
     let (a, b, c, d) = (params.a, params.b, params.c, params.d);
+    if let Some(err) = validate_2x2(a, b, c, d) {
+        return err;
+    }
     let risk_exposed = a / (a + b);
     let risk_unexposed = c / (c + d);
 
@@ -72,6 +84,9 @@ pub fn relative_risk(params: EpiRelativeRiskParams) -> Result<CallToolResult, Mc
 /// OR = (a×d) / (b×c)
 pub fn odds_ratio(params: EpiOddsRatioParams) -> Result<CallToolResult, McpError> {
     let (a, b, c, d) = (params.a, params.b, params.c, params.d);
+    if let Some(err) = validate_2x2(a, b, c, d) {
+        return err;
+    }
 
     if b * c == 0.0 {
         return err_text("Error: b×c is zero, OR undefined");
@@ -108,6 +123,9 @@ pub fn odds_ratio(params: EpiOddsRatioParams) -> Result<CallToolResult, McpError
 /// AR = Ie - Io = a/(a+b) - c/(c+d)
 pub fn attributable_risk(params: EpiAttributableRiskParams) -> Result<CallToolResult, McpError> {
     let (a, b, c, d) = (params.a, params.b, params.c, params.d);
+    if let Some(err) = validate_2x2(a, b, c, d) {
+        return err;
+    }
     let risk_exposed = a / (a + b);
     let risk_unexposed = c / (c + d);
     let ar = risk_exposed - risk_unexposed;
@@ -145,6 +163,9 @@ pub fn attributable_risk(params: EpiAttributableRiskParams) -> Result<CallToolRe
 /// NNT = 1/ARR when AR > 0, NNH = 1/ARI when AR < 0
 pub fn nnt_nnh(params: EpiNntNnhParams) -> Result<CallToolResult, McpError> {
     let (a, b, c, d) = (params.a, params.b, params.c, params.d);
+    if let Some(err) = validate_2x2(a, b, c, d) {
+        return err;
+    }
     let risk_exposed = a / (a + b);
     let risk_unexposed = c / (c + d);
     let ar = risk_exposed - risk_unexposed;
@@ -186,6 +207,9 @@ pub fn attributable_fraction(
     params: EpiAttributableFractionParams,
 ) -> Result<CallToolResult, McpError> {
     let (a, b, c, d) = (params.a, params.b, params.c, params.d);
+    if let Some(err) = validate_2x2(a, b, c, d) {
+        return err;
+    }
     let risk_exposed = a / (a + b);
     let risk_unexposed = c / (c + d);
 
@@ -231,6 +255,9 @@ pub fn population_attributable_fraction(
     params: EpiPopulationAFParams,
 ) -> Result<CallToolResult, McpError> {
     let (a, b, c, d) = (params.a, params.b, params.c, params.d);
+    if let Some(err) = validate_2x2(a, b, c, d) {
+        return err;
+    }
     let total = a + b + c + d;
     let pe = (a + b) / total; // prevalence of exposure in total population
     let risk_exposed = a / (a + b);

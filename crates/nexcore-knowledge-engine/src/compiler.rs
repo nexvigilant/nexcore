@@ -7,11 +7,11 @@ use nexcore_fs::dirs;
 
 use crate::compression::StructuralCompressor;
 use crate::concept_graph::{ConceptGraph, ConceptRelation};
-use crate::error::Result;
+use crate::error::{KnowledgeEngineError, Result};
 use crate::extraction::ConceptExtractor;
 use crate::ingest::{self, KnowledgeFragment, KnowledgeSource, RawKnowledge};
 use crate::knowledge_pack::KnowledgePack;
-use crate::scoring::CompendiousScorer;
+use crate::scoring::{CompendiousScorer, ScoreResult};
 use crate::store::KnowledgeStore;
 
 /// Options for compilation.
@@ -36,6 +36,15 @@ impl Default for CompileOptions {
     }
 }
 
+/// Result of `compress_text` — before/after scores and the compressed output.
+#[derive(Debug, Clone)]
+pub struct CompressTextResult {
+    pub original_score: ScoreResult,
+    pub compressed_score: ScoreResult,
+    pub compressed_text: String,
+    pub compression_ratio: f64,
+}
+
 /// Knowledge compiler.
 pub struct KnowledgeCompiler {
     compressor: StructuralCompressor,
@@ -51,6 +60,9 @@ impl KnowledgeCompiler {
     }
 
     /// Compile knowledge from options into a pack.
+    ///
+    /// Sources that fail ingestion (e.g., compressed to empty) are counted and
+    /// logged in the pack's stats rather than silently dropped.
     pub fn compile(&self, options: CompileOptions) -> Result<KnowledgePack> {
         let mut raw_sources = options.sources;
 
@@ -69,9 +81,12 @@ impl KnowledgeCompiler {
             raw_sources.extend(self.load_implicit());
         }
 
+        let total_sources = raw_sources.len();
+
         // Step 1: Ingest all sources into fragments
         let mut fragments: Vec<KnowledgeFragment> = Vec::new();
         let mut original_word_count = 0_usize;
+        let mut failed_count = 0_usize;
 
         for raw in raw_sources {
             original_word_count += raw.text.split_whitespace().count();
@@ -85,8 +100,13 @@ impl KnowledgeCompiler {
                 timestamp: raw.timestamp,
             };
 
-            if let Ok(frag) = ingest::ingest(compressed_raw) {
-                fragments.push(frag);
+            match ingest::ingest(compressed_raw) {
+                Ok(frag) => fragments.push(frag),
+                Err(KnowledgeEngineError::EmptyInput) => {
+                    // Source compressed to empty — count but don't fail the whole compile
+                    failed_count += 1;
+                }
+                Err(e) => return Err(e),
             }
         }
 
@@ -115,6 +135,10 @@ impl KnowledgeCompiler {
 
         // Step 4: Build pack
         let mut pack = KnowledgePack::new(options.name, version, fragments, graph);
+
+        // Record source statistics
+        pack.stats.sources_attempted = total_sources;
+        pack.stats.sources_failed = failed_count;
 
         // Compute overall compression ratio
         let compressed_word_count = pack.stats.total_words;
@@ -246,24 +270,17 @@ impl KnowledgeCompiler {
     }
 
     /// Compress text and return before/after scores.
-    pub fn compress_text(
-        text: &str,
-    ) -> (
-        crate::scoring::ScoreResult,
-        crate::scoring::ScoreResult,
-        String,
-        f64,
-    ) {
+    pub fn compress_text(text: &str) -> CompressTextResult {
         let original_score = CompendiousScorer::score(text, &[]);
         let compressor = StructuralCompressor::new();
         let result = compressor.compress(text);
         let compressed_score = CompendiousScorer::score(&result.compressed_text, &[]);
-        (
+        CompressTextResult {
             original_score,
             compressed_score,
-            result.compressed_text,
-            result.compression_ratio,
-        )
+            compressed_text: result.compressed_text,
+            compression_ratio: result.compression_ratio,
+        }
     }
 }
 
@@ -302,7 +319,59 @@ mod tests {
         assert_eq!(pack.name, "test-pack");
         assert_eq!(pack.version, 1);
         assert_eq!(pack.stats.fragment_count, 2);
-        assert!(pack.stats.concept_count > 0);
+        assert_eq!(pack.stats.sources_attempted, 2);
+        assert_eq!(pack.stats.sources_failed, 0);
+        // Two domain-rich fragments must produce at least 5 distinct concepts
+        assert!(
+            pack.stats.concept_count >= 5,
+            "expected >= 5 concepts, got {}",
+            pack.stats.concept_count
+        );
+        // Domains should include "pv" from the first source text
+        assert!(
+            pack.stats.domains.contains(&"pv".to_string()),
+            "expected 'pv' domain, got: {:?}",
+            pack.stats.domains
+        );
+    }
+
+    #[test]
+    fn compile_tracks_failed_sources() {
+        let store = KnowledgeStore::temp().unwrap();
+        let compiler = KnowledgeCompiler::new(store);
+
+        let options = CompileOptions {
+            name: "fail-test".to_string(),
+            include_distillations: false,
+            include_artifacts: false,
+            include_implicit: false,
+            sources: vec![
+                RawKnowledge {
+                    text: "Signal detection uses PRR for safety.".to_string(),
+                    source: KnowledgeSource::FreeText,
+                    domain: None,
+                    timestamp: DateTime::now(),
+                },
+                // This source is ONLY verbose throat-clearing — compresses to empty.
+                // No trailing period: the patterns consume all content, leaving "".
+                RawKnowledge {
+                    text: "It is important to note that needless to say as a matter of fact"
+                        .to_string(),
+                    source: KnowledgeSource::FreeText,
+                    domain: None,
+                    timestamp: DateTime::now(),
+                },
+            ],
+        };
+
+        let pack = compiler.compile(options).unwrap();
+        assert_eq!(pack.stats.sources_attempted, 2);
+        // The throat-clearing source should have been dropped
+        assert!(
+            pack.stats.sources_failed >= 1,
+            "expected at least 1 failed source, got {}",
+            pack.stats.sources_failed
+        );
     }
 
     #[test]
@@ -314,5 +383,18 @@ mod tests {
         )
         .unwrap();
         assert!(!frag.concepts.is_empty());
+    }
+
+    #[test]
+    fn compress_text_returns_named_struct() {
+        let result = KnowledgeCompiler::compress_text(
+            "In order to make a decision, we need to perform an analysis.",
+        );
+        assert!(result.compression_ratio > 0.0);
+        assert!(!result.compressed_text.is_empty());
+        assert!(
+            result.compressed_score.expression_cost <= result.original_score.expression_cost,
+            "compressed should have fewer or equal words"
+        );
     }
 }

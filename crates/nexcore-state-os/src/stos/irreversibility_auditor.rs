@@ -12,7 +12,7 @@
 //!
 //! `IrreversibilityAuditor` is T2-C (∝ + π + σ) — irreversibility, persistence, sequence.
 
-use alloc::collections::BTreeMap;
+use alloc::collections::{BTreeMap, VecDeque};
 use alloc::string::String;
 use alloc::vec::Vec;
 
@@ -144,8 +144,8 @@ pub enum IrreversibilityLevel {
 /// Dominant primitive: ∝ (Irreversibility)
 #[derive(Debug, Clone)]
 pub struct IrreversibilityAuditor {
-    /// Audit trail.
-    trail: Vec<AuditEntry>,
+    /// Audit trail (VecDeque for O(1) front removal during pruning).
+    trail: VecDeque<AuditEntry>,
     /// Irreversible transitions registry.
     irreversible_transitions: BTreeMap<TransitionId, IrreversibilityLevel>,
     /// Irreversible states (once entered, cannot leave).
@@ -163,7 +163,7 @@ impl IrreversibilityAuditor {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            trail: Vec::new(),
+            trail: VecDeque::new(),
             irreversible_transitions: BTreeMap::new(),
             absorbing_states: BTreeMap::new(),
             counter: 0,
@@ -242,11 +242,11 @@ impl IrreversibilityAuditor {
             entry = entry.irreversible();
         }
 
-        self.trail.push(entry);
+        self.trail.push_back(entry);
 
-        // Prune if over limit
+        // Prune oldest if over limit — O(1) per removal with VecDeque
         while self.trail.len() > self.max_trail_length {
-            self.trail.remove(0);
+            self.trail.pop_front();
         }
 
         self.counter
@@ -264,17 +264,17 @@ impl IrreversibilityAuditor {
         let id = self.record(machine_id, transition_id, from_state, to_state);
 
         // Add reason to the entry we just added
-        if let Some(entry) = self.trail.last_mut() {
+        if let Some(entry) = self.trail.back_mut() {
             entry.reason = Some(reason.into());
         }
 
         id
     }
 
-    /// Get the full audit trail.
+    /// Get the full audit trail as a contiguous slice pair (VecDeque may split).
     #[must_use]
-    pub fn trail(&self) -> &[AuditEntry] {
-        &self.trail
+    pub fn trail(&self) -> (&[AuditEntry], &[AuditEntry]) {
+        self.trail.as_slices()
     }
 
     /// Get trail for a specific machine.

@@ -151,7 +151,9 @@ pub fn compute_real_mlm_loss<B: AutodiffBackend>(
             if idx >= targets.len() {
                 break;
             }
-            let pos = pos as usize;
+            let Some(pos) = usize::try_from(pos).ok() else {
+                continue;
+            };
 
             let logit_vec = logits
                 .clone()
@@ -285,5 +287,64 @@ mod tests {
             .unwrap_or(f32::NAN);
         assert_eq!(loss_val, 0.0);
         assert_eq!(acc, 0.0);
+    }
+
+    /// Verify compute_real_mlm_loss actually computes loss and accuracy
+    /// when masked positions are provided. The empty-masks test only exercises
+    /// the early-return path; this exercises the real computation path.
+    #[test]
+    fn test_mlm_loss_with_real_positions() {
+        use burn::backend::Autodiff;
+        use burn::backend::ndarray::NdArray;
+        use burn::tensor::TensorData;
+        type B = Autodiff<NdArray>;
+        let device = <B as burn::tensor::backend::Backend>::Device::default();
+
+        // Logits: 1 batch, 8 positions, vocab_size=9
+        // Set logit at position 3 to strongly predict class 5 (A)
+        let mut logit_data = vec![0.0_f32; 1 * 8 * 9];
+        // Position 3, class 5 (A): large logit so argmax selects class 5
+        logit_data[3 * 9 + 5] = 10.0;
+
+        let logits = Tensor::<B, 1>::from_data(TensorData::from(logit_data.as_slice()), &device)
+            .reshape([1, 8, 9]);
+
+        // Mask position 3, true label = 5 (A) — model should get this right
+        let masked_positions = vec![vec![3_i64]];
+        let masked_ids = vec![vec![5_i64]];
+
+        let (loss, acc) = compute_real_mlm_loss(logits, &masked_positions, &masked_ids, 9);
+
+        let loss_val: f32 = loss
+            .into_data()
+            .to_vec::<f32>()
+            .unwrap_or_default()
+            .first()
+            .copied()
+            .unwrap_or(f32::NAN);
+
+        // Loss must be finite and positive
+        assert!(
+            loss_val.is_finite(),
+            "loss must be finite, got {}",
+            loss_val
+        );
+        assert!(
+            loss_val >= 0.0,
+            "loss must be non-negative, got {}",
+            loss_val
+        );
+        // With a dominant logit pointing to the correct class, accuracy should be 1.0
+        assert!(
+            (acc - 1.0).abs() < 1e-6,
+            "accuracy should be 1.0 when logits strongly favour the correct class, got {}",
+            acc
+        );
+        // Cross-entropy loss with a near-certain correct prediction should be low
+        assert!(
+            loss_val < 0.01,
+            "loss should be near-zero for a confident correct prediction, got {}",
+            loss_val
+        );
     }
 }

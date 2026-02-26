@@ -23,7 +23,7 @@
 //! println!("total events: {}", response.meta.results.total);
 //! ```
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -126,7 +126,7 @@ impl CacheEntry {
 pub struct OpenFdaClient {
     client: reqwest::Client,
     /// URL → raw JSON cache.
-    cache: Arc<RwLock<HashMap<String, CacheEntry>>>,
+    cache: Arc<RwLock<BTreeMap<String, CacheEntry>>>,
     api_key: Option<String>,
 }
 
@@ -145,7 +145,7 @@ impl OpenFdaClient {
 
         Ok(Self {
             client,
-            cache: Arc::new(RwLock::new(HashMap::new())),
+            cache: Arc::new(RwLock::new(BTreeMap::new())),
             api_key: None,
         })
     }
@@ -238,6 +238,22 @@ impl OpenFdaClient {
     /// Number of entries currently in the cache.
     pub async fn cache_len(&self) -> usize {
         self.cache.read().await.len()
+    }
+
+    // -------------------------------------------------------------------------
+    // Test helpers
+
+    /// Inject a synthetic cache entry (test-only, used to seed the cache without a real HTTP call).
+    #[cfg(test)]
+    pub async fn inject_cache_entry(&self, url: impl Into<String>, body: impl Into<String>) {
+        let mut cache = self.cache.write().await;
+        cache.insert(
+            url.into(),
+            CacheEntry {
+                body: body.into(),
+                fetched_at: DateTime::now(),
+            },
+        );
     }
 
     // -------------------------------------------------------------------------
@@ -402,9 +418,34 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn clear_cache_empties() {
-        let client = OpenFdaClient::new().unwrap_or_else(|e| panic!("{e}"));
+    async fn clear_cache_empties_non_empty_cache() {
+        let client_result = OpenFdaClient::new();
+        assert!(client_result.is_ok(), "client construction must succeed");
+        let client = client_result.ok().unwrap_or_else(|| {
+            // Safety: asserted is_ok() above; this branch is unreachable in practice.
+            std::process::abort()
+        });
+        // Seed the cache with two synthetic entries.
+        client
+            .inject_cache_entry("https://api.fda.gov/drug/event.json?search=aspirin", "{}")
+            .await;
+        client
+            .inject_cache_entry(
+                "https://api.fda.gov/device/510k.json?search=pacemaker",
+                "{}",
+            )
+            .await;
+        assert_eq!(
+            client.cache_len().await,
+            2,
+            "cache must have 2 entries before clear"
+        );
+        // Now clear and verify all entries are removed.
         client.clear_cache().await;
-        assert_eq!(client.cache_len().await, 0);
+        assert_eq!(
+            client.cache_len().await,
+            0,
+            "cache must be empty after clear"
+        );
     }
 }

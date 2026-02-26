@@ -80,7 +80,10 @@ impl Location {
 
     /// Load percentage.
     #[must_use]
-    #[allow(clippy::cast_precision_loss)]
+    #[allow(
+        clippy::cast_precision_loss,
+        reason = "usize -> f64 for percentage computation; precision loss is acceptable at realistic capacity values"
+    )]
     pub fn load_percentage(&self) -> f64 {
         if self.capacity == 0 || self.capacity == usize::MAX {
             return 0.0;
@@ -255,16 +258,29 @@ impl LocationRouter {
 
         match rule.strategy {
             RoutingStrategy::RoundRobin => {
-                self.rr_index = (self.rr_index + 1) % available.len();
-                Some(available[self.rr_index])
+                // Post-increment: read current index first, then advance.
+                // This ensures available[0] is selected on the very first call.
+                let idx = self.rr_index % available.len();
+                self.rr_index = self.rr_index.saturating_add(1);
+                Some(available[idx])
             }
             RoutingStrategy::LeastLoaded => available
                 .iter()
                 .filter_map(|&id| self.locations.get(&id).map(|l| (id, l.load)))
                 .min_by_key(|(_, load)| *load)
                 .map(|(id, _)| id),
-            RoutingStrategy::Random | RoutingStrategy::Affinity => {
-                // For simplicity, just pick first available
+            RoutingStrategy::Random => {
+                // STUB: deterministic hash-based selection (no_std-compatible).
+                // Uses machine counter as a cheap entropy source.
+                // A proper implementation would use a seeded PRNG.
+                let pseudo_index = (self.rr_index.wrapping_mul(2654435761)) % available.len();
+                self.rr_index = self.rr_index.saturating_add(1);
+                Some(available[pseudo_index])
+            }
+            RoutingStrategy::Affinity => {
+                // STUB: hash-based sticky routing.
+                // Deterministically maps to the same location for the same rr_index.
+                // A proper implementation would hash MachineId for true affinity.
                 available.first().copied()
             }
         }
@@ -433,5 +449,50 @@ mod tests {
         router.unassign(1);
         assert_eq!(router.get_location(loc).map(|l| l.load), Some(0));
         assert!(router.location_of(1).is_none());
+    }
+
+    #[test]
+    fn test_round_robin_starts_at_first_location() {
+        // Verifies that the post-increment pattern correctly selects available[0]
+        // on the very first call, then cycles through the full set.
+        let mut router = LocationRouter::new();
+
+        let loc1 = router.create_location("zone-1");
+        let loc2 = router.create_location("zone-2");
+        let loc3 = router.create_location("zone-3");
+
+        let rule =
+            RoutingRule::new(0, vec![loc1, loc2, loc3]).with_strategy(RoutingStrategy::RoundRobin);
+        router.add_rule(rule);
+
+        // First three calls must cycle through loc1, loc2, loc3 in order.
+        // Machine IDs 10/11/12 are used to avoid conflicts with any prior assignments.
+        let r1 = router.route(10);
+        let r2 = router.route(11);
+        let r3 = router.route(12);
+
+        assert_eq!(
+            r1,
+            Some(loc1),
+            "First round-robin call should select loc1 (index 0)"
+        );
+        assert_eq!(
+            r2,
+            Some(loc2),
+            "Second round-robin call should select loc2 (index 1)"
+        );
+        assert_eq!(
+            r3,
+            Some(loc3),
+            "Third round-robin call should select loc3 (index 2)"
+        );
+
+        // Fourth call wraps back to loc1
+        let r4 = router.route(13);
+        assert_eq!(
+            r4,
+            Some(loc1),
+            "Fourth round-robin call should wrap to loc1 (index 0)"
+        );
     }
 }

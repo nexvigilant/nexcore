@@ -116,11 +116,14 @@ fn verdict_to_str(v: Verdict) -> &'static str {
     }
 }
 
-fn str_to_verdict(s: &str) -> Verdict {
+fn str_to_verdict(s: &str) -> Result<Verdict, GroundedError> {
     match s {
-        "supported" => Verdict::Supported,
-        "refuted" => Verdict::Refuted,
-        _ => Verdict::Inconclusive,
+        "supported" => Ok(Verdict::Supported),
+        "refuted" => Ok(Verdict::Refuted),
+        "inconclusive" => Ok(Verdict::Inconclusive),
+        other => Err(GroundedError::PersistenceFailed(format!(
+            "unknown verdict value in database: {other:?}"
+        ))),
     }
 }
 
@@ -128,11 +131,12 @@ fn row_to_learning(row: LearningRow) -> Result<Learning, GroundedError> {
     let posterior = Confidence::new(row.posterior)?;
     let learned_at = nexcore_chrono::DateTime::parse_from_rfc3339(&row.learned_at)
         .map_err(|e| GroundedError::PersistenceFailed(format!("parse date: {e}")))?;
+    let verdict = str_to_verdict(&row.verdict)?;
 
     Ok(Learning {
         insight: row.insight,
         posterior,
-        verdict: str_to_verdict(&row.verdict),
+        verdict,
         hypothesis_claim: row.hypothesis_claim,
         observation: row.observation,
         learned_at,
@@ -238,50 +242,64 @@ mod tests {
 
     #[test]
     fn sqlite_store_persist_and_retrieve() {
-        let mut store = SqliteStore::in_memory().unwrap_or_else(|_| {
-            std::process::exit(1);
-        });
+        let store_result = SqliteStore::in_memory();
+        assert!(store_result.is_ok(), "in-memory SQLite should always open");
+        let mut store = store_result.unwrap_or_else(|_| unreachable!());
 
         let l1 = make_learning("gravity works", Verdict::Supported, 0.95);
         let l2 = make_learning("perpetual motion", Verdict::Refuted, 0.1);
         let l3 = make_learning("quantum effects", Verdict::Inconclusive, 0.5);
 
-        store.persist(&l1).ok();
-        store.persist(&l2).ok();
-        store.persist(&l3).ok();
+        assert!(store.persist(&l1).is_ok(), "persist l1 must succeed");
+        assert!(store.persist(&l2).is_ok(), "persist l2 must succeed");
+        assert!(store.persist(&l3).is_ok(), "persist l3 must succeed");
 
-        assert_eq!(store.count().unwrap_or(0), 3);
+        let count = store.count();
+        assert!(count.is_ok(), "count query must succeed");
+        assert_eq!(count.unwrap_or(0), 3);
 
-        let all = store.all_learnings().unwrap_or_default();
-        assert_eq!(all.len(), 3);
+        let all = store.all_learnings();
+        assert!(all.is_ok(), "all_learnings query must succeed");
+        assert_eq!(all.unwrap_or_default().len(), 3);
 
-        let supported = store
-            .learnings_by_verdict(Verdict::Supported)
-            .unwrap_or_default();
+        let supported = store.learnings_by_verdict(Verdict::Supported);
+        assert!(supported.is_ok(), "verdict query must succeed");
+        let supported = supported.unwrap_or_default();
         assert_eq!(supported.len(), 1);
         assert!(supported[0].hypothesis_claim.contains("gravity"));
     }
 
     #[test]
     fn sqlite_store_query_by_claim() {
-        let mut store = SqliteStore::in_memory().unwrap_or_else(|_| {
-            std::process::exit(1);
-        });
+        let store_result = SqliteStore::in_memory();
+        assert!(store_result.is_ok(), "in-memory SQLite should always open");
+        let mut store = store_result.unwrap_or_else(|_| unreachable!());
 
-        store
-            .persist(&make_learning("rust is fast", Verdict::Supported, 0.9))
-            .ok();
-        store
-            .persist(&make_learning("rust is easy", Verdict::Inconclusive, 0.6))
-            .ok();
-        store
-            .persist(&make_learning("python is slow", Verdict::Supported, 0.8))
-            .ok();
+        assert!(
+            store
+                .persist(&make_learning("rust is fast", Verdict::Supported, 0.9))
+                .is_ok(),
+            "persist must succeed"
+        );
+        assert!(
+            store
+                .persist(&make_learning("rust is easy", Verdict::Inconclusive, 0.6))
+                .is_ok(),
+            "persist must succeed"
+        );
+        assert!(
+            store
+                .persist(&make_learning("python is slow", Verdict::Supported, 0.8))
+                .is_ok(),
+            "persist must succeed"
+        );
 
-        let rust_learnings = store.learnings_for("rust").unwrap_or_default();
-        assert_eq!(rust_learnings.len(), 2);
+        let rust_learnings = store.learnings_for("rust");
+        assert!(rust_learnings.is_ok(), "learnings_for query must succeed");
+        assert_eq!(rust_learnings.unwrap_or_default().len(), 2);
 
-        let python_learnings = store.learnings_for("python").unwrap_or_default();
-        assert_eq!(python_learnings.len(), 1);
+        let python_learnings = store.learnings_for("python");
+        assert!(python_learnings.is_ok(), "learnings_for query must succeed");
+        assert_eq!(python_learnings.unwrap_or_default().len(), 1);
     }
 }

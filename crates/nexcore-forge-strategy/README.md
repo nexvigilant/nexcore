@@ -14,11 +14,12 @@ Dominant Primitives:
 ## Decision Priority Chain
 1. **ABANDON**: Confidence below threshold (0.027).
 2. **FIX_BLOCKER**: Compiler errors present.
-3. **REFACTOR**: Quality below floor (0.313) AND safe to do so.
-4. **LINT_FIX**: Warnings nearby AND pedantic mode active.
+3. **REFACTOR**: Quality below floor (0.313) AND safe to do so (no blocker within 5 hops).
+4. **LINT_FIX**: Warnings within `lint_radius` (2 hops) AND pedantic mode active (strictness > 0.5).
 5. **DECOMPOSE**: Primitives available to mine.
 6. **PROMOTE**: Current tier complete, advance eagerly.
-7. **EXPLORE**: Speculative alternative search.
+7. **EXPLORE**: Speculative alternative search (when `speculative_generation = true`).
+8. **STUCK**: No actionable state — all paths blocked; requires external intervention.
 
 ## Evolved Parameters (Sample)
 | Parameter | Value | Interpretation |

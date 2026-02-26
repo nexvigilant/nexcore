@@ -9,19 +9,17 @@ license = "LicenseRef-Proprietary"
 description = "Forward-only compound discovery loop. Assess state, reject regression, search for novelty, arrive at new state. Based on T1 primitive decomposition of Walt Disney's curiosity doctrine."
 
 [dependencies]
-tokio = { version = "1.38.0", features = ["full"] }
+tokio = { workspace = true }
 nexcore-error = { workspace = true }
-tracing = { version = "0.1.40" }
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
-serde = { version = "1.0.204", features = ["derive"] }
-serde_json = { version = "1.0.120" }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 nexcore-dataframe = { path = "../nexcore-dataframe" }
-antitransformer = { version = "1.0.0", path = "../antitransformer", registry = "nexcore" }
-nexcore-transform = { version = "1.0.0", path = "../nexcore-transform", registry = "nexcore" }
 
 [dev-dependencies]
-tempfile = { version = "3.10.1" }
+tempfile = { workspace = true }
 
 [[bin]]
 name = "disney-loop"

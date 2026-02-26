@@ -199,6 +199,12 @@ impl StateRegistry {
             return Err(RegistryError::RegistryFull);
         }
 
+        // Guard against ID exhaustion: saturating_add at u32::MAX produces
+        // duplicate IDs, so treat it as full.
+        if self.next_id == StateId::MAX {
+            return Err(RegistryError::RegistryFull);
+        }
+
         let id = self.next_id;
         self.next_id = self.next_id.saturating_add(1);
 

@@ -16,6 +16,8 @@ nexcore-chrono = { workspace = true }
 nexcore-id = { workspace = true, features = ["serde"] }
 nexcore-lex-primitiva = { workspace = true }
 nexcore-primitives = { workspace = true }
+nexcore-signal-types = { workspace = true }
+nexcore-signal-theory = { workspace = true }
 stem-math = { workspace = true }
 axum = { workspace = true, features = ["macros"] }
 tokio = { workspace = true, features = ["full"] }

@@ -10,6 +10,90 @@
 
 use std::fmt;
 
+use serde::{Deserialize, Serialize};
+
+// ============================================================================
+// Error types (SEMVER-01)
+// ============================================================================
+
+/// Error from staged validation operations.
+#[derive(Debug, Clone, PartialEq)]
+pub enum StagedValidationError {
+    /// All stages already completed
+    AlreadyComplete,
+    /// Insufficient evidence to advance
+    InsufficientEvidence,
+}
+
+impl fmt::Display for StagedValidationError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::AlreadyComplete => write!(f, "already complete"),
+            Self::InsufficientEvidence => write!(f, "insufficient evidence"),
+        }
+    }
+}
+
+/// Error from atomicity operations.
+#[derive(Debug, Clone, PartialEq)]
+pub enum AtomicityError {
+    /// Cannot rollback a committed operation
+    AlreadyCommitted,
+}
+
+impl fmt::Display for AtomicityError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::AlreadyCommitted => write!(f, "cannot rollback committed operation"),
+        }
+    }
+}
+
+/// Error from serialization guard operations.
+#[derive(Debug, Clone, PartialEq)]
+pub enum SerializationGuardError {
+    /// Sequence number does not match expected order
+    OutOfOrder,
+}
+
+impl fmt::Display for SerializationGuardError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::OutOfOrder => write!(f, "out-of-order sequence"),
+        }
+    }
+}
+
+/// Error from rate limiter operations.
+#[derive(Debug, Clone, PartialEq)]
+pub enum RateLimitError {
+    /// Rate limit exceeded for current window
+    Exceeded,
+}
+
+impl fmt::Display for RateLimitError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Exceeded => write!(f, "rate limit exceeded"),
+        }
+    }
+}
+
+/// Error from decomposition/mining depth operations.
+#[derive(Debug, Clone, PartialEq)]
+pub enum DepthError {
+    /// Maximum recursion depth exceeded
+    MaxDepthExceeded,
+}
+
+impl fmt::Display for DepthError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::MaxDepthExceeded => write!(f, "max depth exceeded"),
+        }
+    }
+}
+
 // ============================================================================
 // 1. ThreatSignature — T2-P: ∂ (Boundary) + μ (Mapping)
 // ============================================================================
@@ -18,7 +102,7 @@ use std::fmt;
 ///
 /// Transfers from: immunology (PAMP/DAMP), cybersecurity (IOC), ML (anomaly score).
 /// Computing analog: any pattern that triggers a boundary-crossing response.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ThreatSignature {
     /// Identifier for the pattern class
     pub pattern_id: String,
@@ -42,8 +126,15 @@ impl ThreatSignature {
     }
 
     /// Whether this signature exceeds a detection threshold
+    #[must_use]
     pub fn exceeds_threshold(&self, threshold: f64) -> bool {
         self.confidence >= threshold
+    }
+}
+
+impl fmt::Display for ThreatSignature {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Threat({}, c={:.2})", self.pattern_id, self.confidence)
     }
 }
 
@@ -55,7 +146,7 @@ impl ThreatSignature {
 ///
 /// Transfers from: biochemistry (ATP/ADP), economics (debt/equity), systems (load/capacity).
 /// Computing analog: any ratio that determines regime or mode of operation.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ResourceRatio {
     /// Numerator resource (available/active)
     pub available: f64,
@@ -72,16 +163,19 @@ impl ResourceRatio {
     }
 
     /// The ratio value (0.0 to +inf, typically 0.0-1.0)
+    #[must_use]
     pub fn ratio(&self) -> f64 {
         self.available / self.capacity
     }
 
     /// Whether the ratio is above a threshold (resource sufficient)
+    #[must_use]
     pub fn is_sufficient(&self, threshold: f64) -> bool {
         self.ratio() >= threshold
     }
 
     /// Whether the ratio indicates exhaustion (< 0.1)
+    #[must_use]
     pub fn is_exhausted(&self) -> bool {
         self.ratio() < 0.1
     }
@@ -107,7 +201,7 @@ impl fmt::Display for ResourceRatio {
 ///
 /// Transfers from: immunology (antibody), regex (pattern), ML (classifier).
 /// Computing analog: any predicate that recognizes specific input patterns.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PatternMatcher {
     /// Human-readable name for this matcher
     pub name: String,
@@ -136,6 +230,7 @@ impl PatternMatcher {
     }
 
     /// F1-score of the matcher (harmonic mean of precision and recall)
+    #[must_use]
     pub fn f1_score(&self) -> f64 {
         let precision = self.sensitivity; // simplified: precision ≈ sensitivity when balanced
         let recall = self.sensitivity;
@@ -143,6 +238,12 @@ impl PatternMatcher {
             return 0.0;
         }
         2.0 * precision * recall / (precision + recall)
+    }
+}
+
+impl fmt::Display for PatternMatcher {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Matcher({}, sens={:.2})", self.name, self.sensitivity)
     }
 }
 
@@ -154,7 +255,7 @@ impl PatternMatcher {
 ///
 /// Transfers from: RL (epsilon-greedy), game theory (minimax), search (BFS/DFS).
 /// Computing analog: any iterative choice between discovery and optimization.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ExploreExploit {
     /// Exploration rate (0.0 = pure exploit, 1.0 = pure explore)
     pub epsilon: f64,
@@ -174,6 +275,7 @@ impl ExploreExploit {
     }
 
     /// Should the next action explore or exploit?
+    #[must_use]
     pub fn should_explore(&self) -> bool {
         // Deterministic threshold (for testability)
         // In production, use random < epsilon
@@ -194,6 +296,16 @@ impl ExploreExploit {
     }
 }
 
+impl fmt::Display for ExploreExploit {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "ε={:.2} (n={}, best={:.2})",
+            self.epsilon, self.iterations, self.best_known
+        )
+    }
+}
+
 // ============================================================================
 // 5. EventClassifier — T2-P: μ (Mapping) + κ (Comparison) + ∂ (Boundary)
 // ============================================================================
@@ -202,7 +314,7 @@ impl ExploreExploit {
 ///
 /// Transfers from: ML (multiclass), triage (severity), monitoring (alert level).
 /// Computing analog: any mapping from observation to discrete class via thresholds.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct EventClassifier {
     /// Classifier name
     pub name: String,
@@ -225,6 +337,7 @@ impl EventClassifier {
     }
 
     /// Classify a value into a class index (0-based)
+    #[must_use]
     pub fn classify(&self, value: f64) -> usize {
         for (i, threshold) in self.boundaries.iter().enumerate() {
             if value < *threshold {
@@ -232,6 +345,12 @@ impl EventClassifier {
             }
         }
         self.num_classes - 1
+    }
+}
+
+impl fmt::Display for EventClassifier {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Classifier({}, {} classes)", self.name, self.num_classes)
     }
 }
 
@@ -243,7 +362,7 @@ impl EventClassifier {
 ///
 /// Transfers from: control theory (PID), cybernetics, biology (homeostasis).
 /// Computing analog: any system that measures deviation and applies correction.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FeedbackLoop {
     /// Target setpoint
     pub setpoint: f64,
@@ -263,11 +382,13 @@ impl FeedbackLoop {
     }
 
     /// Error: difference between setpoint and current
+    #[must_use]
     pub fn error(&self) -> f64 {
         self.setpoint - self.current
     }
 
     /// Correction signal: error * gain
+    #[must_use]
     pub fn correction(&self) -> f64 {
         self.error() * self.gain
     }
@@ -278,8 +399,21 @@ impl FeedbackLoop {
     }
 
     /// Whether the system has converged (error < tolerance)
+    #[must_use]
     pub fn converged(&self, tolerance: f64) -> bool {
         self.error().abs() < tolerance
+    }
+}
+
+impl fmt::Display for FeedbackLoop {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "FB(sp={:.1}, cur={:.1}, e={:.2})",
+            self.setpoint,
+            self.current,
+            self.error()
+        )
     }
 }
 
@@ -291,7 +425,7 @@ impl FeedbackLoop {
 ///
 /// Transfers from: databases (schema), APIs (contract), biology (ribosome).
 /// Computing analog: any specification that constrains valid data shapes.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SchemaContract {
     /// Contract name/identifier
     pub name: String,
@@ -314,6 +448,7 @@ impl SchemaContract {
     }
 
     /// Check if a newer version is compatible with this one
+    #[must_use]
     pub fn is_compatible_with(&self, other: &Self) -> bool {
         if other.version < self.version {
             return false;
@@ -326,6 +461,16 @@ impl SchemaContract {
     }
 }
 
+impl fmt::Display for SchemaContract {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Schema({} v{}, {} fields)",
+            self.name, self.version, self.required_fields
+        )
+    }
+}
+
 // ============================================================================
 // 8. MessageBus — T2-P: σ (Sequence) + μ (Mapping) + → (Causality)
 // ============================================================================
@@ -334,7 +479,7 @@ impl SchemaContract {
 ///
 /// Transfers from: biology (cytokine), distributed systems (Kafka), hardware (bus).
 /// Computing analog: any pub/sub or event dispatch mechanism.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MessageBus {
     /// Bus name
     pub name: String,
@@ -365,11 +510,22 @@ impl MessageBus {
     }
 
     /// Fan-out ratio: messages per subscriber
+    #[must_use]
     pub fn fan_out(&self) -> f64 {
         if self.subscriber_count == 0 {
             return 0.0;
         }
         self.messages_dispatched as f64 / self.subscriber_count as f64
+    }
+}
+
+impl fmt::Display for MessageBus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Bus({}, {} subs, {} msgs)",
+            self.name, self.subscriber_count, self.messages_dispatched
+        )
     }
 }
 
@@ -381,7 +537,7 @@ impl MessageBus {
 ///
 /// Transfers from: biology (cell), microservices (service), manufacturing (station).
 /// Computing analog: any processing unit with a defined input→output contract.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SpecializedWorker {
     /// Worker identifier
     pub id: String,
@@ -413,8 +569,16 @@ impl SpecializedWorker {
     }
 
     /// Throughput: tasks per unit (abstract)
+    #[must_use]
     pub fn throughput(&self) -> u64 {
         self.tasks_completed
+    }
+}
+
+impl fmt::Display for SpecializedWorker {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let status = if self.busy { "busy" } else { "idle" };
+        write!(f, "Worker({}/{}, {})", self.id, self.specialization, status)
     }
 }
 
@@ -426,7 +590,7 @@ impl SpecializedWorker {
 ///
 /// Transfers from: physics (half-life), chemistry (degradation), caching (TTL).
 /// Computing analog: any time-bounded resource that loses value or expires.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DecayFunction {
     /// Initial value at t=0
     pub initial_value: f64,
@@ -443,11 +607,13 @@ impl DecayFunction {
     }
 
     /// Value remaining at time t
+    #[must_use]
     pub fn value_at(&self, t: f64) -> f64 {
         self.initial_value * (0.5_f64).powf(t / self.half_life)
     }
 
     /// Time until value drops below threshold
+    #[must_use]
     pub fn time_to_threshold(&self, threshold: f64) -> f64 {
         if threshold <= 0.0 || threshold >= self.initial_value {
             return 0.0;
@@ -456,8 +622,19 @@ impl DecayFunction {
     }
 
     /// Whether the value has decayed past a threshold at time t
+    #[must_use]
     pub fn is_expired(&self, t: f64, threshold: f64) -> bool {
         self.value_at(t) < threshold
+    }
+}
+
+impl fmt::Display for DecayFunction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Decay(v₀={:.1}, t½={:.1})",
+            self.initial_value, self.half_life
+        )
     }
 }
 
@@ -473,7 +650,7 @@ impl DecayFunction {
 ///
 /// Distinction from FeedbackLoop: FeedbackLoop is an open-ended P-controller.
 /// Homeostasis adds a tolerance band (∂ boundary) — converge to a zone, not a point.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Homeostasis {
     /// Target equilibrium value
     pub setpoint: f64,
@@ -496,16 +673,19 @@ impl Homeostasis {
     }
 
     /// Error: difference between setpoint and current
+    #[must_use]
     pub fn error(&self) -> f64 {
         self.setpoint - self.current
     }
 
     /// Whether the current value is within the tolerance band
+    #[must_use]
     pub fn in_tolerance(&self) -> bool {
         self.error().abs() <= self.tolerance
     }
 
     /// Correction signal (zero if already in tolerance)
+    #[must_use]
     pub fn correction(&self) -> f64 {
         if self.in_tolerance() {
             0.0
@@ -520,6 +700,17 @@ impl Homeostasis {
     }
 }
 
+impl fmt::Display for Homeostasis {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let status = if self.in_tolerance() { "OK" } else { "DRIFT" };
+        write!(
+            f,
+            "Homeo(sp={:.1}±{:.1}, cur={:.1}, {})",
+            self.setpoint, self.tolerance, self.current, status
+        )
+    }
+}
+
 // ============================================================================
 // 12. StagedValidation — T2-P: σ (Sequence) + ∂ (Boundary) + π (Persistence)
 // ============================================================================
@@ -530,7 +721,7 @@ impl Homeostasis {
 /// code quality (CTVP 5-phase), skill validation (Diamond v2),
 /// agentic hooks (exit 0→1→2 escalation).
 /// Computing analog: pipeline with stage gates.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StagedValidation {
     /// Total number of stages
     pub stages: usize,
@@ -553,17 +744,19 @@ impl StagedValidation {
     }
 
     /// Whether enough evidence has been accumulated to advance
+    #[must_use]
     pub fn can_advance(&self) -> bool {
         self.evidence_accumulated >= self.threshold_per_stage && self.current_stage < self.stages
     }
 
     /// Advance to the next stage, resetting evidence. Returns Err if insufficient evidence.
-    pub fn advance(&mut self) -> Result<usize, &'static str> {
+    #[must_use]
+    pub fn advance(&mut self) -> Result<usize, StagedValidationError> {
         if self.current_stage >= self.stages {
-            return Err("already complete");
+            return Err(StagedValidationError::AlreadyComplete);
         }
         if !self.can_advance() {
-            return Err("insufficient evidence");
+            return Err(StagedValidationError::InsufficientEvidence);
         }
         self.evidence_accumulated = 0.0;
         self.current_stage += 1;
@@ -571,13 +764,27 @@ impl StagedValidation {
     }
 
     /// Whether all stages have been completed
+    #[must_use]
     pub fn is_complete(&self) -> bool {
         self.current_stage >= self.stages
     }
 
     /// Progress as a fraction (0.0 to 1.0)
+    #[must_use]
     pub fn progress(&self) -> f64 {
         self.current_stage as f64 / self.stages as f64
+    }
+}
+
+impl fmt::Display for StagedValidation {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Stage {}/{} ({:.0}%)",
+            self.current_stage,
+            self.stages,
+            self.progress() * 100.0
+        )
     }
 }
 
@@ -590,7 +797,7 @@ impl StagedValidation {
 /// Transfers from: databases (transactions), Rust (Result<T,E>),
 /// hook enforcement (exit 0 or non-zero), CTVP phase gates.
 /// Computing analog: commit/rollback, all-or-nothing.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Atomicity {
     /// Operation identifier
     pub operation: String,
@@ -612,16 +819,29 @@ impl Atomicity {
     }
 
     /// Roll back (only possible if not yet committed)
-    pub fn rollback(&mut self) -> Result<(), &'static str> {
+    #[must_use]
+    pub fn rollback(&mut self) -> Result<(), AtomicityError> {
         if self.committed {
-            return Err("cannot rollback committed operation");
+            return Err(AtomicityError::AlreadyCommitted);
         }
         Ok(())
     }
 
     /// Whether the operation is committed
+    #[must_use]
     pub fn is_committed(&self) -> bool {
         self.committed
+    }
+}
+
+impl fmt::Display for Atomicity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let status = if self.committed {
+            "COMMITTED"
+        } else {
+            "PENDING"
+        };
+        write!(f, "Atomic({}, {})", self.operation, status)
     }
 }
 
@@ -634,7 +854,7 @@ impl Atomicity {
 /// Transfers from: hardware (CPU CAS instruction), databases (optimistic locking),
 /// biology (enzyme lock-and-key specificity), economics (fill-or-kill orders).
 /// Computing analog: lock-free compare-and-swap, version-gated writes.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CompareAndSwap {
     /// The value expected at time of check
     pub expected: f64,
@@ -657,6 +877,7 @@ impl CompareAndSwap {
     }
 
     /// Attempt the swap against a current value. Returns the witnessed value.
+    #[must_use]
     pub fn execute(&mut self, current: f64) -> f64 {
         self.witnessed = current;
         if (current - self.expected).abs() < f64::EPSILON {
@@ -668,13 +889,26 @@ impl CompareAndSwap {
     }
 
     /// Whether the CAS succeeded
+    #[must_use]
     pub fn succeeded(&self) -> bool {
         self.succeeded
     }
 
     /// The value that was actually observed (useful for retry loops)
+    #[must_use]
     pub fn witnessed(&self) -> f64 {
         self.witnessed
+    }
+}
+
+impl fmt::Display for CompareAndSwap {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let status = if self.succeeded { "OK" } else { "FAIL" };
+        write!(
+            f,
+            "CAS({:.2}→{:.2}, {})",
+            self.expected, self.desired, status
+        )
     }
 }
 
@@ -688,7 +922,7 @@ impl CompareAndSwap {
 /// but data changes before action), caching (TTL expiry between read and use),
 /// distributed systems (lease expiry).
 /// Computing analog: any check whose result can go stale before consumption.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ToctouWindow {
     /// What was checked
     pub check_label: String,
@@ -721,13 +955,28 @@ impl ToctouWindow {
     }
 
     /// The gap between check and use
+    #[must_use]
     pub fn gap(&self) -> u64 {
         self.use_time.saturating_sub(self.check_time)
     }
 
     /// Whether the check result is stale at time of use
+    #[must_use]
     pub fn is_stale(&self) -> bool {
         self.gap() > self.max_gap
+    }
+}
+
+impl fmt::Display for ToctouWindow {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let status = if self.is_stale() { "STALE" } else { "FRESH" };
+        write!(
+            f,
+            "TOCTOU({}, gap={}, {})",
+            self.check_label,
+            self.gap(),
+            status
+        )
     }
 }
 
@@ -740,7 +989,7 @@ impl ToctouWindow {
 /// Transfers from: databases (WAL log sequence numbers), distributed systems
 /// (Lamport clocks), biology (DNA replication checkpoints), version control (commit DAG).
 /// Computing analog: monotonic counter ensuring no operation reordering.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SerializationGuard {
     /// Name of the guarded resource
     pub resource: String,
@@ -761,9 +1010,10 @@ impl SerializationGuard {
 
     /// Attempt to commit an operation with the given sequence number.
     /// Succeeds only if sequence matches next_expected (total order).
-    pub fn commit(&mut self, sequence: u64) -> Result<u64, &'static str> {
+    #[must_use]
+    pub fn commit(&mut self, sequence: u64) -> Result<u64, SerializationGuardError> {
         if sequence != self.next_expected {
-            return Err("out-of-order sequence");
+            return Err(SerializationGuardError::OutOfOrder);
         }
         self.last_committed = sequence;
         self.next_expected = sequence + 1;
@@ -771,13 +1021,21 @@ impl SerializationGuard {
     }
 
     /// Whether a given sequence number is in the future (not yet committable)
+    #[must_use]
     pub fn is_future(&self, sequence: u64) -> bool {
         sequence > self.next_expected
     }
 
     /// Whether a given sequence number has already been committed
+    #[must_use]
     pub fn is_committed(&self, sequence: u64) -> bool {
         sequence <= self.last_committed
+    }
+}
+
+impl fmt::Display for SerializationGuard {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Guard({}, seq={})", self.resource, self.last_committed)
     }
 }
 
@@ -790,7 +1048,7 @@ impl SerializationGuard {
 /// Transfers from: API throttling (requests/sec), pharmacokinetics (dosing intervals),
 /// neuroscience (refractory period), traffic engineering (flow control).
 /// Computing analog: token bucket / sliding window rate limiter.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RateLimiter {
     /// Maximum allowed events in the window
     pub max_events: u64,
@@ -813,32 +1071,54 @@ impl RateLimiter {
     }
 
     /// Try to consume one event at the given time. Returns Ok if allowed, Err if rate-limited.
-    pub fn try_acquire(&mut self, time: u64) -> Result<u64, &'static str> {
+    #[must_use]
+    pub fn try_acquire(&mut self, time: u64) -> Result<u64, RateLimitError> {
         // Roll window forward if expired
         if time >= self.window_start + self.window_size {
             self.window_start = time;
             self.current_count = 0;
         }
         if self.current_count >= self.max_events {
-            return Err("rate limit exceeded");
+            return Err(RateLimitError::Exceeded);
         }
         self.current_count += 1;
         Ok(self.remaining())
     }
 
     /// Remaining capacity in the current window
+    #[must_use]
     pub fn remaining(&self) -> u64 {
         self.max_events.saturating_sub(self.current_count)
     }
 
     /// Whether the limiter is currently exhausted
+    #[must_use]
     pub fn is_exhausted(&self) -> bool {
         self.current_count >= self.max_events
     }
 
     /// Utilization as a fraction (0.0 to 1.0)
+    #[must_use]
     pub fn utilization(&self) -> f64 {
         self.current_count as f64 / self.max_events as f64
+    }
+}
+
+impl fmt::Display for RateLimiter {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "RateLimit({}/{}, {:.0}%)",
+            self.current_count,
+            self.max_events,
+            self.utilization() * 100.0
+        )
+    }
+}
+
+impl Default for RateLimiter {
+    fn default() -> Self {
+        Self::new(100, 60) // 100 events per 60-unit window
     }
 }
 
@@ -851,7 +1131,8 @@ impl RateLimiter {
 /// Transfers from: electrical engineering (fuse/breaker), microservices (resilience),
 /// biology (nerve impulse gating / refractory period), economics (market circuit breakers).
 /// Computing analog: fail-fast with recovery probe.
-#[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum BreakerState {
     /// Normal operation — requests flow through
     Closed,
@@ -861,7 +1142,17 @@ pub enum BreakerState {
     HalfOpen,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+impl fmt::Display for BreakerState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Closed => write!(f, "Closed"),
+            Self::Open => write!(f, "Open"),
+            Self::HalfOpen => write!(f, "HalfOpen"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CircuitBreaker {
     /// Current breaker state
     pub state: BreakerState,
@@ -930,8 +1221,25 @@ impl CircuitBreaker {
     }
 
     /// Whether requests should be allowed through
+    #[must_use]
     pub fn is_allowing(&self) -> bool {
         self.state != BreakerState::Open
+    }
+}
+
+impl fmt::Display for CircuitBreaker {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Breaker({:?}, {}/{})",
+            self.state, self.failure_count, self.failure_threshold
+        )
+    }
+}
+
+impl Default for CircuitBreaker {
+    fn default() -> Self {
+        Self::new(3, 1) // reasonable defaults
     }
 }
 
@@ -944,7 +1252,7 @@ impl CircuitBreaker {
 /// Transfers from: HTTP (PUT idempotency), databases (upsert), biology (vaccine
 /// booster plateau), mathematics (projection operators f(f(x)) = f(x)).
 /// Computing analog: deduplication key / idempotency token.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Idempotency {
     /// Unique key identifying this operation
     pub key: String,
@@ -964,6 +1272,7 @@ impl Idempotency {
     }
 
     /// Apply the operation. Returns true only on the first application.
+    #[must_use]
     pub fn apply(&mut self) -> bool {
         self.application_count += 1;
         if !self.applied {
@@ -974,13 +1283,22 @@ impl Idempotency {
     }
 
     /// Whether this operation has already been applied
+    #[must_use]
     pub fn is_applied(&self) -> bool {
         self.applied
     }
 
     /// How many times apply() has been called (including duplicates)
+    #[must_use]
     pub fn attempts(&self) -> u64 {
         self.application_count
+    }
+}
+
+impl fmt::Display for Idempotency {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let status = if self.applied { "applied" } else { "pending" };
+        write!(f, "Idem({}, {})", self.key, status)
     }
 }
 
@@ -994,7 +1312,7 @@ impl Idempotency {
 /// security (absence of heartbeat), statistics (zero-count cells),
 /// diagnostics (dog that didn't bark)
 /// Computing analog: timeout, missing ACK, null result interpretation
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct NegativeEvidence {
     /// What was expected but absent
     pub expected: String,
@@ -1021,6 +1339,7 @@ impl NegativeEvidence {
     }
 
     /// Whether the absence is significant (count below threshold)
+    #[must_use]
     pub fn is_significant(&self) -> bool {
         (self.observed_count as f64) < self.significance_threshold
     }
@@ -1031,11 +1350,22 @@ impl NegativeEvidence {
     }
 
     /// Ratio of observed to expected threshold (0.0 = total absence, 1.0+ = no absence)
+    #[must_use]
     pub fn evidence_ratio(&self) -> f64 {
         if self.significance_threshold == 0.0 {
             return 1.0;
         }
         self.observed_count as f64 / self.significance_threshold
+    }
+}
+
+impl fmt::Display for NegativeEvidence {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Absence({}, {}/{})",
+            self.expected, self.observed_count, self.significance_threshold
+        )
     }
 }
 
@@ -1048,7 +1378,7 @@ impl NegativeEvidence {
 /// Transfers from: filesystem paths, DNS names, module paths,
 /// organizational hierarchy, supply chain location, network topology
 /// Computing analog: URI, dotted notation, tree coordinate
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TopologicalAddress {
     /// Ordered path segments from root to leaf
     pub segments: Vec<String>,
@@ -1074,11 +1404,13 @@ impl TopologicalAddress {
     }
 
     /// Depth in the topology (0 = root)
+    #[must_use]
     pub fn depth(&self) -> usize {
         self.segments.len()
     }
 
     /// Whether this address is a prefix (ancestor) of another
+    #[must_use]
     pub fn is_ancestor_of(&self, other: &Self) -> bool {
         if self.segments.len() >= other.segments.len() {
             return false;
@@ -1090,13 +1422,21 @@ impl TopologicalAddress {
     }
 
     /// Render to string representation
+    #[must_use]
     pub fn render(&self) -> String {
         self.segments.join(&self.separator)
     }
 
     /// Get the leaf (last segment)
+    #[must_use]
     pub fn leaf(&self) -> Option<&str> {
         self.segments.last().map(|s| s.as_str())
+    }
+}
+
+impl fmt::Display for TopologicalAddress {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.render())
     }
 }
 
@@ -1109,7 +1449,7 @@ impl TopologicalAddress {
 /// Transfers from: accounting (ledger balances), metrics (counters),
 /// event sourcing (running projections), statistics (cumulative sums)
 /// Computing analog: atomic counter, write-ahead log position, sequence number
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Accumulator {
     /// Current accumulated value
     pub total: f64,
@@ -1126,6 +1466,7 @@ impl Accumulator {
     }
 
     /// Add a non-negative value to the accumulator
+    #[must_use]
     pub fn add(&mut self, value: f64) -> f64 {
         let clamped = value.max(0.0);
         self.total += clamped;
@@ -1134,6 +1475,7 @@ impl Accumulator {
     }
 
     /// Current running average
+    #[must_use]
     pub fn average(&self) -> f64 {
         if self.additions == 0 {
             return 0.0;
@@ -1142,6 +1484,7 @@ impl Accumulator {
     }
 
     /// Whether any additions have been made
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.additions == 0
     }
@@ -1150,6 +1493,12 @@ impl Accumulator {
 impl Default for Accumulator {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl fmt::Display for Accumulator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Σ={:.2} (n={})", self.total, self.additions)
     }
 }
 
@@ -1163,7 +1512,7 @@ impl Default for Accumulator {
 /// version control (commits), distributed systems (Chandy-Lamport snapshots),
 /// clinical trials (interim analysis freeze)
 /// Computing analog: snapshot, savepoint, bookmark
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Checkpoint {
     /// Identifier for this checkpoint
     pub label: String,
@@ -1188,13 +1537,28 @@ impl Checkpoint {
     }
 
     /// Whether this checkpoint is safe to recover from
+    #[must_use]
     pub fn is_recoverable(&self) -> bool {
         self.durable
     }
 
     /// Whether this checkpoint is newer than another
+    #[must_use]
     pub fn is_newer_than(&self, other: &Self) -> bool {
         self.sequence > other.sequence
+    }
+}
+
+impl fmt::Display for Checkpoint {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let status = if self.durable { "DURABLE" } else { "pending" };
+        write!(f, "CP({} #{}, {})", self.label, self.sequence, status)
+    }
+}
+
+impl Default for Checkpoint {
+    fn default() -> Self {
+        Self::new("default", 0)
     }
 }
 
@@ -1207,7 +1571,7 @@ impl Checkpoint {
 /// Transfers from: chemistry (dissociation), linguistics (morpheme analysis),
 /// finance (factor analysis), biology (catabolism), FORGE (primitive mining).
 /// Computing analog: parser, factorization, tree traversal.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Decomposition {
     /// Current decomposition depth
     pub depth: u32,
@@ -1231,9 +1595,10 @@ impl Decomposition {
     }
 
     /// Descend one level deeper. Returns Err if max depth exceeded.
-    pub fn descend(&mut self) -> Result<u32, &'static str> {
+    #[must_use]
+    pub fn descend(&mut self) -> Result<u32, DepthError> {
         if self.depth >= self.max_depth {
-            return Err("max decomposition depth exceeded");
+            return Err(DepthError::MaxDepthExceeded);
         }
         self.depth += 1;
         Ok(self.depth)
@@ -1255,16 +1620,28 @@ impl Decomposition {
     }
 
     /// Whether we're at the root level.
+    #[must_use]
     pub fn is_root(&self) -> bool {
         self.depth == 0
     }
 
     /// Yield metric: parts per depth unit.
+    #[must_use]
     pub fn yield_ratio(&self) -> f64 {
         if self.depth == 0 {
             return 0.0;
         }
         self.parts_extracted as f64 / self.depth as f64
+    }
+}
+
+impl fmt::Display for Decomposition {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Decomp(d={}/{}, parts={})",
+            self.depth, self.max_depth, self.parts_extracted
+        )
     }
 }
 
@@ -1278,7 +1655,8 @@ impl Decomposition {
 /// manufacturing (CAD→CAM→part), law (statute→regulation→compliance),
 /// FORGE (spec→AST→code).
 /// Computing analog: compiler pipeline, template engine, code emitter.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum GenerationStage {
     /// Specification input (e.g., AST, schema, template)
     Specification,
@@ -1308,7 +1686,7 @@ impl fmt::Display for GenerationStage {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CodeGeneration {
     /// Current generation stage
     pub stage: GenerationStage,
@@ -1332,6 +1710,7 @@ impl CodeGeneration {
     }
 
     /// Advance to the next stage. Returns the new stage.
+    #[must_use]
     pub fn advance(&mut self) -> GenerationStage {
         self.stage = match self.stage {
             GenerationStage::Specification => GenerationStage::Intermediate,
@@ -1363,11 +1742,13 @@ impl CodeGeneration {
     }
 
     /// Whether generation succeeded (output exists).
+    #[must_use]
     pub fn succeeded(&self) -> bool {
         self.output_exists && self.stage == GenerationStage::Complete
     }
 
     /// Whether generation is still in progress.
+    #[must_use]
     pub fn is_in_progress(&self) -> bool {
         !matches!(
             self.stage,
@@ -1382,6 +1763,12 @@ impl Default for CodeGeneration {
     }
 }
 
+impl fmt::Display for CodeGeneration {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "CodeGen({}, {} tokens)", self.stage, self.output_count)
+    }
+}
+
 // ============================================================================
 // 26. PrimitiveMining — T2-C: Σ (Sum) + ρ (Recursion) + κ (Comparison) + μ (Mapping)
 // ============================================================================
@@ -1392,7 +1779,7 @@ impl Default for CodeGeneration {
 /// (morpheme analysis), finance (factor analysis), ML (feature extraction),
 /// FORGE (T1/T2/T3 decomposition).
 /// Computing analog: parser, AST walker, primitive extractor.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PrimitiveMining {
     /// Total candidates under analysis
     pub candidates: u32,
@@ -1434,9 +1821,10 @@ impl PrimitiveMining {
     }
 
     /// Descend into a candidate for deeper analysis.
-    pub fn descend(&mut self) -> Result<u32, &'static str> {
+    #[must_use]
+    pub fn descend(&mut self) -> Result<u32, DepthError> {
         if self.depth >= self.max_depth {
-            return Err("max mining depth exceeded");
+            return Err(DepthError::MaxDepthExceeded);
         }
         self.depth += 1;
         Ok(self.depth)
@@ -1448,6 +1836,7 @@ impl PrimitiveMining {
     }
 
     /// Primitive yield: confirmed / candidates.
+    #[must_use]
     pub fn yield_ratio(&self) -> f64 {
         if self.candidates == 0 {
             return 0.0;
@@ -1456,6 +1845,7 @@ impl PrimitiveMining {
     }
 
     /// Rejection rate: rejected / candidates.
+    #[must_use]
     pub fn rejection_rate(&self) -> f64 {
         if self.candidates == 0 {
             return 0.0;
@@ -1464,9 +1854,20 @@ impl PrimitiveMining {
     }
 
     /// Unprocessed candidates remaining.
+    #[must_use]
     pub fn pending(&self) -> u32 {
         self.candidates
             .saturating_sub(self.confirmed + self.rejected)
+    }
+}
+
+impl fmt::Display for PrimitiveMining {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Mining({}/{} confirmed, d={}/{})",
+            self.confirmed, self.candidates, self.depth, self.max_depth
+        )
     }
 }
 
@@ -1703,7 +2104,7 @@ mod tests {
         sv.evidence_accumulated = 5.0;
         assert!(!sv.can_advance());
         let result = sv.advance();
-        assert!(result.is_err());
+        assert_eq!(result, Err(StagedValidationError::InsufficientEvidence));
     }
 
     #[test]
@@ -1711,10 +2112,29 @@ mod tests {
         let mut sv = StagedValidation::new(2, 5.0);
         for _ in 0..2 {
             sv.evidence_accumulated = 5.0;
+            #[allow(
+                unused_results,
+                reason = "best-effort advance in loop; error means already complete"
+            )]
             let _ = sv.advance();
         }
         assert!(sv.is_complete());
         assert!((sv.progress() - 1.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_staged_validation_already_complete_error() {
+        let mut sv = StagedValidation::new(1, 5.0);
+        sv.evidence_accumulated = 5.0;
+        #[allow(
+            unused_results,
+            reason = "first advance expected to succeed; result not needed"
+        )]
+        let _ = sv.advance();
+        assert!(sv.is_complete());
+        sv.evidence_accumulated = 5.0;
+        let result = sv.advance();
+        assert_eq!(result, Err(StagedValidationError::AlreadyComplete));
     }
 
     // Atomicity tests
@@ -1732,7 +2152,7 @@ mod tests {
     fn test_atomicity_no_rollback_after_commit() {
         let mut a = Atomicity::new("migrate-db");
         a.commit();
-        assert!(a.rollback().is_err());
+        assert_eq!(a.rollback(), Err(AtomicityError::AlreadyCommitted));
     }
 
     // CompareAndSwap tests
@@ -1808,14 +2228,22 @@ mod tests {
     fn test_serialization_out_of_order() {
         let mut g = SerializationGuard::new("wal-log");
         assert!(g.commit(1).is_ok());
-        assert!(g.commit(3).is_err()); // skipped 2
+        assert_eq!(g.commit(3), Err(SerializationGuardError::OutOfOrder)); // skipped 2
         assert_eq!(g.last_committed, 1);
     }
 
     #[test]
     fn test_serialization_queries() {
         let mut g = SerializationGuard::new("commits");
+        #[allow(
+            unused_results,
+            reason = "advancing guard state; success is an invariant here"
+        )]
         let _ = g.commit(1);
+        #[allow(
+            unused_results,
+            reason = "advancing guard state; success is an invariant here"
+        )]
         let _ = g.commit(2);
         assert!(g.is_committed(1));
         assert!(g.is_committed(2));
@@ -1832,7 +2260,7 @@ mod tests {
         assert!(rl.try_acquire(0).is_ok());
         assert!(rl.try_acquire(10).is_ok());
         assert!(rl.try_acquire(20).is_ok());
-        assert!(rl.try_acquire(30).is_err()); // 4th in same window
+        assert_eq!(rl.try_acquire(30), Err(RateLimitError::Exceeded)); // 4th in same window
     }
 
     #[test]
@@ -1847,7 +2275,15 @@ mod tests {
     #[test]
     fn test_rate_limiter_utilization() {
         let mut rl = RateLimiter::new(4, 100);
+        #[allow(
+            unused_results,
+            reason = "consuming slots to test utilization; success is the invariant"
+        )]
         let _ = rl.try_acquire(0);
+        #[allow(
+            unused_results,
+            reason = "consuming slots to test utilization; success is the invariant"
+        )]
         let _ = rl.try_acquire(1);
         assert!((rl.utilization() - 0.5).abs() < f64::EPSILON);
         assert_eq!(rl.remaining(), 2);
@@ -2018,15 +2454,23 @@ mod tests {
         assert!(d.descend().is_ok());
         assert!(d.descend().is_ok());
         assert!(d.descend().is_ok());
-        assert!(d.descend().is_err()); // max depth exceeded
+        assert_eq!(d.descend(), Err(DepthError::MaxDepthExceeded)); // max depth exceeded
     }
 
     #[test]
     fn test_decomposition_extraction() {
         let mut d = Decomposition::new(5);
+        #[allow(
+            unused_results,
+            reason = "descend side-effect is the depth increment; error impossible at depth 0"
+        )]
         let _ = d.descend();
         d.extract_part();
         d.extract_part();
+        #[allow(
+            unused_results,
+            reason = "descend side-effect is the depth increment; error impossible at depth 1"
+        )]
         let _ = d.descend();
         d.extract_part();
         assert_eq!(d.parts_extracted, 3);
@@ -2036,7 +2480,15 @@ mod tests {
     #[test]
     fn test_decomposition_ascend() {
         let mut d = Decomposition::new(5);
+        #[allow(
+            unused_results,
+            reason = "descend side-effect is the depth increment; not testing error path here"
+        )]
         let _ = d.descend();
+        #[allow(
+            unused_results,
+            reason = "descend side-effect is the depth increment; not testing error path here"
+        )]
         let _ = d.descend();
         assert_eq!(d.depth, 2);
         d.ascend();
@@ -2111,7 +2563,7 @@ mod tests {
         assert!(pm.descend().is_ok());
         assert!(pm.descend().is_ok());
         assert!(pm.descend().is_ok());
-        assert!(pm.descend().is_err());
+        assert_eq!(pm.descend(), Err(DepthError::MaxDepthExceeded));
 
         pm.ascend();
         assert_eq!(pm.depth, 2);

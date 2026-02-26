@@ -5,8 +5,8 @@
 
 use nexcore_chrono::DateTime;
 use nexcore_codec::hex;
+use nexcore_hash::sha256::Sha256;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};

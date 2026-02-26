@@ -1085,50 +1085,66 @@ mod tests {
     #[test]
     fn test_serde_all_t1() {
         let threshold = Threshold::new(5.0, true);
-        let json = serde_json::to_string(&threshold).ok();
-        assert!(json.is_some());
+        let json = serde_json::to_string(&threshold).unwrap_or_default();
+        let t2: Threshold =
+            serde_json::from_str(&json).unwrap_or_else(|e| panic!("Threshold deser failed: {e}"));
+        assert_eq!(threshold, t2);
 
         let fb = FeedbackLoop::new(10.0, 0.5);
-        let json = serde_json::to_string(&fb).ok();
-        assert!(json.is_some());
+        let json = serde_json::to_string(&fb).unwrap_or_default();
+        let fb2: FeedbackLoop = serde_json::from_str(&json)
+            .unwrap_or_else(|e| panic!("FeedbackLoop deser failed: {e}"));
+        assert_eq!(fb, fb2);
 
         let idem = Idempotency::new("k");
-        let json = serde_json::to_string(&idem).ok();
-        assert!(json.is_some());
+        let json = serde_json::to_string(&idem).unwrap_or_default();
+        let idem2: Idempotency =
+            serde_json::from_str(&json).unwrap_or_else(|e| panic!("Idempotency deser failed: {e}"));
+        assert_eq!(idem, idem2);
 
         let imm = Immutability::new("rec");
-        let json = serde_json::to_string(&imm).ok();
-        assert!(json.is_some());
+        let json = serde_json::to_string(&imm).unwrap_or_default();
+        let imm2: Immutability = serde_json::from_str(&json)
+            .unwrap_or_else(|e| panic!("Immutability deser failed: {e}"));
+        assert_eq!(imm, imm2);
 
         let conv = Convergence::new(3, 0.5);
-        let json = serde_json::to_string(&conv).ok();
-        assert!(json.is_some());
+        let json = serde_json::to_string(&conv).unwrap_or_default();
+        let conv2: Convergence =
+            serde_json::from_str(&json).unwrap_or_else(|e| panic!("Convergence deser failed: {e}"));
+        assert_eq!(conv, conv2);
     }
 
     #[test]
     fn test_serde_all_t2p() {
-        // Verify all T2-P types survive serde round-trip
-        let types_json: Vec<String> = vec![
-            serde_json::to_string(&Compute::new(1.0, 1.0)).unwrap_or_default(),
-            serde_json::to_string(&Storage::new(100.0)).unwrap_or_default(),
-            serde_json::to_string(&NetworkLink::new("a", "b", 10.0)).unwrap_or_default(),
-            serde_json::to_string(&IsolationBoundary::new("test", 0.5)).unwrap_or_default(),
-            serde_json::to_string(&Permission::new("a", "b", "c")).unwrap_or_default(),
-            serde_json::to_string(&ResourcePool::new(10.0)).unwrap_or_default(),
-            serde_json::to_string(&Metering::new("cpu", 60.0)).unwrap_or_default(),
-            serde_json::to_string(&Replication::new(3)).unwrap_or_default(),
-            serde_json::to_string(&Routing::new(2)).unwrap_or_default(),
-            serde_json::to_string(&Lease::new("r", "h", 10.0)).unwrap_or_default(),
-            serde_json::to_string(&Encryption::new("AES", 256)).unwrap_or_default(),
-            serde_json::to_string(&Queue::new("q", 10)).unwrap_or_default(),
-            serde_json::to_string(&HealthCheck::new("t", 3)).unwrap_or_default(),
-            serde_json::to_string(&Elasticity::new(1, 10)).unwrap_or_default(),
-        ];
-        for json in &types_json {
-            assert!(
-                !json.is_empty(),
-                "Serialization should not produce empty string"
-            );
+        // Verify all T2-P types survive genuine serde round-trip (serialize + deserialize)
+        macro_rules! round_trip {
+            ($ty:ty, $val:expr) => {{
+                let orig = $val;
+                let json = serde_json::to_string(&orig).unwrap_or_default();
+                assert!(
+                    !json.is_empty(),
+                    concat!(stringify!($ty), " serialized to empty")
+                );
+                let back: $ty = serde_json::from_str(&json)
+                    .unwrap_or_else(|e| panic!(concat!(stringify!($ty), " deser failed: {}"), e));
+                assert_eq!(orig, back, concat!(stringify!($ty), " round-trip mismatch"));
+            }};
         }
+
+        round_trip!(Compute, Compute::new(1.0, 1.0));
+        round_trip!(Storage, Storage::new(100.0));
+        round_trip!(NetworkLink, NetworkLink::new("a", "b", 10.0));
+        round_trip!(IsolationBoundary, IsolationBoundary::new("test", 0.5));
+        round_trip!(Permission, Permission::new("a", "b", "c"));
+        round_trip!(ResourcePool, ResourcePool::new(10.0));
+        round_trip!(Metering, Metering::new("cpu", 60.0));
+        round_trip!(Replication, Replication::new(3));
+        round_trip!(Routing, Routing::new(2));
+        round_trip!(Lease, Lease::new("r", "h", 10.0));
+        round_trip!(Encryption, Encryption::new("AES", 256));
+        round_trip!(Queue, Queue::new("q", 10));
+        round_trip!(HealthCheck, HealthCheck::new("t", 3));
+        round_trip!(Elasticity, Elasticity::new(1, 10));
     }
 }

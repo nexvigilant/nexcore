@@ -21,6 +21,10 @@
 //! assert!(result.im.abs() < 1e-10);
 //! ```
 
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
+
 pub mod complex;
 pub mod error;
 pub mod functions;

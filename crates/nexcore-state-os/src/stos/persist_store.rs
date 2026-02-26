@@ -11,9 +11,8 @@
 //!
 //! `PersistStore` is T2-C (π + ς + σ) — persistence, state, sequence.
 
-use alloc::collections::BTreeMap;
+use alloc::collections::{BTreeMap, VecDeque};
 use alloc::string::String;
-use alloc::vec::Vec;
 
 use super::state_registry::StateId;
 use crate::MachineId;
@@ -73,8 +72,8 @@ impl Snapshot {
 pub struct PersistStore {
     /// Machine ID.
     machine_id: MachineId,
-    /// Stored snapshots.
-    snapshots: Vec<Snapshot>,
+    /// Stored snapshots (VecDeque for O(1) front removal during pruning).
+    snapshots: VecDeque<Snapshot>,
     /// Counter for snapshot IDs.
     counter: u64,
     /// Maximum snapshots to retain.
@@ -91,7 +90,7 @@ impl PersistStore {
     pub fn new(machine_id: MachineId) -> Self {
         Self {
             machine_id,
-            snapshots: Vec::new(),
+            snapshots: VecDeque::new(),
             counter: 0,
             max_snapshots: 100,
             auto_interval: 0,
@@ -115,12 +114,12 @@ impl PersistStore {
         let snap = Snapshot::new(self.counter, self.machine_id, current_state, self.counter)
             .with_transition_count(transition_count);
 
-        self.snapshots.push(snap);
+        self.snapshots.push_back(snap);
         self.since_last_snapshot = 0;
 
-        // Prune if over limit
+        // Prune oldest if over limit — O(1) per removal with VecDeque
         while self.snapshots.len() > self.max_snapshots {
-            self.snapshots.remove(0);
+            self.snapshots.pop_front();
         }
 
         self.counter
@@ -137,7 +136,7 @@ impl PersistStore {
     /// Get latest snapshot.
     #[must_use]
     pub fn latest(&self) -> Option<&Snapshot> {
-        self.snapshots.last()
+        self.snapshots.back()
     }
 
     /// Get snapshot by ID.
@@ -146,15 +145,15 @@ impl PersistStore {
         self.snapshots.iter().find(|s| s.id == id)
     }
 
-    /// Get all snapshots.
+    /// Get all snapshots as a contiguous slice pair (VecDeque may split).
     #[must_use]
-    pub fn all(&self) -> &[Snapshot] {
-        &self.snapshots
+    pub fn all(&self) -> (&[Snapshot], &[Snapshot]) {
+        self.snapshots.as_slices()
     }
 
     /// Get snapshots in time range.
     #[must_use]
-    pub fn in_range(&self, from: u64, to: u64) -> Vec<&Snapshot> {
+    pub fn in_range(&self, from: u64, to: u64) -> alloc::vec::Vec<&Snapshot> {
         self.snapshots
             .iter()
             .filter(|s| s.timestamp >= from && s.timestamp <= to)

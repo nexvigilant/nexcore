@@ -1,6 +1,6 @@
 //! Structural compression beyond BLUFF patterns.
 //!
-//! Four stages: Pattern → Dedup → Hierarchy → Summary.
+//! Three active stages: Pattern → Dedup → Hierarchy.
 //! Token Jaccard similarity reused from `nexcore-brain/src/implicit.rs:60-87`.
 
 use std::collections::BTreeSet;
@@ -67,7 +67,6 @@ pub enum CompressionMethod {
     Pattern,
     Dedup,
     Hierarchy,
-    Summary,
 }
 
 impl std::fmt::Display for CompressionMethod {
@@ -76,7 +75,6 @@ impl std::fmt::Display for CompressionMethod {
             Self::Pattern => write!(f, "pattern"),
             Self::Dedup => write!(f, "dedup"),
             Self::Hierarchy => write!(f, "hierarchy"),
-            Self::Summary => write!(f, "summary"),
         }
     }
 }
@@ -92,7 +90,7 @@ pub struct CompressionResult {
     pub methods_applied: Vec<CompressionMethod>,
 }
 
-/// Structural compressor with four stages.
+/// Structural compressor with three active stages (Pattern, Dedup, Hierarchy).
 pub struct StructuralCompressor {
     dedup_threshold: f64,
 }
@@ -119,7 +117,16 @@ impl StructuralCompressor {
         self
     }
 
-    /// Run all compression stages.
+    /// Run all compression stages and return the result.
+    ///
+    /// ```
+    /// use nexcore_knowledge_engine::compression::StructuralCompressor;
+    ///
+    /// let compressor = StructuralCompressor::new();
+    /// let result = compressor.compress("In order to make a decision, we need to act.");
+    /// assert!(result.compression_ratio > 0.0);
+    /// assert!(!result.compressed_text.contains("in order to"));
+    /// ```
     pub fn compress(&self, text: &str) -> CompressionResult {
         let original_word_count = text.split_whitespace().count();
         let mut methods = Vec::new();
@@ -348,6 +355,16 @@ impl StructuralCompressor {
 ///
 /// Uses `BTreeSet<&str>` (borrowed slices) to avoid per-token `String` allocation.
 /// Case-insensitive: both inputs are lowercased before tokenization.
+///
+/// ```
+/// use nexcore_knowledge_engine::compression::token_similarity;
+///
+/// let sim = token_similarity("signal detection analysis", "signal detection method");
+/// assert!((sim - 0.5).abs() < f64::EPSILON); // 2/4 shared tokens = 0.5
+///
+/// let identical = token_similarity("hello world", "hello world");
+/// assert!((identical - 1.0).abs() < f64::EPSILON);
+/// ```
 pub fn token_similarity(a: &str, b: &str) -> f64 {
     let a_lower = a.to_lowercase();
     let b_lower = b.to_lowercase();

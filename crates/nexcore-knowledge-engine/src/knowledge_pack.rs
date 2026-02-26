@@ -11,7 +11,7 @@ use crate::ingest::KnowledgeFragment;
 /// A compiled knowledge pack.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KnowledgePack {
-    pub id: String,
+    pub id: crate::KnowledgeId,
     pub name: String,
     pub version: u32,
     pub fragments: Vec<KnowledgeFragment>,
@@ -32,7 +32,7 @@ pub struct PackIndex {
 }
 
 /// Statistics for a knowledge pack.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PackStats {
     pub fragment_count: usize,
     pub concept_count: usize,
@@ -41,6 +41,12 @@ pub struct PackStats {
     pub compression_ratio: f64,
     pub domains: Vec<String>,
     pub total_words: usize,
+    /// Number of raw sources attempted during compilation.
+    #[serde(default)]
+    pub sources_attempted: usize,
+    /// Number of sources that failed ingestion (e.g., compressed to empty).
+    #[serde(default)]
+    pub sources_failed: usize,
 }
 
 impl KnowledgePack {
@@ -94,7 +100,30 @@ impl KnowledgePack {
             compression_ratio: 0.0, // Set by compiler after compression
             domains,
             total_words,
+            sources_attempted: 0, // Set by compiler
+            sources_failed: 0,    // Set by compiler
         }
+    }
+
+    /// Look up a fragment by ID within this pack.
+    ///
+    /// Returns [`KnowledgeEngineError::FragmentNotFound`] if no match.
+    ///
+    /// ```
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// use nexcore_knowledge_engine::knowledge_pack::KnowledgePack;
+    /// use nexcore_knowledge_engine::concept_graph::ConceptGraph;
+    ///
+    /// let pack = KnowledgePack::new("test".to_string(), 1, vec![], ConceptGraph::new());
+    /// assert!(pack.get_fragment("nonexistent").is_err());
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn get_fragment(&self, id: &str) -> crate::error::Result<&KnowledgeFragment> {
+        self.fragments
+            .iter()
+            .find(|f| f.id == id)
+            .ok_or_else(|| crate::error::KnowledgeEngineError::FragmentNotFound(id.to_string()))
     }
 
     /// Build a PackIndex from this pack.
@@ -127,5 +156,34 @@ mod tests {
         let idx = pack.to_index();
         assert_eq!(idx.name, "test");
         assert_eq!(idx.version, 3);
+    }
+
+    #[test]
+    fn get_fragment_found() {
+        use crate::ingest::{KnowledgeSource, RawKnowledge};
+        use nexcore_chrono::DateTime;
+
+        let raw = RawKnowledge {
+            text: "Signal detection uses PRR for analysis.".to_string(),
+            source: KnowledgeSource::FreeText,
+            domain: Some("pv".to_string()),
+            timestamp: DateTime::now(),
+        };
+        let frag = crate::ingest::ingest(raw).unwrap();
+        let frag_id = frag.id.clone();
+        let pack = KnowledgePack::new("test".to_string(), 1, vec![frag], ConceptGraph::new());
+
+        assert!(pack.get_fragment(&frag_id).is_ok());
+    }
+
+    #[test]
+    fn get_fragment_not_found() {
+        let pack = KnowledgePack::new("test".to_string(), 1, vec![], ConceptGraph::new());
+        let err = pack.get_fragment("nonexistent");
+        assert!(err.is_err());
+        assert!(matches!(
+            err.unwrap_err(),
+            crate::error::KnowledgeEngineError::FragmentNotFound(_)
+        ));
     }
 }

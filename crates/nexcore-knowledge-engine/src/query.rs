@@ -24,7 +24,7 @@ pub struct QueryResult {
     pub concepts: Vec<String>,
     pub domain: String,
     pub relevance: f64,
-    pub fragment_id: String,
+    pub fragment_id: crate::KnowledgeId,
 }
 
 /// Query response with results and metadata.
@@ -69,9 +69,13 @@ impl QueryEngine {
         };
 
         if packs.is_empty() {
-            return Err(KnowledgeEngineError::PackNotFound(
-                pack_name.unwrap_or("any").to_string(),
-            ));
+            return if pack_name.is_some() {
+                Err(KnowledgeEngineError::PackNotFound(
+                    pack_name.unwrap_or("").to_string(),
+                ))
+            } else {
+                Err(KnowledgeEngineError::EmptyStore)
+            };
         }
 
         let mut responses = Vec::new();
@@ -83,6 +87,42 @@ impl QueryEngine {
         }
 
         Ok(responses)
+    }
+
+    /// Query all packs and return a single flat list sorted by global relevance.
+    ///
+    /// Unlike `query()` which returns per-pack responses, this merges all results
+    /// into one ranked list — useful when the caller doesn't care which pack a
+    /// fragment came from.
+    pub fn query_merged(
+        &self,
+        query: &str,
+        mode: QueryMode,
+        domain_filter: Option<&str>,
+        limit: usize,
+    ) -> Result<Vec<QueryResult>> {
+        let indices = self.store.list_packs()?;
+        if indices.is_empty() {
+            return Err(KnowledgeEngineError::EmptyStore);
+        }
+
+        let mut all_results: Vec<QueryResult> = Vec::new();
+        for idx in &indices {
+            if let Ok(pack) = self.store.load_latest(&idx.name) {
+                let response = self.query_pack(&pack, query, &mode, domain_filter, limit);
+                all_results.extend(response.results);
+            }
+        }
+
+        // Global sort by relevance descending
+        all_results.sort_by(|a, b| {
+            b.relevance
+                .partial_cmp(&a.relevance)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        all_results.truncate(limit);
+
+        Ok(all_results)
     }
 
     fn query_pack(
@@ -215,6 +255,62 @@ mod tests {
             .unwrap();
         assert!(!responses.is_empty());
         assert!(responses[0].results[0].relevance > 0.0);
+    }
+
+    #[test]
+    fn merged_query_across_packs() {
+        let store = KnowledgeStore::temp().unwrap();
+        // Compile two separate packs
+        let compiler = KnowledgeCompiler::new(store.clone());
+        compiler
+            .compile(CompileOptions {
+                name: "pack-a".to_string(),
+                include_distillations: false,
+                include_artifacts: false,
+                include_implicit: false,
+                sources: vec![RawKnowledge {
+                    text: "Signal detection uses PRR for pharmacovigilance safety.".to_string(),
+                    source: KnowledgeSource::FreeText,
+                    domain: Some("pv".to_string()),
+                    timestamp: DateTime::now(),
+                }],
+            })
+            .unwrap();
+        compiler
+            .compile(CompileOptions {
+                name: "pack-b".to_string(),
+                include_distillations: false,
+                include_artifacts: false,
+                include_implicit: false,
+                sources: vec![RawKnowledge {
+                    text: "Signal processing and detection algorithms in safety monitoring."
+                        .to_string(),
+                    source: KnowledgeSource::FreeText,
+                    domain: Some("pv".to_string()),
+                    timestamp: DateTime::now(),
+                }],
+            })
+            .unwrap();
+
+        let engine = QueryEngine::new(store);
+        let results = engine
+            .query_merged("signal detection", QueryMode::Keyword, None, 10)
+            .unwrap();
+        // Both packs have signal detection — merged results should have entries from both
+        assert!(
+            results.len() >= 2,
+            "expected merged results from 2 packs, got {}",
+            results.len()
+        );
+        // Results must be sorted by relevance descending
+        for pair in results.windows(2) {
+            assert!(
+                pair[0].relevance >= pair[1].relevance,
+                "results not sorted: {} < {}",
+                pair[0].relevance,
+                pair[1].relevance
+            );
+        }
     }
 
     #[test]

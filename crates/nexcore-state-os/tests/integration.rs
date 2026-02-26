@@ -70,24 +70,16 @@ fn test_full_transition_lifecycle() {
     let mut kernel = StateKernel::new();
     let spec = order_spec();
 
-    let mid = kernel.load_machine(&spec);
-    assert!(mid.is_ok());
-    let mid = mid.ok();
-    assert!(mid.is_some());
-    let mid = mid.map(|id| id);
-    assert!(mid.is_some());
-    let mid = match mid {
-        Some(m) => m,
-        None => return,
-    };
-
-    // Get the initial state (pending)
-    let initial = kernel.current_state(mid);
-    assert!(initial.is_ok());
-    let initial_state = match initial {
-        Ok(s) => s,
+    let mid = match kernel.load_machine(&spec) {
+        Ok(m) => m,
         Err(_) => return,
     };
+
+    // Verify the machine starts in a valid initial state
+    assert!(
+        kernel.current_state(mid).is_ok(),
+        "Machine should have a current state after loading"
+    );
 
     // Find the transitions by looking at metrics after execution
     // We know transitions were registered via load_machine
@@ -203,7 +195,10 @@ fn test_boundary_crossings_recorded() {
     };
 
     // Execute one transition (pending -> confirmed)
-    let _ = kernel.transition(mid, 0);
+    assert!(
+        kernel.transition(mid, 0).is_ok(),
+        "confirm transition should succeed"
+    );
 
     // Check boundary crossings — initial state leaving should be recorded
     let crossings = kernel.boundary_crossings(mid);
@@ -214,8 +209,14 @@ fn test_boundary_crossings_recorded() {
     }
 
     // Execute all the way to terminal
-    let _ = kernel.transition(mid, 1);
-    let _ = kernel.transition(mid, 2);
+    assert!(
+        kernel.transition(mid, 1).is_ok(),
+        "ship transition should succeed"
+    );
+    assert!(
+        kernel.transition(mid, 2).is_ok(),
+        "deliver transition should succeed"
+    );
 
     let crossings = kernel.boundary_crossings(mid);
     assert!(crossings.is_ok());
@@ -251,7 +252,10 @@ fn test_void_analysis_detects_unreachable() {
     };
 
     // Only connect start -> reachable, orphan has no edges
-    let _ = kernel.register_transition(mid, "go", s0, s1);
+    assert!(
+        kernel.register_transition(mid, "go", s0, s1).is_ok(),
+        "Transition registration should succeed"
+    );
 
     // Analyze voids
     let voids = kernel.analyze_voids(mid);
@@ -288,9 +292,18 @@ fn test_cycle_detection() {
     };
 
     // Create a cycle: a -> b -> c -> a
-    let _ = kernel.register_transition(mid, "a_to_b", a, b);
-    let _ = kernel.register_transition(mid, "b_to_c", b, c);
-    let _ = kernel.register_transition(mid, "c_to_a", c, a);
+    assert!(
+        kernel.register_transition(mid, "a_to_b", a, b).is_ok(),
+        "a->b registration should succeed"
+    );
+    assert!(
+        kernel.register_transition(mid, "b_to_c", b, c).is_ok(),
+        "b->c registration should succeed"
+    );
+    assert!(
+        kernel.register_transition(mid, "c_to_a", c, a).is_ok(),
+        "c->a registration should succeed"
+    );
 
     let cycles = kernel.detect_cycles(mid);
     assert!(cycles.is_ok());
@@ -316,8 +329,11 @@ fn test_manual_snapshot() {
         Err(_) => return,
     };
 
-    // Execute one transition
-    let _ = kernel.transition(mid, 0);
+    // Execute one transition (to put the machine in a non-initial state before snapshotting)
+    assert!(
+        kernel.transition(mid, 0).is_ok(),
+        "confirm transition should succeed before snapshot"
+    );
 
     // Create a snapshot
     let snap = kernel.snapshot(mid);
@@ -341,10 +357,19 @@ fn test_audit_trail_integrity() {
         Err(_) => return,
     };
 
-    // Execute all transitions
-    let _ = kernel.transition(mid, 0);
-    let _ = kernel.transition(mid, 1);
-    let _ = kernel.transition(mid, 2);
+    // Execute all transitions (these are the events whose audit trail we verify)
+    assert!(
+        kernel.transition(mid, 0).is_ok(),
+        "confirm transition should succeed"
+    );
+    assert!(
+        kernel.transition(mid, 1).is_ok(),
+        "ship transition should succeed"
+    );
+    assert!(
+        kernel.transition(mid, 2).is_ok(),
+        "deliver transition should succeed"
+    );
 
     // Verify audit trail
     let verified = kernel.verify_audit_trail(mid);
@@ -383,8 +408,13 @@ fn test_absorbing_state_blocks_exit() {
     let t0 = kernel.register_transition(mid, "die", alive, dead);
     let t1 = kernel.register_transition(mid, "resurrect", dead, zombie);
 
-    // Mark "dead" as permanent absorbing state
-    let _ = kernel.register_absorbing_state(mid, dead, IrreversibilityLevel::Permanent);
+    // Mark "dead" as permanent absorbing state (must succeed for the block-exit assertion to be meaningful)
+    assert!(
+        kernel
+            .register_absorbing_state(mid, dead, IrreversibilityLevel::Permanent)
+            .is_ok(),
+        "register_absorbing_state should succeed"
+    );
 
     // Execute die (alive -> dead)
     if let Ok(tid0) = t0 {
@@ -552,8 +582,18 @@ fn test_event_mapping() {
         _ => return,
     };
 
-    let _ = kernel.register_transition(mid, "start", idle, running);
-    let _ = kernel.register_transition(mid, "stop", running, stopped);
+    assert!(
+        kernel
+            .register_transition(mid, "start", idle, running)
+            .is_ok(),
+        "start transition registration should succeed"
+    );
+    assert!(
+        kernel
+            .register_transition(mid, "stop", running, stopped)
+            .is_ok(),
+        "stop transition registration should succeed"
+    );
 
     // Register event mapping
     let mut event_map = EventStateMapping::new();
@@ -602,12 +642,24 @@ fn test_aggregate_multi_machine() {
     assert_eq!(kernel.machine_count(), 3);
 
     // Run mid1 to completion
-    let _ = kernel.transition(mid1, 0);
-    let _ = kernel.transition(mid1, 1);
-    let _ = kernel.transition(mid1, 2);
+    assert!(
+        kernel.transition(mid1, 0).is_ok(),
+        "mid1 confirm should succeed"
+    );
+    assert!(
+        kernel.transition(mid1, 1).is_ok(),
+        "mid1 ship should succeed"
+    );
+    assert!(
+        kernel.transition(mid1, 2).is_ok(),
+        "mid1 deliver should succeed"
+    );
 
     // Run mid2 partially
-    let _ = kernel.transition(mid2, 0);
+    assert!(
+        kernel.transition(mid2, 0).is_ok(),
+        "mid2 confirm should succeed"
+    );
 
     // Leave mid3 untouched
 
@@ -634,8 +686,18 @@ fn test_state_mapping_between_machines() {
     };
 
     // Register states for both machines
-    let _ = kernel.register_state(mid1, "ready", StateKind::Initial);
-    let _ = kernel.register_state(mid2, "standby", StateKind::Initial);
+    assert!(
+        kernel
+            .register_state(mid1, "ready", StateKind::Initial)
+            .is_ok(),
+        "mid1 state registration should succeed"
+    );
+    assert!(
+        kernel
+            .register_state(mid2, "standby", StateKind::Initial)
+            .is_ok(),
+        "mid2 state registration should succeed"
+    );
 
     // Create a state mapping from mid1 to mid2
     let mut mapping = StateMapping::new(mid1, mid2);
@@ -758,12 +820,12 @@ fn test_terminal_blocks_further_transitions() {
         Err(_) => return,
     };
 
-    // Run to terminal
-    let _ = kernel.transition(mid, 0);
-    let _ = kernel.transition(mid, 1);
-    let _ = kernel.transition(mid, 2);
+    // Run to terminal (all three must succeed for the block assertion to be meaningful)
+    assert!(kernel.transition(mid, 0).is_ok(), "confirm should succeed");
+    assert!(kernel.transition(mid, 1).is_ok(), "ship should succeed");
+    assert!(kernel.transition(mid, 2).is_ok(), "deliver should succeed");
 
-    // Try another transition
+    // Try another transition — must be blocked because the machine is now in a terminal state
     let result = kernel.transition(mid, 0);
     assert!(
         matches!(result, Err(KernelError::InTerminalState(_))),
@@ -826,8 +888,13 @@ fn test_irreversible_transition_marked_in_audit() {
         Err(_) => return,
     };
 
-    // Mark transition as irreversible
-    let _ = kernel.register_irreversible_transition(mid, tid, IrreversibilityLevel::Hard);
+    // Mark transition as irreversible (must succeed for the audit-trail assertion to be meaningful)
+    assert!(
+        kernel
+            .register_irreversible_transition(mid, tid, IrreversibilityLevel::Hard)
+            .is_ok(),
+        "register_irreversible_transition should succeed"
+    );
 
     // Execute the transition
     let r = kernel.transition(mid, tid);

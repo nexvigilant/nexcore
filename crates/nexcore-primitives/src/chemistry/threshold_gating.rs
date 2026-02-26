@@ -11,6 +11,8 @@
 //! activation energy to trigger detection.
 
 use nexcore_error::Error;
+use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// Errors for threshold gating calculations.
 #[derive(Debug, Error, PartialEq, Clone)]
@@ -27,7 +29,7 @@ pub enum ThresholdError {
 }
 
 /// Threshold gate configuration.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ThresholdGate {
     /// Base sensitivity (A - pre-exponential factor)
     pub sensitivity: f64,
@@ -37,6 +39,10 @@ pub struct ThresholdGate {
 
 impl ThresholdGate {
     /// Create a new threshold gate.
+    ///
+    /// # Errors
+    /// Returns [`ThresholdError::NegativeSensitivity`] if `sensitivity < 0.0`.
+    /// Returns [`ThresholdError::NegativeThreshold`] if `threshold < 0.0`.
     pub fn new(sensitivity: f64, threshold: f64) -> Result<Self, ThresholdError> {
         if sensitivity < 0.0 {
             return Err(ThresholdError::NegativeSensitivity);
@@ -65,6 +71,16 @@ impl ThresholdGate {
     pub fn exceeds_threshold(&self, signal: f64, cutoff: f64) -> Result<bool, ThresholdError> {
         let rate = self.rate(signal)?;
         Ok(rate > cutoff)
+    }
+}
+
+impl fmt::Display for ThresholdGate {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "ThresholdGate(sensitivity={:.2e}, threshold={:.1})",
+            self.sensitivity, self.threshold
+        )
     }
 }
 

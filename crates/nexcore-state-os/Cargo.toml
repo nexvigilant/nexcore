@@ -3,7 +3,6 @@
 name = "nexcore-state-os"
 version = "0.1.0"
 edition = "2024"
-license = "LicenseRef-NexVigilant-Proprietary"
 rust-version = "1.85"
 description = "State Operating System — 15-layer runtime for state machine orchestration"
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
@@ -15,15 +14,15 @@ categories = ["data-structures", "asynchronous"]
 [dependencies]
 nexcore-state-theory = { version = "0.1.0", path = "../nexcore-state-theory", registry = "nexcore" }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore", optional = true }
-serde = { version = "1.0.204", features = ["derive"] }
+serde = { workspace = true }
 
 [dev-dependencies]
-proptest = { version = "1.6.0" }
+# proptest removed: no property tests exist yet. Re-add when implementing
+# property tests for arbitrary event sequences on MachineInstance.
 
 [features]
 default = ["std"]
 std = []
-async = []
 grounding = ["dep:nexcore-lex-primitiva"]
 
 [lints]

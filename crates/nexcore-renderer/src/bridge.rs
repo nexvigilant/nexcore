@@ -467,10 +467,26 @@ fn extract_objects(body: &str, marker: &str) -> Vec<String> {
 }
 
 /// Find the closing brace for an object starting at `start`.
+/// Find the closing `}` that matches the depth level at `start`.
+///
+/// Unlike a naive `.find('}')`, this tracks nesting depth so it handles
+/// nested JSON objects correctly. Starts counting from depth=0 — the first
+/// `}` at depth 0 is the match.
 fn find_closing_brace(json: &str, start: usize) -> usize {
-    json[start..]
-        .find('}')
-        .map_or(json.len(), |i| start + i + 1)
+    let mut depth = 0usize;
+    for (i, ch) in json[start..].char_indices() {
+        match ch {
+            '{' => depth = depth.saturating_add(1),
+            '}' => {
+                if depth == 0 {
+                    return start + i + 1;
+                }
+                depth -= 1;
+            }
+            _ => {}
+        }
+    }
+    json.len()
 }
 
 /// Find a JSON array section by key name.

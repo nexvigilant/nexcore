@@ -63,7 +63,7 @@ pub struct KernelConfig {
     pub max_transitions_per_machine: usize,
     /// Enable auto-snapshots.
     pub auto_snapshot: bool,
-    /// Snapshot interval (transitions).
+    /// Snapshot interval: number of transitions between auto-snapshots.
     pub snapshot_interval: u64,
     /// Enable audit trail.
     pub audit_enabled: bool,
@@ -114,6 +114,30 @@ pub enum KernelError {
     /// Void (unreachable) state detected.
     VoidStateDetected(String),
 }
+
+impl core::fmt::Display for KernelError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::MachineNotFound(id) => write!(f, "Machine not found: {id}"),
+            Self::StateNotFound(id) => write!(f, "State not found: {id}"),
+            Self::TransitionNotFound(id) => write!(f, "Transition not found: {id}"),
+            Self::TransitionFailed(msg) => write!(f, "Transition failed: {msg}"),
+            Self::GuardRejected(msg) => write!(f, "Guard rejected: {msg}"),
+            Self::GuardNotFound(name) => write!(f, "Guard not found: {name}"),
+            Self::InvalidOperation(msg) => write!(f, "Invalid operation: {msg}"),
+            Self::CapacityExceeded(msg) => write!(f, "Capacity exceeded: {msg}"),
+            Self::MachineExists(id) => write!(f, "Machine already exists: {id}"),
+            Self::InTerminalState(id) => write!(f, "Machine {id} is in terminal state"),
+            Self::RegistryError(msg) => write!(f, "Registry error: {msg}"),
+            Self::AbsorbingState(id) => write!(f, "Machine {id} is in absorbing state"),
+            Self::NoAvailableTransition(msg) => write!(f, "No available transition: {msg}"),
+            Self::VoidStateDetected(msg) => write!(f, "Void state detected: {msg}"),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for KernelError {}
 
 /// Result of a kernel tick operation.
 #[derive(Debug, Clone)]
@@ -281,16 +305,7 @@ impl StateKernel {
 
         // Register all transitions
         for transition_spec in &spec.transitions {
-            let _from = spec.state_id(&transition_spec.from).ok_or({
-                KernelError::StateNotFound(0) // State name not found
-            })?;
-            let _to = spec
-                .state_id(&transition_spec.to)
-                .ok_or(KernelError::StateNotFound(0))?;
-
-            // Map spec state IDs to kernel-registered state IDs
-            // The kernel registers states sequentially, so spec ID N maps to
-            // the Nth state registered in the kernel's registry
+            // Map spec state names to kernel-registered state IDs
             let runtime = self
                 .machines
                 .get(&mid)
@@ -426,7 +441,11 @@ impl StateKernel {
     // LAYER 2 + 3 + 5 + 9 + 11 + 14: TRANSITION EXECUTION
     // ═══════════════════════════════════════════════════════════
 
-    /// Execute a transition by ID (no guard context).
+    /// Execute a transition by ID.
+    ///
+    /// If the transition has a guard attached, this returns
+    /// `KernelError::GuardRejected` — use [`transition_guarded`] instead.
+    /// Unguarded transitions execute normally.
     ///
     /// Wires: Layer 2 (→), Layer 3 (∂), Layer 5 (N), Layer 9 (π),
     ///        Layer 11 (Σ), Layer 14 (∝)
@@ -435,6 +454,18 @@ impl StateKernel {
         machine_id: MachineId,
         transition_id: TransitionId,
     ) -> Result<TransitionResult, KernelError> {
+        // Enforce guard contract: guarded transitions require a context.
+        let runtime = self
+            .machines
+            .get(&machine_id)
+            .ok_or(KernelError::MachineNotFound(machine_id))?;
+        if let Some(spec) = runtime.transitions.get(transition_id) {
+            if let Some(ref guard_name) = spec.guard {
+                return Err(KernelError::GuardRejected(alloc::format!(
+                    "Transition has guard '{guard_name}' — use transition_guarded() with a GuardContext"
+                )));
+            }
+        }
         self.transition_internal(machine_id, transition_id, None)
     }
 
@@ -991,10 +1022,9 @@ impl StateKernel {
             .machines
             .get(&machine_id)
             .ok_or(KernelError::MachineNotFound(machine_id))?;
-        runtime
-            .states
-            .id_of(name)
-            .ok_or(KernelError::StateNotFound(0))
+        runtime.states.id_of(name).ok_or_else(|| {
+            KernelError::InvalidOperation(alloc::format!("State '{}' not found", name))
+        })
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -1144,8 +1174,11 @@ mod tests {
                 }
 
                 if let (Ok(tid0), Ok(tid1)) = (t0, t1) {
-                    // Transition to terminal
-                    let _ = kernel.transition(mid, tid0);
+                    // Transition to terminal — assert here for clear diagnostics
+                    assert!(
+                        kernel.transition(mid, tid0).is_ok(),
+                        "setup transition to terminal state must succeed"
+                    );
                     assert_eq!(kernel.is_terminal(mid), Ok(true));
 
                     // Try to transition from terminal - should fail
@@ -1213,7 +1246,10 @@ mod tests {
                 }
 
                 if let (Ok(tid0), Ok(tid1)) = (t0, t1) {
-                    let _ = kernel.transition(mid, tid0);
+                    assert!(
+                        kernel.transition(mid, tid0).is_ok(),
+                        "setup transition to absorbing state must succeed"
+                    );
                     assert_eq!(kernel.current_state(mid), Ok(abs));
 
                     // Should be blocked by absorbing state
@@ -1296,5 +1332,51 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_guarded_transition_rejected_without_context() {
+        // Priority 2: transition() must reject guarded transitions
+        let mut kernel = StateKernel::new();
+
+        if let Ok(mid) = kernel.create_machine(0) {
+            let s0 = kernel.register_state(mid, "start", StateKind::Initial);
+            let s1 = kernel.register_state(mid, "end", StateKind::Normal);
+
+            if let (Ok(from), Ok(to)) = (s0, s1) {
+                let guard_id = kernel.register_guard(mid, "check", "ready");
+                assert!(guard_id.is_ok(), "Guard registration should succeed");
+
+                let tid = kernel.register_guarded_transition(mid, "go", from, to, "check");
+
+                if let Some(runtime) = kernel.machines.get_mut(&mid) {
+                    runtime.current_state = from;
+                }
+
+                if let Ok(tid) = tid {
+                    // transition() without context must be rejected for guarded transitions
+                    let result = kernel.transition(mid, tid);
+                    assert!(
+                        matches!(result, Err(KernelError::GuardRejected(_))),
+                        "Guarded transition must be rejected when called without GuardContext"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_kernel_error_display() {
+        // Priority 1: KernelError implements Display
+        let err = KernelError::MachineNotFound(42);
+        let msg = alloc::format!("{err}");
+        assert!(msg.contains("42"), "Display should include the machine ID");
+
+        let err = KernelError::GuardRejected("my_guard failed".into());
+        let msg = alloc::format!("{err}");
+        assert!(
+            msg.contains("my_guard"),
+            "Display should include the guard name"
+        );
     }
 }

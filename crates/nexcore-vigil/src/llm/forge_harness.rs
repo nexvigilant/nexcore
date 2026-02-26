@@ -168,6 +168,7 @@ impl ForgeHarness {
         &self,
         blocker_count: u32,
         warning_count: u32,
+        warning_distance: u32,
         primitives_available: u32,
         confidence: f64,
     ) -> ForgeDecision {
@@ -179,6 +180,7 @@ impl ForgeHarness {
             blocker_count,
             nearest_blocker_dist: if blocker_count > 0 { 1 } else { u32::MAX },
             warning_count,
+            warning_distance,
             primitives_available,
             tier_complete,
             confidence,
@@ -473,7 +475,7 @@ mod tests {
     #[test]
     fn test_suggest_action_fix_blocker() {
         let harness = ForgeHarness::new("test");
-        let decision = harness.suggest_action(3, 0, 5, 0.8);
+        let decision = harness.suggest_action(3, 0, 0, 5, 0.8);
         assert_eq!(decision, ForgeDecision::FixBlocker);
     }
 
@@ -481,7 +483,7 @@ mod tests {
     fn test_suggest_action_decompose() {
         let mut harness = ForgeHarness::new("test");
         harness.validation = ValidationStatus::Compiles; // quality=0.5, above floor
-        let decision = harness.suggest_action(0, 0, 4, 0.9);
+        let decision = harness.suggest_action(0, 0, 0, 4, 0.9);
         assert_eq!(decision, ForgeDecision::Decompose);
     }
 
@@ -489,7 +491,7 @@ mod tests {
     fn test_suggest_action_explore_fallback() {
         let mut harness = ForgeHarness::new("test");
         harness.validation = ValidationStatus::Compiles; // quality=0.5, above floor
-        let decision = harness.suggest_action(0, 0, 0, 0.9);
+        let decision = harness.suggest_action(0, 0, 0, 0, 0.9);
         // No blockers, no warnings, no prims → Explore (speculative_generation=true)
         assert_eq!(decision, ForgeDecision::Explore);
     }
@@ -498,7 +500,7 @@ mod tests {
     fn test_suggest_action_refactor_when_pending() {
         let harness = ForgeHarness::new("test");
         // Pending validation → quality=0.3 < quality_floor=0.313 → Refactor
-        let decision = harness.suggest_action(0, 0, 4, 0.9);
+        let decision = harness.suggest_action(0, 0, 0, 4, 0.9);
         assert_eq!(decision, ForgeDecision::Refactor);
     }
 

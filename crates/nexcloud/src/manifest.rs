@@ -119,6 +119,7 @@ fn default_backoff_ms() -> u64 {
 /// Tier: T2-C (μ Mapping + ∂ Boundary + λ Location)
 /// Maps incoming requests to backend services based on host/path boundaries.
 #[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct RouteDef {
     #[serde(default)]
     pub match_host: Option<String>,
@@ -308,15 +309,7 @@ impl CloudManifest {
             })
             .collect();
 
-        let mut in_degree: HashMap<&str, usize> = dep_map.keys().map(|&k| (k, 0)).collect();
-        for deps in dep_map.values() {
-            for &dep in deps {
-                *in_degree.entry(dep).or_insert(0) += 1;
-            }
-        }
-
-        // Note: in_degree counts dependents, not dependencies.
-        // We need the reverse: start services with no dependencies first.
+        // We need the dependency-count per service (services with 0 deps start first).
         let mut in_degree2: HashMap<&str, usize> =
             dep_map.keys().map(|&k| (k, dep_map[k].len())).collect();
 

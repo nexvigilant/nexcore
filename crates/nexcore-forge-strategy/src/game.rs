@@ -225,7 +225,7 @@ mod tests {
         let outcome = game.architect(&matrix);
         assert_eq!(game.phase, GamePhase::Implement);
         assert!(game.architecture.is_some());
-        matches!(outcome, TickOutcome::Decided(_));
+        assert!(matches!(outcome, TickOutcome::Decided(_)));
     }
 
     #[test]
@@ -301,8 +301,13 @@ mod tests {
         if !ship {
             game.record_implementation(4, 0);
             game.quality_gate(20, 20, 5);
+            // After two rounds of high-quality results, total_signal is large enough
+            // that the Hill cascade must exceed boundary_caution (0.718).
             let (_cascade2, ship2) = game.ship_decision(2.5, 1.0);
-            assert!(ship2 || game.quality_signals.len() >= 2);
+            assert!(
+                ship2,
+                "Two high-quality rounds should trigger ship decision"
+            );
         }
     }
 }

@@ -65,22 +65,30 @@ impl EffectivenessMatrix {
 
     /// Get effectiveness of a counter-primitive against a sensing primitive.
     pub fn get(&self, sensing: SensingPrimitive, counter: CounterPrimitive) -> f64 {
+        // SAFETY: SensingPrimitive::index() and CounterPrimitive::index() both return
+        // values in 0..8 via exhaustive match arms — every variant is enumerated
+        // and maps to a distinct value in that range. The array size is 8×8.
         self.data[sensing.index()][counter.index()]
     }
 
     /// Set effectiveness of a counter-primitive against a sensing primitive.
     /// Clamps to [0.0, 1.0].
     pub fn set(&mut self, sensing: SensingPrimitive, counter: CounterPrimitive, value: f64) {
+        // SAFETY: see get() — both index() methods return 0..8.
         self.data[sensing.index()][counter.index()] = value.clamp(0.0, 1.0);
     }
 
     /// Get the full row for a sensing primitive (all counter-effectiveness values).
     pub fn row(&self, sensing: SensingPrimitive) -> &[f64; 8] {
+        // SAFETY: see get() — sensing.index() returns 0..8.
         &self.data[sensing.index()]
     }
 
     /// Get the full column for a counter-primitive (effectiveness against all sensing primitives).
     pub fn column(&self, counter: CounterPrimitive) -> [f64; 8] {
+        // SAFETY: counter.index() returns 0..8 via exhaustive match on 8 variants.
+        // col[i] is safe because enumerate() over self.data (8 rows) yields i ∈ 0..8,
+        // and col is [f64; 8]. row[ci] is safe by the same argument as get().
         let ci = counter.index();
         let mut col = [0.0; 8];
         for (i, row) in self.data.iter().enumerate() {

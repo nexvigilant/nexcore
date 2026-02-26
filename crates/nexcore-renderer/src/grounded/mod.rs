@@ -208,6 +208,15 @@ impl GroundedLoop {
     pub fn active_claim(&self) -> Option<String> {
         self.active_hypothesis.as_ref().map(|h| h.claim.clone())
     }
+
+    /// Integrate an external learning into the GROUNDED context.
+    ///
+    /// Used when a learning arrives from outside the loop (e.g., via
+    /// `Message::IntegrateLearning` from the UI or API bridge) rather
+    /// than through the internal `complete()` cycle.
+    pub fn integrate_learning(&mut self, learning: Learning) {
+        self.context.update(&learning);
+    }
 }
 
 #[cfg(test)]

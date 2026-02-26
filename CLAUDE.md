@@ -74,7 +74,7 @@ Workflow coordination.
 
 ### Service (5-76 internal deps)
 External interfaces. Only layer with binary targets.
-- `nexcore-mcp` (458 MCP tools, **76 internal deps** — pulls from everywhere)
+- `nexcore-mcp` (verify tool count: `nexcore_health_probe`, **76 internal deps** — pulls from everywhere)
 - `nexcore-api` (84+ REST routes)
 - `nexcore-cli`, `nexcore-guardian-cli`
 
@@ -166,7 +166,7 @@ Key thresholds: PSI >0.25 = significant drift, KS alpha=0.05, RRF k=60, hybrid a
 
 | Domain | Benchmark |
 |--------|-----------|
-| **MCP Tools** | 780+ MCP tools with typed parameters, forensic metadata, and >95% passing schema validation. |
+| **MCP Tools** | MCP tools ship with typed parameters, forensic metadata, and >95% passing schema validation. Verify count: `nexcore_health_probe`. |
 | **Signal Detection** | Signal detection algorithms (PRR, ROR, IC, EBGM) validated against FAERS gold-standard datasets with >90% concordance. |
 | **FAERS Pipeline** | FAERS ETL processes quarterly data dumps with automatic signal detection across 20M+ reports. |
 

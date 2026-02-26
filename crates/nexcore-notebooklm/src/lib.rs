@@ -28,6 +28,10 @@
 //! Grounding: μ(Mapping) + π(Persistence) — maps questions to notebook knowledge,
 //! persists library and session state.
 
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
+
 pub mod auth;
 pub mod browser;
 pub mod error;

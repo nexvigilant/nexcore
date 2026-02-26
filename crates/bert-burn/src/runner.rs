@@ -6,7 +6,7 @@ use burn::backend::ndarray::NdArray;
 use burn::grad_clipping::GradientClippingConfig;
 use burn::optim::{AdamConfig, GradientsParams, Optimizer};
 use burn::tensor::backend::AutodiffBackend;
-use burn::tensor::{Int, Tensor, TensorData};
+use burn::tensor::{Bool, Int, Tensor, TensorData};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::time::Instant;
@@ -50,6 +50,10 @@ fn batch_to_tensor<B: AutodiffBackend>(
     input_ids: &[Vec<i64>],
     device: &B::Device,
 ) -> Tensor<B, 2, Int> {
+    assert!(
+        !input_ids.is_empty(),
+        "batch_to_tensor: input_ids must not be empty"
+    );
     let batch_size = input_ids.len();
     let seq_len = input_ids[0].len();
     let flat: Vec<i64> = input_ids
@@ -59,6 +63,26 @@ fn batch_to_tensor<B: AutodiffBackend>(
     let data = TensorData::from(flat.as_slice());
     let t: Tensor<B, 1, Int> = Tensor::from_data(data, device);
     t.reshape([batch_size, seq_len])
+}
+
+/// Convert attention mask (1.0=real, 0.0=pad) to burn padding mask (true=pad).
+fn mask_to_pad_tensor<B: AutodiffBackend>(
+    attention_mask: &[Vec<f32>],
+    device: &B::Device,
+) -> Tensor<B, 2, Bool> {
+    assert!(
+        !attention_mask.is_empty(),
+        "mask_to_pad_tensor: attention_mask must not be empty"
+    );
+    let batch_size = attention_mask.len();
+    let seq_len = attention_mask[0].len();
+    let flat: Vec<f32> = attention_mask
+        .iter()
+        .flat_map(|row| row.iter().copied())
+        .collect();
+    let data = TensorData::from(flat.as_slice());
+    let float_tensor: Tensor<B, 1> = Tensor::from_data(data, device);
+    float_tensor.reshape([batch_size, seq_len]).equal_elem(0.0) // true = padding position (masked from attention)
 }
 
 pub fn run_training(
@@ -111,7 +135,7 @@ pub fn run_training(
     let num_batches = dataset.num_batches();
     println!(
         "Dataset loaded | {} sequences | {} batches\n",
-        config.batch_size * num_batches,
+        dataset.num_sequences(),
         num_batches
     );
 
@@ -157,9 +181,10 @@ pub fn run_training(
 
             // Convert to tensors
             let input_ids = batch_to_tensor::<Backend>(&batch.input_ids, &device);
+            let pad_mask = mask_to_pad_tensor::<Backend>(&batch.attention_mask, &device);
 
-            // Forward pass
-            let logits = model.forward(input_ids, true);
+            // Forward pass (with padding-aware attention)
+            let logits = model.forward(input_ids, Some(pad_mask), true);
 
             // Compute real MLM loss
             let (loss, accuracy) = training::compute_real_mlm_loss(

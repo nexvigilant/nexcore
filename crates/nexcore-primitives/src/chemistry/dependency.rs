@@ -10,7 +10,9 @@
 //! **PV Application**: Signal dependency - how inputs affect detection rate.
 
 use nexcore_error::Error;
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
+use std::fmt;
 
 /// Errors for rate law calculations.
 #[derive(Debug, Error, PartialEq, Clone)]
@@ -27,12 +29,23 @@ pub enum DependencyError {
 }
 
 /// Rate law configuration.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RateLaw {
     /// Rate constant k
     pub rate_constant: f64,
     /// Reactant concentrations and orders: (concentration, order)
     pub reactants: Vec<(f64, f64)>,
+}
+
+impl fmt::Display for RateLaw {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Rate(k={:.2e}, order={:.1})",
+            self.rate_constant,
+            self.overall_order()
+        )
+    }
 }
 
 impl RateLaw {

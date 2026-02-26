@@ -9,6 +9,7 @@ authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "Adversarial test fixture generator — produces schema mutations for drift detection testing"
 
 [dependencies]
+nexcore-error = { workspace = true }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 nexcore-transcriptase = { version = "1.0.0", path = "../nexcore-transcriptase", registry = "nexcore" }
 nexcore-ribosome = { version = "1.0.0", path = "../nexcore-ribosome", registry = "nexcore" }

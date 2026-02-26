@@ -7,7 +7,7 @@
 //! - N Quantity: token counts, type-token ratio
 //! - μ Mapping: token → frequency map
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Tier: T2-C (domain composite)
 ///
@@ -20,8 +20,8 @@ pub struct TokenStats {
     pub unique_tokens: usize,
     /// Type-token ratio (unique / total)
     pub ttr: f64,
-    /// Token frequency map (lowercased)
-    pub frequencies: HashMap<String, usize>,
+    /// Token frequency map (lowercased, deterministic ordering)
+    pub frequencies: BTreeMap<String, usize>,
     /// Ordered tokens (lowercased)
     pub tokens: Vec<String>,
 }
@@ -45,7 +45,7 @@ pub fn tokenize(text: &str) -> TokenStats {
         .collect();
 
     let total_tokens = tokens.len();
-    let mut frequencies: HashMap<String, usize> = HashMap::new();
+    let mut frequencies: BTreeMap<String, usize> = BTreeMap::new();
     for token in &tokens {
         *frequencies.entry(token.clone()).or_insert(0) += 1;
     }

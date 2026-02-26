@@ -5,7 +5,7 @@ use burn::nn::{
     LinearConfig,
     attention::{MhaInput, MultiHeadAttention, MultiHeadAttentionConfig},
 };
-use burn::tensor::{Int, Tensor, backend::Backend};
+use burn::tensor::{Bool, Int, Tensor, backend::Backend};
 
 /// Transformer encoder block with multi-head self-attention
 #[derive(Module, Debug)]
@@ -38,9 +38,17 @@ impl<B: Backend> TransformerBlock<B> {
         }
     }
 
-    pub fn forward(&self, x: Tensor<B, 3>, training: bool) -> Tensor<B, 3> {
-        // Multi-head self-attention with residual
-        let attn_input = MhaInput::self_attn(x.clone());
+    pub fn forward(
+        &self,
+        x: Tensor<B, 3>,
+        mask_pad: Option<Tensor<B, 2, Bool>>,
+        training: bool,
+    ) -> Tensor<B, 3> {
+        // Multi-head self-attention with residual + padding mask
+        let attn_input = match mask_pad {
+            Some(mask) => MhaInput::self_attn(x.clone()).mask_pad(mask),
+            None => MhaInput::self_attn(x.clone()),
+        };
         let attn_out = self.self_attn.forward(attn_input).context;
         let attn_out = if training {
             self.attn_dropout.forward(attn_out)
@@ -72,9 +80,15 @@ pub struct BertModel<B: Backend> {
     embedding_dropout: Dropout,
     mlm_head: Linear<B>,
     mlm_norm: LayerNorm<B>,
-    #[allow(dead_code)]
+    #[allow(
+        dead_code,
+        reason = "carried for checkpoint introspection and future config extraction"
+    )]
     hidden_dim: usize,
-    #[allow(dead_code)]
+    #[allow(
+        dead_code,
+        reason = "carried for checkpoint introspection and future config extraction"
+    )]
     vocab_size: usize,
 }
 
@@ -110,7 +124,12 @@ impl<B: Backend> BertModel<B> {
         }
     }
 
-    pub fn forward(&self, input_ids: Tensor<B, 2, Int>, training: bool) -> Tensor<B, 3> {
+    pub fn forward(
+        &self,
+        input_ids: Tensor<B, 2, Int>,
+        mask_pad: Option<Tensor<B, 2, Bool>>,
+        training: bool,
+    ) -> Tensor<B, 3> {
         let [batch_size, seq_len] = input_ids.dims();
         let device = input_ids.device();
 
@@ -135,10 +154,10 @@ impl<B: Backend> BertModel<B> {
             embeddings
         };
 
-        // Transformer blocks
+        // Transformer blocks (pass padding mask to each block's attention)
         let mut hidden = embeddings;
         for block in &self.transformer_blocks {
-            hidden = block.forward(hidden, training);
+            hidden = block.forward(hidden, mask_pad.clone(), training);
         }
 
         // MLM prediction head
@@ -167,7 +186,7 @@ mod tests {
             Tensor::<TestBackend, 1, Int>::from_data(TensorData::from(data.as_slice()), &device)
                 .reshape([1, 32]);
 
-        let logits = model.forward(input, false);
+        let logits = model.forward(input, None, false);
         let [batch, seq, vocab] = logits.dims();
         assert_eq!(batch, 1);
         assert_eq!(seq, 32);
@@ -186,7 +205,7 @@ mod tests {
             Tensor::<TestBackend, 1, Int>::from_data(TensorData::from(data.as_slice()), &device)
                 .reshape([2, 16]);
 
-        let logits = model.forward(input, false);
+        let logits = model.forward(input, None, false);
         let [batch, seq, vocab] = logits.dims();
         assert_eq!(batch, 2);
         assert_eq!(seq, 16);
@@ -198,7 +217,85 @@ mod tests {
         let block = TransformerBlock::<TestBackend>::new(64, 4, 256, 0.1);
         let device = <TestBackend as Backend>::Device::default();
         let x = Tensor::<TestBackend, 3>::zeros([2, 16, 64], &device);
-        let out = block.forward(x, false);
+        let out = block.forward(x, None, false);
         assert_eq!(out.dims(), [2, 16, 64]);
+    }
+
+    /// Verify forward pass with training=true activates dropout without changing output shape.
+    /// This exercises the dropout branches that are dead in inference-only tests.
+    #[test]
+    fn test_model_training_forward_shape() {
+        let model = BertModel::<TestBackend>::new(9, 32, 64, 2, 4, 256);
+        let device = <TestBackend as Backend>::Device::default();
+        let data: Vec<i64> = vec![
+            2, 5, 6, 7, 8, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0,
+        ];
+        let input =
+            Tensor::<TestBackend, 1, Int>::from_data(TensorData::from(data.as_slice()), &device)
+                .reshape([1, 32]);
+
+        // training=true activates embedding dropout and all layer dropouts
+        let logits = model.forward(input, None, true);
+        let [batch, seq, vocab] = logits.dims();
+        assert_eq!(batch, 1);
+        assert_eq!(seq, 32);
+        assert_eq!(vocab, 9);
+    }
+
+    /// Verify output values are finite (not NaN/Inf) for a well-formed input.
+    /// Shape-only tests miss degenerate numerical states.
+    #[test]
+    fn test_model_output_is_finite() {
+        let model = BertModel::<TestBackend>::new(9, 16, 32, 1, 2, 128);
+        let device = <TestBackend as Backend>::Device::default();
+        let data: Vec<i64> = vec![2, 5, 6, 7, 8, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        let input =
+            Tensor::<TestBackend, 1, Int>::from_data(TensorData::from(data.as_slice()), &device)
+                .reshape([1, 16]);
+
+        let logits = model.forward(input, None, false);
+        let values = logits.into_data().to_vec::<f32>().unwrap_or_default();
+        assert!(!values.is_empty(), "logits should not be empty");
+        assert!(
+            values.iter().all(|v| v.is_finite()),
+            "all logit values must be finite (no NaN or Inf)"
+        );
+    }
+
+    /// Verify forward pass with padding mask correctly shapes output.
+    /// Exercises the attention masking path that prevents padding tokens
+    /// from attending to real tokens.
+    #[test]
+    fn test_model_forward_with_padding_mask() {
+        let model = BertModel::<TestBackend>::new(9, 16, 32, 1, 2, 128);
+        let device = <TestBackend as Backend>::Device::default();
+        // [CLS] A T G C [SEP] [PAD]*10
+        let data: Vec<i64> = vec![2, 5, 6, 7, 8, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        let input =
+            Tensor::<TestBackend, 1, Int>::from_data(TensorData::from(data.as_slice()), &device)
+                .reshape([1, 16]);
+
+        // Build padding mask: 1.0 for real tokens, 0.0 for PAD
+        let mask_data: Vec<f32> = vec![
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ];
+        let mask_float =
+            Tensor::<TestBackend, 1>::from_data(TensorData::from(mask_data.as_slice()), &device)
+                .reshape([1, 16]);
+        let pad_mask = mask_float.equal_elem(0.0); // true = padding
+
+        let logits = model.forward(input, Some(pad_mask), false);
+        let [batch, seq, vocab] = logits.dims();
+        assert_eq!(batch, 1);
+        assert_eq!(seq, 16);
+        assert_eq!(vocab, 9);
+
+        // Output should still be finite with masking active
+        let values = logits.into_data().to_vec::<f32>().unwrap_or_default();
+        assert!(
+            values.iter().all(|v| v.is_finite()),
+            "logits must be finite with padding mask applied"
+        );
     }
 }

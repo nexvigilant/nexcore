@@ -18,7 +18,7 @@
 //! - `DecodedImage`: T2-P (μ + N + π)
 //! - `ImageCache`: T2-C (κ + π + μ)
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// A decoded image ready for GPU rendering.
 ///
@@ -120,7 +120,7 @@ impl DecodedImage {
 /// Limited by max entry count and max total bytes.
 pub struct ImageCache {
     /// URL → decoded image mapping.
-    entries: HashMap<String, CacheEntry>,
+    entries: BTreeMap<String, CacheEntry>,
     /// Maximum number of cached images.
     max_entries: usize,
     /// Maximum total bytes across all cached images.
@@ -128,7 +128,7 @@ pub struct ImageCache {
     /// Current total bytes.
     current_bytes: usize,
     /// URLs that failed to load (avoid retry loops).
-    failed: HashMap<String, u32>,
+    failed: BTreeMap<String, u32>,
 }
 
 /// A cache entry with access metadata.
@@ -151,11 +151,11 @@ impl ImageCache {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            entries: HashMap::new(),
+            entries: BTreeMap::new(),
             max_entries: 128,
             max_bytes: 256 * 1024 * 1024, // 256 MB
             current_bytes: 0,
-            failed: HashMap::new(),
+            failed: BTreeMap::new(),
         }
     }
 
@@ -163,11 +163,11 @@ impl ImageCache {
     #[must_use]
     pub fn with_limits(max_entries: usize, max_bytes: usize) -> Self {
         Self {
-            entries: HashMap::new(),
+            entries: BTreeMap::new(),
             max_entries,
             max_bytes,
             current_bytes: 0,
-            failed: HashMap::new(),
+            failed: BTreeMap::new(),
         }
     }
 

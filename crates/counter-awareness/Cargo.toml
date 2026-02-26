@@ -9,8 +9,7 @@ description = "Detection/counter-detection matrix formalization for multi-spectr
 
 [dependencies]
 nexcore-error = { workspace = true }
-serde = { version = "1.0.204", features = ["derive"] }
-serde_json = { version = "1.0.120" }
+serde = { workspace = true }
 
 
 [lints]

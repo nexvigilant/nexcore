@@ -10,6 +10,8 @@
 //! **PV Application**: Causality likelihood - is relationship plausible?
 
 use nexcore_error::Error;
+use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// Errors for feasibility calculations.
 #[derive(Debug, Error, PartialEq, Clone)]
@@ -20,7 +22,8 @@ pub enum FeasibilityError {
 }
 
 /// Favorability classification.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Favorability {
     /// Always favorable (ΔH < 0, ΔS > 0)
     AlwaysFavorable,
@@ -33,7 +36,7 @@ pub enum Favorability {
 }
 
 /// Feasibility assessment configuration.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FeasibilityAssessment {
     /// Direct benefit/cost (ΔH - negative = beneficial)
     pub delta_h: f64,
@@ -41,6 +44,28 @@ pub struct FeasibilityAssessment {
     pub delta_s: f64,
     /// Uncertainty scaling (T)
     pub temperature: f64,
+}
+
+impl fmt::Display for Favorability {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::AlwaysFavorable => write!(f, "always-favorable"),
+            Self::NeverFavorable => write!(f, "never-favorable"),
+            Self::FavorableAtLowUncertainty => write!(f, "favorable-at-low-uncertainty"),
+            Self::FavorableAtHighUncertainty => write!(f, "favorable-at-high-uncertainty"),
+        }
+    }
+}
+
+impl fmt::Display for FeasibilityAssessment {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "\u{0394}G={:.1} kJ/mol ({:?})",
+            self.delta_g(),
+            self.classify()
+        )
+    }
 }
 
 impl FeasibilityAssessment {

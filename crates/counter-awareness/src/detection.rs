@@ -5,13 +5,20 @@
 //! Single-sensor detection probability:
 //! ```text
 //! P_detect(sensor, target, range) =
-//!     clamp(S_residual / noise_floor, 0, 1) × A(range)
+//!     (1 - exp(-SNR)) × A(range)
 //!
 //! where:
-//!   S_residual = S_raw × ∏\(1 - E\(counter_i, primitive_j\)\)
-//!   A\(range\)   = exp\(-α × range / max_range\)  \[atmospheric attenuation\]
-//!   α          = attenuation coefficient \(band-dependent\)
+//!   S_residual = S_raw × ∏(1 - E(counter_i, primitive_j))
+//!   SNR        = max(S_residual_i) / noise_floor   [max over sensor's primitives]
+//!   A(range)   = exp(-α × range / max_range)       [atmospheric attenuation]
+//!   α          = attenuation coefficient (band-dependent)
 //! ```
+//!
+//! The exponential saturation model `1 - exp(-SNR)` is used instead of a linear clamp
+//! because it gives a smooth, physically-motivated curve: detection rises steeply when
+//! residual signature first clears the noise floor, then saturates toward 1.0 as SNR
+//! grows large. Countermeasures always reduce detection even when residual remains above
+//! the noise floor.
 //!
 //! ## Lex Primitiva Grounding
 //! `DetectionAssessment` → N (Quantity) × κ (Comparison) — numerical probability compared against threshold

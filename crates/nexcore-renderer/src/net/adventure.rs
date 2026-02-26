@@ -6,8 +6,20 @@
 
 use crate::bridge::NexCoreBridge;
 
-/// Path to the Prima template file.
-const TEMPLATE_PATH: &str = "/home/matthew/nexcore/templates/adventure-hud.true";
+/// Resolve the Prima template path at runtime.
+///
+/// Checks `NEXBROWSER_TEMPLATES_DIR` env var first, then falls back to
+/// a path relative to the Cargo workspace root (for development builds).
+/// Never bakes a developer machine path into compiled code.
+fn template_path() -> std::path::PathBuf {
+    if let Ok(dir) = std::env::var("NEXBROWSER_TEMPLATES_DIR") {
+        return std::path::PathBuf::from(dir).join("adventure-hud.true");
+    }
+    // Workspace-relative fallback: crate is at <workspace>/crates/nexcore-renderer/
+    // Templates live at <workspace>/templates/
+    let manifest = env!("CARGO_MANIFEST_DIR");
+    std::path::PathBuf::from(manifest).join("../../templates/adventure-hud.true")
+}
 
 /// Fallback HTML when Prima evaluation fails.
 const FALLBACK_HTML: &str = r#"<html><head><title>Adventure HUD</title></head>
@@ -23,7 +35,7 @@ pub fn render() -> String {
     let bridge = NexCoreBridge::new();
 
     // Read the Prima template
-    let template = match std::fs::read_to_string(TEMPLATE_PATH) {
+    let template = match std::fs::read_to_string(template_path()) {
         Ok(t) => t,
         Err(_) => return fallback("Template file not found"),
     };
@@ -316,7 +328,7 @@ mod tests {
 
     #[test]
     fn test_prima_template_eval_with_demo_data() {
-        let template = match std::fs::read_to_string(TEMPLATE_PATH) {
+        let template = match std::fs::read_to_string(template_path()) {
             Ok(t) => t,
             Err(_) => return, // Skip if template not found (CI)
         };
@@ -344,7 +356,7 @@ mod tests {
 
     #[test]
     fn test_prima_template_empty_data() {
-        let template = match std::fs::read_to_string(TEMPLATE_PATH) {
+        let template = match std::fs::read_to_string(template_path()) {
             Ok(t) => t,
             Err(_) => return,
         };

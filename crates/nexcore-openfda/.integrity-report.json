@@ -1,0 +1,99 @@
+{
+  "scan_timestamp": "2026-02-26T16:42:05Z",
+  "scope": "/home/matthew/Projects/nexcore/crates/nexcore-openfda",
+  "status": "PASS",
+  "summary": {
+    "critical": 0,
+    "high": 2,
+    "medium": 2,
+    "low": 3,
+    "fixed": 7,
+    "deferred": 0
+  },
+  "findings": [
+    {
+      "id": 1,
+      "class": 1,
+      "class_name": "Testing Theater — Vacuous Test Body",
+      "severity": "P1 HIGH",
+      "file": "src/search.rs",
+      "lines": "187-198",
+      "description": "fan_out_results_successful_endpoints_all_fail made no assertions. It created an error closure, discarded its output with let _ = ..., and returned. successful_endpoints() and total_results() had zero test coverage despite being the primary analysis interface on FanOutResults.",
+      "status": "fixed",
+      "deferral_reason": null,
+      "fix": "Replaced with 4 real tests (successful_endpoints_zero_when_all_fail, successful_calls_counts_ok_including_empty, successful_endpoints_counts_only_non_empty_ok, total_results_sums_across_all_ok_arms) that construct FanOutResults directly and assert correct behavior of both methods under all relevant cases."
+    },
+    {
+      "id": 2,
+      "class": 1,
+      "class_name": "Testing Theater — Trivial-Path Test",
+      "severity": "P2 MEDIUM",
+      "file": "src/client.rs",
+      "lines": "420-425",
+      "description": "clear_cache_empties cleared an already-empty cache and asserted it remained empty. This is identical to cache_starts_empty and never exercises the actual cache-clearing code path.",
+      "status": "fixed",
+      "deferral_reason": null,
+      "fix": "Added inject_cache_entry() test-only helper to OpenFdaClient. Rewrote test as clear_cache_empties_non_empty_cache: seeds 2 entries, asserts count=2, clears, asserts count=0."
+    },
+    {
+      "id": 3,
+      "class": 1,
+      "class_name": "Testing Theater — Semantic Mismatch Not Tested",
+      "severity": "P2 MEDIUM",
+      "file": "src/search.rs",
+      "lines": "52-69",
+      "description": "successful_endpoints() was documented as 'returned at least one result' but implemented as is_ok() — counting Ok([]) responses as successes. The semantic gap was never caught because no test exercised the Ok-but-empty case.",
+      "status": "fixed",
+      "deferral_reason": null,
+      "fix": "Rewrote successful_endpoints() to check is_ok_and(|r| !r.results.is_empty()). Preserved the old is_ok() semantic under the new name successful_calls(). Tests now cover all three cases: all-Err, empty-Ok, and non-empty-Ok."
+    },
+    {
+      "id": 4,
+      "class": 3,
+      "class_name": "Documentation-Implementation Drift — MAX_LIMIT value",
+      "severity": "P1 HIGH",
+      "file": "CLAUDE.md",
+      "lines": "19",
+      "description": "CLAUDE.md stated MAX_LIMIT is 100. Code defines MAX_LIMIT as 1_000. Off by 10x.",
+      "status": "fixed",
+      "deferral_reason": null,
+      "fix": "Updated CLAUDE.md line 19: 'Use the MAX_LIMIT (100)' → 'Use the MAX_LIMIT (1_000)'."
+    },
+    {
+      "id": 5,
+      "class": 3,
+      "class_name": "Documentation-Implementation Drift — fan_out_search endpoint coverage",
+      "severity": "P2 MEDIUM",
+      "file": "src/lib.rs",
+      "lines": "24-27",
+      "description": "lib.rs said fan_out_search 'queries all major endpoints concurrently'. FanOutResults covers 10 of 14 documented endpoints. Four endpoints present in the endpoints/ module (/drug/drugsfda.json, /device/pma.json, /device/classification.json, /device/udi.json) are absent from FanOutResults.",
+      "status": "fixed",
+      "deferral_reason": null,
+      "fix": "Updated fan_out_search doc block in lib.rs to explicitly name the 10 covered endpoints and call out the 4 that are available individually but not in the fan-out."
+    },
+    {
+      "id": 6,
+      "class": 3,
+      "class_name": "Documentation-Implementation Drift — disallowed_types allow reason",
+      "severity": "P3 LOW",
+      "file": "src/lib.rs",
+      "lines": "51-58",
+      "description": "clippy::disallowed_types was allowed crate-wide. The justification cited 'mirrors upstream payloads' but the only HashMap usage was the internal URL-keyed response cache — unrelated to payload mirroring.",
+      "status": "fixed",
+      "deferral_reason": null,
+      "fix": "Replaced HashMap with BTreeMap in client.rs (deterministic, no functional change for URL-keyed cache). Removed clippy::disallowed_types from the crate-level allow list."
+    },
+    {
+      "id": 7,
+      "class": 9,
+      "class_name": "Dead Code / Orphan — field types not re-exported",
+      "severity": "P3 LOW",
+      "file": "src/types/mod.rs",
+      "lines": "15-24",
+      "description": "Six public types (NdcPackaging, FdaApplicationDoc, MdrPatient, UdiDeviceSize, UdiSterilization, FoodOutcome) appear as Vec<T> field types of exported structs but were missing from the types/mod.rs re-export surface, violating the stated 'ergonomic imports' design intent.",
+      "status": "fixed",
+      "deferral_reason": null,
+      "fix": "Added all six types to the pub use re-exports in src/types/mod.rs."
+    }
+  ]
+}

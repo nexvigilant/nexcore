@@ -308,10 +308,16 @@ impl ReverseProxy {
                     latency_ms,
                 });
 
-                Ok(response.unwrap_or_else(|_| {
+                Ok(response.unwrap_or_else(|e| {
+                    let msg = e.to_string();
+                    let status = if msg.contains("payload too large") {
+                        StatusCode::PAYLOAD_TOO_LARGE
+                    } else {
+                        StatusCode::BAD_GATEWAY
+                    };
                     Response::builder()
-                        .status(StatusCode::BAD_GATEWAY)
-                        .body(Full::new(Bytes::from("Bad Gateway")))
+                        .status(status)
+                        .body(Full::new(Bytes::from(msg)))
                         .unwrap_or_else(|_| Response::new(Full::new(Bytes::from("Error"))))
                 }))
             }
@@ -356,19 +362,24 @@ impl ReverseProxy {
         let url = format!("http://{}{path}{query}", backend.addr);
 
         // SEC-003: Collect incoming body with size limit to prevent OOM
-        let body_bytes = req
-            .into_body()
-            .collect()
-            .await
-            .map(|collected| {
+        let body_bytes = match req.into_body().collect().await {
+            Ok(collected) => {
                 let bytes = collected.to_bytes();
                 if bytes.len() > MAX_BODY_BYTES {
-                    Bytes::new() // Reject oversized bodies
-                } else {
-                    bytes
+                    return Err(NexCloudError::ProxyRoute(format!(
+                        "payload too large: {} bytes exceeds {} byte limit",
+                        bytes.len(),
+                        MAX_BODY_BYTES
+                    )));
                 }
-            })
-            .unwrap_or_else(|_| Bytes::new());
+                bytes
+            }
+            Err(e) => {
+                return Err(NexCloudError::ProxyRoute(format!(
+                    "failed to read request body: {e}"
+                )));
+            }
+        };
 
         // Build reqwest request, forwarding relevant headers
         let mut proxy_req = self.http_client.request(method, &url);

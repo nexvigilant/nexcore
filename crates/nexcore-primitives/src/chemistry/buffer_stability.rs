@@ -10,6 +10,8 @@
 //! **PV Application**: Baseline stability - reporting rates resist random fluctuation.
 
 use nexcore_error::Error;
+use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// Errors for buffer calculations.
 #[derive(Debug, Error, PartialEq, Clone)]
@@ -26,7 +28,7 @@ pub enum BufferError {
 }
 
 /// Buffer system configuration.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BufferSystem {
     /// Dissociation constant (pKa - setpoint)
     pub pka: f64,
@@ -34,6 +36,16 @@ pub struct BufferSystem {
     pub base_conc: f64,
     /// Acid concentration [HA]
     pub acid_conc: f64,
+}
+
+impl fmt::Display for BufferSystem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Buffer(pKa={:.2}, [HA]={:.1}, [A\u{207B}]={:.1})",
+            self.pka, self.acid_conc, self.base_conc
+        )
+    }
 }
 
 impl BufferSystem {

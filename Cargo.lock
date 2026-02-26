@@ -343,7 +343,6 @@ dependencies = [
  "axum 0.8.8",
  "clap",
  "nexcore-error",
- "proptest",
  "serde",
  "serde_json",
  "tokio",
@@ -1108,9 +1107,6 @@ dependencies = [
  "rand 0.9.2",
  "serde",
  "serde_json",
- "tokio",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
@@ -2246,16 +2242,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "codex-mcp-config"
-version = "1.0.0"
-dependencies = [
- "clap",
- "nexcore-chrono",
- "nexcore-error",
- "toml_edit 0.22.27",
-]
-
-[[package]]
 name = "collection_literals"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2679,7 +2665,6 @@ version = "1.0.0"
 dependencies = [
  "nexcore-error",
  "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -3656,7 +3641,6 @@ checksum = "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
 dependencies = [
  "block-buffer",
  "crypto-common",
- "subtle",
 ]
 
 [[package]]
@@ -3693,11 +3677,9 @@ dependencies = [
 name = "disney-loop"
 version = "1.0.0"
 dependencies = [
- "antitransformer",
  "clap",
  "nexcore-dataframe",
  "nexcore-error",
- "nexcore-transform",
  "serde",
  "serde_json",
  "tempfile",
@@ -5130,7 +5112,6 @@ dependencies = [
  "rusqlite",
  "serde",
  "serde_json",
- "tempfile",
 ]
 
 [[package]]
@@ -5365,15 +5346,6 @@ dependencies = [
  "thiserror 2.0.18",
  "ureq",
  "windows-sys 0.60.2",
-]
-
-[[package]]
-name = "hmac"
-version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
-dependencies = [
- "digest",
 ]
 
 [[package]]
@@ -7603,13 +7575,13 @@ dependencies = [
  "axum 0.8.8",
  "bytes",
  "futures",
- "hmac",
  "nexcore-chrono",
  "nexcore-codec",
  "nexcore-constants",
  "nexcore-error",
  "nexcore-fda-guidance",
  "nexcore-fs",
+ "nexcore-hash",
  "nexcore-id",
  "nexcore-mcp",
  "nexcore-mesh",
@@ -7626,7 +7598,6 @@ dependencies = [
  "rusqlite",
  "serde",
  "serde_json",
- "sha2",
  "shellexpand",
  "tempfile",
  "tokio",
@@ -7669,6 +7640,7 @@ dependencies = [
  "nexcore-db",
  "nexcore-error",
  "nexcore-fs",
+ "nexcore-hash",
  "nexcore-id",
  "nexcore-immunity",
  "nexcore-insight",
@@ -7677,7 +7649,6 @@ dependencies = [
  "proptest",
  "serde",
  "serde_json",
- "sha2",
  "tempfile",
  "tracing",
 ]
@@ -7708,9 +7679,9 @@ dependencies = [
  "nexcore-chrono",
  "nexcore-codec",
  "nexcore-fs",
+ "nexcore-hash",
  "serde",
  "serde_json",
- "sha2",
  "tracing",
  "tracing-subscriber",
 ]
@@ -8106,6 +8077,7 @@ dependencies = [
 name = "nexcore-energy"
 version = "0.1.0"
 dependencies = [
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
@@ -8198,6 +8170,7 @@ name = "nexcore-forge-strategy"
 version = "0.1.0"
 dependencies = [
  "nexcore-lex-primitiva",
+ "serde",
 ]
 
 [[package]]
@@ -8361,6 +8334,7 @@ name = "nexcore-hormones"
 version = "1.0.0"
 dependencies = [
  "nexcore-chrono",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
@@ -8476,7 +8450,6 @@ dependencies = [
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
- "tempfile",
 ]
 
 [[package]]
@@ -8899,10 +8872,10 @@ dependencies = [
  "nexcore-codec",
  "nexcore-error",
  "nexcore-fs",
+ "nexcore-hash",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
- "sha2",
  "tempfile",
  "toml 0.8.23",
 ]
@@ -8926,6 +8899,7 @@ dependencies = [
  "nexcore-energy",
  "nexcore-error",
  "nexcore-fs",
+ "nexcore-hash",
  "nexcore-hormones",
  "nexcore-id",
  "nexcore-insight",
@@ -8951,7 +8925,6 @@ dependencies = [
  "reqwest 0.12.28",
  "serde",
  "serde_json",
- "sha2",
  "stem-math",
  "tempfile",
  "tokio",
@@ -9036,6 +9009,7 @@ dependencies = [
 name = "nexcore-phenotype"
 version = "1.0.0"
 dependencies = [
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "nexcore-ribosome",
  "nexcore-transcriptase",
@@ -9316,6 +9290,7 @@ dependencies = [
  "nexcore-chrono",
  "nexcore-lex-primitiva",
  "nexcore-signal-theory",
+ "nexcore-signal-types",
  "serde",
  "serde_json",
  "tracing",
@@ -9333,6 +9308,8 @@ dependencies = [
  "nexcore-id",
  "nexcore-lex-primitiva",
  "nexcore-primitives",
+ "nexcore-signal-theory",
+ "nexcore-signal-types",
  "phf",
  "serde",
  "serde_json",
@@ -9346,6 +9323,7 @@ name = "nexcore-signal-theory"
 version = "0.1.0"
 dependencies = [
  "nexcore-lex-primitiva",
+ "nexcore-signal-types",
  "serde",
 ]
 
@@ -9482,7 +9460,6 @@ version = "0.1.0"
 dependencies = [
  "nexcore-lex-primitiva",
  "nexcore-state-theory",
- "proptest",
  "serde",
 ]
 
@@ -9542,6 +9519,7 @@ name = "nexcore-synapse"
 version = "1.0.0"
 dependencies = [
  "nexcore-chrono",
+ "nexcore-error",
  "nexcore-lex-primitiva",
  "proptest",
  "serde",
@@ -9730,6 +9708,7 @@ dependencies = [
  "nexcore-error",
  "nexcore-forge-strategy",
  "nexcore-fs",
+ "nexcore-hash",
  "nexcore-hormones",
  "nexcore-id",
  "nexcore-immunity",
@@ -9744,7 +9723,6 @@ dependencies = [
  "reqwest 0.13.2",
  "serde",
  "serde_json",
- "sha2",
  "tempfile",
  "tiktoken-rs",
  "tokio",

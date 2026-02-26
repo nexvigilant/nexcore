@@ -63,6 +63,9 @@ pub struct ForgeSuggestParams {
     /// Number of clippy warnings
     #[serde(default)]
     pub warning_count: Option<u32>,
+    /// Distance (in tier hops) from warning site to current work (0 = same file)
+    #[serde(default)]
+    pub warning_distance: Option<u32>,
     /// Number of unmined primitives available
     #[serde(default)]
     pub primitives_available: Option<u32>,

@@ -37,8 +37,6 @@
     clippy::arithmetic_side_effects,
     clippy::as_conversions,
     clippy::indexing_slicing,
-    clippy::disallowed_types,
-    clippy::iter_over_hash_type,
     reason = "Detection feature pipeline uses explicit statistical structs and bounded numeric transforms"
 )]
 

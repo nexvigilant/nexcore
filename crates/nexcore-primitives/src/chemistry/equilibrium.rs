@@ -10,6 +10,8 @@
 //! **PV Application**: Reporting baseline - expected vs observed steady state.
 
 use nexcore_error::Error;
+use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// Errors for equilibrium calculations.
 #[derive(Debug, Error, PartialEq, Clone)]
@@ -26,12 +28,18 @@ pub enum EquilibriumError {
 }
 
 /// Equilibrium system configuration.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct EquilibriumSystem {
     /// Forward rate constant (k_f)
     pub k_forward: f64,
     /// Reverse rate constant (k_r)
     pub k_reverse: f64,
+}
+
+impl fmt::Display for EquilibriumSystem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Eq(K={:.2e})", self.equilibrium_constant())
+    }
 }
 
 impl EquilibriumSystem {

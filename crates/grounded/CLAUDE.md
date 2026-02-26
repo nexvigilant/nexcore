@@ -21,6 +21,14 @@ Epistemological substrate and evidence-based reasoning engine.
 - **Macro Usage**: Use the `uncertain_match!` macro to ensure that "Low" and "Negligible" confidence cases are never ignored.
 
 ## Key Entry Points
+- `src/lib.rs`: Crate root — public re-exports, crate-level deny attributes (`#![forbid(unsafe_code)]`, `#![cfg_attr(not(test), deny(...))]`), and T1 primitive grounding table.
 - `src/uncertain.rs`: The `Uncertain<T>` type and band logic.
-- `src/feedback.rs`: The `GroundedLoop` and experimental framework.
-- `src/chain.rs`: Sequential evidence tracking.
+- `src/confidence.rs`: `Confidence` (bounded f64) and `ConfidenceBand` (discrete enum).
+- `src/feedback.rs`: The `GroundedLoop`, all traits (`Context`, `World`, `ExperienceStore`), and `MemoryStore`.
+- `src/chain.rs`: Sequential evidence tracking (`EvidenceChain`, `EvidenceStep`).
+- `src/store.rs`: `SqliteStore` — durable cross-session learning persistence.
+- `src/world.rs`: `BashWorld` (shell executor) and `MockWorld` (test double).
+- `src/macros.rs`: `uncertain_match!` (exhaustive band matching) and `verify!` (runtime spec verification).
+- `src/skill.rs`: `SkillContext` — applies GROUNDED loop to skill compliance assessment.
+- `src/error.rs`: `GroundedError` enum.
+- `src/bin/grounded_skill.rs`: CLI binary — assess one skill or scan an entire skills directory.

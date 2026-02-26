@@ -13,7 +13,7 @@
 //! `ExistenceValidator` is T2-P (∃ + ς) — existence, state.
 
 use alloc::collections::BTreeSet;
-use alloc::string::String;
+use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
 use super::state_registry::StateId;

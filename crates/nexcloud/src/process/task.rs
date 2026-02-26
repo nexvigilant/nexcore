@@ -92,7 +92,10 @@ impl ProcessTask {
             reason: e.to_string(),
         })?;
 
-        let pid = child.id().unwrap_or(0);
+        let pid = child.id().ok_or_else(|| NexCloudError::ProcessSpawn {
+            name: self.name.clone(),
+            reason: "process exited immediately after spawn (no PID available)".to_string(),
+        })?;
         self.child = Some(child);
 
         tracing::info!(
@@ -229,20 +232,27 @@ mod tests {
     #[tokio::test]
     async fn spawn_and_stop() {
         let def = test_service_def();
-        let tmp = tempfile::tempdir().ok().unwrap_or_else(|| panic!("tmpdir"));
+        if !def.binary.exists() {
+            eprintln!("SKIP spawn_and_stop: {} not found", def.binary.display());
+            return;
+        }
+        let tmp = match tempfile::tempdir() {
+            Ok(t) => t,
+            Err(e) => {
+                eprintln!("SKIP spawn_and_stop: tmpdir failed: {e}");
+                return;
+            }
+        };
         let log_dir = tmp.path().to_path_buf();
         let mut task = ProcessTask::from_service_def(&def, &log_dir);
 
-        // sleep binary should exist on Linux
-        if def.binary.exists() {
-            let pid = task.spawn();
-            assert!(pid.is_ok());
-            assert!(task.is_alive());
+        let pid = task.spawn();
+        assert!(pid.is_ok());
+        assert!(task.is_alive());
 
-            let stop_result = task.stop(std::time::Duration::from_secs(2)).await;
-            assert!(stop_result.is_ok());
-            assert!(!task.is_alive());
-        }
+        let stop_result = task.stop(std::time::Duration::from_secs(2)).await;
+        assert!(stop_result.is_ok());
+        assert!(!task.is_alive());
     }
 
     #[test]
@@ -316,47 +326,80 @@ mod tests {
     #[tokio::test]
     async fn spawn_creates_log_files() {
         let def = test_service_def();
-        let tmp = tempfile::tempdir().ok().unwrap_or_else(|| panic!("tmpdir"));
+        if !def.binary.exists() {
+            eprintln!(
+                "SKIP spawn_creates_log_files: {} not found",
+                def.binary.display()
+            );
+            return;
+        }
+        let tmp = match tempfile::tempdir() {
+            Ok(t) => t,
+            Err(e) => {
+                eprintln!("SKIP spawn_creates_log_files: tmpdir failed: {e}");
+                return;
+            }
+        };
         let log_dir = tmp.path().to_path_buf();
         let mut task = ProcessTask::from_service_def(&def, &log_dir);
 
-        if def.binary.exists() {
-            let _ = task.spawn();
-            let stdout_log = log_dir.join("test-svc.stdout.log");
-            let stderr_log = log_dir.join("test-svc.stderr.log");
-            assert!(stdout_log.exists());
-            assert!(stderr_log.exists());
-            let _ = task.stop(std::time::Duration::from_secs(1)).await;
-        }
+        let _pid = task.spawn();
+        let stdout_log = log_dir.join("test-svc.stdout.log");
+        let stderr_log = log_dir.join("test-svc.stderr.log");
+        assert!(stdout_log.exists());
+        assert!(stderr_log.exists());
+        let _stop = task.stop(std::time::Duration::from_secs(1)).await;
     }
 
     #[tokio::test]
     async fn pid_available_after_spawn() {
         let def = test_service_def();
-        let tmp = tempfile::tempdir().ok().unwrap_or_else(|| panic!("tmpdir"));
+        if !def.binary.exists() {
+            eprintln!(
+                "SKIP pid_available_after_spawn: {} not found",
+                def.binary.display()
+            );
+            return;
+        }
+        let tmp = match tempfile::tempdir() {
+            Ok(t) => t,
+            Err(e) => {
+                eprintln!("SKIP pid_available_after_spawn: tmpdir failed: {e}");
+                return;
+            }
+        };
         let log_dir = tmp.path().to_path_buf();
         let mut task = ProcessTask::from_service_def(&def, &log_dir);
 
-        if def.binary.exists() {
-            let pid_result = task.spawn();
-            assert!(pid_result.is_ok());
-            assert!(task.pid().is_some());
-            let _ = task.stop(std::time::Duration::from_secs(1)).await;
-        }
+        let pid_result = task.spawn();
+        assert!(pid_result.is_ok());
+        assert!(task.pid().is_some());
+        let _stop = task.stop(std::time::Duration::from_secs(1)).await;
     }
 
     #[tokio::test]
     async fn pid_none_after_stop() {
         let def = test_service_def();
-        let tmp = tempfile::tempdir().ok().unwrap_or_else(|| panic!("tmpdir"));
+        if !def.binary.exists() {
+            eprintln!(
+                "SKIP pid_none_after_stop: {} not found",
+                def.binary.display()
+            );
+            return;
+        }
+        let tmp = match tempfile::tempdir() {
+            Ok(t) => t,
+            Err(e) => {
+                eprintln!("SKIP pid_none_after_stop: tmpdir failed: {e}");
+                return;
+            }
+        };
         let log_dir = tmp.path().to_path_buf();
         let mut task = ProcessTask::from_service_def(&def, &log_dir);
 
-        if def.binary.exists() {
-            let _ = task.spawn();
-            let _ = task.stop(std::time::Duration::from_secs(1)).await;
-            // After stop, child is set to None, so pid() returns None
-            assert!(task.pid().is_none());
-        }
+        let _pid = task.spawn();
+        let _stop = task.stop(std::time::Duration::from_secs(1)).await;
+        // After stop, child is set to None, so pid() returns None
+        assert!(task.pid().is_none());
     }
 }

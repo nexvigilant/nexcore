@@ -9,7 +9,7 @@ Tool provider and dispatcher for Claude Code.
 - Managing tool gating or telemetry collection.
 
 ## Grounding Patterns
-- **Unified Mode**: Prefer adding tools to the `nexcore` unified dispatcher in `unified.rs` to minimize tool-count bloat.
+- **First-Class Tools**: New tools should be added as `#[tool]` methods on `NexCoreMcpServer` in `lib.rs` with typed param structs in `src/params/`. All tools are individually discoverable via MCP `list_tools()`. The `nexcore` unified dispatcher in `unified.rs` remains for backward compatibility.
 - **Forensic Attachment**: Always call `attach_forensic_meta` for detection tools to enable automated downstream reasoning.
 - **T1 Primitives**:
   - `μ + →`: Root primitives for dispatch and execution flow.

@@ -40,16 +40,12 @@ fn default_ssh_port() -> u16 {
 /// Constitutional: Due process — build must succeed before upload, upload before restart.
 pub struct DeployPipeline {
     target: DeployTarget,
-    manifest_path: PathBuf,
 }
 
 impl DeployPipeline {
     /// Create a new deploy pipeline.
-    pub fn new(target: DeployTarget, manifest_path: PathBuf) -> Self {
-        Self {
-            target,
-            manifest_path,
-        }
+    pub fn new(target: DeployTarget) -> Self {
+        Self { target }
     }
 
     /// Execute the full deploy pipeline for a specific service.

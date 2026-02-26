@@ -8,7 +8,7 @@
 //! - Σ Sum: entropy aggregation across windows
 //! - N Quantity: probability distributions, statistics
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Tier: T2-C (domain composite)
 ///
@@ -37,7 +37,7 @@ pub fn shannon_entropy(tokens: &[String]) -> f64 {
     }
 
     let total = tokens.len() as f64;
-    let mut counts: HashMap<&str, usize> = HashMap::new();
+    let mut counts: BTreeMap<&str, usize> = BTreeMap::new();
     for token in tokens {
         *counts.entry(token.as_str()).or_insert(0) += 1;
     }

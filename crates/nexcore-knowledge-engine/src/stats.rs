@@ -22,8 +22,14 @@ pub fn compute_stats(store: &KnowledgeStore) -> crate::error::Result<EngineStats
     let total_packs = packs.len();
     let total_fragments: usize = packs.iter().map(|p| p.fragment_count).sum();
     let total_concepts: usize = packs.iter().map(|p| p.concept_count).sum();
-    let avg_score = if total_packs > 0 {
-        packs.iter().map(|p| p.avg_score).sum::<f64>() / total_packs as f64
+    // Fragment-weighted average — not average of averages.
+    // A pack with 100 fragments contributes 100x more than a pack with 1.
+    let avg_score = if total_fragments > 0 {
+        packs
+            .iter()
+            .map(|p| p.avg_score * p.fragment_count as f64)
+            .sum::<f64>()
+            / total_fragments as f64
     } else {
         0.0
     };
@@ -49,4 +55,73 @@ pub fn pack_stats(store: &KnowledgeStore, name: &str) -> crate::error::Result<En
         avg_score: idx.avg_score,
         packs: vec![idx],
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::compiler::{CompileOptions, KnowledgeCompiler};
+    use crate::ingest::{KnowledgeSource, RawKnowledge};
+    use nexcore_chrono::DateTime;
+
+    fn make_store_with_pack(pack_name: &str) -> KnowledgeStore {
+        let store = KnowledgeStore::temp().unwrap();
+        let compiler = KnowledgeCompiler::new(store.clone());
+        let options = CompileOptions {
+            name: pack_name.to_string(),
+            include_distillations: false,
+            include_artifacts: false,
+            include_implicit: false,
+            sources: vec![RawKnowledge {
+                text: "Signal detection uses PRR for pharmacovigilance safety analysis."
+                    .to_string(),
+                source: KnowledgeSource::FreeText,
+                domain: Some("pv".to_string()),
+                timestamp: DateTime::now(),
+            }],
+        };
+        compiler.compile(options).unwrap();
+        store
+    }
+
+    #[test]
+    fn compute_stats_empty_store() {
+        let store = KnowledgeStore::temp().unwrap();
+        let stats = compute_stats(&store).unwrap();
+        assert_eq!(stats.total_packs, 0);
+        assert_eq!(stats.total_fragments, 0);
+        assert_eq!(stats.avg_score, 0.0);
+    }
+
+    #[test]
+    fn compute_stats_with_pack() {
+        let store = make_store_with_pack("stats-test");
+        let stats = compute_stats(&store).unwrap();
+        assert_eq!(stats.total_packs, 1);
+        // The pack contains 1 fragment (one source text)
+        assert_eq!(stats.total_fragments, 1);
+        // avg_score must be positive — the fragment has actual content
+        assert!(
+            stats.avg_score > 0.0,
+            "avg_score should be positive, got {}",
+            stats.avg_score
+        );
+        assert_eq!(stats.packs.len(), 1);
+        assert_eq!(stats.packs[0].name, "stats-test");
+    }
+
+    #[test]
+    fn pack_stats_specific_pack() {
+        let store = make_store_with_pack("specific-pack");
+        let stats = pack_stats(&store, "specific-pack").unwrap();
+        assert_eq!(stats.total_packs, 1);
+        assert_eq!(stats.total_fragments, 1);
+        assert_eq!(stats.packs[0].name, "specific-pack");
+    }
+
+    #[test]
+    fn pack_stats_nonexistent_returns_error() {
+        let store = KnowledgeStore::temp().unwrap();
+        assert!(pack_stats(&store, "does-not-exist").is_err());
+    }
 }

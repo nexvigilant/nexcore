@@ -10,6 +10,8 @@
 //! **PV Application**: Case processing throughput - systems saturate at capacity.
 
 use nexcore_error::Error;
+use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// Errors for saturation calculations.
 #[derive(Debug, Error, PartialEq, Clone)]
@@ -23,7 +25,7 @@ pub enum SaturationError {
 }
 
 /// Saturation kinetics configuration.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SaturationKinetics {
     /// Maximum rate (Vmax)
     pub v_max: f64,
@@ -33,6 +35,10 @@ pub struct SaturationKinetics {
 
 impl SaturationKinetics {
     /// Create new saturation kinetics model.
+    ///
+    /// # Errors
+    /// Returns [`SaturationError::NegativeParameter`] if `v_max < 0.0` or `k_m < 0.0`.
+    /// Returns [`SaturationError::ZeroHalfSaturation`] if `k_m == 0.0`.
     pub fn new(v_max: f64, k_m: f64) -> Result<Self, SaturationError> {
         if v_max < 0.0 || k_m < 0.0 {
             return Err(SaturationError::NegativeParameter);
@@ -68,6 +74,12 @@ impl SaturationKinetics {
         } else {
             Some((self.k_m * target) / (self.v_max - target))
         }
+    }
+}
+
+impl fmt::Display for SaturationKinetics {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "MM(Vmax={:.1}, Km={:.1})", self.v_max, self.k_m)
     }
 }
 

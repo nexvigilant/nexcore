@@ -124,7 +124,7 @@ proptest! {
 
     #[test]
     fn prop_hash_is_stable(content in any::<Vec<u8>>()) {
-        use sha2::{Digest, Sha256};
+        use nexcore_hash::sha256::Sha256;
 
         // Compute hash twice
         let compute_hash = |data: &[u8]| -> String {
@@ -161,7 +161,7 @@ proptest! {
         content1 in any::<Vec<u8>>(),
         content2 in any::<Vec<u8>>()
     ) {
-        use sha2::{Digest, Sha256};
+        use nexcore_hash::sha256::Sha256;
 
         // Skip if contents happen to be equal
         prop_assume!(content1 != content2);
@@ -498,7 +498,7 @@ fn test_tracked_file_hash_matches_content() {
     let tracked = TrackedFile::from_path(&file_path).unwrap();
 
     // Re-hash and compare
-    use sha2::{Digest, Sha256};
+    use nexcore_hash::sha256::Sha256;
     let mut hasher = Sha256::new();
     hasher.update(content);
     let result = hasher.finalize();

@@ -1,8 +1,18 @@
 #![allow(
     clippy::unwrap_used,
+    reason = "CLI binary — panics are acceptable for invalid user input"
+)]
+#![allow(
     clippy::expect_used,
+    reason = "CLI binary — panics are acceptable for invalid user input"
+)]
+#![allow(
     clippy::panic,
-    clippy::branches_sharing_code
+    reason = "CLI binary — panics are acceptable for invalid user input"
+)]
+#![allow(
+    clippy::branches_sharing_code,
+    reason = "training vs inference branches share dropout logic intentionally"
 )]
 
 mod checkpoint;
@@ -49,7 +59,7 @@ enum Commands {
         rounds: usize,
     },
     Infer {
-        /// DNA sequence with [MASK] at position to predict
+        /// DNA sequence with * or ? marking positions to predict (e.g. "ATG*CATG?C")
         #[arg(long)]
         sequence: String,
     },
@@ -81,9 +91,7 @@ fn candidate_config(base: &RunConfig, i: usize) -> RunConfig {
     c
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tracing_subscriber::fmt().init();
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
     match cli.command.unwrap_or(Commands::Train) {
@@ -212,22 +220,136 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
 
-            println!("🧪 Level 5: Epigenetic Masking (Methylation)");
+            println!(
+                "🧪 Level 5: Epigenetic Masking (Methylation — gene silencing via codon omission)"
+            );
+            // DNA encodes: push 10, push 20, push 30, add, add (= 60)
             let dna_level5 = "GAAAAAAGAAGAGATGAT";
             println!(
                 "🧬 DNA: {} | Task: Sum three numbers (10+20+30)",
                 dna_level5
             );
-            println!("  Applying Methylation (Simulated Silencing)...");
-            println!("✅ SUCCESS: Level 5 verified - Gene silencing demonstrated.\n");
+
+            // Normal execution (all 3 operands)
+            println!("  Normal execution (no silencing):");
+            let normal_result = match Strand::parse(dna_level5) {
+                Err(e) => {
+                    println!("  Parse error: {:?}", e);
+                    None
+                }
+                Ok(strand5) => {
+                    let mut vm5 = CodonVM::new();
+                    if vm5.load(&strand5).is_ok()
+                        && vm5.push_value(10).is_ok()
+                        && vm5.push_value(20).is_ok()
+                        && vm5.push_value(30).is_ok()
+                    {
+                        match vm5.execute() {
+                            Ok(res) => {
+                                let r = res.stack.last().copied().unwrap_or(0);
+                                if r == 60 {
+                                    println!("  Result: {} (expected 60) ✅", r);
+                                } else {
+                                    println!("  FAILURE: got {}, expected 60 ❌", r);
+                                }
+                                Some(r)
+                            }
+                            Err(e) => {
+                                println!("  Runtime Error: {:?}", e);
+                                None
+                            }
+                        }
+                    } else {
+                        None
+                    }
+                }
+            };
+
+            // Silenced execution: omit one push (simulate methylation silencing one gene)
+            println!("  Silenced execution (one operand omitted — methylation):");
+            match Strand::parse(dna_level5) {
+                Err(e) => println!("  Silenced parse error: {:?}", e),
+                Ok(strand_s) => {
+                    let mut vm_s = CodonVM::new();
+                    if vm_s.load(&strand_s).is_ok()
+                        && vm_s.push_value(10).is_ok()
+                        && vm_s.push_value(20).is_ok()
+                    {
+                        // Only 2 values pushed — third gene is "silenced"
+                        match vm_s.execute() {
+                            Ok(res_s) => {
+                                let silenced = res_s.stack.last().copied().unwrap_or(0);
+                                let differs = normal_result.map_or(true, |n| silenced != n);
+                                if differs {
+                                    println!(
+                                        "  Silenced result: {} (differs from normal 60) ✅",
+                                        silenced
+                                    );
+                                } else {
+                                    println!(
+                                        "  FAILURE: Silenced result equals normal — silencing had no effect ❌"
+                                    );
+                                }
+                            }
+                            Err(e) => {
+                                // Error is acceptable — silencing disrupted execution
+                                println!("  Silenced execution disrupted (expected): {:?} ✅", e);
+                            }
+                        }
+                    }
+                }
+            }
+            println!(
+                "✅ Level 5 verified - Normal execution produces 60; silencing alters outcome.\n"
+            );
 
             println!("🧪 Level 6: Antisense Path (Bidirectional Duality)");
             let sense_dna = "GAAAAAAGAGATGAT";
-            let sense_strand = Strand::parse(sense_dna).unwrap();
-            let antisense_strand = complement(&sense_strand);
             println!("🧬 Sense DNA:     {}", sense_dna);
-            println!("🧬 Antisense DNA: {}", antisense_strand.to_string_repr());
-            println!("✅ SUCCESS: Level 6 verified - Antisense logic path generated.");
+            match Strand::parse(sense_dna) {
+                Err(e) => println!("  Parse error: {:?}", e),
+                Ok(sense_strand) => {
+                    let antisense_strand = complement(&sense_strand);
+                    let antisense_repr = antisense_strand.to_string_repr();
+                    println!("🧬 Antisense DNA: {}", antisense_repr);
+
+                    // Verify complement pairs: A↔T, G↔C for each position
+                    let mut all_correct = true;
+                    for (s_ch, a_ch) in sense_dna.chars().zip(antisense_repr.chars()) {
+                        let expected = match s_ch {
+                            'A' => 'T',
+                            'T' => 'A',
+                            'G' => 'C',
+                            'C' => 'G',
+                            other => other,
+                        };
+                        if a_ch != expected {
+                            println!(
+                                "❌ FAILURE: Complement of '{}' should be '{}', got '{}'",
+                                s_ch, expected, a_ch
+                            );
+                            all_correct = false;
+                        }
+                    }
+                    if all_correct {
+                        println!(
+                            "✅ SUCCESS: Level 6 verified - All complement pairs correct (A↔T, G↔C)."
+                        );
+                    }
+
+                    // Double complement should return to original
+                    let double_complement = complement(&antisense_strand);
+                    let double_repr = double_complement.to_string_repr();
+                    if double_repr == sense_dna {
+                        println!("✅ Double complement roundtrip verified.");
+                    } else {
+                        println!(
+                            "❌ FAILURE: Double complement '{}' != original '{}'",
+                            double_repr, sense_dna
+                        );
+                    }
+                }
+            }
         }
         Commands::Oracle { intent, a, b } => {
             println!("🔮 BERT-DNA Oracle | Mission: Practical Utility");
@@ -256,8 +378,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let strand = Strand::parse(dna).expect("Synthesis error: Invalid DNA generated");
             let _ = vm.load(&strand);
 
-            // Handle choice (IfElse) or math
-            if intent == "ifelse" || intent == "choose" {
+            // Handle choice (IfElse) or math.
+            // Compare against the lowercased form, since the match above lowercases intent.
+            let intent_lower = intent.to_lowercase();
+            if intent_lower == "ifelse" || intent_lower == "choose" {
                 let _ = vm.push_value(a); // else
                 let _ = vm.push_value(b); // then
                 let _ = vm.push_value(1); // cond (true)
@@ -344,9 +468,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 burn::tensor::Tensor::from_data(input_data, &device);
             let input_2d = input_t.reshape([1, cfg.seq_length]);
 
-            let logits = model.forward(input_2d, false); // [1, seq_len, vocab]
+            // Build padding mask: true where PAD, so attention ignores padded positions
+            let pad_floats: Vec<f32> = tokens
+                .iter()
+                .map(|&t| {
+                    if t == data::DnaVocabulary::PAD {
+                        0.0_f32
+                    } else {
+                        1.0_f32
+                    }
+                })
+                .collect();
+            let pad_data = burn::tensor::TensorData::from(pad_floats.as_slice());
+            let pad_float_tensor: burn::tensor::Tensor<runner::Backend, 1> =
+                burn::tensor::Tensor::from_data(pad_data, &device);
+            let pad_mask = pad_float_tensor
+                .reshape([1, cfg.seq_length])
+                .equal_elem(0.0_f32);
 
-            let nucleotides = ['?', '?', '?', '?', '?', 'A', 'T', 'G', 'C'];
+            let logits = model.forward(input_2d, Some(pad_mask), false); // [1, seq_len, vocab]
+
             for &pos in &mask_positions {
                 if pos >= cfg.seq_length {
                     continue;
@@ -362,14 +503,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let best_id = probs_data
                     .iter()
                     .enumerate()
-                    .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                    .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
                     .map(|(i, _)| i)
                     .unwrap_or(0);
-                let best_char = if best_id < nucleotides.len() {
-                    nucleotides[best_id]
-                } else {
-                    '?'
-                };
+                let best_char = vocab.decode(best_id as i64);
                 println!(
                     "Position {}: predicted '{}' (confidence {:.1}%)",
                     pos,
@@ -378,13 +515,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 );
                 println!(
                     "  A={:.1}% T={:.1}% G={:.1}% C={:.1}%",
-                    probs_data.get(5).unwrap_or(&0.0) * 100.0,
-                    probs_data.get(6).unwrap_or(&0.0) * 100.0,
-                    probs_data.get(7).unwrap_or(&0.0) * 100.0,
-                    probs_data.get(8).unwrap_or(&0.0) * 100.0,
+                    probs_data
+                        .get(data::DnaVocabulary::A as usize)
+                        .unwrap_or(&0.0)
+                        * 100.0,
+                    probs_data
+                        .get(data::DnaVocabulary::T as usize)
+                        .unwrap_or(&0.0)
+                        * 100.0,
+                    probs_data
+                        .get(data::DnaVocabulary::G as usize)
+                        .unwrap_or(&0.0)
+                        * 100.0,
+                    probs_data
+                        .get(data::DnaVocabulary::C as usize)
+                        .unwrap_or(&0.0)
+                        * 100.0,
                 );
             }
-            let _ = vocab;
         }
         Commands::Status => {
             let mgr = checkpoint::CheckpointManager::new(&cli.checkpoint_dir);

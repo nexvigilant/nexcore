@@ -334,6 +334,12 @@ pub async fn reset() -> Result<CallToolResult, McpError> {
 
 /// Inject a test signal into the Guardian system
 pub fn inject_signal(params: GuardianInjectSignalParams) -> Result<CallToolResult, McpError> {
+    if !(0.0..=1.0).contains(&params.severity) {
+        return Ok(CallToolResult::error(vec![Content::text(format!(
+            "severity must be between 0.0 and 1.0, got {}",
+            params.severity
+        ))]));
+    }
     let signal = ThreatSignal::new(
         params.pattern.clone(),
         threat_level_from_severity(params.severity),

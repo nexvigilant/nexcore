@@ -1,12 +1,12 @@
 use crate::models::Interaction;
 use nexcore_error::{Context, Result};
 use nexcore_fs::walk::WalkDir;
+use nexcore_hash::sha256::Sha256;
 use qdrant_client::Qdrant;
 use qdrant_client::qdrant::{
     CreateCollectionBuilder, Distance, GetPointsBuilder, PointStruct, UpsertPointsBuilder,
     VectorParamsBuilder,
 };
-use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -153,7 +153,7 @@ impl MemoryLayer {
     fn calculate_hash(&self, content: &str) -> String {
         let mut hasher = Sha256::new();
         hasher.update(content.as_bytes());
-        format!("{:x}", hasher.finalize())
+        nexcore_codec::hex::encode(hasher.finalize())
     }
 
     async fn flush_points(&self, points: &mut Vec<PointStruct>) -> Result<()> {

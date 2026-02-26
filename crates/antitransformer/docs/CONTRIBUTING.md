@@ -13,8 +13,8 @@ This is a **High-Performance Rust Application** designed for low-latency AI dete
 3. **Entropy Windowing**: Slides a window (default: 50 tokens) to calculate local Shannon Entropy.
 4. **Burstiness**: Measures inter-arrival time variance of tokens.
 5. **Perplexity**: Estimates sentence-level surprise (simulated currently, target: KenLM).
-6. **Aggregation (Logistic Regression)**: Normalizes features [0,1], applies learned weights + bias.
-7. **Classification**: Sigmoid function outputs `P(AI)`.
+6. **Aggregation (Chemistry Transfer)**: Normalizes features [0,1], applies Beer-Lambert weighted sum, then Hill cooperative amplification.
+7. **Classification (Arrhenius Gate)**: Arrhenius activation probability produces `P(AI)`; threshold at 0.5 → verdict.
 
 ### Project Structure
 
@@ -39,7 +39,7 @@ cargo run --release -- batch < input.json
 
 ### 2. Calibrate Weights (CRITICAL)
 
-The weights in `src/aggregation.rs` are learned via Logistic Regression. To re-train them on new data:
+The weights in `src/aggregation.rs` are Beer-Lambert absorptivity coefficients. The `tune-weights` binary calibrates them via Logistic Regression gradient descent on labeled data. To re-train them:
 
 1. Prepare a dataset in JSONL format: `{"text": "...", "label": "human"|"ai"}`.
 2. Run the tuner:

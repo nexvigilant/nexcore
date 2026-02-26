@@ -1,0 +1,102 @@
+{
+  "scan_timestamp": "2026-02-26T00:00:00Z",
+  "scope": "/home/matthew/Projects/nexcore/crates/nexcore-forge-strategy",
+  "status": "PASS",
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 2,
+    "fixed": 8,
+    "deferred": 0
+  },
+  "findings": [
+    {
+      "id": 1,
+      "class": 9,
+      "class_name": "Dead Code / Orphan Scripts",
+      "severity": "P0",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-forge-strategy/src/lib.rs",
+      "lines": "1-37",
+      "description": "Four source files — scoring.rs, game.rs, nash.rs, kinetics.rs — existed in src/ but were never declared as `mod` in lib.rs. They were entirely excluded from compilation, not exposed as public API, and not tested. Despite this, CLAUDE.md Key Entry Points listed scoring.rs and game.rs as authoritative. The four files contain substantial real implementation (Nash solver, Arrhenius gate, Hill cascade, FerroScore, GameState). Their tests (24 test functions) were silently not running.",
+      "status": "fixed",
+      "deferral_reason": null
+    },
+    {
+      "id": 2,
+      "class": 10,
+      "class_name": "State Schema Drift",
+      "severity": "P1",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-forge-strategy/Cargo.toml",
+      "lines": "17-20",
+      "description": "serde (with features=[\"derive\"]) was used in four source modules (scoring.rs, game.rs, nash.rs, kinetics.rs) via `use serde::{Deserialize, Serialize}` and `#[derive(Serialize, Deserialize)]` on all public structs. The crate's Cargo.toml declared only nexcore-lex-primitiva as a dependency. serde was available only as a transitive dependency through nexcore-lex-primitiva's own Cargo.toml. If nexcore-lex-primitiva ever removes its serde dependency, this crate silently breaks. Workspace convention requires direct declaration.",
+      "status": "fixed",
+      "deferral_reason": null
+    },
+    {
+      "id": 3,
+      "class": 1,
+      "class_name": "Testing Theater",
+      "severity": "P1",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-forge-strategy/src/game.rs",
+      "lines": "229",
+      "description": "In test_architect_phase, the expression `matches!(outcome, TickOutcome::Decided(_));` was a bare statement. The bool returned by matches!() was discarded. The test could not fail regardless of what architect() returned. This is a silent test — it produces a green checkmark without actually asserting the post-condition.",
+      "status": "fixed",
+      "deferral_reason": null
+    },
+    {
+      "id": 4,
+      "class": 3,
+      "class_name": "Documentation-Implementation Drift",
+      "severity": "P2",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-forge-strategy/src/lib.rs",
+      "lines": "268-272",
+      "description": "The decide() Refactor branch included a redundant third condition: `state.quality_ratio < self.refactor_completeness`. Since quality_floor (0.313) is always less than refactor_completeness (0.836), any state satisfying the first condition automatically satisfies the third. The refactor_completeness parameter had zero effect on decide() output. The intent of refactor_completeness is to govern when to STOP refactoring (used in refactor_complete()), not when to START. The third condition was removed and the difference in semantics was documented.",
+      "status": "fixed",
+      "deferral_reason": null
+    },
+    {
+      "id": 5,
+      "class": 3,
+      "class_name": "Documentation-Implementation Drift",
+      "severity": "P2",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-forge-strategy/src/lib.rs",
+      "lines": "276-278",
+      "description": "The decide() LintFix branch checked `lint_strictness > 0.5 && warning_count > 0` but ignored lint_radius entirely. The ForgeDecision enum doc table stated 'Warning within radius', CLAUDE.md said 'Warnings nearby AND pedantic mode active', and the should_lint() method correctly implemented the radius check. ForgeState had no field for warning distance, making it impossible for decide() to apply lint_radius. Fixed by adding `warning_distance: u32` to ForgeState and using it in the LintFix branch condition.",
+      "status": "fixed",
+      "deferral_reason": null
+    },
+    {
+      "id": 6,
+      "class": 3,
+      "class_name": "Documentation-Implementation Drift",
+      "severity": "P2",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-forge-strategy/README.md",
+      "lines": "14-20",
+      "description": "README Decision Priority Chain listed 7 steps (ABANDON through EXPLORE). Code had 8 ForgeDecision variants including Stuck. The Stuck variant and its trigger condition (speculative_generation=false with no other actionable state) was undocumented in both README and CLAUDE.md. Fixed by adding step 8 to README and updating CLAUDE.md guidance.",
+      "status": "fixed",
+      "deferral_reason": null
+    },
+    {
+      "id": 7,
+      "class": 4,
+      "class_name": "Phantom Absence / Schema Drift",
+      "severity": "P3",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-forge-strategy/Cargo.lock",
+      "lines": "1-1",
+      "description": "A standalone Cargo.lock was present at the crate root. Workspace members do not own their lock files — the workspace root Cargo.lock is authoritative. The standalone lock was stale (dated Feb 15) and could cause confusion when building the crate in isolation vs via the workspace. Removed.",
+      "status": "fixed",
+      "deferral_reason": null
+    },
+    {
+      "id": 8,
+      "class": 1,
+      "class_name": "Testing Theater (weak assertion)",
+      "severity": "P3",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-forge-strategy/src/game.rs",
+      "lines": "305",
+      "description": "test_full_game_loop contained `assert!(ship2 || game.quality_signals.len() >= 2)`. The second disjunct was always true by construction (two calls to quality_gate had been made). The test could never fail regardless of ship2. Replaced with `assert!(ship2, ...)` with a descriptive message, relying on the established Hill cascade math that two high-quality rounds must exceed the boundary_caution threshold.",
+      "status": "fixed",
+      "deferral_reason": null
+    }
+  ]
+}

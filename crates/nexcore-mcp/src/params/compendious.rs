@@ -21,7 +21,10 @@ pub struct CompendiousScoreParams {
 pub struct CompendiousCompressParams {
     /// Text to compress using BLUFF method.
     pub text: String,
-    /// Terms to preserve.
+    /// Target Compendious Score to achieve (default: 2.0). Used to compute `target_achieved`
+    /// in the response — whether the compressed text meets the caller's density goal.
+    pub target_cs: Option<f64>,
+    /// Terms to preserve exactly (not replaced during compression).
     pub preserve: Option<Vec<String>>,
 }
 

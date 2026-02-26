@@ -14,6 +14,8 @@
 //! organizational overhead (entropy cost of coordination).
 
 use nexcore_error::Error;
+use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// Boltzmann constant (J/K)
 pub const BOLTZMANN: f64 = 1.380649e-23;
@@ -36,7 +38,7 @@ pub enum TransitionStateError {
 }
 
 /// Transition state theory configuration.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TransitionState {
     /// Gibbs free energy of activation (ΔG‡) in J/mol
     pub delta_g_activation: f64,
@@ -47,7 +49,7 @@ pub struct TransitionState {
 }
 
 /// Activation parameter decomposition.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ActivationParameters {
     /// Enthalpy of activation (ΔH‡) in J/mol
     pub delta_h: f64,
@@ -57,6 +59,26 @@ pub struct ActivationParameters {
     pub delta_g: f64,
     /// Temperature used for calculation
     pub temperature_k: f64,
+}
+
+impl fmt::Display for TransitionState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "TS(\u{0394}G\u{2021}={:.1}, T={:.1}K)",
+            self.delta_g_activation, self.temperature_k
+        )
+    }
+}
+
+impl fmt::Display for ActivationParameters {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Act(\u{0394}G\u{2021}={:.1}, \u{0394}H\u{2021}={:.1}, \u{0394}S\u{2021}={:.2})",
+            self.delta_g, self.delta_h, self.delta_s
+        )
+    }
 }
 
 impl TransitionState {

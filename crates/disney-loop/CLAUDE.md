@@ -16,10 +16,10 @@ Forward-only causal discovery pipeline.
   - `∃ + ν`: Root primitives for discovery and frequency tracking.
 
 ## Maintenance SOPs
-- **DataFrame Integrity**: All columns used for filtering (`direction`) or aggregation (`novelty_score`, `discovery`) MUST exist in the input Polars DataFrame.
+- **DataFrame Integrity**: All columns used for filtering (`direction`) or aggregation (`novelty_score`, `discovery`) MUST exist in the input `nexcore_dataframe::DataFrame`.
 - **Fail-Safe**: If the `anti-regression-gate` filters out 100% of the input, the pipeline should return `DisneyError::EmptyPipeline` rather than an empty state file.
 - **Traceability**: Every run of the `sink_new_state` should be logged with the number of surviving records to maintain an audit trail of the discovery velocity.
 
 ## Key Entry Points
-- `src/lib.rs`: The main pipeline stages and Polars transformations.
+- `src/lib.rs`: The main pipeline stages and nexcore-dataframe transformations.
 - `src/humanize.rs`: Logic for converting raw scores into human-readable discovery reports.

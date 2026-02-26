@@ -5,8 +5,10 @@ Universal cross-domain primitives (T2-P and T2-C).
 ## Use When
 - Implementing types that require explicit `Confidence` or `Fidelity` tracking.
 - Modeling data pipelines as `RelayChain` sequences.
-- Using physics-inspired dynamics (velocity, mass) to measure system performance.
+- Using time-evolution dynamics (Phasor, EnvironmentalCoupling) for quantum-analog simulation.
 - Balancing "data reactions" using stoichiometric chemistry analogs.
+- Quantifying information entropy or distribution divergence (KL, mutual information).
+- Building cross-domain transfer patterns: feedback loops, circuit breakers, homeostasis, decay.
 
 ## Grounding Patterns
 - **Multiplicative Decay**: Remember that `Fidelity` and `Confidence` are generally multiplicative; total value is the product of all components in a chain.
@@ -21,6 +23,12 @@ Universal cross-domain primitives (T2-P and T2-C).
 - **No Domain Logic**: This crate MUST remain domain-agnostic. Never add PV or Skill-specific logic here.
 
 ## Key Entry Points
-- `src/measurement.rs`: `Confidence` and `Measured` value wrappers.
-- `src/relay.rs`: `Fidelity` and `RelayChain` implementation.
-- `src/chemistry/`: Stoichiometry and balancing logic.
+- `src/measurement.rs`: Re-exports `Confidence` and `Measured<T>` from `nexcore-constants`.
+- `src/relay.rs`: `Fidelity`, `RelayChain`, `RelayHop`, and `RelayVerification` (5-axiom verification).
+- `src/chemistry/`: 14 stoichiometric primitives (Arrhenius, Michaelis-Menten, Hill, Nernst, Langmuir, Eyring, Gibbs, Henderson-Hasselbalch, Beer-Lambert, half-life, equilibrium, inhibition, dependency rate-law, aggregation pipeline).
+- `src/quantum.rs`: 13 quantum primitive types across 4 layers (Wave, Operators, State, Domain).
+- `src/dynamics.rs`: Time-evolution operators — `Phasor`, `EnvironmentalCoupling`, `Interaction`, `Observer`.
+- `src/entropy.rs`: Shannon entropy, KL divergence, mutual information, joint entropy, information loss.
+- `src/transfer.rs`: Cross-domain T2-P patterns — `FeedbackLoop`, `CircuitBreaker`, `Homeostasis`, `DecayFunction`, `RateLimiter`, `NegativeEvidence`, `ThreatSignature`, and others.
+- `src/spatial_bridge.rs`: `stem-math` `Orient` / `Neighborhood` trait impls for transfer primitives.
+- `src/grounding.rs`: `GroundsTo` implementations for all 84 public types.

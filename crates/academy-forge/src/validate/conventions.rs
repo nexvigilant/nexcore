@@ -1,8 +1,21 @@
 //! Structural consistency validation rules (R15-R19).
+//!
+//! ## Implementation Status
+//!
+//! | Rule | Status | Description |
+//! |------|--------|-------------|
+//! | R15  | Not yet implemented | Bloom level ordering across stages |
+//! | R16  | Not yet implemented | Activity type diversity per stage |
+//! | R17  | Not yet implemented | Reading-to-practice ratio |
+//! | R18  | Implemented | Consistent quiz point values within stages |
+//! | R19  | Implemented | Quiz type distribution (true-false bias) |
 
 use crate::validate::{Severity, ValidationFinding};
 
 /// Run conventions validation rules R15-R19.
+///
+/// Currently implements R18 and R19.  R15, R16, and R17 are reserved but
+/// not yet implemented — they return no findings until implemented.
 pub fn validate_conventions(content: &serde_json::Value) -> Vec<ValidationFinding> {
     let mut findings = Vec::new();
 

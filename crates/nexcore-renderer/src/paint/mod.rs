@@ -377,7 +377,7 @@ pub fn append_form_commands(
 /// Tier: T2-P (σ + κ — sequence scan with comparison dedup)
 #[must_use]
 pub fn collect_image_urls(commands: &[DisplayCommand]) -> Vec<String> {
-    let mut seen = std::collections::HashSet::new();
+    let mut seen = std::collections::BTreeSet::new();
     let mut urls = Vec::new();
     for cmd in commands {
         if let DisplayCommand::DrawImage { src, .. } = cmd {

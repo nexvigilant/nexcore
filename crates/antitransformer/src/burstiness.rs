@@ -82,7 +82,7 @@ fn single_burstiness(inter_arrivals: &[usize]) -> Option<f64> {
 #[must_use]
 pub fn burstiness_analysis(
     tokens: &[String],
-    frequencies: &std::collections::HashMap<String, usize>,
+    frequencies: &std::collections::BTreeMap<String, usize>,
 ) -> BurstinessResult {
     let mut per_token = Vec::new();
 
@@ -113,11 +113,11 @@ pub fn burstiness_analysis(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
 
-    fn tokens_and_freqs(words: &[&str]) -> (Vec<String>, HashMap<String, usize>) {
+    fn tokens_and_freqs(words: &[&str]) -> (Vec<String>, BTreeMap<String, usize>) {
         let tokens: Vec<String> = words.iter().map(|w| w.to_string()).collect();
-        let mut freqs = HashMap::new();
+        let mut freqs = BTreeMap::new();
         for t in &tokens {
             *freqs.entry(t.clone()).or_insert(0) += 1;
         }
@@ -136,13 +136,27 @@ mod tests {
 
     #[test]
     fn test_burstiness_clustered() {
-        // "topic" clustered at beginning -> bursty
-        let words: Vec<&str> =
-            ["topic", "topic", "topic", "a", "b", "c", "d", "e", "f", "g"].into();
+        // "topic" in two tight clusters separated by a long gap produces bursty inter-arrivals.
+        // Positions: 0,1,9,10 -> inter-arrivals [1, 8, 1] -> mean=10/3, std>0 -> B > 0.
+        let words: Vec<&str> = [
+            "topic", "topic", "a", "b", "c", "d", "e", "f", "g", "topic", "topic",
+        ]
+        .into();
         let (tokens, freqs) = tokens_and_freqs(&words);
         let result = burstiness_analysis(&tokens, &freqs);
-        // Only "topic" has repeats, clustered tightly
-        assert!(result.tokens_analyzed > 0);
+        assert!(
+            result.tokens_analyzed > 0,
+            "should have tokens with repeats"
+        );
+        let topic_b = result
+            .per_token
+            .iter()
+            .find(|(t, _)| t == "topic")
+            .map(|(_, b)| *b);
+        assert!(
+            topic_b.is_some_and(|b| b > 0.0),
+            "clustered topic should have positive burstiness B={topic_b:?}"
+        );
     }
 
     #[test]

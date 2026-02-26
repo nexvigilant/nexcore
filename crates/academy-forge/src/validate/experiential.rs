@@ -1,8 +1,20 @@
 //! Experiential learning validation rules (R24-R27).
+//!
+//! ## Implementation Status
+//!
+//! | Rule | Status | Description |
+//! |------|--------|-------------|
+//! | R24  | Not yet implemented | Reflection activity present per stage |
+//! | R25  | Implemented | Quantitative stages need visualization metadata |
+//! | R26  | Implemented | Middle+ stages need interactive activities |
+//! | R27  | Not yet implemented | Hook activity opens each stage |
 
 use crate::validate::{Severity, ValidationFinding};
 
 /// Run experiential validation rules R24-R27.
+///
+/// Currently implements R25 and R26.  R24 and R27 are reserved but not yet
+/// implemented — they return no findings until implemented.
 pub fn validate_experiential(content: &serde_json::Value) -> Vec<ValidationFinding> {
     let mut findings = Vec::new();
 

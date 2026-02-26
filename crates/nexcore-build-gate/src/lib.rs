@@ -14,7 +14,7 @@
 use core::fmt;
 use nexcore_codec::hex;
 use nexcore_fs::walk::WalkDir;
-use sha2::{Digest, Sha256};
+use nexcore_hash::sha256::Sha256;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -166,7 +166,7 @@ pub fn hash_source_dir(workspace: &Path) -> Result<String> {
     }
 
     // Include file count in hash (detect deletions)
-    hasher.update(file_count.to_le_bytes());
+    hasher.update(&file_count.to_le_bytes());
 
     let hash = hex::encode(hasher.finalize());
     tracing::debug!("Computed hash over {} files: {}", file_count, &hash[..16]);

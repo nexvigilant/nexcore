@@ -43,7 +43,7 @@
 //! |-----------|---------------|----------|
 //! | FSM (Hopcroft & Ullman) | ProcessState enum, 8 states | `supervisor/registry.rs` |
 //! | CSP (Hoare, 1978) | EventBus broadcast channels | `events.rs` |
-//! | Topological Sort (Kahn, 1962) | Dependency ordering via DFS | `manifest.rs` |
+//! | Topological Sort (in-degree reduction) | Dependency ordering | `manifest.rs` |
 //! | Exponential Backoff (Ethernet, 1976) | RestartPolicy with 2x multiplier | `process/restart.rs` |
 //! | DashMap (lock-free hashing) | ServiceRegistry concurrent access | `supervisor/registry.rs` |
 //! | Proxy Pattern (GoF) | ReverseProxy request forwarding | `proxy/mod.rs` |
@@ -154,11 +154,11 @@ pub enum ComputingParadigm {
     /// Grounded in: `supervisor/registry.rs`
     ConcurrentDataStructures,
 
-    /// Graph Algorithms — Topological Sort (Kahn, 1962).
+    /// Graph Algorithms — Topological Sort via in-degree reduction.
     ///
     /// Dependency cycle detection via DFS with 3-color marking (White/Gray/Black).
-    /// Topological ordering for service start/stop sequencing.
-    /// Grounded in: `manifest.rs` — `topo_sort()`, `detect_cycle()`
+    /// Topological ordering via in-degree counting with deterministic (sorted) selection.
+    /// Grounded in: `manifest.rs` — `topo_sort()`, `check_cycles()`
     GraphAlgorithms,
 
     /// Exponential Backoff (Metcalfe, Ethernet, 1976).
@@ -808,35 +808,32 @@ mod tests {
     }
 
     #[test]
-    fn coverage_science_minimum() {
+    fn coverage_science_exact() {
         let c = coverage();
-        // At least 5 components should be grounded in science
-        assert!(
-            c.science_count >= 5,
-            "science coverage too low: {}",
-            c.science_count
+        // 6 of 13 components are grounded in science — update if groundings change
+        assert_eq!(
+            c.science_count, 6,
+            "science grounding count changed — update this test if intentional"
         );
     }
 
     #[test]
-    fn coverage_computing_minimum() {
+    fn coverage_computing_exact() {
         let c = coverage();
-        // At least 7 components should be grounded in computing
-        assert!(
-            c.computing_count >= 7,
-            "computing coverage too low: {}",
-            c.computing_count
+        // 8 of 13 components are grounded in computing — update if groundings change
+        assert_eq!(
+            c.computing_count, 8,
+            "computing grounding count changed — update this test if intentional"
         );
     }
 
     #[test]
-    fn coverage_engineering_minimum() {
+    fn coverage_engineering_exact() {
         let c = coverage();
-        // At least 10 components should be grounded in engineering
-        assert!(
-            c.engineering_count >= 10,
-            "engineering coverage too low: {}",
-            c.engineering_count
+        // 12 of 13 components are grounded in engineering — update if groundings change
+        assert_eq!(
+            c.engineering_count, 12,
+            "engineering grounding count changed — update this test if intentional"
         );
     }
 
@@ -849,21 +846,12 @@ mod tests {
             .iter()
             .find(|g| g.component == "ProcessState FSM");
         assert!(fsm.is_some(), "ProcessState FSM must be grounded");
-        let fsm = fsm.unwrap_or_else(|| {
-            // Safe: we just asserted is_some()
-            groundings.first().unwrap_or_else(|| {
-                static DUMMY: GroundingRecord = GroundingRecord {
-                    component: String::new(),
-                    science: None,
-                    computing: None,
-                    engineering: None,
-                    standard: None,
-                    source_location: String::new(),
-                };
-                &DUMMY
-            })
-        });
-        assert_eq!(fsm.computing, Some(ComputingParadigm::FiniteStateMachine));
+        if let Some(record) = fsm {
+            assert_eq!(
+                record.computing,
+                Some(ComputingParadigm::FiniteStateMachine)
+            );
+        }
     }
 
     #[test]

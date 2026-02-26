@@ -24,8 +24,8 @@ Dominant Primitives:
 ```rust
 use disney_loop::{transform_anti_regression_gate, transform_curiosity_search, sink_new_state};
 
-let df = // load initial state DataFrame
-let filtered = transform_anti_regression_gate(df.lazy())?;
+let df = // load initial state DataFrame (nexcore_dataframe::DataFrame)
+let filtered = transform_anti_regression_gate(df)?;
 let aggregated = transform_curiosity_search(filtered)?;
 let row_count = sink_new_state(aggregated, Path::new("output/state_next.json"))?;
 

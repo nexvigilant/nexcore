@@ -188,22 +188,14 @@ impl std::fmt::Display for SkillSummary {
         writeln!(f, "│ GROUNDED: {:<34}│", self.skill_name)?;
         writeln!(f, "├─────────────────────────────────────────────┤")?;
         writeln!(f, "│ Tier: {:<38}│", self.tier)?;
-        writeln!(
-            f,
-            "│ Score: {:.0}% ({}/{}){}│",
+        let score_str = format!(
+            "{:.0}% ({}/{})",
             self.compliance_score * 100.0,
             self.checks_passed.len(),
-            self.checks_passed.len() + self.checks_failed.len(),
-            " ".repeat(
-                30 - format!(
-                    "{:.0}% ({}/{})",
-                    self.compliance_score * 100.0,
-                    self.checks_passed.len(),
-                    self.checks_passed.len() + self.checks_failed.len()
-                )
-                .len()
-            )
-        )?;
+            self.checks_passed.len() + self.checks_failed.len()
+        );
+        let padding = 30usize.saturating_sub(score_str.len());
+        writeln!(f, "│ Score: {score_str}{}│", " ".repeat(padding))?;
         if !self.checks_failed.is_empty() {
             writeln!(f, "├─────────────────────────────────────────────┤")?;
             writeln!(f, "│ GAPS:                                       │")?;

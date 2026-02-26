@@ -27,7 +27,7 @@ use antitransformer::pipeline::{self, AnalysisConfig, InputSample};
 /// Antitransformer: AI text detector via statistical fingerprints.
 #[derive(Parser, Debug)]
 #[command(name = "antitransformer")]
-#[command(version = "0.1.0")]
+#[command(version = env!("CARGO_PKG_VERSION"))]
 #[command(about = "Detect AI-generated text through statistical fingerprints")]
 struct Cli {
     #[command(subcommand)]
@@ -97,7 +97,7 @@ async fn main() -> Result<()> {
             init_tracing(verbose);
             info!(
                 pipeline = "antitransformer",
-                version = "0.1.0",
+                version = env!("CARGO_PKG_VERSION"),
                 mode = "batch",
                 "Starting pipeline"
             );
@@ -122,7 +122,7 @@ async fn main() -> Result<()> {
             init_tracing(verbose);
             info!(
                 pipeline = "antitransformer",
-                version = "0.1.0",
+                version = env!("CARGO_PKG_VERSION"),
                 mode = "daemon",
                 port,
                 "Starting daemon"

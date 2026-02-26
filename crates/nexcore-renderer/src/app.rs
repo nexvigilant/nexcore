@@ -145,6 +145,12 @@ impl Browser {
         self.viewport.height = height;
     }
 
+    /// Get the current viewport rectangle.
+    #[must_use]
+    pub fn viewport(&self) -> Rect {
+        self.viewport
+    }
+
     /// Get display list for rendering.
     #[must_use]
     pub fn display_list(&self) -> &[DisplayCommand] {

@@ -192,16 +192,41 @@ mod tests {
     fn chain_strengthen() {
         let mut chain = EvidenceChain::new("gravity exists", c(0.5));
         chain.strengthen("apple fell down", c(0.8));
-        assert!(chain.confidence().value() > 0.5);
+
+        // strengthen formula: new = 1 - (1 - old) * (1 - factor)
+        // = 1 - (1 - 0.5) * (1 - 0.8) = 1 - 0.5 * 0.2 = 0.9
+        assert!(
+            (chain.confidence().value() - 0.9).abs() < 1e-10,
+            "expected 0.9, got {}",
+            chain.confidence().value()
+        );
         assert_eq!(chain.len(), 2);
+        assert!(!chain.is_empty());
+
+        // Delta should be +0.4 (from 0.5 to 0.9)
+        let step = &chain.steps()[1];
+        assert!((step.delta - 0.4).abs() < 1e-10, "delta should be +0.4");
     }
 
     #[test]
     fn chain_weaken() {
         let mut chain = EvidenceChain::new("perpetual motion works", c(0.5));
         chain.weaken("thermodynamics says no", c(0.9));
-        assert!(chain.confidence().value() < 0.5);
+
+        // weaken formula: new = old * (1 - factor) = 0.5 * (1 - 0.9) = 0.05
+        assert!(
+            (chain.confidence().value() - 0.05).abs() < 1e-10,
+            "expected 0.05, got {}",
+            chain.confidence().value()
+        );
         assert_eq!(chain.len(), 2);
+
+        // Delta should be -0.45 (from 0.5 to 0.05)
+        let step = &chain.steps()[1];
+        assert!(
+            (step.delta - (-0.45)).abs() < 1e-10,
+            "delta should be -0.45"
+        );
     }
 
     #[test]
@@ -217,6 +242,27 @@ mod tests {
         assert!(chain.total_opposition() > 0.0);
         // Net should be positive given more support than opposition
         assert!(chain.net_evidence() > 0.0);
+        // Final confidence should be > initial 0.5
+        assert!(chain.confidence().value() > 0.5);
+    }
+
+    #[test]
+    fn chain_update_explicit() {
+        let mut chain = EvidenceChain::new("test", c(0.5));
+        chain.update("new evidence", c(0.8));
+        assert!((chain.confidence().value() - 0.8).abs() < 1e-10);
+        let step = &chain.steps()[1];
+        assert!((step.delta - 0.3).abs() < 1e-10, "delta should be +0.3");
+    }
+
+    #[test]
+    fn chain_net_evidence_negative() {
+        let mut chain = EvidenceChain::new("weak claim", c(0.5));
+        chain.weaken("contradicted", c(0.8));
+        assert!(
+            chain.net_evidence() < 0.0,
+            "weakened chain has negative net evidence"
+        );
     }
 
     #[test]

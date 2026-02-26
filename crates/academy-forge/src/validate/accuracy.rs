@@ -102,31 +102,42 @@ fn validate_theorem_accuracy(
     }
 }
 
-/// R13: DAG edges in content match IR.
+/// R13: DAG structure is consistent with the domain axiom set.
+///
+/// Verifies that the DAG node count matches the number of axioms in the IR,
+/// and that the DAG has at least one edge (a single isolated-node DAG would
+/// indicate a wiring failure rather than a valid dependency graph).
+///
+/// Previously this rule hardcoded `5` nodes and `5` edges, which was
+/// wrong for any domain other than vigilance.  The correct invariant is:
+/// `dag.nodes.len() == domain.axioms.len()`.
 fn validate_dag_consistency(
     _content: &serde_json::Value,
     domain: &DomainAnalysis,
     findings: &mut Vec<ValidationFinding>,
 ) {
-    // Verify the DAG itself is well-formed (5 nodes, 5 edges)
-    if domain.dependency_dag.nodes.len() != 5 {
+    let expected_node_count = domain.axioms.len();
+
+    if domain.dependency_dag.nodes.len() != expected_node_count {
         findings.push(ValidationFinding {
             rule: "R13".to_string(),
             severity: Severity::Warning,
             message: format!(
-                "Expected 5 axiom DAG nodes, found {}",
-                domain.dependency_dag.nodes.len()
+                "DAG has {} nodes but domain has {} axioms — counts should match",
+                domain.dependency_dag.nodes.len(),
+                expected_node_count
             ),
             field_path: None,
         });
     }
-    if domain.dependency_dag.edges.len() != 5 {
+
+    if expected_node_count > 1 && domain.dependency_dag.edges.is_empty() {
         findings.push(ValidationFinding {
             rule: "R13".to_string(),
             severity: Severity::Warning,
             message: format!(
-                "Expected 5 axiom DAG edges, found {}",
-                domain.dependency_dag.edges.len()
+                "DAG has {} nodes but zero edges — expected dependency edges between axioms",
+                expected_node_count
             ),
             field_path: None,
         });

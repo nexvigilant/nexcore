@@ -30,8 +30,8 @@
 
 use core::fmt::Write as _;
 use nexcore_chrono::DateTime;
+use nexcore_hash::sha256::Sha256;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 
 /// Unique user identifier.
@@ -594,9 +594,9 @@ impl UserManager {
 
         // Generate session token: SHA-256(user_id || counter || timestamp)
         let mut hasher = Sha256::new();
-        hasher.update(user_id.0.to_le_bytes());
-        hasher.update(self.session_counter.to_le_bytes());
-        hasher.update(now.timestamp().to_le_bytes());
+        hasher.update(&user_id.0.to_le_bytes());
+        hasher.update(&self.session_counter.to_le_bytes());
+        hasher.update(&now.timestamp().to_le_bytes());
         hasher.update(b"nexcore-session");
         let result = hasher.finalize();
 

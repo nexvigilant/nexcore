@@ -506,30 +506,67 @@ mod tests {
     #[test]
     fn test_atomize_produces_alos() {
         let pathway = sample_pathway();
-        let result = atomize(&pathway);
-        assert!(result.is_ok());
-        let atomized = result.ok();
-        assert!(atomized.is_some());
-        let atomized = atomized.as_ref();
-        assert!(atomized.is_some());
-        let atomized = atomized.map(|a| &a.alos);
-        assert!(atomized.is_some());
-        let alos = atomized;
-        assert!(alos.is_some());
-        // Should have at least: 2 hooks + concepts + activities + reflections
-        let alos = alos.map(|a| a.len()).unwrap_or(0);
-        assert!(alos >= 4, "Expected at least 4 ALOs, got {alos}");
+        let atomized = atomize(&pathway).unwrap();
+
+        // 2 stages → each produces Hook + Concept + Activity + Reflection = 4 ALOs each = 8 total
+        assert!(
+            atomized.alos.len() >= 4,
+            "Expected at least 4 ALOs, got {}",
+            atomized.alos.len()
+        );
+
+        // Verify each ALO type is present at least once
+        let has_hook = atomized.alos.iter().any(|a| a.alo_type == AloType::Hook);
+        let has_concept = atomized.alos.iter().any(|a| a.alo_type == AloType::Concept);
+        let has_activity = atomized
+            .alos
+            .iter()
+            .any(|a| a.alo_type == AloType::Activity);
+        let has_reflection = atomized
+            .alos
+            .iter()
+            .any(|a| a.alo_type == AloType::Reflection);
+        assert!(has_hook, "Expected at least one Hook ALO");
+        assert!(has_concept, "Expected at least one Concept ALO");
+        assert!(has_activity, "Expected at least one Activity ALO");
+        assert!(has_reflection, "Expected at least one Reflection ALO");
+
+        // Every ALO must have a non-empty id and a source_stage_id
+        for alo in &atomized.alos {
+            assert!(!alo.id.is_empty(), "ALO id should not be empty");
+            assert!(
+                !alo.source_stage_id.is_empty(),
+                "ALO source_stage_id should not be empty for {}",
+                alo.id
+            );
+        }
     }
 
     #[test]
     fn test_atomize_generates_edges() {
         let pathway = sample_pathway();
-        let result = atomize(&pathway);
-        assert!(result.is_ok());
-        let atomized = result.ok();
-        assert!(atomized.is_some());
-        let edges = atomized.map(|a| a.edges.len()).unwrap_or(0);
-        assert!(edges > 0, "Expected edges, got 0");
+        let atomized = atomize(&pathway).unwrap();
+
+        assert!(
+            !atomized.edges.is_empty(),
+            "Expected at least one edge, got 0"
+        );
+
+        // All edge endpoints must reference valid ALO ids
+        let alo_ids: std::collections::HashSet<&str> =
+            atomized.alos.iter().map(|a| a.id.as_str()).collect();
+        for edge in &atomized.edges {
+            assert!(
+                alo_ids.contains(edge.from.as_str()),
+                "Edge 'from' id '{}' does not reference a known ALO",
+                edge.from
+            );
+            assert!(
+                alo_ids.contains(edge.to.as_str()),
+                "Edge 'to' id '{}' does not reference a known ALO",
+                edge.to
+            );
+        }
     }
 
     #[test]

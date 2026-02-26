@@ -7,7 +7,7 @@
 //!
 //! Tier: T3 (N Quantity + κ Comparison + σ Sequence + μ Mapping)
 
-use std::collections::{HashMap, HashSet};
+use std::collections::BTreeSet;
 use std::sync::LazyLock;
 
 use crate::params::{
@@ -166,7 +166,7 @@ const DOMAIN_TARGETS: &[(&str, &str, f64, &str)] = &[
     ),
 ];
 
-static STOPWORD_SET: LazyLock<HashSet<&'static str>> =
+static STOPWORD_SET: LazyLock<BTreeSet<&'static str>> =
     LazyLock::new(|| STOPWORDS.iter().copied().collect());
 
 // ============================================================================
@@ -200,7 +200,11 @@ pub fn score_text(params: CompendiousScoreParams) -> Result<CallToolResult, McpE
 /// Apply BLUFF method to compress text.
 pub fn compress_text(params: CompendiousCompressParams) -> Result<CallToolResult, McpError> {
     let original_score = score_components(&params.text, &[]);
-    let preserve_set: HashSet<String> = params.preserve.unwrap_or_default().into_iter().collect();
+    let preserve_set: BTreeSet<String> = params.preserve.unwrap_or_default().into_iter().collect();
+    // target_cs: caller-supplied density goal. All applicable patterns are applied regardless
+    // (static patterns are the ceiling), but target_achieved signals whether the output meets
+    // the goal. Defaults to 2.0 (standard dense output target).
+    let target = params.target_cs.unwrap_or(2.0);
 
     let mut compressed = params.text.to_lowercase();
     let mut patterns_applied = Vec::new();
@@ -211,8 +215,10 @@ pub fn compress_text(params: CompendiousCompressParams) -> Result<CallToolResult
                 .iter()
                 .any(|p| verbose.contains(&p.to_lowercase()));
             if !should_skip {
-                let savings =
-                    verbose.split_whitespace().count() - replacement.split_whitespace().count();
+                let savings = verbose
+                    .split_whitespace()
+                    .count()
+                    .saturating_sub(replacement.split_whitespace().count());
                 patterns_applied.push(json!({
                     "pattern": verbose,
                     "replacement": if replacement.is_empty() { "[DELETE]" } else { replacement },
@@ -234,12 +240,15 @@ pub fn compress_text(params: CompendiousCompressParams) -> Result<CallToolResult
         0.0
     };
 
+    let target_achieved = compressed_score.0 >= target;
+
     let result = json!({
         "original_tokens": original_score.1,
         "compressed_tokens": compressed_score.1,
         "original_score": round2(original_score.0),
         "compressed_score": round2(compressed_score.0),
         "improvement_percent": round1(improvement),
+        "target_achieved": target_achieved,
         "compressed_text": compressed,
         "patterns_applied": patterns_applied,
     });
@@ -277,8 +286,10 @@ pub fn analyze_patterns(params: CompendiousAnalyzeParams) -> Result<CallToolResu
 
     for &(verbose, replacement) in VERBOSE_PATTERNS {
         if text_lower.contains(verbose) {
-            let savings =
-                verbose.split_whitespace().count() - replacement.split_whitespace().count();
+            let savings = verbose
+                .split_whitespace()
+                .count()
+                .saturating_sub(replacement.split_whitespace().count());
             matches.push(json!({
                 "pattern": verbose,
                 "replacement": if replacement.is_empty() { "[DELETE]" } else { replacement },
@@ -351,10 +362,10 @@ fn score_components(text: &str, required: &[String]) -> (f64, usize) {
 
 fn information_content(text: &str) -> f64 {
     let lowercased = text.to_lowercase();
-    let words: HashSet<&str> = lowercased
+    let words: BTreeSet<&str> = lowercased
         .split(|c: char| !c.is_alphanumeric())
         .filter(|w| w.len() > 2)
-        .filter(|w| !STOPWORD_SET.contains(w))
+        .filter(|w| !STOPWORD_SET.contains(*w))
         .collect();
     words.len() as f64 * 4.0
 }
@@ -382,40 +393,18 @@ fn readability(text: &str) -> f64 {
         .count()
         .max(1);
     let avg_words_per_sentence = words.len() as f64 / sentences as f64;
-    let avg_syllables = estimate_avg_syllables(&words);
-    // Flesch score: higher = more readable. Can go negative for dense text.
-    let raw = 206.835 - (1.015 * avg_words_per_sentence) - (84.6 * avg_syllables);
-    // Use sigmoid mapping so score is always in (0.1, 1.0) — never collapses to zero.
-    // Flesch 100 → ~0.95, Flesch 50 → ~0.72, Flesch 0 → ~0.48, Flesch -50 → ~0.28
-    let sigmoid = 1.0 / (1.0 + (-0.02 * raw).exp());
-    // Scale to [0.1, 1.0] range so readability is always a meaningful multiplier
-    0.1 + 0.9 * sigmoid
-}
 
-fn estimate_avg_syllables(words: &[&str]) -> f64 {
-    if words.is_empty() {
-        return 1.0;
+    // Sentence-length penalty: penalise run-on sentences only.
+    // Any sentence at or under 20 words: full score (1.0) — concision is never penalised.
+    // Above 20 words: score decays toward 0.5 as sentences get longer.
+    // Replaces Flesch formula which penalises technical vocabulary and thereby
+    // inverts the compendious score for dense, precise text.
+    if avg_words_per_sentence <= 20.0 {
+        1.0
+    } else {
+        let excess = avg_words_per_sentence - 20.0;
+        (1.0 / (1.0 + excess * 0.04)).clamp(0.5, 1.0)
     }
-    let total: usize = words.iter().map(|w| count_syllables(w)).sum();
-    total as f64 / words.len() as f64
-}
-
-fn count_syllables(word: &str) -> usize {
-    let vowels = ['a', 'e', 'i', 'o', 'u', 'y'];
-    let chars: Vec<char> = word.to_lowercase().chars().collect();
-    let mut count = 0;
-    let mut prev_vowel = false;
-    for c in &chars {
-        let is_vowel = vowels.contains(c);
-        if is_vowel && !prev_vowel {
-            count += 1;
-        }
-        prev_vowel = is_vowel;
-    }
-    if chars.last() == Some(&'e') && count > 1 {
-        count -= 1;
-    }
-    count.max(1)
 }
 
 fn identify_limiting_factor(density: f64, c: f64, r: f64) -> String {

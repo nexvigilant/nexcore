@@ -3,6 +3,27 @@
 # nexcloud injects PORT={svc.port} into each service's environment
 # automatically via ProcessTask::spawn(). Additional env vars are
 # merged from the [env] table below.
+#
+# Required top-level sections:
+#   [platform]  — platform identity (name is required)
+#   [proxy]     — reverse proxy config (all fields have defaults)
+
+[platform]
+name = "nexvigilant-dev"
+# log_dir defaults to /var/log/nexcloud if not specified
+log_dir = "/tmp/nexcloud/logs"
+
+[proxy]
+http_port = 8080
+# https_port defaults to 443; tls is optional
+
+[[route]]
+match_host = "api.localhost"
+backend = "api"
+
+[[route]]
+match_host = "browser.localhost"
+backend = "nexbrowser"
 
 [[service]]
 name = "api"

@@ -7,7 +7,7 @@
 //! with a fluent API.
 
 use alloc::collections::BTreeMap;
-use alloc::string::String;
+use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
 use crate::kernel::MachineId;
@@ -326,9 +326,10 @@ mod tests {
         let mut instance = MachineInstance::new(1, spec);
         assert!(instance.is_some());
 
-        let inst = instance.as_mut();
-        assert!(inst.is_some());
-        let i = inst.unwrap();
+        let i = match instance.as_mut() {
+            Some(i) => i,
+            None => return, // MachineInstance::new returned None — test setup failed
+        };
 
         assert_eq!(i.current_state_name(), Some("pending"));
         assert!(i.can_handle("confirm"));

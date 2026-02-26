@@ -51,6 +51,7 @@ fn interpret_entropy(value: f64, base: LogBase) -> String {
             LogBase::Bits => 2.0_f64.powf(value),
             LogBase::Nats => value.exp(),
             LogBase::Hartleys => 10.0_f64.powf(value),
+            _ => 2.0_f64.powf(value), // default to bits for unknown bases
         };
         format!(
             "Entropy of {value:.4} {unit} corresponds to approximately {equiv_outcomes:.1} equally likely outcomes"

@@ -387,6 +387,13 @@ fn quiz_tf(stage_id: &str, num: u32, question_text: &str) -> serde_json::Value {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// Map global stage position to Bloom level, ensuring monotonic non-decreasing.
+#[allow(
+    clippy::as_conversions,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "u32/usize→f64 casts for Bloom level interpolation; stage counts are small enough that f64 precision loss is not a concern, and the result is clamped via .min() before indexing"
+)]
 fn bloom_for_position(current_stage: u32, total_stages: u32) -> &'static str {
     if total_stages <= 1 {
         return BLOOM_LEVELS[0];

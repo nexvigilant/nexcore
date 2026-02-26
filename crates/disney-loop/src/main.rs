@@ -13,6 +13,25 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use disney_loop::*;
 
+/// Pipeline execution mode.
+#[derive(Debug, Clone, Default, clap::ValueEnum)]
+enum Mode {
+    /// Forward-only compound discovery pipeline.
+    #[default]
+    Discovery,
+    /// Text humanization pipeline.
+    Humanize,
+}
+
+impl std::fmt::Display for Mode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Discovery => write!(f, "discovery"),
+            Self::Humanize => write!(f, "humanize"),
+        }
+    }
+}
+
 /// Disney Loop — forward-only compound discovery pipeline.
 ///
 /// Reads JSON from stdin, filters backward regression, aggregates
@@ -26,9 +45,9 @@ struct Args {
     #[arg(short, long, default_value = "output/state_next.json")]
     output: PathBuf,
 
-    /// Mode: "discovery" or "humanize"
-    #[arg(short, long, default_value = "discovery")]
-    mode: String,
+    /// Pipeline mode.
+    #[arg(short, long, default_value_t = Mode::Discovery, value_enum)]
+    mode: Mode,
 
     /// Dry run — validate configuration only.
     #[arg(long)]
@@ -71,10 +90,9 @@ async fn main() -> Result<()> {
         return Ok(());
     }
 
-    let result = if args.mode == "humanize" {
-        run_humanize_pipeline(&args.output)
-    } else {
-        run_pipeline(&args.output)
+    let result = match args.mode {
+        Mode::Humanize => run_humanize_pipeline(&args.output),
+        Mode::Discovery => run_pipeline(&args.output),
     };
 
     match result {

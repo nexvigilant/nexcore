@@ -2,7 +2,7 @@
 //!
 //! Topological sort follows `foundation_graph_topsort` pattern.
 
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use serde::{Deserialize, Serialize};
 
@@ -30,7 +30,7 @@ impl std::fmt::Display for ConceptRelation {
 }
 
 /// A node in the concept graph.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ConceptNode {
     pub name: String,
     pub domain: Option<String>,
@@ -38,7 +38,7 @@ pub struct ConceptNode {
 }
 
 /// A directed edge in the concept graph.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ConceptEdge {
     pub from: String,
     pub to: String,
@@ -49,9 +49,9 @@ pub struct ConceptEdge {
 /// Directed concept graph with adjacency list.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ConceptGraph {
-    pub nodes: HashMap<String, ConceptNode>,
+    pub nodes: BTreeMap<String, ConceptNode>,
     pub edges: Vec<ConceptEdge>,
-    adjacency: HashMap<String, Vec<usize>>,
+    adjacency: BTreeMap<String, Vec<usize>>,
 }
 
 impl ConceptGraph {
@@ -70,6 +70,10 @@ impl ConceptGraph {
     }
 
     /// Add a directed edge between concepts.
+    ///
+    /// If an edge with the same `(from, to, relation)` already exists, averages the
+    /// weight rather than duplicating the edge. This prevents the edge list from
+    /// growing O(fragments × concepts²) when multiple fragments share concepts.
     pub fn add_edge(&mut self, from: &str, to: &str, relation: ConceptRelation, weight: f64) {
         // Ensure both nodes exist
         if !self.nodes.contains_key(from) {
@@ -77,6 +81,16 @@ impl ConceptGraph {
         }
         if !self.nodes.contains_key(to) {
             self.add_concept(to, None);
+        }
+
+        // Deduplicate: if this exact (from, to, relation) edge exists, average weight
+        if let Some(existing) = self
+            .edges
+            .iter_mut()
+            .find(|e| e.from == from && e.to == to && e.relation == relation)
+        {
+            existing.weight = (existing.weight + weight) / 2.0;
+            return;
         }
 
         let edge_idx = self.edges.len();
@@ -102,7 +116,7 @@ impl ConceptGraph {
 
     /// Topological sort (Kahn's algorithm). Returns None if cycle detected.
     pub fn topsort(&self) -> Option<Vec<String>> {
-        let mut in_degree: HashMap<&str, usize> = HashMap::new();
+        let mut in_degree: BTreeMap<&str, usize> = BTreeMap::new();
         for node in self.nodes.keys() {
             in_degree.entry(node).or_insert(0);
         }
@@ -141,7 +155,7 @@ impl ConceptGraph {
     }
 
     /// Get all domains present in the graph.
-    pub fn domains(&self) -> HashSet<String> {
+    pub fn domains(&self) -> BTreeSet<String> {
         self.nodes
             .values()
             .filter_map(|n| n.domain.clone())

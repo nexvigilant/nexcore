@@ -9,7 +9,7 @@ Decision engine and strategy parameters for the Code Forge.
 - Managing tier-to-tier transitions in primitive-first construction.
 
 ## Grounding Patterns
-- **Decision Chain**: Always follow the `decide()` priority. Never refactor if there are blocking errors within the `safe_refactor_distance` (5).
+- **Decision Chain**: Always follow the `decide()` priority (8 steps: ABANDON→FIX_BLOCKER→REFACTOR→LINT_FIX→DECOMPOSE→PROMOTE→EXPLORE→STUCK). Never refactor if there are blocking errors within the `safe_refactor_distance` (5). LINT_FIX only fires when `lint_strictness > 0.5` AND `warning_distance <= lint_radius` — both conditions must hold.
 - **Quality Floor**: Respect the `0.313` floor. Do not spend excessive tokens on mid-process polish if progress can still be made.
 - **T1 Primitives**:
   - `→ + κ`: Root primitives for the decision-threshold logic.

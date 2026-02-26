@@ -280,9 +280,49 @@ mod tests {
                     to produce a real analysis result with meaningful \
                     statistical features extracted from the content.";
         let result = analyze(text, &config);
-        assert!(result.verdict == "human" || result.verdict == "generated");
-        assert!(result.probability >= 0.0 && result.probability <= 1.0);
-        assert!(result.confidence >= 0.0 && result.confidence <= 1.0);
+        // Verdict is one of the two real classifications (not insufficient_data)
+        assert!(
+            result.verdict == "human" || result.verdict == "generated",
+            "unexpected verdict: {}",
+            result.verdict
+        );
+        // Probability is a valid probability
+        assert!(
+            (0.0..=1.0).contains(&result.probability),
+            "probability out of range: {}",
+            result.probability
+        );
+        assert!(
+            (0.0..=1.0).contains(&result.confidence),
+            "confidence out of range: {}",
+            result.confidence
+        );
+        // Feature pipeline actually ran: Zipf alpha must be non-zero for real text,
+        // entropy std must be non-negative, Hill score must be in [0,1].
+        assert!(
+            result.features.zipf_alpha > 0.0,
+            "zipf_alpha should be positive for real text, got {}",
+            result.features.zipf_alpha
+        );
+        assert!(
+            result.features.entropy_std >= 0.0,
+            "entropy_std must be non-negative, got {}",
+            result.features.entropy_std
+        );
+        assert!(
+            (0.0..=1.0).contains(&result.features.hill_score),
+            "hill_score out of [0,1]: {}",
+            result.features.hill_score
+        );
+        assert!(
+            (0.0..=1.0).contains(&result.features.composite),
+            "composite out of [0,1]: {}",
+            result.features.composite
+        );
+        // Normalized features must all be in [0, 1]
+        for (i, &n) in result.features.normalized.iter().enumerate() {
+            assert!((0.0..=1.0).contains(&n), "normalized[{i}]={n} out of [0,1]");
+        }
     }
 
     #[test]

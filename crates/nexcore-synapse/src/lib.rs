@@ -71,6 +71,7 @@
     reason = "Synapse domain types are intentionally closed and map structures preserve compatibility with existing serialized state"
 )]
 
+pub mod error;
 pub mod gate_control;
 pub mod grounding;
 pub mod referred_pain;

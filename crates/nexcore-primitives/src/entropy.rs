@@ -73,6 +73,7 @@ use serde::{Deserialize, Serialize};
 /// Controls the unit of information measurement. The canonical base is `Bits`
 /// (log₂, Shannon's original formulation). Other bases are unit conversions:
 /// 1 nat = 1/ln(2) bits ≈ 1.4427 bits.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum LogBase {
     /// Log base 2 — Shannon entropy in bits (DEFAULT)

@@ -12,8 +12,9 @@ keywords = ["signal-detection", "boundary", "formal-verification", "theory"]
 categories = ["science", "no-std"]
 
 [dependencies]
-serde = { version = "1.0.204", features = ["derive"] }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+serde = { workspace = true, features = ["derive"] }
+nexcore-lex-primitiva = { workspace = true }
+nexcore-signal-types = { workspace = true }
 
 [features]
 default = ["std"]

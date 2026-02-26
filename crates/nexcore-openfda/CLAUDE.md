@@ -16,7 +16,7 @@ OpenFDA REST API client and search bridge.
   - `→ + ∅`: Root primitives for async causality and null-result handling.
 
 ## Maintenance SOPs
-- **API Rate Limits**: Respect the OpenFDA public rate limits (typically 240 requests per minute). Use the `MAX_LIMIT` (100) for large page sizes.
+- **API Rate Limits**: Respect the OpenFDA public rate limits (typically 240 requests per minute). Use the `MAX_LIMIT` (1_000) for large page sizes.
 - **Error Handling**: Map all HTTP errors to `OpenFdaError` to ensure the vigilance kernel can differentiate between networking issues and "no results."
 - **Schema Updates**: The FDA periodically updates JSON keys; when adding support for a new field, ensure it is added to the `OpenFdaEnrichment` struct.
 

@@ -7,7 +7,7 @@
 use html5ever::parse_document;
 use html5ever::tendril::TendrilSink;
 use markup5ever_rcdom::{Handle, NodeData, RcDom};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 // ── Arena types ──────────────────────────────────────────────────
 
@@ -23,7 +23,7 @@ pub enum NodeKind {
     /// Element with tag name and attributes.
     Element {
         tag: String,
-        attrs: HashMap<String, String>,
+        attrs: BTreeMap<String, String>,
     },
     /// Text content.
     Text(String),
@@ -104,7 +104,7 @@ impl Arena {
 
     /// Attributes shortcut (None for non-elements).
     #[must_use]
-    pub fn attrs(&self, id: NodeId) -> Option<&HashMap<String, String>> {
+    pub fn attrs(&self, id: NodeId) -> Option<&BTreeMap<String, String>> {
         match self.nodes.get(id.0).map(|n| &n.kind) {
             Some(NodeKind::Element { attrs, .. }) => Some(attrs),
             _ => None,
@@ -290,7 +290,7 @@ mod tests {
         let div = arena.alloc(
             NodeKind::Element {
                 tag: "div".to_string(),
-                attrs: HashMap::new(),
+                attrs: BTreeMap::new(),
             },
             Some(root),
         );

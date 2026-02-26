@@ -30,6 +30,11 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+pub mod game;
+pub mod kinetics;
+pub mod nash;
+pub mod scoring;
+
 use nexcore_lex_primitiva::grounding::GroundsTo;
 use nexcore_lex_primitiva::primitiva::{LexPrimitiva, PrimitiveComposition};
 use nexcore_lex_primitiva::state_mode::StateMode;
@@ -47,14 +52,14 @@ use std::fmt;
 ///
 /// | ForgeDecision | Game Decision | When |
 /// |---------------|---------------|------|
-/// | Abandon | Flee | Confidence below threshold |
-/// | FixBlocker | Fight | Compile error adjacent |
-/// | Refactor | Heal | Quality below floor |
-/// | LintFix | Hunt | Warning within radius |
-/// | Decompose | CollectPrimitive | Primitives available |
-/// | Promote | Descend | Ready for next tier |
-/// | Explore | Explore | Try alternative paths |
-/// | Stuck | Stuck | No progress possible |
+/// | Abandon | Flee | Confidence below threshold AND blockers present |
+/// | FixBlocker | Fight | Compile error present |
+/// | Refactor | Heal | Quality below floor AND no blockers within safe_refactor_distance |
+/// | LintFix | Hunt | Warning within lint_radius AND lint_strictness > 0.5 |
+/// | Decompose | CollectPrimitive | Primitives available to mine |
+/// | Promote | Descend | Current tier work complete |
+/// | Explore | Explore | speculative_generation=true, all other paths clear |
+/// | Stuck | Stuck | No actionable state (speculative_generation=false) |
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ForgeDecision {
     /// Abandon current generation attempt (confidence too low).
@@ -232,6 +237,13 @@ pub struct ForgeState {
     pub nearest_blocker_dist: u32,
     /// Number of clippy warnings in scope.
     pub warning_count: u32,
+    /// Distance (in tier hops) from the current warning site to current work.
+    ///
+    /// Used by the LintFix branch: only fix warnings within `lint_radius` of
+    /// what is actively being worked on. Set to 0 when warnings are in the
+    /// file currently being edited; higher values mean the warnings are in
+    /// upstream or unrelated modules.
+    pub warning_distance: u32,
     /// Number of unmined primitives available for decomposition.
     pub primitives_available: u32,
     /// Whether the current tier's work is complete.
@@ -264,16 +276,26 @@ impl ForgeStrategy {
             return ForgeDecision::FixBlocker;
         }
 
-        // 3. Refactor when quality is below floor and no nearby blockers
+        // 3. Refactor when quality is below floor and no nearby blockers.
+        // We do NOT add a `< refactor_completeness` guard here because quality_floor
+        // (0.313) is always less than refactor_completeness (0.836), making such a
+        // condition trivially true and therefore inert. `refactor_completeness` is
+        // consumed by `refactor_complete()` — the external caller uses it to know when
+        // to stop the refactor loop and resume generation.
         if state.quality_ratio < self.quality_floor
             && state.nearest_blocker_dist >= self.safe_refactor_distance
-            && state.quality_ratio < self.refactor_completeness
         {
             return ForgeDecision::Refactor;
         }
 
-        // 4. Fix lints when strictness demands it and warnings are nearby
-        if self.lint_strictness > 0.5 && state.warning_count > 0 {
+        // 4. Fix lints when strictness demands it AND warnings are within lint_radius.
+        // "Nearby" means warning_distance <= lint_radius (default: 2 tier hops).
+        // Pragmatic mode (lint_strictness <= 0.5, the evolved default) never triggers
+        // this branch — warnings are tolerated until they're adjacent to active work.
+        if self.lint_strictness > 0.5
+            && state.warning_count > 0
+            && state.warning_distance <= self.lint_radius
+        {
             return ForgeDecision::LintFix;
         }
 
@@ -479,6 +501,7 @@ mod tests {
             blocker_count: 3,
             nearest_blocker_dist: 1,
             warning_count: 0,
+            warning_distance: 10,
             primitives_available: 5,
             tier_complete: false,
             confidence: 0.8,
@@ -494,6 +517,7 @@ mod tests {
             blocker_count: 5,
             nearest_blocker_dist: 1,
             warning_count: 10,
+            warning_distance: 10,
             primitives_available: 0,
             tier_complete: false,
             confidence: 0.01, // below abandon_threshold of 0.027
@@ -509,6 +533,7 @@ mod tests {
             blocker_count: 0,
             nearest_blocker_dist: 20,
             warning_count: 0,
+            warning_distance: 10,
             primitives_available: 4,
             tier_complete: false,
             confidence: 0.9,
@@ -524,6 +549,7 @@ mod tests {
             blocker_count: 0,
             nearest_blocker_dist: 20,
             warning_count: 0,
+            warning_distance: 10,
             primitives_available: 0,
             tier_complete: true,
             confidence: 0.9,
@@ -539,6 +565,7 @@ mod tests {
             blocker_count: 0,
             nearest_blocker_dist: 20,
             warning_count: 0,
+            warning_distance: 10,
             primitives_available: 0,
             tier_complete: false,
             confidence: 0.9,
@@ -555,6 +582,7 @@ mod tests {
             blocker_count: 0,
             nearest_blocker_dist: 10, // above safe_refactor_distance of 5
             warning_count: 0,
+            warning_distance: 10,
             primitives_available: 0,
             tier_complete: false,
             confidence: 0.9,
@@ -565,12 +593,14 @@ mod tests {
     #[test]
     fn pragmatic_lint_skips_warnings() {
         // Default lint_strictness is 0.391 (< 0.5), so warnings don't trigger LintFix
+        // even when warnings are immediately adjacent (warning_distance=0).
         let s = ForgeStrategy::default();
         let state = ForgeState {
             quality_ratio: 0.9,
             blocker_count: 0,
             nearest_blocker_dist: 20,
             warning_count: 15,
+            warning_distance: 0, // right next to current work — still skipped in pragmatic mode
             primitives_available: 3,
             tier_complete: false,
             confidence: 0.9,
@@ -585,16 +615,40 @@ mod tests {
             lint_strictness: 0.8, // pedantic
             ..ForgeStrategy::default()
         };
+        // warning_distance=1 is within lint_radius=2, so LintFix fires.
         let state = ForgeState {
             quality_ratio: 0.9,
             blocker_count: 0,
             nearest_blocker_dist: 20,
             warning_count: 5,
+            warning_distance: 1, // within lint_radius of 2
             primitives_available: 3,
             tier_complete: false,
             confidence: 0.9,
         };
         assert_eq!(s.decide(&state), ForgeDecision::LintFix);
+    }
+
+    #[test]
+    fn pedantic_lint_skips_distant_warnings() {
+        // Pedantic mode but warnings are outside lint_radius — should not trigger LintFix.
+        let s = ForgeStrategy {
+            lint_strictness: 0.8,
+            lint_radius: 2,
+            ..ForgeStrategy::default()
+        };
+        let state = ForgeState {
+            quality_ratio: 0.9,
+            blocker_count: 0,
+            nearest_blocker_dist: 20,
+            warning_count: 5,
+            warning_distance: 5, // beyond lint_radius of 2
+            primitives_available: 3,
+            tier_complete: false,
+            confidence: 0.9,
+        };
+        // Warnings are too far away; falls through to Decompose.
+        assert_eq!(s.decide(&state), ForgeDecision::Decompose);
     }
 
     // --- Utility methods ---

@@ -236,6 +236,7 @@ pub fn forge_suggest(params: ForgeSuggestParams) -> Result<CallToolResult, McpEr
     let decision = harness.suggest_action(
         params.blocker_count.unwrap_or(0),
         params.warning_count.unwrap_or(0),
+        params.warning_distance.unwrap_or(0),
         params.primitives_available.unwrap_or(0),
         params.confidence.unwrap_or(0.9),
     );

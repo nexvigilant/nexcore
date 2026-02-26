@@ -10,6 +10,9 @@
 //! - `primitive_extractor` — Primitive extraction (formerly `skill-primitive-extractor`)
 
 #![forbid(unsafe_code)]
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
 
 /// Core traits and types for skills
 pub mod core;

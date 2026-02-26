@@ -14,11 +14,19 @@ pub enum KnowledgeEngineError {
     #[error("Pack not found: {0}")]
     PackNotFound(String),
 
+    /// Returned by [`KnowledgePack::get_fragment`] and [`KnowledgeStore::find_fragment`]
+    /// when no fragment matches the given ID.
     #[error("Fragment not found: {0}")]
     FragmentNotFound(String),
 
     #[error("Empty input")]
     EmptyInput,
+
+    #[error("Store is empty — no packs compiled yet")]
+    EmptyStore,
+
+    #[error("Invalid pack name: {0}")]
+    InvalidPackName(String),
 
     #[error("Store error: {0}")]
     Store(String),

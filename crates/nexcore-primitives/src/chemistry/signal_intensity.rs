@@ -10,6 +10,8 @@
 //! **PV Application**: Dose-response linearity - signal proportional to exposure.
 
 use nexcore_error::Error;
+use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// Errors for signal intensity calculations.
 #[derive(Debug, Error, PartialEq, Clone)]
@@ -26,7 +28,7 @@ pub enum SignalError {
 }
 
 /// Signal detector configuration.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SignalDetector {
     /// Molar absorptivity ε (L/(mol·cm))
     pub absorptivity: f64,
@@ -34,6 +36,16 @@ pub struct SignalDetector {
     pub path_length: f64,
     /// Detection limit (minimum absorbance)
     pub detection_limit: f64,
+}
+
+impl fmt::Display for SignalDetector {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Signal(\u{03B5}={:.1}, l={:.2})",
+            self.absorptivity, self.path_length
+        )
+    }
 }
 
 impl SignalDetector {

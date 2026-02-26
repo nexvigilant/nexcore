@@ -36,7 +36,7 @@ pub enum LexPrimitiva {
     /// ∂ (partial) - Delimiters and limits. Rust: `Result`, bounds.
     #[serde(rename = "boundary")]
     Boundary,
-    /// f - Rate of occurrence. Rust: Loop counters, rate limiters.
+    /// ν (nu) - Rate of occurrence. Rust: Loop counters, rate limiters.
     #[serde(rename = "frequency")]
     Frequency,
     /// ∃ (exists) - Instantiation of being. Rust: `new()`, constructors.

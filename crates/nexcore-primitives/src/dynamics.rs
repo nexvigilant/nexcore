@@ -1,61 +1,39 @@
 //! # Quantum Dynamics (Evolution Operators)
 //!
-//! Defines the time-evolution rules ("Hamiltonians") that animate the static
-//! quantum primitives. This layer bridges the gap between state representation
-//! (T2-P/C) and active system control.
+//! Time-evolution rules that animate the static quantum primitives (T2-P/C).
+//! This layer bridges state representation and active system control.
+//!
+//! ## T1 Grounding
+//!
+//! - `Phasor`: → (Causality) + N (Quantity) + ν (Frequency)
+//! - `EnvironmentalCoupling`: ∝ (Irreversibility) + N (Quantity) + → (Causality)
+//! - `Interaction`: Σ (Sum) + κ (Comparison)
+//! - `Observer`: κ (Comparison) + ∃ (Existence) + ∝ (Irreversibility)
+//!
+//! ## Transfer Domains
+//!
+//! | Type | PV Application | Systems Application |
+//! |------|---------------|---------------------|
+//! | `Phasor` | Signal oscillation in periodic reports | Cyclic workload patterns |
+//! | `EnvironmentalCoupling` | Signal decay over time | Cache invalidation rates |
+//! | `Interaction` | Constructive/destructive signal combination | Service mesh interference |
+//! | `Observer` | Signal triage (collapse to decision) | Load balancer selection |
 
 use crate::quantum::{
     Amplitude, Decoherence, Entanglement, Interference, Measurement, Phase, Qubit, Superposition,
 };
+use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
-
-// ============================================================================
-// 1. Time Evolution Trait
-// ============================================================================
-
-/// Describes a system that changes state over time.
-pub trait TimeEvolution {
-    /// Evolve the state forward by time delta `dt`.
-    fn evolve(&mut self, dt: f64);
-}
+use std::fmt;
 
 // ============================================================================
 // 2. Hamiltonian Dynamics (Phase Rotation)
 // ============================================================================
 
-/// Evolves a Phase based on an angular velocity (frequency).
-///
-/// θ(t + dt) = θ(t) + ω * dt
-impl TimeEvolution for Phase {
-    fn evolve(&mut self, dt: f64) {
-        // Frequency is implicitly 1.0 rad/time unit if not stored.
-        // For a more complex model, Phase would need a `frequency` field.
-        // Here we assume a standard rotation.
-        // To be precise, we need the angular velocity.
-        // Let's assume the `angle` is the dynamic variable.
-        // We will define a standard evolution rate or require it.
-        // Better design: The *state* has a frequency.
-    }
-}
-
-// Re-design: We need an "Evolver" or "Hamiltonian" struct that acts on the state.
-// Or, we extend the primitives to include their dynamics (which Amplitude has: frequency).
-
-impl TimeEvolution for Amplitude {
-    fn evolve(&mut self, dt: f64) {
-        // Amplitude magnitude is constant in closed systems (unitary).
-        // Phase rotates: φ = 2π * f * t
-        // Amplitude struct stores (magnitude, frequency).
-        // It doesn't store phase. We need a Phasor.
-    }
-}
-
-// Let's introduce a Phasor to couple Amplitude and Phase for evolution.
-
 /// A rotating vector combining Amplitude and Phase.
 ///
 /// H = ℏω (Energy operator)
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Phasor {
     pub amplitude: Amplitude,
     pub phase: Phase,
@@ -76,10 +54,21 @@ impl Phasor {
     }
 
     /// Get the complex value (real, imaginary)
+    #[must_use]
     pub fn as_complex(&self) -> (f64, f64) {
         let mag = self.amplitude.magnitude;
         let angle = self.phase.angle;
         (mag * angle.cos(), mag * angle.sin())
+    }
+}
+
+impl fmt::Display for Phasor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Phasor(|A|={:.2}, φ={:.3}rad)",
+            self.amplitude.magnitude, self.phase.angle
+        )
     }
 }
 
@@ -88,6 +77,7 @@ impl Phasor {
 // ============================================================================
 
 /// Applies decoherence to a quantum state over time.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnvironmentalCoupling {
     pub decoherence: Decoherence,
 }
@@ -116,6 +106,12 @@ impl EnvironmentalCoupling {
     }
 }
 
+impl fmt::Display for EnvironmentalCoupling {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "EnvCoupling(γ={:.3})", self.decoherence.decay_rate)
+    }
+}
+
 // ============================================================================
 // 4. Interaction Gates (Coupling)
 // ============================================================================
@@ -124,32 +120,31 @@ impl EnvironmentalCoupling {
 pub struct Interaction;
 
 impl Interaction {
-    /// Interfere two Phasors to produce a Resultant Amplitude.
+    /// Interfere two Phasors to produce a composite `Interference` value.
+    ///
+    /// Constructs the `Interference` from the Phasors' amplitude magnitudes and phase
+    /// angles. The `Interference` type computes resultant amplitude and constructive/
+    /// destructive classification on demand via its own methods.
+    #[must_use]
     pub fn interfere(p1: &Phasor, p2: &Phasor) -> Interference {
-        let (r1, i1) = p1.as_complex();
-        let (r2, i2) = p2.as_complex();
-
-        // Sum of complex numbers
-        let r_sum = r1 + r2;
-        let i_sum = i1 + i2;
-
-        let resultant_mag = (r_sum * r_sum + i_sum * i_sum).sqrt();
-        let resultant_phase = i_sum.atan2(r_sum);
-
         Interference {
             amplitudes: vec![p1.amplitude.magnitude, p2.amplitude.magnitude],
             phases: vec![p1.phase.angle, p2.phase.angle],
         }
-        // Note: The Interference struct in quantum.rs calculates resultant on demand.
-        // This helper just constructs it from Phasors.
     }
 
     /// Entangle two Qubits into a Bell State (simplified model).
-    /// Returns an Entanglement handle and modifies the Qubits to be "linked".
-    pub fn entangle(q1: &mut Qubit, q2: &mut Qubit, concurrence: f64) -> Entanglement {
-        // In a full simulation, we'd merge q1 and q2 into a tensor product state 4-vector.
-        // Here, we return the Entanglement metadata primitive T2-C.
-        Entanglement::new("q1", "q2", concurrence)
+    ///
+    /// Returns an `Entanglement` handle linking the two qubits by their field labels.
+    /// The `subsystem_a` and `subsystem_b` fields capture which qubits are entangled.
+    /// In a full simulation the four-component tensor product state would be tracked;
+    /// here the T2-C metadata primitive captures the concurrence parameter.
+    #[must_use]
+    pub fn entangle(q1: &Qubit, q2: &Qubit, concurrence: f64) -> Entanglement {
+        // Label the entangled pair by their Bloch-sphere angle to distinguish them.
+        let label_a = format!("q(θ={:.3})", q1.theta());
+        let label_b = format!("q(θ={:.3})", q2.theta());
+        Entanglement::new(label_a, label_b, concurrence)
     }
 }
 
@@ -166,6 +161,7 @@ impl Observer {
     /// Uses a random seed (in a real system) or deterministic selector for simulation.
     /// Here we implement a "max likelihood" collapse for deterministic behavior,
     /// or we could take a selector `rand: f64` [0.0, 1.0).
+    #[must_use]
     pub fn measure(superposition: &Superposition, selector: f64) -> Measurement {
         let total_weight = superposition.total_weight();
         if total_weight <= 0.0 {
@@ -207,6 +203,7 @@ impl Observer {
     }
 
     /// Measure a Qubit (Z-basis measurement).
+    #[must_use]
     pub fn measure_qubit(qubit: &Qubit, selector: f64) -> Measurement {
         let p0 = qubit.prob_zero();
         // selector is [0.0, 1.0)
@@ -291,5 +288,98 @@ mod tests {
         // Should be -2.0 + 0i
         assert!((re - -2.0).abs() < 1e-10);
         assert!(im.abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_interaction_interfere_in_phase() {
+        // Two in-phase phasors (angle=0): should produce constructive interference
+        let p1 = Phasor::new(Amplitude::new(1.0, 1.0), Phase::new(0.0, 0.0));
+        let p2 = Phasor::new(Amplitude::new(1.0, 1.0), Phase::new(0.0, 0.0));
+        let i = Interaction::interfere(&p1, &p2);
+
+        // Resultant: both vectors point same direction, amplitude = 2.0
+        assert!((i.resultant_amplitude() - 2.0).abs() < 1e-10);
+        assert!(i.is_constructive());
+    }
+
+    #[test]
+    fn test_interaction_interfere_out_of_phase() {
+        // Anti-phase phasors (180 degrees apart): destructive interference
+        let p1 = Phasor::new(Amplitude::new(1.0, 1.0), Phase::new(0.0, 0.0));
+        let p2 = Phasor::new(Amplitude::new(1.0, 1.0), Phase::new(PI, 0.0));
+        let i = Interaction::interfere(&p1, &p2);
+
+        // Resultant amplitude ≈ 0 (complete destructive)
+        assert!(i.resultant_amplitude() < 1e-10);
+        assert!(!i.is_constructive());
+    }
+
+    #[test]
+    fn test_interaction_interfere_carries_input_amplitudes() {
+        let p1 = Phasor::new(Amplitude::new(2.0, 1.0), Phase::new(0.0, 0.0));
+        let p2 = Phasor::new(Amplitude::new(3.0, 1.0), Phase::new(0.0, 0.0));
+        let i = Interaction::interfere(&p1, &p2);
+
+        // The Interference records the source magnitudes
+        assert_eq!(i.amplitudes.len(), 2);
+        assert!((i.amplitudes[0] - 2.0).abs() < f64::EPSILON);
+        assert!((i.amplitudes[1] - 3.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_interaction_entangle_links_qubits() {
+        let q1 = Qubit::zero();
+        let q2 = Qubit::one();
+        let concurrence = 0.85;
+        let ent = Interaction::entangle(&q1, &q2, concurrence);
+
+        // Concurrence is preserved
+        assert!((ent.concurrence - concurrence).abs() < f64::EPSILON);
+        // Labels distinguish the two qubits by their Bloch angles
+        assert_ne!(ent.subsystem_a, ent.subsystem_b);
+    }
+
+    #[test]
+    fn test_interaction_entangle_clamps_concurrence() {
+        let q1 = Qubit::zero();
+        let q2 = Qubit::zero();
+        // Over-range concurrence is clamped by Entanglement::new
+        let ent = Interaction::entangle(&q1, &q2, 1.5);
+        assert!((ent.concurrence - 1.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_degrade_superposition_reduces_weights() {
+        let decay = Decoherence::new(1.0, "test");
+        let env = EnvironmentalCoupling::new(decay);
+        let mut s = Superposition::new(vec![0.5, 0.5], vec!["A".to_string(), "B".to_string()]);
+        let total_before = s.total_weight();
+        env.degrade_superposition(&mut s, 1.0);
+        let total_after = s.total_weight();
+        assert!(
+            total_after < total_before,
+            "Decoherence should reduce total weight"
+        );
+        assert!(
+            total_after > 0.0,
+            "Should not reduce to zero in finite time"
+        );
+    }
+
+    #[test]
+    fn test_observer_measure_empty_superposition() {
+        let s = Superposition::new(vec![], vec![]);
+        let m = Observer::measure(&s, 0.5);
+        assert_eq!(m.outcome, "null");
+    }
+
+    #[test]
+    fn test_phasor_full_cycle_returns_near_origin() {
+        let amp = Amplitude::new(1.0, 1.0);
+        let phase = Phase::new(0.0, 0.0);
+        let mut p = Phasor::new(amp, phase);
+        p.evolve(1.0); // Full cycle at f=1.0
+        // Phase should be back near 0 (modulo 2π normalization = 0)
+        assert!(p.phase.angle.abs() < 1e-10 || (p.phase.angle - 2.0 * PI).abs() < 1e-10);
     }
 }

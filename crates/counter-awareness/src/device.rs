@@ -6,9 +6,15 @@
 //!
 //! ## State Machine
 //! ```text
-//! Idle → Configuring → Armed → Active → Assessing
+//!                  ┌─────────────────────────────────────────────┐
+//!                  │ (abort)          (disarm)   (emergency stop) │
+//!                  ↓                                             │
+//! Idle → Configuring → Armed → Active → Assessing ──────────────┘
 //!  ↑                                        │
-//!  └────────────────────────────────────────┘
+//!  └────────────────────────────────────────┘ (Assessing → Idle: full reset)
+//!
+//! All states can transition back to Idle (see DeviceState::can_transition_to).
+//! The forward path is: Idle → Configuring → Armed → Active → Assessing → Active (cycle).
 //! ```
 //!
 //! ## Lex Primitiva Grounding
@@ -16,6 +22,8 @@
 //! - `DeviceState` → Σ (Sum) — enumerated state variants
 //! - `Measurement` → N (Quantity) × ν (Frequency) — quantified observations over time
 //! - `MeasurementLog` → σ (Sequence) × π (Persistence) — ordered persistent record
+
+use std::collections::VecDeque;
 
 use serde::{Deserialize, Serialize};
 
@@ -47,7 +55,7 @@ pub enum DeviceState {
 }
 
 impl DeviceState {
-    /// Valid state transitions.
+    /// Returns true if a transition from this state to `next` is valid.
     pub fn can_transition_to(&self, next: DeviceState) -> bool {
         matches!(
             (self, next),
@@ -127,28 +135,31 @@ pub struct MeasurementStats {
 
 /// Ordered log of measurements with statistical aggregation.
 ///
+/// Uses a `VecDeque` internally for O(1) eviction of the oldest entry.
+///
 /// Tier: T2-C (σ + π — sequence with persistence)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MeasurementLog {
-    entries: Vec<Measurement>,
+    entries: VecDeque<Measurement>,
     /// Maximum entries before oldest are evicted
     capacity: usize,
 }
 
 impl MeasurementLog {
+    /// Create a new `MeasurementLog` with the given eviction capacity.
     pub fn new(capacity: usize) -> Self {
         Self {
-            entries: Vec::with_capacity(capacity),
+            entries: VecDeque::with_capacity(capacity),
             capacity,
         }
     }
 
-    /// Record a measurement. Evicts oldest if at capacity.
+    /// Record a measurement. Evicts oldest if at capacity (O(1)).
     pub fn record(&mut self, measurement: Measurement) {
         if self.entries.len() >= self.capacity {
-            self.entries.remove(0);
+            self.entries.pop_front();
         }
-        self.entries.push(measurement);
+        self.entries.push_back(measurement);
     }
 
     /// Get all measurements of a specific metric kind.
@@ -158,7 +169,7 @@ impl MeasurementLog {
 
     /// Compute statistics for a metric within a time window.
     pub fn stats(&self, kind: MetricKind, window_s: f64) -> Option<MeasurementStats> {
-        let now = self.entries.last().map(|m| m.timestamp_s)?;
+        let now = self.entries.back().map(|m| m.timestamp_s)?;
         let cutoff = now - window_s;
 
         let values: Vec<f64> = self
@@ -208,7 +219,7 @@ impl MeasurementLog {
 
     /// Trend detection: is the metric increasing, decreasing, or stable?
     pub fn trend(&self, kind: MetricKind, window_s: f64) -> Trend {
-        let now = match self.entries.last() {
+        let now = match self.entries.back() {
             Some(m) => m.timestamp_s,
             None => return Trend::Insufficient,
         };
@@ -265,6 +276,13 @@ pub enum Trend {
 /// Environmental conditions affecting detection and counter-detection.
 ///
 /// Tier: T2-C (composes multiple physical primitives)
+///
+/// ## Wiring Status
+/// The modifier methods (`eo_modifier`, `ir_modifier`, `radar_modifier`) compute
+/// per-band environmental modulation factors but are **not yet wired** into
+/// `compute_detection` or `compute_fusion`. They are available for callers that
+/// wish to apply environmental scaling manually. Future work should propagate
+/// the modifier into the detection model based on the sensor's `SpectralBand`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Environment {
     /// Ambient temperature in Celsius
@@ -295,8 +313,13 @@ impl Default for Environment {
 }
 
 impl Environment {
-    /// Environmental modifier for EO detection [0.0, 1.0].
-    /// Low visibility or nighttime reduces EO effectiveness.
+    /// Environmental modifier for EO (visible-band) detection [0.0, 1.0].
+    ///
+    /// Low visibility or nighttime reduces EO effectiveness. Returns a multiplier
+    /// that should be applied to the raw signature before detection computation
+    /// for sensors using `SpectralBand::Visible`.
+    ///
+    /// **Not yet wired into `compute_detection` — callers must apply manually.**
     pub fn eo_modifier(&self) -> f64 {
         let vis_factor = (self.visibility_m / 10000.0).min(1.0);
         let day_factor = if self.is_daytime { 1.0 } else { 0.3 };
@@ -304,8 +327,12 @@ impl Environment {
         vis_factor * day_factor * precip_factor
     }
 
-    /// Environmental modifier for IR detection [0.0, 1.0].
-    /// Higher ambient temperature reduces thermal contrast.
+    /// Environmental modifier for IR (infrared/thermal) detection [0.0, 1.0].
+    ///
+    /// Higher ambient temperature reduces thermal contrast; wind disperses thermal
+    /// plumes. Applies to `SpectralBand::Infrared` and `SpectralBand::NearInfrared`.
+    ///
+    /// **Not yet wired into `compute_detection` — callers must apply manually.**
     pub fn ir_modifier(&self) -> f64 {
         // Thermal contrast decreases as ambient approaches body/engine temp
         let thermal_contrast = ((80.0 - self.ambient_temp_c) / 80.0).clamp(0.2, 1.0);
@@ -313,8 +340,12 @@ impl Environment {
         thermal_contrast * wind_dispersion
     }
 
-    /// Environmental modifier for radar detection [0.0, 1.0].
-    /// Radar is relatively weather-independent.
+    /// Environmental modifier for radar (microwave-band) detection [0.0, 1.0].
+    ///
+    /// Radar is relatively weather-independent but suffers from precipitation clutter
+    /// and ground clutter. Applies to `SpectralBand::Microwave`.
+    ///
+    /// **Not yet wired into `compute_detection` — callers must apply manually.**
     pub fn radar_modifier(&self) -> f64 {
         let precip_factor = 1.0 - 0.15 * self.precipitation; // Minor rain clutter
         let clutter_factor = 1.0 - 0.3 * self.clutter; // Ground clutter
@@ -604,7 +635,9 @@ impl Device {
 
     /// Run a full detection assessment.
     ///
-    /// Requires: Armed or Active state, mission profile, threat sensors.
+    /// Requires: Armed, Active, or Assessing state, plus a configured mission profile
+    /// and at least one threat sensor. Note: this does not enforce weight/power budgets —
+    /// call `validate_config()` before assessment if enforcement is needed.
     pub fn assess(&mut self) -> Result<AssessmentReport, DeviceError> {
         if self.state != DeviceState::Active
             && self.state != DeviceState::Armed
@@ -737,6 +770,7 @@ impl Device {
 pub mod catalog {
     use super::*;
 
+    /// Standard threat sensor catalog entry: visible-band EO camera.
     pub fn eo_camera() -> SensorSystem {
         SensorSystem {
             name: "EO Camera (Visible)".into(),
@@ -754,6 +788,7 @@ pub mod catalog {
         }
     }
 
+    /// Standard threat sensor catalog entry: FLIR thermal imager.
     pub fn flir_thermal() -> SensorSystem {
         SensorSystem {
             name: "FLIR Thermal Imager".into(),
@@ -770,6 +805,7 @@ pub mod catalog {
         }
     }
 
+    /// Standard threat sensor catalog entry: X-band surveillance radar.
     pub fn surveillance_radar() -> SensorSystem {
         SensorSystem {
             name: "Surveillance Radar (X-band)".into(),
@@ -787,6 +823,7 @@ pub mod catalog {
         }
     }
 
+    /// Standard threat sensor catalog entry: 1064 nm LiDAR scanner.
     pub fn lidar_scanner() -> SensorSystem {
         SensorSystem {
             name: "LiDAR Scanner (1064nm)".into(),
@@ -803,6 +840,7 @@ pub mod catalog {
         }
     }
 
+    /// Standard threat sensor catalog entry: 6-band multispectral imager.
     pub fn multispectral_imager() -> SensorSystem {
         SensorSystem {
             name: "Multispectral Imager (6-band)".into(),
@@ -831,6 +869,7 @@ pub mod catalog {
         }
     }
 
+    /// Standard countermeasure catalog entry: thermal insulation layer.
     pub fn thermal_insulation() -> Countermeasure {
         Countermeasure {
             name: "Thermal Insulation Layer".into(),
@@ -842,6 +881,7 @@ pub mod catalog {
         }
     }
 
+    /// Standard countermeasure catalog entry: active adaptive visual camouflage.
     pub fn adaptive_camouflage() -> Countermeasure {
         Countermeasure {
             name: "Adaptive Visual Camouflage".into(),
@@ -856,6 +896,7 @@ pub mod catalog {
         }
     }
 
+    /// Standard countermeasure catalog entry: exhaust heat diffuser.
     pub fn exhaust_diffuser() -> Countermeasure {
         Countermeasure {
             name: "Exhaust Heat Diffuser".into(),
@@ -870,6 +911,7 @@ pub mod catalog {
         }
     }
 
+    /// Standard countermeasure catalog entry: faceted low-observable geometry.
     pub fn faceted_geometry() -> Countermeasure {
         Countermeasure {
             name: "Faceted Low-Observable Geometry".into(),
@@ -885,6 +927,7 @@ pub mod catalog {
         }
     }
 
+    /// Standard countermeasure catalog entry: IR signature suppressor.
     pub fn ir_suppressor() -> Countermeasure {
         Countermeasure {
             name: "IR Signature Suppressor".into(),
@@ -899,6 +942,7 @@ pub mod catalog {
         }
     }
 
+    /// Standard countermeasure catalog entry: band-selective absorptive coating.
     pub fn band_selective_coating() -> Countermeasure {
         Countermeasure {
             name: "Band-Selective Absorptive Coating".into(),
@@ -910,6 +954,7 @@ pub mod catalog {
         }
     }
 
+    /// Standard countermeasure catalog entry: compact form factor design.
     pub fn compact_form_factor() -> Countermeasure {
         Countermeasure {
             name: "Compact Form Factor Design".into(),
@@ -1039,19 +1084,128 @@ mod tests {
         assert!(dev.transition(DeviceState::Armed).is_ok());
         assert!(dev.transition(DeviceState::Active).is_ok());
 
-        let report = dev.assess();
-        assert!(report.is_ok());
+        let report = dev.assess().expect("assessment should succeed");
 
-        let report = report.ok();
-        assert!(report.is_some());
+        // Device identity
+        assert_eq!(report.device_name, "TestDevice");
+        assert_eq!(report.device_state, DeviceState::Active);
 
-        let report = report.as_ref();
-        let r = report.map(|r| &r.device_name);
-        assert_eq!(r, Some(&"TestDevice".to_string()));
+        // Sensor assessments produced for all 3 threat sensors
+        assert_eq!(
+            report.sensor_assessments.len(),
+            3,
+            "Expected 3 per-sensor assessments"
+        );
+
+        // All individual detection probabilities are in valid range
+        for a in &report.sensor_assessments {
+            assert!(
+                (0.0..=1.0).contains(&a.detection_probability),
+                "Sensor {} detection probability out of range: {}",
+                a.sensor_name,
+                a.detection_probability
+            );
+        }
+
+        // Fused probability is >= each individual probability
+        for a in &report.sensor_assessments {
+            assert!(
+                report.fusion.fused_probability >= a.detection_probability,
+                "Fused probability should be >= per-sensor: fused={} sensor={}",
+                report.fusion.fused_probability,
+                a.detection_probability,
+            );
+        }
+
+        // Active countermeasures match what was installed
+        assert_eq!(
+            report.active_countermeasures.len(),
+            3,
+            "Expected 3 active countermeasures"
+        );
+
+        // mission_compliant flag correctly reflects whether fused <= threshold
+        let expected_compliant = report.fusion.fused_probability <= report.fusion.threshold;
+        assert_eq!(
+            report.mission_compliant, expected_compliant,
+            "mission_compliant flag mismatch"
+        );
+
+        // detection_gap is zero when compliant, positive when not
+        if report.mission_compliant {
+            assert_eq!(
+                report.detection_gap, 0.0,
+                "detection_gap should be 0 when compliant"
+            );
+        } else {
+            assert!(
+                report.detection_gap > 0.0,
+                "detection_gap should be positive when non-compliant"
+            );
+        }
+
+        // Fused probability is in valid range [0, 1]
+        assert!(
+            (0.0..=1.0).contains(&report.fusion.fused_probability),
+            "Fused probability out of range: {}",
+            report.fusion.fused_probability
+        );
+
+        // Active counter primitives are non-empty (3 countermeasures installed)
+        assert!(
+            !report.active_counter_primitives.is_empty(),
+            "active_counter_primitives should be non-empty with 3 countermeasures installed"
+        );
+
+        // Recommended loadout respects the weight budget (10.0 kg)
+        assert!(
+            report.recommended_loadout.total_weight_kg <= 10.0,
+            "recommended_loadout exceeds weight budget: {} kg",
+            report.recommended_loadout.total_weight_kg
+        );
+
+        // Recommended loadout fused probability is in valid range
+        assert!(
+            (0.0..=1.0).contains(&report.recommended_loadout.fused_probability),
+            "recommended_loadout fused probability out of range: {}",
+            report.recommended_loadout.fused_probability
+        );
+
+        // Measurement log was populated
+        assert!(
+            !report.measurement_summary.is_empty(),
+            "Measurement summary should have entries after assess()"
+        );
+
+        // All measurement summary stats have finite, non-negative values
+        for stat in &report.measurement_summary {
+            assert!(
+                stat.min.is_finite() && stat.min >= 0.0,
+                "stat min should be finite and non-negative: {}",
+                stat.min
+            );
+            assert!(
+                stat.max.is_finite() && stat.max >= stat.min,
+                "stat max should be >= min: max={} min={}",
+                stat.max,
+                stat.min
+            );
+            assert!(
+                stat.mean.is_finite(),
+                "stat mean should be finite: {}",
+                stat.mean
+            );
+            assert!(
+                stat.std_dev.is_finite() && stat.std_dev >= 0.0,
+                "stat std_dev should be finite and non-negative: {}",
+                stat.std_dev
+            );
+        }
     }
 
     #[test]
     fn measurement_recording() {
+        // Record 3 readings: 0.5, 0.4, 0.3 — each 1 second apart.
         let mut dev = Device::new("Test", 100);
         dev.record_measurement(MetricKind::DetectionProbability, 0.5, "probability", 0.9);
         dev.tick(1.0);
@@ -1059,10 +1213,52 @@ mod tests {
         dev.tick(1.0);
         dev.record_measurement(MetricKind::DetectionProbability, 0.3, "probability", 0.9);
 
-        let stats = dev.measurement_stats(MetricKind::DetectionProbability, 10.0);
-        assert!(stats.is_some());
-        let stats = stats.as_ref();
-        assert_eq!(stats.map(|s| s.count), Some(3));
+        let stats = dev
+            .measurement_stats(MetricKind::DetectionProbability, 10.0)
+            .expect("stats should be present after 3 recordings");
+
+        // Count
+        assert_eq!(stats.count, 3, "expected 3 measurements");
+
+        // Min and max
+        assert!(
+            (stats.min - 0.3).abs() < 1e-10,
+            "min should be 0.3, got {}",
+            stats.min
+        );
+        assert!(
+            (stats.max - 0.5).abs() < 1e-10,
+            "max should be 0.5, got {}",
+            stats.max
+        );
+
+        // Mean: (0.5 + 0.4 + 0.3) / 3 = 0.4
+        assert!(
+            (stats.mean - 0.4).abs() < 1e-10,
+            "mean should be 0.4, got {}",
+            stats.mean
+        );
+
+        // Variance: ((0.5-0.4)² + (0.4-0.4)² + (0.3-0.4)²) / 3 = 0.02/3
+        // std_dev = sqrt(0.02/3) ≈ 0.08165
+        let expected_std = (0.02_f64 / 3.0).sqrt();
+        assert!(
+            (stats.std_dev - expected_std).abs() < 1e-10,
+            "std_dev should be {expected_std}, got {}",
+            stats.std_dev
+        );
+
+        // Window
+        assert!(
+            (stats.window_s - 10.0).abs() < 1e-10,
+            "window should be 10.0 s"
+        );
+
+        // Query for a metric with no data returns None
+        assert!(
+            dev.measurement_stats(MetricKind::PowerDraw, 10.0).is_none(),
+            "stats should be None for unrecorded metric"
+        );
     }
 
     #[test]
@@ -1127,5 +1323,82 @@ mod tests {
 
         // Radar should be less affected by weather
         assert!(night_fog.radar_modifier() > night_fog.eo_modifier());
+    }
+
+    #[test]
+    fn catalog_lookups_return_correct_entries() {
+        // Verify every sensor name round-trips through lookup correctly
+        for name in catalog::sensor_names() {
+            let sensor = catalog::lookup_sensor(name);
+            assert!(
+                sensor.is_some(),
+                "lookup_sensor({name:?}) returned None — name list and lookup are out of sync"
+            );
+            let sensor = sensor.expect("just checked is_some");
+            // Result must have a non-empty name and at least one sensing primitive
+            assert!(
+                !sensor.name.is_empty(),
+                "sensor {name:?} has empty name field"
+            );
+            assert!(
+                !sensor.primary_primitives.is_empty(),
+                "sensor {name:?} has no primary_primitives"
+            );
+            assert!(
+                sensor.max_range_m > 0.0,
+                "sensor {name:?} max_range_m must be positive"
+            );
+        }
+
+        // Verify every countermeasure name round-trips
+        for name in catalog::countermeasure_names() {
+            let cm = catalog::lookup_countermeasure(name);
+            assert!(
+                cm.is_some(),
+                "lookup_countermeasure({name:?}) returned None — name list and lookup are out of sync"
+            );
+            let cm = cm.expect("just checked is_some");
+            assert!(
+                !cm.name.is_empty(),
+                "countermeasure {name:?} has empty name field"
+            );
+            assert!(
+                !cm.primary_counters.is_empty(),
+                "countermeasure {name:?} has no primary_counters"
+            );
+            // effectiveness length must match primary_counters length when non-empty
+            if !cm.effectiveness.is_empty() {
+                assert_eq!(
+                    cm.effectiveness.len(),
+                    cm.primary_counters.len(),
+                    "countermeasure {name:?} effectiveness.len() != primary_counters.len()"
+                );
+            }
+        }
+
+        // Unknown names return None
+        assert!(catalog::lookup_sensor("nonexistent_sensor").is_none());
+        assert!(catalog::lookup_countermeasure("nonexistent_cm").is_none());
+
+        // Spot-check a specific entry: surveillance_radar has known max range 50km
+        let radar = catalog::lookup_sensor("surveillance_radar").expect("radar in catalog");
+        assert!(
+            (radar.max_range_m - 50000.0).abs() < 1.0,
+            "surveillance_radar max_range_m should be 50000.0, got {}",
+            radar.max_range_m
+        );
+
+        // Spot-check RAM coating: weight 2.5 kg, primary counter is Absorption
+        let ram = catalog::lookup_countermeasure("ram_coating").expect("ram_coating in catalog");
+        assert!(
+            (ram.weight_kg - 2.5).abs() < 1e-10,
+            "ram_coating weight should be 2.5 kg, got {}",
+            ram.weight_kg
+        );
+        assert_eq!(
+            ram.primary_counters,
+            vec![crate::primitives::CounterPrimitive::Absorption],
+            "ram_coating should counter Absorption"
+        );
     }
 }

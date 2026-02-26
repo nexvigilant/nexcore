@@ -20,7 +20,10 @@
 //!
 //! ```text
 //! P_detect(sensor, target, range) =
-//!     clamp(S_raw × ∏(1 - M[p][c]) / noise_floor, 0, 1) × exp(-α × r/r_max)
+//!     (1 - exp(-SNR)) × exp(-α × r/r_max)
+//!
+//! where SNR = max(S_residual_i) / noise_floor
+//!       S_residual = S_raw × ∏(1 - M[p][c])
 //!
 //! P_fused = 1 - ∏(1 - P_detect_i)
 //! ```

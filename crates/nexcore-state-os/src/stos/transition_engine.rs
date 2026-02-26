@@ -18,7 +18,7 @@
 //!
 //! `TransitionEngine` is T2-C (→ + ς + κ) — causality, state, comparison.
 
-use alloc::collections::BTreeMap;
+use alloc::collections::{BTreeMap, VecDeque};
 use alloc::string::String;
 use alloc::vec::Vec;
 use core::fmt;
@@ -204,8 +204,8 @@ pub struct TransitionEngine {
     next_id: TransitionId,
     /// Execution counter (monotonic timestamp).
     execution_counter: u64,
-    /// Transition history.
-    history: Vec<TransitionResult>,
+    /// Transition history (VecDeque for O(1) front removal during pruning).
+    history: VecDeque<TransitionResult>,
     /// Maximum history entries.
     max_history: usize,
 }
@@ -221,7 +221,7 @@ impl TransitionEngine {
             outgoing: BTreeMap::new(),
             next_id: 0,
             execution_counter: 0,
-            history: Vec::new(),
+            history: VecDeque::new(),
             max_history: 1000,
         }
     }
@@ -332,19 +332,19 @@ impl TransitionEngine {
         let result =
             TransitionResult::success(transition_id, spec.from, spec.to, self.execution_counter);
 
-        // Record history
-        self.history.push(result.clone());
+        // Record history — O(1) prune with VecDeque
+        self.history.push_back(result.clone());
         if self.history.len() > self.max_history {
-            self.history.remove(0);
+            self.history.pop_front();
         }
 
         Ok(result)
     }
 
-    /// Get transition history.
+    /// Get transition history as a contiguous slice pair (VecDeque may split).
     #[must_use]
-    pub fn history(&self) -> &[TransitionResult] {
-        &self.history
+    pub fn history(&self) -> (&[TransitionResult], &[TransitionResult]) {
+        self.history.as_slices()
     }
 
     /// Total transitions registered.

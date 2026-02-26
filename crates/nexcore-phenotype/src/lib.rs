@@ -36,11 +36,13 @@
 )]
 
 pub mod commensal;
+pub mod error;
 pub mod grounding;
 pub mod harm_synthesis;
 
 use std::fmt;
 
+use error::{PhenotypeError, PhenotypeResult};
 use nexcore_ribosome::DriftType;
 use nexcore_transcriptase::{Schema, SchemaKind};
 use serde::{Deserialize, Serialize};
@@ -155,37 +157,56 @@ pub fn mutate_batch(schema: &Schema, count: usize) -> Vec<Phenotype> {
 /// Uses a very low threshold (0.01) since we're testing that mutations
 /// produce measurable drift, not that they exceed production thresholds.
 ///
-/// Returns `true` if the ribosome detected drift (good — mutation worked).
-#[must_use]
-pub fn verify(schema: &Schema, phenotype: &Phenotype) -> bool {
+/// Returns `Ok(true)` if the ribosome detected drift (good — mutation worked).
+///
+/// # Errors
+///
+/// Returns `PhenotypeError::VerificationError` if the ribosome cannot
+/// store the contract or validate the phenotype.
+pub fn verify(schema: &Schema, phenotype: &Phenotype) -> PhenotypeResult<bool> {
     verify_with_threshold(schema, phenotype, 0.01)
 }
 
 /// Verify a phenotype against the ribosome with a custom drift threshold.
-#[must_use]
-pub fn verify_with_threshold(schema: &Schema, phenotype: &Phenotype, threshold: f64) -> bool {
+///
+/// # Errors
+///
+/// Returns `PhenotypeError::VerificationError` if the ribosome cannot
+/// store the contract or validate the phenotype.
+pub fn verify_with_threshold(
+    schema: &Schema,
+    phenotype: &Phenotype,
+    threshold: f64,
+) -> PhenotypeResult<bool> {
     let mut ribosome = nexcore_ribosome::Ribosome::with_config(nexcore_ribosome::RibosomeConfig {
         drift_threshold: threshold,
         auto_update: false,
     });
-    if ribosome
+    ribosome
         .store_contract("phenotype-test", schema.clone())
-        .is_err()
-    {
-        return false;
-    }
+        .map_err(|e| PhenotypeError::VerificationError(format!("failed to store contract: {e}")))?;
 
     match ribosome.validate("phenotype-test", &phenotype.data) {
-        Some(result) => result.drift_detected,
-        None => false,
+        Some(result) => Ok(result.drift_detected),
+        None => Err(PhenotypeError::VerificationError(
+            "ribosome returned no validation result".to_string(),
+        )),
     }
 }
 
 /// Verify all phenotypes and return (detected_count, total_count).
-#[must_use]
-pub fn verify_batch(schema: &Schema, phenotypes: &[Phenotype]) -> (usize, usize) {
-    let detected = phenotypes.iter().filter(|p| verify(schema, p)).count();
-    (detected, phenotypes.len())
+///
+/// # Errors
+///
+/// Returns `PhenotypeError::VerificationError` if any individual verification fails.
+pub fn verify_batch(schema: &Schema, phenotypes: &[Phenotype]) -> PhenotypeResult<(usize, usize)> {
+    let mut detected = 0usize;
+    for p in phenotypes {
+        if verify(schema, p)? {
+            detected = detected.saturating_add(1);
+        }
+    }
+    Ok((detected, phenotypes.len()))
 }
 
 // ─── Mutation Implementations ──────────────────────────────────────────────
@@ -569,7 +590,7 @@ mod tests {
         let schema = sample_schema();
         let phenotype = mutate(&schema, Mutation::TypeMismatch);
         assert!(
-            verify(&schema, &phenotype),
+            verify(&schema, &phenotype).unwrap_or(false),
             "Type mismatch should be detected"
         );
     }
@@ -578,7 +599,10 @@ mod tests {
     fn test_verify_add_field_detected() {
         let schema = sample_schema();
         let phenotype = mutate(&schema, Mutation::AddField);
-        assert!(verify(&schema, &phenotype), "Add field should be detected");
+        assert!(
+            verify(&schema, &phenotype).unwrap_or(false),
+            "Add field should be detected"
+        );
     }
 
     #[test]
@@ -586,7 +610,7 @@ mod tests {
         let schema = sample_schema();
         let phenotype = mutate(&schema, Mutation::RemoveField);
         assert!(
-            verify(&schema, &phenotype),
+            verify(&schema, &phenotype).unwrap_or(false),
             "Remove field should be detected"
         );
     }
@@ -596,7 +620,7 @@ mod tests {
         let schema = sample_schema();
         let phenotype = mutate(&schema, Mutation::StructureSwap);
         assert!(
-            verify(&schema, &phenotype),
+            verify(&schema, &phenotype).unwrap_or(false),
             "Structure swap should be detected"
         );
     }
@@ -605,7 +629,7 @@ mod tests {
     fn test_verify_batch_coverage() {
         let schema = sample_schema();
         let phenotypes = mutate_all(&schema);
-        let (detected, total) = verify_batch(&schema, &phenotypes);
+        let (detected, total) = verify_batch(&schema, &phenotypes).unwrap_or((0, 0));
         // At minimum, type_mismatch, add_field, remove_field, structure_swap should trigger
         assert!(
             detected >= 4,

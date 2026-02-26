@@ -237,7 +237,12 @@ impl NexBrowserState {
             Message::RunExperiment(_id) => self.handle_run_experiment(),
             Message::ExperimentComplete(_id, outcome) => self.handle_complete(outcome),
             Message::BridgeResponse(result) => self.handle_bridge(result),
+            Message::IntegrateLearning(learning) => self.handle_learning(learning),
             Message::Quit => Effect::ExitApp,
+            // Navigation-class messages (GoBack, GoForward, Reload, Scroll, Zoom,
+            // Click, NewTab, CloseTab, SelectTab, FocusAddressBar) are dispatched
+            // directly to the Browser in window.rs — they do not pass through the
+            // state machine. Noop is intentionally a no-op.
             _ => Effect::None,
         }
     }
@@ -275,6 +280,11 @@ impl NexBrowserState {
 
     fn handle_complete(&mut self, outcome: Outcome) -> Effect {
         self.grounded.complete(outcome);
+        Effect::RequestRedraw
+    }
+
+    fn handle_learning(&mut self, learning: Learning) -> Effect {
+        self.grounded.integrate_learning(learning);
         Effect::RequestRedraw
     }
 

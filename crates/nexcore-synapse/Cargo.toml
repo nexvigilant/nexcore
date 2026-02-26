@@ -10,9 +10,10 @@ license = "LicenseRef-Proprietary"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [dependencies]
+nexcore-chrono = { workspace = true }
+nexcore-error = { workspace = true }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 serde = { version = "1.0.204", features = ["derive"] }
-nexcore-chrono = { workspace = true }
 
 [dev-dependencies]
 proptest = { version = "1.6.0" }

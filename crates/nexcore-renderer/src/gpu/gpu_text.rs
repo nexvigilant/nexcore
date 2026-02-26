@@ -23,7 +23,7 @@
 use crate::style::Color;
 use cosmic_text::fontdb;
 use cosmic_text::{Attrs, Buffer, Family, FontSystem, Metrics, Shaping};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::Arc;
 use vello::Glyph;
 use vello::peniko::{self, Blob, Fill};
@@ -46,7 +46,10 @@ pub struct GpuTextShaper {
     /// cosmic-text font system for shaping.
     font_system: FontSystem,
     /// Cache of font data by fontdb ID.
-    font_cache: HashMap<fontdb::ID, CachedFont>,
+    ///
+    /// `fontdb::ID` derives `Ord` (via slotmap), so it can be used directly
+    /// as a `BTreeMap` key for deterministic iteration.
+    font_cache: BTreeMap<fontdb::ID, CachedFont>,
 }
 
 impl Default for GpuTextShaper {
@@ -61,7 +64,7 @@ impl GpuTextShaper {
     pub fn new() -> Self {
         Self {
             font_system: FontSystem::new(),
-            font_cache: HashMap::new(),
+            font_cache: BTreeMap::new(),
         }
     }
 

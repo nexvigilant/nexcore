@@ -160,6 +160,18 @@ pub struct SensorSystem {
 /// A countermeasure — T3 domain-specific composition of counter-primitives.
 ///
 /// Tier: T3
+///
+/// ## Note on `effectiveness`
+/// The `effectiveness` field stores per-counter effectiveness overrides [0.0, 1.0]
+/// in the same order as `primary_counters`. However, the current detection model
+/// sources all effectiveness values from `EffectivenessMatrix` (a global physics-grounded
+/// lookup table), not from this field. This field is preserved as public API so callers
+/// can record countermeasure-specific performance data; a future extension should wire it
+/// into `optimize_loadout` as a per-instance matrix override.
+///
+/// # Invariant
+/// `effectiveness.len()` should equal `primary_counters.len()` when populated.
+/// The field is not validated at construction time.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Countermeasure {
     pub name: String,
@@ -170,7 +182,8 @@ pub struct Countermeasure {
     pub weight_kg: f64,
     /// Power consumption in watts (0 for passive)
     pub power_w: f64,
-    /// Per-counter effectiveness [0.0, 1.0]
+    /// Per-counter effectiveness overrides [0.0, 1.0], parallel to `primary_counters`.
+    /// Currently informational — see struct-level doc for wiring status.
     pub effectiveness: Vec<f64>,
 }
 
@@ -276,5 +289,194 @@ impl CounterPrimitive {
             Self::RangeDenial => 6,
             Self::SubResolution => 7,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sensing_primitive_from_name_roundtrip() {
+        // Every canonical name parses to the correct variant
+        assert_eq!(
+            SensingPrimitive::from_name("reflection"),
+            Some(SensingPrimitive::Reflection)
+        );
+        assert_eq!(
+            SensingPrimitive::from_name("emission"),
+            Some(SensingPrimitive::Emission)
+        );
+        assert_eq!(
+            SensingPrimitive::from_name("contrast"),
+            Some(SensingPrimitive::Contrast)
+        );
+        assert_eq!(
+            SensingPrimitive::from_name("boundary"),
+            Some(SensingPrimitive::Boundary)
+        );
+        assert_eq!(
+            SensingPrimitive::from_name("intensity"),
+            Some(SensingPrimitive::Intensity)
+        );
+        assert_eq!(
+            SensingPrimitive::from_name("frequency"),
+            Some(SensingPrimitive::Frequency)
+        );
+        assert_eq!(
+            SensingPrimitive::from_name("distance"),
+            Some(SensingPrimitive::Distance)
+        );
+        assert_eq!(
+            SensingPrimitive::from_name("resolution"),
+            Some(SensingPrimitive::Resolution)
+        );
+        // Case-insensitive
+        assert_eq!(
+            SensingPrimitive::from_name("REFLECTION"),
+            Some(SensingPrimitive::Reflection)
+        );
+        assert_eq!(
+            SensingPrimitive::from_name("Contrast"),
+            Some(SensingPrimitive::Contrast)
+        );
+        // Unknown name returns None
+        assert_eq!(SensingPrimitive::from_name("echolocation"), None);
+        assert_eq!(SensingPrimitive::from_name(""), None);
+    }
+
+    #[test]
+    fn counter_primitive_from_name_roundtrip() {
+        assert_eq!(
+            CounterPrimitive::from_name("absorption"),
+            Some(CounterPrimitive::Absorption)
+        );
+        assert_eq!(
+            CounterPrimitive::from_name("thermal_equilibrium"),
+            Some(CounterPrimitive::ThermalEquilibrium)
+        );
+        assert_eq!(
+            CounterPrimitive::from_name("thermalequilibrium"),
+            Some(CounterPrimitive::ThermalEquilibrium)
+        );
+        assert_eq!(
+            CounterPrimitive::from_name("homogenization"),
+            Some(CounterPrimitive::Homogenization)
+        );
+        assert_eq!(
+            CounterPrimitive::from_name("diffusion"),
+            Some(CounterPrimitive::Diffusion)
+        );
+        assert_eq!(
+            CounterPrimitive::from_name("attenuation"),
+            Some(CounterPrimitive::Attenuation)
+        );
+        assert_eq!(
+            CounterPrimitive::from_name("band_denial"),
+            Some(CounterPrimitive::BandDenial)
+        );
+        assert_eq!(
+            CounterPrimitive::from_name("banddenial"),
+            Some(CounterPrimitive::BandDenial)
+        );
+        assert_eq!(
+            CounterPrimitive::from_name("range_denial"),
+            Some(CounterPrimitive::RangeDenial)
+        );
+        assert_eq!(
+            CounterPrimitive::from_name("rangedenial"),
+            Some(CounterPrimitive::RangeDenial)
+        );
+        assert_eq!(
+            CounterPrimitive::from_name("sub_resolution"),
+            Some(CounterPrimitive::SubResolution)
+        );
+        assert_eq!(
+            CounterPrimitive::from_name("subresolution"),
+            Some(CounterPrimitive::SubResolution)
+        );
+        // Case-insensitive
+        assert_eq!(
+            CounterPrimitive::from_name("ABSORPTION"),
+            Some(CounterPrimitive::Absorption)
+        );
+        // Unknown returns None
+        assert_eq!(CounterPrimitive::from_name("jamming"), None);
+    }
+
+    #[test]
+    fn sensing_primary_counter_diagonal() {
+        // primary_counter() must map each sensing primitive to its diagonal counter
+        assert_eq!(
+            SensingPrimitive::Reflection.primary_counter(),
+            CounterPrimitive::Absorption
+        );
+        assert_eq!(
+            SensingPrimitive::Emission.primary_counter(),
+            CounterPrimitive::ThermalEquilibrium
+        );
+        assert_eq!(
+            SensingPrimitive::Contrast.primary_counter(),
+            CounterPrimitive::Homogenization
+        );
+        assert_eq!(
+            SensingPrimitive::Boundary.primary_counter(),
+            CounterPrimitive::Diffusion
+        );
+        assert_eq!(
+            SensingPrimitive::Intensity.primary_counter(),
+            CounterPrimitive::Attenuation
+        );
+        assert_eq!(
+            SensingPrimitive::Frequency.primary_counter(),
+            CounterPrimitive::BandDenial
+        );
+        assert_eq!(
+            SensingPrimitive::Distance.primary_counter(),
+            CounterPrimitive::RangeDenial
+        );
+        assert_eq!(
+            SensingPrimitive::Resolution.primary_counter(),
+            CounterPrimitive::SubResolution
+        );
+    }
+
+    #[test]
+    fn sensing_index_unique_and_bounded() {
+        // All 8 sensing primitives must have distinct indices in 0..8
+        let mut seen = [false; 8];
+        for sp in SensingPrimitive::all() {
+            let idx = sp.index();
+            assert!(idx < 8, "index {idx} out of bounds for {:?}", sp);
+            assert!(!seen[idx], "duplicate index {idx} for {:?}", sp);
+            seen[idx] = true;
+        }
+        // All slots filled
+        assert!(
+            seen.iter().all(|&v| v),
+            "not all 8 sensing indices are covered"
+        );
+    }
+
+    #[test]
+    fn counter_index_unique_and_bounded() {
+        // All 8 counter-primitives must have distinct indices in 0..8
+        let mut seen = [false; 8];
+        for cp in CounterPrimitive::all() {
+            let idx = cp.index();
+            assert!(idx < 8, "index {idx} out of bounds for {:?}", cp);
+            assert!(!seen[idx], "duplicate index {idx} for {:?}", cp);
+            seen[idx] = true;
+        }
+        assert!(
+            seen.iter().all(|&v| v),
+            "not all 8 counter indices are covered"
+        );
+    }
+
+    #[test]
+    fn all_returns_all_eight_variants() {
+        assert_eq!(SensingPrimitive::all().len(), 8);
+        assert_eq!(CounterPrimitive::all().len(), 8);
     }
 }

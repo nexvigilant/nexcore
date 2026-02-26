@@ -127,6 +127,11 @@ impl GuardContext {
     }
 
     /// Add a boolean variable.
+    ///
+    /// # Name constraint
+    ///
+    /// The name must not contain `&&` or `||` as substrings; see
+    /// [`evaluate_expression`] for details.
     pub fn set_bool(&mut self, name: impl Into<String>, value: bool) {
         self.variables.insert(name.into(), GuardValue::Bool(value));
     }
@@ -162,6 +167,11 @@ impl GuardContext {
 }
 
 /// Predicate function type.
+///
+/// Reserved for future use: programmatic predicate attachment that
+/// supplements the string-expression evaluator in [`GuardEvaluator::evaluate`].
+/// Currently no method accepts or stores a `PredicateFn`; this type alias
+/// exists as an extension point for callers that need closure-based guards.
 pub type PredicateFn = Box<dyn Fn(&GuardContext) -> bool + Send + Sync>;
 
 /// The guard evaluator for a machine.
@@ -301,14 +311,25 @@ impl Clone for GuardEvaluator {
 // EXPRESSION EVALUATOR (free function — no self state required)
 // ═══════════════════════════════════════════════════════════
 
-/// Simple expression evaluator.
+/// Expression evaluator with correct operator precedence.
+///
+/// Precedence (low to high): `||`, `&&`, `!`, atoms.
 ///
 /// Supports:
 /// - `true`, `false` literals
 /// - Variable names (looked up in context as bools)
 /// - `!expr` negation
-/// - `expr && expr` conjunction
-/// - `expr || expr` disjunction
+/// - `expr && expr` conjunction (binds tighter than `||`)
+/// - `expr || expr` disjunction (binds looser than `&&`)
+///
+/// ## Variable name constraint
+///
+/// Variable names **must not** contain the substrings `&&` or `||`.
+/// The parser uses [`str::split_once`] on the raw expression string, so
+/// any occurrence of those sequences — even inside an identifier — is
+/// treated as an operator boundary. Names such as `"ready"`, `"a"`,
+/// `"order_valid"` are safe; names such as `"check&&ready"` or
+/// `"flag||true"` will cause a misparse with no error signal.
 fn evaluate_expression(expr: &str, context: &GuardContext) -> bool {
     let expr = expr.trim();
 
@@ -320,19 +341,19 @@ fn evaluate_expression(expr: &str, context: &GuardContext) -> bool {
         return false;
     }
 
-    // Negation
-    if let Some(inner) = expr.strip_prefix('!') {
-        return !evaluate_expression(inner, context);
+    // Disjunction (lowest precedence — parse first, so `&&` inside binds tighter)
+    if let Some((left, right)) = expr.split_once("||") {
+        return evaluate_expression(left, context) || evaluate_expression(right, context);
     }
 
-    // Conjunction (simple, no precedence)
+    // Conjunction (higher precedence than `||`)
     if let Some((left, right)) = expr.split_once("&&") {
         return evaluate_expression(left, context) && evaluate_expression(right, context);
     }
 
-    // Disjunction
-    if let Some((left, right)) = expr.split_once("||") {
-        return evaluate_expression(left, context) || evaluate_expression(right, context);
+    // Negation (highest precedence among operators)
+    if let Some(inner) = expr.strip_prefix('!') {
+        return !evaluate_expression(inner, context);
     }
 
     // Variable lookup
@@ -416,5 +437,89 @@ mod tests {
 
         ctx.set_bool("blocked", true);
         assert!(!evaluator.evaluate(g, &ctx).passed);
+    }
+
+    #[test]
+    fn test_operator_precedence_and_binds_tighter_than_or() {
+        // Priority 7: "a || b && c" should parse as "a || (b && c)"
+        // NOT "(a || b) && c"
+        let mut evaluator = GuardEvaluator::new(1);
+        let mut ctx = GuardContext::new();
+
+        // a=true, b=false, c=false
+        // "a || b && c" should be true: a || (false && false) = true || false = true
+        // Wrong precedence would give: (true || false) && false = true && false = false
+        ctx.set_bool("a", true);
+        ctx.set_bool("b", false);
+        ctx.set_bool("c", false);
+
+        let g = evaluator.register("precedence", "a || b && c");
+        assert!(
+            evaluator.evaluate(g, &ctx).passed,
+            "'a || b && c' with a=true should be true (|| is lower precedence than &&)"
+        );
+    }
+
+    #[test]
+    fn test_disjunction() {
+        let mut evaluator = GuardEvaluator::new(1);
+        let mut ctx = GuardContext::new();
+        ctx.set_bool("a", false);
+        ctx.set_bool("b", true);
+
+        let g = evaluator.register("either", "a || b");
+        assert!(evaluator.evaluate(g, &ctx).passed);
+
+        ctx.set_bool("b", false);
+        assert!(!evaluator.evaluate(g, &ctx).passed);
+    }
+
+    #[test]
+    fn test_double_negation() {
+        // "!!a" should equal "a" via recursive strip_prefix
+        let mut evaluator = GuardEvaluator::new(1);
+        let mut ctx = GuardContext::new();
+        ctx.set_bool("a", true);
+
+        let g = evaluator.register("double_neg", "!!a");
+        assert!(evaluator.evaluate(g, &ctx).passed, "!!true should be true");
+
+        ctx.set_bool("a", false);
+        assert!(
+            !evaluator.evaluate(g, &ctx).passed,
+            "!!false should be false"
+        );
+    }
+
+    #[test]
+    fn test_evaluate_by_name_not_found() {
+        // evaluate_by_name on a guard name that was never registered returns None
+        let mut evaluator = GuardEvaluator::new(1);
+        let ctx = GuardContext::new();
+
+        let result = evaluator.evaluate_by_name("nonexistent_guard", &ctx);
+        assert!(
+            result.is_none(),
+            "evaluate_by_name for unknown guard name should return None"
+        );
+    }
+
+    #[test]
+    fn test_evaluate_by_name_registered() {
+        // evaluate_by_name on a guard name that IS registered returns Some
+        let mut evaluator = GuardEvaluator::new(1);
+        let mut ctx = GuardContext::new();
+        ctx.set_bool("ready", true);
+
+        evaluator.register("my_guard", "ready");
+        let result = evaluator.evaluate_by_name("my_guard", &ctx);
+        assert!(
+            result.is_some(),
+            "evaluate_by_name for known guard should return Some"
+        );
+        assert!(
+            result.map(|r| r.passed).unwrap_or(false),
+            "guard 'ready=true' should pass"
+        );
     }
 }

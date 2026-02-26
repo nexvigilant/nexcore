@@ -3,6 +3,10 @@
 //! Pure game mechanics: ore types, scoring, challenges, signal detection,
 //! and achievements. No UI dependencies.
 
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
+
 pub const MAX_COMBO: u32 = 10;
 
 pub mod achievements;

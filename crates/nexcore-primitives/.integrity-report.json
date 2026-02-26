@@ -1,0 +1,80 @@
+{
+  "scan_timestamp": "2026-02-26T18:45:00Z",
+  "scope": "/home/matthew/Projects/nexcore/crates/nexcore-primitives",
+  "status": "PASS",
+  "summary": {
+    "critical": 0,
+    "high": 3,
+    "medium": 1,
+    "fixed": 4,
+    "deferred": 1
+  },
+  "findings": [
+    {
+      "id": 1,
+      "class": 1,
+      "class_name": "Dead Code — No-op TimeEvolution trait impls in dynamics.rs",
+      "severity": "HIGH",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-primitives/src/dynamics.rs",
+      "lines": "17-51 (removed)",
+      "description": "Phase::evolve() and Amplitude::evolve() implemented TimeEvolution with bodies consisting entirely of design comments — no code executed. The TimeEvolution trait itself was only used by these two no-op impls; no downstream code called them. The correct evolution abstraction is Phasor, which was already implemented and tested. Workspace lint config (dead_code=allow, unused_variables=allow) masked all six resulting compiler warnings from standard clippy.",
+      "status": "fixed",
+      "deferral_reason": null
+    },
+    {
+      "id": 2,
+      "class": 6,
+      "class_name": "Dead Code — Unused locals and parameters in Interaction methods",
+      "severity": "HIGH",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-primitives/src/dynamics.rs",
+      "lines": "136-137 (resultant_mag, resultant_phase), 149 (q1, q2 — removed as &mut)",
+      "description": "Interaction::interfere() computed resultant_mag and resultant_phase from complex arithmetic but never used them — the function returned Interference constructed from input magnitudes/angles only, so all complex summation was wasted computation. Interaction::entangle() received q1 and q2 as &mut Qubit but never read or wrote them, returning Entanglement::new('q1', 'q2', ...) with hardcoded string labels instead of labels derived from the actual qubits. Workspace lints suppressed all six resulting warnings.",
+      "status": "fixed",
+      "deferral_reason": null
+    },
+    {
+      "id": 3,
+      "class": 9,
+      "class_name": "Missing Tests — Interaction::interfere() and Interaction::entangle()",
+      "severity": "HIGH",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-primitives/src/dynamics.rs",
+      "lines": "98-154 (Interaction impl block)",
+      "description": "Interaction::interfere() and Interaction::entangle() had zero test coverage despite being public API. The test suite in dynamics.rs covered Phasor, EnvironmentalCoupling, and Observer but omitted the Interaction gate entirely. After fixing F2 (dead locals/params), five tests were added: test_interaction_interfere_in_phase, test_interaction_interfere_out_of_phase, test_interaction_interfere_carries_input_amplitudes, test_interaction_entangle_links_qubits, and test_interaction_entangle_clamps_concurrence. Test count rose from 383 to 388.",
+      "status": "fixed",
+      "deferral_reason": null
+    },
+    {
+      "id": 4,
+      "class": 10,
+      "class_name": "Dep Hygiene — serde_json in [dependencies] used only in test code",
+      "severity": "MEDIUM",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-primitives/Cargo.toml",
+      "lines": "17",
+      "description": "serde_json appeared in [dependencies] (runtime dependency) but was only used inside #[cfg(test)] mod tests in relay.rs (fidelity_serde_roundtrip and relay_chain_serde_roundtrip). This caused every crate depending on nexcore-primitives to transitively pull serde_json at runtime without needing it. Moved to [dev-dependencies].",
+      "status": "fixed",
+      "deferral_reason": null
+    },
+    {
+      "id": 5,
+      "class": 3,
+      "class_name": "Doc Drift — CLAUDE.md chemistry primitive count off by one",
+      "severity": "MEDIUM",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-primitives/CLAUDE.md",
+      "lines": "28",
+      "description": "CLAUDE.md stated '13 stoichiometric primitives' but 14 submodules exist under src/chemistry/ (excluding mod.rs): adsorption, aggregation_pipeline, buffer_stability, cooperativity, decay_kinetics, dependency, electrochemical, equilibrium, feasibility, inhibition, saturation, signal_intensity, threshold_gating, transition_state. The 'dependency' rate-law module was missing from the enumerated list. Count and list corrected to 14.",
+      "status": "fixed",
+      "deferral_reason": null
+    },
+    {
+      "id": 6,
+      "class": 9,
+      "class_name": "Stale Local Cargo.lock",
+      "severity": "MEDIUM",
+      "file": "/home/matthew/Projects/nexcore/crates/nexcore-primitives/Cargo.lock",
+      "lines": "N/A",
+      "description": "A crate-local Cargo.lock (28KB, dated 2026-02-14) persists despite the crate being a workspace member. The workspace Cargo.lock at the repository root is authoritative. This stale artifact can mislead standalone 'cargo build' invocations from inside the crate directory.",
+      "status": "deferred",
+      "deferral_reason": "No runtime impact during workspace builds (workspace Cargo.lock takes precedence). Deletion is safe but is a workspace-wide hygiene operation — multiple crates have this pattern and should be cleaned up in a single batch commit."
+    }
+  ]
+}

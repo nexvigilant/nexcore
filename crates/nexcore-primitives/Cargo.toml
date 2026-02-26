@@ -10,15 +10,15 @@ rust-version = "1.85"
 description = "Universal computational primitives (Chemistry, Physics, Math) for the NexVigilant Core ecosystem"
 
 [dependencies]
-nexcore-constants = { version = "1.0.0", path = "../nexcore-constants", registry = "nexcore" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
-stem-math = { version = "0.1.0", path = "../stem-math", registry = "nexcore" }
-serde = { version = "1.0.204", features = ["derive"] }
-serde_json = { version = "1.0.120" }
+nexcore-constants = { workspace = true }
+nexcore-lex-primitiva = { workspace = true }
+stem-math = { workspace = true }
+serde = { workspace = true }
 nexcore-error = { workspace = true }
 
 [dev-dependencies]
 criterion = "0.5"
+serde_json = { workspace = true }
 
 [[bench]]
 name = "quantum_bench"

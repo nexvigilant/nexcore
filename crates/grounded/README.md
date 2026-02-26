@@ -23,15 +23,18 @@ Dominant Primitives:
 ## SOPs for Use
 ### Handling Uncertain Values
 ```rust
-use grounded::{Uncertain, ConfidenceBand};
+use grounded::{Confidence, ConfidenceBand, Uncertain, uncertain_match};
 
-let result: Uncertain<u32> = Uncertain::new(42, 0.95);
+// Confidence::new returns Result; use .unwrap() only when value is a known-good literal
+let result: Uncertain<u32> = Uncertain::new(42, Confidence::new(0.95).unwrap());
 
-match result.band() {
-    ConfidenceBand::High => println!("Proceed with confidence."),
-    ConfidenceBand::Medium => println!("Requires secondary verification."),
-    _ => println!("Reject or re-evaluate."),
-}
+// Use uncertain_match! for exhaustive band handling — never use _ to swallow Low/Negligible
+uncertain_match!(result,
+    High(v)       => println!("Proceed with confidence: {v}"),
+    Medium(v)     => println!("Requires secondary verification: {v}"),
+    Low(_v)       => println!("Gather more evidence"),
+    Negligible(_v) => println!("Reject or re-evaluate"),
+);
 ```
 
 ### Running a Grounded Loop

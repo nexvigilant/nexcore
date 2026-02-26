@@ -10,12 +10,12 @@
 //! Grounds to: T1 primitives (String, u16, u64, DateTime)
 
 use axum::{extract::Request, middleware::Next, response::Response};
-use hmac::{Hmac, Mac};
 use nexcore_chrono::DateTime;
 use nexcore_codec::hex;
 use nexcore_fs::dirs;
+use nexcore_hash::hmac::HmacSha256;
+use nexcore_hash::sha256::Sha256;
 use serde::Serialize;
-use sha2::Sha256;
 use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
 use std::time::Instant;
@@ -137,15 +137,12 @@ fn sign_audit_record(record: &mut ApiAuditRecord) {
     let secret = std::env::var("AUDIT_SECRET")
         .unwrap_or_else(|_| "audit-dev-secret-change-in-prod".to_string());
 
-    let sig = match Hmac::<Sha256>::new_from_slice(secret.as_bytes()) {
-        Ok(mut mac) => {
-            mac.update(payload.as_bytes());
-            hex::encode(mac.finalize().into_bytes())
+    let sig = match HmacSha256::new_from_slice(secret.as_bytes()) {
+        Ok(mut hmac) => {
+            hmac.update(payload.as_bytes());
+            hex::encode(hmac.finalize())
         }
-        Err(_) => {
-            use sha2::Digest;
-            hex::encode(Sha256::digest(payload.as_bytes()))
-        }
+        Err(_) => hex::encode(Sha256::digest(payload.as_bytes())),
     };
 
     record.hmac_sig = Some(sig.clone());

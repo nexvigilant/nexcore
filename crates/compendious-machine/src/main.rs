@@ -10,9 +10,12 @@
 //! - analyze_patterns: Identify verbose patterns
 //! - get_domain_target: Get target Cs for domain/content type
 
+#![forbid(unsafe_code)]
+#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 
 // ============================================
 // Core Types
@@ -53,6 +56,8 @@ pub struct CompressionResult {
     pub compressed_score: CompendiousResult,
     pub patterns_applied: Vec<PatternMatch>,
     pub improvement_percent: f64,
+    /// Whether compressed_score.score meets or exceeds the caller-supplied target_cs.
+    pub target_achieved: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -171,17 +176,17 @@ pub fn get_tool_definitions() -> Value {
 // ============================================
 
 pub struct CompendiousMachine {
-    verbose_patterns: HashMap<&'static str, &'static str>,
-    stopwords: HashSet<&'static str>,
-    domain_targets: HashMap<(&'static str, &'static str), DomainTarget>,
+    verbose_patterns: BTreeMap<&'static str, &'static str>,
+    stopwords: BTreeSet<&'static str>,
+    domain_targets: BTreeMap<(&'static str, &'static str), DomainTarget>,
 }
 
 impl CompendiousMachine {
     pub fn new() -> Self {
         let mut machine = Self {
-            verbose_patterns: HashMap::new(),
-            stopwords: HashSet::new(),
-            domain_targets: HashMap::new(),
+            verbose_patterns: BTreeMap::new(),
+            stopwords: BTreeSet::new(),
+            domain_targets: BTreeMap::new(),
         };
         machine.init_patterns();
         machine.init_stopwords();
@@ -401,8 +406,12 @@ impl CompendiousMachine {
         preserve: Option<Vec<String>>,
     ) -> CompressionResult {
         let original_score = self.score_text(text, None);
-        let preserve_set: HashSet<String> = preserve.unwrap_or_default().into_iter().collect();
-        let _target = target_cs.unwrap_or(2.0);
+        let preserve_set: BTreeSet<String> = preserve.unwrap_or_default().into_iter().collect();
+        // target_cs is the caller's desired Cs threshold. All applicable pattern substitutions
+        // are applied regardless (we cannot exceed what static patterns allow), but the
+        // returned improvement_percent is compared against this target so the caller can
+        // judge whether the output meets their goal.
+        let target = target_cs.unwrap_or(2.0);
 
         let mut compressed = text.to_lowercase();
         let mut patterns_applied = Vec::new();
@@ -415,8 +424,10 @@ impl CompendiousMachine {
                     .iter()
                     .any(|p| verbose.contains(&p.to_lowercase()));
                 if !should_skip {
-                    let savings =
-                        verbose.split_whitespace().count() - replacement.split_whitespace().count();
+                    let savings = verbose
+                        .split_whitespace()
+                        .count()
+                        .saturating_sub(replacement.split_whitespace().count());
                     patterns_applied.push(PatternMatch {
                         pattern: verbose.to_string(),
                         found: verbose.to_string(),
@@ -441,6 +452,8 @@ impl CompendiousMachine {
             0.0
         };
 
+        let target_achieved = compressed_score.score >= target;
+
         CompressionResult {
             original: text.to_string(),
             compressed,
@@ -448,6 +461,7 @@ impl CompendiousMachine {
             compressed_score,
             patterns_applied,
             improvement_percent: improvement,
+            target_achieved,
         }
     }
 
@@ -475,8 +489,10 @@ impl CompendiousMachine {
 
         for (verbose, replacement) in &self.verbose_patterns {
             if text_lower.contains(*verbose) {
-                let savings =
-                    verbose.split_whitespace().count() - replacement.split_whitespace().count();
+                let savings = verbose
+                    .split_whitespace()
+                    .count()
+                    .saturating_sub(replacement.split_whitespace().count());
                 matches.push(PatternMatch {
                     pattern: verbose.to_string(),
                     found: verbose.to_string(),
@@ -495,19 +511,19 @@ impl CompendiousMachine {
         matches
     }
 
-    pub fn get_domain_target(&self, domain: &str, content_type: &str) -> Option<DomainTarget> {
+    pub fn get_domain_target(&self, domain: &str, content_type: &str) -> DomainTarget {
         self.domain_targets
             .get(&(domain, content_type))
             .cloned()
-            .or_else(|| {
+            .unwrap_or_else(|| {
                 // Return generic target if specific not found
-                Some(DomainTarget {
+                DomainTarget {
                     domain: domain.to_string(),
                     content_type: content_type.to_string(),
                     target_cs: 1.8,
                     rationale: "Generic target; specific domain/content_type combination not found"
                         .to_string(),
-                })
+                }
             })
     }
 
@@ -515,7 +531,7 @@ impl CompendiousMachine {
 
     fn information_content(&self, text: &str) -> f64 {
         let lowercased = text.to_lowercase();
-        let words: HashSet<&str> = lowercased
+        let words: BTreeSet<&str> = lowercased
             .split(|c: char| !c.is_alphanumeric())
             .filter(|w| w.len() > 2)
             .filter(|w| !self.stopwords.contains(w))
@@ -551,41 +567,18 @@ impl CompendiousMachine {
             .max(1);
 
         let avg_words_per_sentence = words.len() as f64 / sentences as f64;
-        let avg_syllables = self.estimate_avg_syllables(&words);
 
-        // Simplified Flesch formula normalized to 0-1
-        let raw = 206.835 - (1.015 * avg_words_per_sentence) - (84.6 * avg_syllables);
-        (raw.clamp(0.0, 100.0)) / 100.0
-    }
-
-    fn estimate_avg_syllables(&self, words: &[&str]) -> f64 {
-        if words.is_empty() {
-            return 1.0;
+        // Sentence-length penalty: penalise run-on sentences only.
+        // Any sentence at or under 20 words: full score (1.0) — concision is never penalised.
+        // Above 20 words: score decays toward 0.5 as sentences get longer.
+        // This replaces the Flesch formula, which punishes technical vocabulary
+        // and thereby inverts the compendious score for dense, precise text.
+        if avg_words_per_sentence <= 20.0 {
+            1.0
+        } else {
+            let excess = avg_words_per_sentence - 20.0;
+            (1.0 / (1.0 + excess * 0.04)).clamp(0.5, 1.0)
         }
-        let total: usize = words.iter().map(|w| self.count_syllables(w)).sum();
-        total as f64 / words.len() as f64
-    }
-
-    fn count_syllables(&self, word: &str) -> usize {
-        let vowels = ['a', 'e', 'i', 'o', 'u', 'y'];
-        let chars: Vec<char> = word.to_lowercase().chars().collect();
-
-        let mut count = 0;
-        let mut prev_vowel = false;
-
-        for c in &chars {
-            let is_vowel = vowels.contains(c);
-            if is_vowel && !prev_vowel {
-                count += 1;
-            }
-            prev_vowel = is_vowel;
-        }
-
-        if chars.last() == Some(&'e') && count > 1 {
-            count -= 1;
-        }
-
-        count.max(1)
     }
 
     fn identify_limiting_factor(&self, density: f64, c: f64, r: f64) -> String {
@@ -597,7 +590,7 @@ impl CompendiousMachine {
 
         factors
             .iter()
-            .min_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
+            .min_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal))
             .map(|(val, name)| format!("{} ({:.2})", name, val))
             .unwrap_or_else(|| "Unknown".to_string())
     }
@@ -668,10 +661,19 @@ pub struct McpError {
     pub message: String,
 }
 
-pub fn handle_mcp_request(machine: &CompendiousMachine, request: &McpRequest) -> McpResponse {
+pub fn handle_mcp_request(
+    machine: &CompendiousMachine,
+    request: &McpRequest,
+) -> Option<McpResponse> {
     let id = request.id.clone();
 
-    match request.method.as_str() {
+    // MCP notifications have no id and must not receive a response.
+    // Return None to signal the caller to drop the line silently.
+    if request.method.starts_with("notifications/") {
+        return None;
+    }
+
+    Some(match request.method.as_str() {
         "initialize" => McpResponse {
             jsonrpc: "2.0".to_string(),
             id,
@@ -682,7 +684,7 @@ pub fn handle_mcp_request(machine: &CompendiousMachine, request: &McpRequest) ->
                 },
                 "serverInfo": {
                     "name": "compendious-machine",
-                    "version": "2.0.0"
+                    "version": env!("CARGO_PKG_VERSION")
                 }
             })),
             error: None,
@@ -765,6 +767,14 @@ pub fn handle_mcp_request(machine: &CompendiousMachine, request: &McpRequest) ->
                         })
                         .collect::<Vec<_>>()
                         .join("\n");
+                    let target_status = if result.target_achieved {
+                        "Target achieved".to_string()
+                    } else {
+                        format!(
+                            "Target not yet reached (current: {:.2})",
+                            result.compressed_score.score
+                        )
+                    };
                     let markdown = format!(
                         "# Compression Result\n\n\
                         ## Metrics\n\
@@ -772,7 +782,8 @@ pub fn handle_mcp_request(machine: &CompendiousMachine, request: &McpRequest) ->
                         |--------|----------|------------|\n\
                         | Tokens | {} | {} |\n\
                         | Cs Score | {:.2} | {:.2} |\n\
-                        | Improvement | — | **{:+.1}%** |\n\n\
+                        | Improvement | — | **{:+.1}%** |\n\
+                        | Target Cs | — | {} |\n\n\
                         ## Compressed Text\n\
                         {}\n\n\
                         ## Patterns Applied\n\
@@ -782,6 +793,7 @@ pub fn handle_mcp_request(machine: &CompendiousMachine, request: &McpRequest) ->
                         result.original_score.score,
                         result.compressed_score.score,
                         result.improvement_percent,
+                        target_status,
                         result.compressed,
                         if patterns_md.is_empty() {
                             "No verbose patterns detected.".to_string()
@@ -899,21 +911,14 @@ pub fn handle_mcp_request(machine: &CompendiousMachine, request: &McpRequest) ->
                         .and_then(|c| c.as_str())
                         .unwrap_or("default");
                     let target = machine.get_domain_target(domain, content_type);
-                    let markdown = match target {
-                        Some(t) => format!(
-                            "# Domain Target\n\n\
-                            - **Domain:** {}\n\
-                            - **Content Type:** {}\n\
-                            - **Target Cs:** {:.1}\n\
-                            - **Rationale:** {}",
-                            t.domain, t.content_type, t.target_cs, t.rationale
-                        ),
-                        None => format!(
-                            "# Domain Target\n\n\
-                            No specific target found for {}/{}. Using default Cs target of **1.8**.",
-                            domain, content_type
-                        ),
-                    };
+                    let markdown = format!(
+                        "# Domain Target\n\n\
+                        - **Domain:** {}\n\
+                        - **Content Type:** {}\n\
+                        - **Target Cs:** {:.1}\n\
+                        - **Rationale:** {}",
+                        target.domain, target.content_type, target.target_cs, target.rationale
+                    );
                     json!({
                         "content": [{
                             "type": "text",
@@ -948,7 +953,7 @@ pub fn handle_mcp_request(machine: &CompendiousMachine, request: &McpRequest) ->
                 message: format!("Method not found: {}", request.method),
             }),
         },
-    }
+    })
 }
 
 // ============================================
@@ -970,6 +975,13 @@ fn main() {
     }
 }
 
+fn write_response(stdout: &mut io::Stdout, response: &McpResponse) -> io::Result<()> {
+    let encoded = serde_json::to_string(response)
+        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+    writeln!(stdout, "{}", encoded)?;
+    stdout.flush()
+}
+
 fn run_mcp_server() {
     let machine = CompendiousMachine::new();
     let stdin = io::stdin();
@@ -978,7 +990,7 @@ fn run_mcp_server() {
     for line in stdin.lock().lines() {
         let line = match line {
             Ok(l) => l,
-            Err(_) => continue,
+            Err(_) => break,
         };
 
         if line.is_empty() {
@@ -997,19 +1009,24 @@ fn run_mcp_server() {
                         message: format!("Parse error: {}", e),
                     }),
                 };
-                let _ = writeln!(
-                    stdout,
-                    "{}",
-                    serde_json::to_string(&error_response).unwrap()
-                );
-                let _ = stdout.flush();
+                if let Err(io_err) = write_response(&mut stdout, &error_response) {
+                    eprintln!(
+                        "compendious-machine: failed to write error response: {}",
+                        io_err
+                    );
+                }
                 continue;
             }
         };
 
-        let response = handle_mcp_request(&machine, &request);
-        let _ = writeln!(stdout, "{}", serde_json::to_string(&response).unwrap());
-        let _ = stdout.flush();
+        // Notifications return None — no response must be sent per MCP spec.
+        let Some(response) = handle_mcp_request(&machine, &request) else {
+            continue;
+        };
+        if let Err(io_err) = write_response(&mut stdout, &response) {
+            eprintln!("compendious-machine: failed to write response: {}", io_err);
+            break;
+        }
     }
 }
 
@@ -1035,6 +1052,13 @@ mod tests {
         assert!(c_score.score.is_finite());
         assert!(v_score.score >= 0.0);
         assert!(c_score.score >= 0.0);
+        // Core invariant: the concise text must score strictly higher than the verbose one.
+        assert!(
+            c_score.score > v_score.score,
+            "compendious text should score higher than verbose text: {:.4} vs {:.4}",
+            c_score.score,
+            v_score.score
+        );
     }
 
     #[test]
@@ -1053,7 +1077,123 @@ mod tests {
         let text = "In order to make a decision at this point in time, we need to give consideration to the basic fundamentals.";
 
         let result = machine.compress_text(text, None, None);
-        assert!(result.compressed_score.score >= result.original_score.score);
+        // At least 3 known patterns in the input must have been detected and applied.
+        assert!(
+            result.patterns_applied.len() >= 3,
+            "expected at least 3 patterns applied, got {}",
+            result.patterns_applied.len()
+        );
+        // Score must strictly improve, not just stay the same.
+        assert!(
+            result.improvement_percent > 0.0,
+            "expected positive improvement, got {:.2}%",
+            result.improvement_percent
+        );
         assert!(result.compressed.len() < text.len());
+    }
+
+    #[test]
+    fn test_compare_texts() {
+        let machine = CompendiousMachine::new();
+        let original = "In order to achieve success we need to give consideration to the various underlying factors.";
+        let optimized = "To succeed, consider the underlying factors.";
+
+        let result = machine.compare_texts(original, optimized);
+
+        // Optimized must score higher than original.
+        assert!(
+            result.optimized.score > result.original.score,
+            "optimized should score higher: {:.4} vs {:.4}",
+            result.optimized.score,
+            result.original.score
+        );
+        // Improvement percent must be positive.
+        assert!(
+            result.improvement_percent > 0.0,
+            "expected positive improvement, got {:.2}%",
+            result.improvement_percent
+        );
+        // Tokens saved must be positive (shorter text).
+        assert!(
+            result.tokens_saved > 0,
+            "expected positive tokens_saved, got {}",
+            result.tokens_saved
+        );
+    }
+
+    #[test]
+    fn test_get_domain_target_known() {
+        let machine = CompendiousMachine::new();
+
+        // Known combination: journalism/headline = 4.0
+        let target = machine.get_domain_target("journalism", "headline");
+        assert_eq!(target.domain, "journalism");
+        assert_eq!(target.content_type, "headline");
+        assert!(
+            (target.target_cs - 4.0).abs() < f64::EPSILON,
+            "expected 4.0, got {}",
+            target.target_cs
+        );
+    }
+
+    #[test]
+    fn test_get_domain_target_fallback() {
+        let machine = CompendiousMachine::new();
+
+        // Unknown combination: should return generic fallback at 1.8.
+        let target = machine.get_domain_target("unknown_domain", "unknown_type");
+        assert_eq!(target.domain, "unknown_domain");
+        assert_eq!(target.content_type, "unknown_type");
+        assert!(
+            (target.target_cs - 1.8).abs() < f64::EPSILON,
+            "expected fallback 1.8, got {}",
+            target.target_cs
+        );
+    }
+
+    #[test]
+    fn test_target_cs_achieved_flag() {
+        let machine = CompendiousMachine::new();
+
+        // High-verbosity text: after compression should improve, and with a low
+        // target_cs (0.5) the target_achieved flag must be true.
+        let verbose = "In order to make a decision at this point in time, it is important to note that we should give consideration to the basic fundamentals.";
+        let result = machine.compress_text(verbose, Some(0.5), None);
+        assert!(
+            result.target_achieved,
+            "expected target_achieved=true with target=0.5, got compressed Cs={:.4}",
+            result.compressed_score.score
+        );
+
+        // With an unreachably high target (50.0), target_achieved must be false.
+        let result_high = machine.compress_text(verbose, Some(50.0), None);
+        assert!(
+            !result_high.target_achieved,
+            "expected target_achieved=false with target=50.0, got Cs={:.4}",
+            result_high.compressed_score.score
+        );
+    }
+
+    #[test]
+    fn test_readability_penalty() {
+        let machine = CompendiousMachine::new();
+
+        // Short sentence (5 words) should get readability=1.0 (no penalty).
+        let short = "Execute test now.";
+        let r_short = machine.score_text(short, None).readability;
+        assert!(
+            (r_short - 1.0).abs() < f64::EPSILON,
+            "short sentence should have R=1.0, got {:.4}",
+            r_short
+        );
+
+        // Very long single sentence (>>20 words) should get R < 1.0.
+        let long = "The system will attempt to perform an analysis of all the various underlying data structures and components that are present within the broader architectural context of the application framework.";
+        let r_long = machine.score_text(long, None).readability;
+        assert!(
+            r_long < 1.0,
+            "long sentence should have R < 1.0, got {:.4}",
+            r_long
+        );
     }
 }

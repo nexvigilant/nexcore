@@ -23,8 +23,16 @@
 //!
 //! ## Fan-out Search
 //!
-//! [`search::fan_out_search`] queries all major endpoints concurrently and
-//! returns a [`search::FanOutResults`] with per-endpoint results.
+//! [`search::fan_out_search`] queries the 10 highest-traffic endpoints
+//! concurrently and returns a [`search::FanOutResults`] with per-endpoint
+//! results.  The following endpoints are covered by the fan-out:
+//! drug events, drug labels, drug recalls, drug NDC, device events, device
+//! recalls, device 510(k), food recalls, food events, and substances.
+//!
+//! The remaining endpoints (`/drug/drugsfda.json`, `/device/pma.json`,
+//! `/device/classification.json`, `/device/udi.json`) are available as
+//! individual functions in [`endpoints`] and can be called directly when
+//! needed.
 //!
 //! ## Quick Start
 //!
@@ -52,7 +60,6 @@
     clippy::exhaustive_enums,
     clippy::exhaustive_structs,
     clippy::as_conversions,
-    clippy::disallowed_types,
     clippy::arithmetic_side_effects,
     reason = "OpenFDA client mirrors upstream payloads and preserves compatibility with existing downstream data workflows"
 )]

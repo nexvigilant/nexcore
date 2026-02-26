@@ -27,8 +27,8 @@
 //! - ∝ Irreversibility: PCR extends are one-way (append-only hash chain)
 //! - κ Comparison: Expected vs actual measurement comparison
 
+use nexcore_hash::sha256::Sha256;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 
 /// Number of Platform Configuration Registers.
 const PCR_COUNT: usize = 8;
@@ -175,8 +175,8 @@ impl Measurement {
     #[must_use]
     pub fn extend(&self, new: &Self) -> Self {
         let mut hasher = Sha256::new();
-        hasher.update(self.digest);
-        hasher.update(new.digest);
+        hasher.update(&self.digest);
+        hasher.update(&new.digest);
         let result = hasher.finalize();
         let mut digest = [0u8; DIGEST_SIZE];
         digest.copy_from_slice(&result);

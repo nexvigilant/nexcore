@@ -11,24 +11,19 @@ pub struct KnowledgeIngestParams {
     pub text: String,
     /// Source type: free_text, brain_distillation, brain_artifact, implicit_knowledge, lesson, session_reflection.
     pub source_type: Option<String>,
-    /// Domain classification (auto-detected if omitted).
+    /// Domain classification. When omitted, the domain is auto-detected from extracted concepts
+    /// (most-frequent concept with a known domain label wins; falls back to "general").
     pub domain: Option<String>,
-    /// Auto-classify domain from concepts (default: true).
-    pub auto_classify: Option<bool>,
 }
 
 /// Parameters for knowledge_compress.
 #[derive(Debug, Deserialize, JsonSchema)]
 #[serde(crate = "rmcp::serde")]
 pub struct KnowledgeCompressParams {
-    /// Text to compress.
+    /// Text to compress. All three compression stages run: pattern replacement (verbose
+    /// phrase elimination), dedup (near-duplicate sentence removal via token Jaccard),
+    /// and hierarchy flattening (single-child heading promotion).
     pub text: String,
-    /// Compression method: pattern, dedup, hierarchy, summary, or all (default: all).
-    pub method: Option<String>,
-    /// Target compendious score (aims to compress until this score is reached).
-    pub target_cs: Option<f64>,
-    /// Terms to preserve during compression.
-    pub preserve: Option<Vec<String>>,
 }
 
 /// Parameters for knowledge_compile.
@@ -96,4 +91,24 @@ pub struct KnowledgeExtractPrimitivesParams {
 pub struct KnowledgeExtractConceptsParams {
     /// Text to extract significant concepts from with domain classification.
     pub text: String,
+}
+
+/// Parameters for knowledge_delete.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct KnowledgeDeleteParams {
+    /// Pack name to delete. Removes all versions unless `version` is specified.
+    pub name: String,
+    /// Specific version to delete. When omitted, all versions are removed.
+    pub version: Option<u32>,
+}
+
+/// Parameters for knowledge_prune.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct KnowledgePruneParams {
+    /// Pack name to prune old versions from.
+    pub name: String,
+    /// Number of most recent versions to keep (default: 3).
+    pub keep: Option<usize>,
 }

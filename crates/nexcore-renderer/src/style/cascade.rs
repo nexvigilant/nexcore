@@ -795,12 +795,12 @@ pub fn parse_inline_declarations(css: &str) -> Vec<(String, String)> {
 mod tests {
     use super::*;
     use crate::dom::{Arena, NodeKind};
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
 
     fn make_arena_div(class: &str, id: &str) -> (Arena, NodeId) {
         let mut arena = Arena::default();
         let root = arena.alloc(NodeKind::Document, None);
-        let mut attrs = HashMap::new();
+        let mut attrs = BTreeMap::new();
         if !class.is_empty() {
             attrs.insert("class".to_string(), class.to_string());
         }
@@ -904,7 +904,7 @@ mod tests {
         let h1 = arena.alloc(
             NodeKind::Element {
                 tag: "h1".to_string(),
-                attrs: HashMap::new(),
+                attrs: BTreeMap::new(),
             },
             Some(root),
         );

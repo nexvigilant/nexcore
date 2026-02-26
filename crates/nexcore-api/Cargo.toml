@@ -29,8 +29,7 @@ nexcore-mcp = { workspace = true }
 signal = { workspace = true }
 vr-tenant = { workspace = true }
 vr-core = { workspace = true }
-hmac = { workspace = true }
-sha2 = { workspace = true }
+nexcore-hash = { workspace = true }
 nexcore-codec = { workspace = true }
 nexcore-terminal = { workspace = true }
 

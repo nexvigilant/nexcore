@@ -13,6 +13,7 @@
 //! `RecursionDetector` is T2-P (ρ + σ) — recursion, sequence.
 
 use alloc::collections::{BTreeMap, BTreeSet};
+use alloc::vec;
 use alloc::vec::Vec;
 
 use super::state_registry::StateId;
@@ -109,6 +110,8 @@ impl RecursionDetector {
     }
 
     /// Detect all cycles using DFS.
+    ///
+    /// Respects `max_depth` — DFS halts at that depth to prevent stack overflow.
     pub fn detect_cycles(&mut self) -> Vec<CycleInfo> {
         self.cycles.clear();
 
@@ -118,20 +121,26 @@ impl RecursionDetector {
         for start in states {
             if !visited.contains(&start) {
                 self.visit_path.clear();
-                self.dfs_detect(start, &mut visited, &mut BTreeSet::new());
+                self.dfs_detect(start, &mut visited, &mut BTreeSet::new(), 0);
             }
         }
 
         self.cycles.clone()
     }
 
-    /// DFS helper for cycle detection.
+    /// DFS helper for cycle detection with enforced depth limit.
     fn dfs_detect(
         &mut self,
         state: StateId,
         visited: &mut BTreeSet<StateId>,
         rec_stack: &mut BTreeSet<StateId>,
+        depth: usize,
     ) {
+        // Enforce max_depth to prevent stack overflow on deep graphs
+        if depth > self.max_depth {
+            return;
+        }
+
         visited.insert(state);
         rec_stack.insert(state);
         self.visit_path.push(state);
@@ -139,7 +148,7 @@ impl RecursionDetector {
         if let Some(successors) = self.adjacency.get(&state).cloned() {
             for next in successors {
                 if !visited.contains(&next) {
-                    self.dfs_detect(next, visited, rec_stack);
+                    self.dfs_detect(next, visited, rec_stack, depth.saturating_add(1));
                 } else if rec_stack.contains(&next) {
                     // Found a cycle - extract it
                     if let Some(cycle_start) = self.visit_path.iter().position(|&s| s == next) {
@@ -260,5 +269,33 @@ mod tests {
 
         detector.mark_intentional(0);
         assert_eq!(detector.unintentional_cycle_count(), 0);
+    }
+
+    #[test]
+    fn test_max_depth_enforced() {
+        // Priority 6: DFS must respect max_depth to prevent stack overflow
+        let mut detector = RecursionDetector::new(1);
+        detector.set_max_depth(5);
+
+        // Build a long linear chain: 0→1→2→...→10→0 (cycle at depth 10)
+        for i in 0..10 {
+            detector.add_edge(i, i + 1);
+        }
+        detector.add_edge(10, 0); // Cycle back
+
+        // With max_depth=5, DFS stops at depth 5 and won't reach the cycle at depth 10
+        let cycles = detector.detect_cycles();
+        assert!(
+            cycles.is_empty(),
+            "Cycle at depth 10 should not be detected with max_depth=5"
+        );
+
+        // Now raise the limit — cycle should be found
+        detector.set_max_depth(100);
+        let cycles = detector.detect_cycles();
+        assert!(
+            !cycles.is_empty(),
+            "Cycle at depth 10 should be detected with max_depth=100"
+        );
     }
 }

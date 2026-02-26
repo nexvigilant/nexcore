@@ -1,5 +1,9 @@
 //! Grounded signal types and methods.
 
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
+
 pub mod grounding;
 
 use serde::{Deserialize, Serialize};

@@ -23,16 +23,25 @@ pub mod knowledge_pack;
 pub mod scoring;
 pub mod store;
 
-pub use compiler::{CompileOptions, KnowledgeCompiler};
+pub use compiler::{CompileOptions, CompressTextResult, KnowledgeCompiler};
 pub use compression::{
     CompressionMethod, CompressionResult, StructuralCompressor, token_similarity,
 };
 pub use concept_graph::{ConceptEdge, ConceptGraph, ConceptNode, ConceptRelation};
 pub use error::{KnowledgeEngineError, Result};
-pub use extraction::{ConceptExtractor, ExtractedConcept, ExtractedPrimitive, PrimitiveTier};
+
+/// Opaque identifier for knowledge entities (fragments, packs).
+///
+/// Currently backed by `String` (NexId v4). Using a type alias allows future
+/// migration to a newtype without changing call sites.
+pub type KnowledgeId = String;
+
+pub use extraction::{
+    ConceptExtractor, DomainClassifier, ExtractedConcept, ExtractedPrimitive, PrimitiveTier,
+};
 pub use ingest::{KnowledgeFragment, KnowledgeSource, RawKnowledge, ingest};
 pub use knowledge_pack::{KnowledgePack, PackIndex, PackStats};
-pub use scoring::{CompendiousScorer, ScoreResult};
+pub use scoring::{CompendiousScorer, LimitingFactor, STOPWORDS, ScoreInterpretation, ScoreResult};
 pub use store::KnowledgeStore;
 
 pub mod grounding;

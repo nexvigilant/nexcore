@@ -14,6 +14,8 @@
 //! current system load (more bonds = harder to activate new ones).
 
 use nexcore_error::Error;
+use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// Faraday constant (C/mol)
 pub const FARADAY: f64 = 96_485.0;
@@ -36,7 +38,7 @@ pub enum ElectrochemicalError {
 }
 
 /// Electrochemical cell configuration.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ElectrochemicalCell {
     /// Standard potential (E⁰) in volts
     pub e_standard: f64,
@@ -47,7 +49,8 @@ pub struct ElectrochemicalCell {
 }
 
 /// Potential classification.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PotentialState {
     /// Well below threshold - action very unlikely
     FarBelowThreshold,
@@ -57,6 +60,27 @@ pub enum PotentialState {
     AboveThreshold,
     /// Well above threshold - action highly favorable
     HighlyFavorable,
+}
+
+impl fmt::Display for PotentialState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::FarBelowThreshold => write!(f, "far-below-threshold"),
+            Self::NearThreshold => write!(f, "near-threshold"),
+            Self::AboveThreshold => write!(f, "above-threshold"),
+            Self::HighlyFavorable => write!(f, "highly-favorable"),
+        }
+    }
+}
+
+impl fmt::Display for ElectrochemicalCell {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Cell(E\u{00B0}={:.3}V, n={})",
+            self.e_standard, self.n_electrons
+        )
+    }
 }
 
 impl ElectrochemicalCell {

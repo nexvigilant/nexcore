@@ -19,7 +19,10 @@ use crate::feedback::{Experiment, Outcome, World};
 pub struct BashWorld {
     shell: String,
     /// Reserved for future timeout enforcement.
-    #[allow(dead_code)]
+    #[allow(
+        dead_code,
+        reason = "timeout enforcement not yet implemented; field preserves the API for when it is"
+    )]
     timeout_secs: u64,
 }
 
@@ -118,7 +121,10 @@ impl World for MockWorld {
         }
         let idx = self.index.get() % self.outcomes.len();
         self.index.set(idx + 1);
-        Ok(self.outcomes[idx].clone())
+        self.outcomes
+            .get(idx)
+            .cloned()
+            .ok_or_else(|| GroundedError::ExperimentFailed("mock index out of range".into()))
     }
 }
 

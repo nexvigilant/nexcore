@@ -1,7 +1,7 @@
 //! Unified command dispatcher for nexcore MCP Server.
 //!
 //! Routes `nexcore(command="CMD", params={...})` to the appropriate domain function.
-//! Handles 286 commands via a single match table.
+//! Retained as a convenience alias — all tools are also individually discoverable via MCP.
 //!
 //! Two dispatch patterns:
 //! - `typed(params, f)`: Deserialize `Value` → `T`, then call `f(T)`
@@ -1298,11 +1298,15 @@ async fn dispatch_inner(
         "tov_epistemic_trust" => typed(params, tools::tov::epistemic_trust),
 
         // ====================================================================
-        // Knowledge Engine Tools (3)
+        // Knowledge Engine Tools (7)
         // ====================================================================
+        "knowledge_engine_ingest" => typed(params, tools::knowledge_engine::ingest),
         "knowledge_engine_compress" => typed(params, tools::knowledge_engine::compress),
         "knowledge_engine_compile" => typed(params, tools::knowledge_engine::compile),
         "knowledge_engine_query" => typed(params, tools::knowledge_engine::query),
+        "knowledge_engine_stats" => typed(params, tools::knowledge_engine::stats),
+        "knowledge_engine_delete" => typed(params, tools::knowledge_engine::remove_pack),
+        "knowledge_engine_prune" => typed(params, tools::knowledge_engine::prune),
 
         // ====================================================================
         // Relay Fidelity Tools (4)
@@ -3038,7 +3042,7 @@ fn unified_catalog_data() -> serde_json::Value {
             "chrono": ["chrono_now", "chrono_parse", "chrono_format", "chrono_duration"],
             "nexchat": ["nexchat_status", "nexchat_config", "nexchat_tools"],
             "temporal": ["temporal_tto", "temporal_challenge", "temporal_plausibility"],
-            "knowledge_engine": ["knowledge_engine_compress", "knowledge_engine_compile", "knowledge_engine_query", "knowledge_engine_score", "knowledge_engine_extract_primitives", "knowledge_engine_extract_concepts"],
+            "knowledge_engine": ["knowledge_engine_ingest", "knowledge_engine_compress", "knowledge_engine_compile", "knowledge_engine_query", "knowledge_engine_stats", "knowledge_engine_score", "knowledge_engine_extract_primitives", "knowledge_engine_extract_concepts", "knowledge_engine_delete", "knowledge_engine_prune"],
             "notebooklm": ["nlm_add_notebook", "nlm_list_notebooks", "nlm_get_notebook", "nlm_select_notebook", "nlm_update_notebook", "nlm_remove_notebook", "nlm_search_notebooks", "nlm_get_library_stats", "nlm_list_sessions", "nlm_close_session", "nlm_reset_session", "nlm_get_health", "nlm_setup_auth", "nlm_re_auth", "nlm_ask_question", "nlm_cleanup_data"],
             "cloud": ["cloud_primitive_composition", "cloud_transfer_confidence", "cloud_tier_classify", "cloud_compare_types", "cloud_reverse_synthesize", "cloud_list_types", "cloud_molecular_weight", "cloud_dominant_shift", "cloud_infra_status", "cloud_infra_map", "cloud_capacity_project", "cloud_supervisor_health", "cloud_reverse_transfer", "cloud_transfer_chain", "cloud_architecture_advisor", "cloud_anomaly_detect", "cloud_transfer_matrix"],
             "kellnr_pk": ["kellnr_compute_pk_auc", "kellnr_compute_pk_steady_state", "kellnr_compute_pk_ionization", "kellnr_compute_pk_clearance", "kellnr_compute_pk_volume_distribution", "kellnr_compute_pk_michaelis_menten"],
@@ -3092,7 +3096,7 @@ fn unified_catalog_data() -> serde_json::Value {
             "fda_credibility": ["fda_define_cou", "fda_assess_risk", "fda_create_plan", "fda_validate_evidence", "fda_decide_adequacy", "fda_calculate_score", "fda_metrics_summary", "fda_evidence_distribution", "fda_risk_distribution", "fda_drift_trend", "fda_rating_thresholds"],
             "viz": ["viz_stem_taxonomy", "viz_type_composition", "viz_method_loop", "viz_confidence_chain", "viz_bounds", "viz_dag", "viz_node_confidence", "viz_molecular_info", "viz_surface_mesh", "viz_spectral_analysis", "viz_community_detect", "viz_centrality", "viz_vdag_overlay", "viz_antibody_structure", "viz_interaction_map", "viz_projection", "viz_protein_structure", "viz_topology_analysis", "viz_dynamics_step", "viz_force_field_energy", "viz_gpu_layout", "viz_hypergraph", "viz_lod_select", "viz_minimize_energy", "viz_particle_preset", "viz_ae_overlay", "viz_coord_gen", "viz_bipartite_layout", "viz_manifold_sample", "viz_string_modes", "viz_render_pipeline", "viz_orbital_density"],
             "node_hunter": ["node_hunt_scan", "node_hunt_isolate"],
-            "telemetry_intel": ["telemetry_sources_list", "telemetry_source_analyze", "telemetry_governance_crossref", "telemetry_snapshot_evolution", "telemetry_intel_report", "telemetry_recent"],
+
             "primitive_scanner": ["primitive_scan", "primitive_batch_test"],
             "integrity": ["integrity_analyze", "integrity_assess_ksb", "integrity_calibration"],
             "organize": ["organize_analyze", "organize_config_default", "organize_report_markdown", "organize_report_json", "organize_observe", "organize_rank"],
@@ -3108,9 +3112,9 @@ fn unified_catalog_data() -> serde_json::Value {
             "secure_boot": ["secure_boot_status", "secure_boot_verify", "secure_boot_quote"],
             "user": ["user_create", "user_login", "user_logout", "user_list", "user_lock", "user_unlock", "user_status", "user_change_password"],
             "claude_fs": ["claude_fs_list", "claude_fs_read", "claude_fs_write", "claude_fs_delete", "claude_fs_search", "claude_fs_tail", "claude_fs_diff", "claude_fs_stat", "claude_fs_backup_now"],
-            "compendious": ["compendious_score_text", "compendious_compress_text", "compendious_compare_texts", "compendious_analyze_patterns", "compendious_get_domain_target"],
-            "docs_claude": ["docs_claude_list_pages", "docs_claude_get_page", "docs_claude_search_docs", "docs_claude_get_docs_index", "docs_claude_index", "docs_claude_search"],
-            "gsheets": ["gsheets_list_sheets", "gsheets_read_range", "gsheets_batch_read", "gsheets_write_range", "gsheets_append_rows", "gsheets_metadata", "gsheets_search", "gsheets_append"],
+            "compendious": ["score_text", "compress_text", "compare_texts", "analyze_patterns", "get_domain_target"],
+            "docs_claude": ["docs_claude_list_pages", "docs_claude_get_page", "docs_claude_index", "docs_claude_search"],
+            "gsheets": ["gsheets_list_sheets", "gsheets_read_range", "gsheets_batch_read", "gsheets_write_range", "gsheets_metadata", "gsheets_search", "gsheets_append"],
             "reddit": ["reddit_status", "reddit_authenticate", "reddit_hot_posts", "reddit_new_posts", "reddit_subreddit_info", "reddit_detect_signals", "reddit_search_entity"],
             "trust": ["trust_score", "trust_record", "trust_snapshot", "trust_decide", "trust_harm_weight", "trust_velocity", "trust_multi_score", "trust_network_chain"],
             "molecular_weight": ["mw_compute", "mw_periodic_table", "mw_compare", "mw_predict_transfer"],
@@ -3193,7 +3197,6 @@ fn unified_catalog_data() -> serde_json::Value {
             "skeletal": ["skeletal_wolffs_law", "skeletal_structure", "skeletal_health"],
             "digestive": ["digestive_process", "digestive_health", "digestive_taste"],
             "circulatory": ["circulatory_health", "circulatory_pressure", "circulatory_pump"],
-            "compendious_aliases": ["score_text", "compress_text", "compare_texts", "get_domain_target", "analyze_patterns"],
             "api": ["api_list_routes", "api_health"]
         }
     })

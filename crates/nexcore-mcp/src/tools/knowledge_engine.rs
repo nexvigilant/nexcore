@@ -1,12 +1,13 @@
-//! Knowledge Engine tools — ingest, compress, compile, query, stats.
+//! Knowledge Engine tools — ingest, compress, compile, query, stats, score, extract, lifecycle.
 //!
-//! 5 MCP tools for structured knowledge management.
-//! Highway Class: II (<100ms) for ingest/compress/query/stats, III (<500ms) for compile.
+//! 10 MCP tools for structured knowledge management.
+//! Highway Class: II (<100ms) for ingest/compress/query/stats/delete/prune, III (<500ms) for compile.
 
 use crate::params::knowledge_engine::{
-    KnowledgeCompileParams, KnowledgeCompressParams, KnowledgeExtractConceptsParams,
-    KnowledgeExtractPrimitivesParams, KnowledgeIngestParams, KnowledgeQueryParams,
-    KnowledgeScoreCompendiousParams, KnowledgeStatsParams,
+    KnowledgeCompileParams, KnowledgeCompressParams, KnowledgeDeleteParams,
+    KnowledgeExtractConceptsParams, KnowledgeExtractPrimitivesParams, KnowledgeIngestParams,
+    KnowledgePruneParams, KnowledgeQueryParams, KnowledgeScoreCompendiousParams,
+    KnowledgeStatsParams,
 };
 use nexcore_chrono::DateTime;
 use nexcore_knowledge_engine::extraction::ConceptExtractor;
@@ -71,7 +72,7 @@ pub fn ingest(params: KnowledgeIngestParams) -> Result<CallToolResult, McpError>
             "tier": p.tier.to_string(),
         })).collect::<Vec<_>>(),
         "compendious_score": format!("{:.3}", frag.score.compendious_score),
-        "interpretation": frag.score.interpretation,
+        "interpretation": frag.score.interpretation.to_string(),
         "expression_cost": frag.score.expression_cost,
     });
 
@@ -82,18 +83,17 @@ pub fn ingest(params: KnowledgeIngestParams) -> Result<CallToolResult, McpError>
 
 /// Compress text and return before/after scores.
 pub fn compress(params: KnowledgeCompressParams) -> Result<CallToolResult, McpError> {
-    let (original_score, compressed_score, compressed_text, ratio) =
-        KnowledgeCompiler::compress_text(&params.text);
+    let cr = KnowledgeCompiler::compress_text(&params.text);
 
     let result = json!({
-        "original_score": format!("{:.3}", original_score.compendious_score),
-        "compressed_score": format!("{:.3}", compressed_score.compendious_score),
-        "compressed_text": compressed_text,
-        "compression_ratio": format!("{:.1}%", ratio * 100.0),
-        "original_words": original_score.expression_cost,
-        "compressed_words": compressed_score.expression_cost,
-        "original_interpretation": original_score.interpretation,
-        "compressed_interpretation": compressed_score.interpretation,
+        "original_score": format!("{:.3}", cr.original_score.compendious_score),
+        "compressed_score": format!("{:.3}", cr.compressed_score.compendious_score),
+        "compressed_text": cr.compressed_text,
+        "compression_ratio": format!("{:.1}%", cr.compression_ratio * 100.0),
+        "original_words": cr.original_score.expression_cost,
+        "compressed_words": cr.compressed_score.expression_cost,
+        "original_interpretation": cr.original_score.interpretation.to_string(),
+        "compressed_interpretation": cr.compressed_score.interpretation.to_string(),
     });
 
     Ok(CallToolResult::success(vec![Content::text(
@@ -180,6 +180,7 @@ pub fn query(params: KnowledgeQueryParams) -> Result<CallToolResult, McpError> {
         .flat_map(|r| {
             r.results.iter().map(|qr| {
                 json!({
+                    "fragment_id": qr.fragment_id,
                     "content": qr.content,
                     "concepts": qr.concepts,
                     "domain": qr.domain,
@@ -260,8 +261,8 @@ pub fn score_compendious(
             "expression_cost": result.expression_cost,
             "completeness": format!("{:.3}", result.completeness),
             "readability": format!("{:.3}", result.readability),
-            "interpretation": result.interpretation,
-            "limiting_factor": result.limiting_factor,
+            "interpretation": result.interpretation.to_string(),
+            "limiting_factor": result.limiting_factor.to_string(),
         })
         .to_string(),
     )]))
@@ -320,6 +321,63 @@ pub fn extract_concepts(
         json!({
             "concept_count": concepts.len(),
             "concepts": concepts_json,
+        })
+        .to_string(),
+    )]))
+}
+
+fn map_ke_error(e: nexcore_knowledge_engine::KnowledgeEngineError) -> McpError {
+    McpError {
+        code: rmcp::model::ErrorCode::INTERNAL_ERROR,
+        message: e.to_string().into(),
+        data: None,
+    }
+}
+
+/// Remove a knowledge pack (all versions or a specific version).
+pub fn remove_pack(params: KnowledgeDeleteParams) -> Result<CallToolResult, McpError> {
+    let knowledge_store = store()?;
+
+    let result = if let Some(version) = params.version {
+        knowledge_store
+            .delete_version(&params.name, version)
+            .map_err(map_ke_error)?;
+        json!({
+            "removed": format!("{}/v{}", params.name, version),
+            "versions_removed": 1,
+        })
+    } else {
+        let count = knowledge_store
+            .delete_pack(&params.name)
+            .map_err(map_ke_error)?;
+        json!({
+            "removed": params.name,
+            "versions_removed": count,
+        })
+    };
+
+    Ok(CallToolResult::success(vec![Content::text(
+        result.to_string(),
+    )]))
+}
+
+/// Prune old versions of a knowledge pack, keeping only the N most recent.
+pub fn prune(params: KnowledgePruneParams) -> Result<CallToolResult, McpError> {
+    let knowledge_store = store()?;
+    let keep = params.keep.unwrap_or(3);
+
+    let pruned = knowledge_store
+        .prune_old_versions(&params.name, keep)
+        .map_err(map_ke_error)?;
+
+    let latest = knowledge_store.latest_version(&params.name);
+
+    Ok(CallToolResult::success(vec![Content::text(
+        json!({
+            "pack": params.name,
+            "versions_pruned": pruned,
+            "versions_kept": keep,
+            "latest_version": latest,
         })
         .to_string(),
     )]))

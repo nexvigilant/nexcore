@@ -2,6 +2,10 @@
 //!
 //! Grounding module provides T1 primitive composition for transformer operations.
 
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
+
 pub mod grounding;
 
 use nexcore_dataframe::{Agg, DataFrame};

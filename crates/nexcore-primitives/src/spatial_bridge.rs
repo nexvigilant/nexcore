@@ -13,7 +13,10 @@
 
 use stem_math::spatial::{Distance, Neighborhood, Orient, Orientation};
 
-use crate::transfer::{BreakerState, CircuitBreaker, DecayFunction, FeedbackLoop, Homeostasis};
+use crate::transfer::{
+    BreakerState, CircuitBreaker, DecayFunction, ExploreExploit, FeedbackLoop, Homeostasis,
+    NegativeEvidence, RateLimiter, StagedValidation,
+};
 
 // ============================================================================
 // Orient for DecayFunction
@@ -151,6 +154,117 @@ pub fn decay_within_threshold(decay: &DecayFunction, t: f64, threshold: f64) -> 
     // Within threshold = distance from initial is less than max allowed decay
     Neighborhood::closed(max_allowed_decay).contains(distance_from_initial)
         && n.contains(Distance::new(value))
+}
+
+// ============================================================================
+// Orient for RateLimiter
+// ============================================================================
+
+/// Orient detector for `RateLimiter`.
+///
+/// Positive when tokens remain (capacity available, system can serve).
+/// Negative when exhausted (all tokens consumed, requests must wait).
+///
+/// Tier: T2-P (N Quantity + ∂ Boundary + ν Frequency)
+pub struct RateLimiterOrienter;
+
+impl Orient for RateLimiterOrienter {
+    type Element = RateLimiter;
+
+    fn orientation(&self, element: &RateLimiter) -> Orientation {
+        if element.remaining() > 0 {
+            Orientation::Positive // capacity available
+        } else {
+            Orientation::Negative // exhausted
+        }
+    }
+}
+
+// ============================================================================
+// Orient for ExploreExploit
+// ============================================================================
+
+/// Orient detector for `ExploreExploit`.
+///
+/// Positive when exploring (epsilon > 0.5 — biased toward discovery).
+/// Negative when exploiting (epsilon < 0.5 — biased toward known-best).
+/// Unoriented at the exact balance point (epsilon == 0.5).
+///
+/// Tier: T2-P (κ Comparison + ∂ Boundary + ς State)
+pub struct ExploreExploitOrienter;
+
+impl Orient for ExploreExploitOrienter {
+    type Element = ExploreExploit;
+
+    fn orientation(&self, element: &ExploreExploit) -> Orientation {
+        if (element.epsilon - 0.5).abs() < f64::EPSILON {
+            Orientation::Unoriented // perfectly balanced
+        } else if element.epsilon > 0.5 {
+            Orientation::Positive // exploring
+        } else {
+            Orientation::Negative // exploiting
+        }
+    }
+}
+
+// ============================================================================
+// Orient for StagedValidation
+// ============================================================================
+
+/// Orient detector for `StagedValidation`.
+///
+/// Positive when progressing (stages remain — validation moves forward).
+/// Unoriented when complete (no further direction to move).
+///
+/// Tier: T2-P (σ Sequence + ∂ Boundary + → Causality)
+pub struct StagedValidationOrienter;
+
+impl Orient for StagedValidationOrienter {
+    type Element = StagedValidation;
+
+    fn orientation(&self, element: &StagedValidation) -> Orientation {
+        if element.is_complete() {
+            Orientation::Unoriented // validation finished, no direction
+        } else {
+            Orientation::Positive // progressing forward
+        }
+    }
+}
+
+// ============================================================================
+// Orient for NegativeEvidence
+// ============================================================================
+
+/// Orient detector for `NegativeEvidence`.
+///
+/// Negative when absence is significant (the defining feature of negative evidence).
+/// Unoriented when absence is not yet significant (insufficient observation).
+///
+/// Tier: T2-P (∅ Void + κ Comparison + ∃ Existence)
+pub struct NegativeEvidenceOrienter;
+
+impl Orient for NegativeEvidenceOrienter {
+    type Element = NegativeEvidence;
+
+    fn orientation(&self, element: &NegativeEvidence) -> Orientation {
+        if element.is_significant() {
+            Orientation::Negative // absence is meaningful
+        } else {
+            Orientation::Unoriented // not yet significant
+        }
+    }
+}
+
+// ============================================================================
+// Neighborhood expression: RateLimiter capacity
+// ============================================================================
+
+/// Express a `RateLimiter` capacity as a closed `Neighborhood`.
+///
+/// The neighborhood represents the total capacity of the rate limiter.
+/// Current usage can be checked against this boundary.
+pub fn rate_limiter_capacity_neighborhood(rl: &RateLimiter) -> Neighborhood {
+    Neighborhood::closed(Distance::new(rl.max_events as f64))
 }
 
 // ============================================================================
@@ -293,5 +407,141 @@ mod tests {
         assert!(decay_within_threshold(&decay, 10.0, 50.0));
         // At t=20 (two half-lives), value=25, threshold=50 → expired
         assert!(!decay_within_threshold(&decay, 20.0, 50.0));
+    }
+
+    // ===== RateLimiter Orient tests =====
+
+    #[test]
+    fn rate_limiter_positive_when_tokens_remain() {
+        let orienter = RateLimiterOrienter;
+        let rl = RateLimiter::new(10, 60);
+        assert_eq!(orienter.orientation(&rl), Orientation::Positive);
+    }
+
+    #[test]
+    fn rate_limiter_negative_when_exhausted() {
+        let orienter = RateLimiterOrienter;
+        let mut rl = RateLimiter::new(2, 60);
+        rl.current_count = 2; // consume all tokens
+        assert_eq!(orienter.orientation(&rl), Orientation::Negative);
+    }
+
+    #[test]
+    fn rate_limiter_positive_partially_consumed() {
+        let orienter = RateLimiterOrienter;
+        let mut rl = RateLimiter::new(5, 60);
+        rl.current_count = 3; // 2 remaining
+        assert_eq!(orienter.orientation(&rl), Orientation::Positive);
+    }
+
+    // ===== ExploreExploit Orient tests =====
+
+    #[test]
+    fn explore_exploit_positive_when_exploring() {
+        let orienter = ExploreExploitOrienter;
+        let ee = ExploreExploit::new(0.8); // high exploration
+        assert_eq!(orienter.orientation(&ee), Orientation::Positive);
+    }
+
+    #[test]
+    fn explore_exploit_negative_when_exploiting() {
+        let orienter = ExploreExploitOrienter;
+        let ee = ExploreExploit::new(0.2); // low exploration
+        assert_eq!(orienter.orientation(&ee), Orientation::Negative);
+    }
+
+    #[test]
+    fn explore_exploit_unoriented_at_balance() {
+        let orienter = ExploreExploitOrienter;
+        let ee = ExploreExploit::new(0.5); // exact balance
+        assert_eq!(orienter.orientation(&ee), Orientation::Unoriented);
+    }
+
+    // ===== StagedValidation Orient tests =====
+
+    #[test]
+    fn staged_validation_positive_when_progressing() {
+        let orienter = StagedValidationOrienter;
+        let sv = StagedValidation::new(3, 10.0);
+        assert_eq!(orienter.orientation(&sv), Orientation::Positive);
+    }
+
+    #[test]
+    fn staged_validation_unoriented_when_complete() {
+        let orienter = StagedValidationOrienter;
+        let mut sv = StagedValidation::new(2, 10.0);
+        sv.current_stage = 2; // all stages done
+        assert_eq!(orienter.orientation(&sv), Orientation::Unoriented);
+    }
+
+    #[test]
+    fn staged_validation_positive_midway() {
+        let orienter = StagedValidationOrienter;
+        let mut sv = StagedValidation::new(5, 10.0);
+        sv.current_stage = 3; // 3 of 5 done
+        assert_eq!(orienter.orientation(&sv), Orientation::Positive);
+    }
+
+    // ===== NegativeEvidence Orient tests =====
+
+    #[test]
+    fn negative_evidence_negative_when_significant() {
+        let orienter = NegativeEvidenceOrienter;
+        // threshold=5.0, observed=0 → 0 < 5.0 → significant
+        let ne = NegativeEvidence::new("adverse reaction", 100.0, 5.0);
+        assert_eq!(orienter.orientation(&ne), Orientation::Negative);
+    }
+
+    #[test]
+    fn negative_evidence_unoriented_when_not_significant() {
+        let orienter = NegativeEvidenceOrienter;
+        let mut ne = NegativeEvidence::new("adverse reaction", 100.0, 5.0);
+        ne.observed_count = 10; // 10 >= 5.0 → not significant
+        assert_eq!(orienter.orientation(&ne), Orientation::Unoriented);
+    }
+
+    // ===== RateLimiter Neighborhood tests =====
+
+    #[test]
+    fn rate_limiter_capacity_as_neighborhood() {
+        let rl = RateLimiter::new(10, 60);
+        let n = rate_limiter_capacity_neighborhood(&rl);
+        assert!(n.contains(Distance::new(5.0))); // within capacity
+        assert!(n.contains(Distance::new(10.0))); // at boundary (closed)
+        assert!(!n.contains(Distance::new(11.0))); // exceeds capacity
+    }
+
+    // ===== Orientation algebra: new types =====
+
+    #[test]
+    fn orientation_compose_rate_limiter_and_negative_evidence() {
+        let rl_o = RateLimiterOrienter;
+        let ne_o = NegativeEvidenceOrienter;
+
+        let rl = RateLimiter::new(10, 60); // Positive (tokens remain)
+        let ne = NegativeEvidence::new("signal", 100.0, 5.0); // Negative (significant absence)
+
+        let rl_orient = rl_o.orientation(&rl);
+        let ne_orient = ne_o.orientation(&ne);
+
+        // Positive * Negative = Negative
+        assert_eq!(rl_orient.compose(&ne_orient), Orientation::Negative);
+    }
+
+    #[test]
+    fn explore_exploit_same_orientation_both_exploring() {
+        let orienter = ExploreExploitOrienter;
+        let ee1 = ExploreExploit::new(0.7);
+        let ee2 = ExploreExploit::new(0.9);
+        assert!(orienter.same_orientation(&ee1, &ee2));
+    }
+
+    #[test]
+    fn staged_validation_different_orientation_active_vs_complete() {
+        let orienter = StagedValidationOrienter;
+        let active = StagedValidation::new(3, 10.0);
+        let mut complete = StagedValidation::new(2, 10.0);
+        complete.current_stage = 2;
+        assert!(!orienter.same_orientation(&active, &complete));
     }
 }

@@ -9,7 +9,7 @@ pub mod selector;
 
 use crate::dom::{Arena, NodeId};
 use cascade::{CascadeResolver, CssRule};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Color value (T3 Domain Type).
 #[derive(Debug, Clone, Copy, Default)]
@@ -525,7 +525,7 @@ pub struct Rule {
     /// CSS selector string.
     pub selector: String,
     /// Property → value declarations.
-    pub declarations: HashMap<String, String>,
+    pub declarations: BTreeMap<String, String>,
 }
 
 #[cfg(test)]

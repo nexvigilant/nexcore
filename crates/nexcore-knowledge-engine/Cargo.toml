@@ -15,8 +15,5 @@ nexcore-chrono = { workspace = true }
 nexcore-id = { workspace = true }
 nexcore-fs = { workspace = true }
 
-[dev-dependencies]
-tempfile = { workspace = true }
-
 [lints]
 workspace = true

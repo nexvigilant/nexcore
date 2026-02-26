@@ -327,22 +327,32 @@ mod tests {
     fn test_serde_service_models() {
         let c = Container::new("img", 1.0, 256.0);
         let json = serde_json::to_string(&c).unwrap_or_default();
-        assert!(!json.is_empty());
+        let c2: Container =
+            serde_json::from_str(&json).unwrap_or_else(|e| panic!("Container deser failed: {e}"));
+        assert_eq!(c, c2);
 
         let iaas = Iaas::new(1.0, 10.0, 100.0, "u", 30.0);
         let json = serde_json::to_string(&iaas).unwrap_or_default();
-        assert!(!json.is_empty());
+        let iaas2: Iaas =
+            serde_json::from_str(&json).unwrap_or_else(|e| panic!("Iaas deser failed: {e}"));
+        assert_eq!(iaas, iaas2);
 
         let paas = Paas::new("py", 1.0, 10.0, "u", 30.0);
         let json = serde_json::to_string(&paas).unwrap_or_default();
-        assert!(!json.is_empty());
+        let paas2: Paas =
+            serde_json::from_str(&json).unwrap_or_else(|e| panic!("Paas deser failed: {e}"));
+        assert_eq!(paas, paas2);
 
         let saas = Saas::new("app", "rt", "u", 30.0);
         let json = serde_json::to_string(&saas).unwrap_or_default();
-        assert!(!json.is_empty());
+        let saas2: Saas =
+            serde_json::from_str(&json).unwrap_or_else(|e| panic!("Saas deser failed: {e}"));
+        assert_eq!(saas, saas2);
 
         let sf = Serverless::new(5.0, 30.0);
         let json = serde_json::to_string(&sf).unwrap_or_default();
-        assert!(!json.is_empty());
+        let sf2: Serverless =
+            serde_json::from_str(&json).unwrap_or_else(|e| panic!("Serverless deser failed: {e}"));
+        assert_eq!(sf, sf2);
     }
 }

@@ -94,7 +94,7 @@ nexcore-phenotype = { version = "1.0.0", path = "../nexcore-phenotype", registry
 nexcore-hormones = { version = "1.0.0", path = "../nexcore-hormones", registry = "nexcore" }
 signal = { version = "1.0.0", path = "../signal", registry = "nexcore" }
 nexcore-signal-types = { version = "1.0.0", path = "../nexcore-signal-types", registry = "nexcore" }
-nexcore-primitives = { version = "1.0.0", path = "../nexcore-primitives", registry = "nexcore" }
+nexcore-primitives = { workspace = true }
 nexcore-measure = { version = "1.0.0", path = "../nexcore-measure", registry = "nexcore" }
 stem-math = { version = "0.1.0", path = "../stem-math", registry = "nexcore" }
 nexcore-labs = { version = "1.0.0", path = "../nexcore-labs", registry = "nexcore" }

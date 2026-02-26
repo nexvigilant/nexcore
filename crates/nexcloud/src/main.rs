@@ -156,22 +156,31 @@ async fn cmd_start(manifest_path: &PathBuf) -> nexcloud::Result<()> {
     let pid_path_clone = pid_path.clone();
     tokio::spawn(async move {
         // Listen for BOTH SIGINT and SIGTERM — whichever arrives first triggers shutdown
-        let mut sigterm = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-            .unwrap_or_else(|_| {
-                // Fallback: if SIGTERM handler fails, at least SIGINT still works
-                tokio::signal::unix::signal(tokio::signal::unix::SignalKind::interrupt())
-                    .unwrap_or_else(|_| {
-                        // This should never happen but we handle it gracefully
-                        panic!("failed to register any signal handler");
-                    })
-            });
+        let sigterm_result =
+            tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate());
 
-        tokio::select! {
-            _ = tokio::signal::ctrl_c() => {
-                tracing::info!("received SIGINT (Ctrl+C)");
+        match sigterm_result {
+            Ok(mut sigterm) => {
+                tokio::select! {
+                    _ = tokio::signal::ctrl_c() => {
+                        tracing::info!("received SIGINT (Ctrl+C)");
+                    }
+                    _ = sigterm.recv() => {
+                        tracing::info!("received SIGTERM");
+                    }
+                }
             }
-            _ = sigterm.recv() => {
-                tracing::info!("received SIGTERM");
+            Err(e) => {
+                tracing::warn!(
+                    "SIGTERM handler registration failed ({e}), falling back to SIGINT only"
+                );
+                if let Err(e) = tokio::signal::ctrl_c().await {
+                    tracing::error!(
+                        "SIGINT handler also failed: {e} — shutdown requires manual kill"
+                    );
+                    return;
+                }
+                tracing::info!("received SIGINT (Ctrl+C)");
             }
         }
 
@@ -393,7 +402,7 @@ async fn cmd_deploy(
         ssh_port,
     };
 
-    let pipeline = DeployPipeline::new(target, manifest_path.clone());
+    let pipeline = DeployPipeline::new(target);
     pipeline.deploy_service(service_name, &manifest).await
 }
 

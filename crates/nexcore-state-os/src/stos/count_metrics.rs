@@ -72,7 +72,10 @@ impl MachineMetrics {
 
     /// Average visits per state.
     #[must_use]
-    #[allow(clippy::cast_precision_loss)]
+    #[allow(
+        clippy::cast_precision_loss,
+        reason = "usize/u64 -> f64 for ratio computation; precision loss is acceptable for metrics"
+    )]
     pub fn average_visits(&self) -> f64 {
         if self.state_count == 0 {
             return 0.0;

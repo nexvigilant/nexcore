@@ -682,7 +682,7 @@ fn test_concurrent_artifact_reads() -> Result<()> {
 
 #[test]
 fn test_concurrent_hash_computation() -> Result<()> {
-    use sha2::{Digest, Sha256};
+    use nexcore_hash::sha256::Sha256;
 
     let content = b"Content to hash concurrently";
     let expected_hash = {

@@ -10,7 +10,7 @@ Dominant Primitives:
 - **ν (Frequency)**: Primary for analyzing word frequency distributions and perplexity.
 - **κ (Comparison)**: Compares observed statistical features against a validated human baseline.
 - **Σ (Sum)**: Aggregates the five core features into a weighted probability score.
-- **∂ (Boundary)**: Defines the classification boundaries (Human, AI, Mixed, Unknown).
+- **∂ (Boundary)**: Defines the classification boundaries (Human, Generated, or insufficient_data for texts under 10 tokens).
 
 ## The 5 Statistical Features
 1. **Zipf's Law Deviation**: Detects suspiciously smooth power-law distributions.
@@ -27,8 +27,8 @@ use antitransformer::pipeline::{analyze, AnalysisConfig};
 let config = AnalysisConfig::default();
 let result = analyze("Sample text to evaluate...", &config);
 
-if result.is_ai_generated() {
-    println!("High probability of AI generation detected: {:.2}%", result.score * 100.0);
+if result.verdict == "generated" {
+    println!("High probability of AI generation detected: {:.2}%", result.probability * 100.0);
 }
 ```
 

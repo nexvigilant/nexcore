@@ -498,22 +498,37 @@ mod tests {
     fn test_serde_composites() {
         let vm = VirtualMachine::new(2.0, 2.0, 8.0, "u", 60.0);
         let json = serde_json::to_string(&vm).unwrap_or_default();
-        assert!(!json.is_empty());
+        let vm2: VirtualMachine = serde_json::from_str(&json).unwrap_or_else(|e| {
+            panic!("VirtualMachine deserialization failed: {e}");
+        });
+        assert_eq!(vm, vm2);
 
         let lb = LoadBalancer::new(2, 2, 100.0);
         let json = serde_json::to_string(&lb).unwrap_or_default();
-        assert!(!json.is_empty());
+        let lb2: LoadBalancer = serde_json::from_str(&json).unwrap_or_else(|e| {
+            panic!("LoadBalancer deserialization failed: {e}");
+        });
+        assert_eq!(lb, lb2);
 
         let ec = EventualConsistency::new(3, 0.5);
         let json = serde_json::to_string(&ec).unwrap_or_default();
-        assert!(!json.is_empty());
+        let ec2: EventualConsistency = serde_json::from_str(&json).unwrap_or_else(|e| {
+            panic!("EventualConsistency deserialization failed: {e}");
+        });
+        assert_eq!(ec, ec2);
 
         let iam = Iam::new("test", 60.0);
         let json = serde_json::to_string(&iam).unwrap_or_default();
-        assert!(!json.is_empty());
+        let iam2: Iam = serde_json::from_str(&json).unwrap_or_else(|e| {
+            panic!("Iam deserialization failed: {e}");
+        });
+        assert_eq!(iam, iam2);
 
         let sm = SecretsManagement::new("o", 10.0, 60.0);
         let json = serde_json::to_string(&sm).unwrap_or_default();
-        assert!(!json.is_empty());
+        let sm2: SecretsManagement = serde_json::from_str(&json).unwrap_or_else(|e| {
+            panic!("SecretsManagement deserialization failed: {e}");
+        });
+        assert_eq!(sm, sm2);
     }
 }

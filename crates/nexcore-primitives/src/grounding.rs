@@ -1001,6 +1001,54 @@ impl GroundsTo for crate::dynamics::Observer {
 }
 
 // ============================================================================
+// Relay Module
+// ============================================================================
+
+impl GroundsTo for crate::relay::Fidelity {
+    fn primitive_composition() -> PrimitiveComposition {
+        // Fidelity = measured ratio of preserved information
+        PrimitiveComposition::new(vec![LexPrimitiva::Comparison, LexPrimitiva::Quantity])
+            .with_dominant(LexPrimitiva::Comparison, 0.85)
+    }
+}
+
+impl GroundsTo for crate::relay::RelayHop {
+    fn primitive_composition() -> PrimitiveComposition {
+        // Single relay hop = causal transit across boundary
+        PrimitiveComposition::new(vec![
+            LexPrimitiva::Causality,
+            LexPrimitiva::Boundary,
+            LexPrimitiva::Quantity,
+        ])
+        .with_dominant(LexPrimitiva::Causality, 0.80)
+    }
+}
+
+impl GroundsTo for crate::relay::RelayChain {
+    fn primitive_composition() -> PrimitiveComposition {
+        // Ordered sequence of relay hops with persistence tracking
+        PrimitiveComposition::new(vec![
+            LexPrimitiva::Sequence,
+            LexPrimitiva::Sum,
+            LexPrimitiva::Persistence,
+        ])
+        .with_dominant(LexPrimitiva::Sequence, 0.75)
+    }
+}
+
+impl GroundsTo for crate::relay::RelayVerification {
+    fn primitive_composition() -> PrimitiveComposition {
+        // Verification = comparison of axiom requirements against measured state
+        PrimitiveComposition::new(vec![
+            LexPrimitiva::Comparison,
+            LexPrimitiva::Boundary,
+            LexPrimitiva::Persistence,
+        ])
+        .with_dominant(LexPrimitiva::Comparison, 0.80)
+    }
+}
+
+// ============================================================================
 // Entropy Module
 // ============================================================================
 
@@ -1341,6 +1389,34 @@ mod tests {
     fn observer_grounding() {
         let comp = crate::dynamics::Observer::primitive_composition();
         assert_eq!(comp.dominant, Some(LexPrimitiva::Irreversibility));
+    }
+
+    // -- Relay tests --
+
+    #[test]
+    fn fidelity_grounds_to_comparison_dominant() {
+        let comp = crate::relay::Fidelity::primitive_composition();
+        assert_eq!(comp.dominant, Some(LexPrimitiva::Comparison));
+        assert!(!comp.primitives.is_empty());
+    }
+
+    #[test]
+    fn relay_hop_grounds_to_causality_dominant() {
+        let comp = crate::relay::RelayHop::primitive_composition();
+        assert_eq!(comp.dominant, Some(LexPrimitiva::Causality));
+        assert!(comp.primitives.len() >= 2);
+    }
+
+    #[test]
+    fn relay_chain_grounds_to_sequence_dominant() {
+        let comp = crate::relay::RelayChain::primitive_composition();
+        assert_eq!(comp.dominant, Some(LexPrimitiva::Sequence));
+    }
+
+    #[test]
+    fn relay_verification_grounds_to_comparison_dominant() {
+        let comp = crate::relay::RelayVerification::primitive_composition();
+        assert_eq!(comp.dominant, Some(LexPrimitiva::Comparison));
     }
 
     // -- Tier classification tests --

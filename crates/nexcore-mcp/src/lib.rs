@@ -5,7 +5,7 @@
 //!
 //! ## Features
 //!
-//! - **262 tools** across 11+ domains: Foundation, PV, Vigilance, HUD, Skills, Guidelines, FAERS, GCloud, Wolfram, Principles, Brain, Guardian, Chemistry, STEM, Regulatory, Hooks, Vigil
+//! - **488 tools** across 50+ domains — all individually discoverable via MCP `list_tools()`
 //! - **Direct library integration** - no subprocess overhead
 //! - **Thread-safe state** - SkillRegistry with parking_lot RwLock
 //!
@@ -113,7 +113,7 @@ impl NexCoreMcpServer {
     // ========================================================================
 
     #[tool(
-        description = "nexcore unified interface. 380+ commands via {command, params}. help=catalog, toolbox=search."
+        description = "nexcore unified dispatcher (convenience alias). All tools also available as individual MCP tools. help=catalog, toolbox=search."
     )]
     async fn nexcore(
         &self,
@@ -2302,7 +2302,9 @@ impl NexCoreMcpServer {
         .await
     }
 
-    #[tool(description = "List Cloud Storage buckets.")]
+    #[tool(
+        description = "List Google Cloud Storage buckets in the active project. Returns bucket names, locations, and storage classes."
+    )]
     async fn gcloud_storage_buckets_list(
         &self,
         Parameters(params): Parameters<params::gcloud::GcloudOptionalProjectParams>,
@@ -2335,7 +2337,9 @@ impl NexCoreMcpServer {
             .await
     }
 
-    #[tool(description = "List Cloud Run services.")]
+    #[tool(
+        description = "List Google Cloud Run services in the active project. Returns service names, regions, and URLs."
+    )]
     async fn gcloud_run_services_list(
         &self,
         Parameters(params): Parameters<params::gcloud::GcloudServiceListParams>,
@@ -2356,7 +2360,9 @@ impl NexCoreMcpServer {
         .await
     }
 
-    #[tool(description = "List Cloud Functions.")]
+    #[tool(
+        description = "List Google Cloud Functions in the active project. Returns function names, runtimes, and trigger types."
+    )]
     async fn gcloud_functions_list(
         &self,
         Parameters(params): Parameters<params::gcloud::GcloudServiceListParams>,
@@ -2364,7 +2370,9 @@ impl NexCoreMcpServer {
         tools::gcloud::functions_list(params.project.as_deref(), params.region.as_deref()).await
     }
 
-    #[tool(description = "List service accounts.")]
+    #[tool(
+        description = "List Google Cloud IAM service accounts in the active project. Returns account emails and display names."
+    )]
     async fn gcloud_iam_service_accounts_list(
         &self,
         Parameters(params): Parameters<params::gcloud::GcloudOptionalProjectParams>,
@@ -3463,7 +3471,9 @@ impl NexCoreMcpServer {
     }
 
     // ========================================================================
-    // Knowledge Engine Tools (5) - Ingest, Compress, Compile, Query, Stats
+    // Knowledge Engine Tools (10) - Ingest, Compress, Compile, Query, Stats,
+    //                                Score, ExtractPrimitives, ExtractConcepts,
+    //                                Delete, Prune
     // ========================================================================
 
     #[tool(
@@ -3514,6 +3524,56 @@ impl NexCoreMcpServer {
         Parameters(params): Parameters<params::KnowledgeStatsParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::knowledge_engine::stats(params)
+    }
+
+    #[tool(
+        description = "Score text for information density using the Compendious Score (Cs = I/E × C × R). Returns score breakdown: density, completeness, readability, interpretation, and the limiting factor. Use to evaluate or compare text passages before storing as knowledge."
+    )]
+    async fn knowledge_score(
+        &self,
+        Parameters(params): Parameters<params::KnowledgeScoreCompendiousParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::knowledge_engine::score_compendious(params)
+    }
+
+    #[tool(
+        description = "Extract T1/T2/T3 Lex Primitiva from text using keyword heuristics. Scans for primitive indicators (cause, transform, boundary, sequence, etc.) and returns classified primitives with tier and description."
+    )]
+    async fn knowledge_extract_primitives(
+        &self,
+        Parameters(params): Parameters<params::KnowledgeExtractPrimitivesParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::knowledge_engine::extract_primitives(params)
+    }
+
+    #[tool(
+        description = "Extract significant concepts from text with domain classification. Returns terms sorted by frequency, each optionally classified into a domain (pv, rust, claude-code, chemistry, physics, regulatory)."
+    )]
+    async fn knowledge_extract_concepts(
+        &self,
+        Parameters(params): Parameters<params::KnowledgeExtractConceptsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::knowledge_engine::extract_concepts(params)
+    }
+
+    #[tool(
+        description = "Remove a knowledge pack (all versions) or a specific version. Returns the number of versions removed. Use knowledge_prune to keep recent versions while removing old ones."
+    )]
+    async fn knowledge_delete(
+        &self,
+        Parameters(params): Parameters<params::KnowledgeDeleteParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::knowledge_engine::remove_pack(params)
+    }
+
+    #[tool(
+        description = "Prune old versions of a knowledge pack, keeping only the N most recent (default: 3). Returns the number of versions pruned and the current latest version."
+    )]
+    async fn knowledge_prune(
+        &self,
+        Parameters(params): Parameters<params::KnowledgePruneParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::knowledge_engine::prune(params)
     }
 
     // ========================================================================
@@ -5429,11 +5489,13 @@ impl ServerHandler for NexCoreMcpServer {
     fn get_info(&self) -> ServerInfo {
         ServerInfo {
             instructions: Some(
-                r#"nexcore MCP Server — 380+ Rust-powered tools via unified dispatcher.
+                r#"nexcore MCP Server — 488 Rust-powered tools, individually discoverable.
 
-USAGE: nexcore(command="CMD", params={...})
-DISCOVER: nexcore(command="help") for full categorized catalog
-SEARCH: nexcore(command="toolbox", params={query: "keyword"}) for tool lookup with parameter schemas
+All tools are registered as first-class MCP tools with typed parameter schemas.
+Call any tool directly by name (e.g., foundation_levenshtein, pv_signal_complete, guardian_homeostasis_tick).
+
+The `nexcore` unified dispatcher remains available as a convenience alias:
+  nexcore(command="CMD", params={...})
 
 Domains: Foundation, PV Signal Detection, Vigilance, Guardian, Vigil, Skills, Validation, Guidelines, FAERS, GCloud, Wolfram, Principles, Brain, Hooks, Regulatory, Chemistry, STEM, Algovigilance, EditDistance, Cargo, Epidemiology, Compliance, HUD, Immunity, Watchtower, Telemetry"#
                     .into(),
@@ -5471,26 +5533,26 @@ Domains: Foundation, PV Signal Detection, Vigilance, Guardian, Vigil, Skills, Va
         _request: Option<PaginatedRequestParams>,
         _context: RequestContext<RoleServer>,
     ) -> impl std::future::Future<Output = Result<ListToolsResult, McpError>> + Send + '_ {
-        // Toolbox architecture: expose only the unified dispatcher + meta-tools.
-        // All 380+ commands remain accessible via nexcore(command="CMD", params={...}).
-        // Use nexcore(command="toolbox", params={query:"keyword"}) for discovery.
-        // Use nexcore(command="help") for full catalog.
+        // Full exposure: all tools discoverable via MCP list_tools().
+        // Claude Code registers them as deferred tools, loaded on demand via ToolSearch.
+        // The unified dispatcher (nexcore) remains available as a convenience alias.
+        // Security: tool_gate().check() in call_tool() gates ALL invocations regardless.
         //
-        // To restore individual tool listing, set NEXCORE_MCP_ALL_TOOLS=true.
-        let expose_all = std::env::var("NEXCORE_MCP_ALL_TOOLS")
+        // To restrict to meta-tools only, set NEXCORE_MCP_MINIMAL_TOOLS=true.
+        let minimal = std::env::var("NEXCORE_MCP_MINIMAL_TOOLS")
             .map(|v| v == "true" || v == "1")
             .unwrap_or(false);
 
         std::future::ready(Ok(ListToolsResult {
-            tools: if expose_all {
-                self.tool_router.list_all()
-            } else {
-                // Toolbox mode (default): only meta-tools
+            tools: if minimal {
+                // Minimal mode: only meta-tools (for debugging or constrained environments)
                 self.tool_router
                     .list_all()
                     .into_iter()
                     .filter(|t| matches!(t.name.as_ref(), "nexcore" | "nexcore_health_probe"))
                     .collect()
+            } else {
+                self.tool_router.list_all()
             },
             meta: None,
             next_cursor: None,

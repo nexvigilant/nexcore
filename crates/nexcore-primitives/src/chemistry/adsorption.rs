@@ -14,6 +14,8 @@
 //! mean new bonds must wait for slot availability.
 
 use nexcore_error::Error;
+use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// Errors for adsorption calculations.
 #[derive(Debug, Error, PartialEq, Clone)]
@@ -33,7 +35,7 @@ pub enum AdsorptionError {
 }
 
 /// Langmuir adsorption system configuration.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LangmuirIsotherm {
     /// Equilibrium constant K (affinity)
     pub k_eq: f64,
@@ -42,7 +44,7 @@ pub struct LangmuirIsotherm {
 }
 
 /// Multi-component Langmuir for competitive adsorption.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CompetitiveLangmuir {
     /// Components: (name, K_eq, concentration)
     pub components: Vec<(String, f64, f64)>,
@@ -51,7 +53,8 @@ pub struct CompetitiveLangmuir {
 }
 
 /// Coverage classification.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CoverageState {
     /// θ < 0.1: Mostly empty (linear region)
     Linear,
@@ -61,6 +64,38 @@ pub enum CoverageState {
     High,
     /// θ ≥ 0.9: Near saturation
     Saturated,
+}
+
+impl fmt::Display for CoverageState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Linear => write!(f, "linear"),
+            Self::Partial => write!(f, "partial"),
+            Self::High => write!(f, "high"),
+            Self::Saturated => write!(f, "saturated"),
+        }
+    }
+}
+
+impl fmt::Display for LangmuirIsotherm {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Langmuir(Kads={:.2e}, sites={:.1})",
+            self.k_eq, self.max_capacity
+        )
+    }
+}
+
+impl fmt::Display for CompetitiveLangmuir {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "CompLangmuir({}×{} species)",
+            self.components.len(),
+            self.components.len()
+        )
+    }
 }
 
 impl LangmuirIsotherm {

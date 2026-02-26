@@ -16,13 +16,11 @@
 ///
 /// Each feature contributes proportionally to its weight (absorptivity).
 /// Linear combination — no interaction between features.
+///
+/// Uses const generics to enforce equal-length arrays at compile time,
+/// eliminating the need for runtime length assertions.
 #[must_use]
-pub fn beer_lambert_weighted_sum(weights: &[f64], features: &[f64]) -> f64 {
-    debug_assert_eq!(
-        weights.len(),
-        features.len(),
-        "weights and features must have equal length"
-    );
+pub fn beer_lambert_weighted_sum<const N: usize>(weights: &[f64; N], features: &[f64; N]) -> f64 {
     weights
         .iter()
         .zip(features.iter())

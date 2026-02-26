@@ -14,6 +14,8 @@
 //! reducing effective throughput (Ki = interference constant).
 
 use nexcore_error::Error;
+use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// Errors for inhibition calculations.
 #[derive(Debug, Error, PartialEq, Clone)]
@@ -30,7 +32,7 @@ pub enum InhibitionError {
 }
 
 /// Competitive inhibition system configuration.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CompetitiveInhibition {
     /// Maximum rate (Vmax)
     pub v_max: f64,
@@ -41,7 +43,8 @@ pub struct CompetitiveInhibition {
 }
 
 /// Inhibition strength classification.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum InhibitionStrength {
     /// [I]/Ki < 0.1: Negligible interference
     Negligible,
@@ -53,6 +56,24 @@ pub enum InhibitionStrength {
     Strong,
     /// [I]/Ki ≥ 10: Severe interference (system nearly blocked)
     Severe,
+}
+
+impl fmt::Display for InhibitionStrength {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Negligible => write!(f, "negligible"),
+            Self::Mild => write!(f, "mild"),
+            Self::Moderate => write!(f, "moderate"),
+            Self::Strong => write!(f, "strong"),
+            Self::Severe => write!(f, "severe"),
+        }
+    }
+}
+
+impl fmt::Display for CompetitiveInhibition {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Inhib(Ki={:.1}, Km={:.1})", self.k_i, self.k_m)
+    }
 }
 
 impl CompetitiveInhibition {

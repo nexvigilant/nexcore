@@ -10,7 +10,6 @@
 
 use std::io::{Read, Write};
 use std::net::TcpListener;
-use std::sync::mpsc;
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
 

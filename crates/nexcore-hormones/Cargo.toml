@@ -9,6 +9,7 @@ description = "Endocrine system for .claude - persistent state modulators affect
 
 [dependencies]
 nexcore-chrono = { workspace = true }
+nexcore-error = { workspace = true }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }

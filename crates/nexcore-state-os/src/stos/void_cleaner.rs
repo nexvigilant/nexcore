@@ -249,23 +249,51 @@ mod tests {
 
     #[test]
     fn test_dead_edges() {
+        // Scenario: two isolated sub-graphs.
+        //
+        //   Reachable cluster:   0 (initial) -> 1 (terminal)
+        //   Unreachable island:  2 -> 3  (both states disconnected from initial)
+        //
+        // BFS from initial {0}: visits 0 -> 1. States 2 and 3 are never reached.
+        // After analyze():
+        //   - State 2: Disconnected (not in reachable, not initial)
+        //   - State 3: Disconnected (not in reachable, not initial)
+        //
+        // dead_edges() returns edges whose DESTINATION is in the unreachable set.
+        //   - Edge (0, 1): destination 1 is reachable -> NOT dead
+        //   - Edge (2, 3): destination 3 is unreachable -> dead edge
         let mut cleaner = VoidCleaner::new(1);
 
-        cleaner.add_state(0, true, false);
-        cleaner.add_state(1, false, false);
-        cleaner.add_state(2, false, false); // Will be unreachable
+        cleaner.add_state(0, true, false); // Initial
+        cleaner.add_state(1, false, true); // Terminal, reachable
+        cleaner.add_state(2, false, false); // Disconnected island — source of dead edge
+        cleaner.add_state(3, false, false); // Disconnected island — destination of dead edge
 
-        cleaner.add_edge(0, 1);
-        cleaner.add_edge(1, 2); // Edge to unreachable
-        // No edge from 2, and no edge to 2 from initial path
-
-        // Actually, 2 IS reachable via 0→1→2
-        // Let me fix the test
-
-        cleaner.add_state(3, false, false); // Truly disconnected
+        cleaner.add_edge(0, 1); // Live edge: both endpoints reachable
+        cleaner.add_edge(2, 3); // Dead edge: destination 3 is unreachable
 
         cleaner.analyze();
-        // State 3 is disconnected
-        assert!(cleaner.is_unreachable(3));
+
+        // Both island states should be unreachable
+        assert!(
+            cleaner.is_unreachable(2),
+            "State 2 should be unreachable (disconnected)"
+        );
+        assert!(
+            cleaner.is_unreachable(3),
+            "State 3 should be unreachable (disconnected)"
+        );
+        assert_eq!(cleaner.void_count(), 2);
+
+        // dead_edges() must return edge (2, 3) — destination 3 is unreachable
+        let dead = cleaner.dead_edges();
+        assert_eq!(dead.len(), 1, "Should find exactly one dead edge");
+        assert_eq!(dead[0], (2, 3), "Dead edge should be 2 -> 3");
+
+        // The live edge 0 -> 1 must NOT appear in dead_edges
+        assert!(
+            !dead.contains(&(0, 1)),
+            "Live edge should not be reported as dead"
+        );
     }
 }

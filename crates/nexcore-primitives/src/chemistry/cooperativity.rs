@@ -13,6 +13,8 @@
 //! **Bond Application**: Multiple low-energy bonds cascade to trigger action.
 
 use nexcore_error::Error;
+use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// Errors for cooperativity calculations.
 #[derive(Debug, Error, PartialEq, Clone)]
@@ -29,7 +31,7 @@ pub enum CooperativityError {
 }
 
 /// Cooperative binding system configuration.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CooperativeBinding {
     /// Half-saturation constant (K₀.₅)
     pub k_half: f64,
@@ -41,7 +43,8 @@ pub struct CooperativeBinding {
 }
 
 /// Cooperativity classification.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CooperativityType {
     /// nH < 1: Signals interfere, dampening response
     Negative,
@@ -53,6 +56,28 @@ pub enum CooperativityType {
     StrongPositive,
     /// nH ≥ 4: Ultra-cooperative (switch-like)
     Ultrasensitive,
+}
+
+impl fmt::Display for CooperativityType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Negative => write!(f, "negative"),
+            Self::None => write!(f, "non-cooperative"),
+            Self::MildPositive => write!(f, "mild-positive"),
+            Self::StrongPositive => write!(f, "strong-positive"),
+            Self::Ultrasensitive => write!(f, "ultrasensitive"),
+        }
+    }
+}
+
+impl fmt::Display for CooperativeBinding {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Hill(K\u{2080}\u{22C5}\u{2085}={:.1}, nH={:.2})",
+            self.k_half, self.n_hill
+        )
+    }
 }
 
 impl CooperativeBinding {
@@ -115,8 +140,12 @@ impl CooperativeBinding {
 /// Fractional response (0.0 to 1.0)
 #[must_use]
 pub fn hill_response(input: f64, k_half: f64, n_hill: f64) -> f64 {
-    if input <= 0.0 || k_half <= 0.0 || n_hill <= 0.0 {
+    if input <= 0.0 || n_hill <= 0.0 {
         return 0.0;
+    }
+    if k_half <= 0.0 {
+        // lim(k→0⁺) of input^n / (k^n + input^n) = 1.0 for input > 0
+        return 1.0;
     }
     let input_power = input.powf(n_hill);
     let k_power = k_half.powf(n_hill);

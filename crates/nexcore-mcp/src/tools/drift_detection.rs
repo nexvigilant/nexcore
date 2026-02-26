@@ -83,13 +83,11 @@ fn ks_pvalue(d: f64, n1: usize, n2: usize) -> f64 {
 }
 
 /// Bin raw data into histogram proportions.
-fn bin_data(data: &[f64], n_bins: usize) -> Vec<f64> {
+/// Bin a single distribution into proportions using shared min/max edges.
+fn bin_data_with_range(data: &[f64], n_bins: usize, min_val: f64, max_val: f64) -> Vec<f64> {
     if data.is_empty() || n_bins == 0 {
         return vec![0.0; n_bins.max(1)];
     }
-
-    let min_val = data.iter().copied().fold(f64::INFINITY, f64::min);
-    let max_val = data.iter().copied().fold(f64::NEG_INFINITY, f64::max);
 
     if (max_val - min_val).abs() < f64::EPSILON {
         let mut bins = vec![0.0; n_bins];
@@ -102,12 +100,33 @@ fn bin_data(data: &[f64], n_bins: usize) -> Vec<f64> {
 
     for &val in data {
         let idx = ((val - min_val) / bin_width) as usize;
-        let idx = idx.min(n_bins - 1);
-        counts[idx] += 1;
+        let idx = idx.min(n_bins.saturating_sub(1));
+        counts[idx] = counts[idx].saturating_add(1);
     }
 
     let total = data.len() as f64;
     counts.iter().map(|&c| c as f64 / total).collect()
+}
+
+/// Bin two distributions using shared min/max edges computed across both.
+/// This is critical for PSI/JSD — both distributions must use the same
+/// bin boundaries for the comparison to be meaningful.
+fn bin_data_pair(reference: &[f64], current: &[f64], n_bins: usize) -> (Vec<f64>, Vec<f64>) {
+    let all_min = reference
+        .iter()
+        .chain(current.iter())
+        .copied()
+        .fold(f64::INFINITY, f64::min);
+    let all_max = reference
+        .iter()
+        .chain(current.iter())
+        .copied()
+        .fold(f64::NEG_INFINITY, f64::max);
+
+    (
+        bin_data_with_range(reference, n_bins, all_min, all_max),
+        bin_data_with_range(current, n_bins, all_min, all_max),
+    )
 }
 
 /// Compute PSI from two bin proportion vectors.
@@ -267,10 +286,7 @@ pub fn drift_psi(params: DriftPsiParams) -> Result<CallToolResult, McpError> {
                 None,
             ));
         }
-        (
-            bin_data(&params.reference, n_bins),
-            bin_data(&params.current, n_bins),
-        )
+        bin_data_pair(&params.reference, &params.current, n_bins)
     } else {
         if params.reference.len() != params.current.len() {
             return Err(McpError::invalid_params(
@@ -427,9 +443,8 @@ pub fn drift_detect(params: DriftDetectParams) -> Result<CallToolResult, McpErro
     let p = ks_pvalue(d, params.reference.len(), params.current.len());
     let ks_drift = p < alpha;
 
-    // PSI
-    let ref_bins = bin_data(&params.reference, n_bins);
-    let cur_bins = bin_data(&params.current, n_bins);
+    // PSI — shared-range binning so both distributions use identical bin edges
+    let (ref_bins, cur_bins) = bin_data_pair(&params.reference, &params.current, n_bins);
     let psi = psi_from_bins(&ref_bins, &cur_bins);
     let psi_drift = psi >= psi_threshold;
 

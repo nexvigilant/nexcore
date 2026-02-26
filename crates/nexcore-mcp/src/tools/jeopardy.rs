@@ -263,7 +263,7 @@ pub fn jeopardy_compound_velocity(
                 category: Category::SignalDetection,
                 value: ClueValue(0),
                 correct: false,
-                confidence: 0.0,
+                confidence: Confidence::new(0.0),
                 was_daily_double: false,
                 wager: None,
             })

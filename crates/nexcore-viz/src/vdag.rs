@@ -2550,4 +2550,291 @@ mod tests {
             );
         }
     }
+
+    // ------------------------------------------------------------------
+    // Phase 3B — 21 new tests to reach ≥74
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn signal_score_all_none_is_signal() {
+        // All stats missing = no disqualifying evidence = true
+        let s = SignalScore {
+            ae_name: "Unknown".into(),
+            prr: None,
+            ror: None,
+            ic025: None,
+            ebgm: None,
+            case_count: None,
+            timestamp: None,
+        };
+        assert!(
+            s.is_signal(),
+            "all-None should pass (no disqualifying evidence)"
+        );
+    }
+
+    #[test]
+    fn signal_score_fails_sub_threshold_ror() {
+        let s = SignalScore {
+            ae_name: "AE".into(),
+            prr: Some(3.0),
+            ror: Some(0.9), // <= 1.0
+            ic025: Some(0.5),
+            ebgm: Some(2.5),
+            case_count: None,
+            timestamp: None,
+        };
+        assert!(!s.is_signal());
+    }
+
+    #[test]
+    fn signal_score_fails_sub_threshold_ebgm() {
+        let s = SignalScore {
+            ae_name: "AE".into(),
+            prr: Some(2.5),
+            ror: Some(2.0),
+            ic025: Some(0.3),
+            ebgm: Some(1.5), // < 2.0
+            case_count: None,
+            timestamp: None,
+        };
+        assert!(!s.is_signal());
+    }
+
+    #[test]
+    fn signal_score_boundary_prr_exactly_two() {
+        let s = SignalScore {
+            ae_name: "AE".into(),
+            prr: Some(2.0), // exactly at threshold
+            ror: None,
+            ic025: None,
+            ebgm: None,
+            case_count: None,
+            timestamp: None,
+        };
+        assert!(s.is_signal(), "PRR exactly 2.0 should pass (>= 2.0)");
+    }
+
+    #[test]
+    fn signal_score_serde_roundtrip() {
+        let s = SignalScore {
+            ae_name: "Test AE".into(),
+            prr: Some(3.5),
+            ror: Some(2.8),
+            ic025: Some(0.7),
+            ebgm: Some(2.1),
+            case_count: Some(42),
+            timestamp: Some("2024-Q1".into()),
+        };
+        let json = serde_json::to_string(&s).unwrap_or_else(|_| unreachable!());
+        let restored: SignalScore = serde_json::from_str(&json).unwrap_or_else(|_| unreachable!());
+        assert_eq!(restored.ae_name, "Test AE");
+        assert_eq!(restored.prr, Some(3.5));
+        assert_eq!(restored.case_count, Some(42));
+    }
+
+    #[test]
+    fn node_position_3d_serde_roundtrip() {
+        let pos = NodePosition3d {
+            id: "test_node".into(),
+            x: 1.5,
+            y: 2.5,
+            z: 3.5,
+        };
+        let json = serde_json::to_string(&pos).unwrap_or_else(|_| unreachable!());
+        let restored: NodePosition3d =
+            serde_json::from_str(&json).unwrap_or_else(|_| unreachable!());
+        assert_eq!(restored, pos);
+    }
+
+    #[test]
+    fn vdag_node_type_serde_roundtrip() {
+        for nt in [
+            VdagNodeType::DrugClass,
+            VdagNodeType::Drug,
+            VdagNodeType::AdverseEvent,
+            VdagNodeType::Indication,
+        ] {
+            let json = serde_json::to_string(&nt).unwrap_or_else(|_| unreachable!());
+            let restored: VdagNodeType =
+                serde_json::from_str(&json).unwrap_or_else(|_| unreachable!());
+            assert_eq!(restored, nt);
+        }
+    }
+
+    #[test]
+    fn atc_level_serde_roundtrip() {
+        for level in [
+            AtcLevel::Anatomical,
+            AtcLevel::Therapeutic,
+            AtcLevel::Pharmacological,
+            AtcLevel::Chemical,
+            AtcLevel::Substance,
+        ] {
+            let json = serde_json::to_string(&level).unwrap_or_else(|_| unreachable!());
+            let restored: AtcLevel = serde_json::from_str(&json).unwrap_or_else(|_| unreachable!());
+            assert_eq!(restored, level);
+        }
+    }
+
+    #[test]
+    fn vdag_edge_type_serde_roundtrip() {
+        for et in [
+            VdagEdgeType::Contains,
+            VdagEdgeType::InteractsWith,
+            VdagEdgeType::Contraindicates,
+            VdagEdgeType::ClassOf,
+            VdagEdgeType::HasAdverseEvent,
+        ] {
+            let json = serde_json::to_string(&et).unwrap_or_else(|_| unreachable!());
+            let restored: VdagEdgeType =
+                serde_json::from_str(&json).unwrap_or_else(|_| unreachable!());
+            assert_eq!(restored, et);
+        }
+    }
+
+    #[test]
+    fn drugs_empty_vdag_returns_empty() {
+        let vdag = Vdag {
+            nodes: vec![],
+            edges: vec![],
+            title: "empty".into(),
+        };
+        assert!(vdag.drugs().is_empty());
+    }
+
+    #[test]
+    fn adverse_events_empty_vdag_returns_empty() {
+        let vdag = Vdag {
+            nodes: vec![],
+            edges: vec![],
+            title: "empty".into(),
+        };
+        assert!(vdag.adverse_events().is_empty());
+    }
+
+    #[test]
+    fn subtree_from_root_includes_all_reachable() {
+        let vdag = build_test_vdag();
+        let sub = vdag.subtree("N");
+        // N -> N02 -> aspirin -> ae_gi_bleeding, ae_tinnitus
+        //                     -> ibuprofen -> ae_gi_bleeding, ae_renal, ae_nausea
+        assert!(sub.contains(&"N".to_string()));
+        assert!(sub.contains(&"N02".to_string()));
+        assert!(sub.contains(&"aspirin".to_string()));
+        assert!(sub.contains(&"ibuprofen".to_string()));
+        assert!(sub.contains(&"ae_gi_bleeding".to_string()));
+    }
+
+    #[test]
+    fn render_svg_empty_vdag_produces_valid_svg() {
+        let vdag = Vdag {
+            nodes: vec![],
+            edges: vec![],
+            title: "empty".into(),
+        };
+        let svg = vdag.render_svg(&Theme::default());
+        assert!(
+            svg.starts_with("<svg"),
+            "empty VDAG SVG must start with <svg"
+        );
+        assert!(
+            svg.ends_with("</svg>"),
+            "empty VDAG SVG must end with </svg>"
+        );
+    }
+
+    #[test]
+    fn render_legend_empty_vdag_produces_valid_svg() {
+        let vdag = Vdag {
+            nodes: vec![],
+            edges: vec![],
+            title: "empty".into(),
+        };
+        let svg = vdag.render_legend(&Theme::default());
+        assert!(svg.starts_with("<svg"));
+        assert!(svg.ends_with("</svg>"));
+    }
+
+    #[test]
+    fn to_3d_layout_empty_vdag_returns_empty() {
+        let vdag = Vdag {
+            nodes: vec![],
+            edges: vec![],
+            title: "empty".into(),
+        };
+        assert!(vdag.to_3d_layout().is_empty());
+    }
+
+    #[test]
+    fn to_3d_layout_z_coordinates_are_finite() {
+        let vdag = build_test_vdag();
+        let positions = vdag.to_3d_layout();
+        for pos in &positions {
+            assert!(
+                pos.z.is_finite(),
+                "z coordinate for {} must be finite",
+                pos.id
+            );
+        }
+    }
+
+    #[test]
+    fn color_for_node_type_covers_indication() {
+        let c = color_for_node_type(&VdagNodeType::Indication);
+        assert!(!c.is_empty(), "Indication must have a color");
+        // All four types must produce distinct-from-each-other OR valid hex
+        let drug = color_for_node_type(&VdagNodeType::Drug);
+        assert_ne!(c, drug, "Indication and Drug must have distinct colors");
+    }
+
+    #[test]
+    fn color_for_edge_type_covers_class_of() {
+        let c = color_for_edge_type(&VdagEdgeType::ClassOf);
+        assert!(!c.is_empty(), "ClassOf must have a color");
+        let hae = color_for_edge_type(&VdagEdgeType::HasAdverseEvent);
+        assert_ne!(
+            c, hae,
+            "ClassOf and HasAdverseEvent must have distinct colors"
+        );
+    }
+
+    #[test]
+    fn drill_down_context_drug_class_has_empty_signals() {
+        let vdag = build_test_vdag();
+        // "N" is a DrugClass with no signals attached
+        let ctx = vdag.drill_down_context("N");
+        assert!(ctx.is_some(), "drill_down_context should find 'N'");
+        if let Some(c) = ctx {
+            assert!(c.signals.is_empty(), "DrugClass N has no direct signals");
+            assert!(c.parent_chain.is_empty(), "N is root — no parents");
+        }
+    }
+
+    #[test]
+    fn population_weighted_sizes_excludes_non_drug_nodes() {
+        let vdag = build_test_vdag();
+        let weights = vdag.population_weighted_sizes();
+        // Only Drug nodes (aspirin, ibuprofen) — not DrugClass or AE
+        for w in &weights {
+            let node = vdag.nodes.iter().find(|n| n.id == w.node_id);
+            assert!(node.is_some());
+            if let Some(n) = node {
+                assert_eq!(
+                    n.node_type,
+                    VdagNodeType::Drug,
+                    "Only Drug nodes should appear in population_weighted_sizes"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn vdag_clone_preserves_structure() {
+        let vdag = build_test_vdag();
+        let cloned = vdag.clone();
+        assert_eq!(cloned.nodes.len(), vdag.nodes.len());
+        assert_eq!(cloned.edges.len(), vdag.edges.len());
+        assert_eq!(cloned.title, vdag.title);
+    }
 }

@@ -1046,4 +1046,278 @@ mod tests {
             "SES should produce equal or more triangles than VdW"
         );
     }
+
+    // ------------------------------------------------------------------
+    // Phase 3A — 23 new tests to reach ≥37
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn hex_to_rgb_mid_grey() {
+        let (r, g, b) = super::hex_to_rgb("#808080");
+        let expected = 128.0 / 255.0;
+        assert!((r - expected).abs() < 1e-3);
+        assert!((g - expected).abs() < 1e-3);
+        assert!((b - expected).abs() < 1e-3);
+    }
+
+    #[test]
+    fn hex_to_rgb_red() {
+        let (r, g, b) = super::hex_to_rgb("#FF0000");
+        assert!((r - 1.0).abs() < 1e-6);
+        assert!(g.abs() < 1e-6);
+        assert!(b.abs() < 1e-6);
+    }
+
+    #[test]
+    fn hex_to_rgb_lowercase() {
+        let (r, g, b) = super::hex_to_rgb("#00ff00");
+        assert!(r.abs() < 1e-6);
+        assert!((g - 1.0).abs() < 1e-6);
+        assert!(b.abs() < 1e-6);
+    }
+
+    #[test]
+    fn hex_to_rgb_malformed_returns_magenta() {
+        let (r, g, b) = super::hex_to_rgb("not-a-color");
+        // Fallback is magenta (1.0, 0.0, 1.0)
+        assert!((r - 1.0).abs() < 1e-6);
+        assert!(g.abs() < 1e-6);
+        assert!((b - 1.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn surface_type_vdw_serde_roundtrip() {
+        let st = SurfaceType::VanDerWaals;
+        let json = serde_json::to_string(&st).unwrap_or_else(|_| unreachable!());
+        let restored: SurfaceType = serde_json::from_str(&json).unwrap_or_else(|_| unreachable!());
+        assert_eq!(restored, SurfaceType::VanDerWaals);
+    }
+
+    #[test]
+    fn surface_type_ses_serde_roundtrip() {
+        let st = SurfaceType::SolventExcluded { probe_radius: 1.4 };
+        let json = serde_json::to_string(&st).unwrap_or_else(|_| unreachable!());
+        let restored: SurfaceType = serde_json::from_str(&json).unwrap_or_else(|_| unreachable!());
+        assert_eq!(restored, st);
+    }
+
+    #[test]
+    fn vdw_surface_nitrogen_atom() {
+        use crate::molecular::{Atom, Element, Molecule};
+        let mut mol = Molecule::new("N2");
+        mol.atoms.push(Atom::new(1, Element::N, [0.0, 0.0, 0.0]));
+        let mesh = generate_surface(&mol, SurfaceType::VanDerWaals, 0.5);
+        assert!(
+            !mesh.vertices.is_empty(),
+            "Nitrogen atom must produce surface vertices"
+        );
+    }
+
+    #[test]
+    fn vdw_surface_hydrogen_atom() {
+        use crate::molecular::{Atom, Element, Molecule};
+        let mut mol = Molecule::new("H");
+        mol.atoms.push(Atom::new(1, Element::H, [0.0, 0.0, 0.0]));
+        let mesh = generate_surface(&mol, SurfaceType::VanDerWaals, 0.5);
+        assert!(
+            !mesh.vertices.is_empty(),
+            "Hydrogen atom must produce surface vertices"
+        );
+    }
+
+    #[test]
+    fn ses_zero_probe_radius_similar_to_vdw() {
+        let mol = water();
+        let vdw = generate_surface(&mol, SurfaceType::VanDerWaals, 0.5);
+        let ses = generate_surface(
+            &mol,
+            SurfaceType::SolventExcluded { probe_radius: 0.0 },
+            0.5,
+        );
+        // With zero probe, SES should produce similar vertex count to VdW
+        let vdw_vc = vertex_count(&vdw);
+        let ses_vc = vertex_count(&ses);
+        // Allow some tolerance — marching cubes may differ slightly
+        let diff = (vdw_vc as f64 - ses_vc as f64).abs();
+        assert!(
+            diff < (vdw_vc as f64 * 0.2),
+            "SES(probe=0) should be similar to VdW: vdw={vdw_vc} ses={ses_vc}"
+        );
+    }
+
+    #[test]
+    fn finer_resolution_produces_more_vertices() {
+        let mol = water();
+        let coarse = generate_surface(&mol, SurfaceType::VanDerWaals, 1.0);
+        let fine = generate_surface(&mol, SurfaceType::VanDerWaals, 0.3);
+        assert!(
+            vertex_count(&fine) > vertex_count(&coarse),
+            "Finer grid should produce more vertices"
+        );
+    }
+
+    #[test]
+    fn coarse_resolution_still_produces_surface() {
+        let mol = water();
+        let mesh = generate_surface(&mol, SurfaceType::VanDerWaals, 2.0);
+        assert!(
+            !mesh.vertices.is_empty(),
+            "Coarse resolution must still produce a surface"
+        );
+    }
+
+    #[test]
+    fn empty_mesh_vertex_count_is_zero() {
+        let mesh = SurfaceMesh {
+            vertices: Vec::new(),
+            normals: Vec::new(),
+            indices: Vec::new(),
+            colors: Vec::new(),
+        };
+        assert_eq!(vertex_count(&mesh), 0);
+    }
+
+    #[test]
+    fn empty_mesh_triangle_count_is_zero() {
+        let mesh = SurfaceMesh {
+            vertices: Vec::new(),
+            normals: Vec::new(),
+            indices: Vec::new(),
+            colors: Vec::new(),
+        };
+        assert_eq!(triangle_count(&mesh), 0);
+    }
+
+    #[test]
+    fn mesh_deserializes_from_json() {
+        let mol = water();
+        let mesh = generate_surface(&mol, SurfaceType::VanDerWaals, 0.5);
+        let json = serde_json::to_string(&mesh).unwrap_or_else(|_| unreachable!());
+        let restored: SurfaceMesh = serde_json::from_str(&json).unwrap_or_else(|_| unreachable!());
+        assert_eq!(restored.vertices.len(), mesh.vertices.len());
+        assert_eq!(restored.normals.len(), mesh.normals.len());
+        assert_eq!(restored.indices.len(), mesh.indices.len());
+        assert_eq!(restored.colors.len(), mesh.colors.len());
+    }
+
+    #[test]
+    fn indices_reference_valid_vertices() {
+        let mol = water();
+        let mesh = generate_surface(&mol, SurfaceType::VanDerWaals, 0.5);
+        let vc = vertex_count(&mesh) as u32;
+        for (i, idx) in mesh.indices.iter().enumerate() {
+            assert!(
+                *idx < vc,
+                "Index {i} has value {idx} but only {vc} vertices exist"
+            );
+        }
+    }
+
+    #[test]
+    fn two_atom_larger_surface_than_one() {
+        use crate::molecular::{Atom, Element, Molecule};
+        let mut one = Molecule::new("Single");
+        one.atoms.push(Atom::new(1, Element::O, [0.0, 0.0, 0.0]));
+        let mesh_one = generate_surface(&one, SurfaceType::VanDerWaals, 0.5);
+
+        let mut two = Molecule::new("Pair");
+        two.atoms.push(Atom::new(1, Element::O, [0.0, 0.0, 0.0]));
+        two.atoms.push(Atom::new(2, Element::O, [5.0, 0.0, 0.0])); // far apart
+
+        let mesh_two = generate_surface(&two, SurfaceType::VanDerWaals, 0.5);
+        assert!(
+            vertex_count(&mesh_two) > vertex_count(&mesh_one),
+            "Two-atom surface should have more vertices than single-atom"
+        );
+    }
+
+    #[test]
+    fn colors_are_in_valid_range() {
+        let mol = water();
+        let mesh = generate_surface(&mol, SurfaceType::VanDerWaals, 0.5);
+        for (i, c) in mesh.colors.iter().enumerate() {
+            assert!(
+                *c >= 0.0 && *c <= 1.0,
+                "Color component {i} is {c}, expected [0.0, 1.0]"
+            );
+        }
+    }
+
+    #[test]
+    fn multi_element_molecule_produces_colored_surface() {
+        use crate::molecular::{Atom, Bond, BondOrder, Element, Molecule};
+        let mut mol = Molecule::new("CO2");
+        mol.atoms.push(Atom::new(1, Element::C, [0.0, 0.0, 0.0]));
+        mol.atoms.push(Atom::new(2, Element::O, [1.16, 0.0, 0.0]));
+        mol.atoms.push(Atom::new(3, Element::O, [-1.16, 0.0, 0.0]));
+        mol.bonds.push(Bond {
+            atom1: 0,
+            atom2: 1,
+            order: BondOrder::Double,
+        });
+        mol.bonds.push(Bond {
+            atom1: 0,
+            atom2: 2,
+            order: BondOrder::Double,
+        });
+        let mesh = generate_surface(&mol, SurfaceType::VanDerWaals, 0.5);
+        assert!(!mesh.vertices.is_empty());
+        assert_eq!(mesh.colors.len(), mesh.vertices.len());
+    }
+
+    #[test]
+    fn surface_mesh_clone_produces_equal() {
+        let mol = water();
+        let mesh = generate_surface(&mol, SurfaceType::VanDerWaals, 0.5);
+        let cloned = mesh.clone();
+        assert_eq!(mesh.vertices, cloned.vertices);
+        assert_eq!(mesh.indices, cloned.indices);
+    }
+
+    #[test]
+    fn surface_mesh_debug_not_empty() {
+        let mol = water();
+        let mesh = generate_surface(&mol, SurfaceType::VanDerWaals, 0.5);
+        let debug = format!("{mesh:?}");
+        assert!(
+            !debug.is_empty(),
+            "Debug output for SurfaceMesh should be non-empty"
+        );
+    }
+
+    #[test]
+    fn surface_type_partial_eq() {
+        assert_eq!(SurfaceType::VanDerWaals, SurfaceType::VanDerWaals);
+        assert_ne!(
+            SurfaceType::VanDerWaals,
+            SurfaceType::SolventExcluded { probe_radius: 1.4 }
+        );
+    }
+
+    #[test]
+    fn ses_larger_probe_produces_more_triangles() {
+        let mol = water();
+        let small_probe = generate_surface(
+            &mol,
+            SurfaceType::SolventExcluded { probe_radius: 0.5 },
+            0.5,
+        );
+        let large_probe = generate_surface(
+            &mol,
+            SurfaceType::SolventExcluded { probe_radius: 2.0 },
+            0.5,
+        );
+        assert!(
+            triangle_count(&large_probe) >= triangle_count(&small_probe),
+            "Larger probe radius should produce equal or more triangles"
+        );
+    }
+
+    #[test]
+    fn hex_to_rgb_blue() {
+        let (r, g, b) = super::hex_to_rgb("#0000FF");
+        assert!(r.abs() < 1e-6);
+        assert!(g.abs() < 1e-6);
+        assert!((b - 1.0).abs() < 1e-6);
+    }
 }

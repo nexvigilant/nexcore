@@ -38,6 +38,19 @@ fn build_joint_matrix(flat: &[f64], rows: usize) -> Result<Vec<Vec<f64>>, McpErr
     Ok(flat.chunks(cols).map(|c| c.to_vec()).collect())
 }
 
+/// Normalize raw counts to a probability distribution summing to 1.0.
+/// Returns an error if all counts are zero.
+fn normalize_counts(counts: &[f64]) -> Result<Vec<f64>, McpError> {
+    let sum: f64 = counts.iter().sum();
+    if sum <= 0.0 {
+        return Err(McpError::invalid_params(
+            "from_counts requires at least one non-zero count",
+            None,
+        ));
+    }
+    Ok(counts.iter().map(|&c| c / sum).collect())
+}
+
 /// Generate human-readable interpretation of entropy value.
 fn interpret_entropy(value: f64, base: LogBase) -> String {
     let unit = base.unit_name();
@@ -187,7 +200,14 @@ fn compute_normalized(
     params: EntropyComputeParams,
     base: LogBase,
 ) -> Result<CallToolResult, McpError> {
-    let n = entropy::normalized_entropy(&params.distribution_p, base)
+    // When from_counts is true, normalize raw counts to probabilities before validation.
+    // This prevents the [0,1] range check from rejecting valid count inputs.
+    let distribution = if params.from_counts {
+        normalize_counts(&params.distribution_p)?
+    } else {
+        params.distribution_p
+    };
+    let n = entropy::normalized_entropy(&distribution, base)
         .map_err(|e| McpError::invalid_params(e.to_string(), None))?;
     let result = json!({
         "value": (n * 1_000_000.0).round() / 1_000_000.0,
@@ -355,6 +375,64 @@ mod tests {
         };
         let result = entropy_compute(params);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_entropy_compute_from_counts_raw_integers() {
+        // 10-crate test count distribution from workspace audit.
+        // Previously rejected because from_counts normalization ran after validation.
+        let params = EntropyComputeParams {
+            mode: "normalized".to_string(),
+            distribution_p: vec![
+                4014.0, 3364.0, 3561.0, 2632.0, 2838.0, 3610.0, 3857.0, 2398.0, 3486.0, 851.0,
+            ],
+            distribution_q: None,
+            joint_rows: None,
+            base: "bits".to_string(),
+            from_counts: true,
+        };
+        let result = entropy_compute(params);
+        assert!(
+            result.is_ok(),
+            "from_counts: true should normalize before validation"
+        );
+        // Parse the result JSON to verify the entropy value
+        let content = &result.as_ref().ok().map(|r| {
+            r.content
+                .first()
+                .and_then(|c| match &c.raw {
+                    rmcp::model::RawContent::Text(t) => Some(t.text.clone()),
+                    _ => None,
+                })
+                .unwrap_or_default()
+        });
+        if let Some(text) = content {
+            let v: serde_json::Value = serde_json::from_str(text).unwrap_or_default();
+            let entropy_val = v["value"].as_f64().unwrap_or(0.0);
+            // Expected: ~0.9773 (near-uniform distribution with one outlier at 851)
+            assert!(
+                (0.97..0.98).contains(&entropy_val),
+                "Expected normalized entropy in [0.97, 0.98], got {entropy_val}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_normalized_from_counts_false_rejects_raw_counts() {
+        // Without from_counts, raw integers should be rejected
+        let params = EntropyComputeParams {
+            mode: "normalized".to_string(),
+            distribution_p: vec![4014.0, 3364.0, 3561.0],
+            distribution_q: None,
+            joint_rows: None,
+            base: "bits".to_string(),
+            from_counts: false,
+        };
+        let result = entropy_compute(params);
+        assert!(
+            result.is_err(),
+            "from_counts: false must reject non-probability inputs"
+        );
     }
 
     #[test]

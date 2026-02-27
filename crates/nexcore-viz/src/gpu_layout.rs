@@ -3620,6 +3620,1239 @@ mod tests {
             "energy should decrease: initial={initial_energy:.2} final={final_energy:.2}"
         );
     }
+
+    // ── LayoutError Display ─────────────────────────────────────────────────
+
+    #[test]
+    fn test_layout_error_display_convergence_failure() {
+        let e = LayoutError::ConvergenceFailure;
+        let s = format!("{e}");
+        assert!(s.contains("converge"), "expected 'converge' in: {s}");
+    }
+
+    #[test]
+    fn test_layout_error_display_empty_graph() {
+        let s = format!("{}", LayoutError::EmptyGraph);
+        assert!(s.contains("no nodes"), "expected 'no nodes' in: {s}");
+    }
+
+    #[test]
+    fn test_layout_error_display_invalid_node() {
+        let s = format!("{}", LayoutError::InvalidNode(42));
+        assert!(s.contains("42"), "expected node id in: {s}");
+    }
+
+    #[test]
+    fn test_layout_error_display_invalid_parameter() {
+        let s = format!("{}", LayoutError::InvalidParameter("bad".into()));
+        assert!(s.contains("bad"), "expected param msg in: {s}");
+    }
+
+    #[test]
+    fn test_layout_error_is_std_error() {
+        let e: Box<dyn std::error::Error> = Box::new(LayoutError::EmptyGraph);
+        assert!(!e.to_string().is_empty());
+    }
+
+    // ── LayoutConfig validation per-parameter ───────────────────────────────
+
+    #[test]
+    fn test_validate_iterations_zero() {
+        let mut c = LayoutConfig::default();
+        c.iterations = 0;
+        assert!(matches!(
+            c.validate(),
+            Err(LayoutError::InvalidParameter(_))
+        ));
+    }
+
+    #[test]
+    fn test_validate_negative_repulsion() {
+        let mut c = LayoutConfig::default();
+        c.repulsion_strength = -1.0;
+        assert!(matches!(
+            c.validate(),
+            Err(LayoutError::InvalidParameter(_))
+        ));
+    }
+
+    #[test]
+    fn test_validate_negative_attraction() {
+        let mut c = LayoutConfig::default();
+        c.attraction_strength = -0.01;
+        assert!(matches!(
+            c.validate(),
+            Err(LayoutError::InvalidParameter(_))
+        ));
+    }
+
+    #[test]
+    fn test_validate_damping_above_one() {
+        let mut c = LayoutConfig::default();
+        c.damping = 1.01;
+        assert!(matches!(
+            c.validate(),
+            Err(LayoutError::InvalidParameter(_))
+        ));
+    }
+
+    #[test]
+    fn test_validate_damping_negative() {
+        let mut c = LayoutConfig::default();
+        c.damping = -0.1;
+        assert!(matches!(
+            c.validate(),
+            Err(LayoutError::InvalidParameter(_))
+        ));
+    }
+
+    #[test]
+    fn test_validate_min_distance_zero() {
+        let mut c = LayoutConfig::default();
+        c.min_distance = 0.0;
+        assert!(matches!(
+            c.validate(),
+            Err(LayoutError::InvalidParameter(_))
+        ));
+    }
+
+    #[test]
+    fn test_validate_theta_zero() {
+        let mut c = LayoutConfig::default();
+        c.theta = 0.0;
+        assert!(matches!(
+            c.validate(),
+            Err(LayoutError::InvalidParameter(_))
+        ));
+    }
+
+    #[test]
+    fn test_validate_cooling_factor_above_one() {
+        let mut c = LayoutConfig::default();
+        c.cooling_factor = 1.5;
+        assert!(matches!(
+            c.validate(),
+            Err(LayoutError::InvalidParameter(_))
+        ));
+    }
+
+    #[test]
+    fn test_validate_initial_temperature_zero() {
+        let mut c = LayoutConfig::default();
+        c.initial_temperature = 0.0;
+        assert!(matches!(
+            c.validate(),
+            Err(LayoutError::InvalidParameter(_))
+        ));
+    }
+
+    #[test]
+    fn test_validate_default_is_valid() {
+        let c = LayoutConfig::default();
+        assert!(c.validate().is_ok());
+    }
+
+    // ── LayoutNode construction ─────────────────────────────────────────────
+
+    #[test]
+    fn test_layout_node_new_defaults() {
+        let n = LayoutNode::new(7, 1.5, 2.5);
+        assert_eq!(n.id, 7);
+        assert!((n.position[0] - 1.5).abs() < 1e-12);
+        assert!((n.position[1] - 2.5).abs() < 1e-12);
+        assert!((n.velocity[0]).abs() < 1e-12);
+        assert!((n.velocity[1]).abs() < 1e-12);
+        assert!((n.mass - 1.0).abs() < 1e-12);
+        assert!(!n.pinned);
+    }
+
+    // ── random_layout determinism ───────────────────────────────────────────
+
+    #[test]
+    fn test_random_layout_deterministic() {
+        let a = random_layout(10, 800.0, 600.0);
+        let b = random_layout(10, 800.0, 600.0);
+        for (na, nb) in a.iter().zip(b.iter()) {
+            assert!((na.position[0] - nb.position[0]).abs() < 1e-12);
+            assert!((na.position[1] - nb.position[1]).abs() < 1e-12);
+        }
+    }
+
+    // ── normalize_positions edge cases ──────────────────────────────────────
+
+    #[test]
+    fn test_normalize_positions_empty_slice() {
+        let mut nodes: Vec<LayoutNode> = vec![];
+        normalize_positions(&mut nodes, 100.0, 100.0);
+        assert!(nodes.is_empty());
+    }
+
+    #[test]
+    fn test_normalize_positions_pinned_nodes_stay_fixed() {
+        let mut nodes = vec![
+            LayoutNode::new(0, 0.0, 0.0),
+            LayoutNode::new(1, 100.0, 100.0),
+        ];
+        nodes[0].pinned = true;
+        let original_pos = nodes[0].position;
+        normalize_positions(&mut nodes, 400.0, 400.0);
+        assert!((nodes[0].position[0] - original_pos[0]).abs() < 1e-12);
+        assert!((nodes[0].position[1] - original_pos[1]).abs() < 1e-12);
+    }
+
+    #[test]
+    fn test_normalize_identical_x_centres_on_x() {
+        let mut nodes = vec![
+            LayoutNode::new(0, 50.0, 0.0),
+            LayoutNode::new(1, 50.0, 100.0),
+        ];
+        normalize_positions(&mut nodes, 400.0, 300.0);
+        assert!((nodes[0].position[0] - 200.0).abs() < 1e-9);
+        assert!((nodes[1].position[0] - 200.0).abs() < 1e-9);
+    }
+
+    // ── compute_energy numeric assertions ───────────────────────────────────
+
+    #[test]
+    fn test_compute_energy_at_rest_is_zero_kinetic() {
+        let nodes = vec![LayoutNode::new(0, 0.0, 0.0), LayoutNode::new(1, 100.0, 0.0)];
+        let edges = vec![LayoutEdge {
+            source: 0,
+            target: 1,
+            weight: 1.0,
+            ideal_length: 100.0,
+        }];
+        let config = LayoutConfig::default();
+        let e = compute_energy(&nodes, &edges, &config);
+        // Repulsion = 10000/100 = 100. Spring stretch = 0. Kinetic = 0.
+        assert!((e - 100.0).abs() < 0.01, "expected ~100, got {e}");
+    }
+
+    #[test]
+    fn test_compute_energy_spring_stretch_nonzero() {
+        let nodes = vec![LayoutNode::new(0, 0.0, 0.0), LayoutNode::new(1, 200.0, 0.0)];
+        let edges = vec![LayoutEdge {
+            source: 0,
+            target: 1,
+            weight: 1.0,
+            ideal_length: 100.0,
+        }];
+        let config = LayoutConfig::default();
+        let e = compute_energy(&nodes, &edges, &config);
+        // Repulsion: 10000/200 = 50. Spring: 0.5*0.05*1*(200-100)^2 = 250.
+        assert!((e - 300.0).abs() < 0.01, "expected ~300, got {e}");
+    }
+
+    #[test]
+    fn test_compute_energy_single_node_zero() {
+        let nodes = vec![LayoutNode::new(0, 50.0, 50.0)];
+        let config = LayoutConfig::default();
+        let e = compute_energy(&nodes, &[], &config);
+        assert!((e).abs() < 1e-12, "single node energy should be 0, got {e}");
+    }
+
+    // ── pinned node support ─────────────────────────────────────────────────
+
+    #[test]
+    fn test_pinned_node_does_not_move() {
+        let mut nodes = vec![LayoutNode::new(0, 0.0, 0.0), LayoutNode::new(1, 200.0, 0.0)];
+        nodes[0].pinned = true;
+        let edges = vec![LayoutEdge {
+            source: 0,
+            target: 1,
+            weight: 1.0,
+            ideal_length: 50.0,
+        }];
+        let mut config = LayoutConfig::default();
+        config.iterations = 50;
+        let result = fruchterman_reingold(&mut nodes, &edges, &config);
+        assert!(result.is_ok());
+        let r = result.unwrap_or_else(|_| unreachable!());
+        assert!((r.nodes[0].position[0]).abs() < 1e-9);
+        assert!((r.nodes[0].position[1]).abs() < 1e-9);
+    }
+
+    // ── repulsion_force numeric ─────────────────────────────────────────────
+
+    #[test]
+    fn test_repulsion_force_magnitude() {
+        let f = repulsion_force([0.0, 0.0], [100.0, 0.0], 1.0, 1.0, 10_000.0, 1.0);
+        assert!((f[0] - (-1.0)).abs() < 1e-9, "fx={}", f[0]);
+        assert!((f[1]).abs() < 1e-12, "fy={}", f[1]);
+    }
+
+    #[test]
+    fn test_repulsion_force_clamped_at_min_distance() {
+        let f = repulsion_force([0.0, 0.0], [0.001, 0.0], 1.0, 1.0, 10_000.0, 5.0);
+        // dx=-0.001, dist clamped to 5.0, mag=400, f_x = -0.001/5.0*400 = -0.08
+        assert!((f[0] - (-0.08)).abs() < 1e-6, "fx={}", f[0]);
+    }
+
+    // ── attraction_force numeric ────────────────────────────────────────────
+
+    #[test]
+    fn test_attraction_force_at_ideal_length() {
+        let f = attraction_force([0.0, 0.0], [100.0, 0.0], 1.0, 100.0, 0.05, 1.0);
+        assert!((f[0]).abs() < 1e-12, "fx={}", f[0]);
+        assert!((f[1]).abs() < 1e-12, "fy={}", f[1]);
+    }
+
+    #[test]
+    fn test_attraction_force_stretched_beyond_ideal() {
+        let f = attraction_force([0.0, 0.0], [200.0, 0.0], 1.0, 100.0, 0.05, 1.0);
+        assert!((f[0] - 5.0).abs() < 1e-9, "fx={}", f[0]);
+    }
+
+    #[test]
+    fn test_attraction_force_compressed_below_ideal() {
+        let f = attraction_force([0.0, 0.0], [50.0, 0.0], 1.0, 100.0, 0.05, 1.0);
+        assert!((f[0] - (-2.5)).abs() < 1e-9, "fx={}", f[0]);
+    }
+
+    // ── QuadTreeNode helpers ────────────────────────────────────────────────
+
+    #[test]
+    fn test_quadtree_node_quadrant_assignment() {
+        let node = QuadTreeNode::new([0.0, 0.0, 100.0, 100.0]);
+        assert_eq!(node.quadrant_for([25.0, 25.0]), 0);
+        assert_eq!(node.quadrant_for([75.0, 25.0]), 1);
+        assert_eq!(node.quadrant_for([25.0, 75.0]), 2);
+        assert_eq!(node.quadrant_for([75.0, 75.0]), 3);
+    }
+
+    #[test]
+    fn test_quadtree_child_bounds_nw() {
+        let node = QuadTreeNode::new([0.0, 0.0, 100.0, 100.0]);
+        let nw = node.child_bounds(0);
+        assert!((nw[0]).abs() < 1e-12);
+        assert!((nw[1]).abs() < 1e-12);
+        assert!((nw[2] - 50.0).abs() < 1e-12);
+        assert!((nw[3] - 50.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn test_quadtree_child_bounds_se() {
+        let node = QuadTreeNode::new([0.0, 0.0, 100.0, 100.0]);
+        let se = node.child_bounds(3);
+        assert!((se[0] - 50.0).abs() < 1e-12);
+        assert!((se[1] - 50.0).abs() < 1e-12);
+        assert!((se[2] - 100.0).abs() < 1e-12);
+        assert!((se[3] - 100.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn test_quadtree_width() {
+        let node = QuadTreeNode::new([10.0, 20.0, 110.0, 70.0]);
+        assert!((node.width() - 100.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn test_quadtree_node_state_predicates() {
+        let node = QuadTreeNode::new([0.0, 0.0, 10.0, 10.0]);
+        assert!(node.is_leaf());
+        assert!(node.is_empty());
+        assert!(!node.is_single_body());
+    }
+
+    #[test]
+    fn test_quadtree_two_coincident_nodes() {
+        let nodes = vec![
+            LayoutNode::new(0, 50.0, 50.0),
+            LayoutNode::new(1, 50.0, 50.0),
+        ];
+        let tree = build_quadtree(&nodes);
+        assert_eq!(tree.node_count, 2);
+        assert!((tree.root.total_mass - 2.0).abs() < 1e-12);
+    }
+
+    // ── Barnes-Hut repulsion at very small theta ────────────────────────────
+
+    #[test]
+    fn test_bh_repulsion_small_theta_closer_to_exact() {
+        let nodes = random_layout(20, 400.0, 400.0);
+        let tree = build_quadtree(&nodes);
+        let bh_0_3 = compute_repulsion_bh(&tree, &nodes[0], 0.3);
+        let bh_1_0 = compute_repulsion_bh(&tree, &nodes[0], 1.0);
+        let mut bf = [0.0_f64; 2];
+        for j in 1..nodes.len() {
+            let [fx, fy] = repulsion_force(
+                nodes[0].position,
+                nodes[j].position,
+                nodes[0].mass,
+                nodes[j].mass,
+                10_000.0,
+                1.0,
+            );
+            bf[0] += fx;
+            bf[1] += fy;
+        }
+        let err_0_3 = (bh_0_3[0] - bf[0]).hypot(bh_0_3[1] - bf[1]);
+        let err_1_0 = (bh_1_0[0] - bf[0]).hypot(bh_1_0[1] - bf[1]);
+        assert!(
+            err_0_3 <= err_1_0,
+            "theta 0.3 error {err_0_3:.2} should be <= theta 1.0 error {err_1_0:.2}"
+        );
+    }
+
+    // ── compute_layout path selection ───────────────────────────────────────
+
+    #[test]
+    fn test_compute_layout_small_uses_fr() {
+        let nodes = random_layout(10, 200.0, 200.0);
+        let edges = vec![LayoutEdge {
+            source: 0,
+            target: 1,
+            weight: 1.0,
+            ideal_length: 50.0,
+        }];
+        let mut config = LayoutConfig::default();
+        config.iterations = 5;
+        let result = compute_layout(nodes, edges, &config);
+        assert!(result.is_ok());
+    }
+
+    // ── GPU buffer layout fields ────────────────────────────────────────────
+
+    #[test]
+    fn test_gpu_buffer_layout_offsets() {
+        let nodes = vec![
+            LayoutNode::new(0, 1.0, 2.0),
+            LayoutNode::new(1, 3.0, 4.0),
+            LayoutNode::new(2, 5.0, 6.0),
+        ];
+        let (buf, _, layout) = prepare_gpu_buffers(&nodes, &[]);
+        assert_eq!(layout.positions_offset, 0);
+        assert_eq!(layout.velocities_offset, 24);
+        assert_eq!(layout.forces_offset, 48);
+        assert_eq!(layout.stride, 8);
+        assert_eq!(layout.node_count, 3);
+        assert_eq!(buf.len(), 18);
+    }
+
+    #[test]
+    fn test_gpu_buffer_velocities_written() {
+        let mut node = LayoutNode::new(0, 10.0, 20.0);
+        node.velocity = [3.0, 4.0];
+        let (buf, _, _) = prepare_gpu_buffers(&[node], &[]);
+        assert!((buf[2] - 3.0_f32).abs() < 1e-5, "vel_x={}", buf[2]);
+        assert!((buf[3] - 4.0_f32).abs() < 1e-5, "vel_y={}", buf[3]);
+    }
+
+    #[test]
+    fn test_gpu_buffer_forces_zeroed() {
+        let nodes = random_layout(3, 100.0, 100.0);
+        let (buf, _, _) = prepare_gpu_buffers(&nodes, &[]);
+        for i in 12..18 {
+            assert!((buf[i]).abs() < 1e-12, "forces[{i}] should be 0");
+        }
+    }
+
+    // ── WGSL shader kernel strings ──────────────────────────────────────────
+
+    #[test]
+    fn test_wgsl_attraction_kernel_has_compute() {
+        let src = wgsl_attraction_kernel();
+        assert!(!src.is_empty());
+        assert!(src.contains("@compute"));
+        assert!(src.contains("workgroup_size"));
+    }
+
+    #[test]
+    fn test_wgsl_repulsion_kernel_has_compute() {
+        let src = wgsl_repulsion_kernel();
+        assert!(!src.is_empty());
+        assert!(src.contains("@compute"));
+        assert!(src.contains("workgroup_size"));
+    }
+
+    #[test]
+    fn test_wgsl_integration_kernel_has_compute() {
+        let src = wgsl_integration_kernel();
+        assert!(!src.is_empty());
+        assert!(src.contains("@compute"));
+        assert!(src.contains("workgroup_size"));
+    }
+
+    #[test]
+    fn test_wgsl_bounds_kernel_has_compute() {
+        let src = wgsl_bounds_kernel();
+        assert!(!src.is_empty());
+        assert!(src.contains("@compute"));
+        assert!(src.contains("workgroup_size"));
+    }
+
+    #[test]
+    fn test_wgsl_octree_build_kernel_has_compute() {
+        let src = wgsl_octree_build_kernel();
+        assert!(!src.is_empty());
+        assert!(src.contains("@compute"));
+        assert!(src.contains("workgroup_size"));
+    }
+
+    // ── segments_intersect ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_segments_intersect_crossing_diagonals() {
+        assert!(segments_intersect(
+            [0.0, 0.0],
+            [100.0, 100.0],
+            [100.0, 0.0],
+            [0.0, 100.0]
+        ));
+    }
+
+    #[test]
+    fn test_segments_no_intersection_parallel() {
+        assert!(!segments_intersect(
+            [0.0, 0.0],
+            [100.0, 0.0],
+            [0.0, 10.0],
+            [100.0, 10.0]
+        ));
+    }
+
+    #[test]
+    fn test_segments_no_intersection_l_shape() {
+        assert!(!segments_intersect(
+            [0.0, 0.0],
+            [50.0, 0.0],
+            [50.0, 10.0],
+            [50.0, 100.0]
+        ));
+    }
+
+    // ── compute_stress ──────────────────────────────────────────────────────
+
+    #[test]
+    fn test_compute_stress_perfect_layout() {
+        let nodes = vec![LayoutNode::new(0, 0.0, 0.0), LayoutNode::new(1, 100.0, 0.0)];
+        let edges = vec![LayoutEdge {
+            source: 0,
+            target: 1,
+            weight: 1.0,
+            ideal_length: 100.0,
+        }];
+        let stress = compute_stress(&nodes, &edges);
+        assert!(
+            stress < 0.01,
+            "stress should be ~0 for perfect layout, got {stress}"
+        );
+    }
+
+    #[test]
+    fn test_compute_stress_distorted_layout() {
+        let nodes = vec![LayoutNode::new(0, 0.0, 0.0), LayoutNode::new(1, 200.0, 0.0)];
+        let edges = vec![LayoutEdge {
+            source: 0,
+            target: 1,
+            weight: 1.0,
+            ideal_length: 100.0,
+        }];
+        let stress = compute_stress(&nodes, &edges);
+        assert!((stress - 1.0).abs() < 0.01, "expected ~1.0, got {stress}");
+    }
+
+    #[test]
+    fn test_compute_stress_single_node_zero() {
+        let nodes = vec![LayoutNode::new(0, 0.0, 0.0)];
+        assert!((compute_stress(&nodes, &[])).abs() < 1e-12);
+    }
+
+    #[test]
+    fn test_compute_stress_disconnected_pair_ignored() {
+        let nodes = vec![LayoutNode::new(0, 0.0, 0.0), LayoutNode::new(1, 999.0, 0.0)];
+        let stress = compute_stress(&nodes, &[]);
+        assert!((stress).abs() < 1e-12);
+    }
+
+    // ── compute_edge_crossing_count ─────────────────────────────────────────
+
+    #[test]
+    fn test_edge_crossing_count_square_diagonals() {
+        let nodes = vec![
+            LayoutNode::new(0, 0.0, 0.0),
+            LayoutNode::new(1, 100.0, 0.0),
+            LayoutNode::new(2, 100.0, 100.0),
+            LayoutNode::new(3, 0.0, 100.0),
+        ];
+        let edges = vec![
+            LayoutEdge {
+                source: 0,
+                target: 2,
+                weight: 1.0,
+                ideal_length: 141.0,
+            },
+            LayoutEdge {
+                source: 1,
+                target: 3,
+                weight: 1.0,
+                ideal_length: 141.0,
+            },
+        ];
+        assert_eq!(compute_edge_crossing_count(&nodes, &edges), 1);
+    }
+
+    #[test]
+    fn test_edge_crossing_count_no_crossings() {
+        let nodes = vec![
+            LayoutNode::new(0, 0.0, 0.0),
+            LayoutNode::new(1, 100.0, 0.0),
+            LayoutNode::new(2, 200.0, 0.0),
+        ];
+        let edges = vec![
+            LayoutEdge {
+                source: 0,
+                target: 1,
+                weight: 1.0,
+                ideal_length: 100.0,
+            },
+            LayoutEdge {
+                source: 1,
+                target: 2,
+                weight: 1.0,
+                ideal_length: 100.0,
+            },
+        ];
+        assert_eq!(compute_edge_crossing_count(&nodes, &edges), 0);
+    }
+
+    #[test]
+    fn test_edge_crossing_count_fewer_than_two_edges() {
+        let nodes = vec![LayoutNode::new(0, 0.0, 0.0), LayoutNode::new(1, 1.0, 0.0)];
+        let edges = vec![LayoutEdge {
+            source: 0,
+            target: 1,
+            weight: 1.0,
+            ideal_length: 1.0,
+        }];
+        assert_eq!(compute_edge_crossing_count(&nodes, &edges), 0);
+    }
+
+    // ── compute_neighborhood_preservation ───────────────────────────────────
+
+    #[test]
+    fn test_neighborhood_preservation_k_zero() {
+        let nodes = vec![LayoutNode::new(0, 0.0, 0.0), LayoutNode::new(1, 1.0, 0.0)];
+        assert!((compute_neighborhood_preservation(&nodes, &[], 0) - 1.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn test_neighborhood_preservation_single_node() {
+        let nodes = vec![LayoutNode::new(0, 0.0, 0.0)];
+        assert!((compute_neighborhood_preservation(&nodes, &[], 1) - 1.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn test_neighborhood_preservation_linear_chain() {
+        let nodes = vec![
+            LayoutNode::new(0, 0.0, 0.0),
+            LayoutNode::new(1, 100.0, 0.0),
+            LayoutNode::new(2, 200.0, 0.0),
+        ];
+        let edges = vec![
+            LayoutEdge {
+                source: 0,
+                target: 1,
+                weight: 1.0,
+                ideal_length: 100.0,
+            },
+            LayoutEdge {
+                source: 1,
+                target: 2,
+                weight: 1.0,
+                ideal_length: 100.0,
+            },
+        ];
+        let np = compute_neighborhood_preservation(&nodes, &edges, 1);
+        assert!(np > 0.5, "np={np} should be high for aligned layout");
+    }
+
+    // ── 3D types ────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_layout_node_3d_new() {
+        let n = LayoutNode3D::new(3, 1.0, 2.0, 3.0);
+        assert_eq!(n.id, 3);
+        assert!((n.position[0] - 1.0).abs() < 1e-12);
+        assert!((n.position[1] - 2.0).abs() < 1e-12);
+        assert!((n.position[2] - 3.0).abs() < 1e-12);
+        assert!((n.mass - 1.0).abs() < 1e-12);
+        assert!(!n.pinned);
+    }
+
+    // ── LayoutConfig3D validation ───────────────────────────────────────────
+
+    #[test]
+    fn test_layout_config_3d_default_valid() {
+        let c = LayoutConfig3D::default();
+        assert!(c.validate().is_ok());
+    }
+
+    #[test]
+    fn test_layout_config_3d_validate_iterations_zero() {
+        let mut c = LayoutConfig3D::default();
+        c.iterations = 0;
+        assert!(matches!(
+            c.validate(),
+            Err(LayoutError::InvalidParameter(_))
+        ));
+    }
+
+    #[test]
+    fn test_layout_config_3d_validate_negative_repulsion() {
+        let mut c = LayoutConfig3D::default();
+        c.repulsion_strength = -1.0;
+        assert!(matches!(
+            c.validate(),
+            Err(LayoutError::InvalidParameter(_))
+        ));
+    }
+
+    #[test]
+    fn test_layout_config_3d_validate_damping_out_of_range() {
+        let mut c = LayoutConfig3D::default();
+        c.damping = 2.0;
+        assert!(matches!(
+            c.validate(),
+            Err(LayoutError::InvalidParameter(_))
+        ));
+    }
+
+    #[test]
+    fn test_layout_config_3d_validate_theta_zero() {
+        let mut c = LayoutConfig3D::default();
+        c.theta = 0.0;
+        assert!(matches!(
+            c.validate(),
+            Err(LayoutError::InvalidParameter(_))
+        ));
+    }
+
+    // ── random_layout_3d ────────────────────────────────────────────────────
+
+    #[test]
+    fn test_random_layout_3d_within_bounds() {
+        let nodes = random_layout_3d(20, 800.0, 600.0, 400.0);
+        assert_eq!(nodes.len(), 20);
+        for (i, n) in nodes.iter().enumerate() {
+            assert!(
+                n.position[0] >= 0.0 && n.position[0] <= 800.0,
+                "node {i} x OOB"
+            );
+            assert!(
+                n.position[1] >= 0.0 && n.position[1] <= 600.0,
+                "node {i} y OOB"
+            );
+            assert!(
+                n.position[2] >= 0.0 && n.position[2] <= 400.0,
+                "node {i} z OOB"
+            );
+        }
+    }
+
+    #[test]
+    fn test_random_layout_3d_deterministic() {
+        let a = random_layout_3d(10, 100.0, 100.0, 100.0);
+        let b = random_layout_3d(10, 100.0, 100.0, 100.0);
+        for (na, nb) in a.iter().zip(b.iter()) {
+            for k in 0..3 {
+                assert!((na.position[k] - nb.position[k]).abs() < 1e-12);
+            }
+        }
+    }
+
+    #[test]
+    fn test_random_layout_3d_zero_nodes() {
+        let nodes = random_layout_3d(0, 100.0, 100.0, 100.0);
+        assert!(nodes.is_empty());
+    }
+
+    // ── normalize_positions_3d ──────────────────────────────────────────────
+
+    #[test]
+    fn test_normalize_positions_3d_scales_to_box() {
+        let mut nodes = vec![
+            LayoutNode3D::new(0, 0.0, 0.0, 0.0),
+            LayoutNode3D::new(1, 100.0, 200.0, 50.0),
+        ];
+        normalize_positions_3d(&mut nodes, 400.0, 400.0, 200.0);
+        assert!((nodes[1].position[0] - 400.0).abs() < 1e-9);
+        assert!((nodes[1].position[1] - 400.0).abs() < 1e-9);
+        assert!((nodes[1].position[2] - 200.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_normalize_positions_3d_single_node_centres() {
+        let mut nodes = vec![LayoutNode3D::new(0, 999.0, 888.0, 777.0)];
+        normalize_positions_3d(&mut nodes, 400.0, 300.0, 200.0);
+        assert!((nodes[0].position[0] - 200.0).abs() < 1e-9);
+        assert!((nodes[0].position[1] - 150.0).abs() < 1e-9);
+        assert!((nodes[0].position[2] - 100.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_normalize_positions_3d_empty_slice() {
+        let mut nodes: Vec<LayoutNode3D> = vec![];
+        normalize_positions_3d(&mut nodes, 100.0, 100.0, 100.0);
+        assert!(nodes.is_empty());
+    }
+
+    #[test]
+    fn test_normalize_positions_3d_pinned_stays() {
+        let mut nodes = vec![
+            LayoutNode3D::new(0, 0.0, 0.0, 0.0),
+            LayoutNode3D::new(1, 100.0, 100.0, 100.0),
+        ];
+        nodes[0].pinned = true;
+        normalize_positions_3d(&mut nodes, 500.0, 500.0, 500.0);
+        assert!((nodes[0].position[0]).abs() < 1e-12);
+    }
+
+    // ── build_octree ────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_build_octree_basic() {
+        let nodes = random_layout_3d(15, 300.0, 300.0, 300.0);
+        let tree = build_octree(&nodes);
+        assert_eq!(tree.node_count, 15);
+        assert!(tree.root.total_mass > 0.0);
+    }
+
+    #[test]
+    fn test_build_octree_single_node() {
+        let nodes = vec![LayoutNode3D::new(0, 50.0, 50.0, 50.0)];
+        let tree = build_octree(&nodes);
+        assert_eq!(tree.node_count, 1);
+        assert!(tree.root.is_single_body());
+        assert_eq!(tree.root.body, Some(0));
+    }
+
+    // ── OctreeNode helpers ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_octree_node_octant_for() {
+        let node = OctreeNode::new([0.0, 0.0, 0.0, 100.0, 100.0, 100.0]);
+        assert_eq!(node.octant_for([25.0, 25.0, 25.0]), 0);
+        assert_eq!(node.octant_for([75.0, 25.0, 25.0]), 1);
+        assert_eq!(node.octant_for([25.0, 75.0, 25.0]), 2);
+        assert_eq!(node.octant_for([25.0, 25.0, 75.0]), 4);
+        assert_eq!(node.octant_for([75.0, 75.0, 75.0]), 7);
+    }
+
+    #[test]
+    fn test_octree_node_width_cuboid() {
+        let node = OctreeNode::new([0.0, 0.0, 0.0, 100.0, 50.0, 200.0]);
+        assert!((node.width() - 200.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn test_octree_node_child_bounds_octant_0() {
+        let node = OctreeNode::new([0.0, 0.0, 0.0, 100.0, 100.0, 100.0]);
+        let cb = node.child_bounds(0);
+        assert!((cb[0]).abs() < 1e-12);
+        assert!((cb[1]).abs() < 1e-12);
+        assert!((cb[2]).abs() < 1e-12);
+        assert!((cb[3] - 50.0).abs() < 1e-12);
+        assert!((cb[4] - 50.0).abs() < 1e-12);
+        assert!((cb[5] - 50.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn test_octree_node_child_bounds_octant_7() {
+        let node = OctreeNode::new([0.0, 0.0, 0.0, 100.0, 100.0, 100.0]);
+        let cb = node.child_bounds(7);
+        assert!((cb[0] - 50.0).abs() < 1e-12);
+        assert!((cb[1] - 50.0).abs() < 1e-12);
+        assert!((cb[2] - 50.0).abs() < 1e-12);
+        assert!((cb[3] - 100.0).abs() < 1e-12);
+        assert!((cb[4] - 100.0).abs() < 1e-12);
+        assert!((cb[5] - 100.0).abs() < 1e-12);
+    }
+
+    // ── 3D repulsion force ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_repulsion_force_3d_magnitude() {
+        let f = repulsion_force_3d([0.0, 0.0, 0.0], [100.0, 0.0, 0.0], 1.0, 1.0, 10_000.0, 1.0);
+        assert!((f[0] - 1.0).abs() < 1e-9, "fx={}", f[0]);
+        assert!((f[1]).abs() < 1e-12);
+        assert!((f[2]).abs() < 1e-12);
+    }
+
+    #[test]
+    fn test_attraction_force_3d_at_ideal() {
+        let f = attraction_force_3d([0.0, 0.0, 0.0], [100.0, 0.0, 0.0], 1.0, 100.0, 0.05, 1.0);
+        for k in 0..3 {
+            assert!((f[k]).abs() < 1e-12, "f[{k}] = {}", f[k]);
+        }
+    }
+
+    #[test]
+    fn test_attraction_force_3d_stretched() {
+        let f = attraction_force_3d([0.0, 0.0, 0.0], [200.0, 0.0, 0.0], 1.0, 100.0, 0.05, 1.0);
+        assert!((f[0] - 5.0).abs() < 1e-9, "fx={}", f[0]);
+    }
+
+    // ── vec3_len ────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_vec3_len_unit() {
+        assert!((vec3_len(&[1.0, 0.0, 0.0]) - 1.0).abs() < 1e-12);
+        assert!((vec3_len(&[0.0, 1.0, 0.0]) - 1.0).abs() < 1e-12);
+        assert!((vec3_len(&[0.0, 0.0, 1.0]) - 1.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn test_vec3_len_3_4_5_analog() {
+        assert!((vec3_len(&[3.0, 4.0, 0.0]) - 5.0).abs() < 1e-12);
+    }
+
+    // ── compute_energy_3d ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_compute_energy_3d_single_node() {
+        let nodes = vec![LayoutNode3D::new(0, 0.0, 0.0, 0.0)];
+        let config = LayoutConfig3D::default();
+        let e = compute_energy_3d(&nodes, &[], &config);
+        assert!((e).abs() < 1e-12);
+    }
+
+    #[test]
+    fn test_compute_energy_3d_at_ideal_distance() {
+        let nodes = vec![
+            LayoutNode3D::new(0, 0.0, 0.0, 0.0),
+            LayoutNode3D::new(1, 100.0, 0.0, 0.0),
+        ];
+        let edges = vec![LayoutEdge3D {
+            source: 0,
+            target: 1,
+            weight: 1.0,
+            ideal_length: 100.0,
+        }];
+        let config = LayoutConfig3D::default();
+        let e = compute_energy_3d(&nodes, &edges, &config);
+        assert!((e - 100.0).abs() < 0.01, "energy={e}");
+    }
+
+    // ── fruchterman_reingold_3d ─────────────────────────────────────────────
+
+    #[test]
+    fn test_fr_3d_empty_graph() {
+        let config = LayoutConfig3D::default();
+        let result = fruchterman_reingold_3d(&mut [], &[], &config);
+        assert_eq!(result, Err(LayoutError::EmptyGraph));
+    }
+
+    #[test]
+    fn test_fr_3d_invalid_edge() {
+        let mut nodes = vec![LayoutNode3D::new(0, 0.0, 0.0, 0.0)];
+        let edges = vec![LayoutEdge3D {
+            source: 0,
+            target: 99,
+            weight: 1.0,
+            ideal_length: 50.0,
+        }];
+        let mut config = LayoutConfig3D::default();
+        config.iterations = 1;
+        let result = fruchterman_reingold_3d(&mut nodes, &edges, &config);
+        assert!(matches!(result, Err(LayoutError::InvalidNode(99))));
+    }
+
+    #[test]
+    fn test_fr_3d_small_graph_runs() {
+        let mut nodes = random_layout_3d(6, 200.0, 200.0, 200.0);
+        let edges = vec![
+            LayoutEdge3D {
+                source: 0,
+                target: 1,
+                weight: 1.0,
+                ideal_length: 80.0,
+            },
+            LayoutEdge3D {
+                source: 1,
+                target: 2,
+                weight: 1.0,
+                ideal_length: 80.0,
+            },
+        ];
+        let mut config = LayoutConfig3D::default();
+        config.iterations = 20;
+        let result = fruchterman_reingold_3d(&mut nodes, &edges, &config);
+        assert!(result.is_ok());
+        let r = result.unwrap_or_else(|_| unreachable!());
+        assert!(r.iterations_run > 0);
+        assert_eq!(r.nodes.len(), 6);
+    }
+
+    // ── force_atlas2_3d ─────────────────────────────────────────────────────
+
+    #[test]
+    fn test_fa2_3d_empty_graph() {
+        let config = LayoutConfig3D::default();
+        let result = force_atlas2_3d(&mut [], &[], &config);
+        assert_eq!(result, Err(LayoutError::EmptyGraph));
+    }
+
+    #[test]
+    fn test_fa2_3d_small_graph_runs() {
+        let mut nodes = random_layout_3d(5, 300.0, 300.0, 300.0);
+        let edges = vec![LayoutEdge3D {
+            source: 0,
+            target: 1,
+            weight: 1.0,
+            ideal_length: 100.0,
+        }];
+        let mut config = LayoutConfig3D::default();
+        config.iterations = 20;
+        let result = force_atlas2_3d(&mut nodes, &edges, &config);
+        assert!(result.is_ok());
+        let r = result.unwrap_or_else(|_| unreachable!());
+        assert!(r.iterations_run > 0);
+    }
+
+    #[test]
+    fn test_fa2_3d_gravity_pulls_toward_origin() {
+        let mut nodes = vec![LayoutNode3D::new(0, 500.0, 500.0, 500.0)];
+        let mut config = LayoutConfig3D::default();
+        config.iterations = 50;
+        config.gravity = 10.0;
+        let initial_dist = vec3_len(&nodes[0].position);
+        let result = force_atlas2_3d(&mut nodes, &[], &config);
+        assert!(result.is_ok());
+        let r = result.unwrap_or_else(|_| unreachable!());
+        let final_dist = vec3_len(&r.nodes[0].position);
+        assert!(final_dist < initial_dist);
+    }
+
+    // ── compute_layout_3d ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_compute_layout_3d_empty() {
+        let config = LayoutConfig3D::default();
+        let result = compute_layout_3d(vec![], vec![], &config);
+        assert_eq!(result, Err(LayoutError::EmptyGraph));
+    }
+
+    #[test]
+    fn test_compute_layout_3d_small_graph() {
+        let nodes = random_layout_3d(8, 400.0, 400.0, 400.0);
+        let edges = vec![LayoutEdge3D {
+            source: 0,
+            target: 1,
+            weight: 1.0,
+            ideal_length: 100.0,
+        }];
+        let mut config = LayoutConfig3D::default();
+        config.iterations = 10;
+        let result = compute_layout_3d(nodes, edges, &config);
+        assert!(result.is_ok());
+        let r = result.unwrap_or_else(|_| unreachable!());
+        assert!(!r.nodes.is_empty());
+    }
+
+    // ── prepare_gpu_buffers_3d ──────────────────────────────────────────────
+
+    #[test]
+    fn test_prepare_gpu_buffers_3d_positions() {
+        let nodes = vec![
+            LayoutNode3D::new(0, 1.0, 2.0, 3.0),
+            LayoutNode3D::new(1, 4.0, 5.0, 6.0),
+        ];
+        let edges = vec![LayoutEdge3D {
+            source: 0,
+            target: 1,
+            weight: 1.0,
+            ideal_length: 50.0,
+        }];
+        let (floats, indices, layout) = prepare_gpu_buffers_3d(&nodes, &edges);
+        assert_eq!(layout.node_count, 2);
+        assert_eq!(indices.len(), 2);
+        assert!((floats[0] - 1.0_f32).abs() < 1e-5);
+        assert!((floats[1] - 2.0_f32).abs() < 1e-5);
+        assert!((floats[2] - 3.0_f32).abs() < 1e-5);
+    }
+
+    #[test]
+    fn test_prepare_gpu_buffers_3d_layout_offsets() {
+        let nodes = vec![LayoutNode3D::new(0, 0.0, 0.0, 0.0)];
+        let (_, _, layout) = prepare_gpu_buffers_3d(&nodes, &[]);
+        assert_eq!(layout.positions_offset, 0);
+        assert_eq!(layout.velocities_offset, 12);
+        assert_eq!(layout.forces_offset, 24);
+        assert_eq!(layout.stride, 12);
+        assert_eq!(layout.z_component_offset, 8);
+    }
+
+    #[test]
+    fn test_prepare_gpu_buffers_3d_forces_zeroed() {
+        let nodes = random_layout_3d(2, 100.0, 100.0, 100.0);
+        let (buf, _, _) = prepare_gpu_buffers_3d(&nodes, &[]);
+        for i in 12..18 {
+            assert!((buf[i]).abs() < 1e-12);
+        }
+    }
+
+    #[test]
+    fn test_prepare_gpu_buffers_3d_no_edges() {
+        let nodes = random_layout_3d(3, 100.0, 100.0, 100.0);
+        let (buf, indices, layout) = prepare_gpu_buffers_3d(&nodes, &[]);
+        assert_eq!(buf.len(), 27);
+        assert!(indices.is_empty());
+        assert_eq!(layout.node_count, 3);
+    }
+
+    // ── BH 3D repulsion ─────────────────────────────────────────────────────
+
+    #[test]
+    fn test_compute_repulsion_bh_3d_finite() {
+        let nodes = random_layout_3d(10, 400.0, 400.0, 400.0);
+        let tree = build_octree(&nodes);
+        let force = compute_repulsion_bh_3d(&tree, &nodes[0], 0.8, 10_000.0, 1.0);
+        for k in 0..3 {
+            assert!(force[k].is_finite());
+        }
+    }
+
+    // ── Serialization roundtrips ────────────────────────────────────────────
+
+    #[test]
+    fn test_layout_node_serde_roundtrip() {
+        let node = LayoutNode::new(5, 42.0, 99.0);
+        let json = serde_json::to_string(&node).unwrap_or_else(|_| unreachable!());
+        let back: LayoutNode = serde_json::from_str(&json).unwrap_or_else(|_| unreachable!());
+        assert_eq!(node, back);
+    }
+
+    #[test]
+    fn test_layout_edge_serde_roundtrip() {
+        let edge = LayoutEdge {
+            source: 0,
+            target: 1,
+            weight: 0.5,
+            ideal_length: 80.0,
+        };
+        let json = serde_json::to_string(&edge).unwrap_or_else(|_| unreachable!());
+        let back: LayoutEdge = serde_json::from_str(&json).unwrap_or_else(|_| unreachable!());
+        assert_eq!(edge, back);
+    }
+
+    #[test]
+    fn test_layout_config_serde_roundtrip() {
+        let config = LayoutConfig::default();
+        let json = serde_json::to_string(&config).unwrap_or_else(|_| unreachable!());
+        let back: LayoutConfig = serde_json::from_str(&json).unwrap_or_else(|_| unreachable!());
+        assert_eq!(config, back);
+    }
+
+    #[test]
+    fn test_layout_result_serde_roundtrip() {
+        let result = LayoutResult {
+            nodes: vec![LayoutNode::new(0, 1.0, 2.0)],
+            iterations_run: 42,
+            converged: true,
+            energy: 123.456,
+        };
+        let json = serde_json::to_string(&result).unwrap_or_else(|_| unreachable!());
+        let back: LayoutResult = serde_json::from_str(&json).unwrap_or_else(|_| unreachable!());
+        assert_eq!(result, back);
+    }
+
+    #[test]
+    fn test_layout_error_serde_roundtrip() {
+        let e = LayoutError::InvalidNode(7);
+        let json = serde_json::to_string(&e).unwrap_or_else(|_| unreachable!());
+        let back: LayoutError = serde_json::from_str(&json).unwrap_or_else(|_| unreachable!());
+        assert_eq!(e, back);
+    }
+
+    #[test]
+    fn test_gpu_buffer_layout_serde_roundtrip() {
+        let layout = GpuBufferLayout {
+            positions_offset: 0,
+            velocities_offset: 24,
+            forces_offset: 48,
+            stride: 8,
+            node_count: 3,
+        };
+        let json = serde_json::to_string(&layout).unwrap_or_else(|_| unreachable!());
+        let back: GpuBufferLayout = serde_json::from_str(&json).unwrap_or_else(|_| unreachable!());
+        assert_eq!(layout, back);
+    }
+
+    #[test]
+    fn test_layout_node_3d_serde_roundtrip() {
+        let node = LayoutNode3D::new(2, 10.0, 20.0, 30.0);
+        let json = serde_json::to_string(&node).unwrap_or_else(|_| unreachable!());
+        let back: LayoutNode3D = serde_json::from_str(&json).unwrap_or_else(|_| unreachable!());
+        assert_eq!(node, back);
+    }
+
+    #[test]
+    fn test_layout_config_3d_serde_roundtrip() {
+        let config = LayoutConfig3D::default();
+        let json = serde_json::to_string(&config).unwrap_or_else(|_| unreachable!());
+        let back: LayoutConfig3D = serde_json::from_str(&json).unwrap_or_else(|_| unreachable!());
+        assert_eq!(config, back);
+    }
+
+    // ── Mass effects ────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_heavier_node_repels_more_strongly() {
+        let f_light = repulsion_force([0.0, 0.0], [100.0, 0.0], 1.0, 1.0, 10_000.0, 1.0);
+        let f_heavy = repulsion_force([0.0, 0.0], [100.0, 0.0], 1.0, 5.0, 10_000.0, 1.0);
+        assert!(f_heavy[0].abs() > f_light[0].abs());
+    }
+
+    // ── validate_edges ──────────────────────────────────────────────────────
+
+    #[test]
+    fn test_validate_edges_empty() {
+        let nodes = vec![LayoutNode::new(0, 0.0, 0.0)];
+        assert!(validate_edges(&nodes, &[]).is_ok());
+    }
+
+    #[test]
+    fn test_validate_edges_source_out_of_range() {
+        let nodes = vec![LayoutNode::new(0, 0.0, 0.0)];
+        let edges = vec![LayoutEdge {
+            source: 5,
+            target: 0,
+            weight: 1.0,
+            ideal_length: 10.0,
+        }];
+        assert_eq!(
+            validate_edges(&nodes, &edges),
+            Err(LayoutError::InvalidNode(5))
+        );
+    }
+
+    #[test]
+    fn test_validate_edges_3d_target_out_of_range() {
+        let nodes = vec![LayoutNode3D::new(0, 0.0, 0.0, 0.0)];
+        let edges = vec![LayoutEdge3D {
+            source: 0,
+            target: 10,
+            weight: 1.0,
+            ideal_length: 10.0,
+        }];
+        assert!(matches!(
+            validate_edges_3d(&nodes, &edges),
+            Err(LayoutError::InvalidNode(10))
+        ));
+    }
+
+    // ── xorshift64 PRNG property ────────────────────────────────────────────
+
+    #[test]
+    fn test_xorshift64_range() {
+        let mut state: u64 = 0xDEAD_BEEF_CAFE_BABE;
+        for _ in 0..100 {
+            let val = xorshift64(&mut state);
+            assert!(val >= 0.0, "val < 0: {val}");
+            assert!(val < 1.0, "val >= 1: {val}");
+        }
+    }
 }
 
 // --- ACTUAL IMPLEMENTATIONS ---

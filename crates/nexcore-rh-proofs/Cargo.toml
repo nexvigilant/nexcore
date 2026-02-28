@@ -12,7 +12,6 @@ publish = true
 
 [dependencies]
 nexcore-error = { workspace = true }
-nexcore-tov-proofs = { workspace = true }
 nexcore-zeta = { workspace = true }
 stem-number-theory = { workspace = true }
 nexcore-lex-primitiva = { workspace = true }

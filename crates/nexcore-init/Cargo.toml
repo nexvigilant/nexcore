@@ -19,7 +19,6 @@ path = "src/main.rs"
 nexcore-pal = { version = "0.1.0", path = "../nexcore-pal", registry = "nexcore" }
 nexcore-pal-linux = { version = "0.1.0", path = "../nexcore-pal-linux", registry = "nexcore" }
 nexcore-os = { version = "0.1.0", path = "../nexcore-os", registry = "nexcore" }
-nexcore-compositor = { version = "0.1.0", path = "../nexcore-compositor", registry = "nexcore" }
 nexcore-shell = { version = "0.1.0", path = "../nexcore-shell", registry = "nexcore" }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 tracing = { version = "0.1.40" }

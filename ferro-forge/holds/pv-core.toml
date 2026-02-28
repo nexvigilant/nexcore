@@ -2,5 +2,5 @@
 name = "pv-core"
 owner = "pv-core-team"
 review_required = true
-layer = "Orchestration"
+layer = "Domain"
 members = ["nexcore-ccp", "nexcore-chemivigilance", "nexcore-harm-taxonomy", "nexcore-pharmacovigilance", "nexcore-preemptive-pv", "nexcore-pv-core", "nexcore-pvdsl", "nexcore-pvos", "nexcore-qbr", "nexcore-tov", "nexcore-tov-grounded", "nexcore-tov-proofs", "nexcore-vigilance"]

@@ -13,7 +13,6 @@ categories = ["rendering", "gui"]
 
 [dependencies]
 nexcore-pal = { version = "0.1.0", path = "../nexcore-pal", registry = "nexcore" }
-nexcore-os = { version = "0.1.0", path = "../nexcore-os", registry = "nexcore" }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }

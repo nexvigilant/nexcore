@@ -7860,7 +7860,6 @@ name = "nexcore-compositor"
 version = "0.1.0"
 dependencies = [
  "nexcore-lex-primitiva",
- "nexcore-os",
  "nexcore-pal",
  "nexcore-pal-linux",
  "serde",
@@ -8397,7 +8396,6 @@ dependencies = [
 name = "nexcore-init"
 version = "0.1.0"
 dependencies = [
- "nexcore-compositor",
  "nexcore-lex-primitiva",
  "nexcore-os",
  "nexcore-pal",
@@ -9264,7 +9262,6 @@ version = "0.1.0"
 dependencies = [
  "nexcore-error",
  "nexcore-lex-primitiva",
- "nexcore-tov-proofs",
  "nexcore-zeta",
  "serde",
  "stem-number-theory",

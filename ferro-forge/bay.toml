@@ -6,7 +6,7 @@ name = "analysis-tools"
 owner = "analysis-tools-team"
 review_required = true
 layer = "Domain"
-members = ["nexcore-edit-distance", "nexcore-insight", "nexcore-model-checker", "nexcore-oracle", "nexcore-reason", "nexcore-retrocasting", "nexcore-zeta"]
+members = ["nexcore-edit-distance", "nexcore-insight", "nexcore-model-checker", "nexcore-oracle", "nexcore-reason", "nexcore-retrocasting", "nexcore-state-theory", "nexcore-zeta"]
 
 [[bay.holds]]
 name = "bio-anatomical"
@@ -118,7 +118,7 @@ name = "os-runtime"
 owner = "os-runtime-team"
 review_required = true
 layer = "Orchestration"
-members = ["nexcore-os", "nexcore-pty", "nexcore-shell", "nexcore-state-os", "nexcore-state-theory", "nexcore-terminal"]
+members = ["nexcore-os", "nexcore-pty", "nexcore-shell", "nexcore-state-os", "nexcore-terminal"]
 
 [[bay.holds]]
 name = "prima-language"
@@ -131,7 +131,7 @@ members = ["nexcore-prima", "prima", "prima-academy", "prima-chem", "prima-codeg
 name = "pv-core"
 owner = "pv-core-team"
 review_required = true
-layer = "Orchestration"
+layer = "Domain"
 members = ["nexcore-ccp", "nexcore-chemivigilance", "nexcore-harm-taxonomy", "nexcore-pharmacovigilance", "nexcore-preemptive-pv", "nexcore-pv-core", "nexcore-pvdsl", "nexcore-pvos", "nexcore-qbr", "nexcore-tov", "nexcore-tov-grounded", "nexcore-tov-proofs", "nexcore-vigilance"]
 
 [[bay.holds]]

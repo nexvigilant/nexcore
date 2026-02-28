@@ -330,6 +330,73 @@ pv-core holds 13 crates including `nexcore-vigilance` (the 57-module domain mono
 
 ---
 
+## Phase 1-3 Remediation Results (2026-02-28)
+
+**Context:** Executed dead dep removal + hold reclassifications. Phase 4 (type extraction) deferred.
+
+### Phase 1 — Dead Dependency Removal
+
+Of 5 DVs classified as FIXABLE-REMOVE, only **3 were actually dead**. 2 were misclassified by the audit agent:
+
+| DV | Source Crate | Dep | Classified | Actual | Action |
+|----|-------------|-----|-----------|--------|--------|
+| 1 | nexcore-compositor | nexcore-os | Dead | **Dead** | Removed |
+| 3 | nexcore-core | nexcore-brain | Dead | **Live** (lib.rs:82,87) | Restored |
+| 5 | nexcore-init | nexcore-compositor | Dead | **Dead** | Removed |
+| 8 | nexcore-renderer | prima | Dead | **Live** (adventure.rs:60,67,69) | Restored |
+| 9 | nexcore-rh-proofs | nexcore-tov-proofs | Dead | **Dead** | Removed |
+
+**Root cause of misclassification:** The Explore agent's grep did not find `use nexcore_brain` / `use prima` imports because these crates are referenced via fully-qualified paths (`nexcore_brain::BrainSession`, `prima::eval`) rather than top-level `use` imports.
+
+### Phase 2 — pv-core Reclassification
+
+Changed `pv-core.toml` layer from Orchestration to Domain.
+
+**Resolved:** DV4 (faers-etl→vigilance), DV11 (watch-core→pvos) — now Domain→Domain (no violation).
+**Created:** 1 new DV: nexcore-vigilance (pv-core/Domain) → nexcore-guardian-engine (guardian-system/Orchestration). Also +1 LV: nexcore-vigilance depth 29 exceeds Domain layer threshold.
+
+### Phase 3 — nexcore-state-theory Move
+
+Moved nexcore-state-theory from os-runtime to analysis-tools.
+
+**Resolved:** DV6 (model-checker→state-theory) — now same hold (no violation).
+
+### Stale Hold Cleanup
+
+Deleted `ferro-forge/holds/biological-system.toml` — stale pre-split file that caused `load_bay_from_holds_dir` to fail with "crate in both bio-molecular and biological-system" error. The generate_ferro_forge test (bootstrap path) overwrites all holds from topology JSON, masking this orphan. The manifest path correctly detected the conflict.
+
+### Reconciliation Comparison
+
+| Metric | Pre-Phase 1-3 | Post-Phase 1-3 | Delta |
+|--------|--------------|---------------|-------|
+| Total actions | 17 | 16 | -1 |
+| DirectionViolation | 11 | 8 | -3 |
+| LayerViolation | 6 | 7 | +1 |
+| OrphanCrate | 0 | 0 | 0 |
+| SuggestMove | 0 | 0 | 0 |
+
+### Current DV Inventory (8 remaining)
+
+| # | Source Crate | Source Hold (Layer) | Target Crate | Target Hold (Layer) | Classification |
+|---|-------------|-------------------|-------------|-------------------|---------------|
+| 1 | nexcore-constants | core-primitives (Foundation) | nexcore-fs | system-utilities (Domain) | ACCEPT (EX-DV-002) |
+| 2 | nexcore-core | core-primitives (Foundation) | nexcore-brain | brain-knowledge (Domain) | Reclassified: live dep |
+| 3 | nexcore-init | core-primitives (Foundation) | nexcore-os | os-runtime (Orchestration) | Unmasked by dead dep removal |
+| 4 | nexcore-pharos | observability (Domain) | nexcore-guardian-engine | guardian-system (Orchestration) | ACCEPT (EX-DV-007) |
+| 5 | nexcore-renderer | observatory-viz (Foundation) | prima | prima-language (Domain) | Reclassified: live dep |
+| 6 | nexcore-rh-proofs | core-primitives (Foundation) | nexcore-zeta | analysis-tools (Domain) | Unmasked by dead dep removal |
+| 7 | nexcore-value-mining | business-strategy (Domain) | nexcore-social | mcp-service (Service) | EXTRACT (Phase 4) |
+| 8 | nexcore-vigilance | pv-core (Domain) | nexcore-guardian-engine | guardian-system (Orchestration) | New: pv-core reclassification side-effect |
+
+### Lessons
+
+1. **Audit accuracy**: Agent-based grep audits for "dead deps" must search for fully-qualified paths (`crate::Type`), not just `use crate` imports. 2 of 5 classified dead deps were live.
+2. **Layer reclassification creates new DVs**: Downgrading pv-core from Orchestration to Domain made nexcore-vigilance→guardian-engine visible as a DV. The dep was always there — the previous same-layer classification masked it.
+3. **Bootstrap vs manifest path divergence**: The `generate_ferro_forge` test (bootstrap path) overwrites ALL hold TOMLs from workspace-topology.json. Must use `regenerate_bay_from_holds` (manifest path) when hold TOMLs are the source of truth.
+4. **Stale hold files**: The biological-system.toml was never deleted after the bio-remediation split. Bootstrap path masked the issue; manifest path correctly detected it.
+
+---
+
 ## Recommendations
 
 1. **Foundation gravity filter — DONE (P8)**: Directional filter eliminates all 59 false positives. SuggestMove count: 0.

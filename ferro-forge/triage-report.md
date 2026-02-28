@@ -258,12 +258,12 @@ The bio-remediation arc achieved its primary objective: stem-foundation → bio-
 |---|-------------|-------------------|-------------|-------------------|-------|---------------|-----|
 | 1 | nexcore-compositor | build-tooling (Domain) | nexcore-os | os-runtime (Orchestration) | No | FIXABLE-REMOVE | Remove unused dep from Cargo.toml |
 | 2 | nexcore-constants | core-primitives (Foundation) | nexcore-fs | system-utilities (Domain) | Yes | ACCEPT | See rationale below |
-| 3 | nexcore-core | core-primitives (Foundation) | nexcore-brain | brain-knowledge (Domain) | No | FIXABLE-REMOVE | Remove unused dep from Cargo.toml |
+| 3 | nexcore-core | core-primitives (Foundation) | nexcore-brain | brain-knowledge (Domain) | Yes | LIVE-MISCLASSIFIED | Used via `nexcore_brain::BrainSession` (lib.rs:82,87) |
 | 4 | nexcore-faers-etl | regulatory-compliance (Domain) | nexcore-vigilance | pv-core (Orchestration) | Yes | FIXABLE-RECLASSIFY | Reclassify pv-core to Domain |
 | 5 | nexcore-init | core-primitives (Foundation) | nexcore-compositor | build-tooling (Domain) | No | FIXABLE-REMOVE | Remove unused dep from Cargo.toml |
 | 6 | nexcore-model-checker | analysis-tools (Domain) | nexcore-state-theory | os-runtime (Orchestration) | Yes | FIXABLE-RECLASSIFY | Move nexcore-state-theory to analysis-tools |
 | 7 | nexcore-pharos | observability (Domain) | nexcore-guardian-engine | guardian-system (Orchestration) | Yes | ACCEPT | See rationale below |
-| 8 | nexcore-renderer | observatory-viz (Foundation) | prima | prima-language (Domain) | No | FIXABLE-REMOVE | Remove unused dep from Cargo.toml |
+| 8 | nexcore-renderer | observatory-viz (Foundation) | prima | prima-language (Domain) | Yes | LIVE-MISCLASSIFIED | Used via `prima::eval` (adventure.rs:60,67,69) |
 | 9 | nexcore-rh-proofs | core-primitives (Foundation) | nexcore-tov-proofs | pv-core (Orchestration) | No | FIXABLE-REMOVE | Remove unused dep from Cargo.toml |
 | 10 | nexcore-value-mining | business-strategy (Domain) | nexcore-social | mcp-service (Service) | Yes | FIXABLE-EXTRACT | Extract `Post` type to domain-layer types crate |
 | 11 | nexcore-watch-core | observability (Domain) | nexcore-pvos | pv-core (Orchestration) | Yes | FIXABLE-RECLASSIFY | Reclassify pv-core to Domain |
@@ -272,11 +272,12 @@ The bio-remediation arc achieved its primary objective: stem-foundation → bio-
 
 | Classification | Count | DVs | Projected DV Reduction |
 |---------------|-------|-----|----------------------|
-| FIXABLE-REMOVE | 5 | 1, 3, 5, 8, 9 | -5 (dead dep removal) |
+| FIXABLE-REMOVE | 3 | 1, 5, 9 | -3 (dead dep removal) |
 | FIXABLE-RECLASSIFY | 3 | 4, 6, 11 | -3 (hold layer changes) |
 | FIXABLE-EXTRACT | 1 | 10 | -1 (type extraction) |
 | ACCEPT | 2 | 2, 7 | 0 (documented exceptions) |
-| **Total** | **11** | | **-9 fixable, 2 permanent** |
+| LIVE-MISCLASSIFIED | 2 | 3, 8 | 0 (still DVs — require reclassification or accept) |
+| **Total** | **11** | | **-7 fixable, 4 permanent or pending** |
 
 ### ACCEPT Rationale
 
@@ -288,15 +289,15 @@ PHAROS (Pharmacovigilance Autonomous Reconnaissance and Observation System) impo
 
 ### FIXABLE-REMOVE Detail (Dead Dependencies)
 
-5 DVs are caused by Cargo.toml dependencies with zero `use` imports in source code. These are likely remnants of planned-but-not-implemented integrations or refactoring artifacts. Removal requires only Cargo.toml edits — no source code changes.
+3 DVs are caused by Cargo.toml dependencies with zero source references. Removal requires only Cargo.toml edits — no source code changes.
 
 | DV | Source Crate | Dead Dependency | Cargo.toml Line |
 |----|-------------|----------------|-----------------|
 | 1 | nexcore-compositor | `nexcore-os = { version = "0.1.0", path = "../nexcore-os" }` | deps section |
-| 3 | nexcore-core | `nexcore-brain = { version = "1.0.0", path = "../nexcore-brain" }` | deps section |
 | 5 | nexcore-init | `nexcore-compositor = { version = "0.1.0", path = "../nexcore-compositor" }` | deps section |
-| 8 | nexcore-renderer | `prima = { version = "0.1.0", path = "../prima" }` | deps section |
 | 9 | nexcore-rh-proofs | `nexcore-tov-proofs = { workspace = true }` | deps section |
+
+**Misclassification note:** DV3 (`nexcore-core` → `nexcore-brain`) and DV8 (`nexcore-renderer` → `prima`) were originally classified as dead dependencies by the audit agent. Both are live — they use fully-qualified paths (`nexcore_brain::BrainSession`, `prima::eval`) rather than top-level `use` imports, which the agent's grep pattern did not detect.
 
 ### FIXABLE-RECLASSIFY Detail
 
@@ -313,13 +314,14 @@ pv-core holds 13 crates including `nexcore-vigilance` (the 57-module domain mono
 
 ### Recommended Remediation Sequence
 
-| Phase | Action | DVs Fixed | Effort | Resulting DV Count |
-|-------|--------|-----------|--------|-------------------|
-| 1 | Remove 5 dead deps from Cargo.toml | 1, 3, 5, 8, 9 | Trivial (5 line deletions) | 6 |
-| 2 | Reclassify pv-core: Orchestration → Domain | 4, 11 | Low (1 TOML edit + bay.toml regen) | 4 |
-| 3 | Move nexcore-state-theory: os-runtime → analysis-tools | 6 | Low (2 TOML edits + bay.toml regen) | 3 |
-| 4 | Extract nexcore-social-types | 10 | Medium (new crate + re-export wrapper) | 2 |
-| — | Documented exceptions (ACCEPT) | — | — | **2 permanent** |
+| Phase | Action | DVs Fixed | Side Effects | Effort | Resulting DV Count |
+|-------|--------|-----------|-------------|--------|-------------------|
+| 1 | Remove 3 dead deps from Cargo.toml | 1, 5, 9 | Unmasked 2 hidden DVs (init→os, rh-proofs→zeta) | Trivial (3 line deletions) | 8 (net 0: -3 removed, +1 unmasked init→os, +1 unmasked rh-proofs→zeta, +1 reclassified core→brain) |
+| 2 | Reclassify pv-core: Orchestration → Domain | 4, 11 | +1 DV (vigilance→guardian-engine), +1 LV | Low (1 TOML edit) | 7 |
+| 3 | Move nexcore-state-theory: os-runtime → analysis-tools | 6 | None | Low (2 TOML edits) | 6 |
+| 4 | Extract nexcore-social-types | 10 | TBD | Medium (new crate + re-export wrapper) | 5 |
+| — | Documented exceptions (ACCEPT) | 2, 7 | — | — | — |
+| — | Pending analysis (LIVE-MISCLASSIFIED + unmasked + side-effect) | 3, 8 + init→os, rh-proofs→zeta + vigilance→guardian | — | TBD | **≤5 after Phase 4** |
 
 ### Governance Exception Register
 

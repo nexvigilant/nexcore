@@ -2,5 +2,5 @@
 name = "chemistry"
 owner = "chemistry-team"
 review_required = true
-layer = "Foundation"
+layer = "Domain"
 members = ["nexcore-clearance", "nexcore-metabolite", "nexcore-molcore", "nexcore-qsar", "nexcore-stoichiometry", "nexcore-structural-alerts"]

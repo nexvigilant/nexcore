@@ -34,7 +34,7 @@ name = "build-tooling"
 owner = "build-tooling-team"
 review_required = true
 layer = "Domain"
-members = ["nexcore-build-gate", "nexcore-build-orchestrator", "nexcore-compilation-space", "nexcore-compositor", "nexcore-compound-registry", "nexcore-foundry"]
+members = ["nexcore-build-gate", "nexcore-build-orchestrator", "nexcore-compilation-space", "nexcore-compositor", "nexcore-compound-registry", "nexcore-foundry", "nexcore-topology"]
 
 [[bay.holds]]
 name = "business-strategy"
@@ -47,7 +47,7 @@ members = ["academy-forge", "nexcore-ccim", "nexcore-education-machine", "nexcor
 name = "chemistry"
 owner = "chemistry-team"
 review_required = true
-layer = "Foundation"
+layer = "Domain"
 members = ["nexcore-clearance", "nexcore-metabolite", "nexcore-molcore", "nexcore-qsar", "nexcore-stoichiometry", "nexcore-structural-alerts"]
 
 [[bay.holds]]
@@ -118,7 +118,7 @@ name = "os-runtime"
 owner = "os-runtime-team"
 review_required = true
 layer = "Orchestration"
-members = ["nexcore-os", "nexcore-shell", "nexcore-state-os", "nexcore-state-theory", "nexcore-terminal"]
+members = ["nexcore-os", "nexcore-pty", "nexcore-shell", "nexcore-state-os", "nexcore-state-theory", "nexcore-terminal"]
 
 [[bay.holds]]
 name = "prima-language"

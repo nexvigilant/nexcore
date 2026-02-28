@@ -3,4 +3,4 @@ name = "build-tooling"
 owner = "build-tooling-team"
 review_required = true
 layer = "Domain"
-members = ["nexcore-build-gate", "nexcore-build-orchestrator", "nexcore-compilation-space", "nexcore-compositor", "nexcore-compound-registry", "nexcore-foundry"]
+members = ["nexcore-build-gate", "nexcore-build-orchestrator", "nexcore-compilation-space", "nexcore-compositor", "nexcore-compound-registry", "nexcore-foundry", "nexcore-topology"]

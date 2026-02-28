@@ -180,6 +180,7 @@ nexcore-pharos = { path = "crates/nexcore-pharos" }
 nexcore-phenotype = { path = "crates/nexcore-phenotype" }
 nexcore-primitive-scanner = { path = "crates/nexcore-primitive-scanner" }
 nexcore-primitives = { path = "crates/nexcore-primitives" }
+nexcore-pty = { path = "crates/nexcore-pty" }
 nexcore-preemptive-pv = { path = "crates/nexcore-preemptive-pv" }
 nexcore-proof-of-meaning = { path = "crates/nexcore-proof-of-meaning" }
 nexcore-pv-core = { path = "crates/nexcore-pv-core" }

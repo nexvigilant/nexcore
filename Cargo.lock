@@ -8635,7 +8635,6 @@ dependencies = [
  "nexcore-skill-exec",
  "nexcore-skills-engine",
  "nexcore-social",
- "nexcore-softrender",
  "nexcore-sop-anatomy",
  "nexcore-state-os",
  "nexcore-state-theory",
@@ -9086,6 +9085,14 @@ dependencies = [
  "ordered-float 4.6.0",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "nexcore-pty"
+version = "0.1.0"
+dependencies = [
+ "libc",
+ "tempfile",
 ]
 
 [[package]]
@@ -9583,11 +9590,22 @@ dependencies = [
  "nexcore-chrono",
  "nexcore-error",
  "nexcore-id",
+ "nexcore-pty",
  "serde",
  "serde_json",
  "tokio",
  "tracing",
  "vr-core",
+]
+
+[[package]]
+name = "nexcore-topology"
+version = "1.0.0"
+dependencies = [
+ "nexcore-lex-primitiva",
+ "serde",
+ "serde_json",
+ "toml 0.8.23",
 ]
 
 [[package]]

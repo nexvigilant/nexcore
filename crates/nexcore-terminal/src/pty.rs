@@ -1,8 +1,8 @@
 //! PTY manager — async process spawning and I/O for terminal sessions.
 //!
-//! Uses `tokio::process::Command` as the safe process backend. A future
-//! `nexcore-pty` crate will provide true PTY allocation via `forkpty()`
-//! for full ANSI control sequence support (job control, Ctrl-C, etc.).
+//! Uses `nexcore-pty` for real POSIX PTY allocation (`openpty`, `forkpty`,
+//! `TIOCSWINSZ` ioctl). Provides full terminal emulation: job control,
+//! Ctrl-C/Ctrl-Z signal delivery, ICRNL line discipline, and ANSI support.
 //!
 //! ## Primitive Grounding
 //!
@@ -10,9 +10,8 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::process::Stdio;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::process::{Child, ChildStdin, ChildStdout};
+use std::os::fd::{AsRawFd, OwnedFd};
+use tokio::io::unix::AsyncFd;
 
 /// Terminal dimensions (columns x rows).
 #[non_exhaustive]
@@ -127,14 +126,14 @@ impl std::error::Error for PtyError {
     }
 }
 
-/// Handle to a running terminal process with async I/O.
+/// Handle to a running terminal process with async I/O over a real PTY.
 ///
-/// Current backend: `tokio::process::Command` (safe, no PTY allocation).
-/// Future backend: `forkpty()` via `nexcore-pty` for full terminal emulation.
+/// Backend: `nexcore-pty` POSIX PTY allocation (`openpty` + `forkpty`).
+/// The master fd is wrapped in `tokio::io::unix::AsyncFd` for async reads
+/// and writes via the tokio reactor.
 pub struct PtyProcess {
-    child: Child,
-    stdin: Option<ChildStdin>,
-    stdout: Option<ChildStdout>,
+    master: AsyncFd<OwnedFd>,
+    child_pid: u32,
     config: PtyConfig,
     exited: bool,
 }
@@ -142,91 +141,143 @@ pub struct PtyProcess {
 impl PtyProcess {
     /// Spawn a new shell process with the given configuration.
     ///
+    /// Allocates a real POSIX PTY, forks, and execs the shell. The child
+    /// gets a controlling terminal with full line discipline (ICRNL, echo,
+    /// signal generation).
+    ///
     /// # Errors
     ///
-    /// Returns `PtyError::SpawnFailed` if the process cannot be started.
+    /// Returns `PtyError::SpawnFailed` if PTY allocation or fork/exec fails.
     pub fn spawn(config: PtyConfig) -> Result<Self, PtyError> {
-        let mut cmd = tokio::process::Command::new(&config.shell);
-        cmd.current_dir(&config.working_dir)
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .env("TERM", "xterm-256color")
-            .env("COLUMNS", config.size.cols.to_string())
-            .env("LINES", config.size.rows.to_string());
+        let ws = nexcore_pty::WinSize {
+            rows: config.size.rows,
+            cols: config.size.cols,
+        };
 
-        // Merge custom environment
-        for (key, value) in &config.env {
-            cmd.env(key, value);
-        }
+        let pair = nexcore_pty::open_pty(ws).map_err(|e| PtyError::SpawnFailed(e.into_io()))?;
 
-        let mut child = cmd.spawn().map_err(PtyError::SpawnFailed)?;
+        nexcore_pty::set_nonblocking(&pair.master)
+            .map_err(|e| PtyError::SpawnFailed(e.into_io()))?;
 
-        let stdin = child.stdin.take();
-        let stdout = child.stdout.take();
+        let env_pairs: Vec<(String, String)> = vec![
+            ("TERM".to_string(), "xterm-256color".to_string()),
+            ("COLUMNS".to_string(), config.size.cols.to_string()),
+            ("LINES".to_string(), config.size.rows.to_string()),
+        ]
+        .into_iter()
+        .chain(config.env.iter().map(|(k, v)| (k.clone(), v.clone())))
+        .collect();
+
+        let spawn_config = nexcore_pty::SpawnConfig {
+            program: &config.shell,
+            args: &[&config.shell],
+            working_dir: &config.working_dir,
+            env: &env_pairs,
+        };
+
+        let master_raw = pair.master.as_raw_fd();
+        let child_pid = nexcore_pty::fork_exec(pair.slave, master_raw, &spawn_config)
+            .map_err(|e| PtyError::SpawnFailed(e.into_io()))?;
+
+        let async_master = AsyncFd::new(pair.master).map_err(|e| PtyError::SpawnFailed(e))?;
 
         Ok(Self {
-            child,
-            stdin,
-            stdout,
+            master: async_master,
+            child_pid,
             config,
             exited: false,
         })
     }
 
-    /// Write data to the process stdin.
+    /// Write data to the PTY master (goes to child's stdin).
+    ///
+    /// The PTY line discipline translates CR to LF (ICRNL) and generates
+    /// signals from control characters (Ctrl-C → SIGINT, Ctrl-Z → SIGTSTP).
     ///
     /// # Errors
     ///
-    /// Returns `PtyError::StdinUnavailable` if stdin pipe was already taken,
+    /// Returns `PtyError::ProcessExited` if the child has exited,
     /// or `PtyError::IoError` on write failure.
     pub async fn write(&mut self, data: &[u8]) -> Result<(), PtyError> {
         if self.exited {
             return Err(PtyError::ProcessExited);
         }
-        let stdin = self.stdin.as_mut().ok_or(PtyError::StdinUnavailable)?;
-        stdin.write_all(data).await.map_err(PtyError::IoError)?;
-        stdin.flush().await.map_err(PtyError::IoError)?;
-        Ok(())
+
+        let mut guard = self.master.writable().await.map_err(PtyError::IoError)?;
+
+        match guard.try_io(|inner| nexcore_pty::write_master(inner.get_ref(), data)) {
+            Ok(Ok(_n)) => Ok(()),
+            Ok(Err(e)) => Err(PtyError::IoError(e)),
+            Err(_would_block) => {
+                // Spurious readiness — retry once.
+                drop(guard);
+                let mut guard2 = self.master.writable().await.map_err(PtyError::IoError)?;
+                match guard2.try_io(|inner| nexcore_pty::write_master(inner.get_ref(), data)) {
+                    Ok(Ok(_n)) => Ok(()),
+                    Ok(Err(e)) => Err(PtyError::IoError(e)),
+                    Err(_) => Err(PtyError::IoError(std::io::Error::new(
+                        std::io::ErrorKind::WouldBlock,
+                        "PTY write would block after retry",
+                    ))),
+                }
+            }
+        }
     }
 
-    /// Read available data from the process stdout.
+    /// Read available data from the PTY master (child's stdout/stderr).
     ///
-    /// Returns up to `buf_size` bytes. Returns an empty vec if no data
-    /// is immediately available (non-blocking read not yet implemented —
-    /// callers should use `read_with_timeout` or `tokio::select!`).
+    /// Returns up to `buf_size` bytes. Output includes terminal control
+    /// sequences, echo, and program output — all multiplexed through the
+    /// PTY line discipline.
     ///
     /// # Errors
     ///
-    /// Returns `PtyError::StdoutUnavailable` if stdout pipe was already taken,
+    /// Returns `PtyError::ProcessExited` if the child has exited,
     /// or `PtyError::IoError` on read failure.
     pub async fn read(&mut self, buf_size: usize) -> Result<Vec<u8>, PtyError> {
         if self.exited {
             return Err(PtyError::ProcessExited);
         }
-        let stdout = self.stdout.as_mut().ok_or(PtyError::StdoutUnavailable)?;
+
+        let mut guard = self.master.readable().await.map_err(PtyError::IoError)?;
+
         let mut buf = vec![0u8; buf_size];
-        let n = stdout.read(&mut buf).await.map_err(PtyError::IoError)?;
-        if n == 0 {
-            self.exited = true;
-            return Ok(Vec::new());
+
+        match guard.try_io(|inner| nexcore_pty::read_master(inner.get_ref(), &mut buf)) {
+            Ok(Ok(0)) => {
+                self.exited = true;
+                Ok(Vec::new())
+            }
+            Ok(Ok(n)) => {
+                buf.truncate(n);
+                Ok(buf)
+            }
+            Ok(Err(e)) => Err(PtyError::IoError(e)),
+            Err(_would_block) => {
+                // Spurious readiness — no data yet.
+                Ok(Vec::new())
+            }
         }
-        buf.truncate(n);
-        Ok(buf)
     }
 
-    /// Resize the terminal (no-op in tokio::process backend).
+    /// Resize the terminal via TIOCSWINSZ ioctl.
     ///
-    /// With a real PTY backend, this would send `TIOCSWINSZ` ioctl.
+    /// Sends the new dimensions to the terminal driver, which delivers
+    /// SIGWINCH to the child's foreground process group.
     pub fn resize(&mut self, size: PtySize) {
         self.config.size = size;
-        // No-op: tokio::process doesn't support terminal resize.
-        // Future: ioctl(fd, TIOCSWINSZ, &winsize) via nexcore-pty.
-        tracing::debug!(
-            cols = size.cols,
-            rows = size.rows,
-            "PTY resize requested (no-op in process backend)"
-        );
+        let ws = nexcore_pty::WinSize {
+            rows: size.rows,
+            cols: size.cols,
+        };
+        if let Err(e) = nexcore_pty::resize(self.master.get_ref(), ws) {
+            tracing::debug!(
+                cols = size.cols,
+                rows = size.rows,
+                error = %e,
+                "PTY resize failed"
+            );
+        }
     }
 
     /// Kill the process and clean up.
@@ -238,19 +289,32 @@ impl PtyProcess {
         if self.exited {
             return Ok(());
         }
-        self.child.kill().await.map_err(PtyError::IoError)?;
+        // SIGKILL = 9
+        if let Err(e) = nexcore_pty::signal_process(self.child_pid, 9) {
+            tracing::debug!(pid = self.child_pid, error = %e, "PTY kill signal failed");
+            return Err(PtyError::IoError(e.into_io()));
+        }
+        // Wait for child to exit (bounded spin).
+        for _ in 0..50 {
+            if let Ok(Some(_)) = nexcore_pty::try_wait_pid(self.child_pid) {
+                self.exited = true;
+                return Ok(());
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
         self.exited = true;
         Ok(())
     }
 
     /// Check if the process has exited.
     pub fn try_wait(&mut self) -> Result<Option<i32>, PtyError> {
-        match self.child.try_wait().map_err(PtyError::IoError)? {
-            Some(status) => {
+        match nexcore_pty::try_wait_pid(self.child_pid) {
+            Ok(Some(code)) => {
                 self.exited = true;
-                Ok(Some(status.code().unwrap_or(-1)))
+                Ok(Some(code))
             }
-            None => Ok(None),
+            Ok(None) => Ok(None),
+            Err(e) => Err(PtyError::IoError(e.into_io())),
         }
     }
 
@@ -264,6 +328,25 @@ impl PtyProcess {
     #[must_use]
     pub fn has_exited(&self) -> bool {
         self.exited
+    }
+}
+
+impl Drop for PtyProcess {
+    fn drop(&mut self) {
+        if !self.exited {
+            // Best-effort kill on drop.
+            if let Err(e) = nexcore_pty::signal_process(self.child_pid, 9) {
+                tracing::debug!(pid = self.child_pid, error = %e, "PTY drop: kill failed");
+                return;
+            }
+            // Best-effort reap (non-blocking).
+            for _ in 0..10 {
+                if let Ok(Some(_)) = nexcore_pty::try_wait_pid(self.child_pid) {
+                    break;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(5));
+            }
+        }
     }
 }
 
@@ -297,20 +380,18 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn spawn_echo_process() {
-        // Use /bin/echo instead of a shell to avoid interactive mode
-        let config = PtyConfig {
-            shell: "/bin/echo".to_string(),
-            working_dir: "/tmp".to_string(),
-            env: BTreeMap::new(),
-            size: PtySize::default(),
-        };
+    async fn spawn_and_read() {
+        let config = PtyConfig::new("/bin/bash", "/tmp");
         let mut proc = PtyProcess::spawn(config);
-        assert!(proc.is_ok());
+        assert!(proc.is_ok(), "spawn should succeed with real PTY");
         if let Ok(ref mut p) = proc {
-            // echo exits immediately, read its output
+            // Shell should produce some output (prompt, etc.)
+            tokio::time::sleep(std::time::Duration::from_millis(200)).await;
             let output = p.read(4096).await;
             assert!(output.is_ok());
+            // Kill to clean up.
+            let kill_result = p.kill().await;
+            assert!(kill_result.is_ok());
         }
     }
 
@@ -333,29 +414,10 @@ mod tests {
 
     #[tokio::test]
     async fn kill_terminates_process() {
-        let config = PtyConfig {
-            shell: "/bin/sleep".to_string(),
-            working_dir: "/tmp".to_string(),
-            env: BTreeMap::new(),
-            size: PtySize::default(),
-        };
-        // sleep needs an argument; use Command directly for the test
-        let mut cmd = tokio::process::Command::new("/bin/sleep");
-        cmd.arg("60")
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped());
-        let mut child = cmd.spawn();
-        if let Ok(ref mut c) = child {
-            let stdin = c.stdin.take();
-            let stdout = c.stdout.take();
-            let mut proc = PtyProcess {
-                child: child.unwrap(),
-                stdin,
-                stdout,
-                config: PtyConfig::default(),
-                exited: false,
-            };
+        let config = PtyConfig::new("/bin/bash", "/tmp");
+        let result = PtyProcess::spawn(config);
+        assert!(result.is_ok());
+        if let Ok(mut proc) = result {
             assert!(!proc.has_exited());
             let kill_result = proc.kill().await;
             assert!(kill_result.is_ok());
@@ -363,15 +425,50 @@ mod tests {
         }
     }
 
-    #[test]
-    fn resize_is_noop_but_updates_config() {
-        let config = PtyConfig::default();
-        // We can't easily test resize without a running process,
-        // but we can verify the struct update logic
-        let new_size = PtySize {
-            cols: 120,
-            rows: 40,
-        };
-        assert_ne!(config.size, new_size);
+    #[tokio::test]
+    async fn resize_sends_ioctl() {
+        // Spawn a shell to get a valid PtyProcess, then resize.
+        let config = PtyConfig::new("/bin/bash", "/tmp");
+        if let Ok(mut proc) = PtyProcess::spawn(config) {
+            let new_size = PtySize {
+                cols: 120,
+                rows: 40,
+            };
+            // Should not panic — sends real TIOCSWINSZ ioctl.
+            proc.resize(new_size);
+            assert_eq!(proc.size(), new_size);
+            let kill_result = proc.kill().await;
+            assert!(kill_result.is_ok());
+        }
+    }
+
+    #[tokio::test]
+    async fn write_and_read_through_pty() {
+        let config = PtyConfig::new("/bin/bash", "/tmp");
+        if let Ok(mut proc) = PtyProcess::spawn(config) {
+            // Wait for shell startup.
+            tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+            // Drain initial output.
+            let _initial = proc.read(4096).await;
+
+            // Write a command through PTY (CR triggers line discipline).
+            let write_result = proc.write(b"echo PTY_TEST_OK\r").await;
+            assert!(write_result.is_ok(), "write through PTY should succeed");
+
+            // Read output — should contain our marker.
+            tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+            let output = proc.read(4096).await;
+            assert!(output.is_ok());
+            if let Ok(data) = output {
+                let text = String::from_utf8_lossy(&data);
+                assert!(
+                    text.contains("PTY_TEST_OK"),
+                    "PTY output should contain marker, got: {text:?}"
+                );
+            }
+
+            let kill_result = proc.kill().await;
+            assert!(kill_result.is_ok());
+        }
     }
 }

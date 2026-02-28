@@ -115,7 +115,6 @@ nexcore-ghost = { workspace = true }
 nexcore-jeopardy = { workspace = true }
 nexcore-mcp-hot = { workspace = true }
 nexcore-pharma-rd = { workspace = true }
-nexcore-softrender = { workspace = true }
 nexcore-state-theory = { workspace = true }
 # Clinical Trial Validation Paradigm (software validation methodology)
 nexcore-ctvp = { workspace = true }

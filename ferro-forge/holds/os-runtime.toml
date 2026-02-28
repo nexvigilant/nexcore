@@ -3,4 +3,4 @@ name = "os-runtime"
 owner = "os-runtime-team"
 review_required = true
 layer = "Orchestration"
-members = ["nexcore-os", "nexcore-pty", "nexcore-shell", "nexcore-state-os", "nexcore-terminal"]
+members = ["nexcore-init", "nexcore-os", "nexcore-pty", "nexcore-shell", "nexcore-state-os", "nexcore-terminal"]

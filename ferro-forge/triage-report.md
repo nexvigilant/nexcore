@@ -505,6 +505,38 @@ All 6 non-ACCEPT DVs verified LIVE by `cargo check` (remove dep → compilation 
 
 **Projected final state:** 1 DV (down from 8). The sole remaining DV (nexcore-constants → nexcore-fs) has an accepted exemption (EX-DV-002).
 
+### Tiers 1-2 Execution Results (2026-02-28)
+
+**Edits applied:**
+- core-primitives.toml: removed nexcore-core, nexcore-init, nexcore-rh-proofs (18 → 15 members)
+- pv-core.toml: added nexcore-core, nexcore-guardian-engine (13 → 15 members)
+- os-runtime.toml: added nexcore-init (5 → 6 members)
+- analysis-tools.toml: added nexcore-rh-proofs (8 → 9 members)
+- guardian-system.toml: removed nexcore-guardian-engine (9 → 8 members)
+- observatory-viz.toml: layer Foundation → Domain
+
+**bay.toml regenerated** via `regenerate_bay_from_holds` (manifest path). 25 holds, 227 crates.
+
+**Reconciliation results:**
+
+| Metric | Pre-Tiers 1-2 | Post-Tiers 1-2 | Delta |
+|--------|---------------|----------------|-------|
+| Total actions | 16 | 8 | -8 |
+| DirectionViolation | 8 | 2 | -6 |
+| LayerViolation | 7 | 5 | -2 |
+| OrphanCrate | 0 | 0 | 0 |
+| SuggestMove | 0 | 1 | +1 |
+
+**Remaining DVs (2):**
+1. nexcore-constants → nexcore-fs: ACCEPT (EX-DV-002)
+2. nexcore-value-mining → nexcore-social: FIXABLE-EXTRACT (Tier 3 — deferred)
+
+**New LV:** nexcore-guardian-engine in pv-core has depth 26 — exceeds Domain threshold. Expected: guardian-engine is a heavy crate that was Orchestration-layer before the move. Acceptable trade-off: resolving DV8 + DV4 outweighs one LV.
+
+**SuggestMove:** nexcore-chemivigilance (pv-core → chemistry). Pre-existing, not new.
+
+**Prediction accuracy:** 6/6 DV resolutions confirmed. 0 new DVs created. DV4 cascade confirmed (pharos→guardian-engine no longer a DV).
+
 ### Lessons
 
 1. **Audit accuracy**: Agent-based grep audits for "dead deps" must search for fully-qualified paths (`crate::Type`), not just `use crate` imports. 2 of 5 classified dead deps were live.

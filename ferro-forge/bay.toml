@@ -6,7 +6,7 @@ name = "analysis-tools"
 owner = "analysis-tools-team"
 review_required = true
 layer = "Domain"
-members = ["nexcore-edit-distance", "nexcore-insight", "nexcore-model-checker", "nexcore-oracle", "nexcore-reason", "nexcore-retrocasting", "nexcore-state-theory", "nexcore-zeta"]
+members = ["nexcore-edit-distance", "nexcore-insight", "nexcore-model-checker", "nexcore-oracle", "nexcore-reason", "nexcore-retrocasting", "nexcore-rh-proofs", "nexcore-state-theory", "nexcore-zeta"]
 
 [[bay.holds]]
 name = "bio-anatomical"
@@ -55,7 +55,7 @@ name = "core-primitives"
 owner = "core-primitives-team"
 review_required = true
 layer = "Domain"
-members = ["nexcore-bicone", "nexcore-chrono", "nexcore-codec", "nexcore-config", "nexcore-constants", "nexcore-core", "nexcore-domain-primitives", "nexcore-error", "nexcore-error-derive", "nexcore-hash", "nexcore-id", "nexcore-init", "nexcore-lex-primitiva", "nexcore-primitive-scanner", "nexcore-primitives", "nexcore-rh-proofs", "nucli", "primitive-innovation"]
+members = ["nexcore-bicone", "nexcore-chrono", "nexcore-codec", "nexcore-config", "nexcore-constants", "nexcore-domain-primitives", "nexcore-error", "nexcore-error-derive", "nexcore-hash", "nexcore-id", "nexcore-lex-primitiva", "nexcore-primitive-scanner", "nexcore-primitives", "nucli", "primitive-innovation"]
 
 [[bay.holds]]
 name = "data-computation"
@@ -83,7 +83,7 @@ name = "guardian-system"
 owner = "guardian-system-team"
 review_required = true
 layer = "Orchestration"
-members = ["nexcore-guardian-engine", "nexcore-homeostasis", "nexcore-homeostasis-memory", "nexcore-homeostasis-primitives", "nexcore-homeostasis-storm", "nexcore-nvrepl", "nexcore-orchestration", "nexcore-sentinel", "nexcore-vigil"]
+members = ["nexcore-homeostasis", "nexcore-homeostasis-memory", "nexcore-homeostasis-primitives", "nexcore-homeostasis-storm", "nexcore-nvrepl", "nexcore-orchestration", "nexcore-sentinel", "nexcore-vigil"]
 
 [[bay.holds]]
 name = "linguistics"
@@ -110,7 +110,7 @@ members = ["counter-awareness", "nexcore-pharos", "nexcore-telemetry-core", "nex
 name = "observatory-viz"
 owner = "observatory-viz-team"
 review_required = true
-layer = "Foundation"
+layer = "Domain"
 members = ["nexcloud", "nexcore-browser", "nexcore-renderer", "nexcore-softrender", "nexcore-viz"]
 
 [[bay.holds]]
@@ -118,7 +118,7 @@ name = "os-runtime"
 owner = "os-runtime-team"
 review_required = true
 layer = "Orchestration"
-members = ["nexcore-os", "nexcore-pty", "nexcore-shell", "nexcore-state-os", "nexcore-terminal"]
+members = ["nexcore-init", "nexcore-os", "nexcore-pty", "nexcore-shell", "nexcore-state-os", "nexcore-terminal"]
 
 [[bay.holds]]
 name = "prima-language"
@@ -132,7 +132,7 @@ name = "pv-core"
 owner = "pv-core-team"
 review_required = true
 layer = "Domain"
-members = ["nexcore-ccp", "nexcore-chemivigilance", "nexcore-harm-taxonomy", "nexcore-pharmacovigilance", "nexcore-preemptive-pv", "nexcore-pv-core", "nexcore-pvdsl", "nexcore-pvos", "nexcore-qbr", "nexcore-tov", "nexcore-tov-grounded", "nexcore-tov-proofs", "nexcore-vigilance"]
+members = ["nexcore-ccp", "nexcore-chemivigilance", "nexcore-core", "nexcore-guardian-engine", "nexcore-harm-taxonomy", "nexcore-pharmacovigilance", "nexcore-preemptive-pv", "nexcore-pv-core", "nexcore-pvdsl", "nexcore-pvos", "nexcore-qbr", "nexcore-tov", "nexcore-tov-grounded", "nexcore-tov-proofs", "nexcore-vigilance"]
 
 [[bay.holds]]
 name = "quality-assurance"

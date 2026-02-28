@@ -2,5 +2,5 @@
 name = "observatory-viz"
 owner = "observatory-viz-team"
 review_required = true
-layer = "Foundation"
+layer = "Domain"
 members = ["nexcloud", "nexcore-browser", "nexcore-renderer", "nexcore-softrender", "nexcore-viz"]

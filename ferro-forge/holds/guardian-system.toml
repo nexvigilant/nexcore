@@ -3,4 +3,4 @@ name = "guardian-system"
 owner = "guardian-system-team"
 review_required = true
 layer = "Orchestration"
-members = ["nexcore-guardian-engine", "nexcore-homeostasis", "nexcore-homeostasis-memory", "nexcore-homeostasis-primitives", "nexcore-homeostasis-storm", "nexcore-nvrepl", "nexcore-orchestration", "nexcore-sentinel", "nexcore-vigil"]
+members = ["nexcore-homeostasis", "nexcore-homeostasis-memory", "nexcore-homeostasis-primitives", "nexcore-homeostasis-storm", "nexcore-nvrepl", "nexcore-orchestration", "nexcore-sentinel", "nexcore-vigil"]

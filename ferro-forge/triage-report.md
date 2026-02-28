@@ -147,22 +147,23 @@ The 1 remaining SuggestMove (`nexcore-chemivigilance` to `chemistry`) is a legit
 
 ### DirectionViolations (17 bootstrap / 12 manifest)
 
-Post-P8 direction violations on the manifest path (the authoritative source):
+Post-P8 direction violations on the manifest path (the authoritative source).
+Items 11-12 (stem/stem-bio → biological-system) were resolved by the bio-remediation arc (nexcore-hormone-types extraction, commit 555f4bbb). See "Post Bio-Remediation Baseline" section for current counts.
 
-| # | Crate | Source Hold | Target Hold | Direction |
-|---|-------|-----------|------------|-----------|
-| 1 | nexcore-compositor | build-tooling (Domain) | os-runtime (Orchestration) | Domain → Orchestration |
-| 2 | nexcore-constants | core-primitives (Foundation) | system-utilities (Domain) | Foundation → Domain |
-| 3 | nexcore-core | core-primitives (Foundation) | brain-knowledge (Domain) | Foundation → Domain |
-| 4 | nexcore-faers-etl | regulatory-compliance (Domain) | pv-core (Orchestration) | Domain → Orchestration |
-| 5 | nexcore-init | core-primitives (Foundation) | build-tooling (Domain) | Foundation → Domain |
-| 6 | nexcore-model-checker | analysis-tools (Domain) | os-runtime (Orchestration) | Domain → Orchestration |
-| 7 | nexcore-pharos | observability (Domain) | guardian-system (Orchestration) | Domain → Orchestration |
-| 8 | nexcore-rh-proofs | core-primitives (Foundation) | pv-core (Orchestration) | Foundation → Orchestration |
-| 9 | nexcore-value-mining | business-strategy (Domain) | mcp-service (Service) | Domain → Service |
-| 10 | nexcore-watch-core | observability (Domain) | pv-core (Orchestration) | Domain → Orchestration |
-| 11 | stem | stem-foundation (Foundation) | biological-system (Domain) | Foundation → Domain |
-| 12 | stem-bio | stem-foundation (Foundation) | biological-system (Domain) | Foundation → Domain |
+| # | Crate | Source Hold | Target Hold | Direction | Status |
+|---|-------|-----------|------------|-----------|--------|
+| 1 | nexcore-compositor | build-tooling (Domain) | os-runtime (Orchestration) | Domain → Orchestration | Open |
+| 2 | nexcore-constants | core-primitives (Foundation) | system-utilities (Domain) | Foundation → Domain | Open |
+| 3 | nexcore-core | core-primitives (Foundation) | brain-knowledge (Domain) | Foundation → Domain | Open |
+| 4 | nexcore-faers-etl | regulatory-compliance (Domain) | pv-core (Orchestration) | Domain → Orchestration | Open |
+| 5 | nexcore-init | core-primitives (Foundation) | build-tooling (Domain) | Foundation → Domain | Open |
+| 6 | nexcore-model-checker | analysis-tools (Domain) | os-runtime (Orchestration) | Domain → Orchestration | Open |
+| 7 | nexcore-pharos | observability (Domain) | guardian-system (Orchestration) | Domain → Orchestration | Open |
+| 8 | nexcore-rh-proofs | core-primitives (Foundation) | pv-core (Orchestration) | Foundation → Orchestration | Open |
+| 9 | nexcore-value-mining | business-strategy (Domain) | mcp-service (Service) | Domain → Service | Open |
+| 10 | nexcore-watch-core | observability (Domain) | pv-core (Orchestration) | Domain → Orchestration | Open |
+| 11 | ~~stem~~ | ~~stem-foundation~~ | ~~biological-system~~ | ~~Foundation → Domain~~ | **Fixed** (555f4bbb) |
+| 12 | ~~stem-bio~~ | ~~stem-foundation~~ | ~~biological-system~~ | ~~Foundation → Domain~~ | **Fixed** (555f4bbb) |
 
 ### LayerViolations (6 both paths)
 
@@ -181,7 +182,7 @@ Crates in foundation holds whose dep count exceeds the Foundation threshold (≤
 
 | Pattern | Count | Root Cause | Potential Fix |
 |---------|-------|------------|---------------|
-| Foundation crate → Domain/Orchestration hold | 5 DV | Foundation crates (`nexcore-core`, `nexcore-init`, `nexcore-constants`, `nexcore-rh-proofs`, `stem`/`stem-bio`) depend on higher-layer crates | Move high-dep Foundation members to Domain hold, or reclassify target holds |
+| Foundation crate → Domain/Orchestration hold | 3 DV | Foundation crates (`nexcore-core`, `nexcore-init`, `nexcore-constants`, `nexcore-rh-proofs`) depend on higher-layer crates | Move high-dep Foundation members to Domain hold, or reclassify target holds |
 | Domain → Orchestration | 5 DV | `pv-core` and `os-runtime` assigned Orchestration but consumed by Domain crates | Consider downgrading `pv-core`/`os-runtime` to Domain |
 | Foundation members with >3 deps | 6 LV | `core-primitives` and `stem-foundation` contain crates that have grown beyond Foundation threshold | Move `nexcore-core`, `nexcore-init`, `nexcore-primitives`, `nexcore-rh-proofs` to a domain hold, or accept as known violations |
 | Domain → Service | 1 DV | `nexcore-value-mining` depends on `nexcore-social` (MCP service) | Move `nexcore-social` to a domain hold, or restructure dependency |

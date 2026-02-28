@@ -1,0 +1,6 @@
+[hold]
+name = "bio-anatomical"
+owner = "bio-anatomical-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-cardiovascular", "nexcore-circulatory", "nexcore-digestive", "nexcore-integumentary", "nexcore-lymphatic", "nexcore-muscular", "nexcore-nervous", "nexcore-reproductive", "nexcore-respiratory", "nexcore-skeletal", "nexcore-urinary"]

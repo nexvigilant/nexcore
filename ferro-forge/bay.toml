@@ -9,11 +9,18 @@ layer = "Domain"
 members = ["nexcore-edit-distance", "nexcore-insight", "nexcore-model-checker", "nexcore-oracle", "nexcore-reason", "nexcore-retrocasting", "nexcore-zeta"]
 
 [[bay.holds]]
-name = "biological-system"
-owner = "biological-system-team"
+name = "bio-anatomical"
+owner = "bio-anatomical-team"
 review_required = true
 layer = "Domain"
-members = ["nexcore-cardiovascular", "nexcore-circulatory", "nexcore-cytokine", "nexcore-digestive", "nexcore-energy", "nexcore-hormones", "nexcore-immunity", "nexcore-integumentary", "nexcore-lymphatic", "nexcore-muscular", "nexcore-nervous", "nexcore-phenotype", "nexcore-reproductive", "nexcore-respiratory", "nexcore-ribosome", "nexcore-skeletal", "nexcore-spliceosome", "nexcore-synapse", "nexcore-transcriptase", "nexcore-urinary"]
+members = ["nexcore-cardiovascular", "nexcore-circulatory", "nexcore-digestive", "nexcore-integumentary", "nexcore-lymphatic", "nexcore-muscular", "nexcore-nervous", "nexcore-reproductive", "nexcore-respiratory", "nexcore-skeletal", "nexcore-urinary"]
+
+[[bay.holds]]
+name = "bio-molecular"
+owner = "bio-molecular-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-cytokine", "nexcore-energy", "nexcore-hormones", "nexcore-immunity", "nexcore-phenotype", "nexcore-ribosome", "nexcore-spliceosome", "nexcore-synapse", "nexcore-transcriptase"]
 
 [[bay.holds]]
 name = "brain-knowledge"

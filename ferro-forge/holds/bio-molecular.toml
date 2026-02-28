@@ -1,0 +1,6 @@
+[hold]
+name = "bio-molecular"
+owner = "bio-molecular-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-cytokine", "nexcore-energy", "nexcore-hormones", "nexcore-immunity", "nexcore-phenotype", "nexcore-ribosome", "nexcore-spliceosome", "nexcore-synapse", "nexcore-transcriptase"]

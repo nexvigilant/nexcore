@@ -18,9 +18,9 @@ name = "biological-homeostasis"
 description = "Biological system from energy primitives to immune response"
 segments = [
     { layer = "Foundation", hold = "core-primitives",    crate = "nexcore-lex-primitiva" },
-    { layer = "Domain",      hold = "biological-system",  crate = "nexcore-energy" },
-    { layer = "Domain",      hold = "biological-system",  crate = "nexcore-cytokine" },
-    { layer = "Domain",      hold = "biological-system",  crate = "nexcore-immunity" },
+    { layer = "Domain",      hold = "bio-molecular",      crate = "nexcore-energy" },
+    { layer = "Domain",      hold = "bio-molecular",      crate = "nexcore-cytokine" },
+    { layer = "Domain",      hold = "bio-molecular",      crate = "nexcore-immunity" },
     { layer = "Domain",      hold = "guardian-system",    crate = "nexcore-guardian-engine" },
 ]
 

@@ -14,6 +14,10 @@
 //!   brain track <file>                   # Track a file for change detection
 //!   brain changed <file>                 # Check if file changed
 //!   brain original <file>                # Get original content
+//!   brain autopsy run <id>               # Autopsy a single session
+//!   brain autopsy backfill               # Retroactive autopsy on all sessions
+//!   brain autopsy report                 # Aggregate intelligence summary
+//!   brain autopsy directive <id>         # Longitudinal directive report
 //!   brain init                           # Initialize brain directories
 
 use clap::{Parser, Subcommand};
@@ -22,6 +26,7 @@ use nexcore_brain::{
     check_brain_availability, check_index_health, detect_partial_writes, initialize_directories,
     rebuild_index_from_sessions, repair_partial_writes,
 };
+use nexcore_db::pool::DbPool;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -91,6 +96,12 @@ enum Commands {
     Recovery {
         #[command(subcommand)]
         action: RecoveryAction,
+    },
+
+    /// Directive Autopsy Engine — structured session post-mortem
+    Autopsy {
+        #[command(subcommand)]
+        action: AutopsyAction,
     },
 }
 
@@ -248,6 +259,27 @@ enum RecoveryAction {
     Auto,
 }
 
+#[derive(Subcommand)]
+enum AutopsyAction {
+    /// Autopsy a single session
+    Run {
+        /// Session ID to autopsy
+        id: String,
+    },
+
+    /// Retroactive autopsy on all un-autopsied sessions
+    Backfill,
+
+    /// Aggregate intelligence summary across all autopsied sessions
+    Report,
+
+    /// Longitudinal directive report
+    Directive {
+        /// Directive ID (e.g., "D008")
+        id: String,
+    },
+}
+
 fn main() -> ExitCode {
     let cli = Cli::parse();
 
@@ -274,6 +306,7 @@ fn run(cli: Cli) -> nexcore_brain::error::Result<()> {
         Commands::Original { file, project } => handle_original(file, project),
         Commands::Implicit { action } => handle_implicit_action(action),
         Commands::Recovery { action } => handle_recovery_action(action),
+        Commands::Autopsy { action } => handle_autopsy_action(action),
     }
 }
 
@@ -672,6 +705,322 @@ fn auto_recovery_cmd() -> nexcore_brain::error::Result<()> {
         }
     }
     Ok(())
+}
+
+// ── Autopsy ──────────────────────────────────────────────────────────────
+
+fn handle_autopsy_action(action: AutopsyAction) -> nexcore_brain::error::Result<()> {
+    match action {
+        AutopsyAction::Run { id } => autopsy_run_cmd(id),
+        AutopsyAction::Backfill => autopsy_backfill_cmd(),
+        AutopsyAction::Report => autopsy_report_cmd(),
+        AutopsyAction::Directive { id } => autopsy_directive_cmd(id),
+    }
+}
+
+/// Helper to open the brain database pool.
+fn open_db() -> nexcore_brain::error::Result<DbPool> {
+    DbPool::open_default().map_err(|e| {
+        nexcore_brain::error::BrainError::Other(
+            ["Failed to open brain database: ", &e.to_string()].concat(),
+        )
+    })
+}
+
+fn autopsy_run_cmd(session_id: String) -> nexcore_brain::error::Result<()> {
+    let pool = open_db()?;
+    pool.with_conn(|conn| {
+        let (row, newly_inserted) =
+            nexcore_db::autopsy_engine::run_retroactive_single(conn, &session_id)?;
+
+        if newly_inserted {
+            println!("Autopsy created for session: {}", row.session_id);
+        } else {
+            println!("Autopsy already exists for session: {}", row.session_id);
+        }
+
+        print_autopsy_summary(&row);
+        Ok(())
+    })
+    .map_err(|e| {
+        nexcore_brain::error::BrainError::Other(["Autopsy run failed: ", &e.to_string()].concat())
+    })
+}
+
+fn autopsy_backfill_cmd() -> nexcore_brain::error::Result<()> {
+    let pool = open_db()?;
+    pool.with_conn(|conn| {
+        let result = nexcore_db::autopsy_engine::run_retroactive(conn)?;
+
+        println!("Autopsy Backfill Complete");
+        println!("========================");
+        println!("Sessions processed: {}", result.sessions_processed);
+        println!("Records inserted:   {}", result.records_inserted);
+        println!("Records skipped:    {}", result.records_skipped);
+
+        if !result.errors.is_empty() {
+            println!("\nWarnings ({}):", result.errors.len());
+            for err in &result.errors {
+                println!("  - {err}");
+            }
+        }
+
+        Ok(())
+    })
+    .map_err(|e| {
+        nexcore_brain::error::BrainError::Other(
+            ["Autopsy backfill failed: ", &e.to_string()].concat(),
+        )
+    })
+}
+
+fn autopsy_report_cmd() -> nexcore_brain::error::Result<()> {
+    let pool = open_db()?;
+    pool.with_conn(|conn| {
+        let rows = nexcore_db::autopsy::list_all(conn)?;
+
+        if rows.is_empty() {
+            println!("No autopsy records found. Run `brain autopsy backfill` first.");
+            return Ok(());
+        }
+
+        let total = rows.len();
+
+        // PDP pass rates (exclude not_evaluated)
+        let (mut g1_pass, mut g1_total) = (0usize, 0usize);
+        let (mut g2_pass, mut g2_total) = (0usize, 0usize);
+        let (mut g3_pass, mut g3_total) = (0usize, 0usize);
+
+        // Verdict distribution
+        let (mut fully, mut partially, mut not_dem) = (0usize, 0usize, 0usize);
+
+        // Root cause totals
+        let (mut rc_prop, mut rc_sowhat, mut rc_why, mut rc_hook) = (0i64, 0i64, 0i64, 0i64);
+
+        // Aggregates
+        let mut total_lessons: i64 = 0;
+        let mut total_patterns: i64 = 0;
+        let mut rho_sum: f64 = 0.0;
+        let mut rho_count: usize = 0;
+
+        for row in &rows {
+            // PDP gates
+            if row.g1_proposition != "not_evaluated" {
+                g1_total = g1_total.saturating_add(1);
+                if row.g1_proposition == "pass" {
+                    g1_pass = g1_pass.saturating_add(1);
+                }
+            }
+            if row.g2_specificity != "not_evaluated" {
+                g2_total = g2_total.saturating_add(1);
+                if row.g2_specificity == "pass" {
+                    g2_pass = g2_pass.saturating_add(1);
+                }
+            }
+            if row.g3_singularity != "not_evaluated" {
+                g3_total = g3_total.saturating_add(1);
+                if row.g3_singularity == "pass" {
+                    g3_pass = g3_pass.saturating_add(1);
+                }
+            }
+
+            // Verdict
+            match row.outcome_verdict.as_deref() {
+                Some("fully_demonstrated") => fully = fully.saturating_add(1),
+                Some("partially_demonstrated") => partially = partially.saturating_add(1),
+                Some("not_demonstrated") => not_dem = not_dem.saturating_add(1),
+                _ => {}
+            }
+
+            // Root causes
+            rc_prop = rc_prop.saturating_add(row.rc_pdp_proposition);
+            rc_sowhat = rc_sowhat.saturating_add(row.rc_pdp_so_what);
+            rc_why = rc_why.saturating_add(row.rc_pdp_why);
+            rc_hook = rc_hook.saturating_add(row.rc_hook_gap);
+
+            // Lessons / patterns
+            total_lessons = total_lessons.saturating_add(row.lesson_count);
+            total_patterns = total_patterns.saturating_add(row.pattern_count);
+
+            // Rho
+            if let Some(rho) = row.rho_session {
+                rho_sum += rho;
+                rho_count = rho_count.saturating_add(1);
+            }
+        }
+
+        // Print report
+        println!("Autopsy Intelligence Report");
+        println!("===========================");
+        println!();
+        println!("Sessions autopsied: {total}");
+        println!();
+
+        // PDP pass rates
+        println!("PDP Foundation Gate Pass Rates:");
+        print_pass_rate("  G1 Proposition", g1_pass, g1_total);
+        print_pass_rate("  G2 Specificity", g2_pass, g2_total);
+        print_pass_rate("  G3 Singularity", g3_pass, g3_total);
+        println!();
+
+        // Verdict distribution
+        println!("Verdict Distribution:");
+        println!("  Fully demonstrated:     {fully}");
+        println!("  Partially demonstrated: {partially}");
+        println!("  Not demonstrated:       {not_dem}");
+        println!();
+
+        // Lessons
+        let avg_lessons = if total > 0 {
+            total_lessons as f64 / total as f64
+        } else {
+            0.0
+        };
+        println!("Lessons: {total_lessons} total, {avg_lessons:.1} avg/session");
+        println!("Patterns: {total_patterns} total");
+        println!();
+
+        // Root causes
+        println!("Top Root Causes:");
+        let mut causes = [
+            ("PDP Proposition", rc_prop),
+            ("PDP So What?", rc_sowhat),
+            ("PDP Why?", rc_why),
+            ("Hook/Tool Gap", rc_hook),
+        ];
+        causes.sort_by(|a, b| b.1.cmp(&a.1));
+        for (name, count) in &causes {
+            if *count > 0 {
+                println!("  {name}: {count}");
+            }
+        }
+        if causes.iter().all(|(_, c)| *c == 0) {
+            println!("  (none recorded)");
+        }
+        println!();
+
+        // Rho
+        if rho_count > 0 {
+            let avg_rho = rho_sum / rho_count as f64;
+            println!("Compounding: avg rho = {avg_rho:.3} ({rho_count} sessions with data)");
+        } else {
+            println!("Compounding: no rho data recorded");
+        }
+
+        Ok(())
+    })
+    .map_err(|e| {
+        nexcore_brain::error::BrainError::Other(
+            ["Autopsy report failed: ", &e.to_string()].concat(),
+        )
+    })
+}
+
+fn autopsy_directive_cmd(directive_id: String) -> nexcore_brain::error::Result<()> {
+    let pool = open_db()?;
+    pool.with_conn(|conn| {
+        let rows = nexcore_db::autopsy::list_by_directive(conn, &directive_id)?;
+
+        if rows.is_empty() {
+            println!("No autopsy records found for directive: {directive_id}");
+            return Ok(());
+        }
+
+        println!("Directive Report: {directive_id}");
+        println!("{}", "=".repeat(20 + directive_id.len()));
+        println!("Sessions: {}", rows.len());
+        println!();
+
+        for (i, row) in rows.iter().enumerate() {
+            let phase = row.phase.as_deref().unwrap_or("-");
+            let phase_type = row.phase_type.as_deref().unwrap_or("-");
+            let verdict = row.outcome_verdict.as_deref().unwrap_or("-");
+
+            let short_id: String = row.session_id.chars().take(12).collect();
+            println!(
+                "{}. {} | {} ({}) | {}",
+                i + 1,
+                short_id,
+                phase,
+                phase_type,
+                verdict,
+            );
+
+            let rho_str = row
+                .rho_session
+                .map(|r| {
+                    let mut buf = String::with_capacity(8);
+                    buf.push_str("rho=");
+                    // Manual f64 formatting to avoid format! with variable
+                    let truncated = (r * 1000.0) as i64;
+                    let whole = truncated / 1000;
+                    let frac = (truncated % 1000).unsigned_abs();
+                    buf.push_str(&whole.to_string());
+                    buf.push('.');
+                    if frac < 10 {
+                        buf.push_str("00");
+                    } else if frac < 100 {
+                        buf.push('0');
+                    }
+                    buf.push_str(&frac.to_string());
+                    buf
+                })
+                .unwrap_or_else(|| "-".to_string());
+
+            println!(
+                "   lessons={} patterns={} tools={} mcp={} {}",
+                row.lesson_count, row.pattern_count, row.tool_calls_total, row.mcp_calls, rho_str,
+            );
+        }
+
+        Ok(())
+    })
+    .map_err(|e| {
+        nexcore_brain::error::BrainError::Other(
+            ["Directive report failed: ", &e.to_string()].concat(),
+        )
+    })
+}
+
+fn print_autopsy_summary(row: &nexcore_db::autopsy::AutopsyRow) {
+    let directive = row.directive_id.as_deref().unwrap_or("-");
+    let phase = row.phase.as_deref().unwrap_or("-");
+    let verdict = row.outcome_verdict.as_deref().unwrap_or("-");
+
+    println!("  Directive: {directive}");
+    println!("  Phase: {phase}");
+    println!("  Verdict: {verdict}");
+    println!(
+        "  Lessons: {} | Patterns: {}",
+        row.lesson_count, row.pattern_count
+    );
+    println!(
+        "  Tools: {} total, {} MCP | Hook blocks: {}",
+        row.tool_calls_total, row.mcp_calls, row.hook_blocks
+    );
+
+    if let Some(rho) = row.rho_session {
+        let truncated = (rho * 1000.0) as i64;
+        let whole = truncated / 1000;
+        let frac = (truncated % 1000).unsigned_abs();
+        print!("  Rho: {whole}.");
+        if frac < 10 {
+            print!("00");
+        } else if frac < 100 {
+            print!("0");
+        }
+        println!("{frac}");
+    }
+}
+
+fn print_pass_rate(label: &str, pass: usize, total: usize) {
+    if total == 0 {
+        println!("{label}: n/a (no evaluated sessions)");
+    } else {
+        let pct = (pass as f64 / total as f64) * 100.0;
+        let pct_int = pct as u32;
+        println!("{label}: {pass}/{total} ({pct_int}%)");
+    }
 }
 
 fn get_session(id: Option<String>) -> nexcore_brain::error::Result<BrainSession> {

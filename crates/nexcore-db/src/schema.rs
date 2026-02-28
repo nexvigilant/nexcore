@@ -8,7 +8,7 @@ use rusqlite::Connection;
 use crate::error::{DbError, Result};
 
 /// Current schema version. Increment when adding migrations.
-pub const CURRENT_SCHEMA_VERSION: u32 = 3;
+pub const CURRENT_SCHEMA_VERSION: u32 = 4;
 
 /// Initialize the database schema (create all tables if they don't exist).
 ///
@@ -38,6 +38,8 @@ pub fn initialize(conn: &Connection) -> Result<()> {
             // Fresh database — apply full schema (all versions)
             apply_v1(conn)?;
             apply_v2(conn)?;
+            // V3 is a dedup migration — no new tables, skip on fresh install
+            apply_v4(conn)?;
             conn.execute(
                 "INSERT INTO schema_version (version) VALUES (?1)",
                 [CURRENT_SCHEMA_VERSION],
@@ -204,7 +206,9 @@ fn migrate(conn: &Connection, from_version: u32) -> Result<()> {
     if from_version < 3 {
         apply_v3(conn)?;
     }
-    // Future: if from_version < 4 { apply_v4(conn)?; }
+    if from_version < 4 {
+        apply_v4(conn)?;
+    }
 
     conn.execute(
         "UPDATE schema_version SET version = ?1",
@@ -343,6 +347,92 @@ fn apply_v3(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
+/// V4 schema: Directive Autopsy Engine records.
+///
+/// New table:
+/// - `autopsy_records` — structured post-mortem analysis of session quality,
+///   linking PDP gate evaluations, directive identity, session outcomes, and
+///   self-use compounding metrics.
+fn apply_v4(conn: &Connection) -> Result<()> {
+    conn.execute_batch(
+        "
+        CREATE TABLE IF NOT EXISTS autopsy_records (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id          TEXT    NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+
+            -- Directive identity (Directive Protocol §Directive Protocol)
+            directive_id        TEXT,
+            phase               TEXT,
+            phase_type          TEXT,
+
+            -- PDP Foundation Gate (CLAUDE.md §Foundation Gate: G1/G2/G3)
+            g1_proposition      TEXT    NOT NULL DEFAULT 'not_evaluated',
+            g2_specificity      TEXT    NOT NULL DEFAULT 'not_evaluated',
+            g3_singularity      TEXT    NOT NULL DEFAULT 'not_evaluated',
+
+            -- PDP Structural Gate (CLAUDE.md §Structural Gate: S1-S5)
+            s1_badjective       INTEGER NOT NULL DEFAULT 0,
+            s2_throat_clear     INTEGER NOT NULL DEFAULT 0,
+            s3_hedging          INTEGER NOT NULL DEFAULT 0,
+            s4_context          INTEGER NOT NULL DEFAULT 0,
+            s5_output_spec      INTEGER NOT NULL DEFAULT 0,
+
+            -- PDP Calibration Gate (CLAUDE.md §Calibration Gate: C1-C5)
+            c1_eval_criteria    INTEGER NOT NULL DEFAULT 0,
+            c2_outcome_focus    INTEGER NOT NULL DEFAULT 0,
+            c3_abstraction      INTEGER NOT NULL DEFAULT 0,
+            c4_decisive_ending  INTEGER NOT NULL DEFAULT 0,
+            c5_sell_mode        INTEGER NOT NULL DEFAULT 0,
+
+            -- Session Outcome (session-closeout-reflection rule §Output)
+            outcome_verdict     TEXT,
+            lesson_count        INTEGER NOT NULL DEFAULT 0,
+            pattern_count       INTEGER NOT NULL DEFAULT 0,
+
+            -- Lesson Root Causes (session-closeout-reflection rule §Lessons Learned)
+            rc_pdp_proposition  INTEGER NOT NULL DEFAULT 0,
+            rc_pdp_so_what      INTEGER NOT NULL DEFAULT 0,
+            rc_pdp_why          INTEGER NOT NULL DEFAULT 0,
+            rc_hook_gap         INTEGER NOT NULL DEFAULT 0,
+
+            -- Quantitative Metrics (handoffs + tool_usage)
+            tool_calls_total    INTEGER NOT NULL DEFAULT 0,
+            mcp_calls           INTEGER NOT NULL DEFAULT 0,
+            hook_blocks         INTEGER NOT NULL DEFAULT 0,
+            files_modified      INTEGER NOT NULL DEFAULT 0,
+            lines_written       INTEGER NOT NULL DEFAULT 0,
+            commits             INTEGER NOT NULL DEFAULT 0,
+            tokens_total        INTEGER NOT NULL DEFAULT 0,
+
+            -- Self-Use Discipline (CLAUDE.md §Self-Use Discipline, CCIM)
+            rho_session         REAL,
+            tools_sovereign     INTEGER NOT NULL DEFAULT 0,
+            tools_analysis      INTEGER NOT NULL DEFAULT 0,
+
+            -- Density Score (compendious-machine MCP)
+            reflection_cs       REAL,
+
+            -- Prose References
+            reflection_artifact TEXT,
+            closeout_artifact   TEXT,
+
+            -- Timestamps
+            session_started_at  TEXT    NOT NULL,
+            session_ended_at    TEXT,
+            autopsied_at        TEXT    NOT NULL,
+
+            UNIQUE(session_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_autopsy_directive ON autopsy_records(directive_id);
+        CREATE INDEX IF NOT EXISTS idx_autopsy_verdict ON autopsy_records(outcome_verdict);
+        CREATE INDEX IF NOT EXISTS idx_autopsy_date ON autopsy_records(autopsied_at);
+        CREATE INDEX IF NOT EXISTS idx_autopsy_phase ON autopsy_records(phase_type);
+        ",
+    )?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -467,6 +557,121 @@ mod tests {
     }
 
     #[test]
+    fn test_v4_autopsy_migration() {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        // Set up V3 schema manually
+        conn.execute_batch("PRAGMA journal_mode=WAL;").expect("wal");
+        conn.execute_batch("PRAGMA foreign_keys=ON;").expect("fk");
+        conn.execute_batch("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL);")
+            .expect("sv");
+        apply_v1(&conn).expect("v1");
+        apply_v2(&conn).expect("v2");
+        apply_v3(&conn).expect("v3");
+        conn.execute("INSERT INTO schema_version (version) VALUES (3)", [])
+            .expect("insert v3");
+
+        // Run initialize — should migrate V3 → V4
+        initialize(&conn).expect("migrate to v4");
+
+        let version: u32 = conn
+            .query_row("SELECT version FROM schema_version", [], |row| row.get(0))
+            .expect("version");
+        assert_eq!(version, 4);
+
+        // autopsy_records table should exist
+        let exists: bool = conn
+            .query_row(
+                "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='table' AND name='autopsy_records'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("check autopsy table");
+        assert!(exists, "autopsy_records should exist after V4 migration");
+
+        // All 4 indexes should exist
+        for idx in [
+            "idx_autopsy_directive",
+            "idx_autopsy_verdict",
+            "idx_autopsy_date",
+            "idx_autopsy_phase",
+        ] {
+            let idx_exists: bool = conn
+                .query_row(
+                    "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='index' AND name=?1",
+                    [idx],
+                    |row| row.get(0),
+                )
+                .expect("check index");
+            assert!(
+                idx_exists,
+                "Index '{}' should exist after V4 migration",
+                idx
+            );
+        }
+
+        // Insert a test autopsy record
+        conn.execute(
+            "INSERT INTO sessions (id, project, description, created_at)
+             VALUES ('test-sess', 'test', 'test session', '2026-02-28T00:00:00Z')",
+            [],
+        )
+        .expect("insert session");
+
+        conn.execute(
+            "INSERT INTO autopsy_records (session_id, g1_proposition, session_started_at, autopsied_at)
+             VALUES ('test-sess', 'pass', '2026-02-28T00:00:00Z', '2026-02-28T01:00:00Z')",
+            [],
+        )
+        .expect("insert autopsy");
+
+        let count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM autopsy_records", [], |row| row.get(0))
+            .expect("count");
+        assert_eq!(count, 1);
+    }
+
+    #[test]
+    fn test_v4_idempotent() {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        conn.execute_batch("PRAGMA journal_mode=WAL;").expect("wal");
+        conn.execute_batch("PRAGMA foreign_keys=ON;").expect("fk");
+        apply_v1(&conn).expect("v1");
+        apply_v2(&conn).expect("v2");
+
+        // Apply V4 twice — should not error (CREATE TABLE IF NOT EXISTS)
+        apply_v4(&conn).expect("v4 first");
+        apply_v4(&conn).expect("v4 second should be idempotent");
+    }
+
+    #[test]
+    fn test_autopsy_unique_session() {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        initialize(&conn).expect("init");
+
+        conn.execute(
+            "INSERT INTO sessions (id, project, description, created_at)
+             VALUES ('dup-test', 'test', 'test', '2026-02-28T00:00:00Z')",
+            [],
+        )
+        .expect("insert session");
+
+        conn.execute(
+            "INSERT INTO autopsy_records (session_id, session_started_at, autopsied_at)
+             VALUES ('dup-test', '2026-02-28T00:00:00Z', '2026-02-28T01:00:00Z')",
+            [],
+        )
+        .expect("first autopsy");
+
+        // Second insert for same session should fail (UNIQUE constraint)
+        let dup = conn.execute(
+            "INSERT INTO autopsy_records (session_id, session_started_at, autopsied_at)
+             VALUES ('dup-test', '2026-02-28T00:00:00Z', '2026-02-28T02:00:00Z')",
+            [],
+        );
+        assert!(dup.is_err(), "Duplicate session autopsy should be rejected");
+    }
+
+    #[test]
     fn test_tables_exist() {
         let conn = Connection::open_in_memory().expect("open in-memory db");
         initialize(&conn).expect("init");
@@ -489,6 +694,8 @@ mod tests {
             "tasks_history",
             "handoffs",
             "antibodies",
+            // V4 tables
+            "autopsy_records",
         ];
 
         for table in tables {

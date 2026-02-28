@@ -50,11 +50,14 @@
 )]
 
 pub mod artifacts;
+pub mod autopsy;
+pub mod autopsy_engine;
 pub mod decisions;
 pub mod error;
 pub mod implicit;
 pub mod knowledge;
 pub mod migrate;
+pub mod pdp_telemetry;
 pub mod pool;
 pub mod schema;
 pub mod sessions;

@@ -143,12 +143,14 @@ The 1 remaining SuggestMove (`nexcore-chemivigilance` to `chemistry`) is a legit
 
 ---
 
-## Remaining Issues (Post-P8)
+## Remaining Issues (Post-P8) — SUPERSEDED
+
+> **Note:** This section captures the post-P8 baseline before bio-remediation and Phases 1-3. For the current DV inventory (8 remaining), see **"Phase 1-3 Remediation Results → Current DV Inventory"** below.
 
 ### DirectionViolations (17 bootstrap / 12 manifest)
 
 Post-P8 direction violations on the manifest path (the authoritative source).
-Items 11-12 (stem/stem-bio → biological-system) were resolved by the bio-remediation arc (nexcore-hormone-types extraction, commit 555f4bbb). See "Post Bio-Remediation Baseline" section for current counts.
+Items 11-12 (stem/stem-bio → biological-system) were resolved by the bio-remediation arc (nexcore-hormone-types extraction, commit 555f4bbb). Items 1, 5, 9 removed by dead dep cleanup (commit 03103855). Items 4, 6, 11 resolved by hold reclassifications (same commit).
 
 | # | Crate | Source Hold | Target Hold | Direction | Status |
 |---|-------|-----------|------------|-----------|--------|
@@ -228,11 +230,9 @@ The biological-system split and hold restructuring exposed 5 chemistry→prima-l
 | 4 | nexcore-renderer | observatory-viz (Foundation) | prima-language (Domain) | Foundation → Domain |
 | 5 | nexcore-structural-alerts | chemistry (Foundation) | prima-language (Domain) | Foundation → Domain |
 
-**Root cause:** Chemistry hold is declared Foundation-layer, but 4 chemistry crates depend on `prima-chem` (prima-language hold, Domain-layer). Similarly, `nexcore-renderer` depends on `prima` (prima-language hold). These are pre-existing layer mismatches exposed by the hold topology changes.
+**Root cause:** Chemistry hold was declared Foundation-layer, but 4 chemistry crates depend on `prima-chem` (prima-language hold, Domain-layer). Similarly, `nexcore-renderer` depends on `prima` (prima-language hold). These were pre-existing layer mismatches exposed by the hold topology changes.
 
-**Potential fixes:**
-- Reclassify chemistry hold from Foundation to Domain (aligns with actual dependency depth)
-- Or reclassify prima-language hold from Domain to Foundation (if prima-chem has few deps)
+**Resolution (commit e74d6db5):** Chemistry hold reclassified from Foundation to Domain. This resolved the 4 chemistry→prima-language DVs. The nexcore-renderer→prima DV remains (observatory-viz is Foundation-layer).
 
 ### Orphan Changes
 
@@ -287,9 +287,9 @@ The bio-remediation arc achieved its primary objective: stem-foundation → bio-
 **DV7 — nexcore-pharos → nexcore-guardian-engine (Domain → Orchestration):**
 PHAROS (Pharmacovigilance Autonomous Reconnaissance and Observation System) imports `SignalSource`, `ThreatLevel`, and `ThreatSignal` from the guardian's `sensing` module. PHAROS exists to observe system health signals — consuming guardian threat classifications is its primary purpose, not a leaked abstraction. The guardian exports these sensing types for exactly this use case. Extracting them into a separate types crate would fracture the guardian's cohesive threat API for minimal benefit. The dependency is narrow (3 types from one submodule) and architecturally intentional.
 
-### FIXABLE-REMOVE Detail (Dead Dependencies)
+### FIXABLE-REMOVE Detail (Dead Dependencies — Removed in Phase 1)
 
-3 DVs are caused by Cargo.toml dependencies with zero source references. Removal requires only Cargo.toml edits — no source code changes.
+3 DVs were caused by Cargo.toml dependencies with zero source references. All 3 were removed in Phase 1 (commit 03103855). The table below shows the pre-removal state.
 
 | DV | Source Crate | Dead Dependency | Cargo.toml Line |
 |----|-------------|----------------|-----------------|
@@ -365,7 +365,7 @@ Moved nexcore-state-theory from os-runtime to analysis-tools.
 
 ### Stale Hold Cleanup
 
-Deleted `ferro-forge/holds/biological-system.toml` — stale pre-split file that caused `load_bay_from_holds_dir` to fail with "crate in both bio-molecular and biological-system" error. The generate_ferro_forge test (bootstrap path) overwrites all holds from topology JSON, masking this orphan. The manifest path correctly detected the conflict.
+Deleted `ferro-forge/holds/biological-system.toml` — stale pre-split file. The `regenerate_bay_from_holds` test failed with "crate 'nexcore-cytokine' in both 'bio-molecular' and 'biological-system'" because the old hold file conflicted with the new bio-molecular/bio-anatomical split. The `generate_ferro_forge` test (bootstrap path) had masked this orphan by overwriting all hold files from topology JSON. Reactive deletion after test failure.
 
 ### Reconciliation Comparison
 

@@ -382,13 +382,128 @@ Deleted `ferro-forge/holds/biological-system.toml` — stale pre-split file. The
 | # | Source Crate | Source Hold (Layer) | Target Crate | Target Hold (Layer) | Classification |
 |---|-------------|-------------------|-------------|-------------------|---------------|
 | 1 | nexcore-constants | core-primitives (Foundation) | nexcore-fs | system-utilities (Domain) | ACCEPT (EX-DV-002) |
-| 2 | nexcore-core | core-primitives (Foundation) | nexcore-brain | brain-knowledge (Domain) | Reclassified: live dep |
-| 3 | nexcore-init | core-primitives (Foundation) | nexcore-os | os-runtime (Orchestration) | Unmasked by dead dep removal |
-| 4 | nexcore-pharos | observability (Domain) | nexcore-guardian-engine | guardian-system (Orchestration) | ACCEPT (EX-DV-007) |
-| 5 | nexcore-renderer | observatory-viz (Foundation) | prima | prima-language (Domain) | Reclassified: live dep |
-| 6 | nexcore-rh-proofs | core-primitives (Foundation) | nexcore-zeta | analysis-tools (Domain) | Unmasked by dead dep removal |
-| 7 | nexcore-value-mining | business-strategy (Domain) | nexcore-social | mcp-service (Service) | EXTRACT (Phase 4) |
-| 8 | nexcore-vigilance | pv-core (Domain) | nexcore-guardian-engine | guardian-system (Orchestration) | New: pv-core reclassification side-effect |
+| 2 | nexcore-core | core-primitives (Foundation) | nexcore-brain | brain-knowledge (Domain) | FIXABLE-RECLASSIFY |
+| 3 | nexcore-init | core-primitives (Foundation) | nexcore-os | os-runtime (Orchestration) | FIXABLE-RECLASSIFY |
+| 4 | nexcore-pharos | observability (Domain) | nexcore-guardian-engine | guardian-system (Orchestration) | ACCEPT (EX-DV-007) → upgrades to non-DV if DV8 applied |
+| 5 | nexcore-renderer | observatory-viz (Foundation) | prima | prima-language (Domain) | FIXABLE-RECLASSIFY |
+| 6 | nexcore-rh-proofs | core-primitives (Foundation) | nexcore-zeta | analysis-tools (Domain) | FIXABLE-RECLASSIFY |
+| 7 | nexcore-value-mining | business-strategy (Domain) | nexcore-social | mcp-service (Service) | FIXABLE-EXTRACT |
+| 8 | nexcore-vigilance | pv-core (Domain) | nexcore-guardian-engine | guardian-system (Orchestration) | FIXABLE-RECLASSIFY |
+
+### DV Reclassification Impact Models (2026-02-28)
+
+All 6 non-ACCEPT DVs verified LIVE by `cargo check` (remove dep → compilation failure → restore). Zero FIXABLE-REMOVE candidates.
+
+#### DV2: nexcore-core → nexcore-brain — FIXABLE-RECLASSIFY
+
+**Action:** Move `nexcore-core` from `core-primitives` to `pv-core` (Domain).
+
+**Source usage:** `src/lib.rs` — 1 function (`persist_as_artifact`), 2 call sites: `nexcore_brain::BrainSession` (line 82), `nexcore_brain::Artifact::new` (line 87). Highly concentrated.
+
+**Consumer analysis:** 0 downstream consumers (leaf crate).
+
+**Impact model:**
+- core→brain becomes Domain→Domain (same layer, not a DV) ✓
+- nexcore-core also depends on: nexcore-vigilance (pv-core/Domain), nexcore-lex-primitiva (core-primitives/Foundation), nexcore-id (core-primitives/Foundation), duckdb (external). All Domain→Domain or Domain→Foundation = downward. ✓
+- **Predicted new DVs: 0**
+- **Side benefit:** Also resolves LayerViolation (nexcore-core has >3 internal deps, violates Foundation threshold).
+
+#### DV3: nexcore-init → nexcore-os — FIXABLE-RECLASSIFY
+
+**Action:** Move `nexcore-init` from `core-primitives` to `os-runtime` (Orchestration).
+
+**Source usage:** `src/main.rs` — 3 call sites: `NexCoreOs::boot()` (line 158), `.tick()` (line 194), `.shutdown()` (lines 212-214). OS lifecycle management.
+
+**Consumer analysis:** 0 downstream consumers (leaf binary crate).
+
+**Impact model:**
+- init→os becomes Orchestration→Orchestration (same layer) ✓
+- nexcore-init also depends on: nexcore-pal + nexcore-pal-linux (system-utilities/Domain), nexcore-shell (os-runtime/Orchestration), nexcore-lex-primitiva (core-primitives/Foundation). All Orchestration→Domain, Orchestration→Orchestration, or Orchestration→Foundation = downward. ✓
+- **Predicted new DVs: 0**
+- **Side benefit:** Also resolves LayerViolation (nexcore-init has >3 internal deps, violates Foundation threshold).
+
+#### DV5: nexcore-renderer → prima — FIXABLE-RECLASSIFY
+
+**Action:** Reclassify `observatory-viz` hold from Foundation to Domain.
+
+**Source usage:** `src/adventure.rs` — 2 operational sites: `prima::eval` (line 60), `prima::Value`/`prima::value::ValueData` (lines 67, 69). Template evaluation for nex:// pages.
+
+**Consumer analysis:** observatory-viz has 5 members: nexcloud, nexcore-browser, nexcore-renderer, nexcore-softrender, nexcore-viz. Reclassifying the hold affects all 5.
+
+**Impact model:**
+- renderer→prima becomes Domain→Domain (same layer) ✓
+- Other observatory-viz members: nexcore-browser depends on nexcore-lex-primitiva (Foundation), nexcore-softrender has minimal deps, nexcore-viz depends on foundation types. All Domain→Foundation = downward. ✓
+- observatory-viz members' consumers: nexcore-vigilance (pv-core/Domain) depends on nexcore-browser — Domain→Domain = OK. ✓
+- **Predicted new DVs: 0**
+- **Rationale:** observatory-viz contains rendering, visualization, and browser infrastructure — Domain-layer work, not Foundation primitives. The "Foundation" classification was an artifact of name inference, not architectural intent.
+
+#### DV6: nexcore-rh-proofs → nexcore-zeta — FIXABLE-RECLASSIFY
+
+**Action:** Move `nexcore-rh-proofs` from `core-primitives` to `analysis-tools` (Domain).
+
+**Source usage:** `src/bridge.rs` — 3-4 call sites: `convert_rh_verification()`, `convert_zeros()`, `build_certificate_from_zeta()`, `RhVerification`/`ZetaZero` types. Highly concentrated bridge pattern.
+
+**Consumer analysis:** 0 downstream consumers (leaf crate).
+
+**Impact model:**
+- rh-proofs→zeta becomes Domain→Domain (both in analysis-tools, same hold) ✓
+- nexcore-rh-proofs also depends on: nexcore-error (workspace), stem-number-theory (stem-foundation/Foundation), nexcore-lex-primitiva (core-primitives/Foundation), serde (external). All Domain→Foundation = downward. ✓
+- **Predicted new DVs: 0**
+- **Side benefit:** Also resolves LayerViolation (nexcore-rh-proofs in Foundation hold but depends on analysis-tools/Domain crate).
+
+#### DV7: nexcore-value-mining → nexcore-social — FIXABLE-EXTRACT
+
+**Action:** Extract `Post` + `SocialError` types from `nexcore-social` into new `nexcore-social-types` crate. Place `nexcore-social-types` in `business-strategy` hold (Domain).
+
+**Source usage:** 7 call sites across 5 detector modules (`engagement.rs`, `trend.rs`, `virality.rs`, `controversy.rs`, `sentiment.rs`) + `error.rs` + `types.rs`. The `Post` type is pervasive — used in every detector's analysis function signature. Highly dispersed.
+
+**Types to extract:**
+- `Post` (core social media data structure)
+- `SocialError` (error type used in `From` impl)
+- Associated enums/constants referenced by the above
+
+**Precedent:** Follows the `nexcore-hormone-types` extraction pattern from the bio-remediation arc.
+
+**Impact model:**
+- value-mining→social-types becomes Domain→Domain (same hold) ✓
+- nexcore-social (mcp-service/Service) retains `Post` implementation but re-exports from social-types
+- **Predicted new DVs: 0**
+- **Consumer count:** 1 (nexcore-value-mining is the only non-service consumer of `Post`)
+
+#### DV8: nexcore-vigilance → nexcore-guardian-engine — FIXABLE-RECLASSIFY
+
+**Action:** Move `nexcore-guardian-engine` from `guardian-system` (Orchestration) to `pv-core` (Domain).
+
+**Source usage:** `src/guardian/mod.rs` line 6 — single facade re-export: `pub use nexcore_guardian_engine::*;`. Minimal/facade-only integration.
+
+**Consumer analysis:** nexcore-guardian-engine has 4 consumers:
+1. nexcore-vigilance (pv-core/Domain) — the DV8 source
+2. nexcore-pharos (observability/Domain) — currently DV4 (ACCEPT EX-DV-007)
+3. nexcore-mcp (mcp-service/Service)
+4. nexcore-guardian-cli (guardian-system/Orchestration)
+
+**Impact model:**
+- vigilance→guardian-engine becomes Domain→Domain (both in pv-core) ✓
+- pharos→guardian-engine becomes Domain→Domain — **DV4 resolves automatically** ✓
+- mcp→guardian-engine becomes Service→Domain = downward ✓
+- guardian-cli→guardian-engine: guardian-cli is in guardian-system (Orchestration), guardian-engine moves to pv-core (Domain). Orchestration→Domain = downward ✓
+- **Predicted new DVs: 0**
+- **Side benefit:** DV4 (currently ACCEPT EX-DV-007) upgrades to non-DV. Net DV reduction: 2 (DV8 + DV4).
+
+### Projected DV Inventory After All Fixes
+
+| # | DV | Fix | Status |
+|---|-----|-----|--------|
+| 1 | nexcore-constants → nexcore-fs | ACCEPT (EX-DV-002) | Remains (1 of 2 final DVs) |
+| 2 | nexcore-core → nexcore-brain | Move core to pv-core | **Resolved** |
+| 3 | nexcore-init → nexcore-os | Move init to os-runtime | **Resolved** |
+| 4 | nexcore-pharos → nexcore-guardian-engine | Cascade from DV8 fix | **Resolved** |
+| 5 | nexcore-renderer → prima | Reclassify observatory-viz to Domain | **Resolved** |
+| 6 | nexcore-rh-proofs → nexcore-zeta | Move rh-proofs to analysis-tools | **Resolved** |
+| 7 | nexcore-value-mining → nexcore-social | Extract nexcore-social-types | **Resolved** |
+| 8 | nexcore-vigilance → nexcore-guardian-engine | Move guardian-engine to pv-core | **Resolved** |
+
+**Projected final state:** 1 DV (down from 8). The sole remaining DV (nexcore-constants → nexcore-fs) has an accepted exemption (EX-DV-002).
 
 ### Lessons
 

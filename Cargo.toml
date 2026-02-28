@@ -204,6 +204,7 @@ nexcore-skill-compiler = { path = "crates/nexcore-skill-compiler" }
 nexcore-skill-exec = { path = "crates/nexcore-skill-exec" }
 nexcore-skills-engine = { path = "crates/nexcore-skills-engine" }
 nexcore-social = { path = "crates/nexcore-social" }
+nexcore-social-types = { path = "crates/nexcore-social-types" }
 nexcore-sop-anatomy = { path = "crates/nexcore-sop-anatomy" }
 nexcore-softrender = { path = "crates/nexcore-softrender" }
 nexcore-state-os = { path = "crates/nexcore-state-os" }

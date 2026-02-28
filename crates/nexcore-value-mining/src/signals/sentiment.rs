@@ -28,7 +28,7 @@ use crate::error::{MiningError, MiningResult};
 use crate::signals::SignalDetector;
 use crate::types::{Baseline, SignalType, ValueSignal};
 use nexcore_chrono::DateTime;
-use nexcore_social::Post;
+use nexcore_social_types::Post;
 
 /// Sentiment signal detector using PRR algorithm.
 #[derive(Debug, Clone, Default)]

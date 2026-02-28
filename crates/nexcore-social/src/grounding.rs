@@ -13,7 +13,7 @@ use nexcore_lex_primitiva::primitiva::{LexPrimitiva, PrimitiveComposition};
 
 use crate::error::SocialError;
 use crate::ratelimit::RateLimiter;
-use crate::reddit::{Comment, Post, RedditConfig, Subreddit};
+use crate::reddit::{Comment, RedditConfig, Subreddit};
 
 // ---------------------------------------------------------------------------
 // T2-P: Configuration types
@@ -51,22 +51,7 @@ impl GroundsTo for RateLimiter {
 // T3: Domain types
 // ---------------------------------------------------------------------------
 
-/// Post: T3 (σ + N + μ + λ + ς + κ), dominant σ
-///
-/// Reddit post (submission). Sequence-dominant: posts form a stream.
-impl GroundsTo for Post {
-    fn primitive_composition() -> PrimitiveComposition {
-        PrimitiveComposition::new(vec![
-            LexPrimitiva::Sequence,   // σ -- post stream ordering
-            LexPrimitiva::Quantity,   // N -- score, num_comments, upvote_ratio
-            LexPrimitiva::Mapping,    // μ -- JSON → typed fields
-            LexPrimitiva::Location,   // λ -- subreddit, URL identity
-            LexPrimitiva::State,      // ς -- point-in-time content
-            LexPrimitiva::Comparison, // κ -- upvote_ratio comparison
-        ])
-        .with_dominant(LexPrimitiva::Sequence, 0.80)
-    }
-}
+// Post GroundsTo impl is in nexcore-social-types::grounding (canonical location)
 
 /// Comment: T3 (σ + ρ + N + μ + λ + ς), dominant ρ
 ///
@@ -145,11 +130,7 @@ mod tests {
         assert_eq!(RateLimiter::tier(), Tier::T2Composite);
     }
 
-    #[test]
-    fn post_is_t3() {
-        assert_eq!(Post::tier(), Tier::T3DomainSpecific);
-        assert_eq!(Post::dominant_primitive(), Some(LexPrimitiva::Sequence));
-    }
+    // post_is_t3 test moved to nexcore-social-types::grounding
 
     #[test]
     fn comment_is_recursion_dominant() {

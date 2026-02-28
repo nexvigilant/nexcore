@@ -10,6 +10,9 @@ repository = "https://github.com/nexvigilant/nexcore"
 description = "Social media API clients for value signal detection"
 
 [dependencies]
+# Social types (extracted for cross-hold consumption)
+nexcore-social-types = { version = "1.0.0", path = "../nexcore-social-types", registry = "nexcore" }
+
 # Lex Primitiva grounding
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 

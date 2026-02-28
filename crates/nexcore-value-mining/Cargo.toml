@@ -13,8 +13,8 @@ description = "Economic value signal detection using PV algorithms"
 # Lex Primitiva grounding
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 
-# Social media data source
-nexcore-social = { version = "1.0.0", path = "../nexcore-social", registry = "nexcore" }
+# Social media types (extracted from nexcore-social for DV7 resolution)
+nexcore-social-types = { version = "1.0.0", path = "../nexcore-social-types", registry = "nexcore" }
 
 # Serialization
 serde = { version = "1.0.204", features = ["derive"] }

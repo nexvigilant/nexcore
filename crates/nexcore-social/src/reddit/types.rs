@@ -6,6 +6,9 @@
 use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
+// Re-export Post from nexcore-social-types (canonical definition).
+pub use nexcore_social_types::Post;
+
 /// Reddit API configuration.
 #[derive(Debug, Clone)]
 pub struct RedditConfig {
@@ -37,49 +40,6 @@ impl RedditConfig {
             password: password.into(),
             user_agent: user_agent.into(),
         }
-    }
-}
-
-/// Reddit post (submission).
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Post {
-    /// Unique post ID (e.g., "abc123")
-    pub id: String,
-    /// Subreddit name (without r/ prefix)
-    pub subreddit: String,
-    /// Post title
-    pub title: String,
-    /// Post body text (if self-post)
-    #[serde(default)]
-    pub selftext: Option<String>,
-    /// Author username
-    pub author: String,
-    /// Score (upvotes - downvotes)
-    pub score: i64,
-    /// Number of comments
-    pub num_comments: i64,
-    /// Created timestamp (UTC)
-    pub created_utc: f64,
-    /// Post URL
-    pub url: String,
-    /// Whether post is over_18
-    pub over_18: bool,
-    /// Upvote ratio (0.0 to 1.0)
-    pub upvote_ratio: f64,
-}
-
-impl Post {
-    /// Get created timestamp as DateTime.
-    pub fn created_datetime(&self) -> DateTime {
-        DateTime::from_timestamp(self.created_utc as i64)
-    }
-
-    /// Get full Reddit URL.
-    pub fn permalink(&self) -> String {
-        format!(
-            "https://reddit.com/r/{}/comments/{}",
-            self.subreddit, self.id
-        )
     }
 }
 
@@ -149,48 +109,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_post_created_datetime() {
-        let post = Post {
-            id: "test123".to_string(),
-            subreddit: "test".to_string(),
-            title: "Test Post".to_string(),
-            selftext: Some("Body text".to_string()),
-            author: "testuser".to_string(),
-            score: 100,
-            num_comments: 50,
-            created_utc: 1609459200.0, // 2021-01-01 00:00:00 UTC
-            url: "https://reddit.com/r/test".to_string(),
-            over_18: false,
-            upvote_ratio: 0.95,
-        };
-
-        let dt = post.created_datetime();
-        assert_eq!(dt.timestamp(), 1609459200);
-    }
-
-    #[test]
-    fn test_post_permalink() {
-        let post = Post {
-            id: "abc123".to_string(),
-            subreddit: "wallstreetbets".to_string(),
-            title: "Test".to_string(),
-            selftext: None,
-            author: "testuser".to_string(),
-            score: 1000,
-            num_comments: 200,
-            created_utc: 1609459200.0,
-            url: "https://reddit.com".to_string(),
-            over_18: false,
-            upvote_ratio: 0.9,
-        };
-
-        assert_eq!(
-            post.permalink(),
-            "https://reddit.com/r/wallstreetbets/comments/abc123"
-        );
-    }
-
-    #[test]
     fn test_config_creation() {
         let config =
             RedditConfig::new("client123", "secret456", "user789", "pass", "nexcore:0.1.0");
@@ -198,5 +116,24 @@ mod tests {
         assert_eq!(config.client_id, "client123");
         assert_eq!(config.client_secret, "secret456");
         assert_eq!(config.username, "user789");
+    }
+
+    #[test]
+    fn test_post_reexport_accessible() {
+        // Verify Post is accessible via re-export
+        let post = Post {
+            id: "re1".to_string(),
+            subreddit: "test".to_string(),
+            title: "Re-export test".to_string(),
+            selftext: None,
+            author: "tester".to_string(),
+            score: 1,
+            num_comments: 0,
+            created_utc: 1700000000.0,
+            url: "https://reddit.com".to_string(),
+            over_18: false,
+            upvote_ratio: 0.5,
+        };
+        assert_eq!(post.id, "re1");
     }
 }

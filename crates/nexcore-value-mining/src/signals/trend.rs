@@ -22,7 +22,7 @@ use crate::error::MiningResult;
 use crate::signals::SignalDetector;
 use crate::types::{Baseline, SignalType, ValueSignal};
 use nexcore_chrono::DateTime;
-use nexcore_social::Post;
+use nexcore_social_types::Post;
 
 /// Trend signal detector using weighted moving average.
 #[derive(Debug, Clone)]

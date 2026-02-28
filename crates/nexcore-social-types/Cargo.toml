@@ -1,0 +1,26 @@
+
+[package]
+name = "nexcore-social-types"
+version = "1.0.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+repository = "https://github.com/nexvigilant/nexcore"
+description = "Shared social media types extracted from nexcore-social for cross-hold consumption"
+
+[dependencies]
+# Lex Primitiva grounding
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+
+# Serialization
+serde = { version = "1.0.204", features = ["derive"] }
+
+# Time (for Post::created_datetime)
+nexcore-chrono = { workspace = true }
+
+[dev-dependencies]
+serde_json = "1.0.120"
+
+[lints]
+workspace = true

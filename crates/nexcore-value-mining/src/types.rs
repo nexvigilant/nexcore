@@ -247,7 +247,7 @@ impl Baseline {
     }
 
     /// Update baseline from posts data.
-    pub fn update_from_posts(&mut self, posts: &[nexcore_social::Post]) {
+    pub fn update_from_posts(&mut self, posts: &[nexcore_social_types::Post]) {
         if posts.is_empty() {
             return;
         }

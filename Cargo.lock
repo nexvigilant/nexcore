@@ -9453,6 +9453,7 @@ dependencies = [
  "nexcore-chrono",
  "nexcore-error",
  "nexcore-lex-primitiva",
+ "nexcore-social-types",
  "reqwest 0.12.28",
  "serde",
  "serde_json",
@@ -9461,6 +9462,16 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "urlencoding",
+]
+
+[[package]]
+name = "nexcore-social-types"
+version = "1.0.0"
+dependencies = [
+ "nexcore-chrono",
+ "nexcore-lex-primitiva",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -9704,7 +9715,7 @@ dependencies = [
  "nexcore-chrono",
  "nexcore-error",
  "nexcore-lex-primitiva",
- "nexcore-social",
+ "nexcore-social-types",
  "serde",
  "serde_json",
  "tempfile",

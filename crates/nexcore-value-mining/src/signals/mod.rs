@@ -20,7 +20,7 @@ pub use virality::ViralityDetector;
 
 use crate::error::MiningResult;
 use crate::types::{Baseline, ValueSignal};
-use nexcore_social::Post;
+use nexcore_social_types::Post;
 
 /// Trait for signal detection algorithms.
 ///

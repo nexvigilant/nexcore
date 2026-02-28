@@ -23,9 +23,9 @@ pub enum MiningError {
     #[error("Detection failed: {0}")]
     DetectionFailed(String),
 
-    /// Social API error.
+    /// Social API error (string-wrapped; nexcore-social is Service-layer).
     #[error("Social API error: {0}")]
-    SocialError(#[from] nexcore_social::SocialError),
+    SocialError(String),
 
     /// Serialization error.
     #[error("Serialization error: {0}")]

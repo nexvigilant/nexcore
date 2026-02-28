@@ -172,6 +172,7 @@ impl Default for EventBus {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::confidence::ConfidenceSource;
     use nexcore_chrono::DateTime;
     use nexcore_primitives::measurement::Measured;
     use std::collections::HashMap;
@@ -208,7 +209,11 @@ mod tests {
                 subsystem: "pv-engine".to_string(),
                 damage_type: "threshold-breach".to_string(),
             },
-            confidence: Measured::certain(0.95),
+            confidence: ConfidenceSource::Calibrated {
+                value: 0.95,
+                rationale: "test fixture: elevated PV signal",
+            }
+            .derive(),
             metadata: HashMap::new(),
         }
     }

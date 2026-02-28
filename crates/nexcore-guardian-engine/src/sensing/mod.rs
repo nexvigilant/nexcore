@@ -48,6 +48,8 @@ use nexcore_primitives::measurement::Measured;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
+use crate::confidence::ConfidenceSource;
+
 /// Ordinal escalation scale for real-time operational threat detection.
 ///
 /// Tier: T2-P (κ + ∂ — comparison with boundary)
@@ -357,7 +359,13 @@ impl ExternalSensor {
                     vector: "sql-injection".to_string(),
                 },
             )
-            .with_confidence(Measured::certain(0.9))
+            .with_confidence(
+                ConfidenceSource::Calibrated {
+                    value: 0.9,
+                    rationale: "sql injection: regex pattern match",
+                }
+                .derive(),
+            )
             .with_metadata("patterns_matched", matches.join(",")),
         )
     }
@@ -379,7 +387,13 @@ impl ExternalSensor {
                     vector: "xss".to_string(),
                 },
             )
-            .with_confidence(Measured::certain(0.85))
+            .with_confidence(
+                ConfidenceSource::Calibrated {
+                    value: 0.85,
+                    rationale: "xss: heuristic tag detection",
+                }
+                .derive(),
+            )
             .with_metadata("patterns_matched", matches.join(",")),
         )
     }
@@ -401,7 +415,13 @@ impl ExternalSensor {
                     vector: "path-traversal".to_string(),
                 },
             )
-            .with_confidence(Measured::certain(0.8))
+            .with_confidence(
+                ConfidenceSource::Calibrated {
+                    value: 0.8,
+                    rationale: "path traversal: indirect pattern",
+                }
+                .derive(),
+            )
             .with_metadata("patterns_matched", matches.join(",")),
         )
     }
@@ -426,7 +446,13 @@ impl ExternalSensor {
                     vector: "rate-limit-violation".to_string(),
                 },
             )
-            .with_confidence(Measured::certain(0.95))
+            .with_confidence(
+                ConfidenceSource::Calibrated {
+                    value: 0.95,
+                    rationale: "rate limit: threshold violation",
+                }
+                .derive(),
+            )
             .with_metadata("rate", ctx.request_rate.to_string())
             .with_metadata("threshold", self.rate_limit_threshold.to_string()),
         )
@@ -456,7 +482,13 @@ impl ExternalSensor {
                     vector: "authentication-brute-force".to_string(),
                 },
             )
-            .with_confidence(Measured::certain(0.9))
+            .with_confidence(
+                ConfidenceSource::Calibrated {
+                    value: 0.9,
+                    rationale: "auth brute force: failure count",
+                }
+                .derive(),
+            )
             .with_metadata("failed_attempts", ctx.failed_auth_count.to_string()),
         )
     }
@@ -629,7 +661,13 @@ impl InternalSensor {
                     damage_type: "resource-exhaustion".to_string(),
                 },
             )
-            .with_confidence(Measured::certain(0.95))
+            .with_confidence(
+                ConfidenceSource::Calibrated {
+                    value: 0.95,
+                    rationale: "memory: threshold violation",
+                }
+                .derive(),
+            )
             .with_metadata("usage_percent", format!("{:.1}", m.memory_percent))
             .with_metadata("threshold", format!("{:.1}", self.memory_threshold)),
         )
@@ -659,7 +697,13 @@ impl InternalSensor {
                     damage_type: "resource-exhaustion".to_string(),
                 },
             )
-            .with_confidence(Measured::certain(0.9))
+            .with_confidence(
+                ConfidenceSource::Calibrated {
+                    value: 0.9,
+                    rationale: "cpu: utilization pattern",
+                }
+                .derive(),
+            )
             .with_metadata("usage_percent", format!("{:.1}", m.cpu_percent)),
         )
     }
@@ -688,7 +732,13 @@ impl InternalSensor {
                     damage_type: "resource-exhaustion".to_string(),
                 },
             )
-            .with_confidence(Measured::certain(0.95))
+            .with_confidence(
+                ConfidenceSource::Calibrated {
+                    value: 0.95,
+                    rationale: "disk: threshold violation",
+                }
+                .derive(),
+            )
             .with_metadata("usage_percent", format!("{:.1}", m.disk_percent)),
         )
     }
@@ -717,7 +767,13 @@ impl InternalSensor {
                     damage_type: "error-rate-spike".to_string(),
                 },
             )
-            .with_confidence(Measured::certain(0.85))
+            .with_confidence(
+                ConfidenceSource::Calibrated {
+                    value: 0.85,
+                    rationale: "error rate: heuristic detection",
+                }
+                .derive(),
+            )
             .with_metadata("error_rate", format!("{:.1}", m.error_rate))
             .with_metadata("threshold", format!("{:.1}", self.error_rate_threshold)),
         )
@@ -747,7 +803,13 @@ impl InternalSensor {
                     damage_type: "connection-pool-exhaustion".to_string(),
                 },
             )
-            .with_confidence(Measured::certain(0.9))
+            .with_confidence(
+                ConfidenceSource::Calibrated {
+                    value: 0.9,
+                    rationale: "db pool: saturation pattern",
+                }
+                .derive(),
+            )
             .with_metadata("pool_usage", format!("{:.1}", m.db_pool_percent)),
         )
     }
@@ -776,7 +838,13 @@ impl InternalSensor {
                     damage_type: "latency-degradation".to_string(),
                 },
             )
-            .with_confidence(Measured::certain(0.8))
+            .with_confidence(
+                ConfidenceSource::Calibrated {
+                    value: 0.8,
+                    rationale: "latency: deviation signal",
+                }
+                .derive(),
+            )
             .with_metadata("latency_p99_ms", format!("{:.0}", m.latency_p99_ms))
             .with_metadata("threshold_ms", format!("{:.0}", self.latency_threshold)),
         )
@@ -800,7 +868,13 @@ impl InternalSensor {
                         damage_type: "health-check-failure".to_string(),
                     },
                 )
-                .with_confidence(Measured::certain(1.0))
+                .with_confidence(
+                    ConfidenceSource::Calibrated {
+                        value: 1.0,
+                        rationale: "health check: binary pass/fail",
+                    }
+                    .derive(),
+                )
                 .with_metadata("subsystem", subsystem.clone())
             })
             .collect()
@@ -1194,7 +1268,7 @@ impl KevSensor {
                         vector: "known-exploited-vulnerability".to_string(),
                     },
                 )
-                .with_confidence(Measured::certain(0.99)) // High confidence - CVE match is deterministic
+                .with_confidence(ConfidenceSource::Deterministic.derive())
                 .with_metadata("vendor", &vuln.vendor_project)
                 .with_metadata("product", &vuln.product)
                 .with_metadata("due_date", &vuln.due_date)
@@ -1439,7 +1513,13 @@ impl ApiHealthSensor {
                                 damage_type: "availability".to_string(),
                             },
                         )
-                        .with_confidence(Measured::certain(0.95))
+                        .with_confidence(
+                            ConfidenceSource::Calibrated {
+                                value: 0.95,
+                                rationale: "api dependency: availability check",
+                            }
+                            .derive(),
+                        )
                         .with_metadata("endpoint", result.endpoint.clone())
                         .with_metadata("reason", reason.clone()),
                     );
@@ -1454,7 +1534,13 @@ impl ApiHealthSensor {
                                 damage_type: "performance".to_string(),
                             },
                         )
-                        .with_confidence(Measured::certain(0.8))
+                        .with_confidence(
+                            ConfidenceSource::Calibrated {
+                                value: 0.8,
+                                rationale: "api dependency: latency heuristic",
+                            }
+                            .derive(),
+                        )
                         .with_metadata("endpoint", result.endpoint.clone())
                         .with_metadata("latency_ms", latency_ms.to_string()),
                     );

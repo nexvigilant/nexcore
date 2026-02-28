@@ -9,6 +9,7 @@
 //! # Tier: T3 (Domain-Specific Sensor)
 //! # Grounding: κ (Comparison) + ∂ (Boundary) + N (Quantity)
 
+use crate::confidence::ConfidenceSource;
 use crate::sensing::{Measured, Sensor, SignalSource, ThreatLevel, ThreatSignal};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -105,7 +106,13 @@ impl CodeHealthSensor {
                         damage_type: "score-degradation".to_string(),
                     },
                 )
-                .with_confidence(Measured::certain(0.85))
+                .with_confidence(
+                    ConfidenceSource::Calibrated {
+                        value: 0.85,
+                        rationale: "code health: score degradation delta",
+                    }
+                    .derive(),
+                )
                 .with_metadata("current_score", format!("{:.2}", current))
                 .with_metadata("previous_score", format!("{:.2}", previous))
                 .with_metadata("degradation_pct", format!("{:.1}", delta * 100.0)),
@@ -137,7 +144,13 @@ impl CodeHealthSensor {
                         damage_type: "test-regression".to_string(),
                     },
                 )
-                .with_confidence(Measured::certain(0.9))
+                .with_confidence(
+                    ConfidenceSource::Calibrated {
+                        value: 0.9,
+                        rationale: "code health: test count regression",
+                    }
+                    .derive(),
+                )
                 .with_metadata("current_tests", current.to_string())
                 .with_metadata("previous_tests", previous.to_string())
                 .with_metadata("tests_lost", lost.to_string()),
@@ -158,7 +171,13 @@ impl CodeHealthSensor {
                         damage_type: "missing-metrics".to_string(),
                     },
                 )
-                .with_confidence(Measured::certain(0.7)),
+                .with_confidence(
+                    ConfidenceSource::Calibrated {
+                        value: 0.7,
+                        rationale: "code health: metrics file absence",
+                    }
+                    .derive(),
+                ),
             );
         }
         None

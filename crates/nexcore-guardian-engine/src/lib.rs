@@ -39,6 +39,7 @@ pub mod hierarchy;
 pub mod tov_types;
 
 // Guardian submodules
+pub mod confidence;
 pub mod config;
 pub mod dtree_adapter;
 pub mod event_bus;

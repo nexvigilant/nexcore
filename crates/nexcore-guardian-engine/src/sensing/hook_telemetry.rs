@@ -9,6 +9,7 @@
 //! # Tier: T3 (Domain-Specific Sensor)
 //! # Grounding: ς (State) + ν (Frequency) + ∂ (Boundary)
 
+use crate::confidence::ConfidenceSource;
 use crate::sensing::{Measured, Sensor, SignalSource, ThreatLevel, ThreatSignal};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -140,7 +141,13 @@ impl HookTelemetrySensor {
                             damage_type: "high-block-rate".to_string(),
                         },
                     )
-                    .with_confidence(Measured::certain(0.9))
+                    .with_confidence(
+                        ConfidenceSource::Calibrated {
+                            value: 0.9,
+                            rationale: "hook telemetry: block rate frequency",
+                        }
+                        .derive(),
+                    )
                     .with_metadata("hook", hook.clone())
                     .with_metadata("block_rate", format!("{:.2}", rate))
                     .with_metadata("total", total.to_string())
@@ -175,7 +182,13 @@ impl HookTelemetrySensor {
                         damage_type: "performance-degradation".to_string(),
                     },
                 )
-                .with_confidence(Measured::certain(0.85))
+                .with_confidence(
+                    ConfidenceSource::Calibrated {
+                        value: 0.85,
+                        rationale: "hook telemetry: execution time anomaly",
+                    }
+                    .derive(),
+                )
                 .with_metadata("hook", hook.clone())
                 .with_metadata("max_duration_ms", max_ms.to_string()),
             );
@@ -195,7 +208,13 @@ impl HookTelemetrySensor {
                         damage_type: "infrastructure-failure".to_string(),
                     },
                 )
-                .with_confidence(Measured::certain(0.95)),
+                .with_confidence(
+                    ConfidenceSource::Calibrated {
+                        value: 0.95,
+                        rationale: "hook telemetry: file absence check",
+                    }
+                    .derive(),
+                ),
             );
         }
 
@@ -214,7 +233,13 @@ impl HookTelemetrySensor {
                         damage_type: "stale-data".to_string(),
                     },
                 )
-                .with_confidence(Measured::certain(0.8))
+                .with_confidence(
+                    ConfidenceSource::Calibrated {
+                        value: 0.8,
+                        rationale: "hook telemetry: stale data age",
+                    }
+                    .derive(),
+                )
                 .with_metadata("age_hours", (age.as_secs() / 3600).to_string()),
             );
         }

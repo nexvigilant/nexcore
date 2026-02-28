@@ -23,6 +23,7 @@
 //! # Tier: T3 (Domain-Specific Sensor)
 //! # Grounding: κ (Comparison) + ∂ (Boundary) + Σ (Sum) — compares 10 systems against set points
 
+use crate::confidence::ConfidenceSource;
 use crate::sensing::{Measured, Sensor, SignalSource, ThreatLevel, ThreatSignal};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -424,7 +425,13 @@ impl Sensor for BiologicalVitalSignsSensor {
                         damage_type: system.diagnostic.clone(),
                     },
                 )
-                .with_confidence(Measured::certain(0.80))
+                .with_confidence(
+                    ConfidenceSource::Calibrated {
+                        value: 0.80,
+                        rationale: "biological: organ system health assessment",
+                    }
+                    .derive(),
+                )
                 .with_metadata("organ_system", &system.name)
                 .with_metadata("diagnostic", &system.diagnostic)
                 .with_metadata(

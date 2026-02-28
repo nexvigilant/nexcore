@@ -9,6 +9,7 @@
 //! # Tier: T3 (Domain-Specific Sensor)
 //! # Grounding: ν (Frequency) + Σ (Sum) + ∂ (Boundary)
 
+use crate::confidence::ConfidenceSource;
 use crate::sensing::{Measured, Sensor, SignalSource, ThreatLevel, ThreatSignal};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -131,7 +132,13 @@ impl SignalHealthSensor {
                         damage_type: "cytokine-burst".to_string(),
                     },
                 )
-                .with_confidence(Measured::certain(0.9))
+                .with_confidence(
+                    ConfidenceSource::Calibrated {
+                        value: 0.9,
+                        rationale: "signal health: cytokine burst window",
+                    }
+                    .derive(),
+                )
                 .with_metadata("count", recent.len().to_string())
                 .with_metadata("window_ms", window.to_string()),
             );
@@ -155,7 +162,13 @@ impl SignalHealthSensor {
                         damage_type: "unbounded-growth".to_string(),
                     },
                 )
-                .with_confidence(Measured::certain(0.95))
+                .with_confidence(
+                    ConfidenceSource::Calibrated {
+                        value: 0.95,
+                        rationale: "signal health: file size threshold",
+                    }
+                    .derive(),
+                )
                 .with_metadata("size_bytes", size.to_string())
                 .with_metadata("size_mb", format!("{:.1}", size_mb)),
             );
@@ -187,7 +200,13 @@ impl SignalHealthSensor {
                                 damage_type: "circuit-breaker-open".to_string(),
                             },
                         )
-                        .with_confidence(Measured::certain(0.95))
+                        .with_confidence(
+                            ConfidenceSource::Calibrated {
+                                value: 0.95,
+                                rationale: "signal health: circuit breaker state",
+                            }
+                            .derive(),
+                        )
                         .with_metadata("affected_subsystem", subsystem),
                     );
                 }

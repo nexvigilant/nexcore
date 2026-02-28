@@ -15,6 +15,7 @@ use std::sync::Arc;
 use nexcore_cytokine::{CytokineBus, CytokineFamily, Scope, ThreatLevel as CytokineSeverity};
 
 use super::{Sensor, SignalSource, ThreatLevel, ThreatSignal};
+use crate::confidence::ConfidenceSource;
 use nexcore_primitives::measurement::Measured;
 
 /// Sensor that detects cytokine signals from the CytokineBus.
@@ -131,7 +132,13 @@ impl Sensor for CytokineSensor {
             );
 
             let signal = ThreatSignal::new(pattern, guardian_severity, source)
-                .with_confidence(Measured::certain(0.95))
+                .with_confidence(
+                    ConfidenceSource::Calibrated {
+                        value: 0.95,
+                        rationale: "cytokine: bus signal severity match",
+                    }
+                    .derive(),
+                )
                 .with_metadata("cytokine_id", &cytokine.id)
                 .with_metadata("family", cytokine.family.to_string())
                 .with_metadata("scope", cytokine.scope.to_string());
@@ -306,7 +313,13 @@ impl Sensor for CytokineFileSensor {
 
             let pattern = format!("file:{}:{}", entry.family, entry.severity);
             let signal = ThreatSignal::new(pattern, guardian_severity, source)
-                .with_confidence(Measured::certain(0.90))
+                .with_confidence(
+                    ConfidenceSource::Calibrated {
+                        value: 0.90,
+                        rationale: "cytokine: file telemetry signal",
+                    }
+                    .derive(),
+                )
                 .with_metadata("origin", "cytokine_file_sensor")
                 .with_metadata("signal_type", &entry.signal_type);
 
@@ -329,7 +342,13 @@ impl Sensor for CytokineFileSensor {
 
                 let pattern = format!("inflammation:{family}:count={count}");
                 let signal = ThreatSignal::new(pattern, ThreatLevel::Medium, source)
-                    .with_confidence(Measured::certain(0.85))
+                    .with_confidence(
+                        ConfidenceSource::Calibrated {
+                            value: 0.85,
+                            rationale: "cytokine: inflammation count threshold",
+                        }
+                        .derive(),
+                    )
                     .with_metadata("origin", "inflammation_detector")
                     .with_metadata("family", family.as_str())
                     .with_metadata("count", count.to_string());

@@ -7537,6 +7537,7 @@ dependencies = [
  "nexcore-error",
  "nexcore-fs",
  "nexcore-lex-primitiva",
+ "nexcore-proof-of-meaning",
  "rayon",
  "serde",
  "serde_json",
@@ -7720,6 +7721,21 @@ dependencies = [
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "nexcore-capa"
+version = "1.0.0"
+dependencies = [
+ "clap",
+ "nexcore-chrono",
+ "nexcore-constants",
+ "nexcore-error",
+ "nexcore-id",
+ "nexcore-lex-primitiva",
+ "serde",
+ "serde_json",
+ "tempfile",
 ]
 
 [[package]]
@@ -9081,6 +9097,7 @@ dependencies = [
  "nexcore-lex-primitiva",
  "nexcore-openfda",
  "nexcore-preemptive-pv",
+ "nexcore-proof-of-meaning",
  "nexcore-signal-types",
  "nexcore-tov",
  "phf",
@@ -9399,6 +9416,7 @@ dependencies = [
  "nexcore-chrono",
  "nexcore-constants",
  "nexcore-dtree",
+ "nexcore-edit-distance",
  "nexcore-error",
  "nexcore-fs",
  "nexcore-lex-primitiva",
@@ -9749,6 +9767,7 @@ dependencies = [
  "nexcore-constants",
  "nexcore-cytokine",
  "nexcore-dtree",
+ "nexcore-edit-distance",
  "nexcore-error",
  "nexcore-fs",
  "nexcore-guardian-engine",
@@ -9760,6 +9779,7 @@ dependencies = [
  "nexcore-measure",
  "nexcore-phenotype",
  "nexcore-primitives",
+ "nexcore-proof-of-meaning",
  "nexcore-pv-core",
  "nexcore-pvdsl",
  "nexcore-pvos",

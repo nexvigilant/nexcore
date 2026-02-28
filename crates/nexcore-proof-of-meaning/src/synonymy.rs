@@ -1,4 +1,4 @@
-//! Synonym Engine — curated synonym groups for regulatory PV terminology.
+//! Synonymy — curated synonym resolution for regulatory PV terminology.
 //!
 //! Chemistry analogue: Isotopes. Different labels, same element.
 //! "cardiac" and "heart" are isotopes of the OrganSystem::Cardiac atom.

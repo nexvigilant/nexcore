@@ -155,6 +155,20 @@ pub struct HierarchyPath {
     pub soc_name: String,
 }
 
+/// Titration-based provenance for a search result.
+///
+/// Supplements the opaque `score: f64` with auditable POM titration metadata
+/// showing how semantic equivalence was measured between the query and matched term.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct TitrationProvenance {
+    /// Titration equivalence score (0.0-1.0)
+    pub equivalence_score: f64,
+    /// Verdict: "Equivalent" (>0.90), "PartialOverlap" (0.60-0.90), "Distinct" (<0.60)
+    pub verdict: String,
+    /// Number of shared canonical atoms between query and matched term
+    pub shared_atoms: usize,
+}
+
 /// Search result with match score.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SearchResult {
@@ -168,6 +182,12 @@ pub struct SearchResult {
     pub score: f64,
     /// Edit distance from query
     pub distance: usize,
+    /// Optional POM titration provenance for audit trail.
+    ///
+    /// `None` for hot-path fuzzy search results where titration overhead
+    /// is not justified. Populated for exact-match and encode results.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub titration_provenance: Option<TitrationProvenance>,
 }
 
 /// `MedDRA` version information.
@@ -226,5 +246,68 @@ mod tests {
     fn test_version_display() {
         let v = MeddraVersion::new(26, 1, "English");
         assert_eq!(format!("{v}"), "MedDRA v26.1 (English)");
+    }
+
+    #[test]
+    fn test_search_result_without_titration() {
+        let result = SearchResult {
+            term: "headache".into(),
+            code: 10019211,
+            level: HierarchyLevel::Pt,
+            score: 0.95,
+            distance: 1,
+            titration_provenance: None,
+        };
+        assert!(result.titration_provenance.is_none());
+        assert!((result.score - 0.95).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_search_result_with_titration() {
+        let result = SearchResult {
+            term: "cardiac adverse event".into(),
+            code: 10007515,
+            level: HierarchyLevel::Pt,
+            score: 0.85,
+            distance: 2,
+            titration_provenance: Some(TitrationProvenance {
+                equivalence_score: 0.78,
+                verdict: "PartialOverlap".into(),
+                shared_atoms: 2,
+            }),
+        };
+        let prov = result
+            .titration_provenance
+            .as_ref()
+            .expect("should have provenance");
+        assert!((prov.equivalence_score - 0.78).abs() < f64::EPSILON);
+        assert_eq!(prov.shared_atoms, 2);
+    }
+
+    #[test]
+    fn test_titration_provenance_serde_roundtrip() {
+        let prov = TitrationProvenance {
+            equivalence_score: 0.92,
+            verdict: "Equivalent".into(),
+            shared_atoms: 3,
+        };
+        let json = serde_json::to_string(&prov).expect("serialize");
+        let parsed: TitrationProvenance = serde_json::from_str(&json).expect("deserialize");
+        assert!((parsed.equivalence_score - 0.92).abs() < f64::EPSILON);
+        assert_eq!(parsed.verdict, "Equivalent");
+    }
+
+    #[test]
+    fn test_search_result_none_provenance_skipped_in_json() {
+        let result = SearchResult {
+            term: "test".into(),
+            code: 1,
+            level: HierarchyLevel::Llt,
+            score: 1.0,
+            distance: 0,
+            titration_provenance: None,
+        };
+        let json = serde_json::to_string(&result).expect("serialize");
+        assert!(!json.contains("titration_provenance"));
     }
 }

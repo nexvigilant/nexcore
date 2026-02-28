@@ -39,4 +39,5 @@ pub mod types;
 pub use hierarchy::{DictionaryStats, MeddraDictionary};
 pub use types::{
     HierarchyLevel, HierarchyPath, Hlgt, Hlt, Llt, MeddraVersion, Pt, SearchResult, Soc,
+    TitrationProvenance,
 };

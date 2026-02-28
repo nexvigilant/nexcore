@@ -272,12 +272,14 @@ impl MeddraDictionary {
             let max_len_f = query_lower.len().max(term.len()) as f64;
 
             let score = 1.0 - (distance_f / max_len_f);
+            // TODO: titration_provenance omitted in fuzzy search hot path
             results.push(SearchResult {
                 term,
                 code,
                 level: HierarchyLevel::Llt,
                 score,
                 distance,
+                titration_provenance: None,
             });
         }
 
@@ -289,12 +291,14 @@ impl MeddraDictionary {
             let max_len_f = query_lower.len().max(term.len()) as f64;
 
             let score = 1.0 - (distance_f / max_len_f);
+            // TODO: titration_provenance omitted in fuzzy search hot path
             results.push(SearchResult {
                 term,
                 code,
                 level: HierarchyLevel::Pt,
                 score,
                 distance,
+                titration_provenance: None,
             });
         }
 
@@ -333,6 +337,8 @@ impl MeddraDictionary {
                     level: HierarchyLevel::Pt,
                     score: 1.0,
                     distance: 0,
+                    // Exact match — titration is trivially 1.0, omit for efficiency
+                    titration_provenance: None,
                 });
             }
         }
@@ -346,6 +352,8 @@ impl MeddraDictionary {
                     level: HierarchyLevel::Llt,
                     score: 1.0,
                     distance: 0,
+                    // Exact match — titration is trivially 1.0, omit for efficiency
+                    titration_provenance: None,
                 });
             }
         }

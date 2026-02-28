@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use crate::chromatography::{Column, SeparationQuality};
 use crate::distillation::Distiller;
 use crate::element::{Atom, ElementClass};
+use crate::synonymy::SynonymRegistry;
 use crate::titration::{self, EquivalenceProof, Titrator};
 
 /// A single step in the proof pipeline.
@@ -32,6 +33,7 @@ pub enum TransformationMethod {
     Spectroscopy,
     StoichiometricComposition,
     Titration,
+    Synonymy,
 }
 
 /// Verification status of a single proof step.
@@ -72,6 +74,7 @@ pub struct SemanticEquivalenceProof {
 pub struct ProofPipeline {
     distiller: Distiller,
     column: Column,
+    synonym_registry: SynonymRegistry,
     titrator: Titrator,
 }
 
@@ -129,6 +132,7 @@ impl ProofPipeline {
         Self {
             distiller: Distiller::new(),
             column: Column::pv_standard(),
+            synonym_registry: SynonymRegistry::pv_standard(),
             titrator: Titrator::new(titrants),
         }
     }
@@ -205,10 +209,56 @@ impl ProofPipeline {
         };
         steps.push(chromat_step);
 
-        // === STEP 3: TITRATION ===
+        // === STEP 3: SYNONYMY ===
+        // Resolve tokens to canonical forms via curated synonym groups.
+        // This is the isotope resolution step — "heart" → "cardiac", "vaccination" → "immunization".
+        let tokens: Vec<&str> = expression.split_whitespace().collect();
+        let mut resolved_count = 0_usize;
+        let mut canonical_forms = Vec::new();
+        for token in &tokens {
+            if let Some((canonical, _class, _sim)) = self.synonym_registry.resolve(token) {
+                resolved_count += 1;
+                if canonical != token.to_lowercase().as_str() {
+                    canonical_forms.push(format!("{token} → {canonical}"));
+                }
+            }
+        }
+        let synonymy_step = ProofStep {
+            step_number: 3,
+            method: TransformationMethod::Synonymy,
+            input_description: format!("{} tokens from chromatographic separation", tokens.len()),
+            output_description: format!(
+                "Resolved {resolved_count}/{} tokens to canonical forms. Mappings: [{}]",
+                tokens.len(),
+                if canonical_forms.is_empty() {
+                    "all canonical".to_string()
+                } else {
+                    canonical_forms.join(", ")
+                },
+            ),
+            verification: if tokens.is_empty() || resolved_count > 0 {
+                StepVerification::Verified {
+                    confidence: if tokens.is_empty() {
+                        1.0
+                    } else {
+                        resolved_count as f64 / tokens.len() as f64
+                    },
+                }
+            } else {
+                let w = format!(
+                    "No tokens resolved to canonical forms — {} tokens unrecognized",
+                    tokens.len()
+                );
+                warnings.push(w.clone());
+                StepVerification::VerifiedWithWarnings { warnings: vec![w] }
+            },
+        };
+        steps.push(synonymy_step);
+
+        // === STEP 4: TITRATION ===
         let titration = self.titrator.titrate(expression);
         let titration_step = ProofStep {
-            step_number: 3,
+            step_number: 4,
             method: TransformationMethod::Titration,
             input_description: format!("Expression: \"{expression}\""),
             output_description: format!(

@@ -182,6 +182,60 @@ pub fn narrative_similarity_with_synonyms(
     }
 }
 
+/// Compute similarity with POM registry + optional learned synonym boosting
+///
+/// Uses proof-of-meaning `SynonymRegistry` for curated baseline normalization,
+/// then layers learned synonyms on top as fallback.
+#[must_use]
+pub fn narrative_similarity_with_registry(
+    a: &str,
+    b: &str,
+    registry: &nexcore_proof_of_meaning::synonymy::SynonymRegistry,
+    learned_synonyms: &[(String, String)],
+) -> Similarity {
+    let stopwords: HashSet<&str> = MEDICAL_STOPWORDS.iter().copied().collect();
+
+    let normalize = |text: &str| -> HashSet<String> {
+        text.to_lowercase()
+            .split(|c: char| c.is_whitespace() || c.is_ascii_punctuation())
+            .filter(|t| !t.is_empty() && t.len() > 1)
+            .filter(|t| !stopwords.contains(t))
+            .map(|t| {
+                // 1. Check POM registry for curated canonical form
+                if let Some((canonical, _, _)) = registry.resolve(t) {
+                    return canonical.to_string();
+                }
+                // 2. Check learned synonyms as fallback
+                for (canonical, variant) in learned_synonyms {
+                    if t == variant {
+                        return canonical.clone();
+                    }
+                }
+                t.to_string()
+            })
+            .collect()
+    };
+
+    let set_a = normalize(a);
+    let set_b = normalize(b);
+
+    if set_a.is_empty() && set_b.is_empty() {
+        return Similarity::new(1.0);
+    }
+    if set_a.is_empty() || set_b.is_empty() {
+        return Similarity::new(0.0);
+    }
+
+    let intersection = set_a.intersection(&set_b).count();
+    let union = set_a.union(&set_b).count();
+
+    if union == 0 {
+        Similarity::new(0.0)
+    } else {
+        Similarity::new(intersection as f64 / union as f64)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

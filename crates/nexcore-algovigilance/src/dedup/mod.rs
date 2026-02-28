@@ -18,7 +18,9 @@ use crate::store::AlgovigilanceStore;
 use crate::traits::AlgovigilanceFunction;
 use crate::types::{CaseId, DecayReport, Similarity};
 
-use self::tokenizer::{narrative_similarity, narrative_similarity_with_synonyms};
+use nexcore_proof_of_meaning::synonymy::SynonymRegistry;
+
+use self::tokenizer::narrative_similarity_with_registry;
 use self::types::{CasePair, DedupConfig, DeduplicationResult, IcsrNarrative, SynonymPair};
 
 /// ICSR Deduplication function
@@ -27,7 +29,9 @@ use self::types::{CasePair, DedupConfig, DeduplicationResult, IcsrNarrative, Syn
 pub struct DedupFunction {
     /// Configuration
     config: DedupConfig,
-    /// Learned synonym pairs (canonical, variant)
+    /// Curated POM synonym registry (always active)
+    registry: SynonymRegistry,
+    /// Learned synonym pairs (canonical, variant) — gated by use_learned_synonyms
     synonyms: Vec<(String, String)>,
 }
 
@@ -37,6 +41,7 @@ impl DedupFunction {
     pub fn new() -> Self {
         Self {
             config: DedupConfig::default(),
+            registry: SynonymRegistry::pv_standard(),
             synonyms: Vec::new(),
         }
     }
@@ -46,6 +51,7 @@ impl DedupFunction {
     pub fn with_config(config: DedupConfig) -> Self {
         Self {
             config,
+            registry: SynonymRegistry::pv_standard(),
             synonyms: Vec::new(),
         }
     }
@@ -60,13 +66,17 @@ impl DedupFunction {
     }
 
     /// Compare two narratives directly
+    ///
+    /// Always uses POM `SynonymRegistry` for curated baseline resolution.
+    /// Learned synonyms layer on top when `use_learned_synonyms` is enabled.
     #[must_use]
     pub fn compare_pair(&self, a: &str, b: &str) -> Similarity {
-        if self.config.use_learned_synonyms && !self.synonyms.is_empty() {
-            narrative_similarity_with_synonyms(a, b, &self.synonyms)
+        let learned = if self.config.use_learned_synonyms {
+            &self.synonyms[..]
         } else {
-            narrative_similarity(a, b)
-        }
+            &[]
+        };
+        narrative_similarity_with_registry(a, b, &self.registry, learned)
     }
 
     /// Deduplicate a batch of ICSR narratives
@@ -87,27 +97,25 @@ impl DedupFunction {
             .flat_map(|i| (i + 1..n).map(move |j| (i, j)))
             .collect();
 
-        // Parallel or sequential based on batch size
+        // Always use POM registry; learned synonyms gated by config flag
         let threshold = self.config.similarity_threshold;
-        let use_synonyms = self.config.use_learned_synonyms && !self.synonyms.is_empty();
-        let synonyms = &self.synonyms;
+        let learned: &[(String, String)] = if self.config.use_learned_synonyms {
+            &self.synonyms
+        } else {
+            &[]
+        };
+        let registry = &self.registry;
 
         let case_pairs: Vec<CasePair> = if n > 100 {
             pairs
                 .par_iter()
                 .filter_map(|&(i, j)| {
-                    let sim = if use_synonyms {
-                        narrative_similarity_with_synonyms(
-                            &narratives[i].narrative_text,
-                            &narratives[j].narrative_text,
-                            synonyms,
-                        )
-                    } else {
-                        narrative_similarity(
-                            &narratives[i].narrative_text,
-                            &narratives[j].narrative_text,
-                        )
-                    };
+                    let sim = narrative_similarity_with_registry(
+                        &narratives[i].narrative_text,
+                        &narratives[j].narrative_text,
+                        registry,
+                        learned,
+                    );
 
                     if sim.value() >= threshold {
                         Some(CasePair {
@@ -125,18 +133,12 @@ impl DedupFunction {
             pairs
                 .iter()
                 .filter_map(|&(i, j)| {
-                    let sim = if use_synonyms {
-                        narrative_similarity_with_synonyms(
-                            &narratives[i].narrative_text,
-                            &narratives[j].narrative_text,
-                            synonyms,
-                        )
-                    } else {
-                        narrative_similarity(
-                            &narratives[i].narrative_text,
-                            &narratives[j].narrative_text,
-                        )
-                    };
+                    let sim = narrative_similarity_with_registry(
+                        &narratives[i].narrative_text,
+                        &narratives[j].narrative_text,
+                        registry,
+                        learned,
+                    );
 
                     if sim.value() >= threshold {
                         Some(CasePair {

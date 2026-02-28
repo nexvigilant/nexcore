@@ -68,7 +68,7 @@ pub use error::CodingError;
 pub use fuzzy::{BkTree, jaro, jaro_winkler, levenshtein, levenshtein_similarity};
 pub use meddra::{
     DictionaryStats, HierarchyLevel, HierarchyPath, Hlgt, Hlt, Llt, MeddraDictionary,
-    MeddraVersion, Pt, SearchResult, Soc,
+    MeddraVersion, Pt, SearchResult, Soc, TitrationProvenance,
 };
 // Re-export glossary for PV terminology lookup
 pub use glossary::{

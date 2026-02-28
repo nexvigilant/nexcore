@@ -169,7 +169,7 @@ impl Column {
 /// with the same strength as "cardiac", and "vaccination" binds to
 /// Action just like "immunization".
 fn compute_affinity(token: &str, class: &ElementClass) -> f64 {
-    let registry = crate::synonyms::SynonymRegistry::pv_standard();
+    let registry = crate::synonymy::SynonymRegistry::pv_standard();
     let t = token.to_lowercase();
 
     // First: check if the synonym registry resolves this token to this class

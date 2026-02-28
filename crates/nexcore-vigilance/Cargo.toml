@@ -11,6 +11,7 @@ description = "NexVigilant Core: The Vigilance Kernel - Theory of Vigilance, Gua
 
 [dependencies]
 nexcore-constants = { version = "1.0.0", path = "../nexcore-constants", registry = "nexcore" }
+nexcore-edit-distance = { version = "1.0.0", path = "../nexcore-edit-distance", registry = "nexcore" }
 nexcore-tov = { version = "1.0.0", path = "../nexcore-tov", registry = "nexcore" }
 nexcore-harm-taxonomy = { version = "1.0.0", path = "../nexcore-harm-taxonomy", registry = "nexcore" }
 nexcore-pv-core = { version = "1.0.0", path = "../nexcore-pv-core", registry = "nexcore" }
@@ -98,6 +99,7 @@ nexcore-primitives = { workspace = true }
 nexcore-measure = { version = "1.0.0", path = "../nexcore-measure", registry = "nexcore" }
 stem-math = { version = "0.1.0", path = "../stem-math", registry = "nexcore" }
 nexcore-labs = { version = "1.0.0", path = "../nexcore-labs", registry = "nexcore" }
+nexcore-proof-of-meaning = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3.10.1"

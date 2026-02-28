@@ -198,7 +198,7 @@ pub enum EquivalenceVerdict {
 /// Phase 1: curated synonym groups from ICH/MedDRA/WHO-UMC.
 /// Phase 2 (future): spectral vector cosine similarity from corpus embeddings.
 fn compute_similarity(analyte: &str, titrant_label: &str) -> f64 {
-    let registry = crate::synonyms::SynonymRegistry::pv_standard();
+    let registry = crate::synonymy::SynonymRegistry::pv_standard();
     let analyte_lower = analyte.to_lowercase();
     let label_lower = titrant_label.to_lowercase();
 

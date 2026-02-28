@@ -16,6 +16,7 @@ nexcore-error = { workspace = true }
 # NexCore internal
 nexcore-dtree = { version = "1.0.0", path = "../nexcore-dtree", registry = "nexcore" }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-proof-of-meaning = { workspace = true }
 
 # Serialization
 serde = { version = "1.0.204", features = ["derive"] }

@@ -17,6 +17,9 @@
 //! - **Related**: Associated but not hierarchical
 //! - **CloseMatch**: Very similar but not identical
 
+use nexcore_proof_of_meaning::element::{Atom, ElementClass};
+use nexcore_proof_of_meaning::registry::AtomRegistry;
+use nexcore_proof_of_meaning::titration::{self, EquivalenceVerdict, Titrator};
 use serde::{Deserialize, Serialize};
 
 /// Terminology system identifier
@@ -99,7 +102,17 @@ pub enum MappingRelationship {
 }
 
 impl MappingRelationship {
-    /// Get relationship confidence modifier
+    /// Get relationship confidence modifier (hardcoded constants).
+    ///
+    /// # Deprecated
+    ///
+    /// Use [`titrate_confidence`] for POM titration-based scoring instead.
+    /// Hardcoded constants do not account for semantic similarity between
+    /// source and target terms.
+    #[deprecated(
+        since = "1.1.0",
+        note = "Use titrate_confidence() for POM titration-based equivalence scoring"
+    )]
     #[must_use]
     pub fn confidence_modifier(&self) -> f64 {
         match self {
@@ -134,6 +147,18 @@ pub enum CrossRefProvenance {
         /// Curator identifier
         curator: String,
     },
+    /// Computed via POM titration-based semantic equivalence
+    ///
+    /// The confidence is derived from titrating both source and target terms
+    /// against canonical PV atoms and measuring shared equivalence points.
+    PomTitration {
+        /// Titration equivalence score (0.0-1.0)
+        equivalence_score: f64,
+        /// Verdict: Equivalent (>0.90), PartialOverlap (0.60-0.90), Distinct (<0.60)
+        verdict: String,
+        /// Number of shared canonical atoms between source and target
+        shared_atoms: usize,
+    },
 }
 
 impl CrossRefProvenance {
@@ -145,8 +170,82 @@ impl CrossRefProvenance {
             CrossRefProvenance::BioOntology => 0.85,
             CrossRefProvenance::Computed { score, .. } => *score * 0.70,
             CrossRefProvenance::Manual { .. } => 0.90,
+            CrossRefProvenance::PomTitration {
+                equivalence_score, ..
+            } => *equivalence_score,
         }
     }
+}
+
+/// Create a POM titrator seeded with all standard PV atoms.
+///
+/// Uses the full POM `AtomRegistry::seed_all()` (88 atoms across 8 element classes)
+/// to provide comprehensive titrant coverage for terminology cross-referencing.
+#[must_use]
+pub fn pom_titrator() -> Titrator {
+    let mut registry = AtomRegistry::new();
+    registry.seed_all();
+
+    let titrants: Vec<Atom> = ElementClass::all()
+        .iter()
+        .flat_map(|class| registry.by_class(class).into_iter().cloned())
+        .map(|ra| ra.atom)
+        .collect();
+
+    Titrator::new(titrants)
+}
+
+/// Compute a titration-based confidence score for a cross-reference mapping.
+///
+/// Replaces [`MappingRelationship::confidence_modifier()`]'s hardcoded constants with
+/// POM titration-based semantic equivalence measurement. The `MappingRelationship` is
+/// used as a validation hint: if titration disagrees with the pre-assigned relationship,
+/// the disagreement is recorded in the returned provenance.
+///
+/// Returns `(confidence, provenance)` where confidence is the titration equivalence score
+/// and provenance captures the full titration metadata.
+#[must_use]
+pub fn titrate_confidence(
+    titrator: &Titrator,
+    source_term: &str,
+    target_term: &str,
+    relationship: MappingRelationship,
+) -> (f64, CrossRefProvenance) {
+    let proof = titration::prove_equivalence(titrator, source_term, target_term);
+    let score = proof.equivalence_score.into_inner();
+
+    let verdict_str = match &proof.verdict {
+        EquivalenceVerdict::Equivalent => "Equivalent",
+        EquivalenceVerdict::PartialOverlap => "PartialOverlap",
+        EquivalenceVerdict::Distinct => "Distinct",
+    };
+
+    // Validate titration against pre-assigned relationship.
+    // If MappingRelationship::Exact but titration scores < 0.8, the disagreement
+    // is captured in the verdict string for downstream audit.
+    let validation_note = match relationship {
+        MappingRelationship::Exact if score < 0.8 => {
+            format!(
+                "{} (warning: relationship=Exact but titration={:.2}<0.80)",
+                verdict_str, score
+            )
+        }
+        MappingRelationship::CloseMatch if score < 0.6 => {
+            format!(
+                "{} (warning: relationship=CloseMatch but titration={:.2}<0.60)",
+                verdict_str, score
+            )
+        }
+        _ => verdict_str.to_string(),
+    };
+
+    let provenance = CrossRefProvenance::PomTitration {
+        equivalence_score: score,
+        verdict: validation_note,
+        shared_atoms: proof.shared_atoms,
+    };
+
+    (score, provenance)
 }
 
 /// Reference to a term in a terminology system
@@ -228,6 +327,33 @@ impl TerminologyCrossRef {
 
     /// Add a mapping and update overall confidence
     pub fn add_mapping(&mut self, mapping: TermMapping) {
+        if mapping.confidence > self.confidence {
+            self.confidence = mapping.confidence;
+        }
+        self.mappings.push(mapping);
+    }
+
+    /// Add a mapping with POM titration-based confidence scoring.
+    ///
+    /// Uses [`titrate_confidence`] to compute confidence from semantic
+    /// equivalence rather than hardcoded constants. The `relationship` hint
+    /// is validated against the titration result.
+    pub fn add_titrated_mapping(
+        &mut self,
+        titrator: &Titrator,
+        target: TermReference,
+        relationship: MappingRelationship,
+    ) {
+        let (confidence, provenance) =
+            titrate_confidence(titrator, &self.source.name, &target.name, relationship);
+
+        let mapping = TermMapping {
+            target,
+            relationship,
+            confidence,
+            provenance,
+        };
+
         if mapping.confidence > self.confidence {
             self.confidence = mapping.confidence;
         }
@@ -355,6 +481,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated, reason = "Validating backward-compat of deprecated method")]
     fn test_mapping_relationship_confidence() {
         assert_eq!(MappingRelationship::Exact.confidence_modifier(), 1.0);
         assert!(MappingRelationship::Broader.confidence_modifier() < 1.0);
@@ -404,5 +531,101 @@ mod tests {
 
         assert!(result.consistency_score < 1.0);
         assert!(result.is_consistent()); // Still above 0.8
+    }
+
+    #[test]
+    fn test_pom_titrator_construction() {
+        let titrator = pom_titrator();
+        // Should have titrants from all 8 element classes (88 atoms total)
+        assert!(!titrator.titrants.is_empty());
+    }
+
+    #[test]
+    fn test_titrate_confidence_identical_terms() {
+        let titrator = pom_titrator();
+        let (score, provenance) = titrate_confidence(
+            &titrator,
+            "cardiac adverse event",
+            "cardiac adverse event",
+            MappingRelationship::Exact,
+        );
+        // Identical terms should titrate with high equivalence
+        assert!(score > 0.5);
+        assert!(matches!(
+            provenance,
+            CrossRefProvenance::PomTitration { .. }
+        ));
+    }
+
+    #[test]
+    fn test_titrate_confidence_distinct_terms() {
+        let titrator = pom_titrator();
+        let (score, _provenance) = titrate_confidence(
+            &titrator,
+            "cardiac disorder",
+            "hepatic disorder",
+            MappingRelationship::Related,
+        );
+        // Different organ systems — score should be lower than identical
+        let (identical_score, _) = titrate_confidence(
+            &titrator,
+            "cardiac disorder",
+            "cardiac disorder",
+            MappingRelationship::Exact,
+        );
+        assert!(score <= identical_score);
+    }
+
+    #[test]
+    fn test_titrate_confidence_validation_warning() {
+        let titrator = pom_titrator();
+        let (score, provenance) = titrate_confidence(
+            &titrator,
+            "cardiac disorder",
+            "hepatic disorder",
+            MappingRelationship::Exact, // Mismatch: claiming Exact for different organs
+        );
+        if score < 0.8 {
+            // Should contain a validation warning
+            if let CrossRefProvenance::PomTitration { verdict, .. } = &provenance {
+                assert!(
+                    verdict.contains("warning"),
+                    "Expected validation warning for Exact mismatch"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_pom_provenance_base_confidence() {
+        let provenance = CrossRefProvenance::PomTitration {
+            equivalence_score: 0.85,
+            verdict: "PartialOverlap".into(),
+            shared_atoms: 2,
+        };
+        assert!((provenance.base_confidence() - 0.85).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_add_titrated_mapping() {
+        let titrator = pom_titrator();
+        let source =
+            TermReference::new(TerminologySystem::Mesh, "D002318", "cardiac adverse event");
+        let mut crossref = TerminologyCrossRef::new(source, CrossRefProvenance::BioOntology);
+
+        let target = TermReference::new(
+            TerminologySystem::Snomed,
+            "269814003",
+            "cardiac adverse event",
+        );
+        crossref.add_titrated_mapping(&titrator, target, MappingRelationship::Exact);
+
+        assert_eq!(crossref.mappings.len(), 1);
+        assert!(matches!(
+            crossref.mappings[0].provenance,
+            CrossRefProvenance::PomTitration { .. }
+        ));
+        // Identical PV terms should produce non-zero confidence via titration
+        assert!(crossref.confidence > 0.0);
     }
 }

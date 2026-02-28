@@ -27,6 +27,7 @@ signal = { version = "1.0.0", path = "../signal", registry = "nexcore" }
 phf = { version = "0.11.2", features = ["macros"] }
 nexcore-fhir = { workspace = true }
 nexcore-openfda = { workspace = true }
+nexcore-proof-of-meaning = { workspace = true }
 
 [dev-dependencies]
 tempfile = { version = "3.10.1" }

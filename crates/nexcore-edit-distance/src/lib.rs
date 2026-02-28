@@ -34,6 +34,7 @@
 //! ```
 
 pub mod adapter;
+pub mod classic;
 pub mod cost;
 pub mod grounding;
 pub mod metric;

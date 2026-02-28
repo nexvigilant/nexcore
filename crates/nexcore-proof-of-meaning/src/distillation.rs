@@ -101,7 +101,7 @@ impl Distiller {
             let volatility = estimate_volatility(token);
 
             // Resolve class via synonym registry (instead of defaulting to Modifier)
-            let registry = crate::synonyms::SynonymRegistry::pv_standard();
+            let registry = crate::synonymy::SynonymRegistry::pv_standard();
             let class = registry
                 .resolve(&token.to_lowercase())
                 .map(|(_, c, _)| c)

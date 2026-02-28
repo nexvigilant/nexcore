@@ -7,15 +7,17 @@
 //!
 //! ```text
 //!   ┌─────────────────────────────────────────────┐
-//!   │  Distillation  — text → atoms by volatility  │
+//!   │  Distillation   — text → atoms by volatility │
 //!   ├─────────────────────────────────────────────┤
-//!   │  Spectroscopy  — atom fingerprinting          │
+//!   │  Spectroscopy   — atom fingerprinting        │
 //!   ├─────────────────────────────────────────────┤
-//!   │  Chromatography — atoms → hierarchy binding   │
+//!   │  Chromatography — atoms → hierarchy binding  │
 //!   ├─────────────────────────────────────────────┤
-//!   │  Titration      — equivalence measurement     │
+//!   │  Synonymy       — isotope → canonical form   │
 //!   ├─────────────────────────────────────────────┤
-//!   │  Registry       — canonical atom definitions  │
+//!   │  Titration      — equivalence measurement    │
+//!   ├─────────────────────────────────────────────┤
+//!   │  Registry       — canonical atom definitions │
 //!   └─────────────────────────────────────────────┘
 //! ```
 //!
@@ -36,7 +38,7 @@ pub mod grounding;
 pub mod pipeline;
 pub mod registry;
 pub mod spectrum;
-pub mod synonyms;
+pub mod synonymy;
 pub mod titration;
 
 #[cfg(test)]
@@ -262,7 +264,7 @@ mod tests {
     fn pipeline_transforms_expression() {
         let pipeline = pipeline::ProofPipeline::pv_standard();
         let trail = pipeline.transform("cardiac adverse event");
-        assert_eq!(trail.steps.len(), 3);
+        assert_eq!(trail.steps.len(), 4);
         assert!(trail.trail_valid);
     }
 
@@ -591,7 +593,7 @@ mod tests {
         let pipeline = pipeline::ProofPipeline::pv_standard();
         // "severe acute cardiac adverse reaction" — 5 tokens across 5 different classes
         let trail = pipeline.transform("severe acute cardiac adverse reaction");
-        assert_eq!(trail.steps.len(), 3);
+        assert_eq!(trail.steps.len(), 4);
         assert!(trail.steps.iter().all(|s| s.step_number >= 1));
     }
 

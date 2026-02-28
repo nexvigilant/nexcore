@@ -10,6 +10,7 @@ rust-version = "1.85"
 description = "Pharmacovigilance Domain-Specific Language with custom bytecode compiler"
 
 [dependencies]
+nexcore-edit-distance = { version = "1.0.0", path = "../nexcore-edit-distance", registry = "nexcore" }
 nexcore-error = { workspace = true }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 nexcore-pv-core = { version = "1.0.0", path = "../nexcore-pv-core", registry = "nexcore" }

@@ -8017,6 +8017,7 @@ dependencies = [
 name = "nexcore-dna"
 version = "1.0.0"
 dependencies = [
+ "nexcore-edit-distance",
  "nexcore-lex-primitiva",
  "reqwest 0.12.28",
  "serde",
@@ -8134,6 +8135,7 @@ dependencies = [
  "duckdb",
  "nexcore-chrono",
  "nexcore-dataframe",
+ "nexcore-edit-distance",
  "nexcore-error",
  "nexcore-lex-primitiva",
  "nexcore-vigilance",
@@ -9092,6 +9094,7 @@ version = "1.0.0"
 dependencies = [
  "nexcore-chrono",
  "nexcore-constants",
+ "nexcore-edit-distance",
  "nexcore-error",
  "nexcore-fhir",
  "nexcore-lex-primitiva",
@@ -9113,6 +9116,7 @@ dependencies = [
 name = "nexcore-pvdsl"
 version = "1.0.0"
 dependencies = [
+ "nexcore-edit-distance",
  "nexcore-error",
  "nexcore-lex-primitiva",
  "nexcore-pv-core",

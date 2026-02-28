@@ -133,41 +133,9 @@ impl fmt::Debug for Diagnostic {
 
 /// Compute the Levenshtein edit distance between two strings.
 ///
-/// Classic O(m*n) dynamic programming. Used for did-you-mean suggestions.
+/// Delegates to the canonical `nexcore-edit-distance` implementation.
 fn levenshtein(a: &str, b: &str) -> usize {
-    let a_bytes = a.as_bytes();
-    let b_bytes = b.as_bytes();
-    let m = a_bytes.len();
-    let n = b_bytes.len();
-
-    if m == 0 {
-        return n;
-    }
-    if n == 0 {
-        return m;
-    }
-
-    // Single-row DP
-    let mut prev: Vec<usize> = (0..=n).collect();
-    let mut curr = vec![0; n + 1];
-
-    for i in 1..=m {
-        curr[0] = i;
-        for j in 1..=n {
-            let cost = if a_bytes[i - 1] == b_bytes[j - 1] {
-                0
-            } else {
-                1
-            };
-            let del = prev[j] + 1;
-            let ins = curr[j - 1] + 1;
-            let sub = prev[j - 1] + cost;
-            curr[j] = del.min(ins).min(sub);
-        }
-        core::mem::swap(&mut prev, &mut curr);
-    }
-
-    prev[n]
+    nexcore_edit_distance::classic::levenshtein_distance(a, b)
 }
 
 /// Find the closest match for `name` among `candidates`.

@@ -133,55 +133,20 @@ pub fn mine(word: &str) -> WordOre {
 // Refining Functions (Edit Distance + LCS)
 // ---------------------------------------------------------------------------
 
-/// Levenshtein edit distance via classic DP with single-row optimization.
+/// Levenshtein edit distance.
 ///
-/// O(n*m) time, O(min(n,m)) space.
+/// Delegates to the canonical `nexcore-edit-distance` implementation.
 #[must_use]
 pub fn levenshtein(a: &str, b: &str) -> usize {
-    let a_bytes = a.as_bytes();
-    let b_bytes = b.as_bytes();
-
-    let n = a_bytes.len();
-    let m = b_bytes.len();
-
-    // Optimize: ensure we iterate over the shorter dimension
-    if n > m {
-        return levenshtein(b, a);
-    }
-
-    // n <= m now
-    let mut prev: Vec<usize> = (0..=n).collect();
-    let mut curr = vec![0usize; n + 1];
-
-    for j in 1..=m {
-        curr[0] = j;
-        for i in 1..=n {
-            let cost = if a_bytes[i - 1] == b_bytes[j - 1] {
-                0
-            } else {
-                1
-            };
-            curr[i] = (prev[i] + 1) // deletion
-                .min(curr[i - 1] + 1) // insertion
-                .min(prev[i - 1] + cost); // substitution
-        }
-        std::mem::swap(&mut prev, &mut curr);
-    }
-
-    prev[n]
+    nexcore_edit_distance::classic::levenshtein_distance(a, b)
 }
 
 /// Normalized similarity: `1.0 - distance / max(len_a, len_b)`.
 ///
-/// Returns 1.0 for identical strings, 0.0 for completely different.
+/// Delegates to the canonical `nexcore-edit-distance` implementation.
 #[must_use]
 pub fn similarity(a: &str, b: &str) -> f64 {
-    let max_len = a.len().max(b.len());
-    if max_len == 0 {
-        return 1.0; // both empty
-    }
-    let dist = levenshtein(a, b) as f64;
-    1.0 - dist / max_len as f64
+    nexcore_edit_distance::classic::levenshtein_similarity(a, b)
 }
 
 /// Longest common subsequence length via DP.

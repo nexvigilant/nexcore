@@ -32,50 +32,7 @@ use std::cmp::min;
 /// ```
 #[must_use]
 pub fn levenshtein(a: &str, b: &str) -> usize {
-    let a_chars: Vec<char> = a.chars().collect();
-    let b_chars: Vec<char> = b.chars().collect();
-
-    let n = a_chars.len();
-    let m = b_chars.len();
-
-    // Edge cases
-    if n == 0 {
-        return m;
-    }
-    if m == 0 {
-        return n;
-    }
-
-    // Ensure we use the shorter string for the row to minimize space
-    let (shorter, longer, s_len, _l_len) = if n <= m {
-        (&a_chars, &b_chars, n, m)
-    } else {
-        (&b_chars, &a_chars, m, n)
-    };
-
-    // Single row optimization: O(min(n,m)) space
-    let mut prev_row: Vec<usize> = (0..=s_len).collect();
-    let mut curr_row: Vec<usize> = vec![0; s_len + 1];
-
-    for (i, longer_char) in longer.iter().enumerate() {
-        curr_row[0] = i + 1;
-
-        for (j, shorter_char) in shorter.iter().enumerate() {
-            let cost = usize::from(longer_char != shorter_char);
-
-            curr_row[j + 1] = min(
-                min(
-                    prev_row[j + 1] + 1, // deletion
-                    curr_row[j] + 1,     // insertion
-                ),
-                prev_row[j] + cost, // substitution
-            );
-        }
-
-        std::mem::swap(&mut prev_row, &mut curr_row);
-    }
-
-    prev_row[s_len]
+    nexcore_edit_distance::classic::levenshtein_distance(a, b)
 }
 
 /// Calculate normalized Levenshtein similarity (0.0 to 1.0).
@@ -92,16 +49,7 @@ pub fn levenshtein(a: &str, b: &str) -> usize {
 /// ```
 #[must_use]
 pub fn levenshtein_similarity(a: &str, b: &str) -> f64 {
-    let max_len = a.chars().count().max(b.chars().count());
-    if max_len == 0 {
-        return 1.0;
-    }
-    let distance = levenshtein(a, b);
-    #[allow(clippy::cast_precision_loss)]
-    let distance_f = distance as f64;
-    #[allow(clippy::cast_precision_loss)]
-    let max_len_f = max_len as f64;
-    1.0 - (distance_f / max_len_f)
+    nexcore_edit_distance::classic::levenshtein_similarity(a, b)
 }
 
 /// Calculate Jaro similarity between two strings.

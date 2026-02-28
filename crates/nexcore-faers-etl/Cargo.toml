@@ -18,6 +18,7 @@ path = "src/lib.rs"
 
 [dependencies]
 # Workspace crates (signals consolidated into vigilance::pv::signals)
+nexcore-edit-distance = { version = "1.0.0", path = "../nexcore-edit-distance", registry = "nexcore" }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 nexcore-vigilance = { version = "1.0.0", path = "../nexcore-vigilance", registry = "nexcore" }
 

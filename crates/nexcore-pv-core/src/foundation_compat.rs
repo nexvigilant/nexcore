@@ -25,61 +25,23 @@ pub struct LevenshteinResult {
 
 /// Compute Levenshtein edit distance between two strings.
 ///
-/// Uses Wagner-Fischer algorithm with O(min(m,n)) space optimization.
+/// Delegates to the canonical `nexcore-edit-distance` implementation.
 #[must_use]
 pub fn levenshtein_distance(source: &str, target: &str) -> usize {
-    let source_chars: Vec<char> = source.chars().collect();
-    let target_chars: Vec<char> = target.chars().collect();
-
-    let m = source_chars.len();
-    let n = target_chars.len();
-
-    if m == 0 {
-        return n;
-    }
-    if n == 0 {
-        return m;
-    }
-
-    let (shorter, longer, short_len, long_len) = if m <= n {
-        (&source_chars, &target_chars, m, n)
-    } else {
-        (&target_chars, &source_chars, n, m)
-    };
-
-    let mut prev_row: Vec<usize> = (0..=short_len).collect();
-    let mut curr_row: Vec<usize> = vec![0; short_len + 1];
-
-    for i in 1..=long_len {
-        curr_row[0] = i;
-        for j in 1..=short_len {
-            let cost = usize::from(longer[i - 1] != shorter[j - 1]);
-            curr_row[j] = (prev_row[j] + 1)
-                .min(curr_row[j - 1] + 1)
-                .min(prev_row[j - 1] + cost);
-        }
-        std::mem::swap(&mut prev_row, &mut curr_row);
-    }
-
-    prev_row[short_len]
+    nexcore_edit_distance::classic::levenshtein_distance(source, target)
 }
 
 /// Compute Levenshtein distance with full result including similarity ratio.
+///
+/// Delegates to the canonical `nexcore-edit-distance` implementation.
 #[must_use]
 pub fn levenshtein(source: &str, target: &str) -> LevenshteinResult {
-    let distance = levenshtein_distance(source, target);
-    let max_len = source.chars().count().max(target.chars().count());
-    let similarity = if max_len == 0 {
-        1.0
-    } else {
-        1.0 - (distance as f64 / max_len as f64)
-    };
-
+    let result = nexcore_edit_distance::classic::levenshtein(source, target);
     LevenshteinResult {
-        distance,
-        similarity: (similarity * 10000.0).round() / 10000.0,
-        source_len: source.chars().count(),
-        target_len: target.chars().count(),
+        distance: result.distance,
+        similarity: result.similarity,
+        source_len: result.source_len,
+        target_len: result.target_len,
     }
 }
 
@@ -95,53 +57,11 @@ pub struct FuzzyMatch {
 }
 
 /// Compute Levenshtein distance with early termination when distance exceeds threshold.
+///
+/// Delegates to the canonical `nexcore-edit-distance` implementation.
 #[must_use]
 pub fn levenshtein_bounded(source: &str, target: &str, max_distance: usize) -> Option<usize> {
-    let source_chars: Vec<char> = source.chars().collect();
-    let target_chars: Vec<char> = target.chars().collect();
-
-    let m = source_chars.len();
-    let n = target_chars.len();
-
-    if m.abs_diff(n) > max_distance {
-        return None;
-    }
-    if m == 0 {
-        return if n <= max_distance { Some(n) } else { None };
-    }
-    if n == 0 {
-        return if m <= max_distance { Some(m) } else { None };
-    }
-
-    let (shorter, longer, short_len, long_len) = if m <= n {
-        (&source_chars, &target_chars, m, n)
-    } else {
-        (&target_chars, &source_chars, n, m)
-    };
-
-    let mut prev_row: Vec<usize> = (0..=short_len).collect();
-    let mut curr_row: Vec<usize> = vec![0; short_len + 1];
-
-    for i in 1..=long_len {
-        curr_row[0] = i;
-        for j in 1..=short_len {
-            let cost = usize::from(longer[i - 1] != shorter[j - 1]);
-            curr_row[j] = (prev_row[j] + 1)
-                .min(curr_row[j - 1] + 1)
-                .min(prev_row[j - 1] + cost);
-        }
-        if curr_row.iter().all(|&v| v > max_distance) {
-            return None;
-        }
-        std::mem::swap(&mut prev_row, &mut curr_row);
-    }
-
-    let distance = prev_row[short_len];
-    if distance <= max_distance {
-        Some(distance)
-    } else {
-        None
-    }
+    nexcore_edit_distance::classic::levenshtein_bounded(source, target, max_distance)
 }
 
 /// Batch fuzzy search: find best matches for a query against candidates.

@@ -1,0 +1,6 @@
+[hold]
+name = "system-utilities"
+owner = "system-utilities-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-audio", "nexcore-db", "nexcore-downloads-scanner", "nexcore-firebase", "nexcore-fs", "nexcore-hook-lib", "nexcore-organize", "nexcore-pal", "nexcore-pal-linux", "nexcore-registry", "nexcore-synth", "nexcore-vault"]

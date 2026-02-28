@@ -1,0 +1,6 @@
+[hold]
+name = "biological-system"
+owner = "biological-system-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-cardiovascular", "nexcore-circulatory", "nexcore-cytokine", "nexcore-digestive", "nexcore-energy", "nexcore-hormones", "nexcore-immunity", "nexcore-integumentary", "nexcore-lymphatic", "nexcore-muscular", "nexcore-nervous", "nexcore-phenotype", "nexcore-reproductive", "nexcore-respiratory", "nexcore-ribosome", "nexcore-skeletal", "nexcore-spliceosome", "nexcore-synapse", "nexcore-transcriptase", "nexcore-urinary"]

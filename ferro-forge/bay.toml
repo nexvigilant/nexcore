@@ -1,0 +1,170 @@
+[bay]
+name = "nexcore-workspace"
+
+[[bay.holds]]
+name = "analysis-tools"
+owner = "analysis-tools-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-edit-distance", "nexcore-insight", "nexcore-model-checker", "nexcore-oracle", "nexcore-reason", "nexcore-retrocasting", "nexcore-zeta"]
+
+[[bay.holds]]
+name = "biological-system"
+owner = "biological-system-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-cardiovascular", "nexcore-circulatory", "nexcore-cytokine", "nexcore-digestive", "nexcore-energy", "nexcore-hormones", "nexcore-immunity", "nexcore-integumentary", "nexcore-lymphatic", "nexcore-muscular", "nexcore-nervous", "nexcore-phenotype", "nexcore-reproductive", "nexcore-respiratory", "nexcore-ribosome", "nexcore-skeletal", "nexcore-spliceosome", "nexcore-synapse", "nexcore-transcriptase", "nexcore-urinary"]
+
+[[bay.holds]]
+name = "brain-knowledge"
+owner = "brain-knowledge-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-brain", "nexcore-cognition", "nexcore-cortex", "nexcore-dna", "nexcore-engram", "nexcore-knowledge", "nexcore-knowledge-engine", "nexcore-statemind"]
+
+[[bay.holds]]
+name = "build-tooling"
+owner = "build-tooling-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-build-gate", "nexcore-build-orchestrator", "nexcore-compilation-space", "nexcore-compositor", "nexcore-compound-registry", "nexcore-foundry"]
+
+[[bay.holds]]
+name = "business-strategy"
+owner = "business-strategy-team"
+review_required = true
+layer = "Domain"
+members = ["academy-forge", "nexcore-ccim", "nexcore-education-machine", "nexcore-forge-strategy", "nexcore-pharma-rd", "nexcore-proof-of-meaning", "nexcore-value-mining", "vr-billing", "vr-compliance", "vr-core", "vr-marketplace", "vr-platform-ml", "vr-tenant"]
+
+[[bay.holds]]
+name = "chemistry"
+owner = "chemistry-team"
+review_required = true
+layer = "Foundation"
+members = ["nexcore-clearance", "nexcore-metabolite", "nexcore-molcore", "nexcore-qsar", "nexcore-stoichiometry", "nexcore-structural-alerts"]
+
+[[bay.holds]]
+name = "core-primitives"
+owner = "core-primitives-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-bicone", "nexcore-chrono", "nexcore-codec", "nexcore-config", "nexcore-constants", "nexcore-core", "nexcore-domain-primitives", "nexcore-error", "nexcore-error-derive", "nexcore-hash", "nexcore-id", "nexcore-init", "nexcore-lex-primitiva", "nexcore-primitive-scanner", "nexcore-primitives", "nexcore-rh-proofs", "nucli", "primitive-innovation"]
+
+[[bay.holds]]
+name = "data-computation"
+owner = "data-computation-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-aggregate", "nexcore-combinatorics", "nexcore-dataframe", "nexcore-dtree", "nexcore-measure", "nexcore-network", "nexcore-transform"]
+
+[[bay.holds]]
+name = "experimental-prototypes"
+owner = "experimental-prototypes-team"
+review_required = true
+layer = "Domain"
+members = ["antitransformer", "bert-burn", "borrow-miner", "core-true", "disney-loop", "grounded", "pvos-primitive-expansion", "signal", "transformer-primitives", "wksp-types"]
+
+[[bay.holds]]
+name = "experimentation"
+owner = "experimentation-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-ctvp", "nexcore-jeopardy", "nexcore-laboratory", "nexcore-labs", "nexcore-trial"]
+
+[[bay.holds]]
+name = "guardian-system"
+owner = "guardian-system-team"
+review_required = true
+layer = "Orchestration"
+members = ["nexcore-guardian-engine", "nexcore-homeostasis", "nexcore-homeostasis-memory", "nexcore-homeostasis-primitives", "nexcore-homeostasis-storm", "nexcore-nvrepl", "nexcore-orchestration", "nexcore-sentinel", "nexcore-vigil"]
+
+[[bay.holds]]
+name = "linguistics"
+owner = "linguistics-team"
+review_required = true
+layer = "Domain"
+members = ["compendious-machine", "nexcore-caesura", "nexcore-declension", "nexcore-ghost", "nexcore-grammar-lab", "nexcore-word", "nexcore-word-spectroscopy"]
+
+[[bay.holds]]
+name = "mcp-service"
+owner = "mcp-service-team"
+review_required = true
+layer = "Service"
+members = ["claude-fs-mcp", "claude-knowledge-mcp", "claude-mcp-config", "claude-repl-mcp", "gsheets-mcp", "gvids-mcp", "lessons-mcp", "mcp-relay", "mcp-stdio-client", "nexcore-api", "nexcore-docs-mcp", "nexcore-mcp", "nexcore-mcp-hot", "nexcore-notebooklm", "nexcore-perplexity", "nexcore-social", "nexcore-stdio-proxy", "perplexity-mcp", "reddit-mcp"]
+
+[[bay.holds]]
+name = "observability"
+owner = "observability-team"
+review_required = true
+layer = "Domain"
+members = ["counter-awareness", "nexcore-pharos", "nexcore-telemetry-core", "nexcore-watch-app", "nexcore-watch-core"]
+
+[[bay.holds]]
+name = "observatory-viz"
+owner = "observatory-viz-team"
+review_required = true
+layer = "Foundation"
+members = ["nexcloud", "nexcore-browser", "nexcore-renderer", "nexcore-softrender", "nexcore-viz"]
+
+[[bay.holds]]
+name = "os-runtime"
+owner = "os-runtime-team"
+review_required = true
+layer = "Orchestration"
+members = ["nexcore-os", "nexcore-shell", "nexcore-state-os", "nexcore-state-theory", "nexcore-terminal"]
+
+[[bay.holds]]
+name = "prima-language"
+owner = "prima-language-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-prima", "prima", "prima-academy", "prima-chem", "prima-codegen", "prima-mcp", "prima-mcp-server", "prima-pipeline"]
+
+[[bay.holds]]
+name = "pv-core"
+owner = "pv-core-team"
+review_required = true
+layer = "Orchestration"
+members = ["nexcore-ccp", "nexcore-chemivigilance", "nexcore-harm-taxonomy", "nexcore-pharmacovigilance", "nexcore-preemptive-pv", "nexcore-pv-core", "nexcore-pvdsl", "nexcore-pvos", "nexcore-qbr", "nexcore-tov", "nexcore-tov-grounded", "nexcore-tov-proofs", "nexcore-vigilance"]
+
+[[bay.holds]]
+name = "quality-assurance"
+owner = "quality-assurance-team"
+review_required = true
+layer = "Domain"
+members = ["integrity-calc", "nexcore-antibodies", "nexcore-capa", "nexcore-integrity", "nexcore-trust"]
+
+[[bay.holds]]
+name = "regulatory-compliance"
+owner = "regulatory-compliance-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-anatomy", "nexcore-compliance", "nexcore-faers-etl", "nexcore-fda-guidance", "nexcore-fhir", "nexcore-mesh", "nexcore-openfda", "nexcore-sop-anatomy"]
+
+[[bay.holds]]
+name = "signal-pipeline"
+owner = "signal-pipeline-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-algovigilance", "nexcore-signal-fence", "nexcore-signal-pipeline", "nexcore-signal-theory", "nexcore-signal-types"]
+
+[[bay.holds]]
+name = "skills-engine"
+owner = "skills-engine-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-skill-compiler", "nexcore-skill-exec", "nexcore-skill-verify", "nexcore-skills-engine", "skill-core", "skill-hunter", "skill-loader", "skill-macros", "skill-macros-core", "skill-primitive-extractor", "skill-transfer-confidence", "skills", "skills-mcp"]
+
+[[bay.holds]]
+name = "stem-foundation"
+owner = "stem-foundation-team"
+review_required = true
+layer = "Domain"
+members = ["stem", "stem-bio", "stem-complex", "stem-core", "stem-derive", "stem-derive-core", "stem-math", "stem-number-theory", "stem-phys", "stem-topology"]
+
+[[bay.holds]]
+name = "system-utilities"
+owner = "system-utilities-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-audio", "nexcore-db", "nexcore-downloads-scanner", "nexcore-firebase", "nexcore-fs", "nexcore-hook-lib", "nexcore-organize", "nexcore-pal", "nexcore-pal-linux", "nexcore-registry", "nexcore-synth", "nexcore-vault"]

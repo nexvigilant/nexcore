@@ -1,0 +1,6 @@
+[hold]
+name = "experimentation"
+owner = "experimentation-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-ctvp", "nexcore-jeopardy", "nexcore-laboratory", "nexcore-labs", "nexcore-trial"]

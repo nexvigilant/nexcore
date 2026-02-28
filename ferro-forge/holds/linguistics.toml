@@ -1,0 +1,6 @@
+[hold]
+name = "linguistics"
+owner = "linguistics-team"
+review_required = true
+layer = "Domain"
+members = ["compendious-machine", "nexcore-caesura", "nexcore-declension", "nexcore-ghost", "nexcore-grammar-lab", "nexcore-word", "nexcore-word-spectroscopy"]

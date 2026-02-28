@@ -1,0 +1,6 @@
+[hold]
+name = "skills-engine"
+owner = "skills-engine-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-skill-compiler", "nexcore-skill-exec", "nexcore-skill-verify", "nexcore-skills-engine", "skill-core", "skill-hunter", "skill-loader", "skill-macros", "skill-macros-core", "skill-primitive-extractor", "skill-transfer-confidence", "skills", "skills-mcp"]

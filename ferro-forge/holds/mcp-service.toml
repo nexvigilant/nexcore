@@ -1,0 +1,6 @@
+[hold]
+name = "mcp-service"
+owner = "mcp-service-team"
+review_required = true
+layer = "Service"
+members = ["claude-fs-mcp", "claude-knowledge-mcp", "claude-mcp-config", "claude-repl-mcp", "gsheets-mcp", "gvids-mcp", "lessons-mcp", "mcp-relay", "mcp-stdio-client", "nexcore-api", "nexcore-docs-mcp", "nexcore-mcp", "nexcore-mcp-hot", "nexcore-notebooklm", "nexcore-perplexity", "nexcore-social", "nexcore-stdio-proxy", "perplexity-mcp", "reddit-mcp"]

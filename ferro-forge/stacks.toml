@@ -1,0 +1,34 @@
+# Capability Stacks — Named paths from Foundation to Service
+#
+# Each stack traces a vertical capability path through the workspace
+# layer hierarchy. Used by `forge stack <name>` for end-to-end validation.
+
+[[stack]]
+name = "pv-signal-pipeline"
+description = "Pharmacovigilance signal detection from primitives to MCP tools"
+segments = [
+    { layer = "Foundation", hold = "core-primitives",    crate = "nexcore-primitives" },
+    { layer = "Foundation", hold = "stem-foundation",    crate = "stem-math" },
+    { layer = "Domain",      hold = "pv-core",            crate = "nexcore-vigilance" },
+    { layer = "Service",     hold = "mcp-service",        crate = "nexcore-mcp" },
+]
+
+[[stack]]
+name = "biological-homeostasis"
+description = "Biological system from energy primitives to immune response"
+segments = [
+    { layer = "Foundation", hold = "core-primitives",    crate = "nexcore-lex-primitiva" },
+    { layer = "Domain",      hold = "biological-system",  crate = "nexcore-energy" },
+    { layer = "Domain",      hold = "biological-system",  crate = "nexcore-cytokine" },
+    { layer = "Domain",      hold = "biological-system",  crate = "nexcore-immunity" },
+    { layer = "Domain",      hold = "guardian-system",    crate = "nexcore-guardian-engine" },
+]
+
+[[stack]]
+name = "brain-knowledge-path"
+description = "Knowledge pipeline from config to brain sessions to API"
+segments = [
+    { layer = "Foundation", hold = "core-primitives",    crate = "nexcore-config" },
+    { layer = "Domain",      hold = "brain-knowledge",    crate = "nexcore-brain" },
+    { layer = "Service",     hold = "mcp-service",        crate = "nexcore-mcp" },
+]

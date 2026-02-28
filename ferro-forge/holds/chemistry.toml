@@ -1,0 +1,6 @@
+[hold]
+name = "chemistry"
+owner = "chemistry-team"
+review_required = true
+layer = "Foundation"
+members = ["nexcore-clearance", "nexcore-metabolite", "nexcore-molcore", "nexcore-qsar", "nexcore-stoichiometry", "nexcore-structural-alerts"]

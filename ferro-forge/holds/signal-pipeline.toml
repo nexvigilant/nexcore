@@ -1,0 +1,6 @@
+[hold]
+name = "signal-pipeline"
+owner = "signal-pipeline-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-algovigilance", "nexcore-signal-fence", "nexcore-signal-pipeline", "nexcore-signal-theory", "nexcore-signal-types"]

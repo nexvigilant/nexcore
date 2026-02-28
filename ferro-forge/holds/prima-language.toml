@@ -1,0 +1,6 @@
+[hold]
+name = "prima-language"
+owner = "prima-language-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-prima", "prima", "prima-academy", "prima-chem", "prima-codegen", "prima-mcp", "prima-mcp-server", "prima-pipeline"]

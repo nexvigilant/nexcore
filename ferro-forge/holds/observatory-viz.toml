@@ -1,0 +1,6 @@
+[hold]
+name = "observatory-viz"
+owner = "observatory-viz-team"
+review_required = true
+layer = "Foundation"
+members = ["nexcloud", "nexcore-browser", "nexcore-renderer", "nexcore-softrender", "nexcore-viz"]

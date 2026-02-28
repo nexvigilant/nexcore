@@ -1,0 +1,6 @@
+[hold]
+name = "os-runtime"
+owner = "os-runtime-team"
+review_required = true
+layer = "Orchestration"
+members = ["nexcore-os", "nexcore-shell", "nexcore-state-os", "nexcore-state-theory", "nexcore-terminal"]

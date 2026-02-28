@@ -1,0 +1,6 @@
+[hold]
+name = "quality-assurance"
+owner = "quality-assurance-team"
+review_required = true
+layer = "Domain"
+members = ["integrity-calc", "nexcore-antibodies", "nexcore-capa", "nexcore-integrity", "nexcore-trust"]

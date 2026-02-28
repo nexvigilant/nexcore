@@ -1,0 +1,6 @@
+[hold]
+name = "experimental-prototypes"
+owner = "experimental-prototypes-team"
+review_required = true
+layer = "Domain"
+members = ["antitransformer", "bert-burn", "borrow-miner", "core-true", "disney-loop", "grounded", "pvos-primitive-expansion", "signal", "transformer-primitives", "wksp-types"]

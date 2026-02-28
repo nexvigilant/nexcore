@@ -1,0 +1,13 @@
+[package]
+name = "nexcore-topology"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+description = "Type-level workspace topology: Hold, Compartment, Stack, Bay"
+
+[dependencies]
+nexcore-lex-primitiva = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+toml = { workspace = true }

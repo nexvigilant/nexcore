@@ -1,0 +1,6 @@
+[hold]
+name = "regulatory-compliance"
+owner = "regulatory-compliance-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-anatomy", "nexcore-compliance", "nexcore-faers-etl", "nexcore-fda-guidance", "nexcore-fhir", "nexcore-mesh", "nexcore-openfda", "nexcore-sop-anatomy"]

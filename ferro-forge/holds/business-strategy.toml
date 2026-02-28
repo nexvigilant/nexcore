@@ -1,0 +1,6 @@
+[hold]
+name = "business-strategy"
+owner = "business-strategy-team"
+review_required = true
+layer = "Domain"
+members = ["academy-forge", "nexcore-ccim", "nexcore-education-machine", "nexcore-forge-strategy", "nexcore-pharma-rd", "nexcore-proof-of-meaning", "nexcore-value-mining", "vr-billing", "vr-compliance", "vr-core", "vr-marketplace", "vr-platform-ml", "vr-tenant"]

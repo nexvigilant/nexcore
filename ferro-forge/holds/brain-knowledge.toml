@@ -1,0 +1,6 @@
+[hold]
+name = "brain-knowledge"
+owner = "brain-knowledge-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-brain", "nexcore-cognition", "nexcore-cortex", "nexcore-dna", "nexcore-engram", "nexcore-knowledge", "nexcore-knowledge-engine", "nexcore-statemind"]

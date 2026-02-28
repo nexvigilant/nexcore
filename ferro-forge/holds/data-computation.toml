@@ -1,0 +1,6 @@
+[hold]
+name = "data-computation"
+owner = "data-computation-team"
+review_required = true
+layer = "Domain"
+members = ["nexcore-aggregate", "nexcore-combinatorics", "nexcore-dataframe", "nexcore-dtree", "nexcore-measure", "nexcore-network", "nexcore-transform"]

@@ -1,0 +1,6 @@
+[hold]
+name = "observability"
+owner = "observability-team"
+review_required = true
+layer = "Domain"
+members = ["counter-awareness", "nexcore-pharos", "nexcore-telemetry-core", "nexcore-watch-app", "nexcore-watch-core"]

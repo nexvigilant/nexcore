@@ -10,8 +10,8 @@
 //!
 //! ## Protocol
 //!
-//! **Client → Server:** `WsClientMessage` (input, command, resize, mode_switch, ping, get_preferences, update_preference, get_layout, update_layout)
-//! **Server → Client:** `WsServerMessage` (output, result, ai_token, status, error, pong, preferences, preference_updated, layout)
+//! **Client → Server:** `WsClientMessage` (input, command, resize, mode_switch, ping, get_preferences, update_preference, get_layout, update_layout, get_keybindings, update_keybindings)
+//! **Server → Client:** `WsServerMessage` (output, result, ai_token, status, error, pong, preferences, preference_updated, layout, keybindings)
 
 use axum::{
     extract::{
@@ -28,6 +28,7 @@ use vr_core::tenant::SubscriptionTier;
 use nexcore_mcp::NexCoreMcpServer;
 
 use nexcore_terminal::formatter::format_mcp_result;
+use nexcore_terminal::keybindings::{InMemoryKeybindingsStore, KeybindingsStore};
 use nexcore_terminal::layout::{InMemoryLayoutStore, LayoutStore};
 use nexcore_terminal::preferences::{InMemoryPreferencesStore, PreferencesStore};
 use nexcore_terminal::protocol::{SessionStatusMsg, WsClientMessage, WsServerMessage};
@@ -54,6 +55,8 @@ pub struct TerminalState {
     pub preferences: InMemoryPreferencesStore,
     /// Per-user terminal layout (in-memory, shared across reconnects).
     pub layouts: InMemoryLayoutStore,
+    /// Per-user keybindings (in-memory, shared across reconnects).
+    pub keybindings: InMemoryKeybindingsStore,
 }
 
 impl Default for TerminalState {
@@ -62,6 +65,7 @@ impl Default for TerminalState {
             registry: SessionRegistry::new(),
             preferences: InMemoryPreferencesStore::new(),
             layouts: InMemoryLayoutStore::new(),
+            keybindings: InMemoryKeybindingsStore::new(),
         }
     }
 }
@@ -259,6 +263,33 @@ async fn handle_terminal_socket(mut socket: WebSocket, params: TerminalConnectPa
             if let Ok(json) = serde_json::to_string(&layout_msg) {
                 if socket.send(Message::Text(json.into())).await.is_err() {
                     tracing::warn!("Terminal WS: client disconnected during default layout send");
+                    cleanup_session(&term_state, &session_id, &mut pty).await;
+                    return;
+                }
+            }
+        }
+    }
+
+    // Send user keybindings immediately after layout
+    match term_state.keybindings.load(&tenant_id, &user_id).await {
+        Ok(bindings) => {
+            let kb_msg = WsServerMessage::keybindings(bindings);
+            if let Ok(json) = serde_json::to_string(&kb_msg) {
+                if socket.send(Message::Text(json.into())).await.is_err() {
+                    tracing::warn!("Terminal WS: client disconnected during keybindings send");
+                    cleanup_session(&term_state, &session_id, &mut pty).await;
+                    return;
+                }
+            }
+        }
+        Err(e) => {
+            tracing::warn!(error = %e, "Terminal WS: failed to load keybindings, using defaults");
+            let kb_msg = WsServerMessage::keybindings(term_state.keybindings.defaults());
+            if let Ok(json) = serde_json::to_string(&kb_msg) {
+                if socket.send(Message::Text(json.into())).await.is_err() {
+                    tracing::warn!(
+                        "Terminal WS: client disconnected during default keybindings send"
+                    );
                     cleanup_session(&term_state, &session_id, &mut pty).await;
                     return;
                 }
@@ -481,6 +512,44 @@ async fn handle_client_message(
                 if let Ok(json) = serde_json::to_string(&msg) {
                     if socket.send(Message::Text(json.into())).await.is_err() {
                         tracing::debug!("Terminal WS: client gone during layout ack");
+                    }
+                }
+            }
+        }
+        WsClientMessage::GetKeybindings => {
+            let bindings = match term_state.keybindings.load(tenant_id, user_id).await {
+                Ok(b) => b,
+                Err(e) => {
+                    tracing::warn!(error = %e, "Terminal WS: keybindings load failed");
+                    term_state.keybindings.defaults()
+                }
+            };
+            let msg = WsServerMessage::keybindings(bindings);
+            if let Ok(json) = serde_json::to_string(&msg) {
+                if socket.send(Message::Text(json.into())).await.is_err() {
+                    tracing::debug!("Terminal WS: client gone during keybindings send");
+                }
+            }
+        }
+        WsClientMessage::UpdateKeybindings { bindings } => {
+            if let Err(e) = term_state
+                .keybindings
+                .save(tenant_id, user_id, &bindings)
+                .await
+            {
+                tracing::warn!(error = %e, "Terminal WS: keybindings save failed");
+                let err = WsServerMessage::error("KEYBINDINGS_SAVE_ERROR", e.to_string());
+                if let Ok(json) = serde_json::to_string(&err) {
+                    if socket.send(Message::Text(json.into())).await.is_err() {
+                        tracing::debug!("Terminal WS: client gone during keybindings error send");
+                    }
+                }
+            } else {
+                // Echo back the saved keybindings as confirmation
+                let msg = WsServerMessage::keybindings(bindings);
+                if let Ok(json) = serde_json::to_string(&msg) {
+                    if socket.send(Message::Text(json.into())).await.is_err() {
+                        tracing::debug!("Terminal WS: client gone during keybindings ack");
                     }
                 }
             }

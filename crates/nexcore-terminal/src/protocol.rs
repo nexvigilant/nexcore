@@ -5,6 +5,7 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::keybindings::KeybindingSet;
 use crate::layout::TerminalLayout;
 use crate::preferences::TerminalPreferences;
 use crate::session::{SessionStatus, TerminalMode};
@@ -53,6 +54,13 @@ pub enum WsClientMessage {
     UpdateLayout {
         /// The complete layout to persist.
         layout: TerminalLayout,
+    },
+    /// Request current keybindings.
+    GetKeybindings,
+    /// Update the full keybinding set.
+    UpdateKeybindings {
+        /// The complete keybinding set to persist.
+        bindings: KeybindingSet,
     },
 }
 
@@ -110,6 +118,11 @@ pub enum WsServerMessage {
     Layout {
         /// The user's complete terminal layout tree.
         layout: TerminalLayout,
+    },
+    /// Full keybindings snapshot (sent on connect, on request, and after update).
+    Keybindings {
+        /// The user's complete keybinding set.
+        bindings: KeybindingSet,
     },
 }
 
@@ -186,6 +199,12 @@ impl WsServerMessage {
     #[must_use]
     pub fn layout(layout: TerminalLayout) -> Self {
         Self::Layout { layout }
+    }
+
+    /// Convenience: create a keybindings snapshot message.
+    #[must_use]
+    pub fn keybindings(bindings: KeybindingSet) -> Self {
+        Self::Keybindings { bindings }
     }
 }
 
@@ -340,5 +359,39 @@ mod tests {
         assert!(json.contains("\"type\":\"layout\""));
         assert!(json.contains("\"focused_pane\""));
         assert!(json.contains("\"pane-1\""));
+    }
+
+    #[test]
+    fn client_get_keybindings_deserializes() {
+        let json = r#"{"type":"get_keybindings"}"#;
+        let msg: Result<WsClientMessage, _> = serde_json::from_str(json);
+        assert!(msg.is_ok());
+        assert!(matches!(
+            msg.unwrap_or(WsClientMessage::Ping),
+            WsClientMessage::GetKeybindings
+        ));
+    }
+
+    #[test]
+    fn client_update_keybindings_deserializes() {
+        let bindings = crate::keybindings::KeybindingSet::default_set();
+        let json = serde_json::json!({
+            "type": "update_keybindings",
+            "bindings": bindings,
+        });
+        let msg: Result<WsClientMessage, _> = serde_json::from_str(&json.to_string());
+        assert!(msg.is_ok());
+        if let Ok(WsClientMessage::UpdateKeybindings { bindings: b }) = msg {
+            assert_eq!(b.bindings.len(), 13);
+        }
+    }
+
+    #[test]
+    fn server_keybindings_serializes() {
+        let bindings = crate::keybindings::KeybindingSet::default_set();
+        let msg = WsServerMessage::keybindings(bindings);
+        let json = serde_json::to_string(&msg).unwrap_or_default();
+        assert!(json.contains("\"type\":\"keybindings\""));
+        assert!(json.contains("\"bindings\""));
     }
 }

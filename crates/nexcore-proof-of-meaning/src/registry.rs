@@ -83,7 +83,16 @@ impl AtomRegistry {
     }
 
     /// Crystallize a new atom into the registry.
-    pub fn crystallize(&mut self, atom: Atom, provenance: AtomProvenance) -> CrystallizationResult {
+    ///
+    /// If a `reference_spectrum` is provided, the atom is registered with its
+    /// spectral fingerprint. Atoms with a reference spectrum can be frozen
+    /// to production status via [`Self::freeze`].
+    pub fn crystallize(
+        &mut self,
+        atom: Atom,
+        provenance: AtomProvenance,
+        reference_spectrum: Option<Spectrum>,
+    ) -> CrystallizationResult {
         if let Some(&existing_id) = self.label_index.get(&atom.label) {
             return CrystallizationResult::AlreadyExists {
                 existing_id,
@@ -98,7 +107,7 @@ impl AtomRegistry {
 
         let registered = RegisteredAtom {
             atom,
-            reference_spectrum: None,
+            reference_spectrum,
             provenance,
             status: AtomStatus::Supersaturated,
         };
@@ -198,6 +207,7 @@ impl AtomRegistry {
                     code: code.to_string(),
                     level: MedDRALevel::SOC,
                 },
+                None,
             );
         }
     }
@@ -223,6 +233,7 @@ impl AtomRegistry {
                     document: "ICH E2A / WHO-UMC".into(),
                     section: "Causality categories".into(),
                 },
+                None,
             );
         }
     }
@@ -248,6 +259,7 @@ impl AtomRegistry {
                     document: "ICH E2B(R3)".into(),
                     section: "Temporal descriptors".into(),
                 },
+                None,
             );
         }
     }
@@ -270,6 +282,7 @@ impl AtomRegistry {
                     document: "ICH E2A / CTCAE".into(),
                     section: "Severity grading".into(),
                 },
+                None,
             );
         }
     }
@@ -297,6 +310,7 @@ impl AtomRegistry {
                     document: "ICH E2D".into(),
                     section: "Observation classification".into(),
                 },
+                None,
             );
         }
     }
@@ -322,6 +336,7 @@ impl AtomRegistry {
                     document: "ICH E2B(R3)".into(),
                     section: "Event modifiers".into(),
                 },
+                None,
             );
         }
     }
@@ -346,6 +361,7 @@ impl AtomRegistry {
                     document: "ICH E2B(R3)".into(),
                     section: "Action taken".into(),
                 },
+                None,
             );
         }
     }
@@ -367,6 +383,7 @@ impl AtomRegistry {
                     document: "ICH E2B(R3)".into(),
                     section: "Outcome of reaction".into(),
                 },
+                None,
             );
         }
     }

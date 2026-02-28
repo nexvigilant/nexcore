@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use crate::chromatography::{Column, SeparationQuality};
 use crate::distillation::Distiller;
 use crate::element::{Atom, ElementClass};
-use crate::spectrum::{self, ProbeSet, SpectralDistance};
+use crate::spectrum::{self, ProbeSet, SpectralDistance, Spectrum};
 use crate::synonymy::SynonymRegistry;
 use crate::titration::{self, EquivalenceProof, Titrator};
 
@@ -54,6 +54,10 @@ pub struct ProofTrail {
     pub id: NexId,
     pub input_expression: String,
     pub steps: Vec<ProofStep>,
+    /// Spectral fingerprints measured during step 3 (Spectroscopy).
+    /// Empty if the pipeline did not reach the spectroscopy step.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub spectra: Vec<Spectrum>,
     /// Is the entire trail valid?
     pub trail_valid: bool,
     /// Aggregate warnings from all steps.
@@ -345,6 +349,7 @@ impl ProofPipeline {
             id: NexId::v4(),
             input_expression: expression.to_string(),
             steps,
+            spectra,
             trail_valid: all_valid,
             warnings,
         }

@@ -338,6 +338,7 @@ mod tests {
                 corpus: "test".into(),
                 confidence: 0.9,
             },
+            None,
         );
         assert!(matches!(
             r1,
@@ -351,6 +352,7 @@ mod tests {
                 corpus: "test".into(),
                 confidence: 0.9,
             },
+            None,
         );
         assert!(matches!(
             r2,

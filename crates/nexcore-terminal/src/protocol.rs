@@ -5,6 +5,7 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::layout::TerminalLayout;
 use crate::preferences::TerminalPreferences;
 use crate::session::{SessionStatus, TerminalMode};
 
@@ -45,6 +46,13 @@ pub enum WsClientMessage {
         key: String,
         /// New value as JSON (e.g. `14`, `"bar"`, `"solarized_dark"`).
         value: serde_json::Value,
+    },
+    /// Request current layout tree.
+    GetLayout,
+    /// Update the full layout tree.
+    UpdateLayout {
+        /// The complete layout to persist.
+        layout: TerminalLayout,
     },
 }
 
@@ -97,6 +105,11 @@ pub enum WsServerMessage {
         key: String,
         /// The new value after validation/clamping.
         value: serde_json::Value,
+    },
+    /// Full layout snapshot (sent on connect, on request, and after update).
+    Layout {
+        /// The user's complete terminal layout tree.
+        layout: TerminalLayout,
     },
 }
 
@@ -167,6 +180,12 @@ impl WsServerMessage {
             key: key.into(),
             value,
         }
+    }
+
+    /// Convenience: create a layout snapshot message.
+    #[must_use]
+    pub fn layout(layout: TerminalLayout) -> Self {
+        Self::Layout { layout }
     }
 }
 
@@ -289,5 +308,37 @@ mod tests {
             assert_eq!(key, "cursor_style");
             assert_eq!(value, serde_json::json!("bar"));
         }
+    }
+
+    #[test]
+    fn client_get_layout_deserializes() {
+        let json = r#"{"type":"get_layout"}"#;
+        let msg: Result<WsClientMessage, _> = serde_json::from_str(json);
+        assert!(msg.is_ok());
+        assert!(matches!(
+            msg.unwrap_or(WsClientMessage::Ping),
+            WsClientMessage::GetLayout
+        ));
+    }
+
+    #[test]
+    fn client_update_layout_deserializes() {
+        let json = r#"{"type":"update_layout","layout":{"version":1,"root":{"type":"leaf","id":"pane-1","mode":"shell","session_id":null},"focused_pane":"pane-1"}}"#;
+        let msg: Result<WsClientMessage, _> = serde_json::from_str(json);
+        assert!(msg.is_ok());
+        if let Ok(WsClientMessage::UpdateLayout { layout }) = msg {
+            assert_eq!(layout.version, 1);
+            assert_eq!(layout.focused_pane, "pane-1");
+        }
+    }
+
+    #[test]
+    fn server_layout_serializes() {
+        let layout = crate::layout::default_layout();
+        let msg = WsServerMessage::layout(layout);
+        let json = serde_json::to_string(&msg).unwrap_or_default();
+        assert!(json.contains("\"type\":\"layout\""));
+        assert!(json.contains("\"focused_pane\""));
+        assert!(json.contains("\"pane-1\""));
     }
 }

@@ -10,8 +10,8 @@
 //!
 //! ## Protocol
 //!
-//! **Client → Server:** `WsClientMessage` (input, command, resize, mode_switch, ping, get_preferences, update_preference)
-//! **Server → Client:** `WsServerMessage` (output, result, ai_token, status, error, pong, preferences, preference_updated)
+//! **Client → Server:** `WsClientMessage` (input, command, resize, mode_switch, ping, get_preferences, update_preference, get_layout, update_layout)
+//! **Server → Client:** `WsServerMessage` (output, result, ai_token, status, error, pong, preferences, preference_updated, layout)
 
 use axum::{
     extract::{
@@ -28,6 +28,7 @@ use vr_core::tenant::SubscriptionTier;
 use nexcore_mcp::NexCoreMcpServer;
 
 use nexcore_terminal::formatter::format_mcp_result;
+use nexcore_terminal::layout::{InMemoryLayoutStore, LayoutStore};
 use nexcore_terminal::preferences::{InMemoryPreferencesStore, PreferencesStore};
 use nexcore_terminal::protocol::{SessionStatusMsg, WsClientMessage, WsServerMessage};
 use nexcore_terminal::pty::{PtyConfig, PtyProcess, PtySize};
@@ -51,6 +52,8 @@ pub struct TerminalState {
     pub registry: SessionRegistry,
     /// Per-user terminal preferences (in-memory, shared across reconnects).
     pub preferences: InMemoryPreferencesStore,
+    /// Per-user terminal layout (in-memory, shared across reconnects).
+    pub layouts: InMemoryLayoutStore,
 }
 
 impl Default for TerminalState {
@@ -58,6 +61,7 @@ impl Default for TerminalState {
         Self {
             registry: SessionRegistry::new(),
             preferences: InMemoryPreferencesStore::new(),
+            layouts: InMemoryLayoutStore::new(),
         }
     }
 }
@@ -230,6 +234,31 @@ async fn handle_terminal_socket(mut socket: WebSocket, params: TerminalConnectPa
                     tracing::warn!(
                         "Terminal WS: client disconnected during default preferences send"
                     );
+                    cleanup_session(&term_state, &session_id, &mut pty).await;
+                    return;
+                }
+            }
+        }
+    }
+
+    // Send user layout immediately after preferences
+    match term_state.layouts.load(&tenant_id, &user_id).await {
+        Ok(layout) => {
+            let layout_msg = WsServerMessage::layout(layout);
+            if let Ok(json) = serde_json::to_string(&layout_msg) {
+                if socket.send(Message::Text(json.into())).await.is_err() {
+                    tracing::warn!("Terminal WS: client disconnected during layout send");
+                    cleanup_session(&term_state, &session_id, &mut pty).await;
+                    return;
+                }
+            }
+        }
+        Err(e) => {
+            tracing::warn!(error = %e, "Terminal WS: failed to load layout, using defaults");
+            let layout_msg = WsServerMessage::layout(term_state.layouts.defaults());
+            if let Ok(json) = serde_json::to_string(&layout_msg) {
+                if socket.send(Message::Text(json.into())).await.is_err() {
+                    tracing::warn!("Terminal WS: client disconnected during default layout send");
                     cleanup_session(&term_state, &session_id, &mut pty).await;
                     return;
                 }
@@ -421,6 +450,40 @@ async fn handle_client_message(
         }
         WsClientMessage::UpdatePreference { key, value } => {
             handle_update_preference(socket, term_state, tenant_id, user_id, &key, value).await;
+        }
+        WsClientMessage::GetLayout => {
+            let layout = match term_state.layouts.load(tenant_id, user_id).await {
+                Ok(l) => l,
+                Err(e) => {
+                    tracing::warn!(error = %e, "Terminal WS: layout load failed");
+                    term_state.layouts.defaults()
+                }
+            };
+            let msg = WsServerMessage::layout(layout);
+            if let Ok(json) = serde_json::to_string(&msg) {
+                if socket.send(Message::Text(json.into())).await.is_err() {
+                    tracing::debug!("Terminal WS: client gone during layout send");
+                }
+            }
+        }
+        WsClientMessage::UpdateLayout { layout } => {
+            if let Err(e) = term_state.layouts.save(tenant_id, user_id, &layout).await {
+                tracing::warn!(error = %e, "Terminal WS: layout save failed");
+                let err = WsServerMessage::error("LAYOUT_SAVE_ERROR", e.to_string());
+                if let Ok(json) = serde_json::to_string(&err) {
+                    if socket.send(Message::Text(json.into())).await.is_err() {
+                        tracing::debug!("Terminal WS: client gone during layout error send");
+                    }
+                }
+            } else {
+                // Echo back the saved layout as confirmation
+                let msg = WsServerMessage::layout(layout);
+                if let Ok(json) = serde_json::to_string(&msg) {
+                    if socket.send(Message::Text(json.into())).await.is_err() {
+                        tracing::debug!("Terminal WS: client gone during layout ack");
+                    }
+                }
+            }
         }
         // non_exhaustive: ignore unknown variants gracefully
         _ => {}

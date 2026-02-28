@@ -19,6 +19,7 @@ pub mod audit;
 pub mod config;
 pub mod conversation;
 pub mod formatter;
+pub mod layout;
 pub mod metering;
 pub mod preferences;
 pub mod protocol;

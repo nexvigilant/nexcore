@@ -10,8 +10,8 @@
 //!
 //! ## Protocol
 //!
-//! **Client → Server:** `WsClientMessage` (input, command, resize, mode_switch, ping)
-//! **Server → Client:** `WsServerMessage` (output, result, ai_token, status, error, pong)
+//! **Client → Server:** `WsClientMessage` (input, command, resize, mode_switch, ping, get_preferences, update_preference)
+//! **Server → Client:** `WsServerMessage` (output, result, ai_token, status, error, pong, preferences, preference_updated)
 
 use axum::{
     extract::{
@@ -28,6 +28,7 @@ use vr_core::tenant::SubscriptionTier;
 use nexcore_mcp::NexCoreMcpServer;
 
 use nexcore_terminal::formatter::format_mcp_result;
+use nexcore_terminal::preferences::{InMemoryPreferencesStore, PreferencesStore};
 use nexcore_terminal::protocol::{SessionStatusMsg, WsClientMessage, WsServerMessage};
 use nexcore_terminal::pty::{PtyConfig, PtyProcess, PtySize};
 use nexcore_terminal::registry::{RegistryError, SessionRegistry};
@@ -48,12 +49,15 @@ use nexcore_terminal::conversation::ConversationContext;
 pub struct TerminalState {
     /// Session registry with per-tenant concurrency limits.
     pub registry: SessionRegistry,
+    /// Per-user terminal preferences (in-memory, shared across reconnects).
+    pub preferences: InMemoryPreferencesStore,
 }
 
 impl Default for TerminalState {
     fn default() -> Self {
         Self {
             registry: SessionRegistry::new(),
+            preferences: InMemoryPreferencesStore::new(),
         }
     }
 }
@@ -206,6 +210,33 @@ async fn handle_terminal_socket(mut socket: WebSocket, params: TerminalConnectPa
         }
     }
 
+    // Send user preferences immediately after welcome
+    match term_state.preferences.load(&tenant_id, &user_id).await {
+        Ok(prefs) => {
+            let prefs_msg = WsServerMessage::preferences(prefs);
+            if let Ok(json) = serde_json::to_string(&prefs_msg) {
+                if socket.send(Message::Text(json.into())).await.is_err() {
+                    tracing::warn!("Terminal WS: client disconnected during preferences send");
+                    cleanup_session(&term_state, &session_id, &mut pty).await;
+                    return;
+                }
+            }
+        }
+        Err(e) => {
+            tracing::warn!(error = %e, "Terminal WS: failed to load preferences, using defaults");
+            let prefs_msg = WsServerMessage::preferences(term_state.preferences.defaults());
+            if let Ok(json) = serde_json::to_string(&prefs_msg) {
+                if socket.send(Message::Text(json.into())).await.is_err() {
+                    tracing::warn!(
+                        "Terminal WS: client disconnected during default preferences send"
+                    );
+                    cleanup_session(&term_state, &session_id, &mut pty).await;
+                    return;
+                }
+            }
+        }
+    }
+
     // Bidirectional I/O loop
     let mut current_mode = mode;
 
@@ -280,6 +311,8 @@ async fn handle_terminal_socket(mut socket: WebSocket, params: TerminalConnectPa
                                     &session_id,
                                     &mut current_mode,
                                     &mut conversation,
+                                    &tenant_id,
+                                    &user_id,
                                 ).await;
                             }
                             Err(_) => {
@@ -329,6 +362,8 @@ async fn handle_client_message(
     session_id: &vr_core::ids::TerminalSessionId,
     current_mode: &mut TerminalMode,
     conversation: &mut ConversationContext,
+    tenant_id: &TenantId,
+    user_id: &UserId,
 ) {
     match msg {
         WsClientMessage::Input { data } => {
@@ -369,10 +404,173 @@ async fn handle_client_message(
                 }
             }
         }
+        WsClientMessage::GetPreferences => {
+            let prefs = match term_state.preferences.load(tenant_id, user_id).await {
+                Ok(p) => p,
+                Err(e) => {
+                    tracing::warn!(error = %e, "Terminal WS: preferences load failed");
+                    term_state.preferences.defaults()
+                }
+            };
+            let msg = WsServerMessage::preferences(prefs);
+            if let Ok(json) = serde_json::to_string(&msg) {
+                if socket.send(Message::Text(json.into())).await.is_err() {
+                    tracing::debug!("Terminal WS: client gone during preferences send");
+                }
+            }
+        }
+        WsClientMessage::UpdatePreference { key, value } => {
+            handle_update_preference(socket, term_state, tenant_id, user_id, &key, value).await;
+        }
         // non_exhaustive: ignore unknown variants gracefully
         _ => {}
     }
     term_state.registry.touch(session_id).await;
+}
+
+/// Apply a single preference update, validate, persist, and ack.
+async fn handle_update_preference(
+    socket: &mut WebSocket,
+    term_state: &TerminalState,
+    tenant_id: &TenantId,
+    user_id: &UserId,
+    key: &str,
+    value: serde_json::Value,
+) {
+    use nexcore_terminal::preferences::{
+        ColorScheme, CursorStyle, FontFamily, FontSize, LineHeight, ScrollbackSize,
+    };
+
+    // Load current preferences (or defaults)
+    let mut prefs = match term_state.preferences.load(tenant_id, user_id).await {
+        Ok(p) => p,
+        Err(e) => {
+            tracing::warn!(error = %e, "Terminal WS: preferences load for update failed");
+            term_state.preferences.defaults()
+        }
+    };
+
+    // Apply the field update with validation/clamping
+    let applied_value = match key {
+        "font_size" => {
+            if let Some(n) = value.as_u64() {
+                let size = FontSize::new(n.min(255) as u8);
+                prefs.font_size = size;
+                serde_json::json!(size.value())
+            } else {
+                send_preference_error(socket, key, "expected integer").await;
+                return;
+            }
+        }
+        "font_family" => {
+            if let Some(s) = value.as_str() {
+                let family = FontFamily::new(s);
+                let val = serde_json::json!(family.as_str());
+                prefs.font_family = family;
+                val
+            } else {
+                send_preference_error(socket, key, "expected string").await;
+                return;
+            }
+        }
+        "line_height" => {
+            if let Some(n) = value.as_f64() {
+                #[allow(
+                    clippy::as_conversions,
+                    reason = "f64 → f32 narrowing is intentional; clamp handles range"
+                )]
+                let height = LineHeight::new(n as f32);
+                prefs.line_height = height;
+                serde_json::json!(height.value())
+            } else {
+                send_preference_error(socket, key, "expected number").await;
+                return;
+            }
+        }
+        "cursor_style" => match serde_json::from_value::<CursorStyle>(value.clone()) {
+            Ok(style) => {
+                prefs.cursor_style = style;
+                serde_json::to_value(style).unwrap_or(value)
+            }
+            Err(_) => {
+                send_preference_error(socket, key, "expected \"block\", \"underline\", or \"bar\"")
+                    .await;
+                return;
+            }
+        },
+        "cursor_blink" => {
+            if let Some(b) = value.as_bool() {
+                prefs.cursor_blink = b;
+                serde_json::json!(b)
+            } else {
+                send_preference_error(socket, key, "expected boolean").await;
+                return;
+            }
+        }
+        "scrollback" => {
+            if let Some(n) = value.as_u64() {
+                let size = ScrollbackSize::new(n.min(u64::from(u32::MAX)) as u32);
+                prefs.scrollback = size;
+                serde_json::json!(size.value())
+            } else {
+                send_preference_error(socket, key, "expected integer").await;
+                return;
+            }
+        }
+        "color_scheme" => match serde_json::from_value::<ColorScheme>(value.clone()) {
+            Ok(scheme) => {
+                prefs.color_scheme = scheme;
+                serde_json::to_value(scheme).unwrap_or(value)
+            }
+            Err(_) => {
+                send_preference_error(
+                        socket,
+                        key,
+                        "expected \"nexvigilant_dark\", \"high_contrast\", \"light\", or \"solarized_dark\"",
+                    )
+                    .await;
+                return;
+            }
+        },
+        unknown => {
+            send_preference_error(socket, unknown, "unknown preference key").await;
+            return;
+        }
+    };
+
+    // Persist
+    if let Err(e) = term_state
+        .preferences
+        .save(tenant_id, user_id, &prefs)
+        .await
+    {
+        tracing::error!(error = %e, "Terminal WS: failed to save preferences");
+        let err = WsServerMessage::error("PREFERENCES_SAVE_ERROR", e.to_string());
+        if let Ok(json) = serde_json::to_string(&err) {
+            if socket.send(Message::Text(json.into())).await.is_err() {
+                tracing::debug!("Terminal WS: client gone during preferences save error send");
+            }
+        }
+        return;
+    }
+
+    // Ack with the validated/clamped value
+    let ack = WsServerMessage::preference_updated(key, applied_value);
+    if let Ok(json) = serde_json::to_string(&ack) {
+        if socket.send(Message::Text(json.into())).await.is_err() {
+            tracing::debug!("Terminal WS: client gone during preference update ack");
+        }
+    }
+}
+
+/// Send a preference validation error to the client.
+async fn send_preference_error(socket: &mut WebSocket, key: &str, reason: &str) {
+    let err = WsServerMessage::error("INVALID_PREFERENCE", format!("{key}: {reason}"));
+    if let Ok(json) = serde_json::to_string(&err) {
+        if socket.send(Message::Text(json.into())).await.is_err() {
+            tracing::debug!("Terminal WS: client gone during preference error send");
+        }
+    }
 }
 
 /// Dispatch a routed command to the appropriate backend.

@@ -5,6 +5,7 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::preferences::TerminalPreferences;
 use crate::session::{SessionStatus, TerminalMode};
 
 /// Client → Server message sent over WebSocket.
@@ -36,6 +37,15 @@ pub enum WsClientMessage {
     },
     /// Heartbeat ping.
     Ping,
+    /// Request current user preferences.
+    GetPreferences,
+    /// Update a single preference field by key.
+    UpdatePreference {
+        /// Preference field name (e.g. "font_size", "cursor_style").
+        key: String,
+        /// New value as JSON (e.g. `14`, `"bar"`, `"solarized_dark"`).
+        value: serde_json::Value,
+    },
 }
 
 /// Server → Client message sent over WebSocket.
@@ -76,6 +86,18 @@ pub enum WsServerMessage {
     },
     /// Heartbeat response.
     Pong,
+    /// Full preferences snapshot (sent on connect and on request).
+    Preferences {
+        /// The user's complete terminal preferences.
+        preferences: TerminalPreferences,
+    },
+    /// Confirmation that a single preference was updated.
+    PreferenceUpdated {
+        /// The preference field that changed.
+        key: String,
+        /// The new value after validation/clamping.
+        value: serde_json::Value,
+    },
 }
 
 /// Session status payload within a `WsServerMessage::Status`.
@@ -130,6 +152,21 @@ impl WsServerMessage {
     #[must_use]
     pub fn pong() -> Self {
         Self::Pong
+    }
+
+    /// Convenience: create a preferences snapshot message.
+    #[must_use]
+    pub fn preferences(prefs: TerminalPreferences) -> Self {
+        Self::Preferences { preferences: prefs }
+    }
+
+    /// Convenience: create a preference-updated confirmation.
+    #[must_use]
+    pub fn preference_updated(key: impl Into<String>, value: serde_json::Value) -> Self {
+        Self::PreferenceUpdated {
+            key: key.into(),
+            value,
+        }
     }
 }
 
@@ -199,6 +236,58 @@ mod tests {
         assert!(msg.is_ok());
         if let Ok(WsClientMessage::ModeSwitch { mode }) = msg {
             assert_eq!(mode, TerminalMode::Regulatory);
+        }
+    }
+
+    #[test]
+    fn client_get_preferences_deserializes() {
+        let json = r#"{"type":"get_preferences"}"#;
+        let msg: Result<WsClientMessage, _> = serde_json::from_str(json);
+        assert!(msg.is_ok());
+        assert!(matches!(
+            msg.unwrap_or(WsClientMessage::Ping),
+            WsClientMessage::GetPreferences
+        ));
+    }
+
+    #[test]
+    fn client_update_preference_deserializes() {
+        let json = r#"{"type":"update_preference","key":"font_size","value":16}"#;
+        let msg: Result<WsClientMessage, _> = serde_json::from_str(json);
+        assert!(msg.is_ok());
+        if let Ok(WsClientMessage::UpdatePreference { key, value }) = msg {
+            assert_eq!(key, "font_size");
+            assert_eq!(value, serde_json::json!(16));
+        }
+    }
+
+    #[test]
+    fn server_preferences_serializes() {
+        let prefs = TerminalPreferences::default();
+        let msg = WsServerMessage::preferences(prefs);
+        let json = serde_json::to_string(&msg).unwrap_or_default();
+        assert!(json.contains("\"type\":\"preferences\""));
+        assert!(json.contains("\"font_size\""));
+        assert!(json.contains("\"cursor_style\""));
+    }
+
+    #[test]
+    fn server_preference_updated_serializes() {
+        let msg = WsServerMessage::preference_updated("font_size", serde_json::json!(16));
+        let json = serde_json::to_string(&msg).unwrap_or_default();
+        assert!(json.contains("\"type\":\"preference_updated\""));
+        assert!(json.contains("\"font_size\""));
+        assert!(json.contains("16"));
+    }
+
+    #[test]
+    fn update_preference_string_value_deserializes() {
+        let json = r#"{"type":"update_preference","key":"cursor_style","value":"bar"}"#;
+        let msg: Result<WsClientMessage, _> = serde_json::from_str(json);
+        assert!(msg.is_ok());
+        if let Ok(WsClientMessage::UpdatePreference { key, value }) = msg {
+            assert_eq!(key, "cursor_style");
+            assert_eq!(value, serde_json::json!("bar"));
         }
     }
 }

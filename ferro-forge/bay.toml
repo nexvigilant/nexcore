@@ -167,7 +167,7 @@ name = "stem-foundation"
 owner = "stem-foundation-team"
 review_required = true
 layer = "Domain"
-members = ["stem", "stem-bio", "stem-complex", "stem-core", "stem-derive", "stem-derive-core", "stem-math", "stem-number-theory", "stem-phys", "stem-topology"]
+members = ["nexcore-hormone-types", "stem", "stem-bio", "stem-complex", "stem-core", "stem-derive", "stem-derive-core", "stem-math", "stem-number-theory", "stem-phys", "stem-topology"]
 
 [[bay.holds]]
 name = "system-utilities"

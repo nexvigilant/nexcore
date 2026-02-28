@@ -6,7 +6,7 @@
 use stem::bio::endocrine::{BehaviorModulation, EndocrineSystem, StimulusCategory, ToneProfile};
 use stem::core::{Classify, Codify, Confidence, Extend, Infer, Sense};
 
-use nexcore_hormones::Stimulus;
+use nexcore_hormone_types::Stimulus;
 
 #[test]
 fn full_endocrine_pipeline_stress() {
@@ -27,7 +27,7 @@ fn full_endocrine_pipeline_stress() {
     assert!(predictions.len() >= 2);
 
     // 4. CODIFY: Export to behavioral modifiers
-    let modulation = system.codify(&nexcore_hormones::EndocrineState::default());
+    let modulation = system.codify(&nexcore_hormone_types::EndocrineState::default());
 
     // 5. EXTEND: Map to output style tone profile
     let tone = system.extend(&modulation);
@@ -47,10 +47,10 @@ fn full_endocrine_pipeline_reward() {
     assert!(
         predictions
             .iter()
-            .any(|(h, _)| *h == nexcore_hormones::HormoneType::Dopamine)
+            .any(|(h, _)| *h == nexcore_hormone_types::HormoneType::Dopamine)
     );
 
-    let modulation = system.codify(&nexcore_hormones::EndocrineState::default());
+    let modulation = system.codify(&nexcore_hormone_types::EndocrineState::default());
     let tone = system.extend(&modulation);
     validate_tone_profile(&tone);
 }
@@ -67,7 +67,7 @@ fn full_endocrine_pipeline_social() {
     assert!(
         predictions
             .iter()
-            .any(|(h, _)| *h == nexcore_hormones::HormoneType::Oxytocin)
+            .any(|(h, _)| *h == nexcore_hormone_types::HormoneType::Oxytocin)
     );
 }
 

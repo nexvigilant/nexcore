@@ -1,0 +1,18 @@
+
+[package]
+name = "nexcore-hormone-types"
+version = "1.0.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-Proprietary"
+description = "Shared hormone type definitions used across stem-foundation and bio-molecular holds"
+
+[dependencies]
+nexcore-chrono = { workspace = true }
+nexcore-error = { workspace = true }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = { version = "1.0.120" }
+
+[lints]
+workspace = true

@@ -145,6 +145,7 @@ nexcore-guardian-engine = { path = "crates/nexcore-guardian-engine" }
 nexcore-harm-taxonomy = { path = "crates/nexcore-harm-taxonomy" }
 nexcore-hash = { path = "crates/nexcore-hash" }
 # nexcore-hooks — REMOVED 2026-02-22 (dead crate, see ~/.claude/hooks/archive/AUDIT-2026-02-22.md)
+nexcore-hormone-types = { path = "crates/nexcore-hormone-types" }
 nexcore-hormones = { path = "crates/nexcore-hormones" }
 nexcore-id = { path = "crates/nexcore-id", features = ["serde"] }
 nexcore-immunity = { path = "crates/nexcore-immunity" }

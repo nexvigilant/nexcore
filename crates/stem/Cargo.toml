@@ -17,7 +17,7 @@ nexcore-error = { workspace = true }
 stem-derive = { version = "0.1.0", path = "../stem-derive", registry = "nexcore" }
 # Direct dependencies (formerly from sub-crates)
 nexcore-constants = { version = "1.0.0", path = "../nexcore-constants", registry = "nexcore" }
-nexcore-hormones = { version = "1.0.0", path = "../nexcore-hormones", registry = "nexcore" }
+nexcore-hormone-types = { version = "1.0.0", path = "../nexcore-hormone-types" }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 serde = { version = "1.0.204", features = ["derive"] }
 tracing = { version = "0.1.40" }

@@ -8348,13 +8348,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "nexcore-hormones"
+name = "nexcore-hormone-types"
 version = "1.0.0"
 dependencies = [
  "nexcore-chrono",
  "nexcore-error",
  "nexcore-lex-primitiva",
  "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-hormones"
+version = "1.0.0"
+dependencies = [
+ "nexcore-hormone-types",
  "serde_json",
  "tempfile",
 ]
@@ -13724,7 +13732,7 @@ dependencies = [
  "criterion",
  "nexcore-constants",
  "nexcore-error",
- "nexcore-hormones",
+ "nexcore-hormone-types",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
@@ -13737,7 +13745,7 @@ dependencies = [
 name = "stem-bio"
 version = "0.1.0"
 dependencies = [
- "nexcore-hormones",
+ "nexcore-hormone-types",
  "nexcore-lex-primitiva",
  "serde",
  "stem-core",

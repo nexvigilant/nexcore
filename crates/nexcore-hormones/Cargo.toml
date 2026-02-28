@@ -8,10 +8,7 @@ license = "LicenseRef-Proprietary"
 description = "Endocrine system for .claude - persistent state modulators affecting behavior across sessions"
 
 [dependencies]
-nexcore-chrono = { workspace = true }
-nexcore-error = { workspace = true }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
-serde = { version = "1.0.204", features = ["derive"] }
+nexcore-hormone-types = { version = "1.0.0", path = "../nexcore-hormone-types" }
 serde_json = { version = "1.0.120" }
 
 [dev-dependencies]

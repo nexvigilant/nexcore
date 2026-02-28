@@ -13,7 +13,7 @@ publish = true
 
 [dependencies]
 stem-core = { version = "0.1.0", path = "../stem-core", registry = "nexcore" }
-nexcore-hormones = { version = "1.0.0", path = "../nexcore-hormones", registry = "nexcore" }
+nexcore-hormone-types = { version = "1.0.0", path = "../nexcore-hormone-types" }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 serde = { version = "1.0.204", features = ["derive"] }
 

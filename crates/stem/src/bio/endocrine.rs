@@ -17,7 +17,7 @@
 use crate::core::{
     Classify, Codify, Confidence, Experiment, Extend, Infer, Measured, Normalize, Sense,
 };
-use nexcore_hormones::{BehavioralModifiers, EndocrineState, HormoneType, Stimulus};
+use nexcore_hormone_types::{BehavioralModifiers, EndocrineState, HormoneType, Stimulus};
 use serde::{Deserialize, Serialize};
 
 /// Signal detected from environment (T2-P grounded in T1 Mapping μ)
@@ -109,7 +109,7 @@ impl EndocrineSystem {
     }
 
     /// Save state to persistent storage
-    pub fn save(&self) -> Result<(), nexcore_hormones::EndocrineError> {
+    pub fn save(&self) -> Result<(), nexcore_hormone_types::EndocrineError> {
         self.state.save()
     }
 }

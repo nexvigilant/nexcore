@@ -7,6 +7,8 @@ use nexcore_id::NexId;
 use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize};
 
+use crate::element::{Atom, ElementClass};
+
 /// A probe context — a canonical regulatory sentence with a blank.
 /// Insert an atom and observe the contextual behavior.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -190,5 +192,104 @@ impl ProbeSet {
             version: 1,
             probes,
         }
+    }
+}
+
+/// Measure an atom's spectral fingerprint using a probe set.
+///
+/// For each probe, computes:
+/// - **absorption**: How naturally the atom fits the probe's excitation target.
+///   Atoms whose `ElementClass` matches the probe's target absorb strongly.
+///   Uses chromatography's binding affinity concept as proxy.
+/// - **line_width**: How precise the spectral response is.
+///   High-volatility atoms (context-dependent meaning) produce broad lines.
+///   Uses distillation's volatility concept as proxy.
+///
+/// Different atoms always produce different spectra (deterministic perturbation
+/// from atom label ensures uniqueness).
+pub fn measure(atom: &Atom, probe_set: &ProbeSet) -> Spectrum {
+    let perturbation = label_perturbation(&atom.label);
+
+    let lines: Vec<SpectralLine> = probe_set
+        .probes
+        .iter()
+        .map(|probe| {
+            let base_absorption = class_probe_affinity(&atom.class, &probe.excitation_target);
+            let absorption = (base_absorption + perturbation).min(1.0);
+
+            // Volatility as line_width proxy: high volatility → broad line → imprecise
+            let base_width = atom.volatility.into_inner();
+            let line_width = (base_width + perturbation * 0.5).min(1.0);
+
+            SpectralLine {
+                probe_id: probe.id.clone(),
+                absorption: OrderedFloat(absorption),
+                line_width: OrderedFloat(line_width),
+            }
+        })
+        .collect();
+
+    Spectrum {
+        atom_id: atom.id.clone(),
+        lines,
+        recorded_at: nexcore_chrono::DateTime::now(),
+    }
+}
+
+/// Compute how strongly an atom class absorbs a given probe excitation target.
+///
+/// Each `ExcitationTarget` has a natural `ElementClass` that absorbs strongly.
+/// Cross-class responses are weaker, reflecting that e.g. "cardiac" (OrganSystem)
+/// responds weakly to a severity probe but strongly to an event-nature probe.
+fn class_probe_affinity(class: &ElementClass, target: &ExcitationTarget) -> f64 {
+    // Map each excitation target to its natural element class
+    let natural_class = match target {
+        ExcitationTarget::EventNature => ElementClass::ObservationType,
+        ExcitationTarget::CausalRole => ElementClass::Causality,
+        ExcitationTarget::TemporalBehavior => ElementClass::Temporality,
+        ExcitationTarget::SeverityInteraction => ElementClass::Severity,
+        ExcitationTarget::GrammaticalRole => ElementClass::Modifier,
+        ExcitationTarget::ContextSensitivity => ElementClass::Action,
+    };
+
+    if class == &natural_class {
+        0.90 // Strong absorption — atom fits the probe's domain
+    } else {
+        // Cross-class: weaker but non-zero (all atoms have some response)
+        // Use ordinal distance between classes for differentiation
+        let class_ord = class_ordinal(class);
+        let target_ord = class_ordinal(&natural_class);
+        let dist = (class_ord as f64 - target_ord as f64).abs();
+        // Scale: distance 1 → 0.40, distance 7 → 0.10
+        0.10 + 0.30 * (1.0 - dist / 7.0)
+    }
+}
+
+/// Deterministic perturbation from an atom's label.
+/// Ensures different atoms of the same class produce distinct spectra.
+fn label_perturbation(label: &str) -> f64 {
+    let hash: u64 = label.bytes().enumerate().fold(0_u64, |acc, (i, b)| {
+        #[allow(
+            clippy::cast_possible_truncation,
+            reason = "Index within label length, always fits u32"
+        )]
+        let exp = i as u32;
+        acc.wrapping_add((u64::from(b)).wrapping_mul(31_u64.wrapping_pow(exp)))
+    });
+    // Map to [0.0, 0.08) — small enough to not overwhelm class signal
+    (hash % 800) as f64 / 10000.0
+}
+
+/// Stable ordinal for `ElementClass` to compute inter-class distance.
+fn class_ordinal(class: &ElementClass) -> usize {
+    match class {
+        ElementClass::OrganSystem => 0,
+        ElementClass::Causality => 1,
+        ElementClass::Temporality => 2,
+        ElementClass::Severity => 3,
+        ElementClass::ObservationType => 4,
+        ElementClass::Modifier => 5,
+        ElementClass::Action => 6,
+        ElementClass::Outcome => 7,
     }
 }

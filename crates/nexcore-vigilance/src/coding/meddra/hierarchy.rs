@@ -16,12 +16,34 @@
 //! - Name search: O(1) for exact match, O(n) for fuzzy search
 
 use std::collections::HashMap;
+use std::sync::OnceLock;
+
+use nexcore_proof_of_meaning::element::{Atom, ElementClass};
+use nexcore_proof_of_meaning::registry::AtomRegistry;
+use nexcore_proof_of_meaning::titration::{self, Titrator};
 
 use super::super::error::CodingError;
 use super::super::fuzzy::BkTree;
 use super::types::{
     HierarchyLevel, HierarchyPath, Hlgt, Hlt, Llt, MeddraVersion, Pt, SearchResult, Soc,
+    TitrationProvenance,
 };
+
+/// Lazily-initialized POM titrator for semantic equivalence measurement.
+/// Constructed once on first use, shared across all dictionary searches.
+pub(crate) fn pom_titrator() -> &'static Titrator {
+    static TITRATOR: OnceLock<Titrator> = OnceLock::new();
+    TITRATOR.get_or_init(|| {
+        let mut registry = AtomRegistry::new();
+        registry.seed_all();
+        let titrants: Vec<Atom> = ElementClass::all()
+            .iter()
+            .flat_map(|class| registry.by_class(class).into_iter().cloned())
+            .map(|ra| ra.atom)
+            .collect();
+        Titrator::new(titrants)
+    })
+}
 
 /// `MedDRA` dictionary with indexed hierarchy.
 ///
@@ -272,14 +294,18 @@ impl MeddraDictionary {
             let max_len_f = query_lower.len().max(term.len()) as f64;
 
             let score = 1.0 - (distance_f / max_len_f);
-            // TODO: titration_provenance omitted in fuzzy search hot path
+            let proof = titration::prove_equivalence(pom_titrator(), &query_lower, &term);
             results.push(SearchResult {
                 term,
                 code,
                 level: HierarchyLevel::Llt,
                 score,
                 distance,
-                titration_provenance: None,
+                titration_provenance: Some(TitrationProvenance {
+                    equivalence_score: proof.equivalence_score.into_inner(),
+                    verdict: format!("{:?}", proof.verdict),
+                    shared_atoms: proof.shared_atoms,
+                }),
             });
         }
 
@@ -291,14 +317,18 @@ impl MeddraDictionary {
             let max_len_f = query_lower.len().max(term.len()) as f64;
 
             let score = 1.0 - (distance_f / max_len_f);
-            // TODO: titration_provenance omitted in fuzzy search hot path
+            let proof = titration::prove_equivalence(pom_titrator(), &query_lower, &term);
             results.push(SearchResult {
                 term,
                 code,
                 level: HierarchyLevel::Pt,
                 score,
                 distance,
-                titration_provenance: None,
+                titration_provenance: Some(TitrationProvenance {
+                    equivalence_score: proof.equivalence_score.into_inner(),
+                    verdict: format!("{:?}", proof.verdict),
+                    shared_atoms: proof.shared_atoms,
+                }),
             });
         }
 
@@ -506,5 +536,33 @@ mod tests {
         assert_eq!(stats.hlgt_count, 1);
         assert_eq!(stats.soc_count, 1);
         assert_eq!(stats.total(), 6);
+    }
+
+    #[test]
+    fn test_fuzzy_search_populates_titration_provenance() {
+        let dict = create_test_dictionary();
+        let results = dict.search("headahce", 2, 10); // typo
+
+        assert!(!results.is_empty());
+        // Every fuzzy-match result should have titration provenance
+        for result in &results {
+            let prov = result
+                .titration_provenance
+                .as_ref()
+                .expect("fuzzy-match should have titration provenance");
+            assert!(prov.equivalence_score >= 0.0);
+            assert!(prov.equivalence_score <= 1.0);
+            assert!(!prov.verdict.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_exact_encode_no_titration_provenance() {
+        let dict = create_test_dictionary();
+        let result = dict.encode("Headache").expect("encode failed");
+
+        // Exact match should NOT have titration provenance
+        assert!(result.titration_provenance.is_none());
+        assert!((result.score - 1.0).abs() < f64::EPSILON);
     }
 }

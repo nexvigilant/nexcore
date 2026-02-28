@@ -12,6 +12,7 @@
 use nexcore_vigilance::pv::coding::crossref::{
     ConsistencyCheckResult, ConsistencyIssue, ConsistencyIssueType, CrossRefProvenance,
     MappingRelationship, TermMapping, TermReference, TerminologyCrossRef, TerminologySystem,
+    pom_titrator, titrate_confidence,
 };
 use nexcore_vigilance::pv::coding::mesh::{
     MeshDescriptor, MeshDescriptorBrief, MeshTreePath, PrimitiveTier, TreeDirection,
@@ -253,21 +254,28 @@ pub async fn crossref(params: MeshCrossrefParams) -> Result<CallToolResult, McpE
     let mut crossref =
         TerminologyCrossRef::new(source_ref.clone(), CrossRefProvenance::BioOntology);
 
-    // For each target, attempt to find mappings
+    // Construct POM titrator once for all target mappings
+    let titrator = pom_titrator();
+
+    // For each target, attempt to find mappings with POM titration provenance
     for target in &targets {
         if *target == source {
             continue;
         }
 
-        // Use fuzzy matching as fallback (in production, would call UMLS/BioOntology APIs)
+        let target_ref = TermReference::new(*target, term, term);
+        let (confidence, provenance) = titrate_confidence(
+            &titrator,
+            &source_ref.name,
+            &target_ref.name,
+            MappingRelationship::CloseMatch,
+        );
+
         let mapping = TermMapping {
-            target: TermReference::new(*target, term, term),
+            target: target_ref,
             relationship: MappingRelationship::CloseMatch,
-            confidence: 0.70,
-            provenance: CrossRefProvenance::Computed {
-                algorithm: "jaro_winkler".to_string(),
-                score: 0.85,
-            },
+            confidence,
+            provenance,
         };
         crossref.add_mapping(mapping);
     }
@@ -675,4 +683,68 @@ fn extract_mesh_from_pubmed_xml(xml: &str, _include_qualifiers: bool) -> Vec<ser
     }
 
     terms
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_pom_titration_provenance_serialization_roundtrip() {
+        let provenance = CrossRefProvenance::PomTitration {
+            equivalence_score: 0.78,
+            verdict: "PartialOverlap".to_string(),
+            shared_atoms: 3,
+        };
+
+        let json = serde_json::to_string_pretty(&provenance).unwrap_or_default();
+
+        // Verify the JSON contains equivalence_score and verdict
+        assert!(json.contains("equivalence_score"));
+        assert!(json.contains("verdict"));
+        assert!(json.contains("PartialOverlap"));
+        assert!(json.contains("shared_atoms"));
+
+        // Round-trip: deserialize back
+        let parsed: CrossRefProvenance =
+            serde_json::from_str(&json).unwrap_or(CrossRefProvenance::BioOntology);
+        match parsed {
+            CrossRefProvenance::PomTitration {
+                equivalence_score,
+                verdict,
+                shared_atoms,
+            } => {
+                assert!((equivalence_score - 0.78).abs() < f64::EPSILON);
+                assert_eq!(verdict, "PartialOverlap");
+                assert_eq!(shared_atoms, 3);
+            }
+            _ => panic!("Expected PomTitration variant after round-trip"),
+        }
+    }
+
+    #[test]
+    fn test_pom_titration_in_crossref_output() {
+        let source = TermReference::new(TerminologySystem::Mesh, "D006261", "Headache");
+        let mut crossref = TerminologyCrossRef::new(source, CrossRefProvenance::BioOntology);
+
+        let mapping = TermMapping {
+            target: TermReference::new(TerminologySystem::MedDRA, "10019211", "Headache"),
+            relationship: MappingRelationship::Exact,
+            confidence: 0.92,
+            provenance: CrossRefProvenance::PomTitration {
+                equivalence_score: 0.92,
+                verdict: "Equivalent".to_string(),
+                shared_atoms: 4,
+            },
+        };
+        crossref.add_mapping(mapping);
+
+        let json = serde_json::to_string_pretty(&crossref).unwrap_or_default();
+
+        // Full crossref output includes POM titration provenance
+        assert!(json.contains("pomtitration"));
+        assert!(json.contains("equivalence_score"));
+        assert!(json.contains("Equivalent"));
+        assert!(json.contains("shared_atoms"));
+    }
 }

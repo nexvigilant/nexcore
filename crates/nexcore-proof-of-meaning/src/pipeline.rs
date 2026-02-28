@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use crate::chromatography::{Column, SeparationQuality};
 use crate::distillation::Distiller;
 use crate::element::{Atom, ElementClass};
+use crate::spectrum::{self, ProbeSet, SpectralDistance};
 use crate::synonymy::SynonymRegistry;
 use crate::titration::{self, EquivalenceProof, Titrator};
 
@@ -74,6 +75,7 @@ pub struct SemanticEquivalenceProof {
 pub struct ProofPipeline {
     distiller: Distiller,
     column: Column,
+    probe_set: ProbeSet,
     synonym_registry: SynonymRegistry,
     titrator: Titrator,
 }
@@ -132,6 +134,7 @@ impl ProofPipeline {
         Self {
             distiller: Distiller::new(),
             column: Column::pv_standard(),
+            probe_set: ProbeSet::pv_standard(),
             synonym_registry: SynonymRegistry::pv_standard(),
             titrator: Titrator::new(titrants),
         }
@@ -209,7 +212,55 @@ impl ProofPipeline {
         };
         steps.push(chromat_step);
 
-        // === STEP 3: SYNONYMY ===
+        // === STEP 3: SPECTROSCOPY ===
+        // Fingerprint each atom from chromatography via the probe set.
+        // Produces spectral fingerprints that enable identity-by-spectrum matching.
+        let atoms_from_chromat: Vec<Atom> = chromatogram
+            .bands
+            .iter()
+            .map(|band| {
+                Atom::new(
+                    &band.atom_label,
+                    band.bound_class.clone(),
+                    1.0 - band.binding_affinity.into_inner(), // affinity inverse ≈ volatility
+                )
+            })
+            .collect();
+        let spectra: Vec<_> = atoms_from_chromat
+            .iter()
+            .map(|atom| spectrum::measure(atom, &self.probe_set))
+            .collect();
+        // Verify spectra quality: all should have the same line count (same probe set)
+        let spectra_valid = spectra.windows(2).all(|pair| {
+            matches!(
+                pair[0].distance(&pair[1]),
+                SpectralDistance::Measured { .. }
+            )
+        });
+        let spectroscopy_step = ProofStep {
+            step_number: 3,
+            method: TransformationMethod::Spectroscopy,
+            input_description: format!(
+                "{} atoms from chromatographic separation",
+                atoms_from_chromat.len()
+            ),
+            output_description: format!(
+                "Measured {} spectral fingerprints ({} lines each). Spectra compatible: {}",
+                spectra.len(),
+                self.probe_set.probes.len(),
+                spectra_valid,
+            ),
+            verification: if spectra_valid || spectra.len() <= 1 {
+                StepVerification::Verified { confidence: 0.90 }
+            } else {
+                let w = "Some spectra incomparable — probe set mismatch detected".to_string();
+                warnings.push(w.clone());
+                StepVerification::VerifiedWithWarnings { warnings: vec![w] }
+            },
+        };
+        steps.push(spectroscopy_step);
+
+        // === STEP 4: SYNONYMY ===
         // Resolve tokens to canonical forms via curated synonym groups.
         // This is the isotope resolution step — "heart" → "cardiac", "vaccination" → "immunization".
         let tokens: Vec<&str> = expression.split_whitespace().collect();
@@ -224,7 +275,7 @@ impl ProofPipeline {
             }
         }
         let synonymy_step = ProofStep {
-            step_number: 3,
+            step_number: 4,
             method: TransformationMethod::Synonymy,
             input_description: format!("{} tokens from chromatographic separation", tokens.len()),
             output_description: format!(
@@ -258,7 +309,7 @@ impl ProofPipeline {
         // === STEP 4: TITRATION ===
         let titration = self.titrator.titrate(expression);
         let titration_step = ProofStep {
-            step_number: 4,
+            step_number: 5,
             method: TransformationMethod::Titration,
             input_description: format!("Expression: \"{expression}\""),
             output_description: format!(

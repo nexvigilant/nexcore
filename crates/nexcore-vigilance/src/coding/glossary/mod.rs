@@ -63,7 +63,8 @@ mod fuzzy;
 mod terms;
 
 pub use fuzzy::{
-    FuzzyIndexStats, fuzzy_best_match, fuzzy_index_stats, fuzzy_lookup_term, smart_lookup,
+    FuzzyIndexStats, GlossaryMatch, fuzzy_best_match, fuzzy_index_stats, fuzzy_lookup_term,
+    smart_lookup,
 };
 pub use terms::{
     GLOSSARY, GlossaryTerm, all_terms, lookup_term, search_by_prefix, search_terms, term_count,

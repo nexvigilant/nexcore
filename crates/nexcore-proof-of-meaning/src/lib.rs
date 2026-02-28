@@ -264,7 +264,7 @@ mod tests {
     fn pipeline_transforms_expression() {
         let pipeline = pipeline::ProofPipeline::pv_standard();
         let trail = pipeline.transform("cardiac adverse event");
-        assert_eq!(trail.steps.len(), 4);
+        assert_eq!(trail.steps.len(), 5);
         assert!(trail.trail_valid);
     }
 
@@ -593,7 +593,7 @@ mod tests {
         let pipeline = pipeline::ProofPipeline::pv_standard();
         // "severe acute cardiac adverse reaction" — 5 tokens across 5 different classes
         let trail = pipeline.transform("severe acute cardiac adverse reaction");
-        assert_eq!(trail.steps.len(), 4);
+        assert_eq!(trail.steps.len(), 5);
         assert!(trail.steps.iter().all(|s| s.step_number >= 1));
     }
 
@@ -629,5 +629,105 @@ mod tests {
             pipeline.prove_equivalence("cardiac adverse event", "hepatic adverse event");
         // Same organ + same modifier should score higher than different organ
         assert!(proof_same.equivalence.shared_atoms >= proof_diff.equivalence.shared_atoms);
+    }
+
+    // =========================================================================
+    // SPECTROSCOPY TESTS
+    // =========================================================================
+
+    #[test]
+    fn measure_different_atoms_produce_different_spectra() {
+        let probe_set = spectrum::ProbeSet::pv_standard();
+        let cardiac = element::Atom::new("cardiac", element::ElementClass::OrganSystem, 0.15);
+        let severe = element::Atom::new("severe", element::ElementClass::Severity, 0.15);
+
+        let spectrum_a = spectrum::measure(&cardiac, &probe_set);
+        let spectrum_b = spectrum::measure(&severe, &probe_set);
+
+        // Different atoms must produce different absorption values
+        let absorptions_differ = spectrum_a
+            .lines
+            .iter()
+            .zip(spectrum_b.lines.iter())
+            .any(|(a, b)| a.absorption != b.absorption);
+        assert!(
+            absorptions_differ,
+            "Different atoms (cardiac vs severe) must produce distinct spectra",
+        );
+    }
+
+    #[test]
+    fn measure_known_pv_atom_produces_valid_spectrum() {
+        let probe_set = spectrum::ProbeSet::pv_standard();
+        let cardiac = element::Atom::new("cardiac", element::ElementClass::OrganSystem, 0.15);
+
+        let spec = spectrum::measure(&cardiac, &probe_set);
+
+        // Should produce 6 spectral lines (one per probe)
+        assert_eq!(spec.lines.len(), 6);
+
+        // All absorption values should be in [0.0, 1.0]
+        for line in &spec.lines {
+            let abs = line.absorption.into_inner();
+            assert!(
+                (0.0..=1.0).contains(&abs),
+                "Absorption {abs} out of [0, 1] range",
+            );
+            let width = line.line_width.into_inner();
+            assert!(
+                (0.0..=1.0).contains(&width),
+                "Line width {width} out of [0, 1] range",
+            );
+        }
+    }
+
+    #[test]
+    fn measure_spectra_are_comparable_via_distance() {
+        let probe_set = spectrum::ProbeSet::pv_standard();
+        let cardiac = element::Atom::new("cardiac", element::ElementClass::OrganSystem, 0.15);
+        let hepatic = element::Atom::new("hepatic", element::ElementClass::OrganSystem, 0.15);
+
+        let spectrum_a = spectrum::measure(&cardiac, &probe_set);
+        let spectrum_b = spectrum::measure(&hepatic, &probe_set);
+
+        // distance() should return Measured, not Incomparable
+        match spectrum_a.distance(&spectrum_b) {
+            spectrum::SpectralDistance::Measured {
+                distance,
+                interpretation: _,
+            } => {
+                // Same class → should be close but not identical (different labels)
+                assert!(
+                    distance.into_inner() >= 0.0,
+                    "Distance should be non-negative",
+                );
+            }
+            spectrum::SpectralDistance::Incomparable { reason } => {
+                panic!("Spectra from measure() should be comparable, got: {reason}");
+            }
+        }
+    }
+
+    #[test]
+    fn pipeline_spectroscopy_step_is_third() {
+        let pipeline = pipeline::ProofPipeline::pv_standard();
+        let trail = pipeline.transform("cardiac adverse event");
+        assert_eq!(trail.steps.len(), 5);
+        // Step sequence: Distillation(1), Chromatography(2), Spectroscopy(3), Synonymy(4), Titration(5)
+        assert!(matches!(
+            trail.steps[2].method,
+            pipeline::TransformationMethod::Spectroscopy
+        ));
+        assert_eq!(trail.steps[2].step_number, 3);
+        assert!(matches!(
+            trail.steps[3].method,
+            pipeline::TransformationMethod::Synonymy
+        ));
+        assert_eq!(trail.steps[3].step_number, 4);
+        assert!(matches!(
+            trail.steps[4].method,
+            pipeline::TransformationMethod::Titration
+        ));
+        assert_eq!(trail.steps[4].step_number, 5);
     }
 }

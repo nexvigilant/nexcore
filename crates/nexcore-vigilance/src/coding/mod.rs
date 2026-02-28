@@ -72,6 +72,6 @@ pub use meddra::{
 };
 // Re-export glossary for PV terminology lookup
 pub use glossary::{
-    GlossaryTerm, fuzzy_best_match, fuzzy_lookup_term, lookup_term, search_terms, smart_lookup,
-    term_count,
+    GlossaryMatch, GlossaryTerm, fuzzy_best_match, fuzzy_lookup_term, lookup_term, search_terms,
+    smart_lookup, term_count,
 };

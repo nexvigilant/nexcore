@@ -188,6 +188,65 @@ Crates in foundation holds whose dep count exceeds the Foundation threshold (≤
 
 ---
 
+## Post Bio-Remediation Baseline (2026-02-28)
+
+**Context:** Biological-system hold split into bio-molecular (9 crates) + bio-anatomical (11 crates). `nexcore-hormone-types` extracted from `nexcore-hormones` and placed in stem-foundation hold to resolve stem→bio-molecular DirectionViolations.
+
+### Action Counts
+
+| Metric | P8 Baseline | Post Bio-Remediation | Delta |
+|--------|-------------|---------------------|-------|
+| **Bootstrap Path** | | | |
+| Total actions | 24 | 24 | 0 |
+| OrphanCrate | 1 | 3 | +2 |
+| DirectionViolation | 17 | 15 | -2 |
+| LayerViolation | 6 | 6 | 0 |
+| SuggestMove | 0 | 0 | 0 |
+| **Manifest Path** | | | |
+| Total actions | 18 | 23 | +5 |
+| OrphanCrate | 0 | 2 | +2 |
+| DirectionViolation | 12 | 15 | +3 |
+| LayerViolation | 6 | 6 | 0 |
+| SuggestMove | 0 | 0 | 0 |
+
+### Bio Remediation Impact
+
+**Fixed (2 DVs eliminated):**
+- `stem` (stem-foundation) → `nexcore-hormones` (biological-system) — resolved by switching to `nexcore-hormone-types` (stem-foundation)
+- `stem-bio` (stem-foundation) → `nexcore-hormones` (biological-system) — resolved by switching to `nexcore-hormone-types` (stem-foundation)
+
+**Newly Surfaced (5 DVs):**
+
+The biological-system split and hold restructuring exposed 5 chemistry→prima-language direction violations that were previously masked:
+
+| # | Crate | Source Hold (Layer) | Target Hold (Layer) | Direction |
+|---|-------|-------------------|-------------------|-----------|
+| 1 | nexcore-metabolite | chemistry (Foundation) | prima-language (Domain) | Foundation → Domain |
+| 2 | nexcore-molcore | chemistry (Foundation) | prima-language (Domain) | Foundation → Domain |
+| 3 | nexcore-qsar | chemistry (Foundation) | prima-language (Domain) | Foundation → Domain |
+| 4 | nexcore-renderer | observatory-viz (Foundation) | prima-language (Domain) | Foundation → Domain |
+| 5 | nexcore-structural-alerts | chemistry (Foundation) | prima-language (Domain) | Foundation → Domain |
+
+**Root cause:** Chemistry hold is declared Foundation-layer, but 4 chemistry crates depend on `prima-chem` (prima-language hold, Domain-layer). Similarly, `nexcore-renderer` depends on `prima` (prima-language hold). These are pre-existing layer mismatches exposed by the hold topology changes.
+
+**Potential fixes:**
+- Reclassify chemistry hold from Foundation to Domain (aligns with actual dependency depth)
+- Or reclassify prima-language hold from Domain to Foundation (if prima-chem has few deps)
+
+### Orphan Changes
+
+| Crate | P8 Status | Current Status | Cause |
+|-------|-----------|---------------|-------|
+| nexcore-pty | Not in workspace | Orphan (both paths) | New crate, not assigned to any hold |
+| nexcore-topology | In build-tooling | Orphan (both paths) | Hold assignment lost during bay.toml regeneration |
+| nexcore-hormone-types | N/A | Orphan (bootstrap only) | Added to stem-foundation.toml manifest but bootstrap topology not regenerated |
+
+### Net Assessment
+
+The bio-remediation arc achieved its primary objective: stem-foundation → bio-molecular DVs eliminated. The manifest total rose from 18→23 due to 5 previously-masked chemistry→prima-language DVs surfacing — these are pre-existing architectural issues, not regressions. Two orphan crates need hold assignment (nexcore-pty, nexcore-topology re-assignment).
+
+---
+
 ## Recommendations
 
 1. **Foundation gravity filter — DONE (P8)**: Directional filter eliminates all 59 false positives. SuggestMove count: 0.

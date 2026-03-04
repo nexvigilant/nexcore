@@ -71,3 +71,9 @@ docs/rust-skills-link
 wksp/.nexcore
 wksp/languages/dna
 wksp/languages/prima
+
+# Large non-code content (removed from history 2026-03-04)
+# See ~/Projects/archive/nexcore-git-archive-2026-03-04.md
+data/
+docs/
+studio/

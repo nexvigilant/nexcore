@@ -544,6 +544,60 @@ impl NexCoreMcpServer {
     }
 
     // ========================================================================
+    // Primitive Brain Tools (5)
+    // ========================================================================
+
+    #[tool(
+        description = "Decompose a concept into its T1 primitive composition. Produces a structured decomposition with tier classification, conservation check, and optional brain artifact persistence. Example: concept='CausalityAssessment', primitives=['Causality','Comparison','Boundary','State']."
+    )]
+    async fn primitive_brain_decompose(
+        &self,
+        Parameters(params): Parameters<params::primitive_brain::PrimitiveBrainDecomposeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::primitive_brain::decompose(params)
+    }
+
+    #[tool(
+        description = "Query brain state by T1 primitive — find beliefs, patterns, and artifacts grounded to a specific primitive. Returns cross-domain analogs (PV, biology, physics, software) and query templates for brain searches."
+    )]
+    async fn primitive_brain_query(
+        &self,
+        Parameters(params): Parameters<params::primitive_brain::PrimitiveBrainQueryParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::primitive_brain::query(params)
+    }
+
+    #[tool(
+        description = "Compute symmetric difference distance |A△B| between two primitive compositions. Returns distance (0=identical), Jaccard similarity, intersection, and transfer verdict. Use to measure conceptual proximity."
+    )]
+    async fn primitive_brain_distance(
+        &self,
+        Parameters(params): Parameters<params::primitive_brain::PrimitiveBrainDistanceParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::primitive_brain::distance(params)
+    }
+
+    #[tool(
+        description = "Check the conservation law ∃ = ∂(×(ς, ∅)) against a primitive composition. Tests whether all four conservation terms (Existence, Boundary, State, Void) are present. Missing terms signal incomplete identity."
+    )]
+    async fn primitive_brain_conserve(
+        &self,
+        Parameters(params): Parameters<params::primitive_brain::PrimitiveBrainConserveParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::primitive_brain::conserve(params)
+    }
+
+    #[tool(
+        description = "Compose T1 primitives into a named structure with tier classification. Optionally suggests known grounded types that match the composition (within distance 2)."
+    )]
+    async fn primitive_brain_compose(
+        &self,
+        Parameters(params): Parameters<params::primitive_brain::PrimitiveBrainComposeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::primitive_brain::compose(params)
+    }
+
+    // ========================================================================
     // PV Signal Detection Tools (8)
     // ========================================================================
 
@@ -5382,6 +5436,200 @@ impl NexCoreMcpServer {
         Parameters(params): Parameters<params::ctvp::CtvpPhasesListParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::ctvp::phases_list(params)
+    }
+
+    // ========================================================================
+    // AST Query Tools (3) - Structural Rust code search via syn parsing
+    // ========================================================================
+
+    #[tool(
+        description = "Parse a single Rust source file and return all extracted items: structs, enums, traits, functions (with full signatures), and impl blocks. Uses AST parsing (not text search) so renames and refactors are captured accurately."
+    )]
+    async fn ast_query_file(
+        &self,
+        Parameters(params): Parameters<params::ast_query::AstQueryFileParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ast_query::ast_query_file(params)
+    }
+
+    #[tool(
+        description = "Search a crate's source files for items matching a name pattern. Returns structs, enums, traits, functions, and impl blocks with case-insensitive substring matching. Filters by item_types: 'struct', 'enum', 'trait', 'fn', 'impl'."
+    )]
+    async fn ast_query_search(
+        &self,
+        Parameters(params): Parameters<params::ast_query::AstQuerySearchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ast_query::ast_query_search(params)
+    }
+
+    #[tool(
+        description = "Find all implementors of a trait within a crate. Walks all .rs files in the crate's src/ directory and returns impl blocks where trait_name matches (case-insensitive substring)."
+    )]
+    async fn ast_query_implementors(
+        &self,
+        Parameters(params): Parameters<params::ast_query::AstQueryImplementorsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ast_query::ast_query_implementors(params)
+    }
+
+    // ========================================================================
+    // Test History Tools (2) - Cross-session test result tracking
+    // ========================================================================
+
+    #[tool(
+        description = "Query test run history from brain.db. Returns pass/fail/ignored counts, duration, and failing test names. Filter by crate_name, since_days (default 30), limit (default 50)."
+    )]
+    async fn test_history_query(
+        &self,
+        Parameters(params): Parameters<params::test_history::TestHistoryQueryParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::test_history::test_history_query(params)
+    }
+
+    #[tool(
+        description = "Identify flaky tests that alternate between pass and fail across runs. Analyzes test_runs table for tests appearing in fail_names multiple times within window_days (default 14)."
+    )]
+    async fn test_history_flaky(
+        &self,
+        Parameters(params): Parameters<params::test_history::TestHistoryFlakyParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::test_history::test_history_flaky(params)
+    }
+
+    // ========================================================================
+    // Diagram Render Tool (1) - DOT/Graphviz to SVG/PNG/PDF
+    // ========================================================================
+
+    #[tool(
+        description = "Render a DOT/Graphviz diagram to SVG, PNG, or PDF. Supports layout engines: dot (default), neato, circo, fdp, twopi. Returns output file path and size."
+    )]
+    async fn diagram_render(
+        &self,
+        Parameters(params): Parameters<params::diagram::DiagramRenderParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::diagram::diagram_render(params)
+    }
+
+    // ========================================================================
+    // Hook Test Tools (2) - Hook testing harness
+    // ========================================================================
+
+    #[tool(
+        description = "Test a single hook with mock input. Pipes JSON to the hook's stdin, captures stdout/stderr/exit_code/elapsed_ms. Use to validate hook behavior without triggering real events."
+    )]
+    async fn hook_test(
+        &self,
+        Parameters(params): Parameters<params::hook_test::HookTestParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hook_test::hook_test(params)
+    }
+
+    #[tool(
+        description = "Test all hooks in ~/.claude/hooks/bash/. Runs each .sh file with a default mock fixture, reports pass/fail/elapsed for each. Optionally filter by event_type."
+    )]
+    async fn hook_test_all(
+        &self,
+        Parameters(params): Parameters<params::hook_test::HookTestAllParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hook_test::hook_test_all(params)
+    }
+
+    // ========================================================================
+    // Jupyter & Voila Tools (6) - Kernel management, server status, notebook rendering
+    // ========================================================================
+
+    #[tool(
+        description = "List running Jupyter kernels. Returns id, name, execution state, and last activity for each kernel."
+    )]
+    async fn jupyter_kernels(
+        &self,
+        Parameters(params): Parameters<params::jupyter::JupyterKernelsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::jupyter::kernels(params).await
+    }
+
+    #[tool(
+        description = "List available Jupyter kernel specifications (python3, rust, etc). Returns name, display name, and language for each."
+    )]
+    async fn jupyter_kernelspecs(
+        &self,
+        Parameters(params): Parameters<params::jupyter::JupyterKernelspecsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::jupyter::kernelspecs(params).await
+    }
+
+    #[tool(
+        description = "Jupyter server health check. Returns server version, running kernel count, and connectivity status."
+    )]
+    async fn jupyter_status(
+        &self,
+        Parameters(params): Parameters<params::jupyter::JupyterStatusParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::jupyter::status(params).await
+    }
+
+    #[tool(
+        description = "Render a Jupyter notebook as a Voila web app. Returns the render URL and HTTP status. The notebook param is the path relative to Jupyter root (e.g. 'analysis.ipynb')."
+    )]
+    async fn voila_render(
+        &self,
+        Parameters(params): Parameters<params::jupyter::VoilaRenderParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::jupyter::voila_render(params).await
+    }
+
+    #[tool(
+        description = "Check Voila extension status. Returns whether Voila is active and lists renderable .ipynb notebooks."
+    )]
+    async fn voila_status(
+        &self,
+        Parameters(params): Parameters<params::jupyter::VoilaStatusParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::jupyter::voila_status(params).await
+    }
+
+    #[tool(
+        description = "List .ipynb notebook files with metadata (name, path, size, last modified, Voila render URL). Optionally filter by directory path."
+    )]
+    async fn voila_list(
+        &self,
+        Parameters(params): Parameters<params::jupyter::VoilaListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::jupyter::voila_list(params).await
+    }
+
+    // ========================================================================
+    // Jupyter Pipeline Tools
+    // ========================================================================
+
+    #[tool(
+        description = "Create a Jupyter notebook with cells in one call. Provide path and an array of {type, source} cells. Returns the created notebook path and Voila render URL."
+    )]
+    async fn jupyter_notebook_create(
+        &self,
+        Parameters(params): Parameters<params::jupyter::JupyterNotebookCreateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::jupyter::notebook_create(params).await
+    }
+
+    #[tool(
+        description = "Execute all cells in a Jupyter notebook via nbconvert. Returns per-cell outputs (text, errors). The notebook is executed in-place and outputs are saved."
+    )]
+    async fn jupyter_notebook_execute(
+        &self,
+        Parameters(params): Parameters<params::jupyter::JupyterNotebookExecuteParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::jupyter::notebook_execute(params).await
+    }
+
+    #[tool(
+        description = "Full Jupyter pipeline: create notebook (optional) → execute all cells → confirm Voila rendering. Reports per-stage success/failure. One call to go from code to live app."
+    )]
+    async fn jupyter_pipeline(
+        &self,
+        Parameters(params): Parameters<params::jupyter::JupyterPipelineParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::jupyter::pipeline(params).await
     }
 }
 

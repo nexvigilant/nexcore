@@ -158,6 +158,9 @@ pub mod faers_analytics;
 // Lex Primitiva (T1 symbolic foundation queries)
 pub mod lex_primitiva;
 
+// Primitive Brain (T1 decomposition, distance, conservation, composition)
+pub mod primitive_brain;
+
 // Molecular Biology (Central Dogma, ADME, codon translation)
 pub mod molecular;
 
@@ -545,3 +548,18 @@ pub mod chrono;
 
 // NexChat (AI chat status, config, tool discovery)
 pub mod nexchat;
+
+// AST Query (structural Rust code search via syn parsing)
+pub mod ast_query;
+
+// Diagram rendering (DOT/Graphviz to SVG/PNG/PDF)
+pub mod diagram;
+
+// Hook testing harness
+pub mod hook_test;
+
+// Jupyter & Voila (kernel management, server status, notebook rendering)
+pub mod jupyter;
+
+// Test History (cross-session test result tracking — query, flaky detection)
+pub mod test_history;

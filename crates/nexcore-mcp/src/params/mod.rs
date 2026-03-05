@@ -68,6 +68,7 @@ pub mod miner;
 pub mod network;
 pub mod perplexity;
 pub mod pom;
+pub mod primitive_brain;
 pub mod pv;
 pub mod pv_embeddings;
 pub mod pvdsl;
@@ -112,6 +113,10 @@ pub use crate_xray::*;
 // Knowledge Engine (ingest, compress, compile, query, stats)
 pub mod knowledge_engine;
 pub use knowledge_engine::*;
+
+// Test History (cross-session test result tracking)
+pub mod test_history;
+pub use test_history::*;
 
 // New param modules
 pub mod domain_primitives;
@@ -540,3 +545,19 @@ pub use chrono::*;
 // NexChat (AI chat status, config, tool discovery)
 pub mod nexchat;
 pub use nexchat::*;
+
+// AST Query (structural Rust code search)
+pub mod ast_query;
+pub use ast_query::*;
+
+// Diagram rendering (DOT/Graphviz to SVG/PNG/PDF)
+pub mod diagram;
+pub use diagram::*;
+
+// Hook testing harness
+pub mod hook_test;
+pub use hook_test::*;
+
+// Jupyter & Voila (kernel management, server status, notebook rendering)
+pub mod jupyter;
+pub use jupyter::*;

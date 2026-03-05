@@ -133,6 +133,44 @@ pub struct TraitInfo {
     pub methods: Vec<String>,
 }
 
+/// Information about a public function.
+#[non_exhaustive]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FunctionInfo {
+    /// Function name.
+    pub name: String,
+    /// Doc comment (if any).
+    pub doc_comment: Option<String>,
+    /// Parameters (excluding self).
+    pub params: Vec<FunctionParam>,
+    /// Return type as string (None for `-> ()`).
+    pub return_type: Option<String>,
+    /// Whether the function is async.
+    pub is_async: bool,
+}
+
+/// A function parameter.
+#[non_exhaustive]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FunctionParam {
+    /// Parameter name.
+    pub name: String,
+    /// Parameter type as string.
+    pub ty: String,
+}
+
+/// Information about an impl block.
+#[non_exhaustive]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ImplInfo {
+    /// The type being implemented for (e.g., "MyStruct").
+    pub type_name: String,
+    /// The trait being implemented (None for inherent impls).
+    pub trait_name: Option<String>,
+    /// Method names in this impl block.
+    pub methods: Vec<String>,
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // GRAPH TOPOLOGY (Observatory + Academy)
 // ═══════════════════════════════════════════════════════════════════════════

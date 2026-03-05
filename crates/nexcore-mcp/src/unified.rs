@@ -879,6 +879,43 @@ async fn dispatch_inner(
         "forge_shortest_path" => typed(params, tools::academy_forge::forge_shortest_path),
 
         // ====================================================================
+        // AST Query Tools (3) - Structural Rust code search
+        // ====================================================================
+        "ast_query_file" => typed(params, tools::ast_query::ast_query_file),
+        "ast_query_search" => typed(params, tools::ast_query::ast_query_search),
+        "ast_query_implementors" => typed(params, tools::ast_query::ast_query_implementors),
+
+        // ====================================================================
+        // Test History Tools (2) - Cross-session test tracking
+        // ====================================================================
+        "test_history_query" => typed(params, tools::test_history::test_history_query),
+        "test_history_flaky" => typed(params, tools::test_history::test_history_flaky),
+
+        // ====================================================================
+        // Diagram Render (1) - DOT/Graphviz to SVG/PNG/PDF
+        // ====================================================================
+        "diagram_render" => typed(params, tools::diagram::diagram_render),
+
+        // ====================================================================
+        // Hook Test Tools (2) - Hook testing harness
+        // ====================================================================
+        "hook_test" => typed(params, tools::hook_test::hook_test),
+        "hook_test_all" => typed(params, tools::hook_test::hook_test_all),
+
+        // ====================================================================
+        // Jupyter & Voila Tools (9)
+        // ====================================================================
+        "jupyter_kernels" => typed_async(params, tools::jupyter::kernels).await,
+        "jupyter_kernelspecs" => typed_async(params, tools::jupyter::kernelspecs).await,
+        "jupyter_status" => typed_async(params, tools::jupyter::status).await,
+        "jupyter_notebook_create" => typed_async(params, tools::jupyter::notebook_create).await,
+        "jupyter_notebook_execute" => typed_async(params, tools::jupyter::notebook_execute).await,
+        "jupyter_pipeline" => typed_async(params, tools::jupyter::pipeline).await,
+        "voila_render" => typed_async(params, tools::jupyter::voila_render).await,
+        "voila_status" => typed_async(params, tools::jupyter::voila_status).await,
+        "voila_list" => typed_async(params, tools::jupyter::voila_list).await,
+
+        // ====================================================================
         // Primitive Validation Tools (4)
         // ====================================================================
         "primitive_validate" => typed_async(params, tools::primitive_validation::validate).await,
@@ -3064,6 +3101,11 @@ fn unified_catalog_data() -> serde_json::Value {
             "observability": ["observability_record_latency", "observability_query", "observability_freshness"],
             "forge": ["forge_init", "forge_reference", "forge_mine", "forge_prompt", "forge_suggest", "forge_summary", "forge_system_prompt", "forge_tier"],
             "academy_forge": ["forge_extract", "forge_validate", "forge_scaffold", "forge_schema", "forge_compile", "forge_atomize", "forge_graph", "forge_shortest_path"],
+            "ast_query": ["ast_query_file", "ast_query_search", "ast_query_implementors"],
+            "test_history": ["test_history_query", "test_history_flaky"],
+            "diagram": ["diagram_render"],
+            "hook_test": ["hook_test", "hook_test_all"],
+            "jupyter": ["jupyter_kernels", "jupyter_kernelspecs", "jupyter_status", "jupyter_notebook_create", "jupyter_notebook_execute", "jupyter_pipeline", "voila_render", "voila_status", "voila_list"],
             "mcp_lock": ["mcp_lock", "mcp_unlock", "mcp_lock_status"],
             "commandments": ["commandment_verify", "commandment_info", "commandment_list", "commandment_audit"],
             "docs": ["docs_generate_claude_md"],

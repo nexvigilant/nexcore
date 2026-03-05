@@ -7724,21 +7724,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "nexcore-capa"
-version = "1.0.0"
-dependencies = [
- "clap",
- "nexcore-chrono",
- "nexcore-constants",
- "nexcore-error",
- "nexcore-id",
- "nexcore-lex-primitiva",
- "serde",
- "serde_json",
- "tempfile",
-]
-
-[[package]]
 name = "nexcore-cardiovascular"
 version = "1.0.0"
 dependencies = [
@@ -8178,6 +8163,17 @@ version = "1.0.0"
 dependencies = [
  "nexcore-lex-primitiva",
  "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-flywheel"
+version = "0.1.0"
+dependencies = [
+ "nexcore-chrono",
+ "nexcore-error",
+ "nexcore-lex-primitiva",
  "serde",
  "serde_json",
 ]

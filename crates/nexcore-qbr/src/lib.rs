@@ -23,6 +23,7 @@
 //!
 //! Tier: T3-D (Domain Composite)
 
+#![warn(missing_docs)]
 #![cfg_attr(
     not(test),
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)

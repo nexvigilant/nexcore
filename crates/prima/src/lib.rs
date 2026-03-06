@@ -29,6 +29,7 @@
 #![forbid(unsafe_code)]
 #![cfg_attr(not(test), deny(clippy::unwrap_used))]
 #![cfg_attr(not(test), deny(clippy::expect_used))]
+#![warn(missing_docs)]
 #![allow(
     missing_docs,
     clippy::allow_attributes_without_reason,

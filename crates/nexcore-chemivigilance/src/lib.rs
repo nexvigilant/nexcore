@@ -27,7 +27,7 @@
 #![cfg_attr(not(test), deny(clippy::unwrap_used))]
 #![cfg_attr(not(test), deny(clippy::expect_used))]
 #![cfg_attr(not(test), deny(clippy::panic))]
-
+#![warn(missing_docs)]
 pub mod brief;
 pub mod error;
 pub mod pipeline;

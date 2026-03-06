@@ -32,6 +32,7 @@
 #![cfg_attr(not(test), deny(clippy::expect_used))]
 #![cfg_attr(not(test), deny(clippy::panic))]
 #![forbid(unsafe_code)]
+#![warn(missing_docs)]
 #![allow(
     clippy::exhaustive_enums,
     clippy::exhaustive_structs,

@@ -14,6 +14,7 @@
 //!
 //! `∂(Boundary) + ς(State) + →(Causality)`
 
+#![warn(missing_docs)]
 #[cfg(not(unix))]
 compile_error!("nexcore-pty requires a Unix platform (Linux or macOS)");
 

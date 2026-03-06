@@ -9,7 +9,7 @@
 
 #![forbid(unsafe_code)]
 #![cfg_attr(not(test), deny(clippy::unwrap_used))]
-
+#![warn(missing_docs)]
 pub mod dedup;
 pub mod error;
 pub mod grounding;

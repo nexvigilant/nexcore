@@ -1,5 +1,6 @@
 //! Sovereign DateTime engine — UTC timestamps, calendar dates, durations with zero external dependencies.
 #![forbid(unsafe_code)]
+#![warn(missing_docs)]
 #![cfg_attr(
     not(any(test, clippy)),
     deny(

@@ -9,6 +9,7 @@
 
 #![forbid(unsafe_code)]
 #![allow(missing_docs)] // Internal library - docs enforced on public API crates only
+#![warn(missing_docs)]
 #![allow(
     clippy::unwrap_used,
     clippy::expect_used,

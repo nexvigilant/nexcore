@@ -46,7 +46,7 @@
 #![cfg_attr(not(test), deny(clippy::expect_used))]
 #![cfg_attr(not(test), deny(clippy::panic))]
 #![forbid(unsafe_code)]
-
+#![warn(missing_docs)]
 pub mod dsl;
 pub mod grounding;
 pub mod oscal;

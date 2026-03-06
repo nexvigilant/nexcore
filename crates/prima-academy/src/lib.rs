@@ -40,7 +40,7 @@
 #![forbid(unsafe_code)]
 #![cfg_attr(not(test), deny(clippy::unwrap_used))]
 #![cfg_attr(not(test), deny(clippy::expect_used))]
-
+#![warn(missing_docs)]
 pub mod transfer;
 
 pub use transfer::{AffinityMatrix, CapabilityMultiplier, TransferResult};

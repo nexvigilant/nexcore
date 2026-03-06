@@ -25,6 +25,7 @@
 //! - I/O: `DataFrame::from_json(s)`, `df.to_json()`, `df.to_json_file(path)`
 
 #![forbid(unsafe_code)]
+#![warn(missing_docs)]
 #![cfg_attr(
     not(test),
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)

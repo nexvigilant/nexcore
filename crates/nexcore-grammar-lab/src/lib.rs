@@ -27,7 +27,7 @@
 #![cfg_attr(not(test), deny(clippy::expect_used))]
 #![cfg_attr(not(test), deny(clippy::panic))]
 #![forbid(unsafe_code)]
-
+#![warn(missing_docs)]
 pub mod exp1_regular;
 pub mod exp2_context_free;
 pub mod exp3_context_sensitive;

@@ -19,6 +19,7 @@
 //! | `orchestrate` | * | Full pipeline coordinator |
 
 #![forbid(unsafe_code)]
+#![warn(missing_docs)]
 #![cfg_attr(
     not(test),
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)

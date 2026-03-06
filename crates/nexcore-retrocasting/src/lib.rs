@@ -37,6 +37,7 @@
 //! | `training` | T3 | Σ + π + σ + → | Sum of persisted sequences mapped to labels |
 
 #![forbid(unsafe_code)]
+#![warn(missing_docs)]
 #![cfg_attr(
     not(test),
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)

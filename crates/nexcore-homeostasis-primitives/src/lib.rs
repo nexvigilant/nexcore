@@ -20,6 +20,7 @@
 //! 5. **Proportionality** — `state::SystemState::needs_dampening()` flags
 //!    over-response via configurable thresholds.
 
+#![warn(missing_docs)]
 pub mod amplification;
 pub mod baseline;
 pub mod cascade_order;

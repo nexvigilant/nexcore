@@ -14,6 +14,7 @@
 //!
 //! `∂(Boundary) + ς(State) + σ(Sequence) + μ(Mapping) + →(Causality)`
 
+#![warn(missing_docs)]
 pub mod ai;
 pub mod audit;
 pub mod config;

@@ -24,6 +24,7 @@
 //! | Principles | 3 | Knowledge base search (Dalio, KISS, etc.) |
 
 #![forbid(unsafe_code)]
+#![warn(missing_docs)]
 #![cfg_attr(
     not(test),
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
@@ -3164,6 +3165,40 @@ impl NexCoreMcpServer {
     }
 
     // ========================================================================
+    // Boundary Detector Tools (3) - Operational ∂ Primitive
+    // ========================================================================
+
+    #[tool(
+        description = "Scan value(s) against multiple named boundaries. Returns per-boundary classification (ABOVE/BELOW/MARGINAL), distance from threshold, proximity percentage, and overall regime (ALL_ABOVE/ALL_BELOW/MIXED/WARNING). Use for single-point boundary checking."
+    )]
+    async fn boundary_detect_scan(
+        &self,
+        Parameters(params): Parameters<params::BoundaryDetectScanParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::boundary_detector::scan(params)
+    }
+
+    #[tool(
+        description = "Scan a stream of values against boundaries, detecting crossings and regime transitions. Returns total crossings, per-boundary crossing counts, crossing events with direction (RISING/FALLING), closest approach to each boundary, and regime duration breakdown. Use for time-series boundary monitoring."
+    )]
+    async fn boundary_detect_stream(
+        &self,
+        Parameters(params): Parameters<params::BoundaryDetectStreamParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::boundary_detector::stream(params)
+    }
+
+    #[tool(
+        description = "Quick proximity check: how close is a value to a boundary? Returns distance, proximity percentage, classification, and urgency level (CRITICAL/HIGH/MEDIUM/LOW). Use for fast boundary awareness checks."
+    )]
+    async fn boundary_detect_proximity(
+        &self,
+        Parameters(params): Parameters<params::BoundaryDetectProximityParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::boundary_detector::proximity(params)
+    }
+
+    // ========================================================================
     // Chemistry Primitives Tools (10) - Cross-Domain Transfer
     // ========================================================================
 
@@ -5630,6 +5665,108 @@ impl NexCoreMcpServer {
         Parameters(params): Parameters<params::jupyter::JupyterPipelineParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::jupyter::pipeline(params).await
+    }
+
+    // ========================================================================
+    // Knowledge Vault Tools (6)
+    // ========================================================================
+
+    #[tool(description = "Read a note from the knowledge vault by relative path.")]
+    async fn knowledge_vault_read(
+        &self,
+        Parameters(params): Parameters<params::knowledge_vault::KnowledgeVaultReadParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::knowledge_vault::knowledge_vault_read(params)
+    }
+
+    #[tool(description = "Search knowledge vault content and filenames by query string.")]
+    async fn knowledge_vault_search(
+        &self,
+        Parameters(params): Parameters<params::knowledge_vault::KnowledgeVaultSearchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::knowledge_vault::knowledge_vault_search(params)
+    }
+
+    #[tool(description = "List files and directories in the knowledge vault.")]
+    async fn knowledge_vault_list(
+        &self,
+        Parameters(params): Parameters<params::knowledge_vault::KnowledgeVaultListParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::knowledge_vault::knowledge_vault_list(params)
+    }
+
+    #[tool(description = "Write or create a note in the knowledge vault.")]
+    async fn knowledge_vault_write(
+        &self,
+        Parameters(params): Parameters<params::knowledge_vault::KnowledgeVaultWriteParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::knowledge_vault::knowledge_vault_write(params)
+    }
+
+    #[tool(description = "Move or rename a note in the knowledge vault.")]
+    async fn knowledge_vault_move(
+        &self,
+        Parameters(params): Parameters<params::knowledge_vault::KnowledgeVaultMoveParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::knowledge_vault::knowledge_vault_move(params)
+    }
+
+    #[tool(description = "List all #tags used across the knowledge vault with counts.")]
+    async fn knowledge_vault_tags(
+        &self,
+        Parameters(params): Parameters<params::knowledge_vault::KnowledgeVaultTagsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::knowledge_vault::knowledge_vault_tags(params)
+    }
+
+    // ========================================================================
+    // CCCP Tools (5) — Consultant's Client Care Process
+    // ========================================================================
+
+    #[tool(description = "Compute PV gap analysis from current and desired proficiency levels.")]
+    async fn cccp_gap_analysis(
+        &self,
+        Parameters(params): Parameters<params::cccp::CccpGapAnalysisParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cccp::cccp_gap_analysis(params)
+    }
+
+    #[tool(
+        description = "Generate engagement plan with prioritized interventions from proficiency gaps."
+    )]
+    async fn cccp_plan(
+        &self,
+        Parameters(params): Parameters<params::cccp::CccpPlanParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cccp::cccp_plan(params)
+    }
+
+    #[tool(
+        description = "Check EPA readiness status across all 21 EPAs given current proficiency."
+    )]
+    async fn cccp_epa_readiness(
+        &self,
+        Parameters(params): Parameters<params::cccp::CccpEpaReadinessParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cccp::cccp_epa_readiness(params)
+    }
+
+    #[tool(
+        description = "Compute outcome evaluation comparing initial, final, and desired states."
+    )]
+    async fn cccp_evaluate(
+        &self,
+        Parameters(params): Parameters<params::cccp::CccpEvaluateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cccp::cccp_evaluate(params)
+    }
+
+    #[tool(description = "Get CCCP phase information including templates and algorithms.")]
+    async fn cccp_phase_info(
+        &self,
+        Parameters(params): Parameters<params::cccp::CccpPhaseInfoParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cccp::cccp_phase_info(params)
     }
 }
 

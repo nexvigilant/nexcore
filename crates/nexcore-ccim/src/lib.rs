@@ -17,6 +17,7 @@
 //! Grounding: ρ(Recursion) + N(Quantity) + →(Causality) + κ(Comparison) + π(Persistence).
 
 #![forbid(unsafe_code)]
+#![warn(missing_docs)]
 #![cfg_attr(
     not(any(test, clippy)),
     deny(

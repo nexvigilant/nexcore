@@ -1,5 +1,5 @@
 #![forbid(unsafe_code)]
-
+#![warn(missing_docs)]
 use std::fs::File;
 use std::io::{self, Read};
 use std::path::{Path, PathBuf};

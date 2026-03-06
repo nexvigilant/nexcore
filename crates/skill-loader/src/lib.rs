@@ -3,7 +3,7 @@
 //! Load SKILL.md files from disk and bridge to Rust skill implementations.
 
 #![forbid(unsafe_code)]
-
+#![warn(missing_docs)]
 mod frontmatter;
 pub mod grounding;
 mod loader;

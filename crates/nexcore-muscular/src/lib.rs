@@ -21,6 +21,7 @@
 //! - **Antagonistic Pairs**: Write<->Read, Edit<->Undo, Build<->Clean, Spawn<->Stop
 
 #![forbid(unsafe_code)]
+#![warn(missing_docs)]
 #![cfg_attr(
     not(test),
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)

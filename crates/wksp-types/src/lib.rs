@@ -3,6 +3,7 @@
 //! Translated from Studio's TypeScript type files to Rust structs.
 //! Used by both frontend (Leptos) and future backend (nexcore API) code.
 
+#![warn(missing_docs)]
 pub mod academy;
 pub mod admin;
 pub mod careers;

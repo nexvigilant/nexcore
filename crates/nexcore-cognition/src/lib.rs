@@ -37,6 +37,7 @@
 //! | metrics     | κ, N, ν, μ                       | Self-measurement         |
 //! | pipeline    | σ, →, Σ, κ                       | Full cognitive flow      |
 
+#![warn(missing_docs)]
 #![cfg_attr(
     not(test),
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)

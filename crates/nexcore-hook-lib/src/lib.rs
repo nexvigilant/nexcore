@@ -22,6 +22,7 @@
 //! emit(Signal::new("skill_invoked").with_data("skill", "extractor"));
 //! ```
 
+#![warn(missing_docs)]
 pub mod atomic;
 pub mod neurotransmitter;
 

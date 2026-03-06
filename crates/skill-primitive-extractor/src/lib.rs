@@ -3,7 +3,7 @@
 //! Extract irreducible conceptual primitives from any domain.
 
 #![forbid(unsafe_code)]
-
+#![warn(missing_docs)]
 mod extractor;
 pub mod grounding;
 mod types;

@@ -44,6 +44,7 @@
 //! - `math::*` - Mathematical functions (abs, sqrt, pow, log, ln, exp, min, max, floor, ceil, round)
 //! - `chem::*` - Chemistry-based capability assessment (arrhenius, michaelis, hill, henderson, halflife, sqi)
 
+#![warn(missing_docs)]
 pub mod ast;
 pub mod bytecode;
 pub mod chemistry;

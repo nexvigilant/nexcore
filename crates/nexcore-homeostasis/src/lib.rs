@@ -12,7 +12,9 @@
 //! 4. **Self-Measurement** — System measures its own response.
 //! 5. **Proportionality** — Goal is appropriate response, not maximum.
 
+#![warn(missing_docs)]
 pub mod config;
+pub mod flywheel_bridge;
 pub mod machine;
 pub mod mcp;
 pub mod traits;

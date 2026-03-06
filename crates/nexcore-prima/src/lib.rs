@@ -17,8 +17,7 @@
 #![forbid(unsafe_code)]
 #![cfg_attr(not(test), deny(clippy::unwrap_used))]
 #![cfg_attr(not(test), deny(clippy::expect_used))]
-
 // NOTE: grounding.rs exists but impls live in canonical prima crate
 // (orphan rules prevent implementing GroundsTo on re-exported foreign types here)
-
+#![warn(missing_docs)]
 pub use prima::*;

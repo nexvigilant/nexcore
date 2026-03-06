@@ -42,6 +42,7 @@
 //! - **∂ (Boundary)**: present in 7/9 stages — a field defined by thresholds
 
 #![forbid(unsafe_code)]
+#![warn(missing_docs)]
 #![cfg_attr(
     not(test),
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)

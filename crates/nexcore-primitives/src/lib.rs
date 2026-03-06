@@ -11,7 +11,7 @@
 #![deny(unused_variables)]
 #![deny(unused_imports)]
 #![deny(unused_mut)]
-
+#![warn(missing_docs)]
 pub mod chemistry;
 pub mod dynamics;
 pub mod entropy;

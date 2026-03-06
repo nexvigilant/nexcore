@@ -33,7 +33,7 @@
 #![cfg_attr(not(test), deny(clippy::expect_used))]
 #![cfg_attr(not(test), deny(clippy::panic))]
 #![forbid(unsafe_code)]
-
+#![warn(missing_docs)]
 pub mod grounding;
 
 use serde::{Deserialize, Serialize};

@@ -2,6 +2,7 @@
 //!
 //! Provides the core router and state for the nexcore-api.
 
+#![warn(missing_docs)]
 pub mod audit;
 pub mod auth;
 pub mod core_types;

@@ -13,6 +13,7 @@
 #![deny(clippy::unwrap_used)]
 #![deny(clippy::expect_used)]
 #![deny(clippy::panic)]
+#![warn(missing_docs)]
 
 /// Core traits and types for skills
 pub mod core;

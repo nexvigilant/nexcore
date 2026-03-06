@@ -21,7 +21,7 @@
 #![cfg_attr(not(test), deny(clippy::unwrap_used))]
 #![cfg_attr(not(test), deny(clippy::expect_used))]
 #![cfg_attr(not(test), deny(clippy::panic))]
-
+#![warn(missing_docs)]
 pub mod applicability;
 pub mod cardiotoxicity;
 pub mod error;

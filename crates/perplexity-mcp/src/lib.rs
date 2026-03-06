@@ -13,7 +13,7 @@
 #![deny(clippy::unwrap_used)]
 #![deny(clippy::expect_used)]
 #![deny(clippy::panic)]
-
+#![warn(missing_docs)]
 use nexcore_perplexity::client::PerplexityClient;
 use nexcore_perplexity::research::{
     ResearchUseCase, research_competitive, research_general, research_regulatory,

@@ -23,7 +23,7 @@
 #![deny(clippy::unwrap_used)]
 #![deny(clippy::expect_used)]
 #![deny(clippy::panic)]
-
+#![warn(missing_docs)]
 mod attr;
 mod expand;
 

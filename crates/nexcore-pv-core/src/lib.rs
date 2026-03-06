@@ -28,6 +28,7 @@
 //! - **clinical_trial** - FDA effectiveness endpoints, substantial evidence, safety reporting
 
 // Re-export nexcore-tov grounded types at crate root for internal use
+#![warn(missing_docs)]
 pub use nexcore_tov::grounded;
 
 /// Safety margin d(s) calculation result (inlined from vigilance::tov)

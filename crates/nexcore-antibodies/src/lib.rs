@@ -28,6 +28,7 @@
 //! | `AntibodyRepertoire` | T3 | π (Persistence) + μ (Mapping) |
 
 #![forbid(unsafe_code)]
+#![warn(missing_docs)]
 #![cfg_attr(
     not(test),
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)

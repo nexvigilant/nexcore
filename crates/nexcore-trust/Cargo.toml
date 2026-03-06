@@ -7,6 +7,7 @@ license = "LicenseRef-NexVigilant-Proprietary"
 description = "Bayesian trust engine: Beta(alpha, beta) scoring, asymmetric evidence weighting, temporal decay, multi-dimensional trust (Mayer et al.), and network transitivity"
 
 [dependencies]
+nexcore-flywheel = { version = "0.1.0", path = "../nexcore-flywheel", registry = "nexcore" }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 stem-math = { version = "0.1.0", path = "../stem-math", registry = "nexcore" }
 

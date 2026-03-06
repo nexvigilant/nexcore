@@ -28,9 +28,9 @@ pub mod assist_index;
 pub mod builder;
 pub mod codegen;
 pub mod dtree_router;
+pub mod flywheel_bridge;
 pub mod hooks;
 pub mod ksb_verify;
-// maturation module omitted — was undeclared in original (dead code)
 pub mod registry;
 pub mod routing;
 pub mod smst_v2;

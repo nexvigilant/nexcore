@@ -15,6 +15,7 @@ categories = ["development-tools"]
 
 [dependencies]
 nexcore-error = { workspace = true }
+nexcore-flywheel = { path = "../nexcore-flywheel" }
 nexcore-fs = { workspace = true }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 nexcore-spliceosome = { version = "1.0.0", path = "../nexcore-spliceosome" }

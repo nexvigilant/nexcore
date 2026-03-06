@@ -17,6 +17,7 @@ nexcore-dtree = { version = "1.0.0", path = "../nexcore-dtree", registry = "nexc
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
 nexcore-measure = { version = "1.0.0", path = "../nexcore-measure", registry = "nexcore" }
 nexcore-primitives = { workspace = true }
+nexcore-flywheel = { path = "../nexcore-flywheel" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 serde_yml = { version = "0.0.12" }

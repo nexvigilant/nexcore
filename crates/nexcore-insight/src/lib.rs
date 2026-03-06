@@ -20,6 +20,7 @@
 pub mod adapters;
 pub mod composites;
 pub mod engine;
+pub mod flywheel_bridge;
 pub mod grounding;
 pub mod orchestrator;
 pub mod persist;

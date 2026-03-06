@@ -137,13 +137,20 @@ pub fn case_lifecycle(machine_id: u64, entity_id: u64, timestamp: u64) -> StateM
 
 /// Signal lifecycle states.
 ///
-/// Detected → Validated → Confirmed | Refuted
+/// Fast track: Detected → Validated → Confirmed | Refuted
+/// Full PV Loop: Detected → Evaluated → Validated → Actioned → Monitoring → (feedback | close)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SignalLifecycleState {
     /// Signal has been statistically detected.
     Detected,
-    /// Signal has been clinically validated.
+    /// Signal evidence has been gathered (literature, labeling, trials).
+    Evaluated,
+    /// Signal has been clinically validated / causality assessed.
     Validated,
+    /// Signal regulatory/clinical action has been determined.
+    Actioned,
+    /// Signal is under ongoing surveillance.
+    Monitoring,
     /// Signal has been confirmed as real.
     Confirmed,
     /// Signal has been refuted as spurious.
@@ -156,9 +163,12 @@ impl SignalLifecycleState {
     pub fn id(self) -> StateId {
         match self {
             Self::Detected => StateId(1),
-            Self::Validated => StateId(2),
-            Self::Confirmed => StateId(3),
-            Self::Refuted => StateId(4),
+            Self::Evaluated => StateId(2),
+            Self::Validated => StateId(3),
+            Self::Actioned => StateId(4),
+            Self::Monitoring => StateId(5),
+            Self::Confirmed => StateId(6),
+            Self::Refuted => StateId(7),
         }
     }
 
@@ -167,7 +177,10 @@ impl SignalLifecycleState {
     pub fn name(self) -> &'static str {
         match self {
             Self::Detected => "detected",
+            Self::Evaluated => "evaluated",
             Self::Validated => "validated",
+            Self::Actioned => "actioned",
+            Self::Monitoring => "monitoring",
             Self::Confirmed => "confirmed",
             Self::Refuted => "refuted",
         }
@@ -177,9 +190,19 @@ impl SignalLifecycleState {
 /// Signal lifecycle events.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SignalEvent {
-    /// Clinically validate the signal.
+    /// Gather evidence (literature, labeling, trials).
+    Evaluate,
+    /// Clinically validate / assess causality.
     Validate,
-    /// Confirm the signal as real.
+    /// Determine regulatory/clinical action.
+    Action,
+    /// Enter ongoing surveillance.
+    Monitor,
+    /// New signal detected during monitoring (feedback loop).
+    Feedback,
+    /// Close monitoring — signal lifecycle complete.
+    Close,
+    /// Confirm the signal as real (fast-track terminal).
     Confirm,
     /// Refute the signal as spurious.
     Refute,
@@ -190,7 +213,12 @@ impl SignalEvent {
     #[must_use]
     pub fn name(self) -> &'static str {
         match self {
+            Self::Evaluate => "evaluate",
             Self::Validate => "validate",
+            Self::Action => "action",
+            Self::Monitor => "monitor",
+            Self::Feedback => "feedback",
+            Self::Close => "close",
             Self::Confirm => "confirm",
             Self::Refute => "refute",
         }
@@ -198,6 +226,9 @@ impl SignalEvent {
 }
 
 /// Builds a signal lifecycle state machine.
+///
+/// Supports both fast-track (Detected→Validated→Confirmed/Refuted)
+/// and full PV loop (Detected→Evaluated→Validated→Actioned→Monitoring).
 #[must_use]
 pub fn signal_lifecycle(machine_id: u64, entity_id: u64, timestamp: u64) -> StateMachine {
     let mut fsm = StateMachine::new(
@@ -209,24 +240,66 @@ pub fn signal_lifecycle(machine_id: u64, entity_id: u64, timestamp: u64) -> Stat
     );
 
     fsm.add_state(FsmState::new(1, "detected").initial());
-    fsm.add_state(FsmState::new(2, "validated"));
-    fsm.add_state(FsmState::new(3, "confirmed").terminal());
-    fsm.add_state(FsmState::new(4, "refuted").terminal());
+    fsm.add_state(FsmState::new(2, "evaluated"));
+    fsm.add_state(FsmState::new(3, "validated"));
+    fsm.add_state(FsmState::new(4, "actioned"));
+    fsm.add_state(FsmState::new(5, "monitoring"));
+    fsm.add_state(FsmState::new(6, "confirmed").terminal());
+    fsm.add_state(FsmState::new(7, "refuted").terminal());
 
+    // Fast-track: Detected → Validated (skip evaluation)
     fsm.add_transition(TransitionDef::new(
         SignalLifecycleState::Detected.id(),
         SignalEvent::Validate.name(),
         SignalLifecycleState::Validated.id(),
     ));
+    // PV Loop: Detected → Evaluated
+    fsm.add_transition(TransitionDef::new(
+        SignalLifecycleState::Detected.id(),
+        SignalEvent::Evaluate.name(),
+        SignalLifecycleState::Evaluated.id(),
+    ));
+    // Evaluated → Validated (assess causality)
+    fsm.add_transition(TransitionDef::new(
+        SignalLifecycleState::Evaluated.id(),
+        SignalEvent::Validate.name(),
+        SignalLifecycleState::Validated.id(),
+    ));
+    // Validated → Confirmed (fast-track close)
     fsm.add_transition(TransitionDef::new(
         SignalLifecycleState::Validated.id(),
         SignalEvent::Confirm.name(),
         SignalLifecycleState::Confirmed.id(),
     ));
+    // Validated → Refuted
     fsm.add_transition(TransitionDef::new(
         SignalLifecycleState::Validated.id(),
         SignalEvent::Refute.name(),
         SignalLifecycleState::Refuted.id(),
+    ));
+    // Validated → Actioned (PV loop continues)
+    fsm.add_transition(TransitionDef::new(
+        SignalLifecycleState::Validated.id(),
+        SignalEvent::Action.name(),
+        SignalLifecycleState::Actioned.id(),
+    ));
+    // Actioned → Monitoring
+    fsm.add_transition(TransitionDef::new(
+        SignalLifecycleState::Actioned.id(),
+        SignalEvent::Monitor.name(),
+        SignalLifecycleState::Monitoring.id(),
+    ));
+    // Monitoring → Detected (feedback loop)
+    fsm.add_transition(TransitionDef::new(
+        SignalLifecycleState::Monitoring.id(),
+        SignalEvent::Feedback.name(),
+        SignalLifecycleState::Detected.id(),
+    ));
+    // Monitoring → Confirmed (close loop)
+    fsm.add_transition(TransitionDef::new(
+        SignalLifecycleState::Monitoring.id(),
+        SignalEvent::Close.name(),
+        SignalLifecycleState::Confirmed.id(),
     ));
 
     fsm
@@ -544,12 +617,12 @@ mod tests {
     fn test_signal_lifecycle_structure() {
         let fsm = signal_lifecycle(1, 200, 1000);
         assert_eq!(fsm.name, "signal_lifecycle");
-        assert_eq!(fsm.state_count(), 4);
-        assert_eq!(fsm.transition_def_count(), 3);
+        assert_eq!(fsm.state_count(), 7);
+        assert_eq!(fsm.transition_def_count(), 9);
     }
 
     #[test]
-    fn test_signal_lifecycle_confirm_path() {
+    fn test_signal_lifecycle_fast_track_confirm() {
         let mut fsm = signal_lifecycle(1, 200, 1000);
 
         fsm.apply_transition(SignalEvent::Validate.name(), 2000);
@@ -561,7 +634,7 @@ mod tests {
     }
 
     #[test]
-    fn test_signal_lifecycle_refute_path() {
+    fn test_signal_lifecycle_fast_track_refute() {
         let mut fsm = signal_lifecycle(1, 200, 1000);
 
         fsm.apply_transition(SignalEvent::Validate.name(), 2000);
@@ -573,10 +646,59 @@ mod tests {
     #[test]
     fn test_signal_lifecycle_branching() {
         let fsm = signal_lifecycle(1, 200, 1000);
-        // From detected, only validate is available
+        // From detected, validate (fast-track) and evaluate (loop) are available
         assert!(fsm.can_transition(SignalEvent::Validate.name()));
+        assert!(fsm.can_transition(SignalEvent::Evaluate.name()));
         assert!(!fsm.can_transition(SignalEvent::Confirm.name()));
         assert!(!fsm.can_transition(SignalEvent::Refute.name()));
+    }
+
+    #[test]
+    fn test_signal_lifecycle_pv_loop_full() {
+        let mut fsm = signal_lifecycle(1, 200, 1000);
+
+        // DETECT → EVALUATE
+        fsm.apply_transition(SignalEvent::Evaluate.name(), 2000);
+        assert_eq!(fsm.current_state(), SignalLifecycleState::Evaluated.id());
+
+        // EVALUATE → ASSESS (validate)
+        fsm.apply_transition(SignalEvent::Validate.name(), 3000);
+        assert_eq!(fsm.current_state(), SignalLifecycleState::Validated.id());
+
+        // ASSESS → ACT
+        fsm.apply_transition(SignalEvent::Action.name(), 4000);
+        assert_eq!(fsm.current_state(), SignalLifecycleState::Actioned.id());
+
+        // ACT → MONITOR
+        fsm.apply_transition(SignalEvent::Monitor.name(), 5000);
+        assert_eq!(fsm.current_state(), SignalLifecycleState::Monitoring.id());
+        assert!(!fsm.is_terminal());
+
+        // MONITOR → close
+        fsm.apply_transition(SignalEvent::Close.name(), 6000);
+        assert_eq!(fsm.current_state(), SignalLifecycleState::Confirmed.id());
+        assert!(fsm.is_terminal());
+    }
+
+    #[test]
+    fn test_signal_lifecycle_pv_loop_feedback() {
+        let mut fsm = signal_lifecycle(1, 200, 1000);
+
+        // Run through to monitoring
+        fsm.apply_transition(SignalEvent::Evaluate.name(), 2000);
+        fsm.apply_transition(SignalEvent::Validate.name(), 3000);
+        fsm.apply_transition(SignalEvent::Action.name(), 4000);
+        fsm.apply_transition(SignalEvent::Monitor.name(), 5000);
+        assert_eq!(fsm.current_state(), SignalLifecycleState::Monitoring.id());
+
+        // Feedback → back to detected (new cycle)
+        fsm.apply_transition(SignalEvent::Feedback.name(), 6000);
+        assert_eq!(fsm.current_state(), SignalLifecycleState::Detected.id());
+        assert!(!fsm.is_terminal());
+
+        // Can run the loop again
+        fsm.apply_transition(SignalEvent::Evaluate.name(), 7000);
+        assert_eq!(fsm.current_state(), SignalLifecycleState::Evaluated.id());
     }
 
     // Workflow lifecycle tests

@@ -48,7 +48,10 @@ pub use workflow_lifecycle::TypesafeWorkflow;
 
 // Re-export state markers
 pub use case_lifecycle::{CaseAssessed, CaseClosed, CaseReceived, CaseTriaged};
-pub use signal_lifecycle::{SignalConfirmed, SignalDetected, SignalRefuted, SignalValidated};
+pub use signal_lifecycle::{
+    SignalActioned, SignalConfirmed, SignalDetected, SignalEvaluated, SignalMonitoring,
+    SignalRefuted, SignalValidated,
+};
 pub use submission_lifecycle::{
     SubmissionAcknowledged, SubmissionDraft, SubmissionSent, SubmissionSigned, SubmissionValidated,
 };
@@ -86,7 +89,10 @@ mod private {
 
     // Signal states
     impl Sealed for super::SignalDetected {}
+    impl Sealed for super::SignalEvaluated {}
     impl Sealed for super::SignalValidated {}
+    impl Sealed for super::SignalActioned {}
+    impl Sealed for super::SignalMonitoring {}
     impl Sealed for super::SignalConfirmed {}
     impl Sealed for super::SignalRefuted {}
 

@@ -42,7 +42,10 @@ pub use refinery::{
 };
 pub use registry::NodeRegistry;
 pub use simulation::{FlywheelState, Scenario, SimulationConfig, Trajectory, TrajectorySummary};
-pub use station::{StationEvent, StationEventNotification, station_event_to_flywheel};
+pub use station::{
+    LoopGuard, StationAction, StationEvent, StationEventNotification, flywheel_event_to_action,
+    flywheel_react, station_event_to_flywheel,
+};
 pub use thresholds::FlywheelThresholds;
 pub use vdag::{
     CascadeRecord, EvidenceQuality, FlywheelGoal, GradedCascadeResult, LearningInsight,

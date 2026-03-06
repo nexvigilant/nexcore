@@ -7613,6 +7613,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexcore-asm"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "nexcore-state-theory",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "nexcore-audio"
 version = "0.1.0"
 dependencies = [
@@ -7728,6 +7738,16 @@ name = "nexcore-cardiovascular"
 version = "1.0.0"
 dependencies = [
  "nexcore-lex-primitiva",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-cccp"
+version = "1.0.0"
+dependencies = [
+ "chrono",
+ "nexcore-vigilance",
  "serde",
  "serde_json",
 ]
@@ -8284,6 +8304,7 @@ name = "nexcore-homeostasis"
 version = "1.0.0"
 dependencies = [
  "nexcore-error",
+ "nexcore-flywheel",
  "nexcore-homeostasis-memory",
  "nexcore-homeostasis-primitives",
  "nexcore-homeostasis-storm",
@@ -8377,6 +8398,7 @@ name = "nexcore-immunity"
 version = "0.1.0"
 dependencies = [
  "nexcore-error",
+ "nexcore-flywheel",
  "nexcore-fs",
  "nexcore-lex-primitiva",
  "nexcore-spliceosome",
@@ -8407,6 +8429,7 @@ version = "0.1.0"
 dependencies = [
  "nexcore-chrono",
  "nexcore-error",
+ "nexcore-flywheel",
  "nexcore-id",
  "nexcore-lex-primitiva",
  "serde",
@@ -8534,12 +8557,14 @@ dependencies = [
  "nexcore-algovigilance",
  "nexcore-anatomy",
  "nexcore-antibodies",
+ "nexcore-asm",
  "nexcore-audio",
  "nexcore-brain",
  "nexcore-browser",
  "nexcore-build-orchestrator",
  "nexcore-caesura",
  "nexcore-cardiovascular",
+ "nexcore-cccp",
  "nexcore-ccim",
  "nexcore-ccp",
  "nexcore-chemivigilance",
@@ -9070,6 +9095,7 @@ dependencies = [
  "criterion",
  "nexcore-constants",
  "nexcore-error",
+ "nexcore-flywheel",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
@@ -9106,6 +9132,7 @@ dependencies = [
  "nexcore-edit-distance",
  "nexcore-error",
  "nexcore-fhir",
+ "nexcore-flywheel",
  "nexcore-lex-primitiva",
  "nexcore-openfda",
  "nexcore-preemptive-pv",
@@ -9204,8 +9231,13 @@ dependencies = [
  "html5ever",
  "image",
  "markup5ever_rcdom",
+ "nexcore-compositor",
  "nexcore-error",
  "nexcore-lex-primitiva",
+ "nexcore-os",
+ "nexcore-pal",
+ "nexcore-pal-linux",
+ "nexcore-shell",
  "pollster",
  "prima",
  "reqwest 0.12.28",
@@ -9430,6 +9462,7 @@ dependencies = [
  "nexcore-dtree",
  "nexcore-edit-distance",
  "nexcore-error",
+ "nexcore-flywheel",
  "nexcore-fs",
  "nexcore-lex-primitiva",
  "nexcore-measure",
@@ -9691,6 +9724,7 @@ dependencies = [
 name = "nexcore-trust"
 version = "0.1.0"
 dependencies = [
+ "nexcore-flywheel",
  "nexcore-lex-primitiva",
  "stem-math",
 ]

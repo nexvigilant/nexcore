@@ -131,6 +131,7 @@ pub mod types;
 
 // Structural modules: prelude, cross-domain transfer, T1 primitive inventory, T2/T3 composites
 pub mod composites;
+pub mod flywheel_bridge;
 pub mod prelude;
 pub mod primitives;
 pub mod transfer;

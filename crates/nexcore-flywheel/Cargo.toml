@@ -1,0 +1,15 @@
+[package]
+name = "nexcore-flywheel"
+version = "0.1.0"
+edition = "2024"
+description = "Three-node flywheel bridge with five autonomous loops for self-reinforcing feedback"
+license = "LicenseRef-NexVigilant-Proprietary"
+
+[dependencies]
+nexcore-chrono = { workspace = true }
+nexcore-error = { workspace = true }
+nexcore-lex-primitiva = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+[dev-dependencies]

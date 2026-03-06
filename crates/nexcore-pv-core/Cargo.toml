@@ -29,6 +29,7 @@ phf = { version = "0.11.2", features = ["macros"] }
 nexcore-fhir = { workspace = true }
 nexcore-openfda = { workspace = true }
 nexcore-proof-of-meaning = { workspace = true }
+nexcore-flywheel = { path = "../nexcore-flywheel" }
 
 [dev-dependencies]
 tempfile = { version = "3.10.1" }

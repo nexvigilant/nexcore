@@ -77,3 +77,7 @@ wksp/languages/prima
 data/
 docs/
 studio/
+
+# ML checkpoints
+crates/bert-burn/checkpoints*/
+crates/bert-burn/meta-v2/

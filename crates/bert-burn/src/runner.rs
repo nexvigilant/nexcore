@@ -50,7 +50,7 @@ fn batch_to_tensor<B: AutodiffBackend>(
     input_ids: &[Vec<i64>],
     device: &B::Device,
 ) -> Tensor<B, 2, Int> {
-    assert!(
+    debug_assert!(
         !input_ids.is_empty(),
         "batch_to_tensor: input_ids must not be empty"
     );
@@ -70,7 +70,7 @@ fn mask_to_pad_tensor<B: AutodiffBackend>(
     attention_mask: &[Vec<f32>],
     device: &B::Device,
 ) -> Tensor<B, 2, Bool> {
-    assert!(
+    debug_assert!(
         !attention_mask.is_empty(),
         "mask_to_pad_tensor: attention_mask must not be empty"
     );

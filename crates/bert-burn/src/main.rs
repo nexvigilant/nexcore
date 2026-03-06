@@ -15,17 +15,13 @@
     reason = "training vs inference branches share dropout logic intentionally"
 )]
 
-mod checkpoint;
-mod config;
-mod data;
-mod meta;
-mod model;
-mod runner;
-mod training;
-
+use bert_burn::checkpoint;
+use bert_burn::config::RunConfig;
+use bert_burn::data;
+use bert_burn::meta::{ObjectiveWeights, persist_run, print_leaderboard, score_run};
+use bert_burn::model;
+use bert_burn::runner;
 use clap::{Parser, Subcommand};
-use config::RunConfig;
-use meta::{ObjectiveWeights, persist_run, print_leaderboard, score_run};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Debug, Parser)]

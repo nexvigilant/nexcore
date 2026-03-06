@@ -16,8 +16,10 @@ pub mod algovigilance;
 pub mod anatomy;
 pub mod anatomy_db;
 pub mod antitransformer;
+pub mod asm;
 pub mod axioms;
 pub mod biology;
+pub mod boundary_detector;
 pub mod brain;
 pub mod brain_db;
 pub mod brand;
@@ -25,6 +27,7 @@ pub mod browser;
 pub mod ca;
 pub mod caesura;
 pub mod cargo;
+pub mod cccp;
 pub mod ccim;
 pub mod ccp;
 pub mod cep;
@@ -150,8 +153,10 @@ pub use adventure::*;
 pub use algovigilance::*;
 pub use anatomy::*;
 pub use antitransformer::*;
+pub use asm::*;
 pub use axioms::*;
 pub use biology::*;
+pub use boundary_detector::*;
 pub use brain::*;
 pub use brain_db::*;
 pub use brand::*;
@@ -159,6 +164,7 @@ pub use browser::*;
 pub use ca::*;
 pub use caesura::*;
 pub use cargo::*;
+pub use cccp::*;
 pub use ccp::*;
 pub use cep::*;
 pub use chemistry::*;
@@ -510,6 +516,10 @@ pub use pharmacovigilance::*;
 pub mod vault;
 pub use vault::*;
 
+// Knowledge Vault (Obsidian-compatible markdown vault operations)
+pub mod knowledge_vault;
+pub use knowledge_vault::*;
+
 // Build Orchestrator (CI/CD pipeline management)
 pub mod build_orchestrator;
 pub use build_orchestrator::*;
@@ -561,3 +571,7 @@ pub use hook_test::*;
 // Jupyter & Voila (kernel management, server status, notebook rendering)
 pub mod jupyter;
 pub use jupyter::*;
+
+// Station (WebMCP Hub config rail management)
+pub mod station;
+pub use station::*;

@@ -15,6 +15,9 @@ path = "src/main.rs"
 # Academy Forge (structured knowledge extraction + validation)
 academy-forge = { workspace = true }
 
+# Autonomous State Machine
+nexcore-asm = { path = "../nexcore-asm" }
+
 # NexCore unified crate (all modules consolidated)
 nexcore-vigilance = { workspace = true, features = ["viz"] }
 nexcore-vigil = { workspace = true }
@@ -62,6 +65,7 @@ nexcore-trust = { workspace = true }
 nexcore-guardian-engine = { workspace = true }
 counter-awareness = { workspace = true }
 nexcore-signal-fence = { workspace = true }
+nexcore-station = { workspace = true }
 nexcore-caesura = { workspace = true }
 nexcore-declension = { workspace = true }
 # Biological system crates (Claude Code anatomy)
@@ -238,6 +242,8 @@ nexcore-aggregate = { workspace = true }
 
 # Claude Care Process (PK engine for AI support interventions)
 nexcore-ccp = { workspace = true }
+# CCCP (Consultant's Client Care Process — 5-phase PV consulting pipeline)
+nexcore-cccp = { workspace = true }
 
 # Education Machine (Bayesian mastery, 5-phase FSM, spaced repetition)
 nexcore-education-machine = { workspace = true }

@@ -20,7 +20,9 @@
 pub mod academy_forge;
 
 pub mod api;
+pub mod asm;
 pub mod benefit_risk;
+pub mod boundary_detector;
 pub mod brain;
 
 // CLI wrapper tools (git, gh, systemctl, npm, filesystem)
@@ -209,6 +211,9 @@ pub mod compound_detector;
 
 // Claude Care Process (PK engine for AI support interventions)
 pub mod ccp;
+
+// CCCP (Consultant's Client Care Process — 5-phase PV consulting pipeline)
+pub mod cccp;
 
 // Education Machine (Bayesian mastery, 5-phase FSM, spaced repetition)
 pub mod education;
@@ -522,6 +527,9 @@ pub mod pharmacovigilance;
 // Vault (AES-256-GCM encryption, PBKDF2 key derivation, salt generation)
 pub mod vault;
 
+// Knowledge Vault (Obsidian-compatible markdown vault — read, search, write, tags)
+pub mod knowledge_vault;
+
 // Build Orchestrator (CI/CD pipeline: dry-run, stages, workspace, history, metrics)
 pub mod build_orchestrator;
 
@@ -563,3 +571,6 @@ pub mod jupyter;
 
 // Test History (cross-session test result tracking — query, flaky detection)
 pub mod test_history;
+
+// Station (WebMCP Hub config rail management — build, add-tool, list, export, coverage)
+pub mod station;

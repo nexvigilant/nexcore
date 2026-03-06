@@ -176,8 +176,7 @@ struct BioOntologySearchResponse {
 
 /// Search BioOntology for pharmacovigilance-relevant ontologies (MedDRA, SNOMED, etc.)
 async fn search_bioontology(term: &str, max_results: usize) -> Vec<(String, String, String)> {
-    // BioOntology API key (non-sensitive, public for development)
-    let api_key = "443f11f6-1067-4044-bcbd-72cacd506efb";
+    let api_key = std::env::var("BIOONTOLOGY_API_KEY").unwrap_or_else(|_| String::from("DEMO"));
 
     let encoded_term = urlencoding::encode(term);
 

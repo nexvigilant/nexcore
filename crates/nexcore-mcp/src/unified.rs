@@ -285,6 +285,16 @@ async fn dispatch_inner(
         "fda_bridge_batch" => typed(params, tools::guardian::fda_bridge_batch),
 
         // ====================================================================
+        // ASM — Autonomous State Machine (6)
+        // ====================================================================
+        "asm_register" => typed(params, tools::asm::register),
+        "asm_tick" => typed(params, tools::asm::tick),
+        "asm_state" => typed(params, tools::asm::state),
+        "asm_transition" => typed(params, tools::asm::force_transition),
+        "asm_history" => typed(params, tools::asm::history),
+        "asm_list" => typed(params, tools::asm::list),
+
+        // ====================================================================
         // MCP Lock Tools (3)
         // ====================================================================
         "mcp_lock" => typed(params, tools::mcp_lock::mcp_lock),
@@ -914,6 +924,17 @@ async fn dispatch_inner(
         "voila_render" => typed_async(params, tools::jupyter::voila_render).await,
         "voila_status" => typed_async(params, tools::jupyter::voila_status).await,
         "voila_list" => typed_async(params, tools::jupyter::voila_list).await,
+
+        // ====================================================================
+        // Station — WebMCP Hub Config Rails (6)
+        // ====================================================================
+        "station_build_config" => typed(params, tools::station::station_build_config),
+        "station_add_tool" => typed(params, tools::station::station_add_tool),
+        "station_list" => typed(params, tools::station::station_list),
+        "station_export" => typed(params, tools::station::station_export),
+        "station_coverage" => typed(params, tools::station::station_coverage),
+        "station_resolve" => typed(params, tools::station::station_resolve),
+        "station_verticals" => tools::station::station_verticals(),
 
         // ====================================================================
         // Primitive Validation Tools (4)
@@ -2706,6 +2727,14 @@ async fn dispatch_inner(
         "vault_generate_salt" => typed(params, tools::vault::vault_generate_salt),
         "vault_config_sample" => typed(params, tools::vault::vault_config_sample),
 
+        // ── Knowledge Vault (Obsidian-compatible markdown vault) ──────────
+        "knowledge_vault_read" => typed(params, tools::knowledge_vault::knowledge_vault_read),
+        "knowledge_vault_search" => typed(params, tools::knowledge_vault::knowledge_vault_search),
+        "knowledge_vault_list" => typed(params, tools::knowledge_vault::knowledge_vault_list),
+        "knowledge_vault_write" => typed(params, tools::knowledge_vault::knowledge_vault_write),
+        "knowledge_vault_move" => typed(params, tools::knowledge_vault::knowledge_vault_move),
+        "knowledge_vault_tags" => typed(params, tools::knowledge_vault::knowledge_vault_tags),
+
         // ── Build Orchestrator (CI/CD pipeline management) ────────────────
         "build_orchestrator_dry_run" => typed(
             params,
@@ -2754,6 +2783,13 @@ async fn dispatch_inner(
         // Markov chains (stationary distribution, n-step probabilities, ergodicity, classification)
         "markov_analyze" => typed(params, tools::markov::markov_analyze),
         "markov_from_data" => typed(params, tools::markov::markov_from_data),
+
+        // ── CCCP (Consultant's Client Care Process) ──────────────────────
+        "cccp_gap_analysis" => typed(params, tools::cccp::cccp_gap_analysis),
+        "cccp_plan" => typed(params, tools::cccp::cccp_plan),
+        "cccp_epa_readiness" => typed(params, tools::cccp::cccp_epa_readiness),
+        "cccp_evaluate" => typed(params, tools::cccp::cccp_evaluate),
+        "cccp_phase_info" => typed(params, tools::cccp::cccp_phase_info),
 
         // ====================================================================
         _ => Err(McpError::invalid_params(
@@ -3034,6 +3070,7 @@ fn unified_catalog_data() -> serde_json::Value {
             "signal": ["signal_detect", "signal_batch", "signal_thresholds"],
             "vigilance": ["vigilance_safety_margin", "vigilance_risk_score", "vigilance_harm_types", "vigilance_map_to_tov", "pv_signal_chart"],
             "guardian": ["guardian_homeostasis_tick", "guardian_evaluate_pv", "guardian_status", "guardian_reset", "guardian_inject_signal", "guardian_sensors_list", "guardian_actuators_list", "guardian_history", "guardian_subscribe", "guardian_originator_classify", "guardian_ceiling_for_originator", "guardian_space3d_compute", "guardian_adversarial_input", "adversarial_decision_probe", "pv_control_loop_tick", "fda_bridge_evaluate", "fda_bridge_batch"],
+            "asm": ["asm_register", "asm_tick", "asm_state", "asm_transition", "asm_history", "asm_list"],
             "vigil": ["vigil_status", "vigil_health", "vigil_emit_event", "vigil_memory_search", "vigil_memory_stats", "vigil_llm_stats", "vigil_source_control", "vigil_executor_control", "vigil_authority_config", "vigil_context_assemble", "vigil_authority_verify", "vigil_webhook_test", "vigil_source_config"],
             "skills": ["skill_scan", "skill_list", "skill_get", "skill_validate", "skill_search_by_tag", "skill_list_nested", "skill_taxonomy_query", "skill_taxonomy_list", "skill_categories_compute_intensive", "skill_orchestration_analyze", "skill_execute", "skill_schema", "skill_compile", "skill_compile_check", "vocab_skill_lookup", "primitive_skill_lookup", "skill_chain_lookup", "skill_route", "vocab_list", "nexcore_assist"],
             "guidelines": ["guidelines_search", "guidelines_get", "guidelines_categories", "guidelines_pv_all", "guidelines_url", "ich_lookup", "ich_search", "ich_guideline", "ich_stats"],
@@ -3104,6 +3141,7 @@ fn unified_catalog_data() -> serde_json::Value {
             "ast_query": ["ast_query_file", "ast_query_search", "ast_query_implementors"],
             "test_history": ["test_history_query", "test_history_flaky"],
             "diagram": ["diagram_render"],
+            "station": ["station_build_config", "station_add_tool", "station_list", "station_export", "station_coverage", "station_resolve", "station_verticals"],
             "hook_test": ["hook_test", "hook_test_all"],
             "jupyter": ["jupyter_kernels", "jupyter_kernelspecs", "jupyter_status", "jupyter_notebook_create", "jupyter_notebook_execute", "jupyter_pipeline", "voila_render", "voila_status", "voila_list"],
             "mcp_lock": ["mcp_lock", "mcp_unlock", "mcp_lock_status"],
@@ -3220,6 +3258,8 @@ fn unified_catalog_data() -> serde_json::Value {
             "compilation_space": ["compilation_point_compare", "compilation_point_summary", "compilation_point_presets", "compilation_catalog_lookup", "compilation_chain_validate", "compilation_chain_presets", "compilation_axes_catalog", "compilation_abstraction_levels", "compilation_distance"],
             "pharmacovigilance": ["pv_taxonomy_summary", "pv_taxonomy_primitive", "pv_taxonomy_composite", "pv_taxonomy_concept", "pv_taxonomy_chomsky", "pv_taxonomy_who_pillars", "pv_taxonomy_transfer", "pv_taxonomy_transfer_matrix", "pv_taxonomy_lex_symbols"],
             "vault": ["vault_derive_key", "vault_encrypt", "vault_decrypt", "vault_generate_salt", "vault_config_sample"],
+            "knowledge_vault": ["knowledge_vault_read", "knowledge_vault_search", "knowledge_vault_list", "knowledge_vault_write", "knowledge_vault_move", "knowledge_vault_tags"],
+            "cccp": ["cccp_gap_analysis", "cccp_plan", "cccp_epa_readiness", "cccp_evaluate", "cccp_phase_info"],
             "build_orchestrator": ["build_orchestrator_dry_run", "build_orchestrator_stages", "build_orchestrator_workspace", "build_orchestrator_history", "build_orchestrator_metrics"],
             "skills_engine": ["skill_quality_index", "skill_maturity", "skill_ksb_verify", "skill_ecosystem_score", "skill_dependency_graph", "skill_gap_analysis", "skill_evolution_track"],
             "ncbi": ["ncbi_esearch", "ncbi_esummary", "ncbi_efetch", "ncbi_elink", "ncbi_search_and_fetch", "ncbi_search_and_summarize"],

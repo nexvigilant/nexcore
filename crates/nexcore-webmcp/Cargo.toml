@@ -1,0 +1,19 @@
+[package]
+name = "nexcore-webmcp"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+description = "WebMCP config registry — NexVigilant's agent routing infrastructure. Stores, serves, and syncs browser automation configs."
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+reqwest = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]

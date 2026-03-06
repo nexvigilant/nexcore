@@ -1,0 +1,37 @@
+[package]
+name = "nexvigilant-terminal"
+version = "0.1.0"
+edition = "2024"
+authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
+license = "LicenseRef-NexVigilant-Proprietary"
+repository = "https://github.com/nexvigilant/nexcore"
+rust-version = "1.85"
+description = "NexVigilant Terminal — Tauri desktop app for agent observability and cloud shell"
+
+[[bin]]
+name = "nexvigilant-terminal"
+path = "src/main.rs"
+
+[lib]
+path = "src/lib.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# Phase 2: live backends wired
+nexcore-terminal = { path = "../nexcore-terminal" }
+nexcore-shell = { path = "../nexcore-shell" }
+nexcloud = { path = "../nexcloud" }
+nexcore-chrono = { workspace = true }
+vr-core = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+
+[lints]
+workspace = true

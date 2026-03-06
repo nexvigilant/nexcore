@@ -1,0 +1,21 @@
+[package]
+name = "nexcore-station"
+version = "0.1.0"
+edition.workspace = true
+authors.workspace = true
+description = "NexVigilant Station — PV tool resolution gate with confidence-scored config discovery"
+license.workspace = true
+repository.workspace = true
+
+[features]
+default = []
+live-feed = ["dep:reqwest"]
+integration = []
+
+[dependencies]
+nexcore-constants = { workspace = true }
+nexcore-error = { workspace = true }
+reqwest = { workspace = true, features = ["blocking"], optional = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+urlencoding = { workspace = true }

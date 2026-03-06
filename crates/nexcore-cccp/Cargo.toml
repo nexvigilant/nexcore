@@ -1,0 +1,15 @@
+[package]
+name = "nexcore-cccp"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+description = "Consultants' Client Care Process — 5-phase PV consulting workflow engine"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+nexcore-vigilance = { workspace = true }
+chrono = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

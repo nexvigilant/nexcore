@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexVigilant Terminal</title>
+  <style>
+    :root {
+      --bg-primary: #0a0e14;
+      --bg-secondary: #111822;
+      --bg-panel: #1a2233;
+      --border: #2a3a4e;
+      --text-primary: #e0e8f0;
+      --text-secondary: #8899aa;
+      --text-muted: #556677;
+      --accent-green: #4ade80;
+      --accent-blue: #60a5fa;
+      --accent-amber: #fbbf24;
+      --accent-red: #f87171;
+      --accent-emerald: #34d399;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--font-mono);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .status-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 4px 12px; background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border); font-size: 11px;
+      color: var(--text-secondary); -webkit-app-region: drag;
+      height: 28px; flex-shrink: 0;
+    }
+    .status-bar .left, .status-bar .right { display: flex; gap: 12px; align-items: center; }
+    .status-indicator { width: 6px; height: 6px; border-radius: 50%; }
+    .status-indicator.green { background: var(--accent-green); box-shadow: 0 0 4px var(--accent-green); }
+    .main-container { display: flex; flex: 1; overflow: hidden; }
+    .sidebar {
+      width: 240px; background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; flex-shrink: 0;
+    }
+    .sidebar-header {
+      padding: 12px 16px; font-size: 13px; font-weight: 600;
+      color: var(--accent-emerald); border-bottom: 1px solid var(--border);
+      letter-spacing: 0.5px;
+    }
+    .sidebar-section { padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .sidebar-section-title {
+      padding: 4px 16px; font-size: 10px; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--text-muted);
+    }
+    .service-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 16px; font-size: 12px; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .service-item:hover { background: var(--bg-panel); }
+    .service-item .name { flex: 1; }
+    .service-item .port { color: var(--text-muted); font-size: 10px; }
+    .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .tab-bar {
+      display: flex; background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border); height: 32px; flex-shrink: 0;
+    }
+    .tab {
+      padding: 0 16px; display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--text-secondary);
+      border-right: 1px solid var(--border); cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab:hover { color: var(--text-primary); background: var(--bg-panel); }
+    .tab.active {
+      color: var(--accent-emerald); background: var(--bg-primary);
+      border-bottom: 2px solid var(--accent-emerald);
+    }
+    .terminal-container {
+      flex: 1; padding: 12px; overflow-y: auto; font-size: 13px; line-height: 1.5;
+    }
+    .terminal-line { white-space: pre-wrap; }
+    .terminal-line.system { color: var(--accent-emerald); }
+    .terminal-line.info { color: var(--accent-blue); }
+    .terminal-line.warn { color: var(--accent-amber); }
+    .terminal-line.error { color: var(--accent-red); }
+    .terminal-line.muted { color: var(--text-muted); }
+    .prompt-line { display: flex; align-items: center; gap: 0; margin-top: 4px; }
+    .prompt { color: var(--accent-emerald); white-space: pre; }
+    .prompt-input {
+      flex: 1; background: none; border: none; color: var(--text-primary);
+      font-family: var(--font-mono); font-size: 13px; outline: none;
+      caret-color: var(--accent-emerald);
+    }
+    .bottom-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 4px 12px; background: var(--bg-secondary);
+      border-top: 1px solid var(--border); font-size: 10px;
+      color: var(--text-muted); height: 24px; flex-shrink: 0;
+    }
+    .mode-badge {
+      padding: 1px 6px; border-radius: 3px; font-size: 10px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .mode-badge.hybrid { background: #34d39920; color: var(--accent-emerald); border: 1px solid #34d39940; }
+    .mode-badge.shell { background: #60a5fa20; color: var(--accent-blue); border: 1px solid #60a5fa40; }
+    .mode-badge.regulatory { background: #fbbf2420; color: var(--accent-amber); border: 1px solid #fbbf2440; }
+    .mode-badge.ai { background: #a78bfa20; color: #a78bfa; border: 1px solid #a78bfa40; }
+    .dashboard-panel { display: none; flex: 1; padding: 16px; overflow-y: auto; }
+    .dashboard-panel.active { display: block; }
+    .metric-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px; margin-bottom: 16px;
+    }
+    .metric-card {
+      background: var(--bg-panel); border: 1px solid var(--border);
+      border-radius: 6px; padding: 12px;
+    }
+    .metric-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 4px; }
+    .metric-value { font-size: 24px; font-weight: 600; }
+    .metric-value.green { color: var(--accent-green); }
+    .event-list { list-style: none; }
+    .event-item {
+      display: flex; gap: 12px; padding: 6px 0;
+      border-bottom: 1px solid var(--border); font-size: 12px;
+    }
+    .event-time { color: var(--text-muted); min-width: 80px; }
+    .event-service { color: var(--accent-blue); min-width: 120px; }
+  </style>
+</head>
+<body>
+  <div class="status-bar">
+    <div class="left">
+      <span style="color: var(--accent-emerald); font-weight: 600;">NexVigilant Terminal</span>
+      <span class="status-indicator green" id="connectionStatus"></span>
+      <span id="cloudStatus">Cloud: --</span>
+    </div>
+    <div class="right">
+      <span id="sessionCount">Sessions: 0</span>
+      <span id="userInfo">matthew</span>
+    </div>
+  </div>
+  <div class="main-container">
+    <div class="sidebar">
+      <div class="sidebar-header">CLOUD SERVICES</div>
+      <div class="sidebar-section" id="serviceList">
+        <div class="sidebar-section-title">Loading...</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Applications</div>
+        <div id="appList"></div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="tab-bar">
+        <div class="tab active" data-tab="terminal" onclick="switchTab('terminal')">Terminal</div>
+        <div class="tab" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</div>
+        <div class="tab" data-tab="events" onclick="switchTab('events')">Events</div>
+      </div>
+      <div class="terminal-container" id="terminalPanel">
+        <div class="terminal-line system">NexVigilant Terminal v0.1.0</div>
+        <div class="terminal-line muted">Tauri v2 + nexcore-terminal + nexcloud + nexcore-shell</div>
+        <div class="terminal-line muted">-----------------------------------------------------------</div>
+        <div class="terminal-line info">Modes: shell | regulatory (nexvig&gt;) | ai (@claude) | hybrid</div>
+        <div class="terminal-line muted">Type /help for commands, Ctrl+Shift+P for command palette</div>
+        <div class="terminal-line"></div>
+        <div id="terminalOutput"></div>
+        <div class="prompt-line">
+          <span class="prompt" id="promptText">nexvig&gt; </span>
+          <input class="prompt-input" id="terminalInput" autofocus spellcheck="false"
+                 placeholder="Enter command..." />
+        </div>
+      </div>
+      <div class="dashboard-panel" id="dashboardPanel">
+        <div class="metric-grid" id="metricGrid"></div>
+      </div>
+      <div class="dashboard-panel" id="eventsPanel">
+        <ul class="event-list" id="eventList"></ul>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <span class="mode-badge hybrid" id="modeBadge">HYBRID</span>
+      <span id="sessionId">No active session</span>
+    </div>
+    <div style="display: flex; gap: 12px;">
+      <span>MCP: <span id="mcpCount">0</span></span>
+      <span>AI: <span id="aiTokens">0</span></span>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

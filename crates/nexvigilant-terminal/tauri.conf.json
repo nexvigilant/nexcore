@@ -1,0 +1,35 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "NexVigilant Terminal",
+  "version": "0.1.0",
+  "identifier": "com.nexvigilant.terminal",
+  "build": {
+    "beforeBuildCommand": "",
+    "beforeDevCommand": "",
+    "frontendDist": "./frontend/dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "NexVigilant Terminal",
+        "width": 1400,
+        "height": 900,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "transparent": false,
+        "minWidth": 800,
+        "minHeight": 600
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'"
+    }
+  },
+  "bundle": {
+    "active": false,
+    "targets": "all",
+    "icon": ["icons/icon.png"]
+  }
+}

@@ -95,6 +95,22 @@ pub enum DisplayCommand {
         /// Source node identifier for hit-testing.
         node_id: Option<usize>,
     },
+    /// Blit raw RGBA framebuffer data at a position.
+    ///
+    /// Used by the NVOS compositor bridge to upload CPU-composited
+    /// frames into the GPU pipeline.
+    ///
+    /// Tier: T2-C (μ + ∂ — framebuffer_mapping at boundary)
+    BlitRgba {
+        /// Target rectangle on screen.
+        rect: Rect,
+        /// Source framebuffer width in pixels.
+        width: u32,
+        /// Source framebuffer height in pixels.
+        height: u32,
+        /// Raw RGBA pixel data (4 bytes per pixel).
+        data: Vec<u8>,
+    },
 }
 
 impl DisplayCommand {
@@ -108,6 +124,7 @@ impl DisplayCommand {
             | Self::StrokeLine { node_id, .. }
             | Self::DrawText { node_id, .. }
             | Self::DrawImage { node_id, .. } => *node_id,
+            Self::BlitRgba { .. } => None,
         }
     }
 
@@ -161,6 +178,7 @@ impl DisplayCommand {
                     height: approx_height,
                 })
             }
+            Self::BlitRgba { rect, .. } => Some(*rect),
         }
     }
 }

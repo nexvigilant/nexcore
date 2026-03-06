@@ -11,6 +11,10 @@ description = "NexVigilant Browser - 100% Rust rendering engine"
 name = "nexbrowser"
 path = "src/main.rs"
 
+[[bin]]
+name = "nvos-desktop"
+path = "src/nvos_desktop.rs"
+
 [dependencies]
 # Window & GPU
 winit = "0.30"
@@ -52,6 +56,13 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Utilities
 bytemuck = { version = "1", features = ["derive"] }
+
+# NVOS Desktop bridge (compositor → GPU renderer)
+nexcore-compositor = { workspace = true }
+nexcore-shell = { workspace = true }
+nexcore-os = { workspace = true }
+nexcore-pal = { workspace = true }
+nexcore-pal-linux = { workspace = true }
 
 [dev-dependencies]
 tempfile = { version = "3.10.1" }

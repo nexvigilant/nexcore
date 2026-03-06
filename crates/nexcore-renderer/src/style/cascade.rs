@@ -431,6 +431,18 @@ impl<'a> CascadeResolver<'a> {
                 style.display = Display::Block;
                 style.margin.bottom = 8.0;
             }
+            // Non-visual elements — hidden per UA stylesheet
+            "head" | "title" | "meta" | "link" | "script" | "style" | "noscript" | "template"
+            | "datalist" | "colgroup" | "col" | "param" | "source" | "track" | "area" | "base" => {
+                style.display = Display::None;
+            }
+            "br" => {
+                // Line break — display as block with zero height to force line break
+                style.display = Display::Block;
+            }
+            "img" => {
+                style.display = Display::Inline;
+            }
             _ => {}
         }
     }
@@ -930,5 +942,45 @@ mod tests {
         assert_eq!(decls[0].1, "red");
         assert_eq!(decls[1].0, "font-size");
         assert_eq!(decls[1].1, "14px");
+    }
+
+    #[test]
+    fn ua_hides_head_title_style_script() {
+        let html = "<html><head><title>Test</title><style>p{}</style></head><body><p>Hello</p></body></html>";
+        let arena = Arena::parse(html);
+        let styled = super::super::StyledNode::from_arena(&arena, &[]);
+
+        fn find_display(
+            node: &super::super::StyledNode,
+            arena: &Arena,
+            results: &mut Vec<(String, super::super::Display)>,
+        ) {
+            if let Some(tag) = arena.tag(node.node_id) {
+                results.push((tag.to_string(), node.style.display));
+            }
+            for child in &node.children {
+                find_display(child, arena, results);
+            }
+        }
+
+        let mut results = Vec::new();
+        find_display(&styled, &arena, &mut results);
+
+        for (tag, disp) in &results {
+            if matches!(tag.as_str(), "head" | "title" | "style") {
+                assert_eq!(
+                    *disp,
+                    super::super::Display::None,
+                    "{tag} should be Display::None"
+                );
+            }
+            if matches!(tag.as_str(), "body" | "p" | "html") {
+                assert_ne!(
+                    *disp,
+                    super::super::Display::None,
+                    "{tag} should NOT be Display::None"
+                );
+            }
+        }
     }
 }

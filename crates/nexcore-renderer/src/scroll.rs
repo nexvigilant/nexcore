@@ -304,6 +304,17 @@ fn offset_command(cmd: &DisplayCommand, sx: f32, sy: f32) -> DisplayCommand {
             rect: offset_rect(rect, sx, sy),
             node_id: *node_id,
         },
+        DisplayCommand::BlitRgba {
+            rect,
+            width,
+            height,
+            data,
+        } => DisplayCommand::BlitRgba {
+            rect: offset_rect(rect, sx, sy),
+            width: *width,
+            height: *height,
+            data: data.clone(),
+        },
     }
 }
 

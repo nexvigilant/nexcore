@@ -759,6 +759,14 @@ fn translate_command_gpu_text(
         DisplayCommand::DrawImage { src, rect, .. } => {
             draw_image(scene, image_cache, src, rect);
         }
+        DisplayCommand::BlitRgba {
+            rect,
+            width,
+            height,
+            data,
+        } => {
+            blit_rgba(scene, rect, *width, *height, data);
+        }
     }
 }
 
@@ -817,6 +825,14 @@ fn translate_command(
         }
         DisplayCommand::DrawImage { src, rect, .. } => {
             draw_image(scene, image_cache, src, rect);
+        }
+        DisplayCommand::BlitRgba {
+            rect,
+            width,
+            height,
+            data,
+        } => {
+            blit_rgba(scene, rect, *width, *height, data);
         }
     }
 }
@@ -931,6 +947,43 @@ fn draw_image(scene: &mut Scene, cache: &mut ImageCache, src: &str, rect: &Rect)
         };
         fill_rect(scene, rect, placeholder_color);
     }
+}
+
+/// Render a `BlitRgba` command into the Vello scene.
+///
+/// Uploads raw RGBA framebuffer data as a Vello image and draws it
+/// at the target rectangle. Used by the NVOS compositor bridge.
+///
+/// Tier: T2-C (μ + ∂ — framebuffer_mapping at boundary)
+fn blit_rgba(scene: &mut Scene, rect: &Rect, width: u32, height: u32, data: &[u8]) {
+    if width == 0 || height == 0 || data.is_empty() {
+        return;
+    }
+
+    let blob = peniko::Blob::from(data.to_vec());
+    let image_data = peniko::ImageData {
+        data: blob,
+        format: peniko::ImageFormat::Rgba8,
+        alpha_type: peniko::ImageAlphaType::Alpha,
+        width,
+        height,
+    };
+
+    let scale_x = if width > 0 {
+        f64::from(rect.width) / f64::from(width)
+    } else {
+        1.0
+    };
+    let scale_y = if height > 0 {
+        f64::from(rect.height) / f64::from(height)
+    } else {
+        1.0
+    };
+
+    let transform = kurbo::Affine::translate((f64::from(rect.x), f64::from(rect.y)))
+        * kurbo::Affine::scale_non_uniform(scale_x, scale_y);
+
+    scene.draw_image(&image_data, transform);
 }
 
 /// Render a `DrawText` command into the Vello scene.

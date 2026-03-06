@@ -65,7 +65,7 @@ impl LayoutEngine {
     /// Build layout tree from styled nodes, using arena for content extraction.
     pub fn layout(&mut self, root: &StyledNode, viewport: Rect, arena: &Arena) -> LayoutBox {
         self.taffy.clear();
-        let root_node = self.build_taffy_tree(root);
+        let root_node = self.build_taffy_tree(root, arena);
         let available = Size {
             width: AvailableSpace::Definite(viewport.width),
             height: AvailableSpace::Definite(viewport.height),
@@ -76,13 +76,36 @@ impl LayoutEngine {
         self.extract_layout(root_node, root, 0.0, 0.0, arena)
     }
 
-    fn build_taffy_tree(&mut self, styled: &StyledNode) -> NodeId {
-        let style = self.convert_style(&styled.style);
+    fn build_taffy_tree(&mut self, styled: &StyledNode, arena: &Arena) -> NodeId {
+        let mut style = self.convert_style(&styled.style);
+
+        // Text nodes need intrinsic size — taffy gives 0×0 to leaves without it
+        if let Some(NodeKind::Text(text)) = arena.kind(styled.node_id) {
+            let trimmed = text.trim();
+            if !trimmed.is_empty() {
+                let font_size = styled.style.font_size;
+                let line_height = styled.style.line_height;
+                // Approximate: char width ≈ font_size * 0.6 (matches paint module)
+                let text_width = trimmed.len() as f32 * font_size * 0.6;
+                let text_height = font_size * line_height;
+                style.min_size = Size {
+                    width: Dimension::Length(text_width),
+                    height: Dimension::Length(text_height),
+                };
+            } else {
+                // Whitespace-only text nodes: zero size
+                style.size = Size {
+                    width: Dimension::Length(0.0),
+                    height: Dimension::Length(0.0),
+                };
+            }
+        }
+
         let children: Vec<NodeId> = styled
             .children
             .iter()
             .filter(|c| c.style.display != Display::None)
-            .map(|c| self.build_taffy_tree(c))
+            .map(|c| self.build_taffy_tree(c, arena))
             .collect();
         self.taffy
             .new_with_children(style, &children)

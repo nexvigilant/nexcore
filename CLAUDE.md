@@ -1,6 +1,10 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # CLAUDE.md — NexCore
 
-Rust monorepo: 215 crates across 4 layers, Edition 2024 (Rust 1.85+).
+Rust monorepo: 231 workspace members across 4 layers, Edition 2024 (Rust 1.85+).
 
 ## Benchmark Governance (INVARIANT)
 
@@ -18,28 +22,34 @@ This rule is ABSOLUTE. It overrides convenience, velocity, and scope pressure.
 ## Build Commands
 
 ```bash
-# Workspace builds (from ~/nexcore/)
-cargo build -p <crate-name>            # Single crate
-cargo test -p <crate-name> --lib       # Unit tests
+# Single crate (preferred — faster than workspace)
+cargo build -p <crate-name>
+cargo test -p <crate-name> --lib       # Unit tests only
 cargo clippy -p <crate-name> -- -D warnings
-
-# Or from crate directory
-cd crates/<crate> && cargo build --release
+cargo test -p <crate-name> -- <test_name>  # Single test
 
 # Key binaries
-cargo build -p nexcore-mcp --release   # MCP server (84MB, ~2min)
+cargo build -p nexcore-mcp --release   # MCP server (~2min, restart Claude Code after)
+cargo build -p nexcore-api --release   # REST API server
 cargo build -p nexcore-brain --release # Brain CLI
 
-# Rebuild MCP tools (restart Claude Code to pick up new binary)
-cargo build -p nexcore-mcp --release
-
-# Justfile (530 recipes — preferred entry point)
-just check <crate>     # cargo check
-just clippy <crate>    # cargo clippy
-just test <crate>      # cargo test
-just crate-count       # inventory
-just validate          # DAG validation pipeline
-just validate-seq      # Sequential fallback (fmt-check → clippy → test → anatomy-check)
+# Justfile (86 recipes — preferred entry point)
+just check-crate <crate>  # cargo check single crate
+just test-crate <crate>   # cargo test single crate
+just test-match <crate> <pattern>  # Test with pattern filter
+just clippy               # Workspace clippy
+just fmt                  # Format all
+just validate             # Full CI: fmt → clippy → test → docs → build (DAG orchestrator)
+just validate-quick       # Quick: check → clippy → test-core (DAG orchestrator)
+just validate-seq         # Sequential fallback (no orchestrator)
+just sweep                # Quality sweep: fmt → clippy → deps → audit → test-compile
+just sweep-fix            # Quality sweep with auto-fix
+just coverage <crate>     # Test coverage via tarpaulin
+just mcp-build            # Build MCP server
+just services             # Build all service binaries
+just up                   # Launch all services (build + tmux + API)
+just up-fast              # Launch services (skip build)
+just down                 # Graceful shutdown
 ```
 
 ## Layer Architecture
@@ -91,7 +101,8 @@ Claude Code ←stdio→ nexcore-mcp (direct binary)
 - **No unsafe** — `#![forbid(unsafe_code)]` workspace-wide
 - **No Python** — Enforced by hook. Shell glue in zsh only.
 - **Workspace deps** — Define in root `Cargo.toml`, crates reference via `{ workspace = true }`
-- **Error types** — `anyhow::Error` for binaries, crate-specific error enums for libraries
+- **Error types** — `nexcore-error` + `nexcore-error-derive` (anyhow removed). Crate-specific error enums for libraries.
+- **Sovereignty campaign** — External deps actively replaced by internal crates: `anyhow`→`nexcore-error`, `base64`/`hex`→`nexcore-codec`, `dirs`/`glob`/`walkdir`→`nexcore-fs`, `uuid`→`nexcore-id`, `once_cell`→`std::sync::LazyLock`, `thiserror`→`nexcore-error-derive`. Check root `Cargo.toml` comments before adding external deps.
 - **Write source files BEFORE `lib.rs`** — `cargo fmt` strips `mod` declarations for missing files
 - **Edition 2024 patterns** — `|&(_, c)| *c` not `|(_, &c)| c`
 
@@ -110,18 +121,37 @@ Claude Code ←stdio→ nexcore-mcp (direct binary)
 
 ```
 ~/nexcore/
-├── Cargo.toml          # Workspace root (174 members)
-├── Justfile            # 530 recipes (preferred CLI)
-├── crates/             # 172 Rust crates (4 layers)
+├── Cargo.toml          # Workspace root (231 members)
+├── justfile            # 86 recipes (preferred CLI)
+├── crates/             # 229 directories (4 layers)
 ├── tools/              # 2 utility crates (crate-converter, dag-publish)
 ├── studio/             # Separate: Next.js portal (see studio/CLAUDE.md)
 ├── scripts/            # Build/audit scripts
 ├── docs/               # Documentation
 │   └── sops/           # All SOPs (OPS/, QA/, DEV/, DEV-BIO/, SEC/, SPECIALIZED/)
+├── boot/               # NexCore OS boot scripts (QEMU, Docker, initramfs)
 ├── kellnr/             # Crate registry (docker-compose)
 ├── data/, dna/, ksb/   # Reference data
 └── .build-orchestrator/ # DAG state
 ```
+
+## Build Orchestrator
+
+DAG-based build pipeline (`nexcore-build-orchestrator`) replaces sequential CI:
+- `just validate` — full pipeline: fmt → (clippy | test | docs) → build (parallel waves)
+- `just validate-quick` — fast: check → (clippy | test-core)
+- `just orc-status` — last pipeline status
+- `just orc-plan` — dry-run DAG wave visualization
+- State persisted in `.build-orchestrator/`
+- Web dashboard: `just orc-serve` (port 3100)
+
+## NexCore OS Subsystem
+
+Experimental OS layer: `nexcore-pal` (Platform Abstraction), `nexcore-os`, `nexcore-compositor`, `nexcore-shell`, `nexcore-init` (PID 1).
+- `just os-run` — virtual mode (default: desktop, 10 ticks)
+- `just os-test` — test all OS crates
+- `just os-boot-test` — all 3 form factors
+- QEMU boot via `boot/` scripts
 
 ## AI Engineering Bible Tools (19 tools, 5 modules)
 

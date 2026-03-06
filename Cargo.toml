@@ -74,181 +74,184 @@ utoipa = { version = "5.3", features = ["axum_extras", "chrono"] }
 # walkdir — REPLACED by nexcore-fs::walk (sovereignty campaign)
 
 # Internal Workspace Dependencies (Prima)
-prima = { path = "crates/prima" }
-prima-academy = { path = "crates/prima-academy" }
-prima-chem = { path = "crates/prima-chem" }
-prima-codegen = { path = "crates/prima-codegen" }
-prima-mcp-server = { path = "crates/prima-mcp-server" }
-prima-pipeline = { path = "crates/prima-pipeline" }
+prima = { path = "crates/prima", version = "0.1.0" }
+prima-academy = { path = "crates/prima-academy", version = "0.1.0" }
+prima-chem = { path = "crates/prima-chem", version = "0.1.0" }
+prima-codegen = { path = "crates/prima-codegen", version = "0.1.0" }
+prima-mcp-server = { path = "crates/prima-mcp-server", version = "0.1.0" }
+prima-pipeline = { path = "crates/prima-pipeline", version = "0.1.0" }
 
 # Internal Workspace Dependencies (NexCore)
-academy-forge = { path = "crates/academy-forge" }
-antitransformer = { path = "crates/antitransformer" }
-borrow-miner = { path = "crates/borrow-miner" }
-core-true = { path = "crates/core-true" }
-counter-awareness = { path = "crates/counter-awareness" }
-disney-loop = { path = "crates/disney-loop" }
-grounded = { path = "crates/grounded" }
-integrity-calc = { path = "crates/integrity-calc" }
-nexcloud = { path = "crates/nexcloud" }
-nexcore-aggregate = { path = "crates/nexcore-aggregate" }
-nexcore-algovigilance = { path = "crates/nexcore-algovigilance" }
-nexcore-anatomy = { path = "crates/nexcore-anatomy" }
-nexcore-antibodies = { path = "crates/nexcore-antibodies" }
-nexcore-api = { path = "crates/nexcore-api" }
-nexcore-audio = { path = "crates/nexcore-audio" }
-nexcore-bicone = { path = "crates/nexcore-bicone" }
-nexcore-brain = { path = "crates/nexcore-brain" }
-nexcore-build-orchestrator = { path = "crates/nexcore-build-orchestrator" }
-nexcore-browser = { path = "crates/nexcore-browser" }
-nexcore-caesura = { path = "crates/nexcore-caesura" }
-nexcore-cardiovascular = { path = "crates/nexcore-cardiovascular" }
-nexcore-ccp = { path = "crates/nexcore-ccp" }
-nexcore-ccim = { path = "crates/nexcore-ccim" }
-nexcore-chrono = { path = "crates/nexcore-chrono", features = ["serde"] }
-nexcore-circulatory = { path = "crates/nexcore-circulatory" }
-nexcore-codec = { path = "crates/nexcore-codec" }
-nexcore-clearance = { path = "crates/nexcore-clearance" }
-nexcore-combinatorics = { path = "crates/nexcore-combinatorics" }
-nexcore-compilation-space = { path = "crates/nexcore-compilation-space" }
-nexcore-compliance = { path = "crates/nexcore-compliance" }
-nexcore-compositor = { path = "crates/nexcore-compositor" }
-nexcore-compound-registry = { path = "crates/nexcore-compound-registry" }
-nexcore-constants = { path = "crates/nexcore-constants" }
-nexcore-config = { path = "crates/nexcore-config" }
-nexcore-cognition = { path = "crates/nexcore-cognition" }
-nexcore-cortex = { path = "crates/nexcore-cortex" }
-nexcore-ctvp = { path = "crates/nexcore-ctvp" }
-nexcore-cytokine = { path = "crates/nexcore-cytokine" }
-nexcore-db = { path = "crates/nexcore-db" }
-nexcore-declension = { path = "crates/nexcore-declension" }
-nexcore-digestive = { path = "crates/nexcore-digestive" }
-nexcore-dna = { path = "crates/nexcore-dna" }
-nexcore-domain-primitives = { path = "crates/nexcore-domain-primitives" }
-nexcore-downloads-scanner = { path = "crates/nexcore-downloads-scanner" }
-nexcore-dtree = { path = "crates/nexcore-dtree" }
-nexcore-edit-distance = { path = "crates/nexcore-edit-distance" }
-nexcore-education-machine = { path = "crates/nexcore-education-machine" }
-nexcore-energy = { path = "crates/nexcore-energy" }
-nexcore-engram = { path = "crates/nexcore-engram" }
-nexcore-error = { path = "crates/nexcore-error" }
-nexcore-error-derive = { path = "crates/nexcore-error-derive" }
-nexcore-faers-etl = { path = "crates/nexcore-faers-etl" }
-nexcore-fda-guidance = { path = "crates/nexcore-fda-guidance" }
-nexcore-fhir = { path = "crates/nexcore-fhir" }
-nexcore-firebase = { path = "crates/nexcore-firebase" }
-nexcore-forge-strategy = { path = "crates/nexcore-forge-strategy" }
-nexcore-fs = { path = "crates/nexcore-fs" }
-nexcore-ghost = { path = "crates/nexcore-ghost" }
-nexcore-grammar-lab = { path = "crates/nexcore-grammar-lab" }
-nexcore-guardian-engine = { path = "crates/nexcore-guardian-engine" }
-nexcore-harm-taxonomy = { path = "crates/nexcore-harm-taxonomy" }
-nexcore-hash = { path = "crates/nexcore-hash" }
+academy-forge = { path = "crates/academy-forge", version = "1.0.0" }
+antitransformer = { path = "crates/antitransformer", version = "1.0.0" }
+borrow-miner = { path = "crates/borrow-miner", version = "1.0.0" }
+core-true = { path = "crates/core-true", version = "0.1.0" }
+counter-awareness = { path = "crates/counter-awareness", version = "1.0.0" }
+disney-loop = { path = "crates/disney-loop", version = "1.0.0" }
+grounded = { path = "crates/grounded", version = "1.0.0" }
+integrity-calc = { path = "crates/integrity-calc", version = "1.0.0" }
+nexcloud = { path = "crates/nexcloud", version = "1.0.0" }
+nexcore-aggregate = { path = "crates/nexcore-aggregate", version = "1.0.0" }
+nexcore-algovigilance = { path = "crates/nexcore-algovigilance", version = "1.0.0" }
+nexcore-anatomy = { path = "crates/nexcore-anatomy", version = "1.0.0" }
+nexcore-antibodies = { path = "crates/nexcore-antibodies", version = "1.0.0" }
+nexcore-api = { path = "crates/nexcore-api", version = "1.0.0" }
+nexcore-audio = { path = "crates/nexcore-audio", version = "0.1.0" }
+nexcore-bicone = { path = "crates/nexcore-bicone", version = "0.1.0" }
+nexcore-brain = { path = "crates/nexcore-brain", version = "1.0.0" }
+nexcore-build-orchestrator = { path = "crates/nexcore-build-orchestrator", version = "1.0.0" }
+nexcore-browser = { path = "crates/nexcore-browser", version = "0.1.0" }
+nexcore-caesura = { path = "crates/nexcore-caesura", version = "1.0.0" }
+nexcore-cardiovascular = { path = "crates/nexcore-cardiovascular", version = "1.0.0" }
+nexcore-ccp = { path = "crates/nexcore-ccp", version = "1.0.0" }
+nexcore-cccp = { path = "crates/nexcore-cccp", version = "1.0.0" }
+nexcore-ccim = { path = "crates/nexcore-ccim", version = "0.1.0" }
+nexcore-chrono = { path = "crates/nexcore-chrono", version = "0.1.0", features = ["serde"] }
+nexcore-circulatory = { path = "crates/nexcore-circulatory", version = "1.0.0" }
+nexcore-codec = { path = "crates/nexcore-codec", version = "0.1.0" }
+nexcore-clearance = { path = "crates/nexcore-clearance", version = "1.0.0" }
+nexcore-combinatorics = { path = "crates/nexcore-combinatorics", version = "0.1.0" }
+nexcore-compilation-space = { path = "crates/nexcore-compilation-space", version = "0.1.0" }
+nexcore-compliance = { path = "crates/nexcore-compliance", version = "1.0.0" }
+nexcore-compositor = { path = "crates/nexcore-compositor", version = "0.1.0" }
+nexcore-compound-registry = { path = "crates/nexcore-compound-registry", version = "0.1.0" }
+nexcore-constants = { path = "crates/nexcore-constants", version = "1.0.0" }
+nexcore-config = { path = "crates/nexcore-config", version = "0.1.0" }
+nexcore-cognition = { path = "crates/nexcore-cognition", version = "0.1.0" }
+nexcore-cortex = { path = "crates/nexcore-cortex", version = "0.1.0" }
+nexcore-ctvp = { path = "crates/nexcore-ctvp", version = "1.0.0" }
+nexcore-cytokine = { path = "crates/nexcore-cytokine", version = "1.0.0" }
+nexcore-db = { path = "crates/nexcore-db", version = "1.0.0" }
+nexcore-declension = { path = "crates/nexcore-declension", version = "1.0.0" }
+nexcore-digestive = { path = "crates/nexcore-digestive", version = "1.0.0" }
+nexcore-dna = { path = "crates/nexcore-dna", version = "1.0.0" }
+nexcore-domain-primitives = { path = "crates/nexcore-domain-primitives", version = "0.1.0" }
+nexcore-downloads-scanner = { path = "crates/nexcore-downloads-scanner", version = "0.1.0" }
+nexcore-dtree = { path = "crates/nexcore-dtree", version = "1.0.0" }
+nexcore-edit-distance = { path = "crates/nexcore-edit-distance", version = "1.0.0" }
+nexcore-education-machine = { path = "crates/nexcore-education-machine", version = "0.1.0" }
+nexcore-energy = { path = "crates/nexcore-energy", version = "0.1.0" }
+nexcore-engram = { path = "crates/nexcore-engram", version = "0.1.0" }
+nexcore-error = { path = "crates/nexcore-error", version = "0.1.0" }
+nexcore-error-derive = { path = "crates/nexcore-error-derive", version = "1.0.0" }
+nexcore-faers-etl = { path = "crates/nexcore-faers-etl", version = "1.0.0" }
+nexcore-fda-guidance = { path = "crates/nexcore-fda-guidance", version = "1.0.0" }
+nexcore-fhir = { path = "crates/nexcore-fhir", version = "1.0.0" }
+nexcore-firebase = { path = "crates/nexcore-firebase", version = "1.0.0" }
+nexcore-forge-strategy = { path = "crates/nexcore-forge-strategy", version = "0.1.0" }
+nexcore-fs = { path = "crates/nexcore-fs", version = "0.1.0" }
+nexcore-ghost = { path = "crates/nexcore-ghost", version = "1.0.0" }
+nexcore-grammar-lab = { path = "crates/nexcore-grammar-lab", version = "1.0.0" }
+nexcore-guardian-engine = { path = "crates/nexcore-guardian-engine", version = "1.0.0" }
+nexcore-harm-taxonomy = { path = "crates/nexcore-harm-taxonomy", version = "1.0.0" }
+nexcore-hash = { path = "crates/nexcore-hash", version = "0.1.0" }
 # nexcore-hooks — REMOVED 2026-02-22 (dead crate, see ~/.claude/hooks/archive/AUDIT-2026-02-22.md)
-nexcore-hormone-types = { path = "crates/nexcore-hormone-types" }
-nexcore-hormones = { path = "crates/nexcore-hormones" }
-nexcore-id = { path = "crates/nexcore-id", features = ["serde"] }
-nexcore-immunity = { path = "crates/nexcore-immunity" }
-nexcore-insight = { path = "crates/nexcore-insight" }
-nexcore-integumentary = { path = "crates/nexcore-integumentary" }
-nexcore-integrity = { path = "crates/nexcore-integrity" }
-nexcore-jeopardy = { path = "crates/nexcore-jeopardy" }
-nexcore-knowledge = { path = "crates/nexcore-knowledge" }
-nexcore-knowledge-engine = { path = "crates/nexcore-knowledge-engine" }
-nexcore-laboratory = { path = "crates/nexcore-laboratory" }
-nexcore-labs = { path = "crates/nexcore-labs" }
-nexcore-lex-primitiva = { path = "crates/nexcore-lex-primitiva" }
-nexcore-lymphatic = { path = "crates/nexcore-lymphatic" }
-nexcore-mcp = { path = "crates/nexcore-mcp" }
-nexcore-mcp-hot = { path = "crates/nexcore-mcp-hot" }
-nexcore-measure = { path = "crates/nexcore-measure" }
-nexcore-mesh = { path = "crates/nexcore-mesh" }
-nexcore-model-checker = { path = "crates/nexcore-model-checker" }
-nexcore-muscular = { path = "crates/nexcore-muscular" }
-nexcore-nervous = { path = "crates/nexcore-nervous" }
-nexcore-notebooklm = { path = "crates/nexcore-notebooklm" }
-nexcore-openfda = { path = "crates/nexcore-openfda" }
-nexcore-orchestration = { path = "crates/nexcore-orchestration" }
-nexcore-oracle = { path = "crates/nexcore-oracle" }
-nexcore-organize = { path = "crates/nexcore-organize" }
-nexcore-os = { path = "crates/nexcore-os" }
-nexcore-pal = { path = "crates/nexcore-pal" }
-nexcore-pal-linux = { path = "crates/nexcore-pal-linux" }
-nexcore-perplexity = { path = "crates/nexcore-perplexity" }
-nexcore-pharma-rd = { path = "crates/nexcore-pharma-rd" }
-nexcore-pharmacovigilance = { path = "crates/nexcore-pharmacovigilance" }
-nexcore-pharos = { path = "crates/nexcore-pharos" }
-nexcore-phenotype = { path = "crates/nexcore-phenotype" }
-nexcore-primitive-scanner = { path = "crates/nexcore-primitive-scanner" }
-nexcore-primitives = { path = "crates/nexcore-primitives" }
-nexcore-pty = { path = "crates/nexcore-pty" }
-nexcore-preemptive-pv = { path = "crates/nexcore-preemptive-pv" }
-nexcore-proof-of-meaning = { path = "crates/nexcore-proof-of-meaning" }
-nexcore-pv-core = { path = "crates/nexcore-pv-core" }
-nexcore-pvdsl = { path = "crates/nexcore-pvdsl" }
-nexcore-pvos = { path = "crates/nexcore-pvos" }
-nexcore-qbr = { path = "crates/nexcore-qbr" }
-nexcore-registry = { path = "crates/nexcore-registry" }
-nexcore-renderer = { path = "crates/nexcore-renderer" }
-nexcore-rh-proofs = { path = "crates/nexcore-rh-proofs" }
-nexcore-reproductive = { path = "crates/nexcore-reproductive" }
-nexcore-respiratory = { path = "crates/nexcore-respiratory" }
-nexcore-retrocasting = { path = "crates/nexcore-retrocasting" }
-nexcore-ribosome = { path = "crates/nexcore-ribosome" }
-nexcore-sentinel = { path = "crates/nexcore-sentinel" }
-nexcore-signal-fence = { path = "crates/nexcore-signal-fence" }
-nexcore-signal-theory = { path = "crates/nexcore-signal-theory" }
-nexcore-signal-types = { path = "crates/nexcore-signal-types" }
-nexcore-skeletal = { path = "crates/nexcore-skeletal" }
-nexcore-skill-compiler = { path = "crates/nexcore-skill-compiler" }
-nexcore-skill-exec = { path = "crates/nexcore-skill-exec" }
-nexcore-skills-engine = { path = "crates/nexcore-skills-engine" }
-nexcore-social = { path = "crates/nexcore-social" }
-nexcore-social-types = { path = "crates/nexcore-social-types" }
-nexcore-sop-anatomy = { path = "crates/nexcore-sop-anatomy" }
-nexcore-softrender = { path = "crates/nexcore-softrender" }
-nexcore-state-os = { path = "crates/nexcore-state-os" }
-nexcore-state-theory = { path = "crates/nexcore-state-theory" }
-nexcore-stoichiometry = { path = "crates/nexcore-stoichiometry" }
-nexcore-statemind = { path = "crates/nexcore-statemind" }
-nexcore-synapse = { path = "crates/nexcore-synapse" }
-nexcore-synth = { path = "crates/nexcore-synth" }
-nexcore-telemetry-core = { path = "crates/nexcore-telemetry-core" }
-nexcore-terminal = { path = "crates/nexcore-terminal" }
-nexcore-tov = { path = "crates/nexcore-tov" }
-nexcore-tov-grounded = { path = "crates/nexcore-tov-grounded" }
-nexcore-tov-proofs = { path = "crates/nexcore-tov-proofs" }
-nexcore-transcriptase = { path = "crates/nexcore-transcriptase" }
-nexcore-transform = { path = "crates/nexcore-transform" }
-nexcore-trust = { path = "crates/nexcore-trust" }
-nexcore-urinary = { path = "crates/nexcore-urinary" }
-nexcore-value-mining = { path = "crates/nexcore-value-mining" }
-nexcore-vault = { path = "crates/nexcore-vault" }
-nexcore-vigil = { path = "crates/nexcore-vigil" }
-nexcore-vigilance = { path = "crates/nexcore-vigilance" }
-nexcore-viz = { path = "crates/nexcore-viz" }
-nexcore-word = { path = "crates/nexcore-word" }
-nexcore-zeta = { path = "crates/nexcore-zeta" }
-nucli = { path = "crates/nucli" }
-primitive-innovation = { path = "crates/primitive-innovation" }
-pvos-primitive-expansion = { path = "crates/pvos-primitive-expansion" }
+nexcore-hormone-types = { path = "crates/nexcore-hormone-types", version = "1.0.0" }
+nexcore-hormones = { path = "crates/nexcore-hormones", version = "1.0.0" }
+nexcore-id = { path = "crates/nexcore-id", version = "0.1.0", features = ["serde"] }
+nexcore-immunity = { path = "crates/nexcore-immunity", version = "0.1.0" }
+nexcore-insight = { path = "crates/nexcore-insight", version = "0.1.0" }
+nexcore-integumentary = { path = "crates/nexcore-integumentary", version = "1.0.0" }
+nexcore-integrity = { path = "crates/nexcore-integrity", version = "1.0.0" }
+nexcore-jeopardy = { path = "crates/nexcore-jeopardy", version = "1.0.0" }
+nexcore-knowledge = { path = "crates/nexcore-knowledge", version = "1.0.0" }
+nexcore-knowledge-engine = { path = "crates/nexcore-knowledge-engine", version = "1.0.0" }
+nexcore-laboratory = { path = "crates/nexcore-laboratory", version = "1.0.0" }
+nexcore-labs = { path = "crates/nexcore-labs", version = "1.0.0" }
+nexcore-lex-primitiva = { path = "crates/nexcore-lex-primitiva", version = "0.1.0" }
+nexcore-lymphatic = { path = "crates/nexcore-lymphatic", version = "1.0.0" }
+nexcore-mcp = { path = "crates/nexcore-mcp", version = "1.0.0" }
+nexcore-mcp-hot = { path = "crates/nexcore-mcp-hot", version = "1.0.0" }
+nexcore-measure = { path = "crates/nexcore-measure", version = "1.0.0" }
+nexcore-mesh = { path = "crates/nexcore-mesh", version = "1.0.0" }
+nexcore-model-checker = { path = "crates/nexcore-model-checker", version = "0.1.0" }
+nexcore-muscular = { path = "crates/nexcore-muscular", version = "1.0.0" }
+nexcore-nervous = { path = "crates/nexcore-nervous", version = "1.0.0" }
+nexcore-notebooklm = { path = "crates/nexcore-notebooklm", version = "0.1.0" }
+nexcore-openfda = { path = "crates/nexcore-openfda", version = "1.0.0" }
+nexcore-orchestration = { path = "crates/nexcore-orchestration", version = "1.0.0" }
+nexcore-oracle = { path = "crates/nexcore-oracle", version = "0.1.0" }
+nexcore-organize = { path = "crates/nexcore-organize", version = "1.0.0" }
+nexcore-os = { path = "crates/nexcore-os", version = "0.1.0" }
+nexcore-pal = { path = "crates/nexcore-pal", version = "0.1.0" }
+nexcore-pal-linux = { path = "crates/nexcore-pal-linux", version = "0.1.0" }
+nexcore-perplexity = { path = "crates/nexcore-perplexity", version = "1.0.0" }
+nexcore-pharma-rd = { path = "crates/nexcore-pharma-rd", version = "1.0.0" }
+nexcore-pharmacovigilance = { path = "crates/nexcore-pharmacovigilance", version = "1.0.0" }
+nexcore-pharos = { path = "crates/nexcore-pharos", version = "1.0.0" }
+nexcore-phenotype = { path = "crates/nexcore-phenotype", version = "1.0.0" }
+nexcore-primitive-scanner = { path = "crates/nexcore-primitive-scanner", version = "1.0.0" }
+nexcore-primitives = { path = "crates/nexcore-primitives", version = "1.0.0" }
+nexcore-pty = { path = "crates/nexcore-pty", version = "0.1.0" }
+nexcore-preemptive-pv = { path = "crates/nexcore-preemptive-pv", version = "1.0.0" }
+nexcore-proof-of-meaning = { path = "crates/nexcore-proof-of-meaning", version = "1.0.0" }
+nexcore-pv-core = { path = "crates/nexcore-pv-core", version = "1.0.0" }
+nexcore-pvdsl = { path = "crates/nexcore-pvdsl", version = "1.0.0" }
+nexcore-pvos = { path = "crates/nexcore-pvos", version = "1.0.0" }
+nexcore-qbr = { path = "crates/nexcore-qbr", version = "1.0.0" }
+nexcore-registry = { path = "crates/nexcore-registry", version = "1.0.0" }
+nexcore-renderer = { path = "crates/nexcore-renderer", version = "1.0.0" }
+nexcore-rh-proofs = { path = "crates/nexcore-rh-proofs", version = "0.1.0" }
+nexcore-reproductive = { path = "crates/nexcore-reproductive", version = "1.0.0" }
+nexcore-respiratory = { path = "crates/nexcore-respiratory", version = "1.0.0" }
+nexcore-retrocasting = { path = "crates/nexcore-retrocasting", version = "0.1.0" }
+nexcore-ribosome = { path = "crates/nexcore-ribosome", version = "1.0.0" }
+nexcore-sentinel = { path = "crates/nexcore-sentinel", version = "1.0.0" }
+nexcore-shell = { path = "crates/nexcore-shell", version = "0.1.0" }
+nexcore-signal-fence = { path = "crates/nexcore-signal-fence", version = "0.1.0" }
+nexcore-signal-theory = { path = "crates/nexcore-signal-theory", version = "0.1.0" }
+nexcore-signal-types = { path = "crates/nexcore-signal-types", version = "1.0.0" }
+nexcore-skeletal = { path = "crates/nexcore-skeletal", version = "1.0.0" }
+nexcore-skill-compiler = { path = "crates/nexcore-skill-compiler", version = "1.0.0" }
+nexcore-skill-exec = { path = "crates/nexcore-skill-exec", version = "1.0.0" }
+nexcore-skills-engine = { path = "crates/nexcore-skills-engine", version = "1.0.0" }
+nexcore-social = { path = "crates/nexcore-social", version = "1.0.0" }
+nexcore-social-types = { path = "crates/nexcore-social-types", version = "1.0.0" }
+nexcore-sop-anatomy = { path = "crates/nexcore-sop-anatomy", version = "1.0.0" }
+nexcore-softrender = { path = "crates/nexcore-softrender", version = "1.0.0" }
+nexcore-state-os = { path = "crates/nexcore-state-os", version = "0.1.0" }
+nexcore-state-theory = { path = "crates/nexcore-state-theory", version = "0.1.0" }
+nexcore-station = { path = "crates/nexcore-station", version = "0.1.0" }
+nexcore-stoichiometry = { path = "crates/nexcore-stoichiometry", version = "1.0.0" }
+nexcore-statemind = { path = "crates/nexcore-statemind", version = "1.0.0" }
+nexcore-synapse = { path = "crates/nexcore-synapse", version = "1.0.0" }
+nexcore-synth = { path = "crates/nexcore-synth", version = "0.1.0" }
+nexcore-telemetry-core = { path = "crates/nexcore-telemetry-core", version = "1.0.0" }
+nexcore-terminal = { path = "crates/nexcore-terminal", version = "0.1.0" }
+nexcore-tov = { path = "crates/nexcore-tov", version = "1.0.0" }
+nexcore-tov-grounded = { path = "crates/nexcore-tov-grounded", version = "1.0.0" }
+nexcore-tov-proofs = { path = "crates/nexcore-tov-proofs", version = "1.0.0" }
+nexcore-transcriptase = { path = "crates/nexcore-transcriptase", version = "1.0.0" }
+nexcore-transform = { path = "crates/nexcore-transform", version = "1.0.0" }
+nexcore-trust = { path = "crates/nexcore-trust", version = "0.1.0" }
+nexcore-urinary = { path = "crates/nexcore-urinary", version = "1.0.0" }
+nexcore-value-mining = { path = "crates/nexcore-value-mining", version = "1.0.0" }
+nexcore-vault = { path = "crates/nexcore-vault", version = "1.0.0" }
+nexcore-vigil = { path = "crates/nexcore-vigil", version = "0.1.0" }
+nexcore-vigilance = { path = "crates/nexcore-vigilance", version = "1.0.0" }
+nexcore-viz = { path = "crates/nexcore-viz", version = "1.0.0" }
+nexcore-word = { path = "crates/nexcore-word", version = "1.0.0" }
+nexcore-zeta = { path = "crates/nexcore-zeta", version = "0.1.0" }
+nucli = { path = "crates/nucli", version = "1.0.0" }
+primitive-innovation = { path = "crates/primitive-innovation", version = "1.0.0" }
+pvos-primitive-expansion = { path = "crates/pvos-primitive-expansion", version = "1.0.0" }
 # Package renamed to nexcore-signal-pipeline, consumers import as `signal`
-signal = { path = "crates/nexcore-signal-pipeline", package = "nexcore-signal-pipeline" }
-skills = { path = "crates/skills" }
-vr-core = { path = "crates/vr-core" }
-vr-tenant = { path = "crates/vr-tenant" }
-vr-billing = { path = "crates/vr-billing" }
-vr-compliance = { path = "crates/vr-compliance" }
-vr-marketplace = { path = "crates/vr-marketplace" }
-vr-platform-ml = { path = "crates/vr-platform-ml" }
+signal = { path = "crates/nexcore-signal-pipeline", version = "1.0.0", package = "nexcore-signal-pipeline" }
+skills = { path = "crates/skills", version = "0.1.0" }
+vr-core = { path = "crates/vr-core", version = "1.0.0" }
+vr-tenant = { path = "crates/vr-tenant", version = "1.0.0" }
+vr-billing = { path = "crates/vr-billing", version = "1.0.0" }
+vr-compliance = { path = "crates/vr-compliance", version = "1.0.0" }
+vr-marketplace = { path = "crates/vr-marketplace", version = "1.0.0" }
+vr-platform-ml = { path = "crates/vr-platform-ml", version = "1.0.0" }
 
 # Internal Workspace Dependencies (Stem)
-stem = { path = "crates/stem" }
-stem-complex = { path = "crates/stem-complex" }
-stem-math = { path = "crates/stem-math" }
-stem-phys = { path = "crates/stem-phys" }
-stem-number-theory = { path = "crates/stem-number-theory" }
-stem-topology = { path = "crates/stem-topology" }
+stem = { path = "crates/stem", version = "0.1.0" }
+stem-complex = { path = "crates/stem-complex", version = "0.1.0" }
+stem-math = { path = "crates/stem-math", version = "0.1.0" }
+stem-phys = { path = "crates/stem-phys", version = "0.1.0" }
+stem-number-theory = { path = "crates/stem-number-theory", version = "0.1.0" }
+stem-topology = { path = "crates/stem-topology", version = "1.0.0" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

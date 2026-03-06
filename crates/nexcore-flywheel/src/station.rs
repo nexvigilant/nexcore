@@ -4,6 +4,22 @@
 //! This module provides the mapping function that converts station events
 //! into `FlywheelEvent::Custom` for the bus.
 //!
+//! ## Bus Topology (2026-03-06)
+//!
+//! ```text
+//! Station (ferroforge)          nexcore-flywheel           Consumers
+//! ┌──────────────────┐   SSE   ┌──────────────────┐       ┌──────────┐
+//! │ tool_call         │───A→B──│ station_event_to_ │──D→E──│ 3 bridges│
+//! │ → broadcast(event)│        │ flywheel() → emit │       │ (F)      │
+//! └──────────────────┘        └──────────────────┘       └────┬─────┘
+//!         ↑                                                    │
+//!         └──────────── G: ∅ VOID (no return path) ←──────────┘
+//! ```
+//!
+//! Forward path A→F verified end-to-end. Return path G does not exist.
+//! The bus is a one-way conveyor. Closing the loop requires a decision
+//! engine that watches flywheel state and initiates station tool calls.
+//!
 //! ## T1 Primitive Grounding
 //!
 //! | Concept | Primitive | Symbol |
@@ -11,6 +27,7 @@
 //! | Event mapping | Mapping | μ |
 //! | Cross-boundary bridge | Boundary | ∂ |
 //! | Domain extraction | Location | λ |
+//! | Return void | Nothing | ∅ |
 
 use crate::event::{EventKind, FlywheelEvent};
 use crate::node::FlywheelTier;

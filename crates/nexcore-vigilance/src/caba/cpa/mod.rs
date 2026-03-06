@@ -1,6 +1,8 @@
 //! CPA (Critical Practice Activity) Types
 //!
-//! Migrated from Python `domains/regulatory/caba/caba/models/cpa.py`.
+//! The 8 Competency Practice Activities cluster EPAs into practice areas
+//! that map to organizational departments or team functions.
+//! (source: 04-ksb-competency-framework.md CPA table)
 //!
 //! ## CPA Hierarchy
 //!
@@ -8,14 +10,14 @@
 //!
 //! ## The 8 CPAs
 //!
-//! 1. CPA1: Foundational Operations Excellence
-//! 2. CPA2: Analysis and Intelligence Excellence
-//! 3. CPA3: Risk and Intervention Excellence
-//! 4. CPA4: Quality and Compliance Excellence
-//! 5. CPA5: Information and Technology Excellence
-//! 6. CPA6: Communication and Stakeholder Excellence
-//! 7. CPA7: Strategic Leadership and Development Excellence
-//! 8. CPA8: Integrated Excellence and Transformation (Capstone)
+//! 1. CPA-1: Case Management (EPA-01, EPA-02, EPA-03)
+//! 2. CPA-2: Signal Management (EPA-04, EPA-05)
+//! 3. CPA-3: Risk Management (EPA-06, EPA-07)
+//! 4. CPA-4: Quality & Compliance (EPA-08, EPA-09, EPA-12)
+//! 5. CPA-5: Data & Technology (EPA-10, EPA-11)
+//! 6. CPA-6: Communication & Stakeholder (EPA-17, EPA-19)
+//! 7. CPA-7: Research & Development (EPA-16, EPA-20)
+//! 8. CPA-8: AI-Enhanced PV (EPA-10 gateway, capstone)
 //!
 //! ## Components
 //!
@@ -33,50 +35,64 @@ use crate::caba::proficiency::ProficiencyLevel;
 use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
-/// The 8 Critical Practice Activities.
+/// The 8 PV Competency Practice Activities.
+///
+/// (source: 04-ksb-competency-framework.md CPA table)
 ///
 /// # L0 Quark - CPA enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CPACategory {
-    /// CPA1: Foundational Operations Excellence
-    #[serde(rename = "CPA1: Foundational Operations Excellence")]
-    Cpa1FoundationalOperations,
-    /// CPA2: Analysis and Intelligence Excellence
-    #[serde(rename = "CPA2: Analysis and Intelligence Excellence")]
-    Cpa2AnalysisIntelligence,
-    /// CPA3: Risk and Intervention Excellence
-    #[serde(rename = "CPA3: Risk and Intervention Excellence")]
-    Cpa3RiskIntervention,
-    /// CPA4: Quality and Compliance Excellence
-    #[serde(rename = "CPA4: Quality and Compliance Excellence")]
+    /// CPA-1: Case Management (EPA-01, EPA-02, EPA-03)
+    #[serde(rename = "CPA-1: Case Management")]
+    Cpa1CaseManagement,
+    /// CPA-2: Signal Management (EPA-04, EPA-05)
+    #[serde(rename = "CPA-2: Signal Management")]
+    Cpa2SignalManagement,
+    /// CPA-3: Risk Management (EPA-06, EPA-07)
+    #[serde(rename = "CPA-3: Risk Management")]
+    Cpa3RiskManagement,
+    /// CPA-4: Quality & Compliance (EPA-08, EPA-09, EPA-12)
+    #[serde(rename = "CPA-4: Quality & Compliance")]
     Cpa4QualityCompliance,
-    /// CPA5: Information and Technology Excellence
-    #[serde(rename = "CPA5: Information and Technology Excellence")]
-    Cpa5InformationTechnology,
-    /// CPA6: Communication and Stakeholder Excellence
-    #[serde(rename = "CPA6: Communication and Stakeholder Excellence")]
-    Cpa6CommunicationStakeholder,
-    /// CPA7: Strategic Leadership and Development Excellence
-    #[serde(rename = "CPA7: Strategic Leadership and Development Excellence")]
-    Cpa7StrategicLeadership,
-    /// CPA8: Integrated Excellence and Transformation (Capstone)
-    #[serde(rename = "CPA8: Integrated Excellence and Transformation (Capstone)")]
-    Cpa8IntegratedExcellence,
+    /// CPA-5: Data & Technology (EPA-10, EPA-11)
+    #[serde(rename = "CPA-5: Data & Technology")]
+    Cpa5DataTechnology,
+    /// CPA-6: Communication & Stakeholder (EPA-17, EPA-19)
+    #[serde(rename = "CPA-6: Communication & Stakeholder")]
+    Cpa6Communication,
+    /// CPA-7: Research & Development (EPA-16, EPA-20)
+    #[serde(rename = "CPA-7: Research & Development")]
+    Cpa7ResearchDevelopment,
+    /// CPA-8: AI-Enhanced PV (EPA-10 gateway, capstone)
+    #[serde(rename = "CPA-8: AI-Enhanced PV")]
+    Cpa8AiEnhancedPv,
 }
 
 impl CPACategory {
+    /// All 8 CPA variants.
+    pub const ALL: [Self; 8] = [
+        Self::Cpa1CaseManagement,
+        Self::Cpa2SignalManagement,
+        Self::Cpa3RiskManagement,
+        Self::Cpa4QualityCompliance,
+        Self::Cpa5DataTechnology,
+        Self::Cpa6Communication,
+        Self::Cpa7ResearchDevelopment,
+        Self::Cpa8AiEnhancedPv,
+    ];
+
     /// Get the CPA number (1-8).
     #[must_use]
     pub const fn number(&self) -> u8 {
         match self {
-            Self::Cpa1FoundationalOperations => 1,
-            Self::Cpa2AnalysisIntelligence => 2,
-            Self::Cpa3RiskIntervention => 3,
+            Self::Cpa1CaseManagement => 1,
+            Self::Cpa2SignalManagement => 2,
+            Self::Cpa3RiskManagement => 3,
             Self::Cpa4QualityCompliance => 4,
-            Self::Cpa5InformationTechnology => 5,
-            Self::Cpa6CommunicationStakeholder => 6,
-            Self::Cpa7StrategicLeadership => 7,
-            Self::Cpa8IntegratedExcellence => 8,
+            Self::Cpa5DataTechnology => 5,
+            Self::Cpa6Communication => 6,
+            Self::Cpa7ResearchDevelopment => 7,
+            Self::Cpa8AiEnhancedPv => 8,
         }
     }
 
@@ -84,25 +100,21 @@ impl CPACategory {
     #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
-            Self::Cpa1FoundationalOperations => "CPA1: Foundational Operations Excellence",
-            Self::Cpa2AnalysisIntelligence => "CPA2: Analysis and Intelligence Excellence",
-            Self::Cpa3RiskIntervention => "CPA3: Risk and Intervention Excellence",
-            Self::Cpa4QualityCompliance => "CPA4: Quality and Compliance Excellence",
-            Self::Cpa5InformationTechnology => "CPA5: Information and Technology Excellence",
-            Self::Cpa6CommunicationStakeholder => "CPA6: Communication and Stakeholder Excellence",
-            Self::Cpa7StrategicLeadership => {
-                "CPA7: Strategic Leadership and Development Excellence"
-            }
-            Self::Cpa8IntegratedExcellence => {
-                "CPA8: Integrated Excellence and Transformation (Capstone)"
-            }
+            Self::Cpa1CaseManagement => "CPA-1: Case Management",
+            Self::Cpa2SignalManagement => "CPA-2: Signal Management",
+            Self::Cpa3RiskManagement => "CPA-3: Risk Management",
+            Self::Cpa4QualityCompliance => "CPA-4: Quality & Compliance",
+            Self::Cpa5DataTechnology => "CPA-5: Data & Technology",
+            Self::Cpa6Communication => "CPA-6: Communication & Stakeholder",
+            Self::Cpa7ResearchDevelopment => "CPA-7: Research & Development",
+            Self::Cpa8AiEnhancedPv => "CPA-8: AI-Enhanced PV",
         }
     }
 
-    /// Check if this is the capstone CPA (CPA8).
+    /// Check if this is the capstone CPA (CPA-8).
     #[must_use]
     pub const fn is_capstone(&self) -> bool {
-        matches!(self, Self::Cpa8IntegratedExcellence)
+        matches!(self, Self::Cpa8AiEnhancedPv)
     }
 }
 
@@ -638,14 +650,14 @@ mod tests {
 
     #[test]
     fn test_cpa_category_number() {
-        assert_eq!(CPACategory::Cpa1FoundationalOperations.number(), 1);
-        assert_eq!(CPACategory::Cpa8IntegratedExcellence.number(), 8);
+        assert_eq!(CPACategory::Cpa1CaseManagement.number(), 1);
+        assert_eq!(CPACategory::Cpa8AiEnhancedPv.number(), 8);
     }
 
     #[test]
     fn test_cpa_category_capstone() {
-        assert!(!CPACategory::Cpa1FoundationalOperations.is_capstone());
-        assert!(CPACategory::Cpa8IntegratedExcellence.is_capstone());
+        assert!(!CPACategory::Cpa1CaseManagement.is_capstone());
+        assert!(CPACategory::Cpa8AiEnhancedPv.is_capstone());
     }
 
     #[test]

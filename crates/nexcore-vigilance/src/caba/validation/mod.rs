@@ -355,12 +355,12 @@ mod tests {
         let mut result = PrerequisiteValidationResult::new("EPA-3".to_string(), "EPA");
 
         let required = vec![DomainRequirement::primary(
-            DomainCategory::D1ProfessionalFoundations,
+            DomainCategory::D01PvFoundations,
             ProficiencyLevel::L3Competent,
         )];
         let mut professional = HashMap::new();
         professional.insert(
-            DomainCategory::D1ProfessionalFoundations,
+            DomainCategory::D01PvFoundations,
             ProficiencyLevel::L4Proficient,
         );
 
@@ -378,12 +378,12 @@ mod tests {
         let mut result = PrerequisiteValidationResult::new("EPA-3".to_string(), "EPA");
 
         let required = vec![DomainRequirement::primary(
-            DomainCategory::D1ProfessionalFoundations,
+            DomainCategory::D01PvFoundations,
             ProficiencyLevel::L4Proficient,
         )];
         let mut professional = HashMap::new();
         professional.insert(
-            DomainCategory::D1ProfessionalFoundations,
+            DomainCategory::D01PvFoundations,
             ProficiencyLevel::L2AdvancedBeginner,
         );
 

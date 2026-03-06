@@ -1,16 +1,23 @@
 //! EPA (Entrustable Professional Activity) Types
 //!
-//! Migrated from Python `domains/regulatory/caba/caba/models/epa.py`.
+//! The 21 PV Entrustable Professional Activities from the NexVigilant KSB Framework.
+//! (source: ~/Vaults/nexvigilant/400-projects/ksb-framework/epas/)
 //!
 //! ## EPA Overview
 //!
-//! An EPA is a complex, multi-step activity requiring coordination of multiple
-//! core competencies to achieve a high-level goal (e.g., "Implement HIPAA
-//! Technical Safeguards §164.312").
+//! An EPA is a unit of professional practice — a task or responsibility that a
+//! PV professional can be trusted to perform at a given proficiency level.
+//!
+//! ## The 21 PV EPAs by Tier
+//!
+//! **Core (EPA-01 to EPA-08):** Foundation PV activities
+//! **Advanced (EPA-09 to EPA-14, EPA-17):** Specialized PV activities
+//! **Expert (EPA-15, EPA-16, EPA-18 to EPA-21):** Leadership PV activities
 //!
 //! ## Components
 //!
-//! - [`EPACategory`] - 14 compliance framework categories
+//! - [`EPACategory`] - 21 PV entrustable activities
+//! - [`EPATier`] - Core, Advanced, Expert classification
 //! - [`EPAExecutionStatus`] - Overall EPA execution status
 //! - [`CompetencyDeploymentStatus`] - Individual competency deployment status
 //! - [`EPARequirement`] - Specification for an EPA
@@ -23,95 +30,250 @@ use crate::caba::Score;
 use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
-/// EPA domain classifications aligned with compliance frameworks.
+/// The 21 PV Entrustable Professional Activities.
+///
+/// (source: 04-ksb-competency-framework.md EPA table)
 ///
 /// # L0 Quark - Category enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EPACategory {
-    /// HIPAA Technical Safeguards (§164.312)
-    #[serde(rename = "HIPAA Technical Safeguards")]
-    HipaaTechnicalSafeguards,
-    /// HIPAA Administrative Safeguards (§164.308)
-    #[serde(rename = "HIPAA Administrative Safeguards")]
-    HipaaAdministrativeSafeguards,
-    /// HIPAA Physical Safeguards (§164.310)
-    #[serde(rename = "HIPAA Physical Safeguards")]
-    HipaaPhysicalSafeguards,
-    /// SOC2 Security Controls
-    #[serde(rename = "SOC2 Security Controls")]
-    Soc2Security,
-    /// SOC2 Availability Controls
-    #[serde(rename = "SOC2 Availability Controls")]
-    Soc2Availability,
-    /// SOC2 Confidentiality Controls
-    #[serde(rename = "SOC2 Confidentiality Controls")]
-    Soc2Confidentiality,
-    /// GDPR Compliance Controls
-    #[serde(rename = "GDPR Compliance Controls")]
-    GdprCompliance,
-    /// GDPR Data Protection
-    #[serde(rename = "GDPR Data Protection")]
-    GdprDataProtection,
-    /// ISO 27001 Information Security
-    #[serde(rename = "ISO 27001 Information Security")]
-    Iso27001InformationSecurity,
-    /// NIST Cybersecurity Framework
-    #[serde(rename = "NIST Cybersecurity Framework")]
-    NistCybersecurity,
-    /// PCI DSS Compliance
-    #[serde(rename = "PCI DSS Compliance")]
-    PciDssCompliance,
-    /// General Security Implementation
-    #[serde(rename = "General Security Implementation")]
-    GeneralSecurity,
-    /// Business Continuity & Disaster Recovery
-    #[serde(rename = "Business Continuity & Disaster Recovery")]
-    BusinessContinuity,
-    /// Incident Response & Management
-    #[serde(rename = "Incident Response & Management")]
-    IncidentResponse,
+    // Core Tier (EPA-01 to EPA-08)
+    /// EPA-01: Process and Evaluate ICSRs
+    #[serde(rename = "EPA-01: Process and Evaluate ICSRs")]
+    Epa01ProcessIcsrs,
+    /// EPA-02: Assess Causality
+    #[serde(rename = "EPA-02: Assess Causality")]
+    Epa02AssessCausality,
+    /// EPA-03: Manage Case Quality
+    #[serde(rename = "EPA-03: Manage Case Quality")]
+    Epa03ManageCaseQuality,
+    /// EPA-04: Detect Safety Signals
+    #[serde(rename = "EPA-04: Detect Safety Signals")]
+    Epa04DetectSignals,
+    /// EPA-05: Validate and Analyze Signals
+    #[serde(rename = "EPA-05: Validate and Analyze Signals")]
+    Epa05ValidateSignals,
+    /// EPA-06: Assess Benefit-Risk
+    #[serde(rename = "EPA-06: Assess Benefit-Risk")]
+    Epa06AssessBenefitRisk,
+    /// EPA-07: Manage Risk Minimization
+    #[serde(rename = "EPA-07: Manage Risk Minimization")]
+    Epa07ManageRiskMinimization,
+    /// EPA-08: Prepare Regulatory Submissions
+    #[serde(rename = "EPA-08: Prepare Regulatory Submissions")]
+    Epa08RegulatorySubmissions,
+
+    // Advanced Tier (EPA-09 to EPA-14, EPA-17)
+    /// EPA-09: Manage Regulatory Intelligence
+    #[serde(rename = "EPA-09: Manage Regulatory Intelligence")]
+    Epa09RegulatoryIntelligence,
+    /// EPA-10: Integrate AI in PV
+    #[serde(rename = "EPA-10: Integrate AI in PV")]
+    Epa10IntegrateAi,
+    /// EPA-11: Manage PV Systems
+    #[serde(rename = "EPA-11: Manage PV Systems")]
+    Epa11ManagePvSystems,
+    /// EPA-12: Conduct PV Audits
+    #[serde(rename = "EPA-12: Conduct PV Audits")]
+    Epa12ConductAudits,
+    /// EPA-13: Manage Special Population Safety
+    #[serde(rename = "EPA-13: Manage Special Population Safety")]
+    Epa13SpecialPopulations,
+    /// EPA-14: Coordinate Global PV
+    #[serde(rename = "EPA-14: Coordinate Global PV")]
+    Epa14CoordinateGlobalPv,
+    /// EPA-17: Manage Stakeholder Communication
+    #[serde(rename = "EPA-17: Manage Stakeholder Communication")]
+    Epa17StakeholderCommunication,
+
+    // Expert Tier (EPA-15, EPA-16, EPA-18 to EPA-21)
+    /// EPA-15: Lead PV Program Strategy
+    #[serde(rename = "EPA-15: Lead PV Program Strategy")]
+    Epa15LeadPvStrategy,
+    /// EPA-16: Conduct Advanced Safety Analytics
+    #[serde(rename = "EPA-16: Conduct Advanced Safety Analytics")]
+    Epa16AdvancedAnalytics,
+    /// EPA-18: Develop PV Talent
+    #[serde(rename = "EPA-18: Develop PV Talent")]
+    Epa18DevelopTalent,
+    /// EPA-19: Manage Crisis Safety Communication
+    #[serde(rename = "EPA-19: Manage Crisis Safety Communication")]
+    Epa19CrisisCommunication,
+    /// EPA-20: Design Pharmacoepidemiology Studies
+    #[serde(rename = "EPA-20: Design Pharmacoepidemiology Studies")]
+    Epa20PharmacoepidemiologyStudies,
+    /// EPA-21: Lead Organizational PV Transformation
+    #[serde(rename = "EPA-21: Lead Organizational PV Transformation")]
+    Epa21LeadTransformation,
 }
 
 impl EPACategory {
+    /// All 21 EPA variants.
+    pub const ALL: [Self; 21] = [
+        Self::Epa01ProcessIcsrs,
+        Self::Epa02AssessCausality,
+        Self::Epa03ManageCaseQuality,
+        Self::Epa04DetectSignals,
+        Self::Epa05ValidateSignals,
+        Self::Epa06AssessBenefitRisk,
+        Self::Epa07ManageRiskMinimization,
+        Self::Epa08RegulatorySubmissions,
+        Self::Epa09RegulatoryIntelligence,
+        Self::Epa10IntegrateAi,
+        Self::Epa11ManagePvSystems,
+        Self::Epa12ConductAudits,
+        Self::Epa13SpecialPopulations,
+        Self::Epa14CoordinateGlobalPv,
+        Self::Epa15LeadPvStrategy,
+        Self::Epa16AdvancedAnalytics,
+        Self::Epa17StakeholderCommunication,
+        Self::Epa18DevelopTalent,
+        Self::Epa19CrisisCommunication,
+        Self::Epa20PharmacoepidemiologyStudies,
+        Self::Epa21LeadTransformation,
+    ];
+
+    /// Get the EPA number (1-21).
+    #[must_use]
+    pub const fn number(&self) -> u8 {
+        match self {
+            Self::Epa01ProcessIcsrs => 1,
+            Self::Epa02AssessCausality => 2,
+            Self::Epa03ManageCaseQuality => 3,
+            Self::Epa04DetectSignals => 4,
+            Self::Epa05ValidateSignals => 5,
+            Self::Epa06AssessBenefitRisk => 6,
+            Self::Epa07ManageRiskMinimization => 7,
+            Self::Epa08RegulatorySubmissions => 8,
+            Self::Epa09RegulatoryIntelligence => 9,
+            Self::Epa10IntegrateAi => 10,
+            Self::Epa11ManagePvSystems => 11,
+            Self::Epa12ConductAudits => 12,
+            Self::Epa13SpecialPopulations => 13,
+            Self::Epa14CoordinateGlobalPv => 14,
+            Self::Epa15LeadPvStrategy => 15,
+            Self::Epa16AdvancedAnalytics => 16,
+            Self::Epa17StakeholderCommunication => 17,
+            Self::Epa18DevelopTalent => 18,
+            Self::Epa19CrisisCommunication => 19,
+            Self::Epa20PharmacoepidemiologyStudies => 20,
+            Self::Epa21LeadTransformation => 21,
+        }
+    }
+
+    /// Get the EPA tier.
+    #[must_use]
+    pub const fn tier(&self) -> EPATier {
+        match self {
+            Self::Epa01ProcessIcsrs
+            | Self::Epa02AssessCausality
+            | Self::Epa03ManageCaseQuality
+            | Self::Epa04DetectSignals
+            | Self::Epa05ValidateSignals
+            | Self::Epa06AssessBenefitRisk
+            | Self::Epa07ManageRiskMinimization
+            | Self::Epa08RegulatorySubmissions => EPATier::Core,
+
+            Self::Epa09RegulatoryIntelligence
+            | Self::Epa10IntegrateAi
+            | Self::Epa11ManagePvSystems
+            | Self::Epa12ConductAudits
+            | Self::Epa13SpecialPopulations
+            | Self::Epa14CoordinateGlobalPv
+            | Self::Epa17StakeholderCommunication => EPATier::Advanced,
+
+            Self::Epa15LeadPvStrategy
+            | Self::Epa16AdvancedAnalytics
+            | Self::Epa18DevelopTalent
+            | Self::Epa19CrisisCommunication
+            | Self::Epa20PharmacoepidemiologyStudies
+            | Self::Epa21LeadTransformation => EPATier::Expert,
+        }
+    }
+
+    /// Get the PV focus area for this EPA.
+    #[must_use]
+    pub const fn focus_area(&self) -> &'static str {
+        match self {
+            Self::Epa01ProcessIcsrs | Self::Epa02AssessCausality | Self::Epa03ManageCaseQuality => {
+                "Case Processing"
+            }
+            Self::Epa04DetectSignals | Self::Epa05ValidateSignals => "Signal Management",
+            Self::Epa06AssessBenefitRisk | Self::Epa07ManageRiskMinimization => "Risk Assessment",
+            Self::Epa08RegulatorySubmissions | Self::Epa09RegulatoryIntelligence => "Regulatory",
+            Self::Epa10IntegrateAi | Self::Epa11ManagePvSystems => "Technology",
+            Self::Epa12ConductAudits => "Quality",
+            Self::Epa13SpecialPopulations => "Specialized",
+            Self::Epa14CoordinateGlobalPv => "Operations",
+            Self::Epa15LeadPvStrategy => "Management",
+            Self::Epa16AdvancedAnalytics | Self::Epa20PharmacoepidemiologyStudies => "Analytics",
+            Self::Epa17StakeholderCommunication | Self::Epa19CrisisCommunication => "Communication",
+            Self::Epa18DevelopTalent => "Development",
+            Self::Epa21LeadTransformation => "Transformation",
+        }
+    }
+
     /// Get display string for the category.
     #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
-            Self::HipaaTechnicalSafeguards => "HIPAA Technical Safeguards",
-            Self::HipaaAdministrativeSafeguards => "HIPAA Administrative Safeguards",
-            Self::HipaaPhysicalSafeguards => "HIPAA Physical Safeguards",
-            Self::Soc2Security => "SOC2 Security Controls",
-            Self::Soc2Availability => "SOC2 Availability Controls",
-            Self::Soc2Confidentiality => "SOC2 Confidentiality Controls",
-            Self::GdprCompliance => "GDPR Compliance Controls",
-            Self::GdprDataProtection => "GDPR Data Protection",
-            Self::Iso27001InformationSecurity => "ISO 27001 Information Security",
-            Self::NistCybersecurity => "NIST Cybersecurity Framework",
-            Self::PciDssCompliance => "PCI DSS Compliance",
-            Self::GeneralSecurity => "General Security Implementation",
-            Self::BusinessContinuity => "Business Continuity & Disaster Recovery",
-            Self::IncidentResponse => "Incident Response & Management",
-        }
-    }
-
-    /// Get the compliance framework this category belongs to.
-    #[must_use]
-    pub const fn framework(&self) -> &'static str {
-        match self {
-            Self::HipaaTechnicalSafeguards
-            | Self::HipaaAdministrativeSafeguards
-            | Self::HipaaPhysicalSafeguards => "HIPAA",
-            Self::Soc2Security | Self::Soc2Availability | Self::Soc2Confidentiality => "SOC2",
-            Self::GdprCompliance | Self::GdprDataProtection => "GDPR",
-            Self::Iso27001InformationSecurity => "ISO27001",
-            Self::NistCybersecurity => "NIST",
-            Self::PciDssCompliance => "PCI-DSS",
-            Self::GeneralSecurity | Self::BusinessContinuity | Self::IncidentResponse => "General",
+            Self::Epa01ProcessIcsrs => "EPA-01: Process and Evaluate ICSRs",
+            Self::Epa02AssessCausality => "EPA-02: Assess Causality",
+            Self::Epa03ManageCaseQuality => "EPA-03: Manage Case Quality",
+            Self::Epa04DetectSignals => "EPA-04: Detect Safety Signals",
+            Self::Epa05ValidateSignals => "EPA-05: Validate and Analyze Signals",
+            Self::Epa06AssessBenefitRisk => "EPA-06: Assess Benefit-Risk",
+            Self::Epa07ManageRiskMinimization => "EPA-07: Manage Risk Minimization",
+            Self::Epa08RegulatorySubmissions => "EPA-08: Prepare Regulatory Submissions",
+            Self::Epa09RegulatoryIntelligence => "EPA-09: Manage Regulatory Intelligence",
+            Self::Epa10IntegrateAi => "EPA-10: Integrate AI in PV",
+            Self::Epa11ManagePvSystems => "EPA-11: Manage PV Systems",
+            Self::Epa12ConductAudits => "EPA-12: Conduct PV Audits",
+            Self::Epa13SpecialPopulations => "EPA-13: Manage Special Population Safety",
+            Self::Epa14CoordinateGlobalPv => "EPA-14: Coordinate Global PV",
+            Self::Epa15LeadPvStrategy => "EPA-15: Lead PV Program Strategy",
+            Self::Epa16AdvancedAnalytics => "EPA-16: Conduct Advanced Safety Analytics",
+            Self::Epa17StakeholderCommunication => "EPA-17: Manage Stakeholder Communication",
+            Self::Epa18DevelopTalent => "EPA-18: Develop PV Talent",
+            Self::Epa19CrisisCommunication => "EPA-19: Manage Crisis Safety Communication",
+            Self::Epa20PharmacoepidemiologyStudies => "EPA-20: Design Pharmacoepidemiology Studies",
+            Self::Epa21LeadTransformation => "EPA-21: Lead Organizational PV Transformation",
         }
     }
 }
 
 impl std::fmt::Display for EPACategory {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
+
+/// EPA tier classification.
+///
+/// (source: 04-ksb-competency-framework.md EPA table, Tier column)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum EPATier {
+    /// Foundation PV activities (EPA-01 to EPA-08)
+    Core,
+    /// Specialized PV activities (EPA-09 to EPA-14, EPA-17)
+    Advanced,
+    /// Leadership PV activities (EPA-15, EPA-16, EPA-18 to EPA-21)
+    Expert,
+}
+
+impl EPATier {
+    /// Get display string.
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::Core => "Core",
+            Self::Advanced => "Advanced",
+            Self::Expert => "Expert",
+        }
+    }
+}
+
+impl std::fmt::Display for EPATier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.as_str())
     }
@@ -160,8 +322,6 @@ impl CompetencyDeploymentStatus {
 }
 
 /// Overall EPA execution status.
-///
-/// Represents high-level state of entire EPA orchestration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum EPAExecutionStatus {
@@ -242,8 +402,6 @@ impl std::cmp::Ord for Priority {
 }
 
 /// Specification for an EPA to be orchestrated.
-///
-/// Defines the high-level goal and which competencies are needed to achieve it.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EPARequirement {
     /// EPA title
@@ -264,18 +422,8 @@ pub struct EPARequirement {
     /// Explicit ordering if needed (competency IDs)
     #[serde(default)]
     pub deployment_order: Option<Vec<String>>,
-    /// Cross-competency configuration
-    #[serde(default)]
-    pub integration_requirements: serde_json::Value,
 
-    /// Post-deployment tests
-    #[serde(default)]
-    pub validation_checks: Vec<serde_json::Value>,
-
-    /// Compliance framework (e.g., "HIPAA", "SOC2", "GDPR")
-    #[serde(default)]
-    pub compliance_framework: Option<String>,
-    /// Specific regulation sections
+    /// Specific regulation sections (e.g., "ICH E2B(R3)", "GVP Module VI")
     #[serde(default)]
     pub regulatory_citations: Vec<String>,
 
@@ -285,9 +433,6 @@ pub struct EPARequirement {
     /// Estimated duration in hours
     #[serde(default)]
     pub estimated_duration_hours: Option<f64>,
-    /// Estimated cost in USD
-    #[serde(default)]
-    pub estimated_cost_usd: Option<f64>,
 }
 
 impl EPARequirement {
@@ -309,21 +454,14 @@ impl EPARequirement {
             success_criteria,
             required_competencies,
             deployment_order: None,
-            integration_requirements: serde_json::Value::Object(serde_json::Map::new()),
-            validation_checks: Vec::new(),
-            compliance_framework: Some(category.framework().to_string()),
             regulatory_citations: Vec::new(),
             priority: Priority::default(),
             estimated_duration_hours: None,
-            estimated_cost_usd: None,
         }
     }
 }
 
 /// Results of EPA goal validation.
-///
-/// Verifies that the orchestrated competencies achieve the intended goal.
-/// Produces compliance evidence and attestation documentation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EPAValidationResult {
     /// EPA ID
@@ -333,19 +471,8 @@ pub struct EPAValidationResult {
     /// Validation score [0.0, 1.0]
     pub validation_score: Score,
 
-    /// Success criteria evaluation (criterion → passed/failed)
+    /// Success criteria evaluation (criterion -> passed/failed)
     pub criteria_results: std::collections::HashMap<String, bool>,
-
-    /// Detailed validation check results
-    #[serde(default)]
-    pub validation_checks: Vec<serde_json::Value>,
-
-    /// Formal attestation statement
-    #[serde(default)]
-    pub compliance_attestation: Option<String>,
-    /// Supporting evidence
-    #[serde(default)]
-    pub evidence_package: serde_json::Value,
 
     /// Errors found
     #[serde(default)]
@@ -357,7 +484,7 @@ pub struct EPAValidationResult {
     #[serde(default)]
     pub recommendations: Vec<String>,
 
-    /// Validation timestamp (ISO 8601)
+    /// Validation timestamp
     pub validated_at: String,
 
     /// How reliable is the deployment [0.0, 1.0]
@@ -366,9 +493,6 @@ pub struct EPAValidationResult {
     /// How complete is the implementation [0.0, 1.0]
     #[serde(default)]
     pub completeness_score: Score,
-    /// How well does it meet compliance requirements [0.0, 1.0]
-    #[serde(default)]
-    pub compliance_score: Score,
 }
 
 impl EPAValidationResult {
@@ -387,16 +511,12 @@ impl EPAValidationResult {
             goal_achieved,
             validation_score: Score::new(validation_score)?,
             criteria_results: std::collections::HashMap::new(),
-            validation_checks: Vec::new(),
-            compliance_attestation: None,
-            evidence_package: serde_json::Value::Object(serde_json::Map::new()),
             errors: Vec::new(),
             warnings: Vec::new(),
             recommendations: Vec::new(),
             validated_at,
             reliability_score: Score::ZERO,
             completeness_score: Score::ZERO,
-            compliance_score: Score::ZERO,
         })
     }
 
@@ -423,13 +543,10 @@ impl EPAValidationResult {
 }
 
 // =============================================================================
-// Execution Types (type definitions - services migrate separately)
+// Execution Types
 // =============================================================================
 
 /// Represents deployment of a single competency within an EPA.
-///
-/// Tracks status, timing, outputs, and errors for one competency
-/// as part of EPA orchestration.
 ///
 /// # L2 Molecule - Competency deployment tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -441,18 +558,16 @@ pub struct CompetencyDeploymentStep {
     /// Current deployment status
     pub status: CompetencyDeploymentStatus,
 
-    // Execution timeline
-    /// When deployment started (ISO 8601)
+    /// When deployment started
     #[serde(default)]
     pub started_at: Option<DateTime>,
-    /// When deployment completed (ISO 8601)
+    /// When deployment completed
     #[serde(default)]
     pub completed_at: Option<DateTime>,
     /// Total duration in seconds
     #[serde(default)]
     pub duration_seconds: Option<f64>,
 
-    // Results (note: terraform_outputs excluded per SOP - that's infrastructure)
     /// Errors encountered during deployment
     #[serde(default)]
     pub deployment_errors: Vec<String>,
@@ -460,18 +575,13 @@ pub struct CompetencyDeploymentStep {
     #[serde(default)]
     pub deployment_warnings: Vec<String>,
 
-    // Dependencies
     /// Other competency IDs this step depends on
     #[serde(default)]
     pub depends_on: Vec<String>,
 
-    // Progress
     /// Current progress percentage [0.0, 100.0]
     #[serde(default)]
     pub progress_percent: f64,
-    /// Current operation description (e.g., "Running terraform apply")
-    #[serde(default)]
-    pub current_operation: Option<String>,
 }
 
 impl CompetencyDeploymentStep {
@@ -489,7 +599,6 @@ impl CompetencyDeploymentStep {
             deployment_warnings: Vec::new(),
             depends_on: Vec::new(),
             progress_percent: 0.0,
-            current_operation: None,
         }
     }
 
@@ -508,9 +617,6 @@ impl CompetencyDeploymentStep {
 
 /// Detailed plan for EPA execution.
 ///
-/// Generated by analyzing requirements and resolving dependencies.
-/// Defines exact order of competency deployment and integration points.
-///
 /// # L2 Molecule - EPA execution planning
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EPAExecutionPlan {
@@ -522,19 +628,10 @@ pub struct EPAExecutionPlan {
     /// Deployment steps in execution order
     pub deployment_steps: Vec<CompetencyDeploymentStep>,
 
-    /// Cross-competency integration points
-    #[serde(default)]
-    pub integration_points: Vec<serde_json::Value>,
-
-    // Resource estimates
     /// Estimated total duration in minutes
     #[serde(default)]
     pub estimated_duration_minutes: Option<u32>,
-    /// Estimated cost in USD
-    #[serde(default)]
-    pub estimated_cost_usd: Option<f64>,
 
-    // Risk assessment
     /// Identified risks and mitigations
     #[serde(default)]
     pub risks: Vec<String>,
@@ -559,9 +656,7 @@ impl EPAExecutionPlan {
             epa_id,
             epa_title,
             deployment_steps,
-            integration_points: Vec::new(),
             estimated_duration_minutes: None,
-            estimated_cost_usd: None,
             risks: Vec::new(),
             preconditions: Vec::new(),
             created_at: Some(DateTime::now()),
@@ -586,9 +681,6 @@ impl EPAExecutionPlan {
 
 /// Real-time state of EPA execution.
 ///
-/// Tracks progress, maintains state, enables recovery from failures.
-/// Type definition only - persistence services migrate separately.
-///
 /// # L2 Molecule - EPA execution state tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EPAExecutionState {
@@ -597,7 +689,6 @@ pub struct EPAExecutionState {
     /// Overall execution status
     pub status: EPAExecutionStatus,
 
-    // Progress tracking
     /// Current step description
     #[serde(default)]
     pub current_step: Option<String>,
@@ -611,7 +702,6 @@ pub struct EPAExecutionState {
     #[serde(default)]
     pub percent_complete: f64,
 
-    // Execution timeline
     /// When execution started
     #[serde(default)]
     pub started_at: Option<DateTime>,
@@ -622,22 +712,16 @@ pub struct EPAExecutionState {
     #[serde(default)]
     pub completed_at: Option<DateTime>,
 
-    // Competency-level tracking
-    /// Status of each competency deployment (competency_id → status)
+    /// Status of each competency deployment (competency_id -> status)
     #[serde(default)]
     pub competency_states: std::collections::HashMap<String, CompetencyDeploymentStatus>,
 
-    // Issues
     /// Errors encountered during execution
     #[serde(default)]
     pub errors: Vec<String>,
     /// Warnings encountered during execution
     #[serde(default)]
     pub warnings: Vec<String>,
-
-    /// Elapsed time in seconds
-    #[serde(default)]
-    pub elapsed_seconds: Option<f64>,
 }
 
 impl EPAExecutionState {
@@ -657,7 +741,6 @@ impl EPAExecutionState {
             competency_states: std::collections::HashMap::new(),
             errors: Vec::new(),
             warnings: Vec::new(),
-            elapsed_seconds: None,
         }
     }
 
@@ -697,11 +780,33 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_epa_category_framework() {
-        assert_eq!(EPACategory::HipaaTechnicalSafeguards.framework(), "HIPAA");
-        assert_eq!(EPACategory::Soc2Security.framework(), "SOC2");
-        assert_eq!(EPACategory::GdprCompliance.framework(), "GDPR");
-        assert_eq!(EPACategory::NistCybersecurity.framework(), "NIST");
+    fn test_epa_category_tier() {
+        assert_eq!(EPACategory::Epa01ProcessIcsrs.tier(), EPATier::Core);
+        assert_eq!(
+            EPACategory::Epa08RegulatorySubmissions.tier(),
+            EPATier::Core
+        );
+        assert_eq!(EPACategory::Epa10IntegrateAi.tier(), EPATier::Advanced);
+        assert_eq!(EPACategory::Epa21LeadTransformation.tier(), EPATier::Expert);
+    }
+
+    #[test]
+    fn test_epa_focus_area() {
+        assert_eq!(
+            EPACategory::Epa01ProcessIcsrs.focus_area(),
+            "Case Processing"
+        );
+        assert_eq!(
+            EPACategory::Epa04DetectSignals.focus_area(),
+            "Signal Management"
+        );
+        assert_eq!(EPACategory::Epa12ConductAudits.focus_area(), "Quality");
+    }
+
+    #[test]
+    fn test_epa_numbers() {
+        assert_eq!(EPACategory::Epa01ProcessIcsrs.number(), 1);
+        assert_eq!(EPACategory::Epa21LeadTransformation.number(), 21);
     }
 
     #[test]
@@ -729,7 +834,7 @@ mod tests {
     #[test]
     fn test_epa_validation_result() {
         let result = EPAValidationResult::new(
-            "EPA-1".to_string(),
+            "EPA-04".to_string(),
             true,
             0.95,
             "2026-01-29T00:00:00Z".to_string(),
@@ -737,9 +842,9 @@ mod tests {
         assert!(result.is_ok());
 
         if let Ok(mut result) = result {
-            result.add_criterion_result("Auth implemented".to_string(), true);
-            result.add_criterion_result("Encryption configured".to_string(), true);
-            result.add_criterion_result("Audit logging".to_string(), false);
+            result.add_criterion_result("Signal detected".to_string(), true);
+            result.add_criterion_result("Threshold validated".to_string(), true);
+            result.add_criterion_result("Causality assessed".to_string(), false);
 
             assert!((result.criteria_met_percentage() - 0.666_666).abs() < 0.001);
         }
@@ -748,46 +853,36 @@ mod tests {
     #[test]
     fn test_competency_deployment_step() {
         let step =
-            CompetencyDeploymentStep::new("CC-AUTH-001".to_string(), "Authentication".to_string());
+            CompetencyDeploymentStep::new("CC-SIG-001".to_string(), "Signal Detection".to_string());
 
         assert_eq!(step.status, CompetencyDeploymentStatus::Pending);
         assert!(!step.has_errors());
         assert!(!step.has_warnings());
-        assert_eq!(step.progress_percent, 0.0);
-    }
-
-    #[test]
-    fn test_competency_deployment_step_with_errors() {
-        let mut step =
-            CompetencyDeploymentStep::new("CC-AUTH-001".to_string(), "Authentication".to_string());
-        step.deployment_errors.push("Connection failed".to_string());
-        step.deployment_warnings
-            .push("Retry recommended".to_string());
-
-        assert!(step.has_errors());
-        assert!(step.has_warnings());
     }
 
     #[test]
     fn test_epa_execution_plan() {
         let steps = vec![
-            CompetencyDeploymentStep::new("CC-AUTH-001".to_string(), "Authentication".to_string()),
-            CompetencyDeploymentStep::new("CC-ENCRYPT-001".to_string(), "Encryption".to_string()),
+            CompetencyDeploymentStep::new("CC-SIG-001".to_string(), "Signal Detection".to_string()),
+            CompetencyDeploymentStep::new(
+                "CC-CAUS-001".to_string(),
+                "Causality Assessment".to_string(),
+            ),
         ];
 
         let plan = EPAExecutionPlan::new(
-            "EPA-HIPAA-001".to_string(),
-            "HIPAA Technical Safeguards".to_string(),
+            "EPA-04".to_string(),
+            "Detect Safety Signals".to_string(),
             steps,
         );
 
         assert_eq!(plan.total_steps(), 2);
-        assert_eq!(plan.competency_ids(), vec!["CC-AUTH-001", "CC-ENCRYPT-001"]);
+        assert_eq!(plan.competency_ids(), vec!["CC-SIG-001", "CC-CAUS-001"]);
     }
 
     #[test]
     fn test_epa_execution_state() {
-        let state = EPAExecutionState::new("EPA-HIPAA-001".to_string(), 3);
+        let state = EPAExecutionState::new("EPA-04".to_string(), 3);
 
         assert_eq!(state.status, EPAExecutionStatus::NotStarted);
         assert_eq!(state.steps_completed, 0);
@@ -798,22 +893,53 @@ mod tests {
 
     #[test]
     fn test_epa_execution_state_competency_counts() {
-        let mut state = EPAExecutionState::new("EPA-HIPAA-001".to_string(), 3);
+        let mut state = EPAExecutionState::new("EPA-04".to_string(), 3);
 
         state.competency_states.insert(
-            "CC-AUTH-001".to_string(),
+            "CC-SIG-001".to_string(),
             CompetencyDeploymentStatus::Completed,
         );
         state.competency_states.insert(
-            "CC-ENCRYPT-001".to_string(),
+            "CC-CAUS-001".to_string(),
             CompetencyDeploymentStatus::Completed,
         );
         state.competency_states.insert(
-            "CC-AUDIT-001".to_string(),
+            "CC-RISK-001".to_string(),
             CompetencyDeploymentStatus::Failed,
         );
 
         assert_eq!(state.completed_competency_count(), 2);
         assert_eq!(state.failed_competency_count(), 1);
+    }
+
+    #[test]
+    fn test_all_21_epas_exist() {
+        let epas = [
+            EPACategory::Epa01ProcessIcsrs,
+            EPACategory::Epa02AssessCausality,
+            EPACategory::Epa03ManageCaseQuality,
+            EPACategory::Epa04DetectSignals,
+            EPACategory::Epa05ValidateSignals,
+            EPACategory::Epa06AssessBenefitRisk,
+            EPACategory::Epa07ManageRiskMinimization,
+            EPACategory::Epa08RegulatorySubmissions,
+            EPACategory::Epa09RegulatoryIntelligence,
+            EPACategory::Epa10IntegrateAi,
+            EPACategory::Epa11ManagePvSystems,
+            EPACategory::Epa12ConductAudits,
+            EPACategory::Epa13SpecialPopulations,
+            EPACategory::Epa14CoordinateGlobalPv,
+            EPACategory::Epa15LeadPvStrategy,
+            EPACategory::Epa16AdvancedAnalytics,
+            EPACategory::Epa17StakeholderCommunication,
+            EPACategory::Epa18DevelopTalent,
+            EPACategory::Epa19CrisisCommunication,
+            EPACategory::Epa20PharmacoepidemiologyStudies,
+            EPACategory::Epa21LeadTransformation,
+        ];
+        assert_eq!(epas.len(), 21);
+        for epa in &epas {
+            assert!(epa.number() >= 1 && epa.number() <= 21);
+        }
     }
 }

@@ -1,12 +1,14 @@
 //! Knowledge-Skills-Behaviors (KSB) Taxonomy
 //!
-//! Migrated from Python `domains/regulatory/caba/caba/models/ksb.py`.
+//! The atomic unit of PV competency. Each KSB is classified by type and subtype.
+//! (source: ~/Vaults/nexvigilant/400-projects/ksb-framework/)
 //!
 //! ## KSB Types
 //!
 //! - **Knowledge**: Facts, concepts, principles, mental models (K1-K3)
 //! - **Skills**: Procedures, techniques, tool usage (S1-S3)
 //! - **Behaviors**: Patterns, heuristics, decision approaches (B1-B3)
+//! - **AI Integration**: Human-AI collaboration points (A1-A3)
 
 use crate::caba::{Score, ScoreError};
 use serde::{Deserialize, Serialize};
@@ -49,10 +51,22 @@ pub enum KsbType {
     /// B3: Performance patterns
     #[serde(rename = "B3_Optimization")]
     BehaviorOptimization,
+
+    // AI Integration Types (A1-A3)
+    // (source: primitives/ksb.rs documents 233 AI Integration KSBs per domain)
+    /// A1: AI tool selection and prompt engineering
+    #[serde(rename = "A1_Tool_Selection")]
+    AiToolSelection,
+    /// A2: Human-AI workflow orchestration
+    #[serde(rename = "A2_Workflow_Orchestration")]
+    AiWorkflowOrchestration,
+    /// A3: AI output validation and oversight
+    #[serde(rename = "A3_Validation_Oversight")]
+    AiValidationOversight,
 }
 
 impl KsbType {
-    /// Get single-letter type prefix (K, S, or B).
+    /// Get single-letter type prefix (K, S, B, or A).
     #[must_use]
     pub fn prefix(&self) -> char {
         match self {
@@ -63,6 +77,9 @@ impl KsbType {
             Self::BehaviorErrorHandling
             | Self::BehaviorQualityAssurance
             | Self::BehaviorOptimization => 'B',
+            Self::AiToolSelection | Self::AiWorkflowOrchestration | Self::AiValidationOversight => {
+                'A'
+            }
         }
     }
 
@@ -82,6 +99,12 @@ impl KsbType {
     #[must_use]
     pub fn is_behavior(&self) -> bool {
         self.prefix() == 'B'
+    }
+
+    /// Check if this is an AI Integration type.
+    #[must_use]
+    pub fn is_ai_integration(&self) -> bool {
+        self.prefix() == 'A'
     }
 }
 
@@ -235,7 +258,13 @@ impl CodedKsb {
         self.ksb_type.is_behavior()
     }
 
-    /// Get the single-letter type prefix (K, S, or B).
+    /// Check if this is an AI Integration KSB.
+    #[must_use]
+    pub fn is_ai_integration(&self) -> bool {
+        self.ksb_type.is_ai_integration()
+    }
+
+    /// Get the single-letter type prefix (K, S, B, or A).
     #[must_use]
     pub fn type_prefix(&self) -> char {
         self.ksb_type.prefix()
@@ -251,6 +280,7 @@ mod tests {
         assert_eq!(KsbType::KnowledgeDeclarative.prefix(), 'K');
         assert_eq!(KsbType::SkillTechnical.prefix(), 'S');
         assert_eq!(KsbType::BehaviorErrorHandling.prefix(), 'B');
+        assert_eq!(KsbType::AiToolSelection.prefix(), 'A');
     }
 
     #[test]
@@ -259,6 +289,8 @@ mod tests {
         assert!(!KsbType::KnowledgeConceptual.is_skill());
         assert!(KsbType::SkillAnalytical.is_skill());
         assert!(KsbType::BehaviorOptimization.is_behavior());
+        assert!(KsbType::AiWorkflowOrchestration.is_ai_integration());
+        assert!(!KsbType::AiValidationOversight.is_knowledge());
     }
 
     #[test]

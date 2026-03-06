@@ -977,12 +977,100 @@ impl fmt::Display for SignalStrength {
 }
 
 // ============================================================================
-// T2-C: SignalLifecycle (directed state machine)
+// T2-C: PvLoopStage (pharmacovigilance pipeline stage)
+// ============================================================================
+
+/// PV loop pipeline stage — which stage of the pharmacovigilance cycle
+/// a signal is currently being processed through.
+///
+/// Mirrors `nexcore-pvos::typestate::SignalDetected/Evaluated/Validated/Actioned/Monitoring`
+/// at the runtime level, for consumers that need loop stage awareness without
+/// compile-time typestate enforcement.
+///
+/// # PV Loop
+/// ```text
+/// Detect → Evaluate → Assess → Act → Monitor
+///   ↑                                    │
+///   └──────────── feedback ──────────────┘
+/// ```
+///
+/// # Lex Primitiva
+/// - **ς (State)**: Each stage is a discrete pipeline position
+/// - **σ (Sequence)**: Stages follow the PV loop ordering
+/// - **∂ (Boundary)**: Thresholds gate transitions between stages
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum PvLoopStage {
+    /// Stage 1: Statistical signal detection from FAERS/spontaneous data.
+    Detect,
+    /// Stage 2: Evidence gathering (literature, labeling, clinical trials).
+    Evaluate,
+    /// Stage 3: Causality assessment (Naranjo, WHO-UMC).
+    Assess,
+    /// Stage 4: Regulatory/clinical action determination.
+    Act,
+    /// Stage 5: Ongoing surveillance. Non-terminal — can feedback to Detect.
+    Monitor,
+}
+
+impl PvLoopStage {
+    /// Next stage in the loop. Monitor returns None (decision point: feedback or close).
+    #[must_use]
+    pub const fn next(self) -> Option<Self> {
+        match self {
+            Self::Detect => Some(Self::Evaluate),
+            Self::Evaluate => Some(Self::Assess),
+            Self::Assess => Some(Self::Act),
+            Self::Act => Some(Self::Monitor),
+            Self::Monitor => None, // Decision point: feedback() → Detect or close
+        }
+    }
+
+    /// All stages in order.
+    #[must_use]
+    pub const fn all() -> [Self; 5] {
+        [
+            Self::Detect,
+            Self::Evaluate,
+            Self::Assess,
+            Self::Act,
+            Self::Monitor,
+        ]
+    }
+
+    /// Stage name matching nexcore-pvos convention.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Detect => "detected",
+            Self::Evaluate => "evaluated",
+            Self::Assess => "validated",
+            Self::Act => "actioned",
+            Self::Monitor => "monitoring",
+        }
+    }
+}
+
+impl fmt::Display for PvLoopStage {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Detect => write!(f, "Detect"),
+            Self::Evaluate => write!(f, "Evaluate"),
+            Self::Assess => write!(f, "Assess"),
+            Self::Act => write!(f, "Act"),
+            Self::Monitor => write!(f, "Monitor"),
+        }
+    }
+}
+
+// ============================================================================
+// T2-C: SignalLifecycle (directed state machine — review workflow)
 // ============================================================================
 
 /// Signal lifecycle state machine (T2-C: State Machine).
 ///
-/// Tracks a signal through its review lifecycle from detection to closure.
+/// Tracks a signal through its **review workflow** from detection to closure.
+/// This is the administrative review process, orthogonal to [`PvLoopStage`]
+/// which tracks which PV pipeline stage the signal is being processed through.
 ///
 /// # Lex Primitiva (Canonical Composition)
 ///
@@ -999,6 +1087,13 @@ impl fmt::Display for SignalStrength {
 ///              \-----> Rejected -> Closed
 ///              \-----> Escalated -> Confirmed -> Closed
 /// ```
+///
+/// # Relationship to PvLoopStage
+///
+/// A signal can be in any review state during any loop stage:
+/// - `New` + `Detect`: Fresh signal just identified
+/// - `UnderReview` + `Assess`: Being reviewed during causality assessment
+/// - `Confirmed` + `Monitor`: Confirmed signal under ongoing surveillance
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SignalLifecycle {
     /// Newly detected, not yet reviewed.
@@ -1062,6 +1157,22 @@ impl SignalLifecycle {
     #[must_use]
     pub fn can_transition_to(self, target: Self) -> bool {
         self.valid_transitions().contains(&target)
+    }
+
+    /// PV loop stages that are compatible with this review state.
+    ///
+    /// A signal can be in any review state during any loop stage, but some
+    /// combinations are more common. This returns the typical stages.
+    #[must_use]
+    pub const fn compatible_loop_stages(self) -> &'static [PvLoopStage] {
+        match self {
+            Self::New => &[PvLoopStage::Detect],
+            Self::UnderReview => &[PvLoopStage::Evaluate, PvLoopStage::Assess],
+            Self::Confirmed => &[PvLoopStage::Act, PvLoopStage::Monitor],
+            Self::Rejected => &[PvLoopStage::Assess],
+            Self::Escalated => &[PvLoopStage::Assess, PvLoopStage::Act],
+            Self::Closed => &[], // Terminal — no active loop stage
+        }
     }
 }
 

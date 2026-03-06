@@ -13,9 +13,9 @@
 //!
 //! - [`ksb`] - Knowledge-Skills-Behaviors taxonomy
 //! - [`proficiency`] - 7-level proficiency model (L1 Novice → L5++ Executive)
-//! - [`domain`] - 15 competency domains (PDC framework)
-//! - [`competency`] - Core competencies (10 categories, requirements, validation)
-//! - [`epa`] - Entrustable Professional Activities (14 compliance categories)
+//! - [`domain`] - 15 PV knowledge domains (NexVigilant KSB Framework)
+//! - [`competency`] - Core PV competencies (8 domain clusters, requirements, validation)
+//! - [`epa`] - Entrustable Professional Activities (21 PV activities)
 //! - [`cpa`] - Critical Practice Activities (8 CPAs, integration modules)
 //! - [`validation`] - Prerequisite validation atoms and molecules
 //!
@@ -39,25 +39,30 @@ pub mod cpa;
 pub mod domain;
 pub mod epa;
 pub mod ksb;
+pub mod mappings;
 pub mod proficiency;
+pub mod state;
 pub mod validation;
 
 // Re-export key types at crate root
 pub use domain::{DomainCategory, DomainRequirement};
 pub use ksb::{CodedKsb, KsbRequirement, KsbType, ResearchSource};
+pub use mappings::{cpa_required_domains, cpa_required_epas, epa_required_domains};
 pub use proficiency::{ProficiencyLevel, ProficiencyMetrics};
+pub use state::DomainStateVector;
 pub use validation::{PrerequisiteValidationResult, PrerequisiteValidator};
 
 // Re-export competency types
 pub use competency::{
     CompetencyCategory, CompetencyError, CompetencyRequirement, CompetencyRequirementBuilder,
-    CoreCompetency, IntegrationModel, SimpleProficiencyLevel, ValidationResult,
+    CoreCompetency, IntegrationModel, ValidationResult,
 };
+pub use domain::DomainCluster;
 
 // Re-export EPA types
 pub use epa::{
     CompetencyDeploymentStatus, CompetencyDeploymentStep, EPACategory, EPAExecutionPlan,
-    EPAExecutionState, EPAExecutionStatus, EPARequirement, EPAValidationResult, Priority,
+    EPAExecutionState, EPAExecutionStatus, EPARequirement, EPATier, EPAValidationResult, Priority,
 };
 
 // Re-export CPA types

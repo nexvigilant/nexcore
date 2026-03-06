@@ -1,59 +1,58 @@
-//! Competency Domain Types
+//! PV Competency Domain Types
 //!
-//! Migrated from Python `domains/regulatory/caba/caba/models/competency.py`.
+//! Core competencies integrate multiple KSBs into working PV capabilities.
+//! (source: ~/Vaults/nexvigilant/400-projects/ksb-framework/)
 //!
 //! ## Competency Hierarchy
 //!
-//! KSB (atomic) → Core Competency (integrated) → EPA (process) → CPA (complete business)
+//! KSB (atomic) -> Core Competency (integrated) -> EPA (process) -> CPA (complete business)
 //!
 //! ## Components
 //!
-//! - [`CompetencyCategory`] - 10 competency domain classifications
-//! - [`SimpleProficiencyLevel`] - 4-level proficiency (novice → expert)
+//! - [`CompetencyCategory`] - 8 PV competency domain clusters
 //! - [`CompetencyRequirement`] - Specification for a required competency
 //! - [`IntegrationModel`] - How KSBs integrate into working competency
 //! - [`ValidationResult`] - Competency validation results
 //! - [`CoreCompetency`] - Complete, validated competency
 
+use crate::caba::domain::DomainCluster;
+use crate::caba::proficiency::ProficiencyLevel;
+use nexcore_chrono::DateTime;
 use serde::{Deserialize, Serialize};
 
-/// Competency domain classifications.
+/// PV competency domain classifications.
+///
+/// These align with the DomainCluster groupings from the KSB framework,
+/// representing the major functional areas of PV competency.
+/// (source: 04-ksb-competency-framework.md)
 ///
 /// # L0 Quark - Category enumeration
-///
-/// These represent the 10 major technical domains for competencies.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CompetencyCategory {
-    /// Authentication & Authorization
-    #[serde(rename = "Authentication & Authorization")]
-    Authentication,
-    /// Data Storage & Retrieval
-    #[serde(rename = "Data Storage & Retrieval")]
-    DataManagement,
-    /// API Integration & Communication
-    #[serde(rename = "API Integration & Communication")]
-    ApiIntegration,
-    /// Payment & Billing
-    #[serde(rename = "Payment & Billing")]
-    PaymentProcessing,
-    /// Email & Messaging
-    #[serde(rename = "Email & Messaging")]
-    EmailCommunication,
-    /// File Storage & Management
-    #[serde(rename = "File Storage & Management")]
-    FileStorage,
-    /// Analytics & Metrics
-    #[serde(rename = "Analytics & Metrics")]
-    Analytics,
-    /// Monitoring & Observability
-    #[serde(rename = "Monitoring & Observability")]
-    Monitoring,
-    /// Security & Compliance
-    #[serde(rename = "Security & Compliance")]
-    Security,
-    /// Workflow Orchestration
-    #[serde(rename = "Workflow Orchestration")]
-    Workflow,
+    /// PV foundations, clinical pharmacology, medical terminology (D01-D03)
+    #[serde(rename = "Foundational PV Science")]
+    FoundationalScience,
+    /// ICSR processing, signal detection, risk assessment (D04-D06)
+    #[serde(rename = "Core PV Operations")]
+    CoreOperations,
+    /// Regulatory intelligence, PV systems & technology (D07-D08)
+    #[serde(rename = "Regulatory & Systems")]
+    RegulatorySystems,
+    /// Quality management in PV (D09)
+    #[serde(rename = "Quality Management")]
+    QualityManagement,
+    /// Special populations, global PV operations (D10-D11)
+    #[serde(rename = "Specialized PV")]
+    SpecializedPv,
+    /// PV program management & strategy (D12)
+    #[serde(rename = "PV Program Management")]
+    ProgramManagement,
+    /// Advanced analytics & data science (D13)
+    #[serde(rename = "Advanced Analytics")]
+    AdvancedAnalytics,
+    /// Communication, professional development (D14-D15)
+    #[serde(rename = "Communication & Development")]
+    CommunicationDevelopment,
 }
 
 impl CompetencyCategory {
@@ -61,83 +60,49 @@ impl CompetencyCategory {
     #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
-            Self::Authentication => "Authentication & Authorization",
-            Self::DataManagement => "Data Storage & Retrieval",
-            Self::ApiIntegration => "API Integration & Communication",
-            Self::PaymentProcessing => "Payment & Billing",
-            Self::EmailCommunication => "Email & Messaging",
-            Self::FileStorage => "File Storage & Management",
-            Self::Analytics => "Analytics & Metrics",
-            Self::Monitoring => "Monitoring & Observability",
-            Self::Security => "Security & Compliance",
-            Self::Workflow => "Workflow Orchestration",
+            Self::FoundationalScience => "Foundational PV Science",
+            Self::CoreOperations => "Core PV Operations",
+            Self::RegulatorySystems => "Regulatory & Systems",
+            Self::QualityManagement => "Quality Management",
+            Self::SpecializedPv => "Specialized PV",
+            Self::ProgramManagement => "PV Program Management",
+            Self::AdvancedAnalytics => "Advanced Analytics",
+            Self::CommunicationDevelopment => "Communication & Development",
+        }
+    }
+
+    /// Map to the corresponding DomainCluster.
+    #[must_use]
+    pub const fn to_domain_cluster(&self) -> DomainCluster {
+        match self {
+            Self::FoundationalScience => DomainCluster::Foundational,
+            Self::CoreOperations => DomainCluster::CoreOperational,
+            Self::RegulatorySystems => DomainCluster::Regulatory,
+            Self::QualityManagement => DomainCluster::Quality,
+            Self::SpecializedPv => DomainCluster::Specialized,
+            Self::ProgramManagement => DomainCluster::Management,
+            Self::AdvancedAnalytics => DomainCluster::Advanced,
+            Self::CommunicationDevelopment => DomainCluster::CrossCutting,
+        }
+    }
+}
+
+impl From<DomainCluster> for CompetencyCategory {
+    fn from(cluster: DomainCluster) -> Self {
+        match cluster {
+            DomainCluster::Foundational => Self::FoundationalScience,
+            DomainCluster::CoreOperational => Self::CoreOperations,
+            DomainCluster::Regulatory => Self::RegulatorySystems,
+            DomainCluster::Quality => Self::QualityManagement,
+            DomainCluster::Specialized => Self::SpecializedPv,
+            DomainCluster::Management => Self::ProgramManagement,
+            DomainCluster::Advanced => Self::AdvancedAnalytics,
+            DomainCluster::CrossCutting => Self::CommunicationDevelopment,
         }
     }
 }
 
 impl std::fmt::Display for CompetencyCategory {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.as_str())
-    }
-}
-
-/// Simple 4-level proficiency model for competencies.
-///
-/// # L0 Quark - Simple proficiency levels
-///
-/// Note: This is a simplified model. For full PDC 7-level model, use
-/// [`crate::proficiency::ProficiencyLevel`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-#[serde(rename_all = "lowercase")]
-pub enum SimpleProficiencyLevel {
-    /// Basic understanding, can use with guidance
-    Novice,
-    /// Solid understanding, can use independently
-    #[default]
-    Competent,
-    /// Deep understanding, can optimize and adapt
-    Proficient,
-    /// Mastery, can design and teach
-    Expert,
-}
-
-impl SimpleProficiencyLevel {
-    /// Get numeric value for comparisons.
-    #[must_use]
-    pub const fn numeric_value(&self) -> u8 {
-        match self {
-            Self::Novice => 1,
-            Self::Competent => 2,
-            Self::Proficient => 3,
-            Self::Expert => 4,
-        }
-    }
-
-    /// Get display string.
-    #[must_use]
-    pub const fn as_str(&self) -> &'static str {
-        match self {
-            Self::Novice => "novice",
-            Self::Competent => "competent",
-            Self::Proficient => "proficient",
-            Self::Expert => "expert",
-        }
-    }
-}
-
-impl std::cmp::PartialOrd for SimpleProficiencyLevel {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl std::cmp::Ord for SimpleProficiencyLevel {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.numeric_value().cmp(&other.numeric_value())
-    }
-}
-
-impl std::fmt::Display for SimpleProficiencyLevel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.as_str())
     }
@@ -157,7 +122,6 @@ pub struct CompetencyRequirement {
     /// Domain context
     pub domain: String,
 
-    // KSB Requirements (can be IDs or natural language descriptions)
     /// Required knowledge items
     pub required_knowledge: Vec<String>,
     /// Required skill items
@@ -167,20 +131,11 @@ pub struct CompetencyRequirement {
 
     /// Use case description
     pub use_case: String,
-    /// Constraints on implementation
-    #[serde(default)]
-    pub constraints: serde_json::Value,
     /// Target proficiency level
     #[serde(default)]
-    pub target_proficiency: SimpleProficiencyLevel,
+    pub target_proficiency: ProficiencyLevel,
 
-    /// Runtime requirements
-    #[serde(default)]
-    pub runtime_requirements: serde_json::Value,
-    /// Infrastructure needs
-    #[serde(default)]
-    pub infrastructure_needs: Vec<String>,
-    /// Integration points
+    /// Integration points with other competencies
     #[serde(default)]
     pub integration_points: Vec<String>,
 }
@@ -196,7 +151,7 @@ pub struct CompetencyRequirementBuilder {
     required_skills: Vec<String>,
     required_behaviors: Vec<String>,
     use_case: Option<String>,
-    target_proficiency: SimpleProficiencyLevel,
+    target_proficiency: ProficiencyLevel,
 }
 
 impl CompetencyRequirementBuilder {
@@ -264,7 +219,7 @@ impl CompetencyRequirementBuilder {
 
     /// Set the target proficiency.
     #[must_use]
-    pub fn target_proficiency(mut self, level: SimpleProficiencyLevel) -> Self {
+    pub fn target_proficiency(mut self, level: ProficiencyLevel) -> Self {
         self.target_proficiency = level;
         self
     }
@@ -315,10 +270,7 @@ impl CompetencyRequirementBuilder {
             required_skills: self.required_skills,
             required_behaviors: self.required_behaviors,
             use_case,
-            constraints: serde_json::Value::Object(serde_json::Map::new()),
             target_proficiency: self.target_proficiency,
-            runtime_requirements: serde_json::Value::Object(serde_json::Map::new()),
-            infrastructure_needs: Vec::new(),
             integration_points: Vec::new(),
         })
     }
@@ -335,23 +287,18 @@ impl CompetencyRequirement {
 /// Defines how KSBs integrate into working competency.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IntegrationModel {
-    /// How knowledge is applied
+    /// How knowledge items are applied (KSB ID -> application description)
     pub knowledge_integration: std::collections::HashMap<String, String>,
-    /// How skills are executed
+    /// How skills are executed (KSB ID -> execution description)
     pub skill_integration: std::collections::HashMap<String, String>,
-    /// How behaviors are demonstrated
+    /// How behaviors are demonstrated (KSB ID -> demonstration description)
     pub behavior_integration: std::collections::HashMap<String, String>,
-    /// Module structure
-    pub module_structure: serde_json::Value,
     /// External dependencies
     #[serde(default)]
     pub external_dependencies: Vec<String>,
     /// Internal dependencies
     #[serde(default)]
     pub internal_dependencies: Vec<String>,
-    /// Infrastructure components
-    #[serde(default)]
-    pub infrastructure_components: Vec<serde_json::Value>,
 }
 
 /// Competency validation results.
@@ -366,15 +313,6 @@ pub struct ValidationResult {
     pub completeness_check: std::collections::HashMap<String, bool>,
     /// Dependency check results
     pub dependency_check: std::collections::HashMap<String, bool>,
-    /// Integration check results
-    #[serde(default)]
-    pub integration_check: serde_json::Value,
-    /// Code quality check results
-    #[serde(default)]
-    pub code_quality_check: serde_json::Value,
-    /// Test coverage check results
-    #[serde(default)]
-    pub test_coverage_check: std::collections::HashMap<String, f64>,
 
     /// Errors found
     #[serde(default)]
@@ -385,16 +323,6 @@ pub struct ValidationResult {
     /// Suggestions for improvement
     #[serde(default)]
     pub suggestions: Vec<String>,
-
-    /// Automation score [0.0, 1.0]
-    #[serde(default)]
-    pub automation_score: f64,
-    /// Reliability score [0.0, 1.0]
-    #[serde(default)]
-    pub reliability_score: f64,
-    /// Maintainability score [0.0, 1.0]
-    #[serde(default)]
-    pub maintainability_score: f64,
 }
 
 impl Default for ValidationResult {
@@ -404,15 +332,9 @@ impl Default for ValidationResult {
             validation_score: 0.0,
             completeness_check: std::collections::HashMap::new(),
             dependency_check: std::collections::HashMap::new(),
-            integration_check: serde_json::Value::Object(serde_json::Map::new()),
-            code_quality_check: serde_json::Value::Object(serde_json::Map::new()),
-            test_coverage_check: std::collections::HashMap::new(),
             errors: Vec::new(),
             warnings: Vec::new(),
             suggestions: Vec::new(),
-            automation_score: 0.0,
-            reliability_score: 0.0,
-            maintainability_score: 0.0,
         }
     }
 }
@@ -438,7 +360,7 @@ impl ValidationResult {
 
 /// Complete, validated competency ready for deployment.
 ///
-/// Output of Competency Composer - fully functional capability module.
+/// Output of Competency Composer - fully functional PV capability module.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CoreCompetency {
     /// Unique identifier (format: CC-XXX-001)
@@ -462,40 +384,18 @@ pub struct CoreCompetency {
     /// Validation result
     pub validation_result: ValidationResult,
 
-    /// Proficiency definitions per level
-    #[serde(default)]
-    pub proficiency_definitions: std::collections::HashMap<String, serde_json::Value>,
     /// Target proficiency level
     #[serde(default)]
-    pub target_proficiency: SimpleProficiencyLevel,
+    pub target_proficiency: ProficiencyLevel,
 
-    /// Runtime requirements
-    #[serde(default)]
-    pub runtime_requirements: serde_json::Value,
-    /// Infrastructure requirements
-    #[serde(default)]
-    pub infrastructure_requirements: Vec<serde_json::Value>,
     /// External integrations
     #[serde(default)]
     pub external_integrations: Vec<String>,
 
-    /// Automation potential [0.0, 1.0]
-    #[serde(default)]
-    pub automation_potential: f64,
-    /// Reliability score [0.0, 1.0]
-    #[serde(default)]
-    pub reliability_score: f64,
-    /// Test coverage [0.0, 1.0]
-    #[serde(default)]
-    pub test_coverage: f64,
-    /// Code quality score [0.0, 1.0]
-    #[serde(default)]
-    pub code_quality_score: f64,
-
-    /// Creation timestamp (ISO 8601)
-    pub created_at: String,
-    /// Last validation timestamp (ISO 8601)
-    pub last_validated: String,
+    /// Creation timestamp
+    pub created_at: DateTime,
+    /// Last validation timestamp
+    pub last_validated: DateTime,
     /// Creator identifier
     pub created_by: String,
 }
@@ -523,33 +423,34 @@ mod tests {
     #[test]
     fn test_competency_category_display() {
         assert_eq!(
-            CompetencyCategory::Authentication.as_str(),
-            "Authentication & Authorization"
+            CompetencyCategory::FoundationalScience.as_str(),
+            "Foundational PV Science"
         );
         assert_eq!(
-            CompetencyCategory::Security.as_str(),
-            "Security & Compliance"
+            CompetencyCategory::CoreOperations.as_str(),
+            "Core PV Operations"
         );
     }
 
     #[test]
-    fn test_simple_proficiency_ordering() {
-        assert!(SimpleProficiencyLevel::Novice < SimpleProficiencyLevel::Competent);
-        assert!(SimpleProficiencyLevel::Competent < SimpleProficiencyLevel::Proficient);
-        assert!(SimpleProficiencyLevel::Proficient < SimpleProficiencyLevel::Expert);
+    fn test_category_domain_cluster_roundtrip() {
+        let cat = CompetencyCategory::CoreOperations;
+        let cluster = cat.to_domain_cluster();
+        let back: CompetencyCategory = cluster.into();
+        assert_eq!(cat, back);
     }
 
     #[test]
     fn test_competency_requirement_validation() {
         let result = CompetencyRequirement::builder()
-            .title("Test")
-            .description("Description")
-            .category(CompetencyCategory::Authentication)
-            .domain("Auth")
-            .knowledge("K1")
-            .skill("S1")
-            .behavior("B1")
-            .use_case("Use case")
+            .title("Signal Detection Competency")
+            .description("Ability to detect safety signals from PV data")
+            .category(CompetencyCategory::CoreOperations)
+            .domain("Signal Detection")
+            .knowledge("PRR calculation methodology")
+            .skill("Statistical signal analysis")
+            .behavior("Timely escalation of confirmed signals")
+            .use_case("Routine signal detection review")
             .build();
         assert!(result.is_ok());
 
@@ -557,9 +458,8 @@ mod tests {
         let result = CompetencyRequirement::builder()
             .title("Test")
             .description("Description")
-            .category(CompetencyCategory::Authentication)
-            .domain("Auth")
-            // No knowledge added
+            .category(CompetencyCategory::FoundationalScience)
+            .domain("PV Foundations")
             .skill("S1")
             .behavior("B1")
             .use_case("Use case")

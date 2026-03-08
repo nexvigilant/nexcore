@@ -15,7 +15,6 @@ nexcore-lex-primitiva = { workspace = true }
 stem-math = { workspace = true }
 serde = { workspace = true }
 nexcore-error = { workspace = true }
-nexcore-flywheel = { path = "../nexcore-flywheel" }
 serde_json = { workspace = true }
 
 [dev-dependencies]

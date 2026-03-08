@@ -70,6 +70,35 @@ impl FlywheelBus {
             buf.clear();
         }
     }
+
+    /// Emit a fidelity drift event when a relay chain's total fidelity shifts.
+    ///
+    /// Called when a `RelayChain` recalculates and the total fidelity product
+    /// changes by more than the configured drift threshold.
+    pub fn emit_fidelity_drift(&self, chain: &str, f_total: f64, delta: f64) -> FlywheelEvent {
+        use crate::event::EventKind;
+        let kind = EventKind::ThresholdDrift {
+            parameter: format!("fidelity:{chain}"),
+            delta,
+        };
+        let event = FlywheelEvent::broadcast(FlywheelTier::Staging, kind)
+            .with_payload(serde_json::json!({ "f_total": f_total }));
+        self.emit(event)
+    }
+
+    /// Emit a relay degradation event when F_total drops below F_min.
+    ///
+    /// Called when relay verification detects total fidelity has fallen
+    /// below the safety-critical threshold (default 0.80).
+    pub fn emit_relay_degradation(&self, chain: &str, f_total: f64, f_min: f64) -> FlywheelEvent {
+        use crate::event::EventKind;
+        let kind = EventKind::RelayDegradation {
+            chain: chain.to_owned(),
+            f_total,
+            f_min,
+        };
+        self.emit(FlywheelEvent::broadcast(FlywheelTier::Staging, kind))
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

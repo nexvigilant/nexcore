@@ -23,7 +23,6 @@
 //! | Guardian | actuator state | iteration number |
 //! | Hooks | Cargo.lock | hook binary name |
 
-use nexcore_fs::dirs;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::fs;
@@ -32,11 +31,15 @@ use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
 /// Cached home directory — avoids repeated env var lookups in hot paths.
-/// `dirs::home_dir()` queries `$HOME` each call; 175+ hooks × 10 factory
-/// methods = 1750 redundant env reads per session without this cache.
+/// 175+ hooks × 10 factory methods = 1750 redundant env reads per session
+/// without this cache. Uses `$HOME` directly to avoid foundation→domain dep.
 fn cached_home() -> &'static Path {
     static HOME: OnceLock<PathBuf> = OnceLock::new();
-    HOME.get_or_init(|| dirs::home_dir().unwrap_or_else(|| PathBuf::from(".")))
+    HOME.get_or_init(|| {
+        std::env::var("HOME")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| PathBuf::from("."))
+    })
 }
 
 // ============================================================================

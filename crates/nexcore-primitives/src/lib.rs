@@ -15,7 +15,6 @@
 pub mod chemistry;
 pub mod dynamics;
 pub mod entropy;
-pub mod flywheel_bridge;
 pub mod grounding;
 pub mod measurement;
 pub mod quantum;

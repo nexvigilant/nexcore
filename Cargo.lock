@@ -8578,7 +8578,6 @@ dependencies = [
 name = "nexcore-constants"
 version = "1.0.0"
 dependencies = [
- "nexcore-fs",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
@@ -9784,7 +9783,6 @@ dependencies = [
  "criterion",
  "nexcore-constants",
  "nexcore-error",
- "nexcore-flywheel",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",

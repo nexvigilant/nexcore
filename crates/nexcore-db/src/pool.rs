@@ -62,7 +62,12 @@ impl DbPool {
         }
 
         let conn = Connection::open(&path)?;
-        schema::initialize(&conn)?;
+        if let Err(e) = schema::initialize(&conn) {
+            // Emit to stderr — tracing may have no subscriber (e.g. CLI binaries).
+            // This ensures version mismatches are always audible.
+            eprintln!("[nexcore-db] {e} at {}", path.display());
+            return Err(e);
+        }
 
         tracing::info!(path = %path.display(), "Brain database opened");
 

@@ -1,15 +1,23 @@
 //! SQLite dual-write layer for Brain working memory.
 //!
 //! Every Brain mutation (session create, artifact save/resolve, implicit save,
-//! code track) writes to both the filesystem (JSON) and SQLite. Reads remain
-//! file-based for now — SQLite acts as a durable mirror that accumulates
-//! knowledge across sessions.
+//! code track) writes to both the filesystem (JSON) and SQLite.
+//!
+//! **Read paths use DB-first with index.json fallback.** Session resolution
+//! (`BrainSession::load`, `list_all`, `load_latest`) queries brain.db first
+//! via direct `DbPool::open_default()`, falling back to index.json only if
+//! the DB is unavailable. Changed in Phase 1 Foundation Repair (2026-03-08)
+//! to fix dual-store divergence where 196/218 sessions were invisible to CLI.
 //!
 //! # Design
 //!
-//! - **Lazy global `DbPool`**: Initialized on first use via `std::sync::LazyLock`.
-//! - **Non-fatal**: If SQLite writes fail, we log a warning but don't fail the
-//!   operation. The file-based system remains the primary source of truth.
+//! - **Lazy global `DbPool`**: Used by write-mirror functions (sync_session,
+//!   sync_artifact, etc.). Uses `tracing::warn` on failure — silent in CLI
+//!   binaries without a tracing subscriber.
+//! - **Direct `DbPool::open_default()`**: Used by read functions in
+//!   `session.rs`. Bypasses the LazyLock so errors propagate via `eprintln!`.
+//! - **Non-fatal writes**: If writes fail, we warn but don't fail the op.
+//! - **Loud read failures**: Read failures emit to stderr before fallback.
 //! - **INSERT OR IGNORE** for sessions (may already exist from migration).
 //! - **Upsert** for artifacts and implicit knowledge (idempotent updates).
 

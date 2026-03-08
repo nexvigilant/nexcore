@@ -40,6 +40,7 @@ futures = "0.3.30"
 # hex — REPLACED by nexcore-codec (sovereignty campaign Phase 2)
 http-body-util = "0.1.2"
 jsonwebtoken = "9"
+molt = "0.3"
 # once_cell — REMOVED: migrated to std::sync::LazyLock (Rust 1.80+)
 phf = { version = "0.11.2", features = ["macros"] }
 proc-macro2 = "1.0.86"

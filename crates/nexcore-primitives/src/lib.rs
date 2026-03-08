@@ -25,4 +25,7 @@ pub mod transfer;
 
 pub use measurement::{Confidence, Measured};
 pub use relay::{Fidelity, RelayChain, RelayHop, RelayVerification};
-pub use transfer::{CircuitBreaker, DecayFunction, FeedbackLoop, Homeostasis, TopologicalAddress};
+pub use transfer::{
+    CircuitBreaker, DecayFunction, FeedbackLoop, Homeostasis, Regulator, RegulatorAction,
+    TopologicalAddress,
+};

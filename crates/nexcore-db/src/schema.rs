@@ -8,7 +8,7 @@ use rusqlite::Connection;
 use crate::error::{DbError, Result};
 
 /// Current schema version. Increment when adding migrations.
-pub const CURRENT_SCHEMA_VERSION: u32 = 4;
+pub const CURRENT_SCHEMA_VERSION: u32 = 5;
 
 /// Initialize the database schema (create all tables if they don't exist).
 ///
@@ -40,6 +40,7 @@ pub fn initialize(conn: &Connection) -> Result<()> {
             apply_v2(conn)?;
             // V3 is a dedup migration — no new tables, skip on fresh install
             apply_v4(conn)?;
+            apply_v5(conn)?;
             conn.execute(
                 "INSERT INTO schema_version (version) VALUES (?1)",
                 [CURRENT_SCHEMA_VERSION],
@@ -208,6 +209,9 @@ fn migrate(conn: &Connection, from_version: u32) -> Result<()> {
     }
     if from_version < 4 {
         apply_v4(conn)?;
+    }
+    if from_version < 5 {
+        apply_v5(conn)?;
     }
 
     conn.execute(
@@ -433,6 +437,77 @@ fn apply_v4(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
+/// V5 schema: extended autopsy metrics + skill proposals + test history.
+///
+/// Changes:
+/// - `autopsy_records` gains 9 columns for PDP prompt quality metrics
+/// - `skill_proposals` — tracks pattern→skill promotion pipeline
+/// - `test_runs` — per-crate test execution history for flake detection
+fn apply_v5(conn: &Connection) -> Result<()> {
+    // Extended autopsy columns (ALTER TABLE is idempotent-safe with IF NOT EXISTS
+    // unavailable in SQLite ALTER, so we check column existence first)
+    let cols: Vec<String> = conn
+        .prepare("PRAGMA table_info(autopsy_records)")?
+        .query_map([], |row| row.get::<_, String>(1))?
+        .filter_map(|r| r.ok())
+        .collect();
+
+    let new_cols = [
+        ("restart_count", "INTEGER NOT NULL DEFAULT 0"),
+        ("clarification_count", "INTEGER NOT NULL DEFAULT 0"),
+        ("deviation_count", "INTEGER NOT NULL DEFAULT 0"),
+        ("ac_passed", "INTEGER NOT NULL DEFAULT 0"),
+        ("ac_total", "INTEGER NOT NULL DEFAULT 0"),
+        ("blocker_count", "INTEGER NOT NULL DEFAULT 0"),
+        ("constraint_specificity", "REAL"),
+        ("prior_art_refs", "INTEGER NOT NULL DEFAULT 0"),
+        ("prompt_tokens", "INTEGER NOT NULL DEFAULT 0"),
+    ];
+
+    for (name, typ) in new_cols {
+        if !cols.iter().any(|c| c == name) {
+            conn.execute_batch(&format!(
+                "ALTER TABLE autopsy_records ADD COLUMN {name} {typ};"
+            ))?;
+        }
+    }
+
+    // Skill proposals table
+    conn.execute_batch(
+        "
+        CREATE TABLE IF NOT EXISTS skill_proposals (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            pattern_id          INTEGER,
+            proposed_name       TEXT NOT NULL,
+            proposed_description TEXT,
+            source_pattern      TEXT,
+            confidence          REAL DEFAULT 0.0,
+            status              TEXT DEFAULT 'pending',
+            created_at          TEXT,
+            promoted_at         TEXT,
+            skill_path          TEXT,
+            FOREIGN KEY (pattern_id) REFERENCES patterns(id)
+        );
+
+        -- Test run history for flake detection
+        CREATE TABLE IF NOT EXISTS test_runs (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            run_at      TEXT NOT NULL DEFAULT (datetime('now')),
+            session_id  TEXT,
+            crate_name  TEXT NOT NULL,
+            runner      TEXT NOT NULL DEFAULT 'cargo-test',
+            passed      INTEGER NOT NULL DEFAULT 0,
+            failed      INTEGER NOT NULL DEFAULT 0,
+            ignored     INTEGER NOT NULL DEFAULT 0,
+            duration_s  REAL NOT NULL DEFAULT 0,
+            fail_names  TEXT NOT NULL DEFAULT '[]'
+        );
+        ",
+    )?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -576,7 +651,7 @@ mod tests {
         let version: u32 = conn
             .query_row("SELECT version FROM schema_version", [], |row| row.get(0))
             .expect("version");
-        assert_eq!(version, 4);
+        assert_eq!(version, CURRENT_SCHEMA_VERSION);
 
         // autopsy_records table should exist
         let exists: bool = conn

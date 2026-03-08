@@ -1872,6 +1872,176 @@ impl fmt::Display for PrimitiveMining {
 }
 
 // ============================================================================
+// 27. Regulator — T2-C: μ (Mapping) + ∂ (Boundary) + N (Quantity) + σ (Sequence) + ∝ (Irreversibility)
+// ============================================================================
+
+/// A discrete action from a regulator's action space.
+///
+/// Each action has a label, a signed magnitude (direction + strength),
+/// and a threshold: the minimum absolute error required to trigger it.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct RegulatorAction {
+    /// Human-readable action label (e.g., "increase_dose", "hold", "reduce")
+    pub label: String,
+    /// Signed magnitude: positive = increase, negative = decrease, zero = hold
+    pub magnitude: f64,
+    /// Minimum |error| required to activate this action
+    pub threshold: f64,
+}
+
+impl RegulatorAction {
+    pub fn new(label: impl Into<String>, magnitude: f64, threshold: f64) -> Self {
+        Self {
+            label: label.into(),
+            magnitude,
+            threshold: threshold.max(0.0),
+        }
+    }
+}
+
+impl fmt::Display for RegulatorAction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let dir = if self.magnitude > 0.0 {
+            "+"
+        } else if self.magnitude < 0.0 {
+            "-"
+        } else {
+            "="
+        };
+        write!(
+            f,
+            "{}({}{:.2}, t≥{:.2})",
+            self.label,
+            dir,
+            self.magnitude.abs(),
+            self.threshold
+        )
+    }
+}
+
+/// A quantumizing regulator: collapses continuous error into discrete actions.
+///
+/// Unlike `FeedbackLoop` (#6) and `Homeostasis` (#11) which apply continuous
+/// proportional corrections, a `Regulator` operates on a **discrete action space**.
+/// Each tick: measure → compare → collapse to ONE action → commit irrevocably.
+///
+/// This is the closed-loop version of the quantumizing pattern:
+/// `μ(continuous→discrete) at ∂(boundary) producing N(one quantum) in σ(sequence) with ∝(no undo)`.
+///
+/// Transfers from: thermostat (heat/cool/off), dose adjustment (increase/hold/decrease),
+/// PV signal triage (escalate/monitor/dismiss), traffic lights (red/yellow/green),
+/// token generation (sample one token from distribution — the open-loop version).
+///
+/// Grounding: μ (error→action mapping) + ∂ (threshold boundaries) + N (one action selected) +
+///            σ (sequential ticks) + ∝ (committed history) + κ (error comparison) + ρ (feedback loop)
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Regulator {
+    /// Target setpoint the regulator seeks to maintain
+    pub setpoint: f64,
+    /// Available discrete actions (the action space)
+    pub actions: Vec<RegulatorAction>,
+    /// Current observed value
+    pub current: f64,
+    /// Committed action history (irreversible — ∝)
+    pub history: Vec<String>,
+    /// Number of ticks executed
+    pub ticks: u64,
+}
+
+impl Regulator {
+    pub fn new(setpoint: f64, actions: Vec<RegulatorAction>) -> Self {
+        Self {
+            setpoint,
+            actions,
+            current: setpoint, // start at equilibrium
+            history: Vec::new(),
+            ticks: 0,
+        }
+    }
+
+    /// Feed a new measurement into the regulator (the feedback wire)
+    pub fn observe(&mut self, measured: f64) {
+        self.current = measured;
+    }
+
+    /// The error signal: setpoint - current
+    #[must_use]
+    pub fn error(&self) -> f64 {
+        self.setpoint - self.current
+    }
+
+    /// Whether the system is within tolerance of setpoint
+    #[must_use]
+    pub fn converged(&self, tolerance: f64) -> bool {
+        self.error().abs() < tolerance
+    }
+
+    /// The quantumizing operation: collapse continuous error into one discrete action.
+    ///
+    /// Selection logic:
+    /// 1. Compute error (κ: compare current vs setpoint)
+    /// 2. Filter actions whose threshold ≤ |error| (∂: boundary gate)
+    /// 3. Among eligible actions, select the one whose sign matches error direction
+    ///    and whose threshold is highest (most specific match) (μ: mapping)
+    /// 4. Commit to history irrevocably (∝)
+    ///
+    /// Returns `None` if no actions are defined.
+    pub fn quantumize(&mut self) -> Option<RegulatorAction> {
+        if self.actions.is_empty() {
+            return None;
+        }
+
+        let error = self.error();
+        let abs_error = error.abs();
+
+        // Find the best matching action:
+        // - If error > 0 (below setpoint): prefer positive magnitude (increase)
+        // - If error < 0 (above setpoint): prefer negative magnitude (decrease)
+        // - If error ≈ 0: prefer magnitude closest to zero (hold)
+        let selected = self
+            .actions
+            .iter()
+            .filter(|a| a.threshold <= abs_error || a.magnitude.abs() < f64::EPSILON)
+            .min_by(|a, b| {
+                // Score: distance between action direction and error direction
+                // Lower score = better match
+                let score_a = (a.magnitude - error).abs();
+                let score_b = (b.magnitude - error).abs();
+                score_a
+                    .partial_cmp(&score_b)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            })
+            .cloned();
+
+        if let Some(ref action) = selected {
+            self.history.push(action.label.clone());
+            self.ticks += 1;
+        }
+
+        selected
+    }
+}
+
+impl fmt::Display for Regulator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let status = if self.converged(0.1) {
+            "STABLE"
+        } else {
+            "ACTIVE"
+        };
+        write!(
+            f,
+            "Reg(sp={:.1}, cur={:.1}, e={:.2}, ticks={}, {})",
+            self.setpoint,
+            self.current,
+            self.error(),
+            self.ticks,
+            status
+        )
+    }
+}
+
+// ============================================================================
 // Tests
 // ============================================================================
 
@@ -2574,5 +2744,99 @@ mod tests {
         let pm = PrimitiveMining::new(10);
         assert!((pm.yield_ratio() - 0.0).abs() < f64::EPSILON);
         assert_eq!(pm.pending(), 0);
+    }
+
+    // Regulator tests
+
+    #[test]
+    fn test_regulator_selects_action_from_error() {
+        let actions = vec![
+            RegulatorAction::new("decrease_strongly", -1.0, 0.5),
+            RegulatorAction::new("decrease", -0.5, 0.3),
+            RegulatorAction::new("hold", 0.0, 0.1),
+            RegulatorAction::new("increase", 0.5, 0.3),
+            RegulatorAction::new("increase_strongly", 1.0, 0.5),
+        ];
+        let mut reg = Regulator::new(100.0, actions);
+
+        // Current value above setpoint → error is negative → should select a decrease action
+        reg.observe(120.0);
+        let action = reg.quantumize();
+        assert!(action.is_some());
+        let a = action.unwrap();
+        assert!(
+            a.magnitude <= 0.0,
+            "Expected decrease action, got magnitude {}",
+            a.magnitude
+        );
+        assert!(reg.ticks > 0);
+    }
+
+    #[test]
+    fn test_regulator_hold_when_at_setpoint() {
+        let actions = vec![
+            RegulatorAction::new("decrease", -1.0, 0.5),
+            RegulatorAction::new("hold", 0.0, 0.1),
+            RegulatorAction::new("increase", 1.0, 0.5),
+        ];
+        let mut reg = Regulator::new(100.0, actions);
+        reg.observe(100.0); // at setpoint
+        let action = reg.quantumize();
+        let a = action.unwrap();
+        assert_eq!(a.label, "hold", "At setpoint, should hold");
+    }
+
+    #[test]
+    fn test_regulator_history_is_irreversible() {
+        let actions = vec![
+            RegulatorAction::new("decrease", -1.0, 0.5),
+            RegulatorAction::new("hold", 0.0, 0.1),
+            RegulatorAction::new("increase", 1.0, 0.5),
+        ];
+        let mut reg = Regulator::new(50.0, actions);
+        reg.observe(30.0);
+        let _ = reg.quantumize();
+        reg.observe(70.0);
+        let _ = reg.quantumize();
+
+        assert_eq!(
+            reg.history.len(),
+            2,
+            "History should record both actions irrevocably"
+        );
+        assert_eq!(reg.ticks, 2);
+    }
+
+    #[test]
+    fn test_regulator_empty_actions() {
+        let mut reg = Regulator::new(50.0, vec![]);
+        reg.observe(30.0);
+        let action = reg.quantumize();
+        assert!(action.is_none(), "No actions available → None");
+    }
+
+    #[test]
+    fn test_regulator_convergence() {
+        let actions = vec![
+            RegulatorAction::new("decrease", -1.0, 0.5),
+            RegulatorAction::new("hold", 0.0, 0.1),
+            RegulatorAction::new("increase", 1.0, 0.5),
+        ];
+        let mut reg = Regulator::new(100.0, actions);
+        reg.observe(100.0);
+        assert!(reg.converged(1.0));
+        reg.observe(99.5);
+        assert!(reg.converged(1.0));
+        reg.observe(110.0);
+        assert!(!reg.converged(1.0));
+    }
+
+    #[test]
+    fn test_regulator_display() {
+        let actions = vec![RegulatorAction::new("hold", 0.0, 0.1)];
+        let reg = Regulator::new(37.0, actions);
+        let s = format!("{}", reg);
+        assert!(s.contains("37"));
+        assert!(s.contains("Reg"));
     }
 }

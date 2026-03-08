@@ -7904,6 +7904,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "molt"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6ff0d27c6261b74d65ab819de1b163d29917d9f95cf995e5845b6c953e516bc"
+dependencies = [
+ "indexmap 1.9.3",
+]
+
+[[package]]
 name = "monostate"
 version = "0.1.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9457,6 +9466,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexcore-molt"
+version = "0.1.0"
+dependencies = [
+ "molt",
+ "nexcore-error",
+ "nexcore-lex-primitiva",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "nexcore-muscular"
 version = "1.0.0"
 dependencies = [
@@ -9787,6 +9807,7 @@ dependencies = [
 name = "nexcore-pv-core"
 version = "1.0.0"
 dependencies = [
+ "grounded",
  "nexcore-chrono",
  "nexcore-constants",
  "nexcore-edit-distance",

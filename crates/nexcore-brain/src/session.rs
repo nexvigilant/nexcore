@@ -176,30 +176,33 @@ impl BrainSession {
 
     /// Load an existing session by ID
     ///
+    /// Queries brain.db first (contains all sessions including those created by
+    /// hooks via direct SQL). Falls back to index.json for backward compatibility.
+    ///
     /// # Errors
     ///
     /// Returns an error if the session doesn't exist or cannot be loaded.
     pub fn load(id: String) -> Result<Self> {
         let session_dir = brain_dir().join("sessions").join(&id);
 
-        if !session_dir.exists() {
-            return Err(BrainError::SessionNotFound(id));
+        // Try loading from SQLite first (authoritative — contains hook-created sessions)
+        if let Some(session) = Self::load_from_db(&id, &session_dir) {
+            return Ok(session);
         }
 
-        // Load session metadata from index
+        // Fallback: check index.json (legacy path)
         let index = Self::load_index()?;
-        let entry = index
-            .iter()
-            .find(|e| e.id == id)
-            .ok_or_else(|| BrainError::SessionNotFound(id))?;
+        if let Some(entry) = index.iter().find(|e| e.id == id) {
+            return Ok(Self {
+                id: entry.id.clone(),
+                created_at: entry.created_at,
+                project: entry.project.clone(),
+                git_commit: entry.git_commit.clone(),
+                session_dir,
+            });
+        }
 
-        Ok(Self {
-            id: entry.id.clone(),
-            created_at: entry.created_at,
-            project: entry.project.clone(),
-            git_commit: entry.git_commit.clone(),
-            session_dir,
-        })
+        Err(BrainError::SessionNotFound(id))
     }
 
     /// Load session by string ID
@@ -219,19 +222,43 @@ impl BrainSession {
 
     /// List all sessions
     ///
+    /// Queries brain.db first (authoritative). Falls back to index.json.
+    ///
     /// # Errors
     ///
-    /// Returns an error if the index cannot be loaded.
+    /// Returns an error if neither store can be read.
     pub fn list_all() -> Result<Vec<SessionEntry>> {
+        if let Some(entries) = Self::list_from_db() {
+            if !entries.is_empty() {
+                return Ok(entries);
+            }
+        }
         Self::load_index()
     }
 
-    /// Load the most recent session from disk
+    /// Load the most recent session
+    ///
+    /// Queries brain.db first (authoritative). Falls back to index.json.
     ///
     /// # Errors
     ///
-    /// Returns an error if no sessions exist or the index cannot be loaded.
+    /// Returns an error if no sessions exist or neither store can be read.
     pub fn load_latest() -> Result<Self> {
+        // Try DB first — it has all sessions including hook-created ones
+        if let Some(entries) = Self::list_from_db() {
+            if let Some(entry) = entries.into_iter().max_by_key(|e| e.created_at) {
+                let session_dir = brain_dir().join("sessions").join(&entry.id);
+                return Ok(Self {
+                    id: entry.id,
+                    created_at: entry.created_at,
+                    project: entry.project,
+                    git_commit: entry.git_commit,
+                    session_dir,
+                });
+            }
+        }
+
+        // Fallback: index.json
         let index = Self::load_index()?;
         let entry = index
             .into_iter()
@@ -621,6 +648,71 @@ impl BrainSession {
     }
 
     // Private helper methods
+
+    /// Try to load a session from brain.db by ID.
+    ///
+    /// Returns `None` if the DB is unavailable or the session doesn't exist.
+    /// This is the preferred path — brain.db contains all sessions including
+    /// those created by the autopsy-prospective hook via direct SQL INSERT.
+    ///
+    /// Creates the session directory on disk if it doesn't exist yet (hook-created
+    /// sessions exist only in the DB until their first artifact operation).
+    fn load_from_db(id: &str, session_dir: &Path) -> Option<Self> {
+        // Open DB directly — the LazyLock pool uses tracing which is silent
+        // in CLI context (no subscriber). Direct open matches main.rs pattern.
+        let pool = nexcore_db::pool::DbPool::open_default().ok()?;
+        let row = pool
+            .with_conn(|conn| nexcore_db::sessions::get(conn, id))
+            .ok()?;
+
+        // Ensure session directory exists — hook-created sessions lack it
+        if !session_dir.exists() {
+            let _ = fs::create_dir_all(session_dir);
+        }
+
+        Some(Self {
+            id: row.id,
+            created_at: row.created_at,
+            project: if row.project.is_empty() {
+                None
+            } else {
+                Some(row.project)
+            },
+            git_commit: row.git_commit,
+            session_dir: session_dir.to_path_buf(),
+        })
+    }
+
+    /// List all sessions from brain.db, converting to SessionEntry.
+    ///
+    /// Returns `None` if the DB is unavailable.
+    fn list_from_db() -> Option<Vec<SessionEntry>> {
+        // Open DB directly — same bypass as load_from_db.
+        let pool = nexcore_db::pool::DbPool::open_default().ok()?;
+        let rows = pool
+            .with_conn(|conn| nexcore_db::sessions::list_all(conn))
+            .ok()?;
+
+        Some(
+            rows.into_iter()
+                .map(|row| SessionEntry {
+                    id: row.id,
+                    created_at: row.created_at,
+                    project: if row.project.is_empty() {
+                        None
+                    } else {
+                        Some(row.project)
+                    },
+                    git_commit: row.git_commit,
+                    description: if row.description.is_empty() {
+                        None
+                    } else {
+                        Some(row.description)
+                    },
+                })
+                .collect(),
+        )
+    }
 
     fn register_in_index(&self, description: Option<String>) -> Result<()> {
         let mut index = Self::load_index()?;

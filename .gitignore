@@ -81,3 +81,4 @@ studio/
 # ML checkpoints
 crates/bert-burn/checkpoints*/
 crates/bert-burn/meta-v2/
+crates/nexvigilant-terminal/frontend/package-lock.json

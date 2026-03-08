@@ -1,0 +1,23 @@
+[package]
+name = "nexcore-molt"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Embeddable Tcl scripting engine for NexCore — domain-agnostic Molt wrapper"
+authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
+license = "LicenseRef-NexVigilant-Proprietary"
+repository = "https://github.com/nexvigilant/nexcore"
+keywords = ["scripting", "tcl", "embed", "molt"]
+categories = ["command-line-interface"]
+
+[dependencies]
+molt = { workspace = true }
+nexcore-error = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+nexcore-lex-primitiva = { workspace = true }
+
+[lints]
+workspace = true

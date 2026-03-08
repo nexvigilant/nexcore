@@ -2,14 +2,34 @@
 //!
 //! Exposes signal detection via MCP using nexcore-vigilance::pv (canonical path).
 //! Provides drug-event pair analysis with SignalStrength classification.
+//!
+//! ## Cargo Transport Enrichment
+//!
+//! Signal detection results are enriched with typed cargo transport metadata:
+//! provenance, perishability (ICH E2D deadlines), destination routing, and
+//! custody chain stamping. This metadata flows through the `cargo` section
+//! in the JSON response without breaking existing consumers.
 
 use crate::params::{SignalBatchParams, SignalDetectParams};
 use crate::tooling::attach_forensic_meta;
+use nexcore_cargo::{Cargo, DataSource, StationStamp};
+use nexcore_vigilance::pv::cargo_transport::SignalCargo;
 use nexcore_vigilance::pv::signals::evaluate_signal_complete;
 use nexcore_vigilance::pv::thresholds::SignalCriteria;
 use nexcore_vigilance::pv::types::ContingencyTable;
 use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolResult, Content};
+
+/// Map signal strength to source confidence for cargo provenance.
+fn source_confidence_from_strength(strength: &str) -> f64 {
+    match strength {
+        "Critical" => 0.98,
+        "Strong" => 0.90,
+        "Moderate" => 0.80,
+        "Weak" => 0.65,
+        _ => 0.50,
+    }
+}
 
 /// Map PRR value to strength label (matches former SignalStrength enum).
 fn strength_label(prr: f64) -> &'static str {
@@ -57,6 +77,24 @@ pub fn signal_detect(params: SignalDetectParams) -> Result<CallToolResult, McpEr
     let ic_convergence_alpha = 1.0 - (ic_variance / ic_variance.max(1.0)).min(0.95);
     let ic_is_converged = ic_variance < 0.06;
 
+    // Wrap in typed cargo for transport metadata enrichment
+    let loaded_at = nexcore_chrono::DateTime::now().timestamp();
+    let mut signal_cargo = SignalCargo::from_result(
+        result.clone(),
+        params.drug.clone(),
+        params.event.clone(),
+        DataSource::Faers,
+        loaded_at,
+        source_confidence_from_strength(strength),
+    );
+    // Stamp this MCP tool as a custody chain station
+    signal_cargo.stamp(StationStamp::new(
+        "nexcore-mcp",
+        "signal_detect",
+        loaded_at,
+        0.95,
+    ));
+
     let json = serde_json::json!({
         "drug": params.drug,
         "event": params.event,
@@ -70,6 +108,21 @@ pub fn signal_detect(params: SignalDetectParams) -> Result<CallToolResult, McpEr
         "ic_variance": ic_variance,
         "ic_convergence_alpha": ic_convergence_alpha,
         "ic_is_converged": ic_is_converged,
+        "cargo": {
+            "perishability": format!("{:?}", signal_cargo.perishability()),
+            "destination": format!("{:?}", signal_cargo.destination()),
+            "signal_count": signal_cargo.signal_count(),
+            "provenance": {
+                "source": format!("{:?}", signal_cargo.provenance().source),
+                "loaded_at": signal_cargo.provenance().loaded_at,
+                "source_confidence": signal_cargo.provenance().source_confidence,
+            },
+            "custody_chain": {
+                "hop_count": signal_cargo.custody_chain().hop_count(),
+                "cumulative_fidelity": signal_cargo.custody_chain().cumulative_fidelity(),
+                "meets_safety_threshold": signal_cargo.custody_chain().meets_safety_threshold(),
+            },
+        },
     });
 
     let confidence = match strength {

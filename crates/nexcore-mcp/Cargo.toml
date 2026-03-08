@@ -91,6 +91,8 @@ disney-loop = { workspace = true }
 nexcore-tov = { workspace = true }
 nexcore-tov-grounded = { workspace = true }
 nexcore-tov-proofs = { workspace = true }
+# Cargo (typed domain payloads with provenance, perishability, custody)
+nexcore-cargo = { workspace = true }
 # PV Core (signal algorithms, causality, medical coding, pharmacokinetics)
 nexcore-pv-core = { workspace = true }
 # QBR (Quantitative Benefit-Risk — 4-form statistical evidence engine)

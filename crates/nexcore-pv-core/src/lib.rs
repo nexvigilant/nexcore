@@ -102,6 +102,7 @@ impl SafetyMargin {
 pub mod foundation_compat;
 
 pub mod benefit_risk;
+pub mod cargo_transport;
 pub mod causality;
 pub mod classification;
 pub mod clinical_trial;

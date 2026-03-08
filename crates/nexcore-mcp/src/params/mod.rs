@@ -92,6 +92,7 @@ pub mod sos;
 pub mod stem;
 pub mod system;
 pub mod telemetry;
+pub mod terminal_remote;
 pub mod trace;
 pub mod transcriptase;
 pub mod transform;

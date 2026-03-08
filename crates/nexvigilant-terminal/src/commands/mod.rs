@@ -4,6 +4,8 @@
 //! Tauri IPC command modules — bridge frontend to nexcore backends.
 
 pub mod cloud;
+pub mod health;
 pub mod pty;
+pub mod remote;
 pub mod shell;
 pub mod terminal;

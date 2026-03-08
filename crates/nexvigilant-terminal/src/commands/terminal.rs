@@ -117,12 +117,21 @@ pub fn terminal_list_sessions(state: tauri::State<'_, TerminalState>) -> Vec<Ter
 }
 
 /// Send input to the active terminal session.
+///
+/// Records input and output events on the χ health monitor for
+/// real-time session health tracking.
 #[tauri::command]
 pub fn terminal_send_input(
     state: tauri::State<'_, TerminalState>,
+    health: tauri::State<'_, super::health::HealthState>,
     session_id: String,
     data: String,
 ) -> Result<String, String> {
+    // Record input event on the χ monitor
+    if let Ok(mut monitor) = health.monitor.lock() {
+        monitor.record_input();
+    }
+
     let mut sessions = state.sessions.lock().map_err(|e| e.to_string())?;
     let session = sessions
         .get_mut(&session_id)
@@ -135,7 +144,7 @@ pub fn terminal_send_input(
     session.touch();
 
     // Route based on mode — PTY integration deferred to Phase 3
-    match session.mode {
+    let result = match session.mode {
         TerminalMode::Regulatory => {
             session.metadata.mcp_calls_made += 1;
             Ok(format!("[MCP] Routing regulatory query: {data}"))
@@ -158,7 +167,16 @@ pub fn terminal_send_input(
             }
         }
         _ => Ok(format!("echo: {data}")),
+    };
+
+    // Record output event on the χ monitor (response produced)
+    if result.is_ok() {
+        if let Ok(mut monitor) = health.monitor.lock() {
+            monitor.record_output();
+        }
     }
+
+    result
 }
 
 /// Switch terminal mode for a session.

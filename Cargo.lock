@@ -8411,6 +8411,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexcore-cargo"
+version = "1.0.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "nexcore-cccp"
 version = "1.0.0"
 dependencies = [
@@ -9232,6 +9240,7 @@ dependencies = [
  "nexcore-build-orchestrator",
  "nexcore-caesura",
  "nexcore-cardiovascular",
+ "nexcore-cargo",
  "nexcore-cccp",
  "nexcore-ccim",
  "nexcore-ccp",
@@ -9808,6 +9817,7 @@ name = "nexcore-pv-core"
 version = "1.0.0"
 dependencies = [
  "grounded",
+ "nexcore-cargo",
  "nexcore-chrono",
  "nexcore-constants",
  "nexcore-edit-distance",
@@ -10044,6 +10054,7 @@ dependencies = [
  "axum 0.8.8",
  "bytes",
  "http-body-util",
+ "nexcore-cargo",
  "nexcore-chrono",
  "nexcore-error",
  "nexcore-id",

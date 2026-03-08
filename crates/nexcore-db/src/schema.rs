@@ -8,7 +8,7 @@ use rusqlite::Connection;
 use crate::error::{DbError, Result};
 
 /// Current schema version. Increment when adding migrations.
-pub const CURRENT_SCHEMA_VERSION: u32 = 5;
+pub const CURRENT_SCHEMA_VERSION: u32 = 6;
 
 /// Initialize the database schema (create all tables if they don't exist).
 ///
@@ -41,6 +41,7 @@ pub fn initialize(conn: &Connection) -> Result<()> {
             // V3 is a dedup migration — no new tables, skip on fresh install
             apply_v4(conn)?;
             apply_v5(conn)?;
+            apply_v6(conn)?;
             conn.execute(
                 "INSERT INTO schema_version (version) VALUES (?1)",
                 [CURRENT_SCHEMA_VERSION],
@@ -212,6 +213,9 @@ fn migrate(conn: &Connection, from_version: u32) -> Result<()> {
     }
     if from_version < 5 {
         apply_v5(conn)?;
+    }
+    if from_version < 6 {
+        apply_v6(conn)?;
     }
 
     conn.execute(
@@ -502,6 +506,35 @@ fn apply_v5(conn: &Connection) -> Result<()> {
             duration_s  REAL NOT NULL DEFAULT 0,
             fail_names  TEXT NOT NULL DEFAULT '[]'
         );
+        ",
+    )?;
+
+    Ok(())
+}
+
+/// V6 schema: Guardian observability — health snapshots for continuous monitoring.
+///
+/// New table:
+/// - `health_snapshots` — periodic system health readings from the Guardian observer daemon
+fn apply_v6(conn: &Connection) -> Result<()> {
+    conn.execute_batch(
+        "
+        CREATE TABLE IF NOT EXISTS health_snapshots (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            captured_at     TEXT NOT NULL DEFAULT (datetime('now')),
+            session_velocity    REAL NOT NULL DEFAULT 0.0,
+            mcp_backend_health  REAL NOT NULL DEFAULT 1.0,
+            microgram_integrity REAL NOT NULL DEFAULT 1.0,
+            station_activity    REAL NOT NULL DEFAULT 0.0,
+            guardian_threat     TEXT NOT NULL DEFAULT 'Low',
+            artifact_freshness  REAL NOT NULL DEFAULT 1.0,
+            hook_error_rate     REAL NOT NULL DEFAULT 0.0,
+            composite_score     REAL NOT NULL DEFAULT 1.0,
+            alerts_json         TEXT NOT NULL DEFAULT '[]',
+            vitals_json         TEXT NOT NULL DEFAULT '{}'
+        );
+        CREATE INDEX IF NOT EXISTS idx_health_snapshots_captured
+            ON health_snapshots(captured_at);
         ",
     )?;
 

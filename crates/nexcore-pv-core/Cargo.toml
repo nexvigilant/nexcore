@@ -12,6 +12,7 @@ keywords = ["pharmacovigilance", "signal-detection", "drug-safety", "faers"]
 categories = ["science", "algorithms"]
 
 [dependencies]
+nexcore-cargo = { workspace = true }
 nexcore-edit-distance = { version = "1.0.0", path = "../nexcore-edit-distance", registry = "nexcore" }
 nexcore-error = { workspace = true }
 serde = { version = "1.0.204", features = ["derive"] }

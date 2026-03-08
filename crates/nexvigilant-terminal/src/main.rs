@@ -19,6 +19,7 @@
     windows_subsystem = "windows"
 )]
 
+use nexvigilant_terminal::commands::health::HealthState;
 use nexvigilant_terminal::commands::pty::PtyState;
 use nexvigilant_terminal::commands::terminal::TerminalState;
 
@@ -36,6 +37,7 @@ fn main() {
         .plugin(tauri_plugin_shell::init())
         .manage(PtyState::new())
         .manage(TerminalState::new())
+        .manage(HealthState::new())
         .invoke_handler(tauri::generate_handler![
             // PTY process management (real POSIX PTY)
             nexvigilant_terminal::commands::pty::pty_spawn,
@@ -54,11 +56,21 @@ fn main() {
             nexvigilant_terminal::commands::terminal::terminal_switch_mode,
             nexvigilant_terminal::commands::terminal::terminal_resize,
             nexvigilant_terminal::commands::terminal::terminal_get_session,
+            // χ health monitoring
+            nexvigilant_terminal::commands::health::health_record_input,
+            nexvigilant_terminal::commands::health::health_record_output,
+            nexvigilant_terminal::commands::health::health_get,
+            nexvigilant_terminal::commands::health::health_start_polling,
+            nexvigilant_terminal::commands::health::health_stop_polling,
             // Shell / app launcher
             nexvigilant_terminal::commands::shell::shell_status,
             nexvigilant_terminal::commands::shell::shell_list_apps,
             nexvigilant_terminal::commands::shell::shell_launch_app,
             nexvigilant_terminal::commands::shell::shell_command_palette,
+            // Remote controller (Claude accessibility layer)
+            nexvigilant_terminal::commands::remote::remote_execute,
+            nexvigilant_terminal::commands::remote::remote_snapshot,
+            nexvigilant_terminal::commands::remote::remote_action_count,
         ])
         .run(tauri::generate_context!());
 

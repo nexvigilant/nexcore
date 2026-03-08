@@ -10,6 +10,8 @@ use crate::core::{
     Alert, Detect, DetectionResult, Ingest, Normalize, Report, Result, SignalError, Store,
     Threshold, Validate,
 };
+use crate::detection_cargo::DetectionCargo;
+use nexcore_cargo::DataSource;
 
 /// Full signal detection pipeline.
 ///
@@ -89,6 +91,25 @@ where
             alerts.push(alert);
         }
         Ok(alerts)
+    }
+
+    /// Run pipeline with cargo transport enrichment.
+    ///
+    /// Same as `run()` but wraps each result in `DetectionCargo` with:
+    /// - Provenance (data source, drug/event query params)
+    /// - 5-stage custody chain stamps (ingest→normalize→detect→threshold→store)
+    /// - Perishability derived from signal strength (ICH E2D aligned)
+    ///
+    /// The cargo system adds the audit trail that regulators require —
+    /// every processing hop stamps its fidelity into the chain.
+    pub fn run_with_cargo(&mut self, source: DataSource) -> Result<Vec<DetectionCargo>> {
+        let loaded_at = nexcore_chrono::DateTime::now().timestamp();
+        let results = self.run()?;
+
+        Ok(results
+            .into_iter()
+            .map(|r| DetectionCargo::from_pipeline_result(r, source.clone(), loaded_at))
+            .collect())
     }
 
     /// Access the store (for queries after pipeline run).

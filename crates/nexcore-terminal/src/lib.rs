@@ -17,9 +17,11 @@
 #![warn(missing_docs)]
 pub mod ai;
 pub mod audit;
+pub mod chi_monitor;
 pub mod config;
 pub mod conversation;
 pub mod formatter;
+pub mod health;
 pub mod keybindings;
 pub mod layout;
 pub mod metering;

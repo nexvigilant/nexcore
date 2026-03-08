@@ -5844,6 +5844,50 @@ impl NexCoreMcpServer {
     ) -> Result<CallToolResult, McpError> {
         tools::microgram::mcg_chain_test(params)
     }
+
+    // ========================================================================
+    // Terminal Remote Controller (4)
+    // ========================================================================
+
+    #[tool(
+        description = "Execute a remote terminal action. Actions: CreateSession, SendInput, SwitchMode, GetHealth, StartHealthPolling, StopHealthPolling, ListSessions, CloudOverview, CloudServices, ShellStatus, SystemSnapshot. Returns before/after state with diffs."
+    )]
+    async fn terminal_remote_execute(
+        &self,
+        Parameters(params): Parameters<params::terminal_remote::TerminalRemoteExecuteParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::terminal_remote::execute(params)
+    }
+
+    #[tool(
+        description = "Get a full terminal system snapshot without executing any action. Optionally includes action history count and recent actions."
+    )]
+    async fn terminal_remote_snapshot(
+        &self,
+        Parameters(params): Parameters<params::terminal_remote::TerminalRemoteSnapshotParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::terminal_remote::snapshot(params)
+    }
+
+    #[tool(
+        description = "Execute a batch of terminal actions in sequence. Returns aggregate success status and per-action results."
+    )]
+    async fn terminal_remote_batch(
+        &self,
+        Parameters(params): Parameters<params::terminal_remote::TerminalRemoteBatchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::terminal_remote::batch(params)
+    }
+
+    #[tool(
+        description = "Start or stop terminal health polling. When started, the system periodically updates chi health metrics."
+    )]
+    async fn terminal_remote_health_stream(
+        &self,
+        Parameters(params): Parameters<params::terminal_remote::TerminalRemoteHealthStreamParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::terminal_remote::health_stream(params)
+    }
 }
 
 // ============================================================================

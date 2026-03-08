@@ -451,6 +451,7 @@ pub fn create_monitoring_loop() -> homeostasis::HomeostasisLoop {
         root.join("nexcore-sentinel/src/lib.rs"),
     ));
     control_loop.add_sensor(sensing::engram_drift::EngramDriftSensor::new());
+    control_loop.add_sensor(sensing::observability::ObservabilitySensor::new());
 
     control_loop
 }
@@ -517,7 +518,7 @@ mod monitoring_integration_tests {
     #[test]
     fn test_create_monitoring_loop_wiring() {
         let control_loop = create_monitoring_loop();
-        assert_eq!(control_loop.sensor_count(), 12);
+        assert_eq!(control_loop.sensor_count(), 13);
         assert_eq!(control_loop.actuator_count(), 0); // Monitoring only, no actuators
         assert_eq!(control_loop.iteration_count(), 0);
     }

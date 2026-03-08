@@ -40,6 +40,7 @@ pub mod cytokine;
 pub mod engram_drift;
 pub mod hook_telemetry;
 pub mod hud;
+pub mod observability;
 pub mod ribosome_damp;
 pub mod signal_health;
 

@@ -408,6 +408,9 @@ pub mod oracle;
 #[cfg(feature = "telemetry")]
 pub mod telemetry;
 
+// Terminal Remote Controller (Claude accessibility bridge)
+pub mod terminal_remote;
+
 // Kellnr computation & registry (consolidated from kellnr-mcp)
 pub mod kellnr_dtree;
 pub mod kellnr_graph;

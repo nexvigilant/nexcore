@@ -27,8 +27,10 @@
 
 pub mod alert;
 pub mod api;
+pub mod cargo_bridge;
 pub mod core;
 pub mod detect;
+pub mod detection_cargo;
 pub mod grounding;
 pub mod ingest;
 pub mod normalize;
@@ -48,6 +50,7 @@ pub mod primitives;
 pub mod transfer;
 
 // Re-export commonly used items
+pub use detection_cargo::DetectionCargo;
 pub use orchestrate::Pipeline;
 pub use relay::{core_detection_chain, pv_pipeline_chain};
 pub use stats::{SignalMetrics, compute_all};

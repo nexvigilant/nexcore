@@ -103,6 +103,7 @@ nexcore-brain = { path = "crates/nexcore-brain", version = "1.0.0" }
 nexcore-build-orchestrator = { path = "crates/nexcore-build-orchestrator", version = "1.0.0" }
 nexcore-browser = { path = "crates/nexcore-browser", version = "0.1.0" }
 nexcore-caesura = { path = "crates/nexcore-caesura", version = "1.0.0" }
+nexcore-cargo = { path = "crates/nexcore-cargo", version = "1.0.0" }
 nexcore-cardiovascular = { path = "crates/nexcore-cardiovascular", version = "1.0.0" }
 nexcore-ccp = { path = "crates/nexcore-ccp", version = "1.0.0" }
 nexcore-cccp = { path = "crates/nexcore-cccp", version = "1.0.0" }

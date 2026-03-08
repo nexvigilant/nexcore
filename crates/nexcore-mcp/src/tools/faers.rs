@@ -2,10 +2,18 @@
 //!
 //! Provides real-time access to FAERS data for pharmacovigilance signal detection.
 //! Reuses `nexcore-pv` for signal detection calculations.
+//!
+//! ## Cargo Transport Enrichment
+//!
+//! FAERS query results carry `DataSource::Faers` provenance — each response
+//! includes the query parameters, timestamp, and source confidence that feed
+//! into the typed cargo transport system. Agents consuming these tools get
+//! ICH E2D perishability deadlines and custody chain metadata for free.
 
 use crate::params::{
     FaersCompareDrugsParams, FaersDrugEventsParams, FaersSearchParams, FaersSignalParams,
 };
+use nexcore_cargo::{DataSource, Perishability, Provenance, QueryParams, StationStamp};
 use nexcore_vigilance::pv::{
     ContingencyTable, SignalCriteria, calculate_chi_square, calculate_prr, calculate_ror,
 };
@@ -180,10 +188,49 @@ pub async fn search(params: FaersSearchParams) -> Result<CallToolResult, McpErro
         .filter_map(parse_event)
         .collect();
 
+    // Build cargo provenance for this FAERS query
+    let loaded_at = nexcore_chrono::DateTime::now().timestamp();
+    let mut query = QueryParams::empty();
+    if let Some(ref drug) = params.drug_name {
+        query.insert("drug", drug);
+    }
+    if let Some(ref reaction) = params.reaction {
+        query.insert("reaction", reaction);
+    }
+    let provenance = Provenance::new(DataSource::Faers, query, loaded_at, 0.95);
+
+    // Derive perishability from seriousness of results
+    let has_death = events.iter().any(|e| e.get("death") == Some(&json!(true)));
+    let has_serious = events
+        .iter()
+        .any(|e| e.get("serious") == Some(&json!(true)));
+    let perishability = if has_death {
+        Perishability::Expedited { deadline_days: 7 }
+    } else if has_serious {
+        Perishability::PROMPT_90
+    } else {
+        Perishability::Periodic
+    };
+
     let result = json!({
         "results": events,
         "total": total,
         "returned": events.len(),
+        "cargo": {
+            "provenance": {
+                "source": "Faers",
+                "query": {
+                    "drug": params.drug_name,
+                    "reaction": params.reaction,
+                    "serious_filter": params.serious.unwrap_or(false),
+                },
+                "loaded_at": provenance.loaded_at,
+                "source_confidence": provenance.source_confidence,
+            },
+            "perishability": format!("{perishability:?}"),
+            "cases_with_death": has_death,
+            "cases_with_serious": has_serious,
+        },
     });
 
     Ok(CallToolResult::success(vec![Content::text(
@@ -342,6 +389,10 @@ pub async fn signal_check(params: FaersSignalParams) -> Result<CallToolResult, M
 }
 
 /// Full disproportionality analysis for drug-event pair
+///
+/// Returns PRR, ROR, chi-square with full cargo transport metadata:
+/// provenance (FAERS query params), perishability (signal-driven),
+/// and a custody chain stamp from this MCP station.
 pub async fn disproportionality(params: FaersSignalParams) -> Result<CallToolResult, McpError> {
     let (a, b, c, d) = get_contingency_counts(&params.drug_name, &params.event_name).await?;
 
@@ -355,6 +406,28 @@ pub async fn disproportionality(params: FaersSignalParams) -> Result<CallToolRes
     // Evans criteria
     let signal_detected = a >= 3 && prr_result.point_estimate >= 2.0 && chi_sq >= 3.841;
 
+    // Cargo provenance — this result came from a live FAERS query
+    let loaded_at = nexcore_chrono::DateTime::now().timestamp();
+    let mut query = QueryParams::empty();
+    query.insert("drug", &params.drug_name);
+    query.insert("event", &params.event_name);
+    query.insert("n", &a.to_string());
+    let provenance = Provenance::new(DataSource::Faers, query, loaded_at, 0.95);
+
+    // Perishability from signal strength
+    let perishability = if signal_detected && prr_result.point_estimate >= 5.0 {
+        // Critical signal — expedited review
+        Perishability::EXPEDITED_15
+    } else if signal_detected {
+        // Signal detected — needs causality assessment
+        Perishability::PROMPT_90
+    } else {
+        Perishability::Periodic
+    };
+
+    // Custody chain — stamp this MCP tool as a processing station
+    let stamp = StationStamp::new("nexcore-mcp", "faers_disproportionality", loaded_at, 0.95);
+
     let result = json!({
         "drug": params.drug_name,
         "event": params.event_name,
@@ -367,6 +440,25 @@ pub async fn disproportionality(params: FaersSignalParams) -> Result<CallToolRes
         "chi_square": (chi_sq * 1000.0).round() / 1000.0,
         "is_signal": signal_detected,
         "signal_criteria": "Evans: PRR≥2, χ²≥3.841, n≥3",
+        "cargo": {
+            "provenance": {
+                "source": "Faers",
+                "query": {
+                    "drug": params.drug_name,
+                    "event": params.event_name,
+                    "case_count": a,
+                },
+                "loaded_at": provenance.loaded_at,
+                "source_confidence": provenance.source_confidence,
+            },
+            "perishability": format!("{perishability:?}"),
+            "destination": if signal_detected { "CausalityAssessment" } else { "AggregateAnalysis" },
+            "custody_chain": {
+                "station": stamp.station_id,
+                "operation": stamp.operation,
+                "fidelity": stamp.fidelity,
+            },
+        },
     });
 
     Ok(CallToolResult::success(vec![Content::text(

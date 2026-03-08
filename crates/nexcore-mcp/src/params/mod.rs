@@ -1,5 +1,8 @@
 pub mod serde_lenient;
 
+// Microgram Decision Trees (chain execution, run, test, catalog, coverage, bench)
+pub mod microgram;
+
 // Academy Forge (extract IR, validate academy content)
 pub mod academy_forge;
 pub use academy_forge::*;

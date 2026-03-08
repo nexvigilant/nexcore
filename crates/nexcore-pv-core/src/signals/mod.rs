@@ -77,6 +77,9 @@ pub mod fisher;
 /// Chi-square calculations (compatibility)
 pub mod chi_square;
 
+/// Grounded signal detection — Uncertain<T>-returning wrappers
+pub mod grounded_signals;
+
 // =============================================================================
 // TOP-LEVEL RE-EXPORTS
 // =============================================================================

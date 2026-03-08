@@ -5768,6 +5768,82 @@ impl NexCoreMcpServer {
     ) -> Result<CallToolResult, McpError> {
         tools::cccp::cccp_phase_info(params)
     }
+
+    // ── Microgram Decision Trees ──────────────────────────────────────────
+
+    #[tool(
+        description = "Execute a microgram with JSON input. Path can be a name (e.g. 'signal-to-causality') or subdirectory path (e.g. 'station/config-openvigil-triage')."
+    )]
+    async fn mcg_run(
+        &self,
+        Parameters(params): Parameters<params::microgram::MgRunParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::microgram::mcg_run(params)
+    }
+
+    #[tool(description = "Self-test a single microgram by path or name.")]
+    async fn mcg_test(
+        &self,
+        Parameters(params): Parameters<params::microgram::MgTestParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::microgram::mcg_test(params)
+    }
+
+    #[tool(
+        description = "Self-test all micrograms in the ecosystem. Returns pass/fail counts and any failures."
+    )]
+    async fn mcg_test_all(
+        &self,
+        Parameters(params): Parameters<params::microgram::MgTestAllParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::microgram::mcg_test_all(params)
+    }
+
+    #[tool(description = "Compute decision tree path coverage for all micrograms.")]
+    async fn mcg_coverage(
+        &self,
+        Parameters(params): Parameters<params::microgram::MgCoverageParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::microgram::mcg_coverage(params)
+    }
+
+    #[tool(
+        description = "Introspect the microgram ecosystem: list all programs, their inputs/outputs, and chain connections."
+    )]
+    async fn mcg_catalog(
+        &self,
+        Parameters(params): Parameters<params::microgram::MgCatalogParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::microgram::mcg_catalog(params)
+    }
+
+    #[tool(description = "Benchmark microgram execution performance across all programs.")]
+    async fn mcg_bench(
+        &self,
+        Parameters(params): Parameters<params::microgram::MgBenchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::microgram::mcg_bench(params)
+    }
+
+    #[tool(
+        description = "Execute a microgram chain pipeline with JSON input. Chains compose multiple micrograms (e.g. 'station-openvigil-pipeline' runs config-openvigil-triage → adapt-signal-strength → signal-to-causality). 7 station chains bridge NexVigilant data extraction into PV decision logic."
+    )]
+    async fn mcg_chain_run(
+        &self,
+        Parameters(params): Parameters<params::microgram::MgChainRunParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::microgram::mcg_chain_run(params)
+    }
+
+    #[tool(
+        description = "Self-test microgram chain definitions. Tests a single chain by name, or all chains if no name provided."
+    )]
+    async fn mcg_chain_test(
+        &self,
+        Parameters(params): Parameters<params::microgram::MgChainTestParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::microgram::mcg_chain_test(params)
+    }
 }
 
 // ============================================================================

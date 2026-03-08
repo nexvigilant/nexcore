@@ -574,3 +574,6 @@ pub mod test_history;
 
 // Station (WebMCP Hub config rail management — build, add-tool, list, export, coverage)
 pub mod station;
+
+// Microgram Decision Trees (run, test, catalog, coverage, bench, chain execution)
+pub mod microgram;

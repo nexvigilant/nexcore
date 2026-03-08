@@ -30,6 +30,7 @@ nexcore-fhir = { workspace = true }
 nexcore-openfda = { workspace = true }
 nexcore-proof-of-meaning = { workspace = true }
 nexcore-flywheel = { path = "../nexcore-flywheel" }
+grounded = { path = "../grounded" }
 
 [dev-dependencies]
 tempfile = { version = "3.10.1" }

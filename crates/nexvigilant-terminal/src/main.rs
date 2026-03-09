@@ -19,8 +19,10 @@
     windows_subsystem = "windows"
 )]
 
+use nexvigilant_terminal::commands::cloud::CloudState;
 use nexvigilant_terminal::commands::health::HealthState;
 use nexvigilant_terminal::commands::pty::PtyState;
+use nexvigilant_terminal::commands::shell::NexShellState;
 use nexvigilant_terminal::commands::terminal::TerminalState;
 
 fn main() {
@@ -38,6 +40,8 @@ fn main() {
         .manage(PtyState::new())
         .manage(TerminalState::new())
         .manage(HealthState::new())
+        .manage(CloudState::new())
+        .manage(NexShellState::new())
         .invoke_handler(tauri::generate_handler![
             // PTY process management (real POSIX PTY)
             nexvigilant_terminal::commands::pty::pty_spawn,

@@ -10671,6 +10671,7 @@ version = "0.1.0"
 dependencies = [
  "nexcloud",
  "nexcore-chrono",
+ "nexcore-pal",
  "nexcore-shell",
  "nexcore-terminal",
  "serde",

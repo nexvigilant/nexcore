@@ -29,6 +29,12 @@ pub struct HealthState {
     pub polling: Mutex<bool>,
 }
 
+impl Default for HealthState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl HealthState {
     /// Create a new health state with the default 60-second window.
     #[must_use]

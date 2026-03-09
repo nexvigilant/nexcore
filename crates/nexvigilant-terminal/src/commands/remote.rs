@@ -291,12 +291,14 @@ pub fn remote_execute(
     terminal: tauri::State<'_, super::terminal::TerminalState>,
     health: tauri::State<'_, super::health::HealthState>,
     cloud: tauri::State<'_, super::cloud::CloudState>,
+    shell: tauri::State<'_, super::shell::NexShellState>,
     app: tauri::AppHandle,
 ) -> RemoteResult {
     let before = capture_state(&terminal, &health, &cloud);
     let start = Instant::now();
 
-    let (success, payload, error) = dispatch_action(&action, &terminal, &health, &cloud, &app);
+    let (success, payload, error) =
+        dispatch_action(&action, &terminal, &health, &cloud, &shell, &app);
 
     let after = capture_state(&terminal, &health, &cloud);
     let diff = before.diff(&after);
@@ -376,6 +378,7 @@ fn dispatch_action(
     terminal: &tauri::State<'_, super::terminal::TerminalState>,
     health: &tauri::State<'_, super::health::HealthState>,
     cloud: &tauri::State<'_, super::cloud::CloudState>,
+    shell: &tauri::State<'_, super::shell::NexShellState>,
     app: &tauri::AppHandle,
 ) -> (bool, serde_json::Value, Option<String>) {
     match action {
@@ -458,7 +461,7 @@ fn dispatch_action(
         }
 
         RemoteAction::ShellStatus => {
-            let status = super::shell::shell_status();
+            let status = super::shell::shell_status(shell.clone());
             (
                 true,
                 serde_json::to_value(&status).unwrap_or_default(),
@@ -479,7 +482,7 @@ fn dispatch_action(
             (
                 false,
                 serde_json::Value::Null,
-                Some("PTY operations require async context — use pty_spawn/pty_write/pty_kill IPC commands directly".into()),
+                Some("PTY operations are async — use pty_spawn/pty_write/pty_kill IPC commands directly. Remote controller async bridging planned for v0.2.0.".into()),
             )
         }
 
@@ -489,7 +492,7 @@ fn dispatch_action(
 
             for sub_action in actions {
                 let (success, payload, error) =
-                    dispatch_action(sub_action, terminal, health, cloud, app);
+                    dispatch_action(sub_action, terminal, health, cloud, shell, app);
                 if !success {
                     all_success = false;
                 }

@@ -21,6 +21,12 @@ pub struct TerminalState {
     pub user_id: UserId,
 }
 
+impl Default for TerminalState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TerminalState {
     /// Create terminal state for desktop (single-tenant, single-user).
     #[must_use]

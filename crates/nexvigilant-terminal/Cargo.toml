@@ -22,6 +22,7 @@ tauri-build = { version = "2", features = [] }
 # Phase 2: live backends wired
 nexcore-terminal = { path = "../nexcore-terminal" }
 nexcore-shell = { path = "../nexcore-shell" }
+nexcore-pal = { path = "../nexcore-pal" }
 nexcloud = { path = "../nexcloud" }
 nexcore-chrono = { workspace = true }
 vr-core = { workspace = true }

@@ -16,6 +16,12 @@ pub struct CloudState {
     pub registry: Arc<ServiceRegistry>,
 }
 
+impl Default for CloudState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CloudState {
     /// Create a new cloud state with default NexVigilant services registered.
     #[must_use]

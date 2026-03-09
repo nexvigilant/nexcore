@@ -13,12 +13,22 @@ use std::sync::Arc;
 use tauri::Emitter;
 use tokio::sync::Mutex;
 
+/// Maximum number of concurrent PTY sessions allowed.
+/// Guards against fork bombs and resource exhaustion.
+const MAX_PTY_SESSIONS: usize = 16;
+
 /// Managed state for PTY processes.
 pub struct PtyState {
     /// Active PTY processes keyed by session ID.
     pub processes: Arc<Mutex<HashMap<String, PtyProcess>>>,
     /// Counter for generating session IDs.
     counter: Arc<std::sync::atomic::AtomicU64>,
+}
+
+impl Default for PtyState {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl PtyState {
@@ -58,6 +68,16 @@ pub async fn pty_spawn(
     cols: u16,
     rows: u16,
 ) -> Result<PtySpawnResult, String> {
+    // Resource guard: prevent fork bombs and OOM
+    {
+        let procs = state.processes.lock().await;
+        if procs.len() >= MAX_PTY_SESSIONS {
+            return Err(format!(
+                "Maximum PTY sessions reached ({MAX_PTY_SESSIONS}). Kill an existing session first."
+            ));
+        }
+    }
+
     let config = PtyConfig::new(&shell, &working_dir).with_size(PtySize::new(cols, rows));
 
     let process = PtyProcess::spawn(config).map_err(|e| format!("PTY spawn failed: {e}"))?;

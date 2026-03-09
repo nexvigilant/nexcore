@@ -248,6 +248,11 @@ impl Shell {
         &self.apps
     }
 
+    /// Get mutable access to the app registry (for registration).
+    pub fn apps_mut(&mut self) -> &mut AppRegistry {
+        &mut self.apps
+    }
+
     /// Get the composited framebuffer.
     pub fn framebuffer(&self) -> &[u8] {
         self.compositor.framebuffer()

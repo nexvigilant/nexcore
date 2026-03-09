@@ -231,3 +231,11 @@ pub fn terminal_get_session(
         .ok()
         .and_then(|sessions| sessions.get(&session_id).map(session_to_info))
 }
+
+/// Return the user's home directory for portable session creation.
+#[tauri::command]
+pub fn get_home_dir() -> String {
+    std::env::var("HOME")
+        .or_else(|_| std::env::var("USERPROFILE"))
+        .unwrap_or_else(|_| "/root".to_string())
+}

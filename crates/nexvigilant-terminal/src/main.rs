@@ -60,6 +60,7 @@ fn main() {
             nexvigilant_terminal::commands::terminal::terminal_switch_mode,
             nexvigilant_terminal::commands::terminal::terminal_resize,
             nexvigilant_terminal::commands::terminal::terminal_get_session,
+            nexvigilant_terminal::commands::terminal::get_home_dir,
             // χ health monitoring
             nexvigilant_terminal::commands::health::health_record_input,
             nexvigilant_terminal::commands::health::health_record_output,

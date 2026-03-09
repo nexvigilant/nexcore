@@ -111,6 +111,233 @@
     .xterm-viewport::-webkit-scrollbar-thumb:hover {
       background: var(--text-muted);
     }
+    /* Mode pill in status bar */
+    .mode-pill {
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      -webkit-app-region: no-drag;
+      transition: background 200ms, color 200ms;
+    }
+    .mode-pill[data-mode="Normal"]  { color: var(--text-dim); background: transparent; border: 1px solid var(--border); }
+    .mode-pill[data-mode="Focus"]   { color: #fbbf24; background: #fbbf2418; border: 1px solid #fbbf2440; }
+    .mode-pill[data-mode="Agent"]   { color: var(--emerald); background: #34d39918; border: 1px solid #34d39940; }
+    .mode-pill[data-mode="Pairing"] { color: #c084fc; background: #c084fc18; border: 1px solid #c084fc40; }
+    /* Overlay backdrop */
+    .overlay-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 80px;
+    }
+    .overlay-backdrop.hidden { display: none; }
+    /* Command palette */
+    .palette-box {
+      width: 520px;
+      max-height: 400px;
+      background: #111822;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    .palette-input {
+      width: 100%;
+      padding: 10px 14px;
+      background: #0d1117;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      outline: none;
+    }
+    .palette-input::placeholder { color: var(--text-muted); }
+    .palette-results {
+      max-height: 340px;
+      overflow-y: auto;
+    }
+    .palette-item {
+      padding: 8px 14px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #1a223340;
+    }
+    .palette-item:hover { background: #1a2a3e; }
+    .palette-item .label { color: var(--text); }
+    .palette-item .source { color: var(--text-muted); font-size: 10px; }
+    /* App launcher */
+    .app-list {
+      width: 320px;
+      background: #111822;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    .app-list-header {
+      padding: 8px 12px;
+      font-size: 11px;
+      color: var(--emerald);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+    .app-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .app-item:hover { background: #1a2a3e; }
+    .app-item .name { color: var(--text); }
+    .app-item .state { font-size: 10px; color: var(--text-muted); }
+    /* Tab bar */
+    .tab-bar {
+      display: flex;
+      align-items: center;
+      height: 28px;
+      padding: 0 4px;
+      background: var(--bg-bar);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      gap: 2px;
+      overflow-x: auto;
+    }
+    .tab-bar::-webkit-scrollbar { height: 0; }
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 4px 4px 0 0;
+      border: 1px solid transparent;
+      border-bottom: none;
+      white-space: nowrap;
+      user-select: none;
+      -webkit-app-region: no-drag;
+    }
+    .tab:hover { color: var(--text-dim); background: #ffffff08; }
+    .tab.active {
+      color: var(--text);
+      background: var(--bg-primary);
+      border-color: var(--border);
+    }
+    .tab .close-btn {
+      font-size: 13px;
+      line-height: 1;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0 2px;
+    }
+    .tab .close-btn:hover { color: var(--red); }
+    .tab-add {
+      padding: 2px 8px;
+      font-size: 14px;
+      color: var(--text-muted);
+      cursor: pointer;
+      -webkit-app-region: no-drag;
+    }
+    .tab-add:hover { color: var(--emerald); }
+    /* Main content area: terminal + side panel */
+    .main-area {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    /* Side panel (cloud + agents) */
+    .side-panel {
+      width: 280px;
+      flex-shrink: 0;
+      background: var(--bg-bar);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .side-panel.hidden { display: none; }
+    .side-panel-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .side-panel-section + .side-panel-section {
+      border-top: 1px solid var(--border);
+    }
+    .side-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .side-panel-header .refresh-btn {
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 12px;
+      -webkit-app-region: no-drag;
+    }
+    .side-panel-header .refresh-btn:hover { color: var(--emerald); }
+    .side-panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 0;
+    }
+    .side-panel-body::-webkit-scrollbar { width: 4px; }
+    .side-panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    /* Service row */
+    .svc-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 10px;
+      font-size: 11px;
+    }
+    .svc-row:hover { background: #ffffff06; }
+    .svc-name { color: var(--text); }
+    .svc-badge {
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 600;
+    }
+    .svc-badge.healthy { color: var(--emerald); background: #34d39915; }
+    .svc-badge.unhealthy { color: var(--red); background: #f8717115; }
+    .svc-badge.unknown { color: var(--text-muted); background: #55667715; }
+    /* Agent event row */
+    .agent-row {
+      padding: 4px 10px;
+      font-size: 11px;
+      border-bottom: 1px solid #1a223320;
+    }
+    .agent-row .agent-time { color: var(--text-muted); font-size: 9px; }
+    .agent-row .agent-svc { color: var(--blue); }
+    .agent-row .agent-msg { color: var(--text-dim); }
+    .agent-empty {
+      padding: 12px 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+    }
   </style>
   <link rel="stylesheet" href="xterm.css" />
 </head>
@@ -126,7 +353,28 @@
         <span id="terminal-size">--x--</span>
       </div>
     </div>
-    <div id="terminal-container"></div>
+    <div class="tab-bar" id="tab-bar">
+      <div class="tab-add" id="tab-add" title="New Session (Ctrl+Shift+N)">+</div>
+    </div>
+    <div class="main-area">
+      <div id="terminal-container"></div>
+      <div class="side-panel hidden" id="side-panel">
+        <div class="side-panel-section">
+          <div class="side-panel-header">
+            <span>Cloud Services</span>
+            <span class="refresh-btn" id="cloud-refresh" title="Refresh">&#x21bb;</span>
+          </div>
+          <div class="side-panel-body" id="cloud-services-list"></div>
+        </div>
+        <div class="side-panel-section">
+          <div class="side-panel-header">
+            <span>Agent Activity</span>
+            <span class="refresh-btn" id="agent-refresh" title="Refresh">&#x21bb;</span>
+          </div>
+          <div class="side-panel-body" id="agent-events-list"></div>
+        </div>
+      </div>
+    </div>
     <div id="remote-panel-container"></div>
     <div class="status-bar">
       <div class="left">

@@ -1,10 +1,12 @@
 {
-  "name": "frontend",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "nexvigilant-terminal-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NexVigilant Terminal frontend — xterm.js with epistemic color processing",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "esbuild src/main.ts --bundle --format=iife --outfile=dist/app.js --minify --sourcemap",
+    "dev": "esbuild src/main.ts --bundle --format=iife --outfile=dist/app.js --sourcemap --watch",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",

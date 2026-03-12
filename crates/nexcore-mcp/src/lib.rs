@@ -598,6 +598,16 @@ impl NexCoreMcpServer {
         tools::primitive_brain::compose(params)
     }
 
+    #[tool(
+        description = "Compute an ouverse chain — the forward-enablement direction of the conservation law (opposite of Five Whys). Given existence, traces what it makes possible downstream. Each link: ∃ₙ persists (πₙ) and enables ∃ₙ₊₁. Detects dead ouverses (∃ → ()), measures primitive coverage, and identifies root strength. Source: primitives.ipynb Cell 123. Example: name='Guardian Angel', chain=[{existence:'Charitable mission', persistence:'Encoded in rules', primitives:['Boundary','Existence','Persistence']}]."
+    )]
+    async fn primitive_brain_ouverse(
+        &self,
+        Parameters(params): Parameters<params::ouverse::PrimitiveBrainOuverseParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ouverse::ouverse(params)
+    }
+
     // ========================================================================
     // PV Signal Detection Tools (8)
     // ========================================================================

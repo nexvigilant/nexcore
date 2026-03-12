@@ -72,6 +72,7 @@ pub mod measure;
 pub mod mesh;
 pub mod miner;
 pub mod network;
+pub mod ouverse;
 pub mod perplexity;
 pub mod pom;
 pub mod primitive_brain;

@@ -31,7 +31,7 @@ pub mod verticals;
 
 pub use builder::StationBuilder;
 pub use client::StationClient;
-pub use confidence::compute_confidence;
+pub use confidence::{DAILY_DECAY_RATE, apply_staleness_decay, compute_confidence, is_stale};
 pub use config::{AccessTier, ExecutionType, PvVertical, StationConfig, StationTool};
 pub use error::StationError;
 pub use feed::{DomainCoverage, ObservatoryFeed, QualityMetrics, StubObservatoryFeed};

@@ -34,6 +34,13 @@ pub use crate::OperationBuilder;
 pub use crate::EnergyState;
 pub use crate::RecyclingRate;
 
+// Temporal metabolism (Time = ADP)
+pub use crate::temporal::AttentionCostCurve;
+pub use crate::temporal::CrossSessionSynthase;
+pub use crate::temporal::TemporalConservation;
+pub use crate::temporal::TemporalMetrics;
+pub use crate::temporal::TemporalVelocityTracker;
+
 // Threshold constants
 pub use crate::ADP_WEIGHT;
 pub use crate::EC_ANABOLIC;

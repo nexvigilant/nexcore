@@ -46,6 +46,7 @@ pub mod grounding;
 pub mod prelude;
 pub mod primitives;
 pub mod pv_gate;
+pub mod temporal;
 pub mod transfer;
 
 use serde::{Deserialize, Serialize};
@@ -443,6 +444,81 @@ impl TokenPool {
             return u64::MAX;
         }
         self.t_atp / avg_cost_per_op
+    }
+
+    // ========================================================================
+    // Temporal Methods — Time = ADP
+    // ========================================================================
+
+    /// Lifespan efficiency: fraction of spent tokens that were productive.
+    ///
+    /// `eta_life = tADP / (tADP + tAMP)`
+    ///
+    /// 1.0 = all spend was time. 0.0 = all spend was entropy.
+    /// Returns 1.0 if nothing spent yet (perfect efficiency by default).
+    #[must_use]
+    pub fn lifespan_efficiency(&self) -> f64 {
+        let spent = self.t_adp + self.t_amp;
+        if spent == 0 {
+            return 1.0;
+        }
+        #[allow(clippy::cast_precision_loss)]
+        {
+            self.t_adp as f64 / spent as f64
+        }
+    }
+
+    /// Metabolic age: fraction of total budget lived productively.
+    ///
+    /// `age_metabolic = tADP / total`
+    #[must_use]
+    pub fn metabolic_age(&self) -> f64 {
+        let total = self.total();
+        if total == 0 {
+            return 0.0;
+        }
+        #[allow(clippy::cast_precision_loss)]
+        {
+            self.t_adp as f64 / total as f64
+        }
+    }
+
+    /// Chronological age: fraction of total budget consumed (any purpose).
+    ///
+    /// `age_chronological = (tADP + tAMP) / total`
+    #[must_use]
+    pub fn chronological_age(&self) -> f64 {
+        let total = self.total();
+        if total == 0 {
+            return 0.0;
+        }
+        #[allow(clippy::cast_precision_loss)]
+        {
+            (self.t_adp + self.t_amp) as f64 / total as f64
+        }
+    }
+
+    /// Age gap: difference between how old you look and how much you've lived.
+    ///
+    /// `gap = chronological_age - metabolic_age = tAMP / total`
+    ///
+    /// Positive = accumulated waste made you age faster than you lived.
+    /// Zero = no waste — every consumed token was time.
+    #[must_use]
+    pub fn age_gap(&self) -> f64 {
+        self.chronological_age() - self.metabolic_age()
+    }
+
+    /// Temporal metrics snapshot: all five instant calculations.
+    #[must_use]
+    pub fn temporal_metrics(&self, total_value: f64) -> temporal::TemporalMetrics {
+        temporal::TemporalMetrics::from_pool(self, total_value)
+    }
+
+    /// Temporal conservation view: future + time + entropy = total.
+    #[must_use]
+    pub fn temporal_conservation(&self) -> temporal::TemporalConservation {
+        temporal::TemporalConservation::from_pool(self)
     }
 }
 

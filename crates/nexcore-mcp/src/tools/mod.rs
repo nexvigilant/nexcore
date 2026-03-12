@@ -163,6 +163,9 @@ pub mod lex_primitiva;
 // Primitive Brain (T1 decomposition, distance, conservation, composition)
 pub mod primitive_brain;
 
+// Ouverse Chain (forward enablement — Anti-Why direction of conservation law)
+pub mod ouverse;
+
 // Molecular Biology (Central Dogma, ADME, codon translation)
 pub mod molecular;
 

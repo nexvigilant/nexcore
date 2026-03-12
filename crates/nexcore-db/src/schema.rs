@@ -8,7 +8,7 @@ use rusqlite::Connection;
 use crate::error::{DbError, Result};
 
 /// Current schema version. Increment when adding migrations.
-pub const CURRENT_SCHEMA_VERSION: u32 = 6;
+pub const CURRENT_SCHEMA_VERSION: u32 = 7;
 
 /// Initialize the database schema (create all tables if they don't exist).
 ///
@@ -42,6 +42,7 @@ pub fn initialize(conn: &Connection) -> Result<()> {
             apply_v4(conn)?;
             apply_v5(conn)?;
             apply_v6(conn)?;
+            apply_v7(conn)?;
             conn.execute(
                 "INSERT INTO schema_version (version) VALUES (?1)",
                 [CURRENT_SCHEMA_VERSION],
@@ -216,6 +217,9 @@ fn migrate(conn: &Connection, from_version: u32) -> Result<()> {
     }
     if from_version < 6 {
         apply_v6(conn)?;
+    }
+    if from_version < 7 {
+        apply_v7(conn)?;
     }
 
     conn.execute(
@@ -537,6 +541,38 @@ fn apply_v6(conn: &Connection) -> Result<()> {
             ON health_snapshots(captured_at);
         ",
     )?;
+
+    Ok(())
+}
+
+/// V7 schema: Discharge tracking — when stored knowledge was last surfaced to a session.
+///
+/// Adds `last_surfaced_at TEXT` to 5 tables that accumulate knowledge without
+/// evidence of retrieval. This column enables measuring the discharge rate:
+/// what fraction of stored knowledge actually flows back into session behavior.
+///
+/// Tables modified: antibodies, corrections, patterns, autopsy_records, beliefs.
+fn apply_v7(conn: &Connection) -> Result<()> {
+    // Use PRAGMA table_info to check column existence (ALTER TABLE has no IF NOT EXISTS)
+    let tables_and_cols: [(&str, &str); 5] = [
+        ("antibodies", "last_surfaced_at"),
+        ("corrections", "last_surfaced_at"),
+        ("patterns", "last_surfaced_at"),
+        ("autopsy_records", "last_surfaced_at"),
+        ("beliefs", "last_surfaced_at"),
+    ];
+
+    for (table, col) in tables_and_cols {
+        let cols: Vec<String> = conn
+            .prepare(&format!("PRAGMA table_info({table})"))?
+            .query_map([], |row| row.get::<_, String>(1))?
+            .filter_map(|r| r.ok())
+            .collect();
+
+        if !cols.iter().any(|c| c == col) {
+            conn.execute_batch(&format!("ALTER TABLE {table} ADD COLUMN {col} TEXT;"))?;
+        }
+    }
 
     Ok(())
 }

@@ -119,6 +119,7 @@ nexcore-compositor = { path = "crates/nexcore-compositor", version = "0.1.0" }
 nexcore-compound-registry = { path = "crates/nexcore-compound-registry", version = "0.1.0" }
 nexcore-constants = { path = "crates/nexcore-constants", version = "1.0.0" }
 nexcore-config = { path = "crates/nexcore-config", version = "0.1.0" }
+nexcore-crystalbook = { path = "crates/nexcore-crystalbook", version = "0.1.0" }
 nexcore-cognition = { path = "crates/nexcore-cognition", version = "0.1.0" }
 nexcore-cortex = { path = "crates/nexcore-cortex", version = "0.1.0" }
 nexcore-ctvp = { path = "crates/nexcore-ctvp", version = "1.0.0" }

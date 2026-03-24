@@ -99,8 +99,11 @@ pub struct RefineryMetrics {
 /// Breakdown of products by type.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ProductBreakdown {
+    /// The number of action products produced.
     pub actions: u64,
+    /// The number of report products produced.
     pub reports: u64,
+    /// The number of learning products produced.
     pub learnings: u64,
 }
 
@@ -172,10 +175,15 @@ impl RefineryMetrics {
 /// Result of fractionating crude signals into typed streams.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FractionationResult {
+    /// The number of health signals extracted.
     pub health_count: u64,
+    /// The number of threat signals extracted.
     pub threat_count: u64,
+    /// The number of learning signals extracted.
     pub learning_count: u64,
+    /// The number of noise signals stripped during desalting.
     pub noise_stripped: u64,
+    /// The total number of input signals before fractionation.
     pub total_input: u64,
 }
 

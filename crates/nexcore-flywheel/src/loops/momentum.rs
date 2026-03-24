@@ -5,26 +5,39 @@
 use crate::thresholds::FlywheelThresholds;
 use serde::{Deserialize, Serialize};
 
+/// Input parameters for momentum conservation evaluation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MomentumInput {
+    /// The rotational inertia of the flywheel.
     pub inertia: f64,
+    /// The angular velocity of the flywheel.
     pub omega: f64,
+    /// The friction-induced momentum loss.
     pub friction_drain: f64,
 }
 
+/// Result of a momentum conservation evaluation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MomentumResult {
+    /// The computed angular momentum value.
     pub l: f64,
+    /// The momentum classification tier.
     pub classification: MomentumClassification,
+    /// Whether momentum exceeds the critical stability threshold.
     pub above_critical: bool,
 }
 
+/// Classification of flywheel momentum level.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum MomentumClassification {
+    /// Represents momentum well above critical threshold.
     High,
+    /// Represents momentum above critical threshold.
     Normal,
+    /// Represents momentum below critical but not stalled.
     Low,
+    /// Represents zero or negative effective momentum.
     Stalled,
 }
 
@@ -39,6 +52,7 @@ impl std::fmt::Display for MomentumClassification {
     }
 }
 
+/// Computes angular momentum and classifies it against stability thresholds.
 pub fn evaluate(input: &MomentumInput, thresholds: &FlywheelThresholds) -> MomentumResult {
     let l = input.inertia * input.omega - input.friction_drain;
     let critical = thresholds.min_momentum_for_stability;

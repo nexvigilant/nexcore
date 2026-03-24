@@ -15,19 +15,33 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+/// Event bus and snapshot infrastructure for inter-node communication.
 pub mod bridge;
+/// Structural flywheel components (hub, rim, spokes, shaft, housing).
 pub mod components;
+/// Core flywheel physics equations (E = 1/2 I omega^2).
 pub mod equations;
+/// Flywheel event envelope and typed event kinds.
 pub mod event;
+/// Five autonomous feedback loops (rim, momentum, friction, gyroscopic, elastic).
 pub mod loops;
+/// Module-to-loop mapping for NexVigilant product modules.
 pub mod modules;
+/// Node descriptors, tiers, and lifecycle status.
 pub mod node;
+/// Refinery theory metrics for signal processing cycles.
 pub mod refinery;
+/// Node registry tracking flywheel nodes and their tier status.
 pub mod registry;
+/// Flywheel simulation engine for scenario modeling.
 pub mod simulation;
+/// Station integration for translating flywheel events into actions.
 pub mod station;
+/// Configurable thresholds for all five flywheel loops.
 pub mod thresholds;
+/// Value DAG: graded cascade results, evidence, and learning insights.
 pub mod vdag;
+/// Flywheel vitals snapshot for health monitoring.
 pub mod vitals;
 
 pub use bridge::{FlywheelBus, FlywheelSnapshot};

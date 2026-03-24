@@ -69,8 +69,11 @@ impl std::fmt::Display for EvidenceQuality {
 /// Default: all loops healthy, equal weights.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FlywheelGoal {
+    /// Human-readable goal label.
     pub description: String,
+    /// Desired system state (e.g. `Thriving`).
     pub target_state: SystemState,
+    /// Per-loop weights (rim, momentum, friction, gyroscopic, elastic), summing to 1.0.
     pub loop_weights: [f64; 5],
 }
 
@@ -119,9 +122,13 @@ impl std::fmt::Display for RealityRating {
 /// Per-loop evidence breakdown.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoopEvidence {
+    /// Loop identifier (e.g. "rim", "momentum").
     pub loop_name: String,
+    /// Evidence quality for this loop.
     pub quality: EvidenceQuality,
+    /// Weight in the composite score.
     pub weight: f64,
+    /// Whether this loop met the goal's target state.
     pub achieved_target: bool,
 }
 
@@ -145,8 +152,11 @@ pub struct RealityGradient {
 /// CascadeResult enriched with Reality Gradient and goal context.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GradedCascadeResult {
+    /// Raw cascade evaluation result.
     pub cascade: CascadeResult,
+    /// Reality Gradient derived from evidence grading.
     pub reality: RealityGradient,
+    /// Goal context used for this evaluation.
     pub goal: FlywheelGoal,
 }
 
@@ -179,27 +189,37 @@ impl std::fmt::Display for LearningLoopType {
 /// A concrete threshold adjustment recommendation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThresholdAdjustment {
+    /// Parameter name to adjust.
     pub parameter: String,
+    /// Current threshold value.
     pub current_value: f64,
+    /// Recommended new value.
     pub suggested_value: f64,
     /// 0.0-1.0 confidence in this recommendation.
     pub confidence: f64,
+    /// Human-readable justification.
     pub reason: String,
 }
 
 /// A learning insight produced by history analysis.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LearningInsight {
+    /// Which learning loop produced this insight.
     pub loop_type: LearningLoopType,
+    /// What was observed.
     pub observation: String,
+    /// Concrete threshold adjustments, if any.
     pub suggested_adjustments: Vec<ThresholdAdjustment>,
 }
 
 /// A timestamped cascade record for history tracking.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CascadeRecord {
+    /// Unix timestamp in milliseconds.
     pub timestamp_ms: u64,
+    /// Raw cascade result.
     pub cascade: CascadeResult,
+    /// Graded reality assessment.
     pub reality: RealityGradient,
 }
 

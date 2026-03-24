@@ -22,10 +22,15 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ComponentKind {
+    /// Represents the outer mass ring (value network).
     Rim,
+    /// Represents the central bore (coordination layer).
     Hub,
+    /// Represents the hub-to-rim bridges (module interconnections).
     Spokes,
+    /// Represents the input/output axis (external interface).
     Shaft,
+    /// Represents the bearings and enclosure (infrastructure).
     Housing,
 }
 
@@ -44,6 +49,7 @@ impl std::fmt::Display for ComponentKind {
 /// Health status of a single component.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComponentHealth {
+    /// The component type this health record describes.
     pub kind: ComponentKind,
     /// 0.0 (failed) to 1.0 (perfect).
     pub health: f64,
@@ -56,10 +62,15 @@ pub struct ComponentHealth {
 /// The five-component flywheel anatomy.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FlywheelAnatomy {
+    /// The health of the rim component.
     pub rim: ComponentHealth,
+    /// The health of the hub component.
     pub hub: ComponentHealth,
+    /// The health of the spokes component.
     pub spokes: ComponentHealth,
+    /// The health of the shaft component.
     pub shaft: ComponentHealth,
+    /// The health of the housing component.
     pub housing: ComponentHealth,
 }
 

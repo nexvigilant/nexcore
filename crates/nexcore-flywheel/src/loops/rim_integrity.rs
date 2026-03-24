@@ -5,24 +5,35 @@
 use crate::thresholds::FlywheelThresholds;
 use serde::{Deserialize, Serialize};
 
+/// Input parameters for rim integrity evaluation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RimInput {
+    /// The tensile strength of the rim material.
     pub tensile_strength: f64,
+    /// The centrifugal force acting on the rim.
     pub centrifugal_force: f64,
 }
 
+/// Result of a rim integrity evaluation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RimIntegrityResult {
+    /// The classified rim state.
     pub state: RimState,
+    /// The absolute margin between tensile strength and centrifugal force.
     pub margin: f64,
+    /// The ratio of tensile strength to centrifugal force.
     pub ratio: f64,
 }
 
+/// Classification of rim structural integrity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum RimState {
+    /// Represents a rim with strength well above centrifugal load.
     Thriving,
+    /// Represents a rim near the failure boundary.
     Critical,
+    /// Represents a rim that has failed under centrifugal load.
     Disintegrated,
 }
 
@@ -36,6 +47,7 @@ impl std::fmt::Display for RimState {
     }
 }
 
+/// Computes rim integrity margin and ratio, then classifies the structural state.
 pub fn evaluate(input: &RimInput, thresholds: &FlywheelThresholds) -> RimIntegrityResult {
     let margin = input.tensile_strength - input.centrifugal_force;
     let ratio = if input.centrifugal_force.abs() < f64::EPSILON {

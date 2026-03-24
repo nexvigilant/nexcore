@@ -24,13 +24,21 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Module {
+    /// Represents the central coordination and orchestration module.
     Nucleus,
+    /// Represents the regulatory monitoring module.
     Guardian,
+    /// Represents the education and development module.
     Academy,
+    /// Represents the user engagement module.
     Community,
+    /// Represents the professional placement module.
     Careers,
+    /// Represents the data analysis and reporting module.
     Insights,
+    /// Represents the AI/ML capabilities module.
     Neural,
+    /// Represents the operations and infrastructure module.
     Core,
 }
 
@@ -66,6 +74,7 @@ impl std::fmt::Display for Module {
 /// Module's contribution to the flywheel.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModuleContribution {
+    /// The module this contribution describes.
     pub module: Module,
     /// Which loops this module primarily serves (1-indexed as in spec).
     pub primary_loops: Vec<u8>,

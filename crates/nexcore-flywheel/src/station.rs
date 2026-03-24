@@ -132,10 +132,10 @@ impl LoopGuard {
         if self.depth >= self.max_depth {
             return false;
         }
-        if let Some(last) = self.last_action {
-            if last.elapsed().as_millis() < u128::from(self.cooldown_ms) {
-                return false;
-            }
+        if let Some(last) = self.last_action
+            && last.elapsed().as_millis() < u128::from(self.cooldown_ms)
+        {
+            return false;
         }
         self.depth += 1;
         self.last_action = Some(Instant::now());

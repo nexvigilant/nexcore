@@ -5,27 +5,41 @@
 use crate::thresholds::FlywheelThresholds;
 use serde::{Deserialize, Serialize};
 
+/// Inputs to the elastic equilibrium model.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ElasticInput {
+    /// Applied stress (load on the system).
     pub stress: f64,
+    /// Yield point — stress above which permanent deformation occurs.
     pub yield_point: f64,
+    /// Cumulative fatigue cycles consumed.
     pub fatigue_cycles: u32,
+    /// Maximum fatigue cycles before failure.
     pub fatigue_limit: u32,
 }
 
+/// Elastic equilibrium evaluation result.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ElasticResult {
+    /// Current elastic state classification.
     pub state: ElasticState,
+    /// Strain = stress / elastic_modulus.
     pub strain: f64,
+    /// Fatigue cycles remaining before failure.
     pub cycles_remaining: u32,
+    /// Permanent deformation beyond yield (0.0 if within elastic range).
     pub permanent_deformation: f64,
 }
 
+/// Elastic state classification.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ElasticState {
+    /// Within elastic range, fatigue well below limit.
     Nominal,
+    /// Stress exceeds yield point — permanent deformation occurring.
     YieldExceeded,
+    /// Fatigue cycles approaching or exceeding limit.
     FatigueFailureImminent,
 }
 
@@ -39,6 +53,7 @@ impl std::fmt::Display for ElasticState {
     }
 }
 
+/// Evaluate elastic equilibrium: strain, fatigue remaining, and state classification.
 pub fn evaluate(input: &ElasticInput, thresholds: &FlywheelThresholds) -> ElasticResult {
     let modulus = thresholds.default_elastic_modulus;
     let strain = if modulus.abs() < f64::EPSILON {

@@ -5,26 +5,39 @@
 use crate::thresholds::FlywheelThresholds;
 use serde::{Deserialize, Serialize};
 
+/// Input parameters for gyroscopic stability evaluation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GyroscopicInput {
+    /// The current angular momentum magnitude.
     pub momentum_l: f64,
+    /// The external perturbation torque magnitude.
     pub perturbation_torque: f64,
+    /// The minimum momentum required for gyroscopic effect.
     pub critical_momentum: f64,
 }
 
+/// Result of a gyroscopic stability evaluation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GyroscopicResult {
+    /// The stability score from 0.0 (unstable) to 1.0 (fully stable).
     pub score: f64,
+    /// The classified gyroscopic state.
     pub state: GyroscopicState,
+    /// The ratio of momentum to perturbation torque.
     pub stability_ratio: f64,
 }
 
+/// Classification of gyroscopic stability state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum GyroscopicState {
+    /// Represents a system resisting perturbation effectively.
     Stable,
+    /// Represents a system oscillating under perturbation but not locked.
     Precessing,
+    /// Represents a system overwhelmed by perturbation torque.
     GimbalLock,
+    /// Represents insufficient momentum for any gyroscopic effect.
     NoStability,
 }
 
@@ -39,6 +52,7 @@ impl std::fmt::Display for GyroscopicState {
     }
 }
 
+/// Computes gyroscopic stability score and classifies the stability state.
 pub fn evaluate(input: &GyroscopicInput, thresholds: &FlywheelThresholds) -> GyroscopicResult {
     let l_abs = input.momentum_l.abs();
     let critical = input

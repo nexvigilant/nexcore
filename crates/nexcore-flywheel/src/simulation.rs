@@ -298,16 +298,27 @@ pub fn run(config: &SimulationConfig) -> Trajectory {
 /// Summary statistics from a trajectory.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TrajectorySummary {
+    /// The total number of simulated steps.
     pub steps: u64,
+    /// The system state at the last step.
     pub final_state: SystemState,
+    /// The maximum kinetic energy observed across all steps.
     pub peak_energy: f64,
+    /// The maximum angular momentum observed across all steps.
     pub peak_momentum: f64,
+    /// The maximum stress-to-yield ratio observed across all steps.
     pub peak_stress_ratio: f64,
+    /// The step at which gyroscopic stability first activated, if ever.
     pub gyroscopic_activation_step: Option<u64>,
+    /// The step at which the system first entered the Failed state, if ever.
     pub failure_step: Option<u64>,
+    /// The number of steps spent in the Thriving state.
     pub time_in_thriving: u64,
+    /// The number of steps spent in the Stressed state.
     pub time_in_stressed: u64,
+    /// The number of steps spent in the Critical state.
     pub time_in_critical: u64,
+    /// The number of steps spent in the Failed state.
     pub time_in_failed: u64,
 }
 

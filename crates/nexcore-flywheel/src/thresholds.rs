@@ -68,3 +68,34 @@ impl Default for FlywheelThresholds {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_thresholds_sane() {
+        let t = FlywheelThresholds::default();
+        assert_eq!(t.min_community_size, 100);
+        assert!((t.max_churn_rate - 0.15).abs() < f64::EPSILON);
+        assert_eq!(t.max_fatigue_cycles, 1000);
+    }
+    #[test]
+    fn thresholds_serialization_roundtrip() {
+        let t = FlywheelThresholds::default();
+        let json = serde_json::to_string(&t).expect("ser");
+        let back: FlywheelThresholds = serde_json::from_str(&json).expect("de");
+        assert_eq!(back.min_community_size, 100);
+        assert!((back.gyroscopic_stable_ratio - 2.0).abs() < f64::EPSILON);
+    }
+    #[test]
+    fn thresholds_has_11_fields() {
+        let json = serde_json::to_value(FlywheelThresholds::default()).expect("ser");
+        assert_eq!(json.as_object().expect("obj").len(), 11);
+    }
+    #[test]
+    fn friction_thresholds_ordered() {
+        let t = FlywheelThresholds::default();
+        assert!(t.friction_acceptable_threshold < t.friction_warning_threshold);
+    }
+}

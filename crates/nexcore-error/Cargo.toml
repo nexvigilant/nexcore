@@ -13,11 +13,13 @@ categories = ["no-std", "rust-patterns"]
 [dependencies]
 # Replaces: thiserror, anyhow
 nexcore-error-derive = { path = "../nexcore-error-derive", optional = true }
+serde = { workspace = true, optional = true }
 
 [features]
-default = ["std", "derive"]
+default = ["std", "derive", "serde"]
 std = []
 derive = ["dep:nexcore-error-derive"]
+serde = ["dep:serde"]
 
 [lints]
 workspace = true

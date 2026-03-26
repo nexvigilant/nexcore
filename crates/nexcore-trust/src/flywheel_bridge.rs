@@ -29,9 +29,76 @@ pub fn emit_trust_update(bus: &FlywheelBus, score: f64, level: &str) -> Flywheel
     bus.emit(FlywheelEvent::broadcast(FlywheelTier::Live, kind))
 }
 
+/// Consume pending flywheel events relevant to the trust node.
+///
+/// Drains `TrustUpdate` events (self-feedback for trend tracking),
+/// `BaselineShift` events (homeostasis recalibration affects trust priors),
+/// and `AdaptationReady` events (immunity learning cycles update trust scores).
+pub fn consume_trust_events(bus: &FlywheelBus) -> Vec<FlywheelEvent> {
+    let events = bus.consume(FlywheelTier::Live);
+    events
+        .into_iter()
+        .filter(|e| {
+            matches!(
+                &e.kind,
+                EventKind::TrustUpdate { .. }
+                    | EventKind::BaselineShift { .. }
+                    | EventKind::AdaptationReady { .. }
+            )
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_consume_trust_events_filters() {
+        let bus = FlywheelBus::new();
+
+        // Relevant: trust self-feedback
+        emit_trust_update(&bus, 0.82, "high");
+        // Relevant: adaptation from immunity
+        bus.emit(FlywheelEvent::broadcast(
+            FlywheelTier::Live,
+            EventKind::AdaptationReady {
+                category: "panic-pattern".to_owned(),
+            },
+        ));
+        // Irrelevant: cycle complete (homeostasis internal)
+        bus.emit(FlywheelEvent::broadcast(
+            FlywheelTier::Live,
+            EventKind::CycleComplete { iteration: 42 },
+        ));
+
+        let consumed = consume_trust_events(&bus);
+        assert_eq!(
+            consumed.len(),
+            2,
+            "should consume trust + adaptation, not cycle"
+        );
+    }
+
+    #[test]
+    fn test_consume_includes_baseline_shift() {
+        let bus = FlywheelBus::new();
+        bus.emit(FlywheelEvent::broadcast(
+            FlywheelTier::Live,
+            EventKind::BaselineShift {
+                metric: "threat_level".to_owned(),
+                old: 0.4,
+                new: 0.6,
+            },
+        ));
+
+        let consumed = consume_trust_events(&bus);
+        assert_eq!(
+            consumed.len(),
+            1,
+            "baseline shifts recalibrate trust priors"
+        );
+    }
 
     /// Emit a trust update and verify the consumed event carries the
     /// correct score and level from the Live tier.

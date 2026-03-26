@@ -30,12 +30,15 @@ use nexcore_mcp::NexCoreMcpServer;
 use nexcore_terminal::formatter::format_mcp_result;
 use nexcore_terminal::keybindings::{InMemoryKeybindingsStore, KeybindingsStore};
 use nexcore_terminal::layout::{InMemoryLayoutStore, LayoutStore};
+use nexcore_terminal::microgram::{MicrogramConfig, run_microgram};
 use nexcore_terminal::preferences::{InMemoryPreferencesStore, PreferencesStore};
 use nexcore_terminal::protocol::{SessionStatusMsg, WsClientMessage, WsServerMessage};
 use nexcore_terminal::pty::{PtyConfig, PtyProcess, PtySize};
 use nexcore_terminal::registry::{RegistryError, SessionRegistry};
+use nexcore_terminal::relay::{RelayConfig, query_relay};
 use nexcore_terminal::router::{RoutedCommand, route_command};
 use nexcore_terminal::session::{SessionStatus, TerminalMode, TerminalSession};
+use nexcore_terminal::station::{StationConfig, call_station_tool};
 
 use crate::ApiState;
 use crate::mcp_bridge;
@@ -345,8 +348,15 @@ async fn handle_terminal_socket(mut socket: WebSocket, params: TerminalConnectPa
                         term_state.registry.touch(&session_id).await;
                     }
                     Err(e) => {
+                        let err_msg = e.to_string();
+                        // "no data available" is transient (PTY has nothing to output) — skip, don't break
+                        if err_msg.contains("no data available") || err_msg.contains("Resource temporarily unavailable") {
+                            tracing::trace!(session_id = %session_id, "Terminal WS: PTY no data (transient)");
+                            continue;
+                        }
+                        // Real PTY errors — log and break
                         tracing::error!(session_id = %session_id, error = %e, "Terminal WS: PTY read error");
-                        let err = WsServerMessage::error("PTY_READ_ERROR", e.to_string());
+                        let err = WsServerMessage::error("PTY_READ_ERROR", err_msg);
                         if let Ok(json) = serde_json::to_string(&err) {
                             if socket.send(Message::Text(json.into())).await.is_err() {
                                 tracing::debug!("Terminal WS: client gone before error sent");
@@ -764,9 +774,131 @@ async fn dispatch_routed_command(
                 }
             }
         }
+        RoutedCommand::Station { tool_name, params } => {
+            // Station dispatch — HTTP to mcp.nexvigilant.com
+            let config = StationConfig::default();
+            match call_station_tool(&tool_name, params, &config).await {
+                Ok(result) => {
+                    // ANSI-formatted output
+                    let value_str = serde_json::to_string_pretty(&result.value)
+                        .unwrap_or_else(|e| format!("(serialization error: {e})"));
+                    let formatted = format!(
+                        "\x1b[36m[station:{tool_name}]\x1b[0m ({:.0}ms)\n{}",
+                        result.elapsed.as_millis(),
+                        value_str
+                    );
+                    let output = WsServerMessage::output(formatted);
+                    if let Ok(json) = serde_json::to_string(&output) {
+                        if socket.send(Message::Text(json.into())).await.is_err() {
+                            tracing::debug!("Terminal WS: client gone during Station output");
+                            return;
+                        }
+                    }
+                    // Structured result
+                    let structured = WsServerMessage::Result {
+                        source: format!("station:{tool_name}"),
+                        content: result.value,
+                    };
+                    if let Ok(json) = serde_json::to_string(&structured) {
+                        if socket.send(Message::Text(json.into())).await.is_err() {
+                            tracing::debug!("Terminal WS: client gone during Station result");
+                        }
+                    }
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        tool = %tool_name,
+                        error = %e,
+                        "Terminal WS: Station dispatch failed"
+                    );
+                    let err = WsServerMessage::error("STATION_DISPATCH_ERROR", e.to_string());
+                    if let Ok(json) = serde_json::to_string(&err) {
+                        if socket.send(Message::Text(json.into())).await.is_err() {
+                            tracing::debug!("Terminal WS: client gone during Station error");
+                        }
+                    }
+                }
+            }
+        }
+        RoutedCommand::Microgram { name, variables } => {
+            // Microgram dispatch — rsk subprocess
+            let config = MicrogramConfig::default();
+            let result = run_microgram(&name, &variables, &config).await;
+
+            let formatted = if result.success {
+                let output_str = serde_json::to_string_pretty(&result.output)
+                    .unwrap_or_else(|e| format!("(serialization error: {e})"));
+                format!(
+                    "\x1b[32m[mcg:{name}]\x1b[0m ({}ms)\n{}",
+                    result.elapsed_ms, output_str
+                )
+            } else {
+                format!(
+                    "\x1b[31m[mcg:{name}]\x1b[0m ERROR ({}ms)\n{}",
+                    result.elapsed_ms,
+                    result.error.as_deref().unwrap_or("unknown error")
+                )
+            };
+
+            let output = WsServerMessage::output(formatted);
+            if let Ok(json) = serde_json::to_string(&output) {
+                if socket.send(Message::Text(json.into())).await.is_err() {
+                    tracing::debug!("Terminal WS: client gone during mcg output");
+                    return;
+                }
+            }
+            // Structured result
+            let structured = WsServerMessage::Result {
+                source: format!("mcg:{name}"),
+                content: serde_json::to_value(&result)
+                    .unwrap_or_else(|_| serde_json::json!({"error": "serialization failed"})),
+            };
+            if let Ok(json) = serde_json::to_string(&structured) {
+                if socket.send(Message::Text(json.into())).await.is_err() {
+                    tracing::debug!("Terminal WS: client gone during mcg result");
+                }
+            }
+        }
         RoutedCommand::Ai { message, .. } => {
-            // AI dispatch — stream Claude response via NexChat
-            dispatch_ai_message(&message, socket, conversation).await;
+            // AI dispatch — try relay first (Agent SDK + Station MCP), fall back to direct Claude.
+            // Relay call is wrapped in timeout + catch_unwind to prevent WS connection drops.
+            let relay_config = RelayConfig::default();
+            let relay_result = tokio::time::timeout(
+                std::time::Duration::from_secs(35),
+                query_relay(&message, &relay_config),
+            )
+            .await;
+
+            match relay_result {
+                Ok(Ok(result)) => {
+                    let formatted = format!(
+                        "\x1b[33m[relay]\x1b[0m ({}ms relay, {}ms total)\n{}",
+                        result.relay_elapsed_ms, result.total_elapsed_ms, result.text
+                    );
+                    let output = WsServerMessage::output(formatted);
+                    if let Ok(json) = serde_json::to_string(&output) {
+                        if socket.send(Message::Text(json.into())).await.is_err() {
+                            tracing::debug!("Terminal WS: client gone during relay output");
+                            return;
+                        }
+                    }
+                    let done = WsServerMessage::AiToken {
+                        token: String::new(),
+                        done: true,
+                    };
+                    if let Ok(json) = serde_json::to_string(&done) {
+                        let _ = socket.send(Message::Text(json.into())).await;
+                    }
+                }
+                Ok(Err(e)) => {
+                    tracing::info!(error = %e, "Relay error, falling back to direct Claude");
+                    dispatch_ai_message(&message, socket, conversation).await;
+                }
+                Err(_) => {
+                    tracing::info!("Relay timed out after 35s, falling back to direct Claude");
+                    dispatch_ai_message(&message, socket, conversation).await;
+                }
+            }
         }
         RoutedCommand::Control(ctrl) => {
             // Control commands handled in handle_client_message already

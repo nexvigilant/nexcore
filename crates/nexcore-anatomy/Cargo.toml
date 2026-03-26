@@ -9,6 +9,7 @@ license = "LicenseRef-Proprietary"
 description = "Structural anatomy analysis for Rust workspaces — dependency graph metrics, layer validation, Chomsky classification, and criticality scoring"
 
 [dependencies]
+nexcore-error = { workspace = true }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 cargo_metadata = "0.19"

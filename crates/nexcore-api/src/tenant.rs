@@ -112,11 +112,13 @@ where
 ///
 /// In production, this would verify the JWT signature against Firebase/Auth0
 /// public keys and check expiration. For now, it decodes the base64 payload.
-fn decode_tenant_claims(token: &str) -> Result<TenantClaims, String> {
+fn decode_tenant_claims(token: &str) -> Result<TenantClaims, nexcore_error::NexError> {
     // JWT format: header.payload.signature
     let parts: Vec<&str> = token.split('.').collect();
     if parts.len() != 3 {
-        return Err("malformed JWT: expected 3 parts".to_string());
+        return Err(nexcore_error::NexError::new(
+            "malformed JWT: expected 3 parts",
+        ));
     }
 
     // Decode the payload (second part)
@@ -130,11 +132,11 @@ fn decode_tenant_claims(token: &str) -> Result<TenantClaims, String> {
     };
     let payload_b64_std = padded.replace('-', "+").replace('_', "/");
 
-    let payload_bytes =
-        b64::decode(&payload_b64_std).map_err(|e| format!("base64 decode failed: {e}"))?;
+    let payload_bytes = b64::decode(&payload_b64_std)
+        .map_err(|e| nexcore_error::NexError::new(format!("base64 decode failed: {e}")))?;
 
-    let claims: TenantClaims =
-        serde_json::from_slice(&payload_bytes).map_err(|e| format!("JSON parse failed: {e}"))?;
+    let claims: TenantClaims = serde_json::from_slice(&payload_bytes)
+        .map_err(|e| nexcore_error::NexError::new(format!("JSON parse failed: {e}")))?;
 
     Ok(claims)
 }

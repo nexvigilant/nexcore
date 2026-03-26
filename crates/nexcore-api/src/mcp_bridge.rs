@@ -1,7 +1,7 @@
 //! MCP Bridge — In-process dispatch to nexcore-mcp tools
 //!
-//! Calls `nexcore_mcp::unified::dispatch()` directly, eliminating the
-//! Unix socket daemon dependency. All tool execution happens in-process.
+//! Tries the first-class tool router (540+ tools) via `nexcore_mcp::call_tool_direct`,
+//! then falls back to the unified dispatcher for legacy short-name commands.
 
 use std::time::Instant;
 
@@ -10,8 +10,8 @@ use nexcore_mcp::NexCoreMcpServer;
 
 /// Call a single MCP tool via in-process dispatch.
 ///
-/// Routes directly to `nexcore_mcp::unified::dispatch()` without any
-/// socket or JSON-RPC overhead.
+/// Tries `nexcore_mcp::call_tool_direct` first (all `#[tool]` methods),
+/// then falls back to `unified::dispatch` for legacy short-name commands.
 pub async fn call_tool(
     tool_name: &str,
     params: serde_json::Value,
@@ -19,9 +19,16 @@ pub async fn call_tool(
 ) -> Result<serde_json::Value, nexcore_error::NexError> {
     let start = Instant::now();
 
-    let result = nexcore_mcp::unified::dispatch(tool_name, params, server)
-        .await
-        .map_err(|e| nexcore_error::nexerror!("MCP dispatch error: {e:?}"))?;
+    // Try first-class tool router, fallback to unified
+    let result = match nexcore_mcp::call_tool_direct(tool_name, params.clone(), server).await {
+        Ok(r) => r,
+        Err(_) => {
+            // Fallback: unified dispatcher (legacy short-name commands)
+            nexcore_mcp::unified::dispatch(tool_name, params, server)
+                .await
+                .map_err(|e| nexcore_error::nexerror!("MCP dispatch error: {e:?}"))?
+        }
+    };
 
     let value = serde_json::to_value(&result).context("failed to serialize CallToolResult")?;
 

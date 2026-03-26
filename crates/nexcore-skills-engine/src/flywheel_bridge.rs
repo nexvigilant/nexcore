@@ -55,6 +55,28 @@ pub fn emit_skill_promoted(
     bus.emit(FlywheelEvent::broadcast(FlywheelTier::Staging, kind))
 }
 
+/// Consume pending flywheel events relevant to the skill maturation node.
+///
+/// Drains `MaturationSignal` and `SkillPromoted` events from the staging tier
+/// so the engine can react to maturation signals from other subsystems
+/// (e.g., insight novelty triggering skill re-evaluation).
+///
+/// Returns the consumed events for the caller to process.
+pub fn consume_maturation_events(bus: &FlywheelBus) -> Vec<FlywheelEvent> {
+    let events = bus.consume(FlywheelTier::Staging);
+    events
+        .into_iter()
+        .filter(|e| {
+            matches!(
+                &e.kind,
+                EventKind::MaturationSignal { .. }
+                    | EventKind::SkillPromoted { .. }
+                    | EventKind::InsightAccumulated { .. }
+            )
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -102,6 +124,42 @@ mod tests {
 
         let consumed = bus.consume(FlywheelTier::Staging);
         assert_eq!(consumed.len(), 1, "expected 1 event in Staging tier");
+    }
+
+    #[test]
+    fn test_consume_maturation_events_filters() {
+        let bus = FlywheelBus::new();
+
+        // Emit maturation signal (relevant)
+        emit_maturation_signal(&bus, "forge", 0.85);
+
+        // Emit skill promoted (relevant)
+        emit_skill_promoted(&bus, "pv-dev", "staging", "live");
+
+        // Emit a trust update (irrelevant to maturation)
+        let trust = EventKind::TrustUpdate {
+            score: 0.9,
+            level: "high".to_owned(),
+        };
+        bus.emit(FlywheelEvent::broadcast(FlywheelTier::Staging, trust));
+
+        let consumed = consume_maturation_events(&bus);
+        assert_eq!(
+            consumed.len(),
+            2,
+            "should consume maturation + promoted, not trust"
+        );
+    }
+
+    #[test]
+    fn test_consume_includes_insight_events() {
+        let bus = FlywheelBus::new();
+
+        let kind = EventKind::InsightAccumulated { pattern_count: 10 };
+        bus.emit(FlywheelEvent::broadcast(FlywheelTier::Staging, kind));
+
+        let consumed = consume_maturation_events(&bus);
+        assert_eq!(consumed.len(), 1, "insight events feed skill maturation");
     }
 
     #[test]

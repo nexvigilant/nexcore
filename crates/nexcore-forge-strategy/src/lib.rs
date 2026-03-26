@@ -31,6 +31,7 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+pub mod diagnosis;
 pub mod game;
 pub mod kinetics;
 pub mod nash;

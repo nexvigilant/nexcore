@@ -14,11 +14,11 @@ pub enum ComplianceLevel {
     Invalid = 0,
     /// Bronze - valid SKILL.md with frontmatter
     Bronze = 1,
-    /// Silver - + scripts/ directory
+    /// Silver - + scripts/ directory, paired agent, triggers >= 3
     Silver = 2,
-    /// Gold - + references/, templates/, verify.py, build.py
+    /// Gold - + references/, examples >= 2, verify.sh, triggers >= 5
     Gold = 3,
-    /// Platinum - + functional tests pass
+    /// Platinum - + all internal links resolve
     Platinum = 4,
     /// Diamond - + SMST score >= 85%
     Diamond = 5,
@@ -86,20 +86,54 @@ pub fn validate_diamond(skill_path: &Path) -> Result<DiamondValidation, String> 
         suggestions.push("Add scripts/ directory".to_string());
     }
 
-    // Check for Gold requirements
+    // Spec-canonical tier gates (source: skill-dev/references/compliance-levels.md)
     let has_references = skill_path.join("references").exists();
-    let has_templates = skill_path.join("templates").exists();
-    let has_verify = skill_path.join("verify.py").exists() || skill_path.join("verify.rs").exists();
-    let has_build = skill_path.join("build.py").exists() || skill_path.join("build.rs").exists();
+    let has_verify = skill_path.join("scripts").join("verify.sh").exists()
+        || skill_path.join("verify.py").exists()
+        || skill_path.join("verify.rs").exists();
 
-    // Determine level
+    // Count examples (inline ## Example headers)
+    let example_count = content
+        .lines()
+        .filter(|l| {
+            let trimmed = l.trim_start_matches('#');
+            l.starts_with("##")
+                && (trimmed.trim().starts_with("Example") || trimmed.trim().starts_with(" Example"))
+        })
+        .count();
+
+    // Check internal link resolution
+    let mut total_links: usize = 0;
+    let mut broken_links: usize = 0;
+    for line in content.lines() {
+        // Match ](relative-path) but not ](http
+        let mut rest = line;
+        while let Some(pos) = rest.find("](") {
+            let after = &rest[pos + 2..];
+            if let Some(end) = after.find(')') {
+                let link = &after[..end];
+                if !link.starts_with("http") && !link.starts_with('#') {
+                    total_links += 1;
+                    if !skill_path.join(link).exists() {
+                        broken_links += 1;
+                    }
+                }
+                rest = &after[end..];
+            } else {
+                break;
+            }
+        }
+    }
+    let links_resolve = total_links == 0 || broken_links == 0;
+
+    // Determine level (strict gate sequence — each tier requires all previous gates)
     let level = if issues.contains(&"Missing frontmatter".to_string()) {
         ComplianceLevel::Invalid
-    } else if smst.score >= 85.0 {
+    } else if smst.score >= 85.0 && links_resolve {
         ComplianceLevel::Diamond
-    } else if has_verify && has_build {
+    } else if links_resolve && has_references && example_count >= 2 && has_verify {
         ComplianceLevel::Platinum
-    } else if has_references && has_templates {
+    } else if has_references && example_count >= 2 && has_verify {
         ComplianceLevel::Gold
     } else if has_scripts {
         ComplianceLevel::Silver

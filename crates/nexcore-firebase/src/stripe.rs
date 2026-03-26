@@ -3,6 +3,7 @@
 //! Provides checkout session creation and retrieval
 //! via the Stripe REST API.
 
+use nexcore_error::NexError;
 use serde::Deserialize;
 
 /// Stripe Checkout Session (subset of fields we need)
@@ -54,12 +55,15 @@ impl StripeClient {
     /// Create a Checkout Session for a subscription
     ///
     /// Uses form-encoded POST (Stripe requires `application/x-www-form-urlencoded`).
+    ///
+    /// # Errors
+    /// Returns `NexError` on network failure, parse failure, or Stripe API error.
     pub async fn create_checkout_session(
         &self,
         price_id: &str,
         success_url: &str,
         cancel_url: &str,
-    ) -> Result<CheckoutSession, String> {
+    ) -> Result<CheckoutSession, NexError> {
         let params = [
             ("mode", "subscription"),
             ("success_url", success_url),
@@ -75,23 +79,26 @@ impl StripeClient {
             .form(&params)
             .send()
             .await
-            .map_err(|e| format!("Stripe network error: {e}"))?;
+            .map_err(|e| NexError::new(format!("Stripe network error: {e}")))?;
 
         if resp.status().is_success() {
             resp.json::<CheckoutSession>()
                 .await
-                .map_err(|e| format!("Stripe parse error: {e}"))
+                .map_err(|e| NexError::new(format!("Stripe parse error: {e}")))
         } else {
             let err = resp
                 .json::<StripeError>()
                 .await
-                .map_err(|e| format!("Stripe error parse error: {e}"))?;
-            Err(err.error.message)
+                .map_err(|e| NexError::new(format!("Stripe error parse error: {e}")))?;
+            Err(NexError::new(err.error.message))
         }
     }
 
     /// Retrieve a Checkout Session by ID (for verification)
-    pub async fn retrieve_session(&self, session_id: &str) -> Result<SessionStatus, String> {
+    ///
+    /// # Errors
+    /// Returns `NexError` on network failure, parse failure, or Stripe API error.
+    pub async fn retrieve_session(&self, session_id: &str) -> Result<SessionStatus, NexError> {
         let url = format!("https://api.stripe.com/v1/checkout/sessions/{session_id}");
 
         let resp = self
@@ -100,18 +107,18 @@ impl StripeClient {
             .basic_auth(&self.secret_key, Option::<&str>::None)
             .send()
             .await
-            .map_err(|e| format!("Stripe network error: {e}"))?;
+            .map_err(|e| NexError::new(format!("Stripe network error: {e}")))?;
 
         if resp.status().is_success() {
             resp.json::<SessionStatus>()
                 .await
-                .map_err(|e| format!("Stripe parse error: {e}"))
+                .map_err(|e| NexError::new(format!("Stripe parse error: {e}")))
         } else {
             let err = resp
                 .json::<StripeError>()
                 .await
-                .map_err(|e| format!("Stripe error parse error: {e}"))?;
-            Err(err.error.message)
+                .map_err(|e| NexError::new(format!("Stripe error parse error: {e}")))?;
+            Err(NexError::new(err.error.message))
         }
     }
 }

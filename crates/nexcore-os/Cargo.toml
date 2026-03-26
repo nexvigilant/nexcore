@@ -52,7 +52,7 @@ nexcore-urinary = { version = "1.0.0", path = "../nexcore-urinary", registry = "
 nexcore-reproductive = { version = "1.0.0", path = "../nexcore-reproductive", registry = "nexcore" }
 nexcore-browser = { version = "0.1.0", path = "../nexcore-browser", optional = true, registry = "nexcore" }
 nexcore-insight = { version = "0.1.0", path = "../nexcore-insight", optional = true, registry = "nexcore" }
-reqwest = { version = "0.12.5", features = ["json"] }
+reqwest = { workspace = true }
 dashmap = "6.0.1"
 async-trait = "0.1.81"
 toml = "0.8.15"

@@ -3,6 +3,7 @@
 //! Implements sign-in, sign-up, password reset, and token refresh
 //! via the Firebase Identity Toolkit REST API.
 
+use nexcore_error::NexError;
 use serde::{Deserialize, Serialize};
 
 /// Firebase Auth REST API base URL
@@ -93,7 +94,10 @@ impl FirebaseAuthClient {
     }
 
     /// Sign in with email and password
-    pub async fn sign_in(&self, email: &str, password: &str) -> Result<AuthResponse, String> {
+    ///
+    /// # Errors
+    /// Returns `NexError` on network failure, parse failure, or Firebase auth error.
+    pub async fn sign_in(&self, email: &str, password: &str) -> Result<AuthResponse, NexError> {
         let url = format!(
             "{AUTH_BASE}/accounts:signInWithPassword?key={}",
             self.api_key
@@ -110,23 +114,26 @@ impl FirebaseAuthClient {
             .json(&body)
             .send()
             .await
-            .map_err(|e| format!("Network error: {e}"))?;
+            .map_err(|e| NexError::new(format!("Network error: {e}")))?;
 
         if resp.status().is_success() {
             resp.json::<AuthResponse>()
                 .await
-                .map_err(|e| format!("Parse error: {e}"))
+                .map_err(|e| NexError::new(format!("Parse error: {e}")))
         } else {
             let err = resp
                 .json::<AuthErrorResponse>()
                 .await
-                .map_err(|e| format!("Error parse error: {e}"))?;
-            Err(err.error.message)
+                .map_err(|e| NexError::new(format!("Error parse error: {e}")))?;
+            Err(NexError::new(err.error.message))
         }
     }
 
     /// Create a new account with email and password
-    pub async fn sign_up(&self, email: &str, password: &str) -> Result<AuthResponse, String> {
+    ///
+    /// # Errors
+    /// Returns `NexError` on network failure, parse failure, or Firebase auth error.
+    pub async fn sign_up(&self, email: &str, password: &str) -> Result<AuthResponse, NexError> {
         let url = format!("{AUTH_BASE}/accounts:signUp?key={}", self.api_key);
         let body = SignUpRequest {
             email: email.to_string(),
@@ -140,23 +147,26 @@ impl FirebaseAuthClient {
             .json(&body)
             .send()
             .await
-            .map_err(|e| format!("Network error: {e}"))?;
+            .map_err(|e| NexError::new(format!("Network error: {e}")))?;
 
         if resp.status().is_success() {
             resp.json::<AuthResponse>()
                 .await
-                .map_err(|e| format!("Parse error: {e}"))
+                .map_err(|e| NexError::new(format!("Parse error: {e}")))
         } else {
             let err = resp
                 .json::<AuthErrorResponse>()
                 .await
-                .map_err(|e| format!("Error parse error: {e}"))?;
-            Err(err.error.message)
+                .map_err(|e| NexError::new(format!("Error parse error: {e}")))?;
+            Err(NexError::new(err.error.message))
         }
     }
 
     /// Send password reset email
-    pub async fn send_password_reset(&self, email: &str) -> Result<(), String> {
+    ///
+    /// # Errors
+    /// Returns `NexError` on network failure, parse failure, or Firebase auth error.
+    pub async fn send_password_reset(&self, email: &str) -> Result<(), NexError> {
         let url = format!("{AUTH_BASE}/accounts:sendOobCode?key={}", self.api_key);
         let body = PasswordResetRequest {
             request_type: "PASSWORD_RESET".to_string(),
@@ -169,7 +179,7 @@ impl FirebaseAuthClient {
             .json(&body)
             .send()
             .await
-            .map_err(|e| format!("Network error: {e}"))?;
+            .map_err(|e| NexError::new(format!("Network error: {e}")))?;
 
         if resp.status().is_success() {
             Ok(())
@@ -177,13 +187,16 @@ impl FirebaseAuthClient {
             let err = resp
                 .json::<AuthErrorResponse>()
                 .await
-                .map_err(|e| format!("Error parse error: {e}"))?;
-            Err(err.error.message)
+                .map_err(|e| NexError::new(format!("Error parse error: {e}")))?;
+            Err(NexError::new(err.error.message))
         }
     }
 
     /// Refresh an expired ID token
-    pub async fn refresh_token(&self, refresh_token: &str) -> Result<RefreshResponse, String> {
+    ///
+    /// # Errors
+    /// Returns `NexError` on network failure, parse failure, or Firebase auth error.
+    pub async fn refresh_token(&self, refresh_token: &str) -> Result<RefreshResponse, NexError> {
         let url = format!(
             "https://securetoken.googleapis.com/v1/token?key={}",
             self.api_key
@@ -199,18 +212,18 @@ impl FirebaseAuthClient {
             .json(&body)
             .send()
             .await
-            .map_err(|e| format!("Network error: {e}"))?;
+            .map_err(|e| NexError::new(format!("Network error: {e}")))?;
 
         if resp.status().is_success() {
             resp.json::<RefreshResponse>()
                 .await
-                .map_err(|e| format!("Parse error: {e}"))
+                .map_err(|e| NexError::new(format!("Parse error: {e}")))
         } else {
             let err = resp
                 .json::<AuthErrorResponse>()
                 .await
-                .map_err(|e| format!("Error parse error: {e}"))?;
-            Err(err.error.message)
+                .map_err(|e| NexError::new(format!("Error parse error: {e}")))?;
+            Err(NexError::new(err.error.message))
         }
     }
 }

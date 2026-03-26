@@ -125,7 +125,7 @@ Claude Code ←stdio→ nexcore-mcp (direct binary)
 ├── justfile            # 86 recipes (preferred CLI)
 ├── crates/             # 229 directories (4 layers)
 ├── tools/              # 2 utility crates (crate-converter, dag-publish)
-├── studio/             # Separate: Next.js portal (see studio/CLAUDE.md)
+├── studio/             # Legacy — active frontend is ~/Projects/Active/nucleus/
 ├── scripts/            # Build/audit scripts
 ├── docs/               # Documentation
 │   └── sops/           # All SOPs (OPS/, QA/, DEV/, DEV-BIO/, SEC/, SPECIALIZED/)

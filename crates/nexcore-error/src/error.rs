@@ -95,3 +95,40 @@ where
         }
     }
 }
+
+// ── String interop ──────────────────────────────────────────────
+// These conversions let NexError participate in String-based error
+// pipelines (MCP tool boundaries, JSON serialization, Cow<str>)
+// without adding serde as a dependency.
+
+impl From<NexError> for String {
+    fn from(err: NexError) -> Self {
+        err.to_string()
+    }
+}
+
+#[cfg(not(feature = "std"))]
+impl From<NexError> for alloc::borrow::Cow<'static, str> {
+    fn from(err: NexError) -> Self {
+        alloc::borrow::Cow::Owned(err.to_string())
+    }
+}
+
+#[cfg(feature = "std")]
+impl From<NexError> for std::borrow::Cow<'static, str> {
+    fn from(err: NexError) -> Self {
+        std::borrow::Cow::Owned(err.to_string())
+    }
+}
+
+/// Allows NexError to be used in `json!({"error": e})` contexts
+/// via serde's `Display`-based serialization. Gated behind `serde` feature.
+#[cfg(feature = "serde")]
+impl serde::Serialize for NexError {
+    fn serialize<S: serde::Serializer>(
+        &self,
+        serializer: S,
+    ) -> core::result::Result<S::Ok, S::Error> {
+        serializer.serialize_str(&self.to_string())
+    }
+}

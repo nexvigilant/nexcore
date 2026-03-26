@@ -82,7 +82,7 @@ pub async fn converge_layout(
     }
 
     let result = compute_layout(&body.nodes, &body.edges, body.dimensions, body.iterations)
-        .map_err(|e| ApiError::new("LAYOUT_ERROR", e))?;
+        .map_err(|e| ApiError::new("LAYOUT_ERROR", e.to_string()))?;
 
     Ok(Json(result))
 }
@@ -161,7 +161,7 @@ fn compute_layout(
     edges: &[LayoutEdgeInput],
     dimensions: Option<u8>,
     iterations: Option<u32>,
-) -> Result<serde_json::Value, String> {
+) -> Result<serde_json::Value, nexcore_error::NexError> {
     let n = nodes.len();
 
     let dims = dimensions.unwrap_or(3).clamp(2, 3);

@@ -3,6 +3,7 @@
 //! Provides typed access to Firestore documents and collections
 //! via the REST API. Used for server-side data fetching.
 
+use nexcore_error::NexError;
 use serde::de::DeserializeOwned;
 
 /// Firestore REST API base URL template
@@ -58,12 +59,15 @@ impl FirestoreClient {
     }
 
     /// Get a single document by collection and document ID
+    ///
+    /// # Errors
+    /// Returns `NexError` on network failure, parse failure, or Firestore error.
     pub async fn get_document<T: DeserializeOwned>(
         &self,
         collection: &str,
         doc_id: &str,
         token: &str,
-    ) -> Result<T, String> {
+    ) -> Result<T, NexError> {
         let url = format!(
             "{FIRESTORE_BASE}/projects/{}/databases/(default)/documents/{}/{}",
             self.project_id, collection, doc_id
@@ -75,24 +79,29 @@ impl FirestoreClient {
             .header("Authorization", format!("Bearer {token}"))
             .send()
             .await
-            .map_err(|e| format!("Network error: {e}"))?;
+            .map_err(|e| NexError::new(format!("Network error: {e}")))?;
 
         if resp.status().is_success() {
-            let doc: serde_json::Value =
-                resp.json().await.map_err(|e| format!("Parse error: {e}"))?;
+            let doc: serde_json::Value = resp
+                .json()
+                .await
+                .map_err(|e| NexError::new(format!("Parse error: {e}")))?;
             parse_firestore_document(&doc)
         } else {
-            Err(format!("Firestore error: {}", resp.status()))
+            Err(NexError::new(format!("Firestore error: {}", resp.status())))
         }
     }
 
     /// List documents in a collection
+    ///
+    /// # Errors
+    /// Returns `NexError` on network failure, parse failure, or Firestore error.
     pub async fn list_documents<T: DeserializeOwned>(
         &self,
         collection: &str,
         token: &str,
         page_size: Option<u32>,
-    ) -> Result<Vec<T>, String> {
+    ) -> Result<Vec<T>, NexError> {
         let mut url = format!(
             "{FIRESTORE_BASE}/projects/{}/databases/(default)/documents/{}",
             self.project_id, collection
@@ -108,11 +117,13 @@ impl FirestoreClient {
             .header("Authorization", format!("Bearer {token}"))
             .send()
             .await
-            .map_err(|e| format!("Network error: {e}"))?;
+            .map_err(|e| NexError::new(format!("Network error: {e}")))?;
 
         if resp.status().is_success() {
-            let body: serde_json::Value =
-                resp.json().await.map_err(|e| format!("Parse error: {e}"))?;
+            let body: serde_json::Value = resp
+                .json()
+                .await
+                .map_err(|e| NexError::new(format!("Parse error: {e}")))?;
 
             let documents = body
                 .get("documents")
@@ -122,7 +133,7 @@ impl FirestoreClient {
 
             documents.iter().map(parse_firestore_document).collect()
         } else {
-            Err(format!("Firestore error: {}", resp.status()))
+            Err(NexError::new(format!("Firestore error: {}", resp.status())))
         }
     }
 }
@@ -139,11 +150,17 @@ impl Default for FirestoreClient {
 /// Firestore REST API returns documents in a specific format with
 /// typed value wrappers (`stringValue`, `integerValue`, etc.).
 /// This function extracts the fields and converts them to a flat JSON object.
-pub fn parse_firestore_document<T: DeserializeOwned>(doc: &serde_json::Value) -> Result<T, String> {
-    let fields = doc.get("fields").ok_or("Document missing 'fields'")?;
+/// # Errors
+/// Returns `NexError` if the document is missing `fields` or deserialization fails.
+pub fn parse_firestore_document<T: DeserializeOwned>(
+    doc: &serde_json::Value,
+) -> Result<T, NexError> {
+    let fields = doc
+        .get("fields")
+        .ok_or_else(|| NexError::new("Document missing 'fields'"))?;
 
     let flat = convert_firestore_fields(fields);
-    serde_json::from_value(flat).map_err(|e| format!("Deserialization error: {e}"))
+    serde_json::from_value(flat).map_err(|e| NexError::new(format!("Deserialization error: {e}")))
 }
 
 /// Convert Firestore typed fields to plain JSON values

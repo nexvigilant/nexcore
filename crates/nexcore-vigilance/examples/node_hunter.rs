@@ -13,7 +13,7 @@ use nexcore_vigilance::network_nodes::{NetworkNode, NodeSignal, NodeSignalScanne
 use nexcore_vigilance::vdag::prelude::*;
 use std::collections::HashMap;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Starting Node Hunter Simulation...");
 
     // 1. Setup VDAG Nodes (Conceptual Entities)
@@ -32,7 +32,9 @@ fn main() {
 
     // Most nodes behave normally
     for id in &node_ids {
-        let node = network_nodes.get_mut(*id).unwrap();
+        let node = network_nodes
+            .get_mut(*id)
+            .ok_or_else(|| format!("node '{id}' not found in network"))?;
         // Normal baseline activity
         node.signals.push(NodeSignal {
             pattern_id: "HEARTBEAT".into(),
@@ -48,7 +50,9 @@ fn main() {
 
     // "EXECUTOR" node starts exhibiting "LATENCY_SPIKE" (The Target Pattern)
     println!("⚠️  Anomalous behavior detected in 'EXECUTOR' node...");
-    let executor = network_nodes.get_mut("EXECUTOR").unwrap();
+    let executor = network_nodes
+        .get_mut("EXECUTOR")
+        .ok_or("node 'EXECUTOR' not found in network")?;
     for i in 0..10 {
         executor.signals.push(NodeSignal {
             pattern_id: "LATENCY_SPIKE".into(),
@@ -58,7 +62,9 @@ fn main() {
     }
 
     // Background has a few other spikes (noise)
-    let parser = network_nodes.get_mut("PARSER").unwrap();
+    let parser = network_nodes
+        .get_mut("PARSER")
+        .ok_or("node 'PARSER' not found in network")?;
     parser.signals.push(NodeSignal {
         pattern_id: "LATENCY_SPIKE".into(),
         intensity: 0.4,
@@ -89,7 +95,9 @@ fn main() {
                 "🛡️  Establishing Boundary Primitive (∂) for node '{}'...",
                 id
             );
-            let mut target_node = network_nodes.get_mut(&id).unwrap();
+            let target_node = network_nodes
+                .get_mut(&id)
+                .ok_or_else(|| format!("node '{id}' not found in network"))?;
             target_node.isolate();
             println!(
                 "🚫 Node '{}' isolated from network. is_isolated: {}",
@@ -99,4 +107,5 @@ fn main() {
     }
 
     println!("🏁 Simulation complete.");
+    Ok(())
 }

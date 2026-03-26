@@ -49,6 +49,28 @@ pub fn emit_novelty_detected(
     bus.emit(FlywheelEvent::broadcast(FlywheelTier::Staging, kind))
 }
 
+/// Consume pending flywheel events relevant to the insight node.
+///
+/// Drains `NoveltyDetected`, `InsightAccumulated`, and `ThresholdDrift` events
+/// from the staging tier so the engine can integrate signals from other nodes
+/// (e.g., primitive tier shifts or maturation signals that produce new patterns).
+///
+/// Returns the consumed events for the caller to process.
+pub fn consume_insight_events(bus: &FlywheelBus) -> Vec<FlywheelEvent> {
+    let events = bus.consume(FlywheelTier::Staging);
+    events
+        .into_iter()
+        .filter(|e| {
+            matches!(
+                &e.kind,
+                EventKind::NoveltyDetected { .. }
+                    | EventKind::InsightAccumulated { .. }
+                    | EventKind::ThresholdDrift { .. }
+            )
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -89,6 +111,48 @@ mod tests {
 
         let consumed = bus.consume(FlywheelTier::Staging);
         assert_eq!(consumed.len(), 1, "expected 1 event in Staging tier");
+    }
+
+    #[test]
+    fn test_consume_insight_events_filters() {
+        let bus = FlywheelBus::new();
+
+        // Emit novelty (relevant)
+        emit_novelty_detected(&bus, "faers", 0.88, "new ADE pattern");
+
+        // Emit threshold drift (relevant — primitives feeding insight)
+        let drift = EventKind::ThresholdDrift {
+            parameter: "tier:κ".to_owned(),
+            delta: 1.0,
+        };
+        bus.emit(FlywheelEvent::broadcast(FlywheelTier::Staging, drift));
+
+        // Emit trust update (irrelevant)
+        let trust = EventKind::TrustUpdate {
+            score: 0.7,
+            level: "medium".to_owned(),
+        };
+        bus.emit(FlywheelEvent::broadcast(FlywheelTier::Staging, trust));
+
+        let consumed = consume_insight_events(&bus);
+        assert_eq!(
+            consumed.len(),
+            2,
+            "should consume novelty + drift, not trust"
+        );
+    }
+
+    #[test]
+    fn test_consume_includes_accumulated_events() {
+        let bus = FlywheelBus::new();
+        emit_insight_accumulated(&bus, 50);
+
+        let consumed = consume_insight_events(&bus);
+        assert_eq!(
+            consumed.len(),
+            1,
+            "self-referential insight events consumed"
+        );
     }
 
     #[test]

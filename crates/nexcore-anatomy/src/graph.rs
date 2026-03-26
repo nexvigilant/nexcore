@@ -165,12 +165,14 @@ impl DependencyGraph {
     /// then calls `from_metadata`.
     ///
     /// # Errors
-    /// Returns an error string if cargo metadata execution fails.
-    pub fn from_manifest_path(manifest_path: &std::path::Path) -> Result<Self, String> {
+    /// Returns `NexError` if cargo metadata execution fails.
+    pub fn from_manifest_path(
+        manifest_path: &std::path::Path,
+    ) -> Result<Self, nexcore_error::NexError> {
         let metadata = cargo_metadata::MetadataCommand::new()
             .manifest_path(manifest_path)
             .exec()
-            .map_err(|e| format!("cargo metadata failed: {e}"))?;
+            .map_err(|e| nexcore_error::NexError::new(format!("cargo metadata failed: {e}")))?;
         Ok(Self::from_metadata(&metadata))
     }
 

@@ -8,7 +8,7 @@ use rusqlite::Connection;
 use crate::error::{DbError, Result};
 
 /// Current schema version. Increment when adding migrations.
-pub const CURRENT_SCHEMA_VERSION: u32 = 7;
+pub const CURRENT_SCHEMA_VERSION: u32 = 9;
 
 /// Initialize the database schema (create all tables if they don't exist).
 ///
@@ -43,6 +43,8 @@ pub fn initialize(conn: &Connection) -> Result<()> {
             apply_v5(conn)?;
             apply_v6(conn)?;
             apply_v7(conn)?;
+            apply_v8(conn)?;
+            apply_v9(conn)?;
             conn.execute(
                 "INSERT INTO schema_version (version) VALUES (?1)",
                 [CURRENT_SCHEMA_VERSION],
@@ -220,6 +222,12 @@ fn migrate(conn: &Connection, from_version: u32) -> Result<()> {
     }
     if from_version < 7 {
         apply_v7(conn)?;
+    }
+    if from_version < 8 {
+        apply_v8(conn)?;
+    }
+    if from_version < 9 {
+        apply_v9(conn)?;
     }
 
     conn.execute(
@@ -574,6 +582,58 @@ fn apply_v7(conn: &Connection) -> Result<()> {
         }
     }
 
+    Ok(())
+}
+
+/// V8: Add `vapor_flags` TEXT column to `autopsy_records`.
+///
+/// The stop hook's anti-pattern gates (AP1-AP8, added 2026-03-22) detect
+/// pathological exhale behaviors and need a proper column to store flags like
+/// "AP1_empty_exhale,AP5_verdict_shopping". Previously repurposed `rc_pdp_why`
+/// (INTEGER) which caused a semantic collision.
+fn apply_v8(conn: &Connection) -> Result<()> {
+    let cols: Vec<String> = conn
+        .prepare("PRAGMA table_info(autopsy_records)")?
+        .query_map([], |row| row.get::<_, String>(1))?
+        .filter_map(|r| r.ok())
+        .collect();
+
+    if !cols.iter().any(|c| c == "vapor_flags") {
+        conn.execute_batch("ALTER TABLE autopsy_records ADD COLUMN vapor_flags TEXT;")?;
+    }
+
+    Ok(())
+}
+
+/// V9: Skill scores persistence table.
+///
+/// Stores SMST scores and compliance levels for each skill over time,
+/// enabling trend analysis ("is the fleet improving?") and eliminating
+/// the phantom `.smst-score` cache file dependency.
+///
+/// New table:
+/// - `skill_scores` — timestamped SMST scores per skill
+fn apply_v9(conn: &Connection) -> Result<()> {
+    conn.execute_batch(
+        "
+        CREATE TABLE IF NOT EXISTS skill_scores (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            skill_name      TEXT NOT NULL,
+            compliance_level TEXT NOT NULL DEFAULT 'Bronze',
+            smst_score      INTEGER NOT NULL DEFAULT 0,
+            structure_score  INTEGER NOT NULL DEFAULT 0,
+            metadata_score   INTEGER NOT NULL DEFAULT 0,
+            substance_score  INTEGER NOT NULL DEFAULT 0,
+            triggers_score   INTEGER NOT NULL DEFAULT 0,
+            issues_json     TEXT NOT NULL DEFAULT '[]',
+            scored_at       TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_skill_scores_name
+            ON skill_scores(skill_name);
+        CREATE INDEX IF NOT EXISTS idx_skill_scores_time
+            ON skill_scores(scored_at);
+        ",
+    )?;
     Ok(())
 }
 

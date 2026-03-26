@@ -88,9 +88,70 @@ pub fn emit_safety_margin_shift(bus: &FlywheelBus, drug: &str, old: f64, new: f6
     ));
 }
 
+/// Consume pending flywheel events relevant to the PV signal node.
+///
+/// Drains `Custom` events with PV-domain labels (`pv_signal_detected`,
+/// `pv_causality_assessed`, `pv_safety_margin_shift`) plus `BaselineShift`
+/// and `ThresholdDrift` events that may affect signal thresholds.
+/// PV signal detection reacts to homeostasis baseline shifts (recalibrating
+/// thresholds) and its own prior signals (temporal trend analysis).
+pub fn consume_pv_events(bus: &FlywheelBus) -> Vec<FlywheelEvent> {
+    let events = bus.consume(FlywheelTier::Live);
+    events
+        .into_iter()
+        .filter(|e| match &e.kind {
+            EventKind::Custom { label, .. } => label.starts_with("pv_"),
+            EventKind::BaselineShift { .. } | EventKind::ThresholdDrift { .. } => true,
+            _ => false,
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_consume_pv_events_filters() {
+        let bus = FlywheelBus::new();
+
+        // Relevant: PV signal
+        emit_signal_detected(&bus, "PRR", "metformin", "lactic_acidosis", 3.1);
+        // Relevant: baseline shift from homeostasis
+        bus.emit(FlywheelEvent::broadcast(
+            FlywheelTier::Live,
+            EventKind::BaselineShift {
+                metric: "threat_level".to_owned(),
+                old: 0.5,
+                new: 0.7,
+            },
+        ));
+        // Irrelevant: skill maturation
+        bus.emit(FlywheelEvent::broadcast(
+            FlywheelTier::Live,
+            EventKind::MaturationSignal {
+                skill: "forge".to_owned(),
+                transfer_score: 0.8,
+            },
+        ));
+
+        let consumed = consume_pv_events(&bus);
+        assert_eq!(
+            consumed.len(),
+            2,
+            "should consume pv_signal + baseline, not maturation"
+        );
+    }
+
+    #[test]
+    fn test_consume_includes_own_signals() {
+        let bus = FlywheelBus::new();
+        emit_causality_assessed(&bus, "naranjo", "warfarin", "bleeding", "probable", 7.0);
+        emit_safety_margin_shift(&bus, "warfarin", 0.85, 0.72);
+
+        let consumed = consume_pv_events(&bus);
+        assert_eq!(consumed.len(), 2, "PV node consumes its own domain events");
+    }
 
     #[test]
     fn test_emit_signal_detected() {

@@ -53,9 +53,70 @@ pub fn emit_threshold_drift(bus: &FlywheelBus, parameter: &str, delta: f64) {
     ));
 }
 
+/// Consume pending flywheel events relevant to the homeostasis node.
+///
+/// Drains `CycleComplete`, `BaselineShift`, `ThresholdDrift`, and
+/// `AdaptationReady` events from the Live tier. Homeostasis reacts to its
+/// own cycle completions (feedback), baseline/threshold drift from other
+/// nodes, and immunity adaptation signals that may shift setpoints.
+pub fn consume_homeostasis_events(bus: &FlywheelBus) -> Vec<FlywheelEvent> {
+    let events = bus.consume(FlywheelTier::Live);
+    events
+        .into_iter()
+        .filter(|e| {
+            matches!(
+                &e.kind,
+                EventKind::CycleComplete { .. }
+                    | EventKind::BaselineShift { .. }
+                    | EventKind::ThresholdDrift { .. }
+                    | EventKind::AdaptationReady { .. }
+            )
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_consume_homeostasis_events_filters() {
+        let bus = FlywheelBus::new();
+
+        // Relevant: cycle complete
+        emit_cycle_complete(&bus, 10);
+        // Relevant: adaptation from immunity
+        bus.emit(FlywheelEvent::broadcast(
+            FlywheelTier::Live,
+            EventKind::AdaptationReady {
+                category: "unwrap".to_owned(),
+            },
+        ));
+        // Irrelevant: trust update
+        bus.emit(FlywheelEvent::broadcast(
+            FlywheelTier::Live,
+            EventKind::TrustUpdate {
+                score: 0.9,
+                level: "high".to_owned(),
+            },
+        ));
+
+        let consumed = consume_homeostasis_events(&bus);
+        assert_eq!(
+            consumed.len(),
+            2,
+            "should consume cycle + adaptation, not trust"
+        );
+    }
+
+    #[test]
+    fn test_consume_includes_threshold_drift() {
+        let bus = FlywheelBus::new();
+        emit_threshold_drift(&bus, "retry_ceiling", -0.05);
+
+        let consumed = consume_homeostasis_events(&bus);
+        assert_eq!(consumed.len(), 1, "threshold drift feeds homeostasis");
+    }
 
     /// Emit a `CycleComplete` event and verify it is consumed with the correct iteration.
     #[test]

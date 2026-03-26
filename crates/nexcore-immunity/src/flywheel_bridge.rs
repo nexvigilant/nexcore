@@ -44,6 +44,24 @@ pub fn emit_adaptation_ready(bus: &FlywheelBus, category: &str) -> FlywheelEvent
     bus.emit(event)
 }
 
+/// Consume pending flywheel events relevant to the immunity node.
+///
+/// Drains `AdaptationReady` events (self-feedback from prior adaptation cycles)
+/// and `Custom` PV signal events that may trigger new antibody creation.
+/// Immunity also reacts to `ThresholdDrift` as drift in control parameters
+/// signals potential new threat vectors.
+pub fn consume_immunity_events(bus: &FlywheelBus) -> Vec<FlywheelEvent> {
+    let events = bus.consume(FlywheelTier::Live);
+    events
+        .into_iter()
+        .filter(|e| match &e.kind {
+            EventKind::AdaptationReady { .. } | EventKind::ThresholdDrift { .. } => true,
+            EventKind::Custom { label, .. } => label.starts_with("pv_"),
+            _ => false,
+        })
+        .collect()
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // TESTS
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -52,6 +70,52 @@ pub fn emit_adaptation_ready(bus: &FlywheelBus, category: &str) -> FlywheelEvent
 mod tests {
     use super::*;
     use nexcore_flywheel::{EventKind, FlywheelBus, node::FlywheelTier};
+
+    #[test]
+    fn test_consume_immunity_events_filters() {
+        let bus = FlywheelBus::new();
+
+        // Relevant: adaptation feedback
+        emit_adaptation_ready(&bus, "unwrap-pattern");
+        // Relevant: PV signal (new threat vector)
+        bus.emit(FlywheelEvent::broadcast(
+            FlywheelTier::Live,
+            EventKind::Custom {
+                label: "pv_signal_detected".to_owned(),
+                data: serde_json::json!({"drug": "test"}),
+            },
+        ));
+        // Irrelevant: trust update
+        bus.emit(FlywheelEvent::broadcast(
+            FlywheelTier::Live,
+            EventKind::TrustUpdate {
+                score: 0.7,
+                level: "medium".to_owned(),
+            },
+        ));
+
+        let consumed = consume_immunity_events(&bus);
+        assert_eq!(
+            consumed.len(),
+            2,
+            "should consume adaptation + pv_signal, not trust"
+        );
+    }
+
+    #[test]
+    fn test_consume_includes_threshold_drift() {
+        let bus = FlywheelBus::new();
+        bus.emit(FlywheelEvent::broadcast(
+            FlywheelTier::Live,
+            EventKind::ThresholdDrift {
+                parameter: "retry_ceiling".to_owned(),
+                delta: -0.05,
+            },
+        ));
+
+        let consumed = consume_immunity_events(&bus);
+        assert_eq!(consumed.len(), 1, "drift signals feed immunity");
+    }
 
     /// Emit an AdaptationReady event and consume it from the Live tier broadcast.
     /// Verifies the category round-trips correctly.

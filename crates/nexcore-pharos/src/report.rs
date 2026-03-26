@@ -21,6 +21,10 @@ pub struct SignalEntry {
     pub eb05: f64,
     pub algorithms_flagged: u32,
     pub threat_level: String,
+    /// Unified boundary sharpness score (∂-score). How crystallized is the
+    /// signal boundary across all four measurement angles?
+    #[serde(default)]
+    pub boundary_score: f64,
 }
 
 /// Complete surveillance report from a PHAROS run.

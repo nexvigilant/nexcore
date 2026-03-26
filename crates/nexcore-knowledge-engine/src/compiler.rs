@@ -21,6 +21,8 @@ pub struct CompileOptions {
     pub include_distillations: bool,
     pub include_artifacts: bool,
     pub include_implicit: bool,
+    /// Include fragments from the staging area (written by `knowledge_ingest`).
+    pub include_staged: bool,
     pub sources: Vec<RawKnowledge>,
 }
 
@@ -28,9 +30,10 @@ impl Default for CompileOptions {
     fn default() -> Self {
         Self {
             name: "default".to_string(),
-            include_distillations: true,
+            include_distillations: false,
             include_artifacts: false,
             include_implicit: false,
+            include_staged: true,
             sources: Vec::new(),
         }
     }
@@ -81,6 +84,13 @@ impl KnowledgeCompiler {
             raw_sources.extend(self.load_implicit());
         }
 
+        // Load staged fragments if requested (fragments saved by knowledge_ingest)
+        let staged_fragments = if options.include_staged {
+            self.store.load_staged_fragments()
+        } else {
+            Vec::new()
+        };
+
         let total_sources = raw_sources.len();
 
         // Step 1: Ingest all sources into fragments
@@ -109,6 +119,9 @@ impl KnowledgeCompiler {
                 Err(e) => return Err(e),
             }
         }
+
+        // Include pre-processed staged fragments (already ingested, scored, extracted)
+        fragments.extend(staged_fragments);
 
         // Step 2: Build concept graph from fragments
         let mut graph = ConceptGraph::new();
@@ -149,6 +162,11 @@ impl KnowledgeCompiler {
 
         // Step 5: Persist
         self.store.save_pack(&pack)?;
+
+        // Clear staging after successful compile so fragments aren't re-included
+        if options.include_staged {
+            let _ = self.store.clear_staging();
+        }
 
         Ok(pack)
     }
@@ -298,6 +316,7 @@ mod tests {
             include_distillations: false,
             include_artifacts: false,
             include_implicit: false,
+            include_staged: false,
             sources: vec![
                 RawKnowledge {
                     text: "Signal detection uses PRR for safety analysis.".to_string(),
@@ -345,6 +364,7 @@ mod tests {
             include_distillations: false,
             include_artifacts: false,
             include_implicit: false,
+            include_staged: false,
             sources: vec![
                 RawKnowledge {
                     text: "Signal detection uses PRR for safety.".to_string(),

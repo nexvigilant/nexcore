@@ -46,19 +46,28 @@ pub struct ActionableSignal {
     pub ebgm: f64,
     pub eb05: f64,
     pub algorithms_flagged: u32,
+    /// Unified boundary sharpness score (∂-score).
+    ///
+    /// Encodes the conservation law: all four algorithms measure the same
+    /// boundary from different angles. This is the Rosetta number —
+    /// a single continuous value encoding how crystallized the signal is.
+    pub boundary_score: f64,
 }
 
 impl ActionableSignal {
-    /// Classify threat level based on signal strength.
+    /// Classify threat level based on boundary sharpness (∂-score).
+    ///
+    /// Maps to the visual encoding:
+    /// - Low: faint glow — boundary barely visible
+    /// - Medium: ring forming — boundary detectable
+    /// - High: ring crystallized — boundary confirmed
+    /// - Critical: ring blazing — existence undeniable
     pub fn threat_level(&self) -> &'static str {
-        if self.eb05 >= 5.0 && self.algorithms_flagged >= 4 {
-            "Critical"
-        } else if self.eb05 >= 3.0 && self.algorithms_flagged >= 3 {
-            "High"
-        } else if self.eb05 >= 2.0 && self.algorithms_flagged >= 2 {
-            "Medium"
-        } else {
-            "Low"
+        match self.boundary_score {
+            s if s >= 1.5 => "Critical",
+            s if s >= 0.5 => "High",
+            s if s >= 0.1 => "Medium",
+            _ => "Low",
         }
     }
 
@@ -78,6 +87,7 @@ impl ActionableSignal {
             eb05: self.eb05,
             algorithms_flagged: self.algorithms_flagged,
             threat_level: self.threat_level().to_string(),
+            boundary_score: self.boundary_score,
         }
     }
 }
@@ -160,11 +170,12 @@ impl PharosPipeline {
         report.duration_ms = start.elapsed().as_millis();
         report.thresholds_used = format!("{:?}", self.config.thresholds);
 
-        // Build top signals for report (sorted by EB05 descending)
+        // Build top signals for report (sorted by ∂-score descending —
+        // the unified boundary sharpness metric, not a single algorithm)
         let mut top: Vec<SignalEntry> = actionable.iter().map(|s| s.to_entry()).collect();
         top.sort_by(|a, b| {
-            b.eb05
-                .partial_cmp(&a.eb05)
+            b.boundary_score
+                .partial_cmp(&a.boundary_score)
                 .unwrap_or(std::cmp::Ordering::Equal)
         });
         top.truncate(self.config.top_n_report);
@@ -180,6 +191,10 @@ impl PharosPipeline {
     }
 
     /// Stage 3: Apply threshold filtering to raw signal results.
+    ///
+    /// Each signal that passes the binary gate also receives a continuous
+    /// ∂-score measuring boundary sharpness. The binary gate answers "is
+    /// there a boundary?" The ∂-score answers "how sharp is it?"
     fn apply_thresholds(&self, results: &[SignalDetectionResult]) -> Vec<ActionableSignal> {
         let thresholds = &self.config.thresholds;
 
@@ -187,27 +202,30 @@ impl PharosPipeline {
             .iter()
             .filter_map(|r| {
                 let flagged = count_algorithms_flagged(r);
-                if thresholds.passes(
-                    r.prr.point.value(),
-                    r.ror.lower_ci,
-                    r.ic.lower_ci,
-                    r.ebgm.lower_ci,
-                    r.case_count.value(),
-                    flagged,
-                ) {
+                let prr = r.prr.point.value();
+                let ror_lower = r.ror.lower_ci;
+                let ic025 = r.ic.lower_ci;
+                let eb05 = r.ebgm.lower_ci;
+                let cases = r.case_count.value();
+
+                if thresholds.passes(prr, ror_lower, ic025, eb05, cases, flagged) {
+                    let boundary_score =
+                        thresholds.boundary_score(prr, ror_lower, ic025, eb05, cases, flagged);
+
                     Some(ActionableSignal {
                         drug: r.drug.as_str().to_string(),
                         event: r.event.as_str().to_string(),
-                        case_count: r.case_count.value(),
-                        prr: r.prr.point.value(),
+                        case_count: cases,
+                        prr,
                         prr_lower_ci: r.prr.lower_ci,
                         ror: r.ror.point.value(),
-                        ror_lower_ci: r.ror.lower_ci,
+                        ror_lower_ci: ror_lower,
                         ic: r.ic.point.value(),
-                        ic025: r.ic.lower_ci,
+                        ic025,
                         ebgm: r.ebgm.point.value(),
-                        eb05: r.ebgm.lower_ci,
+                        eb05,
                         algorithms_flagged: flagged,
+                        boundary_score,
                     })
                 } else {
                     None
@@ -244,18 +262,8 @@ impl PharosPipeline {
 
 /// Count how many of the 4 algorithms flagged a signal.
 fn count_algorithms_flagged(r: &SignalDetectionResult) -> u32 {
-    let mut count = 0u32;
-    if r.prr.is_signal {
-        count += 1;
-    }
-    if r.ror.is_signal {
-        count += 1;
-    }
-    if r.ic.is_signal {
-        count += 1;
-    }
-    if r.ebgm.is_signal {
-        count += 1;
-    }
-    count
+    u32::from(r.prr.is_signal)
+        + u32::from(r.ror.is_signal)
+        + u32::from(r.ic.is_signal)
+        + u32::from(r.ebgm.is_signal)
 }

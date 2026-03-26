@@ -130,13 +130,14 @@ fn main() -> Result<()> {
                 println!("\nTop actionable signals:");
                 for (i, sig) in output.actionable_signals.iter().take(10).enumerate() {
                     println!(
-                        "  {}. {} + {} | cases={} PRR={:.1} EB05={:.1} [{}]",
+                        "  {}. {} + {} | n={} PRR={:.1} EB05={:.1} \u{2202}={:.2} [{}]",
                         i + 1,
                         sig.drug,
                         sig.event,
                         sig.case_count,
                         sig.prr,
                         sig.eb05,
+                        sig.boundary_score,
                         sig.threat_level(),
                     );
                 }

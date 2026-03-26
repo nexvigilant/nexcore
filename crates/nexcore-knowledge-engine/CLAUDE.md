@@ -57,10 +57,10 @@ All primary types implement `GroundsTo`:
 
 | Tool | Purpose |
 |------|---------|
-| `knowledge_ingest` | Ingest single text into scored fragment |
+| `knowledge_ingest` | Ingest single text into scored fragment, persisted to staging area |
 | `knowledge_compress` | Compress text through 3 active stages (Pattern, Dedup, Hierarchy) |
-| `knowledge_compile` | Full pipeline: ingest + compress + graph + pack |
-| `knowledge_query` | Query packs by keyword/concept/domain |
+| `knowledge_compile` | Full pipeline: sources + staged fragments → compress → graph → pack |
+| `knowledge_query` | Query packs by keyword/concept/domain (returns `packs_searched` + `packs_matched`) |
 | `knowledge_stats` | Engine-wide statistics across all packs |
 | `knowledge_score` | Compute Compendious Score for text |
 | `knowledge_extract_primitives` | Extract T1-T3 primitives from text |

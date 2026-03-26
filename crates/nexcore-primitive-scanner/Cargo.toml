@@ -10,6 +10,10 @@ description = "Automated primitive extraction with CLI, MCP, and hook integratio
 [dependencies]
 # Core
 serde = { version = "1.0.204", features = ["derive"] }
+serde_json = { workspace = true }
+
+# Flywheel integration
+nexcore-flywheel = { path = "../nexcore-flywheel" }
 
 # CLI
 clap = { version = "4", features = ["derive"] }

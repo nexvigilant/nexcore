@@ -23,6 +23,7 @@
 #![warn(missing_docs)]
 
 pub mod extraction;
+pub mod flywheel_bridge;
 pub mod graph;
 pub mod scanner;
 pub mod test_card;

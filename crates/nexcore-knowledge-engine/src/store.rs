@@ -252,6 +252,81 @@ impl KnowledgeStore {
         ))
     }
 
+    /// Get the staging directory path.
+    fn staging_dir(&self) -> PathBuf {
+        self.root.join("_staging")
+    }
+
+    /// Save a fragment to the staging area for later compilation.
+    ///
+    /// Staged fragments persist across MCP calls and are consumed by
+    /// `KnowledgeCompiler::compile()` when `include_staged` is true.
+    pub fn save_staged_fragment(
+        &self,
+        fragment: &crate::ingest::KnowledgeFragment,
+    ) -> Result<PathBuf> {
+        let staging = self.staging_dir();
+        std::fs::create_dir_all(&staging)?;
+
+        let path = staging.join(format!("{}.json", fragment.id));
+        let tmp = staging.join(format!("{}.json.tmp", fragment.id));
+        let content = serde_json::to_string(fragment)?;
+        std::fs::write(&tmp, content)?;
+        std::fs::rename(&tmp, &path)?;
+
+        Ok(path)
+    }
+
+    /// Load all staged fragments.
+    pub fn load_staged_fragments(&self) -> Vec<crate::ingest::KnowledgeFragment> {
+        let staging = self.staging_dir();
+        if !staging.exists() {
+            return Vec::new();
+        }
+
+        let mut fragments = Vec::new();
+        if let Ok(entries) = std::fs::read_dir(&staging) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.extension().is_some_and(|e| e == "json") {
+                    if let Ok(content) = std::fs::read_to_string(&path) {
+                        if let Ok(frag) =
+                            serde_json::from_str::<crate::ingest::KnowledgeFragment>(&content)
+                        {
+                            fragments.push(frag);
+                        }
+                    }
+                }
+            }
+        }
+        fragments
+    }
+
+    /// Clear the staging area after successful compilation.
+    pub fn clear_staging(&self) -> Result<()> {
+        let staging = self.staging_dir();
+        if staging.exists() {
+            std::fs::remove_dir_all(&staging)?;
+        }
+        Ok(())
+    }
+
+    /// Count fragments currently in staging.
+    pub fn staged_count(&self) -> usize {
+        let staging = self.staging_dir();
+        if !staging.exists() {
+            return 0;
+        }
+        std::fs::read_dir(&staging)
+            .map(|entries| {
+                entries
+                    .flatten()
+                    .filter(|e| e.path().extension().is_some_and(|ext| ext == "json"))
+                    .count()
+            })
+            .unwrap_or(0)
+    }
+
     /// List all pack indices.
     pub fn list_packs(&self) -> Result<Vec<PackIndex>> {
         let mut indices = Vec::new();
@@ -263,6 +338,10 @@ impl KnowledgeStore {
         let entries = std::fs::read_dir(&self.root)?;
         for entry in entries.flatten() {
             let pack_name = entry.file_name().to_string_lossy().to_string();
+            // Skip staging directory and non-pack entries
+            if pack_name.starts_with('_') {
+                continue;
+            }
             if let Some(version) = self.latest_version(&pack_name) {
                 let index_path = self
                     .root
@@ -449,6 +528,7 @@ mod tests {
                 include_distillations: false,
                 include_artifacts: false,
                 include_implicit: false,
+                include_staged: false,
                 sources: vec![RawKnowledge {
                     text: "Signal detection uses PRR for pharmacovigilance safety.".to_string(),
                     source: KnowledgeSource::FreeText,

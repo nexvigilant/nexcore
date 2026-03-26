@@ -50,19 +50,15 @@ pub fn to_threat_signal(signal: &ActionableSignal) -> ThreatSignal<String> {
         .with_metadata("algorithms_flagged", signal.algorithms_flagged.to_string())
 }
 
-/// Calculate confidence based on signal strength indicators.
+/// Derive confidence from the unified boundary sharpness score.
 ///
-/// Higher case count + more algorithms agreeing = higher confidence.
+/// The ∂-score already encodes algorithm agreement, dimensional excess,
+/// and case resolution. Confidence is a saturating map from ∂-score to
+/// [0, 1]: a ∂-score of 2.0 (Critical boundary) yields full confidence.
 fn calculate_confidence(signal: &ActionableSignal) -> f64 {
-    // Base confidence from algorithm agreement (0.25 per algorithm)
-    let algo_confidence = (signal.algorithms_flagged as f64) * 0.25;
-
-    // Case count factor: log2(n) / 10, capped at 0.3
-    let case_factor = (signal.case_count as f64).log2() / 10.0;
-    let case_confidence = case_factor.min(0.3);
-
-    // Total confidence capped at 1.0
-    (algo_confidence + case_confidence).min(1.0)
+    // Confidence saturates at 1.0 when ∂-score reaches the Critical
+    // threshold (1.5). If the boundary is blazing, you're fully confident.
+    (signal.boundary_score / 1.5).min(1.0).max(0.0)
 }
 
 /// Batch convert all actionable signals to threat signals.
@@ -75,19 +71,30 @@ mod tests {
     use super::*;
 
     fn test_signal(eb05: f64, algos: u32, cases: u64) -> ActionableSignal {
+        let thresholds = crate::thresholds::SignalThresholds::default();
+        // Scale all metrics proportionally to eb05 — the Rosetta encoding
+        // says all four algorithms measure the same boundary, so test
+        // signals should reflect consistent strength across all angles.
+        let ratio = eb05 / thresholds.min_eb05;
+        let prr = thresholds.min_prr * ratio;
+        let ror_lower_ci = thresholds.min_ror_lower_ci * ratio;
+        let ic025 = thresholds.min_ic025 + (ratio - 1.0).max(0.0);
+        let boundary_score =
+            thresholds.boundary_score(prr, ror_lower_ci, ic025, eb05, cases, algos);
         ActionableSignal {
             drug: "TESTDRUG".to_string(),
             event: "TESTEVENT".to_string(),
             case_count: cases,
-            prr: 3.0,
-            prr_lower_ci: 2.0,
-            ror: 3.5,
-            ror_lower_ci: 2.1,
-            ic: 1.5,
-            ic025: 0.5,
+            prr,
+            prr_lower_ci: prr * 0.7,
+            ror: prr * 1.1,
+            ror_lower_ci,
+            ic: ic025 + 0.5,
+            ic025,
             ebgm: eb05 + 1.0,
             eb05,
             algorithms_flagged: algos,
+            boundary_score,
         }
     }
 
@@ -113,20 +120,27 @@ mod tests {
     }
 
     #[test]
-    fn test_confidence_calculation() {
+    fn test_confidence_from_strong_boundary() {
+        // Strong signal: high eb05, all 4 algorithms, many cases
         let sig = test_signal(5.0, 4, 1024);
         let confidence = calculate_confidence(&sig);
-        // 4 algos * 0.25 = 1.0, case factor = log2(1024)/10 = 1.0 → capped at 1.0
-        assert!((confidence - 1.0).abs() < 0.001);
+        // ∂-score should be well above 2.0 → confidence saturates at 1.0
+        assert!(
+            confidence > 0.9,
+            "Strong boundary should yield high confidence, got {confidence}"
+        );
     }
 
     #[test]
-    fn test_low_confidence() {
+    fn test_confidence_from_weak_boundary() {
+        // Weak signal: low eb05, 1 algorithm, few cases
         let sig = test_signal(2.0, 1, 3);
         let confidence = calculate_confidence(&sig);
-        // 1 algo * 0.25 = 0.25, case factor = log2(3)/10 ≈ 0.158
-        assert!(confidence > 0.3);
-        assert!(confidence < 0.5);
+        // Low ∂-score → low confidence
+        assert!(
+            confidence < 0.5,
+            "Weak boundary should yield low confidence, got {confidence}"
+        );
     }
 
     #[test]

@@ -36,6 +36,15 @@ pub struct QueryResponse {
     pub pack_version: u32,
 }
 
+/// Result of a query operation, including metadata about how many packs were searched.
+#[derive(Debug, Clone)]
+pub struct QueryOutcome {
+    /// Responses from packs that had matching results.
+    pub responses: Vec<QueryResponse>,
+    /// Total number of packs that were loaded and searched (regardless of matches).
+    pub packs_loaded: usize,
+}
+
 /// Query engine.
 pub struct QueryEngine {
     store: KnowledgeStore,
@@ -54,7 +63,7 @@ impl QueryEngine {
         mode: QueryMode,
         domain_filter: Option<&str>,
         limit: usize,
-    ) -> Result<Vec<QueryResponse>> {
+    ) -> Result<QueryOutcome> {
         let packs = if let Some(name) = pack_name {
             vec![self.store.load_latest(name)?]
         } else {
@@ -78,6 +87,7 @@ impl QueryEngine {
             };
         }
 
+        let packs_loaded = packs.len();
         let mut responses = Vec::new();
         for pack in &packs {
             let response = self.query_pack(pack, query, &mode, domain_filter, limit);
@@ -86,7 +96,10 @@ impl QueryEngine {
             }
         }
 
-        Ok(responses)
+        Ok(QueryOutcome {
+            responses,
+            packs_loaded,
+        })
     }
 
     /// Query all packs and return a single flat list sorted by global relevance.
@@ -220,6 +233,7 @@ mod tests {
             include_distillations: false,
             include_artifacts: false,
             include_implicit: false,
+            include_staged: false,
             sources: vec![
                 RawKnowledge {
                     text: "Signal detection uses PRR for pharmacovigilance safety.".to_string(),
@@ -244,7 +258,7 @@ mod tests {
     #[test]
     fn keyword_query() {
         let (_store, engine) = setup();
-        let responses = engine
+        let outcome = engine
             .query(
                 "signal detection",
                 Some("test-query"),
@@ -253,8 +267,9 @@ mod tests {
                 10,
             )
             .unwrap();
-        assert!(!responses.is_empty());
-        assert!(responses[0].results[0].relevance > 0.0);
+        assert_eq!(outcome.packs_loaded, 1);
+        assert!(!outcome.responses.is_empty());
+        assert!(outcome.responses[0].results[0].relevance > 0.0);
     }
 
     #[test]
@@ -268,6 +283,7 @@ mod tests {
                 include_distillations: false,
                 include_artifacts: false,
                 include_implicit: false,
+                include_staged: false,
                 sources: vec![RawKnowledge {
                     text: "Signal detection uses PRR for pharmacovigilance safety.".to_string(),
                     source: KnowledgeSource::FreeText,
@@ -282,6 +298,7 @@ mod tests {
                 include_distillations: false,
                 include_artifacts: false,
                 include_implicit: false,
+                include_staged: false,
                 sources: vec![RawKnowledge {
                     text: "Signal processing and detection algorithms in safety monitoring."
                         .to_string(),
@@ -316,7 +333,7 @@ mod tests {
     #[test]
     fn domain_filter() {
         let (_store, engine) = setup();
-        let responses = engine
+        let outcome = engine
             .query(
                 "traits",
                 Some("test-query"),
@@ -325,8 +342,8 @@ mod tests {
                 10,
             )
             .unwrap();
-        assert!(!responses.is_empty());
-        for result in &responses[0].results {
+        assert!(!outcome.responses.is_empty());
+        for result in &outcome.responses[0].results {
             assert_eq!(result.domain, "rust");
         }
     }

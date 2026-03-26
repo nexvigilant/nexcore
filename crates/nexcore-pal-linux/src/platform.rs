@@ -51,7 +51,9 @@ impl LinuxPlatform {
 
         let display = match form_factor {
             FormFactor::Watch => LinuxDisplay::new(
-                nexcore_pal::Resolution::new(450, 450),
+                // Galaxy Watch 7: LX83805 (BOE) / LX83806 (SDC) AMOLED
+                // DRM: drmdecon@138C0000, drmdsim@138D0000, /dev/dri/card0
+                nexcore_pal::Resolution::new(480, 480),
                 nexcore_pal::DisplayShape::Circle,
             ),
             FormFactor::Phone => LinuxDisplay::new(

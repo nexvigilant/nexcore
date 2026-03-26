@@ -72,6 +72,7 @@ mod tests {
             include_distillations: false,
             include_artifacts: false,
             include_implicit: false,
+            include_staged: false,
             sources: vec![RawKnowledge {
                 text: "Signal detection uses PRR for pharmacovigilance safety analysis."
                     .to_string(),

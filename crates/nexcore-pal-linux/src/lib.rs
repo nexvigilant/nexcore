@@ -45,6 +45,7 @@ pub mod platform;
 pub mod power;
 pub mod prelude;
 pub mod storage;
+pub mod watch_hw;
 
 // Re-export the main type
 pub use platform::LinuxPlatform;

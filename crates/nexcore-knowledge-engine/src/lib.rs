@@ -49,5 +49,5 @@ pub mod grounding;
 pub mod query;
 pub mod stats;
 
-pub use query::{QueryEngine, QueryMode, QueryResponse, QueryResult};
+pub use query::{QueryEngine, QueryMode, QueryOutcome, QueryResponse, QueryResult};
 pub use stats::{EngineStats, compute_stats, pack_stats};

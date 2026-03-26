@@ -20,7 +20,7 @@ const TIMEOUT_SECS: u64 = 15;
 async fn jupyter_client(
     url: &Option<String>,
     token: &Option<String>,
-) -> Result<(reqwest::Client, String, String), String> {
+) -> Result<(reqwest::Client, String, String), nexcore_error::NexError> {
     let base = url
         .as_deref()
         .unwrap_or(DEFAULT_URL)
@@ -30,28 +30,29 @@ async fn jupyter_client(
     let tok = match token {
         Some(t) => t.clone(),
         None => std::env::var("JUPYTER_TOKEN")
+            .map_err(|e| nexcore_error::NexError::new(format!("{e}")))
             .or_else(|_| discover_token())
             .map_err(|e| {
-                format!(
+                nexcore_error::NexError::new(format!(
                     "No token: set JUPYTER_TOKEN env or pass token param. Discovery failed: {e}"
-                )
+                ))
             })?,
     };
 
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(TIMEOUT_SECS))
         .build()
-        .map_err(|e| format!("Failed to create HTTP client: {e}"))?;
+        .map_err(|e| nexcore_error::nexerror!("Failed to create HTTP client: {e}"))?;
 
     Ok((client, base, tok))
 }
 
 /// Discover token from `jupyter server list` output.
-fn discover_token() -> Result<String, String> {
+fn discover_token() -> Result<String, nexcore_error::NexError> {
     let output = std::process::Command::new("jupyter")
         .args(["server", "list"])
         .output()
-        .map_err(|e| format!("Failed to run `jupyter server list`: {e}"))?;
+        .map_err(|e| nexcore_error::nexerror!("Failed to run `jupyter server list`: {e}"))?;
 
     let text = String::from_utf8_lossy(&output.stdout);
     // Parse lines like: http://localhost:8888/?token=abc123 :: /home/user
@@ -67,7 +68,9 @@ fn discover_token() -> Result<String, String> {
             }
         }
     }
-    Err("No running Jupyter server with token found".to_string())
+    Err(nexcore_error::NexError::new(
+        "No running Jupyter server with token found",
+    ))
 }
 
 fn success_result(value: serde_json::Value) -> Result<CallToolResult, McpError> {
@@ -76,9 +79,9 @@ fn success_result(value: serde_json::Value) -> Result<CallToolResult, McpError> 
     )]))
 }
 
-fn error_result(msg: &str) -> Result<CallToolResult, McpError> {
+fn error_result(msg: &impl std::fmt::Display) -> Result<CallToolResult, McpError> {
     Ok(CallToolResult::error(vec![Content::text(
-        json!({"success": false, "error": msg}).to_string(),
+        json!({"success": false, "error": msg.to_string()}).to_string(),
     )]))
 }
 

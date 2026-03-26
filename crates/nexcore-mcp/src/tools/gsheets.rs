@@ -286,27 +286,33 @@ impl SheetsClient {
         }
     }
 
-    async fn get_json<T: serde::de::DeserializeOwned>(&self, url: &str) -> Result<T, String> {
-        let token = self.get_token().await.map_err(|e| format!("auth: {e}"))?;
+    async fn get_json<T: serde::de::DeserializeOwned>(
+        &self,
+        url: &str,
+    ) -> Result<T, nexcore_error::NexError> {
+        let token = self
+            .get_token()
+            .await
+            .map_err(|e| nexcore_error::nexerror!("auth: {e}"))?;
         let resp = self
             .http
             .get(url)
             .bearer_auth(&token)
             .send()
             .await
-            .map_err(|e| format!("HTTP: {e}"))?;
+            .map_err(|e| nexcore_error::nexerror!("HTTP: {e}"))?;
         if resp.status().as_u16() == 401 {
             let token = self
                 .get_token()
                 .await
-                .map_err(|e| format!("auth refresh: {e}"))?;
+                .map_err(|e| nexcore_error::nexerror!("auth refresh: {e}"))?;
             let resp = self
                 .http
                 .get(url)
                 .bearer_auth(&token)
                 .send()
                 .await
-                .map_err(|e| format!("HTTP retry: {e}"))?;
+                .map_err(|e| nexcore_error::nexerror!("HTTP retry: {e}"))?;
             return parse_api_response(resp).await;
         }
         parse_api_response(resp).await
@@ -316,8 +322,11 @@ impl SheetsClient {
         &self,
         url: &str,
         body: &serde_json::Value,
-    ) -> Result<T, String> {
-        let token = self.get_token().await.map_err(|e| format!("auth: {e}"))?;
+    ) -> Result<T, nexcore_error::NexError> {
+        let token = self
+            .get_token()
+            .await
+            .map_err(|e| nexcore_error::nexerror!("auth: {e}"))?;
         let resp = self
             .http
             .put(url)
@@ -325,7 +334,7 @@ impl SheetsClient {
             .json(body)
             .send()
             .await
-            .map_err(|e| format!("HTTP: {e}"))?;
+            .map_err(|e| nexcore_error::nexerror!("HTTP: {e}"))?;
         parse_api_response(resp).await
     }
 
@@ -333,8 +342,11 @@ impl SheetsClient {
         &self,
         url: &str,
         body: &serde_json::Value,
-    ) -> Result<T, String> {
-        let token = self.get_token().await.map_err(|e| format!("auth: {e}"))?;
+    ) -> Result<T, nexcore_error::NexError> {
+        let token = self
+            .get_token()
+            .await
+            .map_err(|e| nexcore_error::nexerror!("auth: {e}"))?;
         let resp = self
             .http
             .post(url)
@@ -342,7 +354,7 @@ impl SheetsClient {
             .json(body)
             .send()
             .await
-            .map_err(|e| format!("HTTP: {e}"))?;
+            .map_err(|e| nexcore_error::nexerror!("HTTP: {e}"))?;
         parse_api_response(resp).await
     }
 }
@@ -420,14 +432,17 @@ async fn parse_token_response(resp: reqwest::Response) -> Result<TokenResponse, 
 
 async fn parse_api_response<T: serde::de::DeserializeOwned>(
     resp: reqwest::Response,
-) -> Result<T, String> {
+) -> Result<T, nexcore_error::NexError> {
     let status = resp.status();
     if !status.is_success() {
         let body = resp.text().await.unwrap_or_default();
-        return Err(format!("API error {status}: {body}"));
+        return Err(nexcore_error::nexerror!("API error {status}: {body}"));
     }
-    let text = resp.text().await.map_err(|e| format!("read: {e}"))?;
-    serde_json::from_str(&text).map_err(|e| format!("parse: {e}"))
+    let text = resp
+        .text()
+        .await
+        .map_err(|e| nexcore_error::nexerror!("read: {e}"))?;
+    serde_json::from_str(&text).map_err(|e| nexcore_error::nexerror!("parse: {e}"))
 }
 
 // ============================================================================
@@ -443,7 +458,10 @@ pub async fn gsheets_list_sheets(
         "{SHEETS_BASE}/{}?fields=spreadsheetId,properties,sheets.properties",
         params.spreadsheet_id
     );
-    let meta: SpreadsheetMeta = client.get_json(&url).await.map_err(sheets_err)?;
+    let meta: SpreadsheetMeta = client
+        .get_json(&url)
+        .await
+        .map_err(|e| sheets_err(e.to_string()))?;
 
     let mut lines = Vec::new();
     lines.push(format!("Spreadsheet: {}", meta.properties.title));
@@ -468,7 +486,10 @@ pub async fn gsheets_read_range(
     let client = get_client().await?;
     let encoded = urlenc(&params.range);
     let url = format!("{SHEETS_BASE}/{}/values/{encoded}", params.spreadsheet_id);
-    let vr: ValueRange = client.get_json(&url).await.map_err(sheets_err)?;
+    let vr: ValueRange = client
+        .get_json(&url)
+        .await
+        .map_err(|e| sheets_err(e.to_string()))?;
     Ok(text_result(&format_value_range(&vr)))
 }
 
@@ -487,7 +508,10 @@ pub async fn gsheets_batch_read(
         "{SHEETS_BASE}/{}/values:batchGet?{range_params}",
         params.spreadsheet_id
     );
-    let batch: BatchGetResponse = client.get_json(&url).await.map_err(sheets_err)?;
+    let batch: BatchGetResponse = client
+        .get_json(&url)
+        .await
+        .map_err(|e| sheets_err(e.to_string()))?;
 
     let mut out = Vec::new();
     for vr in &batch.value_ranges {
@@ -515,7 +539,10 @@ pub async fn gsheets_write_range(
         "majorDimension": "ROWS",
         "values": params.values,
     });
-    let resp: UpdateResponse = client.put_json(&url, &body).await.map_err(sheets_err)?;
+    let resp: UpdateResponse = client
+        .put_json(&url, &body)
+        .await
+        .map_err(|e| sheets_err(e.to_string()))?;
     let summary = json!({
         "updatedRange": resp.updated_range,
         "updatedRows": resp.updated_rows,
@@ -539,7 +566,10 @@ pub async fn gsheets_append(params: GsheetsAppendParams) -> Result<CallToolResul
         "majorDimension": "ROWS",
         "values": params.values,
     });
-    let resp: AppendResponse = client.post_json(&url, &body).await.map_err(sheets_err)?;
+    let resp: AppendResponse = client
+        .post_json(&url, &body)
+        .await
+        .map_err(|e| sheets_err(e.to_string()))?;
     let summary = json!({
         "tableRange": resp.table_range,
         "updatedRows": resp.updates.as_ref().and_then(|u| u.updated_rows),
@@ -559,7 +589,10 @@ pub async fn gsheets_metadata(
         "{SHEETS_BASE}/{}?fields=spreadsheetId,properties,sheets.properties",
         params.spreadsheet_id
     );
-    let meta: SpreadsheetMeta = client.get_json(&url).await.map_err(sheets_err)?;
+    let meta: SpreadsheetMeta = client
+        .get_json(&url)
+        .await
+        .map_err(|e| sheets_err(e.to_string()))?;
     let payload = json!({
         "spreadsheetId": meta.spreadsheet_id,
         "title": meta.properties.title,
@@ -588,7 +621,10 @@ pub async fn gsheets_search(params: GsheetsSearchParams) -> Result<CallToolResul
             "{SHEETS_BASE}/{}?fields=spreadsheetId,properties,sheets.properties",
             params.spreadsheet_id
         );
-        let meta: SpreadsheetMeta = client.get_json(&url).await.map_err(sheets_err)?;
+        let meta: SpreadsheetMeta = client
+            .get_json(&url)
+            .await
+            .map_err(|e| sheets_err(e.to_string()))?;
         meta.sheets
             .iter()
             .map(|s| s.properties.title.clone())

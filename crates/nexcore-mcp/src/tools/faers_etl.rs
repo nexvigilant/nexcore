@@ -80,11 +80,11 @@ fn run_pipeline(
     faers_dir: &Path,
     include_all_roles: bool,
     min_cases: i64,
-) -> Result<PipelineResult, String> {
+) -> Result<PipelineResult, nexcore_error::NexError> {
     let start = Instant::now();
 
     let output = nexcore_faers_etl::run_full_pipeline(faers_dir, include_all_roles, min_cases)
-        .map_err(|e| format!("Pipeline failed: {e}"))?;
+        .map_err(|e| nexcore_error::nexerror!("Pipeline failed: {e}"))?;
 
     let signal_count = output.results.iter().filter(|r| r.is_any_signal()).count();
 
@@ -115,7 +115,7 @@ async fn run_blocking_pipeline(
     })
     .await
     .map_err(|e| McpError::internal_error(format!("Task join failed: {e}"), None))?
-    .map_err(|e| McpError::internal_error(e, None))
+    .map_err(|e| McpError::internal_error(e.to_string(), None))
 }
 
 // ---------------------------------------------------------------------------

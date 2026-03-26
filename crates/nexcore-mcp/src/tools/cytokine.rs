@@ -20,7 +20,7 @@ use crate::params::{CytokineEmitParams, CytokineListParams, CytokineRecentParams
 const CYTOKINE_METRICS_PATH: &str = "/home/matthew/.claude/brain/telemetry/cytokine_metrics.json";
 
 /// Parse a cytokine family from string.
-fn parse_family(s: &str) -> Result<CytokineFamily, String> {
+fn parse_family(s: &str) -> Result<CytokineFamily, nexcore_error::NexError> {
     match s.to_lowercase().as_str() {
         "il1" | "il-1" => Ok(CytokineFamily::Il1),
         "il2" | "il-2" => Ok(CytokineFamily::Il2),
@@ -30,7 +30,7 @@ fn parse_family(s: &str) -> Result<CytokineFamily, String> {
         "ifn_gamma" | "ifn-gamma" | "ifn" => Ok(CytokineFamily::IfnGamma),
         "tgf_beta" | "tgf-beta" | "tgf" => Ok(CytokineFamily::TgfBeta),
         "csf" => Ok(CytokineFamily::Csf),
-        other => Err(format!(
+        other => Err(nexcore_error::nexerror!(
             "Unknown family '{}'. Valid: il1, il2, il6, il10, tnf_alpha, ifn_gamma, tgf_beta, csf",
             other
         )),
@@ -66,7 +66,8 @@ fn parse_scope(s: &str) -> Scope {
 /// - → (causality): This call causes signal emission
 /// - π (persistence): Signal persists until TTL expires
 pub fn emit(params: CytokineEmitParams) -> Result<CallToolResult, McpError> {
-    let family = parse_family(&params.family).map_err(|e| McpError::invalid_params(e, None))?;
+    let family =
+        parse_family(&params.family).map_err(|e| McpError::invalid_params(e.to_string(), None))?;
 
     let severity = params
         .severity
@@ -108,7 +109,7 @@ pub fn emit(params: CytokineEmitParams) -> Result<CallToolResult, McpError> {
                 "family": family_str,
                 "name": name,
                 "severity": severity.to_string(),
-                "scope": scope.to_string(),
+                "scope": scope,
                 "message": format!("Emitted {} signal: {}", family_str, name),
             });
             Ok(CallToolResult::success(vec![Content::text(
@@ -268,10 +269,12 @@ pub fn families(params: CytokineListParams) -> Result<CallToolResult, McpError> 
 // ============================================================================
 
 /// Read the cytokine_metrics.json file and return its parsed content.
-fn read_cytokine_metrics() -> Result<serde_json::Value, String> {
-    let content = std::fs::read_to_string(CYTOKINE_METRICS_PATH)
-        .map_err(|e| format!("No cytokine metrics file: {e}. Run signal-receiver to generate."))?;
-    serde_json::from_str(&content).map_err(|e| format!("Invalid metrics JSON: {e}"))
+fn read_cytokine_metrics() -> Result<serde_json::Value, nexcore_error::NexError> {
+    let content = std::fs::read_to_string(CYTOKINE_METRICS_PATH).map_err(|e| {
+        nexcore_error::nexerror!("No cytokine metrics file: {e}. Run signal-receiver to generate.")
+    })?;
+    serde_json::from_str(&content)
+        .map_err(|e| nexcore_error::nexerror!("Invalid metrics JSON: {e}"))
 }
 
 /// Get persistent cytokine telemetry from file-based signal aggregation.
@@ -382,7 +385,8 @@ pub fn chemotaxis_gradient(
     let mut field = GradientField::new();
 
     for sample in &params.gradients {
-        let family = parse_family(&sample.family).map_err(|e| McpError::invalid_params(e, None))?;
+        let family = parse_family(&sample.family)
+            .map_err(|e| McpError::invalid_params(e.to_string(), None))?;
 
         let tropism = match sample.tropism.to_lowercase().as_str() {
             "negative" | "repel" => Tropism::Negative,
@@ -447,7 +451,8 @@ pub fn endocytosis_internalize(
 ) -> Result<CallToolResult, McpError> {
     use nexcore_cytokine::{InternalizationResult, VesiclePool, VesicleState};
 
-    let family = parse_family(&params.family).map_err(|e| McpError::invalid_params(e, None))?;
+    let family =
+        parse_family(&params.family).map_err(|e| McpError::invalid_params(e.to_string(), None))?;
 
     let severity = params
         .severity

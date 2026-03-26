@@ -37,7 +37,7 @@ fn parse_node_type(s: &str) -> nexcore_reason::dag::NodeType {
 fn build_dag(
     nodes: &[ReasonNodeInput],
     links: &[crate::params::reason::ReasonLinkInput],
-) -> Result<nexcore_reason::dag::CausalDag, String> {
+) -> Result<nexcore_reason::dag::CausalDag, nexcore_error::NexError> {
     use nexcore_reason::dag::{CausalDag, CausalLink, CausalNode, NodeId};
 
     let mut dag = CausalDag::new();
@@ -54,8 +54,7 @@ fn build_dag(
             to: NodeId::new(&l.to),
             strength: l.strength.unwrap_or(0.5),
             evidence: l.evidence.clone().unwrap_or_default(),
-        })
-        .map_err(|e| e.to_string())?;
+        })?;
     }
     Ok(dag)
 }
@@ -66,7 +65,7 @@ fn build_dag(
 pub fn reason_infer(p: ReasonInferParams) -> Result<CallToolResult, McpError> {
     let dag = match build_dag(&p.nodes, &p.links) {
         Ok(d) => d,
-        Err(e) => return err_result(&e),
+        Err(e) => return err_result(&e.to_string()),
     };
 
     let engine = nexcore_reason::inference::InferenceEngine::new(dag);
@@ -98,7 +97,7 @@ pub fn reason_counterfactual(p: ReasonCounterfactualParams) -> Result<CallToolRe
 
     let dag = match build_dag(&p.nodes, &p.links) {
         Ok(d) => d,
-        Err(e) => return err_result(&e),
+        Err(e) => return err_result(&e.to_string()),
     };
 
     let engine = CounterfactualEngine::new(dag);

@@ -199,15 +199,15 @@ pub fn secure_boot_quote(params: SecureBootQuoteParams) -> Result<CallToolResult
 }
 
 /// Decode a hex string to bytes.
-fn hex_to_bytes(hex: &str) -> Result<Vec<u8>, String> {
+fn hex_to_bytes(hex: &str) -> Result<Vec<u8>, nexcore_error::NexError> {
     if hex.len() % 2 != 0 {
-        return Err("Hex string must have even length".to_string());
+        return Err(nexcore_error::nexerror!("Hex string must have even length"));
     }
     (0..hex.len())
         .step_by(2)
         .map(|i| {
             u8::from_str_radix(&hex[i..i + 2], 16)
-                .map_err(|e| format!("Invalid hex at position {i}: {e}"))
+                .map_err(|e| nexcore_error::nexerror!("Invalid hex at position {i}: {e}"))
         })
         .collect()
 }

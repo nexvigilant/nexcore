@@ -58,7 +58,7 @@ pub fn aggregate_tree_fold(params: AggregateTreeFoldParams) -> Result<CallToolRe
         Ok(t) => t,
         Err(e) => {
             return Ok(CallToolResult::success(vec![Content::text(
-                json!({"error": e}).to_string(),
+                json!({"error": e.to_string()}).to_string(),
             )]));
         }
     };
@@ -94,15 +94,15 @@ pub fn aggregate_tree_fold(params: AggregateTreeFoldParams) -> Result<CallToolRe
 }
 
 /// Parse a JSON value into a SimpleNode tree.
-fn parse_tree_node(value: &serde_json::Value) -> Result<SimpleNode, String> {
+fn parse_tree_node(value: &serde_json::Value) -> Result<SimpleNode, nexcore_error::NexError> {
     let id = value
         .get("id")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| "missing 'id' field".to_string())?;
+        .ok_or_else(|| nexcore_error::nexerror!("missing 'id' field"))?;
     let node_value = value
         .get("value")
         .and_then(|v| v.as_f64())
-        .ok_or_else(|| format!("missing 'value' field on node '{id}'"))?;
+        .ok_or_else(|| nexcore_error::nexerror!("missing 'value' field on node '{id}'"))?;
 
     let children = if let Some(children_arr) = value.get("children").and_then(|v| v.as_array()) {
         children_arr

@@ -3,6 +3,7 @@
 
 use crate::{extract, models, protocol::Response, storage};
 use nexcore_chrono::DateTime;
+use nexcore_error::NexError;
 use serde_json::{Value, json};
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -104,10 +105,16 @@ pub fn definitions() -> Value {
 // Tool Handlers
 // ─────────────────────────────────────────────────────────────────────────────
 
-fn handle_add(params: &Value) -> Result<Value, String> {
-    let title = params["title"].as_str().ok_or("Missing title")?;
-    let content = params["content"].as_str().ok_or("Missing content")?;
-    let context = params["context"].as_str().ok_or("Missing context")?;
+fn handle_add(params: &Value) -> Result<Value, NexError> {
+    let title = params["title"]
+        .as_str()
+        .ok_or_else(|| NexError::new("Missing title"))?;
+    let content = params["content"]
+        .as_str()
+        .ok_or_else(|| NexError::new("Missing content"))?;
+    let context = params["context"]
+        .as_str()
+        .ok_or_else(|| NexError::new("Missing context"))?;
     let tags = extract_tags(params);
     let source = params["source"].as_str().unwrap_or("").to_string();
     let primitives = extract::suggest_primitives(content);
@@ -141,33 +148,41 @@ fn extract_tags(params: &Value) -> Vec<String> {
         .unwrap_or_default()
 }
 
-fn handle_get(params: &Value) -> Result<Value, String> {
-    let id = params["id"].as_u64().ok_or("Missing or invalid id")?;
+fn handle_get(params: &Value) -> Result<Value, NexError> {
+    let id = params["id"]
+        .as_u64()
+        .ok_or_else(|| NexError::new("Missing or invalid id"))?;
     let db = storage::load();
     db.get(id)
         .map(|l| serde_json::to_value(l).unwrap_or(json!(null)))
-        .ok_or_else(|| format!("Lesson not found: {}", id))
+        .ok_or_else(|| NexError::new(format!("Lesson not found: {}", id)))
 }
 
-fn handle_search(params: &Value) -> Result<Value, String> {
-    let query = params["query"].as_str().ok_or("Missing query")?;
+fn handle_search(params: &Value) -> Result<Value, NexError> {
+    let query = params["query"]
+        .as_str()
+        .ok_or_else(|| NexError::new("Missing query"))?;
     let db = storage::load();
     Ok(serde_json::to_value(db.search(query)).unwrap_or(json!([])))
 }
 
-fn handle_by_context(params: &Value) -> Result<Value, String> {
-    let ctx = params["context"].as_str().ok_or("Missing context")?;
+fn handle_by_context(params: &Value) -> Result<Value, NexError> {
+    let ctx = params["context"]
+        .as_str()
+        .ok_or_else(|| NexError::new("Missing context"))?;
     let db = storage::load();
     Ok(serde_json::to_value(db.by_context(ctx)).unwrap_or(json!([])))
 }
 
-fn handle_by_tag(params: &Value) -> Result<Value, String> {
-    let tag = params["tag"].as_str().ok_or("Missing tag")?;
+fn handle_by_tag(params: &Value) -> Result<Value, NexError> {
+    let tag = params["tag"]
+        .as_str()
+        .ok_or_else(|| NexError::new("Missing tag"))?;
     let db = storage::load();
     Ok(serde_json::to_value(db.by_tag(tag)).unwrap_or(json!([])))
 }
 
-fn handle_summary() -> Result<Value, String> {
+fn handle_summary() -> Result<Value, NexError> {
     let db = storage::load();
     let summary = db.primitives_summary();
     let formatted: Vec<Value> = summary
@@ -192,11 +207,11 @@ pub fn call(params: &Value, id: Value) -> Response {
 
     match result {
         Ok(content) => Response::success(id, wrap_content(content)),
-        Err(e) => Response::error(id, -32000, &e),
+        Err(e) => Response::error(id, -32000, &e.to_string()),
     }
 }
 
-fn dispatch_tool(name: &str, args: &Value) -> Result<Value, String> {
+fn dispatch_tool(name: &str, args: &Value) -> Result<Value, NexError> {
     match name {
         "lesson_add" => handle_add(args),
         "lesson_get" => handle_get(args),
@@ -204,7 +219,7 @@ fn dispatch_tool(name: &str, args: &Value) -> Result<Value, String> {
         "lesson_by_context" => handle_by_context(args),
         "lesson_by_tag" => handle_by_tag(args),
         "primitives_summary" => handle_summary(),
-        _ => Err(format!("Unknown tool: {}", name)),
+        _ => Err(NexError::new(format!("Unknown tool: {}", name))),
     }
 }
 

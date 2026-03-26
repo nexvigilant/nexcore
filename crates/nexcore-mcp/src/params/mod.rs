@@ -580,3 +580,7 @@ pub use jupyter::*;
 // Station (WebMCP Hub config rail management)
 pub mod station;
 pub use station::*;
+
+// Root Cause Diagnosis (organizational 5 Whys + Ishikawa + constraint)
+pub mod root_cause;
+pub use root_cause::*;

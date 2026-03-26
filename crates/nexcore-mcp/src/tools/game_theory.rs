@@ -128,12 +128,16 @@ pub fn nash_2x2(params: GameTheoryNash2x2Params) -> Result<CallToolResult, McpEr
 // ============================================================================
 
 /// Build a flat values array into a rows×cols matrix, or return an error result.
-fn build_matrix(values: &[f64], rows: usize, cols: usize) -> Result<Vec<Vec<f64>>, String> {
+fn build_matrix(
+    values: &[f64],
+    rows: usize,
+    cols: usize,
+) -> Result<Vec<Vec<f64>>, nexcore_error::NexError> {
     if rows == 0 || cols == 0 {
-        return Err("rows and cols must be > 0".to_string());
+        return Err(nexcore_error::nexerror!("rows and cols must be > 0"));
     }
     if values.len() != rows * cols {
-        return Err(format!(
+        return Err(nexcore_error::nexerror!(
             "values length {} != rows({}) × cols({})",
             values.len(),
             rows,

@@ -62,7 +62,7 @@ pub fn fda_calculate_score(
         "formula": "score = (evidence × 0.30) + (fit_for_use × 0.25) + (risk × 0.25) + (docs × 0.20) × 10",
         "result": {
             "score": score.value(),
-            "score_display": score.to_string(),
+            "score_display": score,
             "rating": rating.to_string(),
             "is_acceptable": rating.is_acceptable(),
             "recommended_action": rating.recommended_action()

@@ -194,7 +194,7 @@ pub fn enroll(params: EduEnrollParams) -> Result<CallToolResult, McpError> {
         serde_json::json!({
             "learner_id": params.learner_id,
             "subject_id": params.subject_id,
-            "phase": e.phase.to_string(),
+            "phase": e.phase,
             "mastery_probability": e.mastery_probability(),
             "verdict": e.current_verdict().to_string(),
             "competency": e.competency().to_string(),
@@ -287,8 +287,10 @@ pub fn mastery(params: EduMasteryParams) -> Result<CallToolResult, McpError> {
 
 /// Execute a learning phase transition.
 pub fn phase_transition(params: EduPhaseTransitionParams) -> Result<CallToolResult, McpError> {
-    let from = parse_learning_phase(&params.from).map_err(|e| McpError::invalid_params(e, None))?;
-    let to = parse_learning_phase(&params.to).map_err(|e| McpError::invalid_params(e, None))?;
+    let from = parse_learning_phase(&params.from)
+        .map_err(|e| McpError::invalid_params(e.to_string(), None))?;
+    let to = parse_learning_phase(&params.to)
+        .map_err(|e| McpError::invalid_params(e.to_string(), None))?;
 
     let can = can_transition(from, to);
 
@@ -323,8 +325,8 @@ pub fn phase_transition(params: EduPhaseTransitionParams) -> Result<CallToolResu
 
 /// Query phase state information.
 pub fn phase_info(params: EduPhaseInfoParams) -> Result<CallToolResult, McpError> {
-    let phase =
-        parse_learning_phase(&params.phase).map_err(|e| McpError::invalid_params(e, None))?;
+    let phase = parse_learning_phase(&params.phase)
+        .map_err(|e| McpError::invalid_params(e.to_string(), None))?;
 
     let next = suggest_next_phase(phase);
     let remaining = phases_remaining(phase);
@@ -342,7 +344,7 @@ pub fn phase_info(params: EduPhaseInfoParams) -> Result<CallToolResult, McpError
         .collect();
 
     let response = serde_json::json!({
-        "current_phase": phase.to_string(),
+        "current_phase": phase,
         "ordinal": phase.ordinal(),
         "next_phase": next.map(|p| p.to_string()),
         "phases_remaining": remaining,
@@ -374,7 +376,8 @@ pub fn review_create(params: EduReviewCreateParams) -> Result<CallToolResult, Mc
 
 /// Grade a review item and reschedule.
 pub fn review_schedule(params: EduReviewScheduleParams) -> Result<CallToolResult, McpError> {
-    let grade = parse_grade(&params.grade).map_err(|e| McpError::invalid_params(e, None))?;
+    let grade =
+        parse_grade(&params.grade).map_err(|e| McpError::invalid_params(e.to_string(), None))?;
 
     // Reconstruct review state from params
     let mut state = ReviewState::new(&params.item_id, params.last_review.unwrap_or(0.0));
@@ -496,26 +499,26 @@ pub fn primitive_map(params: EduPrimitiveMapParams) -> Result<CallToolResult, Mc
 
 // ── Parsers ─────────────────────────────────────────────────────────────────
 
-fn parse_learning_phase(s: &str) -> Result<LearningPhase, String> {
+fn parse_learning_phase(s: &str) -> Result<LearningPhase, nexcore_error::NexError> {
     match s.to_lowercase().as_str() {
         "discover" => Ok(LearningPhase::Discover),
         "extract" => Ok(LearningPhase::Extract),
         "practice" => Ok(LearningPhase::Practice),
         "assess" => Ok(LearningPhase::Assess),
         "master" => Ok(LearningPhase::Master),
-        _ => Err(format!(
+        _ => Err(nexcore_error::nexerror!(
             "Unknown phase: {s}. Valid: discover, extract, practice, assess, master"
         )),
     }
 }
 
-fn parse_grade(s: &str) -> Result<Grade, String> {
+fn parse_grade(s: &str) -> Result<Grade, nexcore_error::NexError> {
     match s.to_lowercase().as_str() {
         "again" => Ok(Grade::Again),
         "hard" => Ok(Grade::Hard),
         "good" => Ok(Grade::Good),
         "easy" => Ok(Grade::Easy),
-        _ => Err(format!(
+        _ => Err(nexcore_error::nexerror!(
             "Unknown grade: {s}. Valid: again, hard, good, easy"
         )),
     }

@@ -31,7 +31,7 @@ fn vault_root() -> PathBuf {
 
 /// Resolve a relative vault path, ensuring it stays within the vault root.
 /// Appends .md if the path has no extension.
-fn resolve_path(relative: &str) -> Result<PathBuf, String> {
+fn resolve_path(relative: &str) -> Result<PathBuf, nexcore_error::NexError> {
     let root = vault_root();
     let mut rel = PathBuf::from(relative.trim_start_matches('/'));
 
@@ -47,12 +47,14 @@ fn resolve_path(relative: &str) -> Result<PathBuf, String> {
     if parent.exists() {
         let canon = parent
             .canonicalize()
-            .map_err(|e| format!("path resolution failed: {e}"))?;
-        let root_canon = root
-            .canonicalize()
-            .map_err(|e| format!("vault root resolution failed: {e}"))?;
+            .map_err(|e| nexcore_error::NexError::new(format!("path resolution failed: {e}")))?;
+        let root_canon = root.canonicalize().map_err(|e| {
+            nexcore_error::NexError::new(format!("vault root resolution failed: {e}"))
+        })?;
         if !canon.starts_with(&root_canon) {
-            return Err("path traversal outside vault root is not allowed".to_string());
+            return Err(nexcore_error::NexError::new(
+                "path traversal outside vault root is not allowed",
+            ));
         }
     }
 
@@ -67,11 +69,11 @@ fn ok_json(value: serde_json::Value) -> Result<CallToolResult, McpError> {
 
 fn ok_text(text: String) -> Result<CallToolResult, McpError> {
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-        text,
+        text.to_string(),
     )]))
 }
 
-fn err_result(msg: &str) -> Result<CallToolResult, McpError> {
+fn err_result(msg: &impl std::fmt::Display) -> Result<CallToolResult, McpError> {
     Ok(CallToolResult::error(vec![rmcp::model::Content::text(
         msg.to_string(),
     )]))

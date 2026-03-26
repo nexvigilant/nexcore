@@ -48,6 +48,10 @@ fn store() -> Result<KnowledgeStore, McpError> {
 }
 
 /// Ingest text as a knowledge fragment.
+///
+/// Fragments are persisted to the staging area at
+/// `~/.claude/brain/knowledge_packs/_staging/` so they survive across MCP calls
+/// and are automatically included in the next `knowledge_compile` invocation.
 pub fn ingest(params: KnowledgeIngestParams) -> Result<CallToolResult, McpError> {
     let source_type = params
         .source_type
@@ -63,9 +67,14 @@ pub fn ingest(params: KnowledgeIngestParams) -> Result<CallToolResult, McpError>
         },
     )?;
 
+    // Persist fragment to staging area for later compilation
+    let knowledge_store = store()?;
+    let staged = knowledge_store.save_staged_fragment(&frag).is_ok();
+
     let result = json!({
         "fragment_id": frag.id,
         "domain": frag.domain,
+        "staged": staged,
         "concepts": frag.concepts.iter().map(|c| &c.term).collect::<Vec<_>>(),
         "primitives": frag.primitives.iter().map(|p| json!({
             "name": p.name,
@@ -120,9 +129,10 @@ pub fn compile(params: KnowledgeCompileParams) -> Result<CallToolResult, McpErro
 
     let options = CompileOptions {
         name: params.name,
-        include_distillations: params.include_distillations.unwrap_or(true),
+        include_distillations: params.include_distillations.unwrap_or(false),
         include_artifacts: params.include_artifacts.unwrap_or(false),
         include_implicit: params.include_implicit.unwrap_or(false),
+        include_staged: params.include_staged.unwrap_or(true),
         sources,
     };
 
@@ -161,7 +171,7 @@ pub fn query(params: KnowledgeQueryParams) -> Result<CallToolResult, McpError> {
         .unwrap_or_default();
     let limit = params.limit.unwrap_or(10);
 
-    let responses = engine
+    let outcome = engine
         .query(
             &params.query,
             params.pack_name.as_deref(),
@@ -175,7 +185,8 @@ pub fn query(params: KnowledgeQueryParams) -> Result<CallToolResult, McpError> {
             data: None,
         })?;
 
-    let results: Vec<serde_json::Value> = responses
+    let results: Vec<serde_json::Value> = outcome
+        .responses
         .iter()
         .flat_map(|r| {
             r.results.iter().map(|qr| {
@@ -190,12 +201,13 @@ pub fn query(params: KnowledgeQueryParams) -> Result<CallToolResult, McpError> {
         })
         .collect();
 
-    let total: usize = responses.iter().map(|r| r.total_matches).sum();
+    let total: usize = outcome.responses.iter().map(|r| r.total_matches).sum();
 
     let result = json!({
         "results": results,
         "total_matches": total,
-        "packs_searched": responses.len(),
+        "packs_searched": outcome.packs_loaded,
+        "packs_matched": outcome.responses.len(),
     });
 
     Ok(CallToolResult::success(vec![Content::text(

@@ -96,7 +96,7 @@ impl CompoundTracker {
     }
 
     /// Create projection by adding primitives to a tier.
-    fn project(&self, tier: &str, count: u32) -> Result<Self, String> {
+    fn project(&self, tier: &str, count: u32) -> Result<Self, nexcore_error::NexError> {
         let mut projected = self.clone();
 
         match tier {
@@ -104,7 +104,7 @@ impl CompoundTracker {
             "T2-P" => projected.t2_p += count,
             "T2-C" => projected.t2_c += count,
             "T3" => projected.t3 += count,
-            _ => return Err(format!("Invalid tier: {}", tier)),
+            _ => return Err(nexcore_error::nexerror!("Invalid tier: {}", tier)),
         }
 
         Ok(projected)

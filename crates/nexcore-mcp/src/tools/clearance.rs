@@ -112,8 +112,8 @@ pub fn clearance_policy_for(params: ClearancePolicyForParams) -> Result<CallTool
 
     let response = serde_json::json!({
         "level": level.to_string(),
-        "access_mode": policy.access_mode.to_string(),
-        "effective_mode": effective_mode.to_string(),
+        "access_mode": policy.access_mode,
+        "effective_mode": effective_mode,
         "audit": policy.audit,
         "warn_on_write": policy.warn_on_write,
         "block_external": policy.block_external,
@@ -157,7 +157,7 @@ pub fn clearance_validate_change(
         "result": result.to_string(),
         "is_permitted": result.is_permitted(),
         "is_blocked": result.is_blocked(),
-        "mode": mode.to_string(),
+        "mode": mode,
         "downgrade_permitted": params.downgrade_permitted,
         "crosses_boundary": CrossBoundaryValidator::crosses_boundary(from, to),
     });
@@ -178,7 +178,7 @@ pub fn clearance_level_info(params: ClearanceLevelInfoParams) -> Result<CallTool
         "requires_audit": level.requires_audit(),
         "requires_dual_auth": level.requires_dual_auth(),
         "allows_external": level.allows_external(),
-        "default_access_mode": policy.access_mode.to_string(),
+        "default_access_mode": policy.access_mode,
         "enforcement_active": policy.access_mode.is_enforcement_active(),
         "allows_cross_boundary": policy.access_mode.allows_cross_boundary(),
         "allows_external_calls": policy.access_mode.allows_external_calls(),
@@ -214,7 +214,7 @@ pub fn clearance_config() -> Result<CallToolResult, McpError> {
         policies.insert(
             level.to_string(),
             serde_json::json!({
-                "access_mode": policy.access_mode.to_string(),
+                "access_mode": policy.access_mode,
                 "audit": policy.audit,
                 "warn_on_write": policy.warn_on_write,
                 "block_external": policy.block_external,
@@ -227,7 +227,7 @@ pub fn clearance_config() -> Result<CallToolResult, McpError> {
     let response = serde_json::json!({
         "version": config.version,
         "default_level": config.default_level.to_string(),
-        "default_mode": config.default_mode.to_string(),
+        "default_mode": config.default_mode,
         "mode_override": config.mode_override.map(|m| m.to_string()),
         "policies": policies,
         "priority_hierarchy": [

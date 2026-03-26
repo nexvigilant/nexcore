@@ -17,7 +17,7 @@ async fn run_gh(
     args: &[&str],
     path: &Option<String>,
     timeout_secs: u64,
-) -> Result<(bool, String, String), String> {
+) -> Result<(bool, String, String), nexcore_error::NexError> {
     let mut cmd = Command::new("gh");
     cmd.args(args).stdout(Stdio::piped()).stderr(Stdio::piped());
     if let Some(p) = path {
@@ -26,8 +26,8 @@ async fn run_gh(
 
     let output = tokio::time::timeout(std::time::Duration::from_secs(timeout_secs), cmd.output())
         .await
-        .map_err(|_| format!("Command timed out after {timeout_secs}s"))?
-        .map_err(|e| format!("Failed to execute gh: {e}"))?;
+        .map_err(|_| nexcore_error::nexerror!("Command timed out after {timeout_secs}s"))?
+        .map_err(|e| nexcore_error::nexerror!("Failed to execute gh: {e}"))?;
 
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     let stderr = String::from_utf8_lossy(&output.stderr).to_string();

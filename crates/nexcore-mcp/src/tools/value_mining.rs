@@ -137,7 +137,7 @@ pub fn detect_signal(params: ValueSignalDetectParams) -> Result<CallToolResult, 
     let is_actionable = confidence >= 0.7;
 
     let result = serde_json::json!({
-        "signal_type": signal_type.to_string(),
+        "signal_type": signal_type,
         "pv_algorithm": algorithm,
         "entity": params.entity,
         "source": params.source,

@@ -211,7 +211,7 @@ pub fn artifact_save(params: BrainArtifactSaveParams) -> Result<CallToolResult, 
     let result = serde_json::json!({
         "status": "saved",
         "name": params.name,
-        "artifact_type": artifact_type.to_string(),
+        "artifact_type": artifact_type,
         "session_id": session.id.to_string(),
     });
 
@@ -250,7 +250,7 @@ pub fn artifact_get(params: BrainArtifactGetParams) -> Result<CallToolResult, Mc
 
     let result = serde_json::json!({
         "name": artifact.name,
-        "artifact_type": artifact.artifact_type.to_string(),
+        "artifact_type": artifact.artifact_type,
         "version": params.version.unwrap_or(0),
         "content": artifact.content,
         "updated_at": artifact.updated_at.to_rfc3339(),

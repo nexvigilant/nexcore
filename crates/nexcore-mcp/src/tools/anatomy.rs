@@ -30,7 +30,8 @@ fn ws_manifest() -> PathBuf {
 /// Load workspace dependency graph via nexcore-anatomy.
 fn load_graph() -> Result<DependencyGraph, McpError> {
     let manifest = ws_manifest();
-    DependencyGraph::from_manifest_path(&manifest).map_err(|e| McpError::internal_error(e, None))
+    DependencyGraph::from_manifest_path(&manifest)
+        .map_err(|e| McpError::internal_error(e.to_string(), None))
 }
 
 // ---------------------------------------------------------------------------

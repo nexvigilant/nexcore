@@ -101,13 +101,13 @@ use crate::params::{
     QbrWeightParam,
 };
 
-fn parse_qbr_method(s: &str) -> Result<nexcore_qbr::QbrSignalMethod, String> {
+fn parse_qbr_method(s: &str) -> Result<nexcore_qbr::QbrSignalMethod, nexcore_error::NexError> {
     match s {
         "prr" => Ok(nexcore_qbr::QbrSignalMethod::Prr),
         "ror" => Ok(nexcore_qbr::QbrSignalMethod::Ror),
         "ic" => Ok(nexcore_qbr::QbrSignalMethod::Ic),
         "ebgm" => Ok(nexcore_qbr::QbrSignalMethod::Ebgm),
-        other => Err(format!(
+        other => Err(nexcore_error::nexerror!(
             "Invalid method '{other}'. Must be: prr, ror, ic, ebgm"
         )),
     }

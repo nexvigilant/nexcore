@@ -33,8 +33,13 @@ fn err_result(msg: &str) -> Result<CallToolResult, McpError> {
     )]))
 }
 
-fn find_zeros(t_min: f64, t_max: f64, step: f64) -> Result<Vec<nexcore_zeta::ZetaZero>, String> {
-    nexcore_zeta::zeros::find_zeros_bracket(t_min, t_max, step).map_err(|e| format!("{e}"))
+fn find_zeros(
+    t_min: f64,
+    t_max: f64,
+    step: f64,
+) -> Result<Vec<nexcore_zeta::ZetaZero>, nexcore_error::NexError> {
+    nexcore_zeta::zeros::find_zeros_bracket(t_min, t_max, step)
+        .map_err(|e| nexcore_error::nexerror!("{e}"))
 }
 
 // ── Tools ────────────────────────────────────────────────────────────────────

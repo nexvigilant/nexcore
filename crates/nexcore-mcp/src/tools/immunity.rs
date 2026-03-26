@@ -38,25 +38,30 @@ use std::sync::OnceLock;
 
 /// Cached scanner instance (singleton pattern for performance).
 /// Uses Option to handle initialization errors gracefully.
-static SCANNER: OnceLock<Result<(AntibodyRegistry, ImmunityScanner), String>> = OnceLock::new();
+static SCANNER: OnceLock<Result<(AntibodyRegistry, ImmunityScanner), nexcore_error::NexError>> =
+    OnceLock::new();
 
 /// Get or initialize the scanner.
 fn get_scanner() -> Result<&'static (AntibodyRegistry, ImmunityScanner), McpError> {
     let result = SCANNER.get_or_init(|| {
         let registry = match load_default_registry() {
             Ok(r) => r,
-            Err(e) => return Err(format!("Failed to load antibody registry: {e}")),
+            Err(e) => {
+                return Err(nexcore_error::nexerror!(
+                    "Failed to load antibody registry: {e}"
+                ));
+            }
         };
         let scanner = match ImmunityScanner::new(&registry) {
             Ok(s) => s,
-            Err(e) => return Err(format!("Failed to create scanner: {e}")),
+            Err(e) => return Err(nexcore_error::nexerror!("Failed to create scanner: {e}")),
         };
         Ok((registry, scanner))
     });
 
     match result {
         Ok(pair) => Ok(pair),
-        Err(e) => Err(McpError::internal_error(e.clone(), None)),
+        Err(e) => Err(McpError::internal_error(e.to_string(), None)),
     }
 }
 
@@ -75,7 +80,7 @@ pub fn immunity_scan(params: ImmunityScanParams) -> Result<CallToolResult, McpEr
             json!({
                 "antibody_id": t.antibody_id,
                 "name": t.antibody_name,
-                "type": t.threat_type.to_string(),
+                "type": t.threat_type,
                 "severity": t.severity.to_string(),
                 "line": t.location,
                 "matched": t.matched_content,
@@ -178,7 +183,7 @@ pub fn immunity_list(params: ImmunityListParams) -> Result<CallToolResult, McpEr
             json!({
                 "id": ab.id,
                 "name": ab.name,
-                "type": ab.threat_type.to_string(),
+                "type": ab.threat_type,
                 "severity": ab.severity.to_string(),
                 "confidence": ab.confidence,
                 "applications": ab.applications
@@ -207,7 +212,7 @@ pub fn immunity_get(params: ImmunityGetParams) -> Result<CallToolResult, McpErro
     let response = json!({
         "id": antibody.id,
         "name": antibody.name,
-        "type": antibody.threat_type.to_string(),
+        "type": antibody.threat_type,
         "severity": antibody.severity.to_string(),
         "description": antibody.description,
         "detection": {

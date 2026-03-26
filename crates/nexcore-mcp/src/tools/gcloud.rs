@@ -10,7 +10,10 @@ use std::process::Stdio;
 use tokio::process::Command;
 
 /// Run gcloud command with JSON output format
-async fn run_gcloud(args: &[&str], timeout_secs: u64) -> Result<serde_json::Value, String> {
+async fn run_gcloud(
+    args: &[&str],
+    timeout_secs: u64,
+) -> Result<serde_json::Value, nexcore_error::NexError> {
     let mut cmd_args: Vec<&str> = args.to_vec();
     cmd_args.push("--format=json");
 
@@ -23,8 +26,8 @@ async fn run_gcloud(args: &[&str], timeout_secs: u64) -> Result<serde_json::Valu
             .output(),
     )
     .await
-    .map_err(|_| format!("Command timed out after {timeout_secs}s"))?
-    .map_err(|e| format!("Failed to execute gcloud: {e}"))?;
+    .map_err(|_| nexcore_error::NexError::new(format!("Command timed out after {timeout_secs}s")))?
+    .map_err(|e| nexcore_error::NexError::new(format!("Failed to execute gcloud: {e}")))?;
 
     if output.status.success() {
         let stdout = String::from_utf8_lossy(&output.stdout);
@@ -42,7 +45,10 @@ async fn run_gcloud(args: &[&str], timeout_secs: u64) -> Result<serde_json::Valu
 }
 
 /// Run gcloud command with text output (no JSON format)
-async fn run_gcloud_text(args: &[&str], timeout_secs: u64) -> Result<serde_json::Value, String> {
+async fn run_gcloud_text(
+    args: &[&str],
+    timeout_secs: u64,
+) -> Result<serde_json::Value, nexcore_error::NexError> {
     let output = tokio::time::timeout(
         std::time::Duration::from_secs(timeout_secs),
         Command::new("gcloud")
@@ -52,8 +58,8 @@ async fn run_gcloud_text(args: &[&str], timeout_secs: u64) -> Result<serde_json:
             .output(),
     )
     .await
-    .map_err(|_| format!("Command timed out after {timeout_secs}s"))?
-    .map_err(|e| format!("Failed to execute gcloud: {e}"))?;
+    .map_err(|_| nexcore_error::NexError::new(format!("Command timed out after {timeout_secs}s")))?
+    .map_err(|e| nexcore_error::NexError::new(format!("Failed to execute gcloud: {e}")))?;
 
     if output.status.success() {
         let stdout = String::from_utf8_lossy(&output.stdout);
@@ -64,11 +70,13 @@ async fn run_gcloud_text(args: &[&str], timeout_secs: u64) -> Result<serde_json:
     }
 }
 
-fn format_result(result: Result<serde_json::Value, String>) -> Result<CallToolResult, McpError> {
+fn format_result(
+    result: Result<serde_json::Value, nexcore_error::NexError>,
+) -> Result<CallToolResult, McpError> {
     match result {
         Ok(v) => Ok(CallToolResult::success(vec![Content::text(v.to_string())])),
         Err(e) => Ok(CallToolResult::success(vec![Content::text(
-            json!({"success": false, "error": e}).to_string(),
+            json!({"success": false, "error": e.to_string()}).to_string(),
         )])),
     }
 }

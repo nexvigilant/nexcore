@@ -38,6 +38,8 @@
 pub mod browser;
 pub mod composites;
 pub mod config;
+/// Diagnostic Engine — 6-state FSM for prompt validation pipeline.
+pub mod diagnostic;
 pub mod grounding;
 pub mod params;
 pub mod prelude;
@@ -170,6 +172,88 @@ impl NexCoreMcpServer {
         });
         Ok(CallToolResult::success(vec![rmcp::model::Content::text(
             serde_json::to_string_pretty(&health).unwrap_or_default(),
+        )]))
+    }
+
+    #[tool(
+        description = "Query the PDP diagnostic engine state for a session. Returns current state (IDLE/PARSED/EVALUATED/COMPLETE), gate scores, and transition history. Reads from /tmp/pdp-parse-*.json and /tmp/pdp-eval-*.json."
+    )]
+    async fn diagnostic_state(
+        &self,
+        Parameters(params): Parameters<params::system::DiagnosticStateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let session_id = if let Some(id) = params.session_id {
+            id
+        } else {
+            // Get most recent session from brain.db
+            let db_path =
+                std::path::PathBuf::from(std::env::var("BRAIN_DIR").unwrap_or_else(|_| {
+                    format!(
+                        "{}/.claude/brain",
+                        std::env::var("HOME").unwrap_or_default()
+                    )
+                }))
+                .join("brain.db");
+
+            if db_path.exists() {
+                let conn = rusqlite::Connection::open(&db_path)
+                    .map_err(|e| McpError::internal_error(format!("db open: {e}"), None))?;
+                conn.query_row(
+                    "SELECT id FROM sessions ORDER BY created_at DESC LIMIT 1",
+                    [],
+                    |row| row.get::<_, String>(0),
+                )
+                .unwrap_or_else(|_| "unknown".to_string())
+            } else {
+                "unknown".to_string()
+            }
+        };
+
+        let parse_path = format!("/tmp/pdp-parse-{session_id}.json");
+        let eval_path = format!("/tmp/pdp-eval-{session_id}.json");
+
+        let mut engine = diagnostic::DiagnosticEngine::new(session_id.clone());
+        let ts = || {
+            let now = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs();
+            format!("{now}")
+        };
+
+        let mut result = serde_json::json!({
+            "session_id": session_id,
+            "state": "IDLE",
+            "parse": null,
+            "evaluation": null,
+        });
+
+        // Check PARSING stage
+        if let Ok(content) = std::fs::read_to_string(&parse_path) {
+            if let Ok(parse_data) = serde_json::from_str::<serde_json::Value>(&content) {
+                let _ = engine.transition(diagnostic::DiagnosticState::Parsing, ts());
+                result["state"] = serde_json::json!("PARSED");
+                result["parse"] = parse_data;
+            }
+        }
+
+        // Check EVALUATING stage
+        if let Ok(content) = std::fs::read_to_string(&eval_path) {
+            if let Ok(eval_data) = serde_json::from_str::<serde_json::Value>(&content) {
+                if engine.current_state == diagnostic::DiagnosticState::Parsing {
+                    let _ = engine.transition(diagnostic::DiagnosticState::Evaluating, ts());
+                    let _ = engine.transition(diagnostic::DiagnosticState::Reporting, ts());
+                    let _ = engine.transition(diagnostic::DiagnosticState::Complete, ts());
+                }
+                result["state"] = serde_json::json!("COMPLETE");
+                result["evaluation"] = eval_data;
+            }
+        }
+
+        result["transitions"] = serde_json::json!(engine.transition_count());
+
+        Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+            serde_json::to_string_pretty(&result).unwrap_or_default(),
         )]))
     }
 
@@ -3519,6 +3603,123 @@ impl NexCoreMcpServer {
     }
 
     // ========================================================================
+    // Root Cause Diagnosis (1) - Organizational Issue Analysis
+    // ========================================================================
+
+    #[tool(
+        description = "Diagnose root causes from observed symptoms using Ishikawa categorization (People/Process/Technology/Strategy/Environment/Measurement), leverage scoring, and Theory of Constraints identification. Takes symptoms and their 5-Whys root causes, returns the constraint (single highest-leverage issue), category distribution, and conservation assessment."
+    )]
+    async fn root_cause_diagnose(
+        &self,
+        Parameters(params): Parameters<params::RootCauseDiagnoseParams>,
+    ) -> Result<CallToolResult, McpError> {
+        use nexcore_forge_strategy::diagnosis::{
+            self as diag, IshikawaCategory, RootCause, Symptom, WhyStep,
+        };
+
+        // Convert input symptoms
+        let symptoms: Vec<Symptom> = params
+            .symptoms
+            .iter()
+            .map(|s| Symptom {
+                description: s.description.clone(),
+                severity: s.severity.clamp(1, 5),
+                area: s.area.clone(),
+            })
+            .collect();
+
+        // Convert input root causes
+        let root_causes: Vec<RootCause> = params
+            .root_causes
+            .iter()
+            .map(|rc| {
+                let category = match rc.category.to_lowercase().as_str() {
+                    "people" => IshikawaCategory::People,
+                    "process" => IshikawaCategory::Process,
+                    "technology" | "tech" => IshikawaCategory::Technology,
+                    "strategy" => IshikawaCategory::Strategy,
+                    "environment" | "env" => IshikawaCategory::Environment,
+                    "measurement" => IshikawaCategory::Measurement,
+                    _ => IshikawaCategory::Process, // default
+                };
+
+                let why_chain: Vec<WhyStep> = rc
+                    .why_chain
+                    .iter()
+                    .enumerate()
+                    .map(|(i, explanation)| WhyStep {
+                        depth: (i + 1) as u8,
+                        explanation: explanation.clone(),
+                        verified: true,
+                    })
+                    .collect();
+
+                RootCause {
+                    symptom_index: rc.symptom_index,
+                    why_chain,
+                    category,
+                    statement: rc.statement.clone(),
+                    confidence: rc.confidence.clamp(0.0, 1.0),
+                    corrective_action: rc
+                        .corrective_action
+                        .clone()
+                        .unwrap_or_else(|| "Not specified".to_string()),
+                    preventive_action: rc
+                        .preventive_action
+                        .clone()
+                        .unwrap_or_else(|| "Not specified".to_string()),
+                }
+            })
+            .collect();
+
+        let diagnosis = diag::diagnose(symptoms, root_causes);
+
+        let result = serde_json::json!({
+            "symptom_count": diagnosis.symptoms.len(),
+            "root_cause_count": diagnosis.root_causes.len(),
+            "category_distribution": diagnosis.category_distribution.iter().map(|(cat, count)| {
+                serde_json::json!({
+                    "category": cat.to_string(),
+                    "count": count,
+                    "question": cat.diagnostic_question()
+                })
+            }).collect::<Vec<_>>(),
+            "dominant_category": diagnosis.dominant_category.map(|c| c.to_string()),
+            "constraint": diagnosis.constraint.map(|c| {
+                serde_json::json!({
+                    "root_cause_index": c.root_cause_index,
+                    "statement": diagnosis.root_causes.get(c.root_cause_index).map(|rc| rc.statement.as_str()).unwrap_or("unknown"),
+                    "leverage_score": format!("{:.2}", c.leverage_score),
+                    "downstream_count": c.downstream_count,
+                    "exploit_action": c.exploit_action,
+                    "elevate_action": c.elevate_action
+                })
+            }),
+            "conservation": {
+                "void": diagnosis.conservation.void_status,
+                "state": diagnosis.conservation.state_status,
+                "boundary": diagnosis.conservation.boundary_status,
+                "existence": diagnosis.conservation.existence_status
+            },
+            "root_causes": diagnosis.root_causes.iter().map(|rc| {
+                serde_json::json!({
+                    "symptom_index": rc.symptom_index,
+                    "category": rc.category.to_string(),
+                    "statement": rc.statement,
+                    "confidence": rc.confidence,
+                    "corrective_action": rc.corrective_action,
+                    "preventive_action": rc.preventive_action,
+                    "why_depth": rc.why_chain.len()
+                })
+            }).collect::<Vec<_>>()
+        });
+
+        Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+            serde_json::to_string_pretty(&result).unwrap_or_default(),
+        )]))
+    }
+
+    // ========================================================================
     // Transform Tools (5) - Cross-Domain Text Transformation
     // ========================================================================
 
@@ -5930,7 +6131,7 @@ impl NexCoreMcpServer {
             None => "No configuration loaded".to_string(),
         };
         Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-            msg,
+            msg.to_string(),
         )]))
     }
 
@@ -5951,7 +6152,7 @@ impl NexCoreMcpServer {
     ) -> Result<CallToolResult, McpError> {
         let msg = unified_get_server(&self.config, &p.name);
         Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-            msg,
+            msg.to_string(),
         )]))
     }
 }
@@ -6105,4 +6306,48 @@ Domains: Foundation, PV Signal Detection, Vigilance, Guardian, Vigil, Skills, Va
             next_cursor: None,
         }))
     }
+}
+
+// ========================================================================
+// Public API: call_tool_direct (for in-process callers like nexcore-api)
+// ========================================================================
+
+/// Call a tool by name via unified dispatch, with automatic name normalization.
+///
+/// Tries the unified dispatcher first. If the tool name isn't found in the
+/// short-name match table, strips common prefixes and retries. This handles
+/// the naming gap between first-class `#[tool]` names (e.g., `nexcore_health_probe`)
+/// and legacy unified dispatcher names (e.g., `nexcore_health`).
+///
+/// For first-class tools not in the unified table, callers should use Station
+/// or the full MCP protocol instead.
+pub async fn call_tool_direct(
+    tool_name: &str,
+    params: serde_json::Value,
+    server: &NexCoreMcpServer,
+) -> Result<CallToolResult, McpError> {
+    // Try exact name first
+    match unified::dispatch(tool_name, params.clone(), server).await {
+        Ok(result) => return Ok(result),
+        Err(e) => {
+            let msg = format!("{e:?}");
+            if !msg.contains("Unknown command") {
+                return Err(e);
+            }
+        }
+    }
+
+    // Try without common prefixes (nexcore_ -> tool might be just the suffix)
+    if let Some(short) = tool_name.strip_prefix("nexcore_") {
+        if let Ok(result) = unified::dispatch(short, params.clone(), server).await {
+            return Ok(result);
+        }
+    }
+
+    // Not found in unified dispatcher
+    Err(McpError {
+        code: rmcp::model::ErrorCode(-32602),
+        message: format!("Tool '{tool_name}' not found in unified dispatcher. Use station> prefix for Station tools.").into(),
+        data: None,
+    })
 }

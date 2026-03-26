@@ -108,3 +108,12 @@ pub struct ToolboxParams {
     #[serde(default)]
     pub category: Option<String>,
 }
+
+/// Parameters for querying diagnostic engine state.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct DiagnosticStateParams {
+    /// Session ID to query. If omitted, uses the most recent session.
+    #[serde(default)]
+    pub session_id: Option<String>,
+}

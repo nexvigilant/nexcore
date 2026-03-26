@@ -110,7 +110,7 @@ pub fn summary() -> Result<CallToolResult, McpError> {
         .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-        result,
+        result.to_string(),
     )]))
 }
 
@@ -141,7 +141,7 @@ pub fn decisions_stats() -> Result<CallToolResult, McpError> {
         .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-        result,
+        result.to_string(),
     )]))
 }
 
@@ -181,7 +181,7 @@ pub fn tool_stats() -> Result<CallToolResult, McpError> {
         .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-        result,
+        result.to_string(),
     )]))
 }
 
@@ -218,7 +218,7 @@ pub fn antibodies() -> Result<CallToolResult, McpError> {
         .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-        result,
+        result.to_string(),
     )]))
 }
 
@@ -285,7 +285,7 @@ pub fn handoffs(params: params::BrainDbHandoffsParams) -> Result<CallToolResult,
         .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-        result,
+        result.to_string(),
     )]))
 }
 
@@ -312,7 +312,7 @@ pub fn tasks() -> Result<CallToolResult, McpError> {
         .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-        result,
+        result.to_string(),
     )]))
 }
 
@@ -356,7 +356,7 @@ pub fn efficiency() -> Result<CallToolResult, McpError> {
         .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-        result,
+        result.to_string(),
     )]))
 }
 
@@ -428,7 +428,7 @@ pub fn query(params: params::BrainDbQueryParams) -> Result<CallToolResult, McpEr
         .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-        result,
+        result.to_string(),
     )]))
 }
 
@@ -466,6 +466,6 @@ pub fn sync() -> Result<CallToolResult, McpError> {
     );
 
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-        output,
+        output.to_string(),
     )]))
 }

@@ -35,8 +35,8 @@ fn format_error(msg: &str) -> Result<CallToolResult, McpError> {
     ))]))
 }
 
-fn get_client() -> Result<PerplexityClient, String> {
-    PerplexityClient::from_env().map_err(|e| format!("{e}"))
+fn get_client() -> Result<PerplexityClient, nexcore_error::NexError> {
+    PerplexityClient::from_env().map_err(|e| nexcore_error::NexError::new(format!("{e}")))
 }
 
 // ============================================================================
@@ -47,7 +47,7 @@ fn get_client() -> Result<PerplexityClient, String> {
 pub async fn search(params: PerplexitySearchParams) -> Result<CallToolResult, McpError> {
     let client = match get_client() {
         Ok(c) => c,
-        Err(e) => return format_error(&e),
+        Err(e) => return format_error(&e.to_string()),
     };
 
     let model = params
@@ -80,7 +80,7 @@ pub async fn search(params: PerplexitySearchParams) -> Result<CallToolResult, Mc
 pub async fn research(params: PerplexityResearchParams) -> Result<CallToolResult, McpError> {
     let client = match get_client() {
         Ok(c) => c,
-        Err(e) => return format_error(&e),
+        Err(e) => return format_error(&e.to_string()),
     };
 
     let use_case =
@@ -107,7 +107,7 @@ pub async fn research(params: PerplexityResearchParams) -> Result<CallToolResult
 pub async fn competitive(params: PerplexityCompetitiveParams) -> Result<CallToolResult, McpError> {
     let client = match get_client() {
         Ok(c) => c,
-        Err(e) => return format_error(&e),
+        Err(e) => return format_error(&e.to_string()),
     };
 
     match research_competitive(&client, &params.query, &params.competitors, None).await {
@@ -120,7 +120,7 @@ pub async fn competitive(params: PerplexityCompetitiveParams) -> Result<CallTool
 pub async fn regulatory(params: PerplexityRegulatoryParams) -> Result<CallToolResult, McpError> {
     let client = match get_client() {
         Ok(c) => c,
-        Err(e) => return format_error(&e),
+        Err(e) => return format_error(&e.to_string()),
     };
 
     let recency = params

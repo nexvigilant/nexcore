@@ -57,18 +57,21 @@ fn build_board(
     round: Round,
     dd_positions: &[CluePosition],
     answered: &[CluePosition],
-) -> Result<Board, String> {
-    let mut board = Board::new(round, dd_positions).map_err(|e| format!("{e}"))?;
+) -> Result<Board, nexcore_error::NexError> {
+    let mut board = Board::new(round, dd_positions).map_err(|e| nexcore_error::nexerror!("{e}"))?;
     for pos in answered {
-        board.answer(*pos).map_err(|e| format!("{e}"))?;
+        board
+            .answer(*pos)
+            .map_err(|e| nexcore_error::nexerror!("{e}"))?;
     }
     Ok(board)
 }
 
 /// Build a full GameState from the shared input structure.
-fn build_game_state(input: &JeopardyGameStateInput) -> Result<GameState, String> {
-    let round = parse_round(&input.round)
-        .ok_or_else(|| "round must be 'jeopardy', 'double_jeopardy', or 'final_jeopardy'")?;
+fn build_game_state(input: &JeopardyGameStateInput) -> Result<GameState, nexcore_error::NexError> {
+    let round = parse_round(&input.round).ok_or_else(|| {
+        nexcore_error::nexerror!("round must be 'jeopardy', 'double_jeopardy', or 'final_jeopardy'")
+    })?;
 
     let dd_pos: Vec<CluePosition> = input
         .daily_double_positions
@@ -158,7 +161,7 @@ pub fn jeopardy_score_board(p: JeopardyScoreBoardParams) -> Result<CallToolResul
 
     let board = match build_board(round, &dd_pos, &answered) {
         Ok(b) => b,
-        Err(e) => return err_result(&e),
+        Err(e) => return err_result(&e.to_string()),
     };
 
     let scores = nexcore_jeopardy::strategy::score_selections(&board);
@@ -169,7 +172,7 @@ pub fn jeopardy_score_board(p: JeopardyScoreBoardParams) -> Result<CallToolResul
 pub fn jeopardy_should_buzz(p: JeopardyShouldBuzzParams) -> Result<CallToolResult, McpError> {
     let state = match build_game_state(&p.state) {
         Ok(s) => s,
-        Err(e) => return err_result(&e),
+        Err(e) => return err_result(&e.to_string()),
     };
 
     let pos = CluePosition::new(p.position.row, p.position.col);
@@ -187,7 +190,7 @@ pub fn jeopardy_should_buzz(p: JeopardyShouldBuzzParams) -> Result<CallToolResul
 pub fn jeopardy_optimal_dd_wager(p: JeopardyDdWagerParams) -> Result<CallToolResult, McpError> {
     let state = match build_game_state(&p.state) {
         Ok(s) => s,
-        Err(e) => return err_result(&e),
+        Err(e) => return err_result(&e.to_string()),
     };
 
     let confidence = Confidence::new(p.confidence);
@@ -203,7 +206,7 @@ pub fn jeopardy_optimal_final_wager(
 ) -> Result<CallToolResult, McpError> {
     let state = match build_game_state(&p.state) {
         Ok(s) => s,
-        Err(e) => return err_result(&e),
+        Err(e) => return err_result(&e.to_string()),
     };
 
     let confidence = Confidence::new(p.confidence);
@@ -219,7 +222,7 @@ pub fn jeopardy_board_control_value(
 ) -> Result<CallToolResult, McpError> {
     let state = match build_game_state(&p.state) {
         Ok(s) => s,
-        Err(e) => return err_result(&e),
+        Err(e) => return err_result(&e.to_string()),
     };
 
     let value = nexcore_jeopardy::strategy::board_control_value(&state.board, &state);

@@ -34,12 +34,14 @@ pub struct KnowledgeCompileParams {
     pub name: String,
     /// Raw text sources to include (optional, in addition to Brain sources).
     pub sources: Option<Vec<String>>,
-    /// Include Brain distillation files (default: true).
+    /// Include Brain distillation files (default: false).
     pub include_distillations: Option<bool>,
     /// Include Brain artifact files (default: false).
     pub include_artifacts: Option<bool>,
     /// Include implicit knowledge files (default: false).
     pub include_implicit: Option<bool>,
+    /// Include staged fragments from prior knowledge_ingest calls (default: true).
+    pub include_staged: Option<bool>,
 }
 
 /// Parameters for knowledge_query.

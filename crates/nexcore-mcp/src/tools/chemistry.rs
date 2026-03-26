@@ -475,7 +475,7 @@ pub fn first_law_open(params: ChemistryFirstLawOpenParams) -> Result<CallToolRes
         None => "Error: Invalid mass flow parameters".to_string(),
     };
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-        result_text,
+        result_text.to_string(),
     )]))
 }
 

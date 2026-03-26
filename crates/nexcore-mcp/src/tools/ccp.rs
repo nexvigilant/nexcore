@@ -31,8 +31,8 @@ pub fn episode_start(params: CcpEpisodeStartParams) -> Result<CallToolResult, Mc
 
 /// Compute recommended dose given strategy and target.
 pub fn dose_compute(params: CcpDoseComputeParams) -> Result<CallToolResult, McpError> {
-    let strategy =
-        parse_strategy(&params.strategy).map_err(|e| McpError::invalid_params(e, None))?;
+    let strategy = parse_strategy(&params.strategy)
+        .map_err(|e| McpError::invalid_params(e.to_string(), None))?;
     let target = PlasmaLevel(params.target_level);
 
     let bio = BioAvailability::new(params.bioavailability.unwrap_or(0.8))
@@ -69,8 +69,8 @@ pub fn episode_advance(params: CcpEpisodeAdvanceParams) -> Result<CallToolResult
     let mut ep = Episode::new(&params.episode_id, 0.0);
 
     // Set initial phase
-    let initial_phase =
-        parse_phase(&params.current_phase).map_err(|e| McpError::invalid_params(e, None))?;
+    let initial_phase = parse_phase(&params.current_phase)
+        .map_err(|e| McpError::invalid_params(e.to_string(), None))?;
     ep.phase = initial_phase;
     ep.plasma_level = PlasmaLevel(params.current_plasma.unwrap_or(0.0));
 
@@ -88,7 +88,7 @@ pub fn episode_advance(params: CcpEpisodeAdvanceParams) -> Result<CallToolResult
                 .clone()
                 .unwrap_or_else(|| "therapeutic".to_string()),
         )
-        .map_err(|e| McpError::invalid_params(e, None))?;
+        .map_err(|e| McpError::invalid_params(e.to_string(), None))?;
 
         let intervention = Intervention {
             dose,
@@ -107,7 +107,8 @@ pub fn episode_advance(params: CcpEpisodeAdvanceParams) -> Result<CallToolResult
 
     // Transition phase
     if let Some(ref target_phase) = params.target_phase {
-        let target = parse_phase(target_phase).map_err(|e| McpError::invalid_params(e, None))?;
+        let target =
+            parse_phase(target_phase).map_err(|e| McpError::invalid_params(e.to_string(), None))?;
         let reason = params.reason.as_deref().unwrap_or("advanced");
         ep.advance_phase(target, reason, params.timestamp.unwrap_or(0.0))
             .map_err(|e| McpError::invalid_params(e.to_string(), None))?;
@@ -128,7 +129,7 @@ pub fn episode_advance(params: CcpEpisodeAdvanceParams) -> Result<CallToolResult
 /// Check interaction effects between two plasma levels.
 pub fn interaction_check(params: CcpInteractionCheckParams) -> Result<CallToolResult, McpError> {
     let itype = parse_interaction_type(&params.interaction_type)
-        .map_err(|e| McpError::invalid_params(e, None))?;
+        .map_err(|e| McpError::invalid_params(e.to_string(), None))?;
     let a = PlasmaLevel(params.level_a);
     let b = PlasmaLevel(params.level_b);
 
@@ -190,8 +191,9 @@ pub fn quality_score(params: CcpQualityScoreParams) -> Result<CallToolResult, Mc
 
 /// Validate and execute a phase transition.
 pub fn phase_transition(params: CcpPhaseTransitionParams) -> Result<CallToolResult, McpError> {
-    let from = parse_phase(&params.from).map_err(|e| McpError::invalid_params(e, None))?;
-    let to = parse_phase(&params.to).map_err(|e| McpError::invalid_params(e, None))?;
+    let from =
+        parse_phase(&params.from).map_err(|e| McpError::invalid_params(e.to_string(), None))?;
+    let to = parse_phase(&params.to).map_err(|e| McpError::invalid_params(e.to_string(), None))?;
 
     let can = can_transition(from, to);
 
@@ -226,38 +228,38 @@ pub fn phase_transition(params: CcpPhaseTransitionParams) -> Result<CallToolResu
 
 // ── Parsers ───────────────────────────────────────────────────────────────
 
-fn parse_phase(s: &str) -> Result<Phase, String> {
+fn parse_phase(s: &str) -> Result<Phase, nexcore_error::NexError> {
     match s.to_lowercase().as_str() {
         "collect" => Ok(Phase::Collect),
         "assess" => Ok(Phase::Assess),
         "plan" => Ok(Phase::Plan),
         "implement" => Ok(Phase::Implement),
         "followup" | "follow_up" | "follow-up" => Ok(Phase::FollowUp),
-        _ => Err(format!(
+        _ => Err(nexcore_error::nexerror!(
             "Unknown phase: {s}. Valid: collect, assess, plan, implement, followup"
         )),
     }
 }
 
-fn parse_strategy(s: &str) -> Result<DosingStrategy, String> {
+fn parse_strategy(s: &str) -> Result<DosingStrategy, nexcore_error::NexError> {
     match s.to_lowercase().as_str() {
         "subtherapeutic" => Ok(DosingStrategy::Subtherapeutic),
         "therapeutic" => Ok(DosingStrategy::Therapeutic),
         "loading" => Ok(DosingStrategy::Loading),
         "maintenance" => Ok(DosingStrategy::Maintenance),
-        _ => Err(format!(
+        _ => Err(nexcore_error::nexerror!(
             "Unknown strategy: {s}. Valid: subtherapeutic, therapeutic, loading, maintenance"
         )),
     }
 }
 
-fn parse_interaction_type(s: &str) -> Result<InteractionType, String> {
+fn parse_interaction_type(s: &str) -> Result<InteractionType, nexcore_error::NexError> {
     match s.to_lowercase().as_str() {
         "synergistic" => Ok(InteractionType::Synergistic),
         "antagonistic" => Ok(InteractionType::Antagonistic),
         "additive" => Ok(InteractionType::Additive),
         "potentiating" => Ok(InteractionType::Potentiating),
-        _ => Err(format!(
+        _ => Err(nexcore_error::nexerror!(
             "Unknown interaction type: {s}. Valid: synergistic, antagonistic, additive, potentiating"
         )),
     }

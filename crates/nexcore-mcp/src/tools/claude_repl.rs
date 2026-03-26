@@ -16,11 +16,13 @@ use tokio::process::Command;
 pub async fn claude_repl(params: ClaudeReplParams) -> Result<CallToolResult, McpError> {
     match run_claude(params).await {
         Ok(output) => Ok(CallToolResult::success(vec![Content::text(output)])),
-        Err(msg) => Ok(CallToolResult::success(vec![Content::text(msg)])),
+        Err(msg) => Ok(CallToolResult::success(vec![Content::text(
+            msg.to_string(),
+        )])),
     }
 }
 
-async fn run_claude(params: ClaudeReplParams) -> Result<String, String> {
+async fn run_claude(params: ClaudeReplParams) -> Result<String, nexcore_error::NexError> {
     let cli_path = discover_cli()?;
 
     let mut cmd = Command::new(&cli_path);
@@ -68,16 +70,16 @@ async fn run_claude(params: ClaudeReplParams) -> Result<String, String> {
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()
-        .map_err(|e| format!("Failed to spawn claude cli: {e}"))?;
+        .map_err(|e| nexcore_error::nexerror!("Failed to spawn claude cli: {e}"))?;
 
     let mut stdout = child
         .stdout
         .take()
-        .ok_or_else(|| "missing stdout".to_string())?;
+        .ok_or_else(|| nexcore_error::NexError::new("missing stdout"))?;
     let mut stderr = child
         .stderr
         .take()
-        .ok_or_else(|| "missing stderr".to_string())?;
+        .ok_or_else(|| nexcore_error::NexError::new("missing stderr"))?;
 
     let stdout_task = tokio::spawn(async move {
         let mut buf = Vec::new();
@@ -94,14 +96,19 @@ async fn run_claude(params: ClaudeReplParams) -> Result<String, String> {
     let status = if let Some(timeout_ms) = params.timeout_ms {
         match tokio::time::timeout(std::time::Duration::from_millis(timeout_ms), child.wait()).await
         {
-            Ok(result) => result.map_err(|e| format!("CLI failed: {e}"))?,
+            Ok(result) => result.map_err(|e| nexcore_error::nexerror!("CLI failed: {e}"))?,
             Err(_) => {
                 let _ = child.kill().await;
-                return Err(format!("Claude CLI timed out after {timeout_ms}ms"));
+                return Err(nexcore_error::nexerror!(
+                    "Claude CLI timed out after {timeout_ms}ms"
+                ));
             }
         }
     } else {
-        child.wait().await.map_err(|e| format!("CLI failed: {e}"))?
+        child
+            .wait()
+            .await
+            .map_err(|e| nexcore_error::nexerror!("CLI failed: {e}"))?
     };
 
     let stdout_buf = stdout_task.await.unwrap_or_default();
@@ -115,7 +122,7 @@ async fn run_claude(params: ClaudeReplParams) -> Result<String, String> {
         } else {
             stderr_str
         };
-        return Err(format!("Claude CLI failed: {combined}"));
+        return Err(nexcore_error::nexerror!("Claude CLI failed: {combined}"));
     }
 
     let max_bytes = params.max_output_bytes.unwrap_or(1_000_000);
@@ -126,18 +133,24 @@ async fn run_claude(params: ClaudeReplParams) -> Result<String, String> {
     Ok(String::from_utf8_lossy(&out).to_string())
 }
 
-fn discover_cli() -> Result<PathBuf, String> {
+fn discover_cli() -> Result<PathBuf, nexcore_error::NexError> {
     if let Ok(path) = std::env::var("CLAUDE_CLI_PATH") {
         let pb = PathBuf::from(path);
         if pb.exists() {
             return Ok(pb);
         }
-        return Err(format!("CLAUDE_CLI_PATH not found: {}", pb.display()));
+        return Err(nexcore_error::nexerror!(
+            "CLAUDE_CLI_PATH not found: {}",
+            pb.display()
+        ));
     }
     let default = PathBuf::from("/home/matthew/.local/bin/claude");
     if default.exists() {
         Ok(default)
     } else {
-        Err(format!("Claude CLI not found at {}", default.display()))
+        Err(nexcore_error::nexerror!(
+            "Claude CLI not found at {}",
+            default.display()
+        ))
     }
 }

@@ -66,10 +66,10 @@ struct IndexDocuments {
 }
 
 #[inline]
-fn load_index() -> Result<IndexData, String> {
+fn load_index() -> Result<IndexData, nexcore_error::NexError> {
     // ALLOC: Error message only on parse failure (rare)
     serde_json::from_str(GUIDELINES_INDEX)
-        .map_err(|e| format!("Failed to parse guidelines index: {e}"))
+        .map_err(|e| nexcore_error::nexerror!("Failed to parse guidelines index: {e}"))
 }
 
 /// Score a single document against query (helper to avoid nested loops)
@@ -134,7 +134,7 @@ fn collect_all_docs(index: &IndexData) -> Vec<GuidelineDoc> {
 
 /// Search documents by query string
 pub fn search(params: GuidelinesSearchParams) -> Result<CallToolResult, McpError> {
-    let index = load_index().map_err(|e| McpError::internal_error(e, None))?;
+    let index = load_index().map_err(|e| McpError::internal_error(e.to_string(), None))?;
     let query = params.query;
     let query_lower = query.to_lowercase();
     let query_terms: Vec<&str> = query_lower.split_whitespace().collect();
@@ -193,7 +193,7 @@ pub fn search(params: GuidelinesSearchParams) -> Result<CallToolResult, McpError
 
 /// Get a specific guideline by ID
 pub fn get(params: GuidelinesGetParams) -> Result<CallToolResult, McpError> {
-    let index = load_index().map_err(|e| McpError::internal_error(e, None))?;
+    let index = load_index().map_err(|e| McpError::internal_error(e.to_string(), None))?;
     let doc_id_upper = params.id.to_uppercase();
 
     let all_docs = collect_all_docs(&index);
@@ -238,7 +238,7 @@ fn format_guideline_output(doc: &GuidelineDoc) -> Result<CallToolResult, McpErro
 
 /// List all guideline categories with counts
 pub fn categories() -> Result<CallToolResult, McpError> {
-    let index = load_index().map_err(|e| McpError::internal_error(e, None))?;
+    let index = load_index().map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
     // ALLOC: Output string built once per request
     let mut output = String::from("# Available Guideline Categories\n\n");
@@ -303,7 +303,7 @@ pub fn categories() -> Result<CallToolResult, McpError> {
 
 /// Get all pharmacovigilance-specific guidelines
 pub fn pv_all() -> Result<CallToolResult, McpError> {
-    let index = load_index().map_err(|e| McpError::internal_error(e, None))?;
+    let index = load_index().map_err(|e| McpError::internal_error(e.to_string(), None))?;
     let all_docs = collect_all_docs(&index);
 
     // Filter to PV-related guidelines
@@ -366,7 +366,7 @@ pub fn pv_all() -> Result<CallToolResult, McpError> {
 
 /// Get URL for a guideline
 pub fn url(params: GuidelinesUrlParams) -> Result<CallToolResult, McpError> {
-    let index = load_index().map_err(|e| McpError::internal_error(e, None))?;
+    let index = load_index().map_err(|e| McpError::internal_error(e.to_string(), None))?;
     let doc_id_upper = params.id.to_uppercase();
 
     let all_docs = collect_all_docs(&index);

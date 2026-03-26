@@ -163,10 +163,10 @@ pub fn flywheel_cascade(params: FlywheelCascadeParams) -> Result<CallToolResult,
     let result_data = cascade(&input, &thresholds);
 
     let result = json!({
-        "system_state": result_data.system_state.to_string(),
+        "system_state": result_data.system_state,
         "loops": {
             "rim": {
-                "state": result_data.rim.state.to_string(),
+                "state": result_data.rim.state,
                 "margin": result_data.rim.margin,
                 "ratio": result_data.rim.ratio,
             },
@@ -184,11 +184,11 @@ pub fn flywheel_cascade(params: FlywheelCascadeParams) -> Result<CallToolResult,
             },
             "gyroscopic": {
                 "score": result_data.gyroscopic.score,
-                "state": result_data.gyroscopic.state.to_string(),
+                "state": result_data.gyroscopic.state,
                 "stability_ratio": result_data.gyroscopic.stability_ratio,
             },
             "elastic": {
-                "state": result_data.elastic.state.to_string(),
+                "state": result_data.elastic.state,
                 "strain": result_data.elastic.strain,
                 "cycles_remaining": result_data.elastic.cycles_remaining,
                 "permanent_deformation": result_data.elastic.permanent_deformation,
@@ -286,10 +286,10 @@ pub fn flywheel_reality(params: FlywheelRealityParams) -> Result<CallToolResult,
         .collect();
 
     let result = json!({
-        "system_state": graded.cascade.system_state.to_string(),
+        "system_state": graded.cascade.system_state,
         "loops": {
             "rim": {
-                "state": graded.cascade.rim.state.to_string(),
+                "state": graded.cascade.rim.state,
                 "margin": graded.cascade.rim.margin,
                 "ratio": graded.cascade.rim.ratio,
             },
@@ -307,11 +307,11 @@ pub fn flywheel_reality(params: FlywheelRealityParams) -> Result<CallToolResult,
             },
             "gyroscopic": {
                 "score": graded.cascade.gyroscopic.score,
-                "state": graded.cascade.gyroscopic.state.to_string(),
+                "state": graded.cascade.gyroscopic.state,
                 "stability_ratio": graded.cascade.gyroscopic.stability_ratio,
             },
             "elastic": {
-                "state": graded.cascade.elastic.state.to_string(),
+                "state": graded.cascade.elastic.state,
                 "strain": graded.cascade.elastic.strain,
                 "cycles_remaining": graded.cascade.elastic.cycles_remaining,
                 "permanent_deformation": graded.cascade.elastic.permanent_deformation,
@@ -325,7 +325,7 @@ pub fn flywheel_reality(params: FlywheelRealityParams) -> Result<CallToolResult,
         },
         "goal": {
             "description": graded.goal.description,
-            "target_state": graded.goal.target_state.to_string(),
+            "target_state": graded.goal.target_state,
             "loop_weights": graded.goal.loop_weights,
         },
         "source": "nexcore-flywheel vdag::evaluate()"
@@ -389,7 +389,7 @@ pub fn flywheel_learn(params: FlywheelLearnParams) -> Result<CallToolResult, Mcp
                 .collect();
 
             json!({
-                "loop_type": insight.loop_type.to_string(),
+                "loop_type": insight.loop_type,
                 "observation": insight.observation,
                 "suggested_adjustments": adjustments,
             })

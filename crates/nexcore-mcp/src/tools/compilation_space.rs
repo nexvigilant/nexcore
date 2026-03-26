@@ -82,10 +82,9 @@ fn resolve_language(s: &str) -> LanguageId {
     }
 }
 
-fn build_point(input: &CompilationPointInput) -> Result<CompilationPoint, String> {
+fn build_point(input: &CompilationPointInput) -> Result<CompilationPoint, nexcore_error::NexError> {
     let abstraction = parse_abstraction(&input.abstraction).ok_or_else(|| {
-        "abstraction must be execution, binary, ir, ast, token, source, specification, or intent"
-            .to_string()
+        nexcore_error::nexerror!("abstraction must be execution, binary, ir, ast, token, source, specification, or intent")
     })?;
     let language = resolve_language(&input.language);
 
@@ -95,16 +94,18 @@ fn build_point(input: &CompilationPointInput) -> Result<CompilationPoint, String
         point = point.at_time(TemporalCoord::new(rev));
     }
     if let Some(ref eval) = input.eval_state {
-        let es = parse_eval_state(eval)
-            .ok_or_else(|| "eval_state must be symbolic, partial, or concrete".to_string())?;
+        let es = parse_eval_state(eval).ok_or_else(|| {
+            nexcore_error::nexerror!("eval_state must be symbolic, partial, or concrete")
+        })?;
         point = point.with_eval(es);
     }
     if let Some(depth) = input.reflection_depth {
         point = point.with_reflection(ReflectionDepth(depth));
     }
     if let Some(ref dim) = input.dimensionality {
-        let d = parse_dimensionality(dim)
-            .ok_or_else(|| "dimensionality must be scalar, linear, tree, or graph".to_string())?;
+        let d = parse_dimensionality(dim).ok_or_else(|| {
+            nexcore_error::nexerror!("dimensionality must be scalar, linear, tree, or graph")
+        })?;
         point = point.with_dimensionality(d);
     }
 
@@ -113,7 +114,7 @@ fn build_point(input: &CompilationPointInput) -> Result<CompilationPoint, String
 
 fn resolve_catalog_transform(
     p: &CompilationCatalogLookupParams,
-) -> Result<nexcore_compilation_space::transform::Transform, String> {
+) -> Result<nexcore_compilation_space::transform::Transform, nexcore_error::NexError> {
     use nexcore_compilation_space::catalog;
 
     let lang = || resolve_language(p.language.as_deref().unwrap_or("rust"));
@@ -172,7 +173,10 @@ fn resolve_catalog_transform(
         "prima_compile" => Ok(catalog::prima_compile()),
         "pvdsl_execute" => Ok(catalog::pvdsl_execute()),
         "intent_to_prima" => Ok(catalog::intent_to_prima()),
-        _ => Err(format!("unknown transform '{}'", p.transform)),
+        _ => Err(nexcore_error::nexerror!(
+            "unknown transform '{}'",
+            p.transform
+        )),
     }
 }
 
@@ -184,11 +188,11 @@ pub fn compilation_point_compare(
 ) -> Result<CallToolResult, McpError> {
     let a = match build_point(&p.a) {
         Ok(pt) => pt,
-        Err(e) => return err_result(&e),
+        Err(e) => return err_result(&e.to_string()),
     };
     let b = match build_point(&p.b) {
         Ok(pt) => pt,
-        Err(e) => return err_result(&e),
+        Err(e) => return err_result(&e.to_string()),
     };
 
     let differing = a.differing_axes(&b);
@@ -209,7 +213,7 @@ pub fn compilation_point_summary(
 ) -> Result<CallToolResult, McpError> {
     let point = match build_point(&p.point) {
         Ok(pt) => pt,
-        Err(e) => return err_result(&e),
+        Err(e) => return err_result(&e.to_string()),
     };
     ok_json(json!({
         "summary": point.summary(),
@@ -250,7 +254,7 @@ pub fn compilation_catalog_lookup(
 ) -> Result<CallToolResult, McpError> {
     let transform = match resolve_catalog_transform(&p) {
         Ok(t) => t,
-        Err(e) => return err_result(&e),
+        Err(e) => return err_result(&e.to_string()),
     };
 
     let axes: Vec<&str> = transform
@@ -381,11 +385,11 @@ pub fn compilation_abstraction_levels(
 pub fn compilation_distance(p: CompilationDistanceParams) -> Result<CallToolResult, McpError> {
     let a = match build_point(&p.a) {
         Ok(pt) => pt,
-        Err(e) => return err_result(&e),
+        Err(e) => return err_result(&e.to_string()),
     };
     let b = match build_point(&p.b) {
         Ok(pt) => pt,
-        Err(e) => return err_result(&e),
+        Err(e) => return err_result(&e.to_string()),
     };
 
     ok_json(json!({

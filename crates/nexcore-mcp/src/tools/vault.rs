@@ -36,22 +36,25 @@ fn bytes_to_hex(bytes: &[u8]) -> String {
 }
 
 /// Decode hex string to bytes.
-fn hex_to_bytes(hex: &str) -> Result<Vec<u8>, String> {
+fn hex_to_bytes(hex: &str) -> Result<Vec<u8>, nexcore_error::NexError> {
     let hex = hex.trim();
     if hex.len() % 2 != 0 {
-        return Err("hex string must have even length".to_string());
+        return Err(nexcore_error::nexerror!("hex string must have even length"));
     }
     (0..hex.len())
         .step_by(2)
-        .map(|i| u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| format!("invalid hex: {e}")))
+        .map(|i| {
+            u8::from_str_radix(&hex[i..i + 2], 16)
+                .map_err(|e| nexcore_error::nexerror!("invalid hex: {e}"))
+        })
         .collect()
 }
 
 /// Parse a hex-encoded 32-byte key.
-fn parse_key(hex: &str) -> Result<[u8; 32], String> {
+fn parse_key(hex: &str) -> Result<[u8; 32], nexcore_error::NexError> {
     let bytes = hex_to_bytes(hex)?;
     if bytes.len() != 32 {
-        return Err(format!(
+        return Err(nexcore_error::nexerror!(
             "key must be 32 bytes (64 hex chars), got {}",
             bytes.len()
         ));
@@ -90,7 +93,7 @@ pub fn vault_derive_key(p: VaultDeriveKeyParams) -> Result<CallToolResult, McpEr
 pub fn vault_encrypt(p: VaultEncryptParams) -> Result<CallToolResult, McpError> {
     let key = match parse_key(&p.key) {
         Ok(k) => k,
-        Err(e) => return err_result(&e),
+        Err(e) => return err_result(&e.to_string()),
     };
 
     match cipher::encrypt(&key, p.plaintext.as_bytes()) {
@@ -108,7 +111,7 @@ pub fn vault_encrypt(p: VaultEncryptParams) -> Result<CallToolResult, McpError> 
 pub fn vault_decrypt(p: VaultDecryptParams) -> Result<CallToolResult, McpError> {
     let key = match parse_key(&p.key) {
         Ok(k) => k,
-        Err(e) => return err_result(&e),
+        Err(e) => return err_result(&e.to_string()),
     };
 
     match cipher::decrypt(&key, &p.nonce, &p.ciphertext) {

@@ -75,7 +75,7 @@ fn record_to_json(r: &CompoundRecord) -> serde_json::Value {
         "pubchem_cid": r.pubchem_cid,
         "chembl_id": r.chembl_id,
         "synonyms": r.synonyms,
-        "source": r.source.to_string(),
+        "source": r.source,
         "resolved_at": r.resolved_at.to_rfc3339(),
     })
 }

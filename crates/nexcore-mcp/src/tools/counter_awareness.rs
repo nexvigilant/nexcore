@@ -20,13 +20,13 @@ use rmcp::model::{CallToolResult, Content};
 use serde_json::json;
 
 /// Parse a list of counter-primitive names, returning an error message for unknowns.
-fn parse_counters(names: &[String]) -> Result<Vec<CounterPrimitive>, String> {
+fn parse_counters(names: &[String]) -> Result<Vec<CounterPrimitive>, nexcore_error::NexError> {
     let mut counters = Vec::with_capacity(names.len());
     for name in names {
         match CounterPrimitive::from_name(name) {
             Some(cp) => counters.push(cp),
             None => {
-                return Err(format!(
+                return Err(nexcore_error::nexerror!(
                     "Unknown counter-primitive: '{name}'. Valid: absorption, thermal_equilibrium, \
                  homogenization, diffusion, attenuation, band_denial, range_denial, sub_resolution"
                 ));

@@ -27,7 +27,7 @@ async fn run_npm(
     args: &[&str],
     path: &Option<String>,
     timeout_secs: u64,
-) -> Result<(bool, String, String, u128), String> {
+) -> Result<(bool, String, String, u128), nexcore_error::NexError> {
     let start = Instant::now();
     let mut cmd = Command::new("npm");
     cmd.args(args).stdout(Stdio::piped()).stderr(Stdio::piped());
@@ -37,8 +37,8 @@ async fn run_npm(
 
     let output = tokio::time::timeout(std::time::Duration::from_secs(timeout_secs), cmd.output())
         .await
-        .map_err(|_| format!("npm timed out after {timeout_secs}s"))?
-        .map_err(|e| format!("Failed to execute npm: {e}"))?;
+        .map_err(|_| nexcore_error::nexerror!("npm timed out after {timeout_secs}s"))?
+        .map_err(|e| nexcore_error::nexerror!("Failed to execute npm: {e}"))?;
 
     let elapsed = start.elapsed().as_millis();
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();

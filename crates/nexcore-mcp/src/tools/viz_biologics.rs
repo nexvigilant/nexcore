@@ -24,7 +24,7 @@ fn json_success(value: &impl serde::Serialize) -> Result<CallToolResult, McpErro
     let json = serde_json::to_string_pretty(value)
         .map_err(|e| McpError::invalid_params(format!("serialization failed: {e}"), None))?;
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-        json,
+        json.to_string(),
     )]))
 }
 

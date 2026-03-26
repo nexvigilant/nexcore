@@ -92,8 +92,8 @@ fn format_error(msg: &str) -> Result<CallToolResult, McpError> {
     ))]))
 }
 
-fn get_client() -> Result<PerplexityClient, String> {
-    PerplexityClient::from_env().map_err(|e| format!("{e}"))
+fn get_client() -> Result<PerplexityClient, nexcore_error::NexError> {
+    PerplexityClient::from_env().map_err(|e| nexcore_error::NexError::new(format!("{e}")))
 }
 
 // ============================================================================
@@ -125,7 +125,7 @@ impl PerplexityMcpServer {
     ) -> Result<CallToolResult, McpError> {
         let client = match get_client() {
             Ok(c) => c,
-            Err(e) => return format_error(&e),
+            Err(e) => return format_error(&e.to_string()),
         };
 
         let model = params
@@ -163,7 +163,7 @@ impl PerplexityMcpServer {
     ) -> Result<CallToolResult, McpError> {
         let client = match get_client() {
             Ok(c) => c,
-            Err(e) => return format_error(&e),
+            Err(e) => return format_error(&e.to_string()),
         };
 
         let use_case =
@@ -194,7 +194,7 @@ impl PerplexityMcpServer {
     ) -> Result<CallToolResult, McpError> {
         let client = match get_client() {
             Ok(c) => c,
-            Err(e) => return format_error(&e),
+            Err(e) => return format_error(&e.to_string()),
         };
 
         match research_competitive(&client, &params.query, &params.competitors, None).await {
@@ -212,7 +212,7 @@ impl PerplexityMcpServer {
     ) -> Result<CallToolResult, McpError> {
         let client = match get_client() {
             Ok(c) => c,
-            Err(e) => return format_error(&e),
+            Err(e) => return format_error(&e.to_string()),
         };
 
         let recency = params

@@ -278,18 +278,21 @@ pub async fn docs_claude_index() -> Result<CallToolResult, McpError> {
 // HTTP helpers
 // ============================================================================
 
-async fn fetch_page(url: &str) -> Result<String, String> {
+async fn fetch_page(url: &str) -> Result<String, nexcore_error::NexError> {
     let md_url = format!("{url}.md");
     let response = http_client()
         .get(&md_url)
         .send()
         .await
-        .map_err(|e| format!("Fetch error: {e}"))?;
+        .map_err(|e| nexcore_error::NexError::new(format!("Fetch error: {e}")))?;
     if !response.status().is_success() {
-        return Err(format!("HTTP {}", response.status()));
+        return Err(nexcore_error::NexError::new(format!(
+            "HTTP {}",
+            response.status()
+        )));
     }
     response
         .text()
         .await
-        .map_err(|e| format!("Read error: {e}"))
+        .map_err(|e| nexcore_error::NexError::new(format!("Read error: {e}")))
 }

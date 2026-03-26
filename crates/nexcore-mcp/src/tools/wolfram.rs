@@ -13,6 +13,7 @@ use crate::params::{
     WolframQueryFilteredParams, WolframQueryParams, WolframQueryWithAssumptionParams,
     WolframShortParams, WolframStatisticsParams, WolframStepByStepParams,
 };
+use nexcore_error::NexError;
 use quick_xml::Reader;
 use quick_xml::events::Event;
 use rmcp::ErrorData as McpError;
@@ -92,7 +93,7 @@ async fn query_full_results(
     assumption: Option<&str>,
     include_pods: Option<&[String]>,
     exclude_pods: Option<&[String]>,
-) -> Result<FullResult, String> {
+) -> Result<FullResult, NexError> {
     let app_id = get_api_key();
 
     let mut params = vec![
@@ -142,11 +143,11 @@ async fn query_full_results(
         .get(&url)
         .send()
         .await
-        .map_err(|e| format!("HTTP request failed: {e}"))?;
+        .map_err(|e| NexError::new(format!("HTTP request failed: {e}")))?;
 
     let status = response.status();
     if !status.is_success() {
-        return Err(format!("API error: HTTP {status}"));
+        return Err(NexError::new(format!("API error: HTTP {status}")));
     }
 
     // Validate Content-Type before XML parsing — ∂ Boundary guard
@@ -160,21 +161,21 @@ async fn query_full_results(
         && !content_type.contains("xml")
         && !content_type.contains("text/plain")
     {
-        return Err(format!(
+        return Err(NexError::new(format!(
             "Unexpected Content-Type from Wolfram API: {content_type} (expected XML)"
-        ));
+        )));
     }
 
     let xml = response
         .text()
         .await
-        .map_err(|e| format!("Failed to read response: {e}"))?;
+        .map_err(|e| NexError::new(format!("Failed to read response: {e}")))?;
 
     parse_full_results_xml(&xml)
 }
 
 /// Parse XML response - single-pass streaming parser
-fn parse_full_results_xml(xml: &str) -> Result<FullResult, String> {
+fn parse_full_results_xml(xml: &str) -> Result<FullResult, NexError> {
     let mut reader = Reader::from_str(xml);
     reader.config_mut().trim_text(true);
 
@@ -240,7 +241,7 @@ fn parse_full_results_xml(xml: &str) -> Result<FullResult, String> {
                 }
             }
             Ok(Event::Eof) => break,
-            Err(e) => return Err(format!("XML parse error: {e}")),
+            Err(e) => return Err(NexError::new(format!("XML parse error: {e}"))),
             _ => {}
         }
         buf.clear();
@@ -377,7 +378,7 @@ fn format_subpod(subpod: &Subpod, verbose: bool) -> Vec<String> {
 // Short Answer API
 // ============================================================================
 
-async fn query_short_answer(query: &str, units: &str) -> Result<String, String> {
+async fn query_short_answer(query: &str, units: &str) -> Result<String, NexError> {
     let app_id = get_api_key();
     let url = format!(
         "{}?appid={}&i={}&units={}",
@@ -391,7 +392,7 @@ async fn query_short_answer(query: &str, units: &str) -> Result<String, String> 
         .get(&url)
         .send()
         .await
-        .map_err(|e| format!("HTTP request failed: {e}"))?;
+        .map_err(|e| NexError::new(format!("HTTP request failed: {e}")))?;
 
     let status = response.status();
     if status.as_u16() == 501 {
@@ -399,20 +400,20 @@ async fn query_short_answer(query: &str, units: &str) -> Result<String, String> 
     }
 
     if !status.is_success() {
-        return Err(format!("API error: {status}"));
+        return Err(NexError::new(format!("API error: {status}")));
     }
 
     response
         .text()
         .await
-        .map_err(|e| format!("Failed to read response: {e}"))
+        .map_err(|e| NexError::new(format!("Failed to read response: {e}")))
 }
 
 // ============================================================================
 // Spoken Results API
 // ============================================================================
 
-async fn query_spoken(query: &str, units: &str) -> Result<String, String> {
+async fn query_spoken(query: &str, units: &str) -> Result<String, NexError> {
     let app_id = get_api_key();
     let url = format!(
         "{}?appid={}&i={}&units={}",
@@ -426,7 +427,7 @@ async fn query_spoken(query: &str, units: &str) -> Result<String, String> {
         .get(&url)
         .send()
         .await
-        .map_err(|e| format!("HTTP request failed: {e}"))?;
+        .map_err(|e| NexError::new(format!("HTTP request failed: {e}")))?;
 
     let status = response.status();
     if status.as_u16() == 501 {
@@ -434,13 +435,13 @@ async fn query_spoken(query: &str, units: &str) -> Result<String, String> {
     }
 
     if !status.is_success() {
-        return Err(format!("API error: {status}"));
+        return Err(NexError::new(format!("API error: {status}")));
     }
 
     response
         .text()
         .await
-        .map_err(|e| format!("Failed to read response: {e}"))
+        .map_err(|e| NexError::new(format!("Failed to read response: {e}")))
 }
 
 // ============================================================================
@@ -465,7 +466,7 @@ fn format_result(text: String) -> Result<CallToolResult, McpError> {
     Ok(CallToolResult::success(vec![Content::text(text)]))
 }
 
-fn format_error(msg: &str) -> Result<CallToolResult, McpError> {
+fn format_error(msg: &impl std::fmt::Display) -> Result<CallToolResult, McpError> {
     Ok(CallToolResult::success(vec![Content::text(format!(
         "❌ {msg}"
     ))]))

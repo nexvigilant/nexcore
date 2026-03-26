@@ -25,7 +25,7 @@ pub fn taxonomy(params: VizTaxonomyParams) -> Result<CallToolResult, McpError> {
     let svg = nexcore_viz::render_taxonomy(&entries, &title, &nexcore_viz::Theme::default());
 
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-        svg,
+        svg.to_string(),
     )]))
 }
 
@@ -53,7 +53,7 @@ pub fn composition(params: VizCompositionParams) -> Result<CallToolResult, McpEr
 
     let svg = nexcore_viz::render_composition(&comp, &nexcore_viz::Theme::default());
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-        svg,
+        svg.to_string(),
     )]))
 }
 
@@ -72,7 +72,7 @@ pub fn method_loop(params: VizLoopParams) -> Result<CallToolResult, McpError> {
 
     let svg = nexcore_viz::render_science_loop(&steps, name, &nexcore_viz::Theme::default());
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-        svg,
+        svg.to_string(),
     )]))
 }
 
@@ -98,7 +98,7 @@ pub fn confidence(params: VizConfidenceParams) -> Result<CallToolResult, McpErro
 
     let svg = nexcore_viz::render_confidence_chain(&claims, &title, &nexcore_viz::Theme::default());
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-        svg,
+        svg.to_string(),
     )]))
 }
 
@@ -113,7 +113,7 @@ pub fn bounds(params: VizBoundsParams) -> Result<CallToolResult, McpError> {
 
     let svg = nexcore_viz::render_bounds(&bounded, &nexcore_viz::Theme::default());
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-        svg,
+        svg.to_string(),
     )]))
 }
 
@@ -151,7 +151,7 @@ pub fn dag(params: VizDagParams) -> Result<CallToolResult, McpError> {
 
     let svg = nexcore_viz::render_dag(&nodes, &edges, &title, &nexcore_viz::Theme::default());
     Ok(CallToolResult::success(vec![rmcp::model::Content::text(
-        svg,
+        svg.to_string(),
     )]))
 }
 

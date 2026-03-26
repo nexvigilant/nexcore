@@ -7,6 +7,7 @@ import { WebglAddon } from '@xterm/addon-webgl';
 import { Unicode11Addon } from '@xterm/addon-unicode11';
 import { mountChiIndicator } from './chi-indicator';
 import { mountRemotePanel } from './remote-panel';
+import { mountSessionFeed } from './session-feed';
 import * as toasts from './toast';
 import * as quickCmd from './quick-cmd';
 
@@ -1152,6 +1153,9 @@ async function init(): Promise<void> {
       console.warn('[remote-panel] mount failed:', e);
     });
   }
+
+  // Mount Claude session live feed (SSE from localhost:9800)
+  mountSessionFeed();
 
   // Mount quick command bar (: trigger)
   quickCmd.mount();

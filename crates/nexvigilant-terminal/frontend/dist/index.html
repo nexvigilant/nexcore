@@ -506,6 +506,102 @@
       background: #60a5fa25;
       color: #93c5fd;
     }
+    /* Session Feed styles */
+    .sf-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+    }
+    .sf-metric {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3px 0;
+      background: #0d111780;
+      border-radius: 4px;
+    }
+    .sf-val {
+      font-size: 16px;
+      font-weight: 800;
+      color: #38bdf8;
+      line-height: 1.2;
+      font-variant-numeric: tabular-nums;
+    }
+    .sf-lbl {
+      font-size: 8px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .sf-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 0;
+      font-size: 10px;
+      border-bottom: 1px solid #1a223320;
+      animation: sf-slide 0.2s ease;
+    }
+    .sf-item:last-child { border-bottom: none; }
+    @keyframes sf-slide {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .sf-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .sf-label {
+      flex: 1;
+      color: var(--text-dim);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .sf-time {
+      color: var(--text-muted);
+      font-size: 9px;
+      flex-shrink: 0;
+    }
+    .sf-prop {
+      display: block;
+      color: var(--text-dim);
+      font-size: 10px;
+      margin-top: 2px;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    #sf-conn-dot { animation: pulse 2s infinite; }
+    /* Session tabs */
+    .sf-tab {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-family: monospace;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+      border: 1px solid transparent;
+    }
+    .sf-tab:hover { background: #ffffff08; }
+    .sf-tab.active {
+      color: var(--text);
+      background: #38bdf810;
+      border-color: #38bdf830;
+    }
+    .sf-tab-count {
+      font-size: 8px;
+      color: var(--text-muted);
+      background: #ffffff08;
+      padding: 0 3px;
+      border-radius: 2px;
+    }
+    #sf-tabs::-webkit-scrollbar { height: 0; }
   </style>
   <link rel="stylesheet" href="xterm.css" />
 </head>
@@ -527,6 +623,37 @@
     <div class="main-area">
       <div id="terminal-container" tabindex="0"></div>
       <div class="side-panel hidden" id="side-panel">
+        <!-- Claude Session Feed (SSE from localhost:9800) -->
+        <div class="side-panel-section" id="sf-section" style="display:none; flex: 1 1 auto;">
+          <div class="side-panel-header">
+            <span>Claude Session</span>
+            <span style="display:flex;align-items:center;gap:6px;">
+              <span id="sf-elapsed" style="font-size:10px;color:var(--text-muted);font-variant-numeric:tabular-nums">0:00</span>
+              <span id="sf-conn-dot" style="width:6px;height:6px;border-radius:50%;background:#f87171;display:inline-block" title="Disconnected"></span>
+            </span>
+          </div>
+          <div class="side-panel-body" style="padding:0;">
+            <!-- Session tabs -->
+            <div id="sf-tabs" style="display:flex;gap:2px;padding:4px 6px;overflow-x:auto;border-bottom:1px solid var(--border);flex-shrink:0;"></div>
+            <div style="padding:6px 8px;">
+            <!-- Compact metrics -->
+            <div class="sf-metrics">
+              <div class="sf-metric"><span class="sf-val" id="sf-tools">0</span><span class="sf-lbl">Tools</span></div>
+              <div class="sf-metric"><span class="sf-val" id="sf-files">0</span><span class="sf-lbl">Files</span></div>
+              <div class="sf-metric"><span class="sf-val" id="sf-reads">0</span><span class="sf-lbl">Reads</span></div>
+              <div class="sf-metric"><span class="sf-val" id="sf-writes">0</span><span class="sf-lbl">Writes</span></div>
+              <div class="sf-metric"><span class="sf-val" id="sf-bash">0</span><span class="sf-lbl">Bash</span></div>
+              <div class="sf-metric"><span class="sf-val" id="sf-mcp">0</span><span class="sf-lbl">MCP</span></div>
+            </div>
+            <!-- Activity bar -->
+            <div id="sf-bar" style="display:flex;height:4px;border-radius:2px;overflow:hidden;background:#334155;margin:6px 0;"></div>
+            <!-- Verdict banner (hidden until verdict) -->
+            <div id="sf-verdict" style="display:none;text-align:center;padding:4px 6px;border:1px solid var(--border);border-radius:4px;margin-bottom:6px;font-size:11px;"></div>
+            <!-- Live feed -->
+            <div id="sf-feed-list" style="max-height:240px;overflow-y:auto;"></div>
+            </div>
+          </div>
+        </div>
         <div class="side-panel-section" style="flex: 0 0 auto;">
           <div class="side-panel-header">
             <span>Nucleus Portal</span>

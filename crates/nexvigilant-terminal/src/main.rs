@@ -23,6 +23,7 @@ use nexvigilant_terminal::commands::cloud::CloudState;
 use nexvigilant_terminal::commands::health::HealthState;
 use nexvigilant_terminal::commands::pty::PtyState;
 use nexvigilant_terminal::commands::shell::NexShellState;
+use nexvigilant_terminal::commands::station::StationState;
 use nexvigilant_terminal::commands::terminal::TerminalState;
 
 fn main() {
@@ -42,6 +43,7 @@ fn main() {
         .manage(HealthState::new())
         .manage(CloudState::new())
         .manage(NexShellState::new())
+        .manage(StationState::new())
         .invoke_handler(tauri::generate_handler![
             // PTY process management (real POSIX PTY)
             nexvigilant_terminal::commands::pty::pty_spawn,
@@ -76,6 +78,13 @@ fn main() {
             nexvigilant_terminal::commands::remote::remote_execute,
             nexvigilant_terminal::commands::remote::remote_snapshot,
             nexvigilant_terminal::commands::remote::remote_action_count,
+            // NexVigilant Station direct access (no Claude needed)
+            nexvigilant_terminal::commands::station::station_health,
+            nexvigilant_terminal::commands::station::station_tools,
+            nexvigilant_terminal::commands::station::station_call,
+            // Persistent config
+            nexvigilant_terminal::commands::config::config_load,
+            nexvigilant_terminal::commands::config::config_save,
         ])
         .run(tauri::generate_context!());
 

@@ -13,12 +13,26 @@ use crate::session::TerminalMode;
 pub enum RoutedCommand {
     /// Raw shell command — write directly to PTY.
     Shell(String),
-    /// MCP tool invocation — dispatch via in-process bridge.
+    /// MCP tool invocation — dispatch via in-process NexCore bridge.
     Mcp {
         /// Tool name (e.g., "faers_search").
         tool_name: String,
         /// Tool parameters as JSON.
         params: serde_json::Value,
+    },
+    /// NexVigilant Station tool — dispatch via HTTP to mcp.nexvigilant.com.
+    Station {
+        /// Tool name (e.g., "search_adverse_events").
+        tool_name: String,
+        /// Tool parameters as JSON.
+        params: serde_json::Value,
+    },
+    /// Microgram decision tree — dispatch via rsk subprocess.
+    Microgram {
+        /// Microgram name (e.g., "prr-signal").
+        name: String,
+        /// Input variables as JSON.
+        variables: serde_json::Value,
     },
     /// Natural language — route to AI backend.
     Ai {
@@ -62,6 +76,24 @@ pub fn route_command(input: &str, current_mode: TerminalMode) -> RoutedCommand {
     let trimmed = input.trim();
 
     // Explicit prefixes always win regardless of mode
+
+    // Station prefix: route to NexVigilant Station (mcp.nexvigilant.com)
+    if let Some(rest) = trimmed
+        .strip_prefix("station>")
+        .or_else(|| trimmed.strip_prefix("station> "))
+    {
+        return parse_station_command(rest.trim());
+    }
+
+    // Microgram prefix: route to rsk kernel decision trees
+    if let Some(rest) = trimmed
+        .strip_prefix("mcg>")
+        .or_else(|| trimmed.strip_prefix("mcg> "))
+    {
+        return parse_microgram_command(rest.trim());
+    }
+
+    // NexCore MCP prefix
     if let Some(rest) = trimmed
         .strip_prefix("nexvig>")
         .or_else(|| trimmed.strip_prefix("nexvig> "))
@@ -157,6 +189,100 @@ fn parse_args_to_json(input: &str) -> serde_json::Value {
 
     if !positional.is_empty() {
         map.insert("args".to_string(), serde_json::Value::Array(positional));
+    }
+
+    serde_json::Value::Object(map)
+}
+
+/// Parse a string as a Station tool command: `tool_name arg1 --flag value`.
+///
+/// Uses the same arg parsing as MCP commands but routes to Station backend.
+fn parse_station_command(input: &str) -> RoutedCommand {
+    let trimmed = input.trim();
+    let (tool_name, rest) = match trimmed.split_once(' ') {
+        Some((name, args)) => (name.to_string(), args.trim()),
+        None => (trimmed.to_string(), ""),
+    };
+
+    let params = if rest.is_empty() {
+        serde_json::Value::Object(serde_json::Map::new())
+    } else {
+        parse_args_to_json(rest)
+    };
+
+    RoutedCommand::Station { tool_name, params }
+}
+
+/// Parse a microgram command: `name key=value key=value`.
+///
+/// Supports both `key=value` pairs and `--key value` flags, converted to
+/// JSON variables for the microgram runtime.
+fn parse_microgram_command(input: &str) -> RoutedCommand {
+    let trimmed = input.trim();
+    let (name, rest) = match trimmed.split_once(' ') {
+        Some((n, args)) => (n.to_string(), args.trim()),
+        None => (trimmed.to_string(), ""),
+    };
+
+    let variables = if rest.is_empty() {
+        serde_json::Value::Object(serde_json::Map::new())
+    } else {
+        parse_microgram_args(rest)
+    };
+
+    RoutedCommand::Microgram { name, variables }
+}
+
+/// Parse microgram-style args: `drug=metformin event=nausea count=42`.
+///
+/// Supports `key=value` (preferred for mcg) and falls back to `--key value`.
+fn parse_microgram_args(input: &str) -> serde_json::Value {
+    let mut map = serde_json::Map::new();
+    let parts: Vec<&str> = input.split_whitespace().collect();
+    let mut i = 0;
+
+    while i < parts.len() {
+        if let Some(part) = parts.get(i) {
+            if let Some((key, value)) = part.split_once('=') {
+                // key=value syntax
+                let json_val = if let Ok(n) = value.parse::<f64>() {
+                    serde_json::Value::Number(
+                        serde_json::Number::from_f64(n)
+                            .unwrap_or_else(|| serde_json::Number::from(0)),
+                    )
+                } else if value == "true" {
+                    serde_json::Value::Bool(true)
+                } else if value == "false" {
+                    serde_json::Value::Bool(false)
+                } else {
+                    serde_json::Value::String(value.to_string())
+                };
+                map.insert(key.to_string(), json_val);
+                i = i.wrapping_add(1);
+            } else if let Some(key) = part.strip_prefix("--") {
+                // --key value fallback
+                if let Some(next) = parts.get(i.wrapping_add(1)) {
+                    if next.starts_with("--") || next.contains('=') {
+                        map.insert(key.to_string(), serde_json::Value::Bool(true));
+                        i = i.wrapping_add(1);
+                    } else {
+                        map.insert(
+                            key.to_string(),
+                            serde_json::Value::String((*next).to_string()),
+                        );
+                        i = i.wrapping_add(2);
+                    }
+                } else {
+                    map.insert(key.to_string(), serde_json::Value::Bool(true));
+                    i = i.wrapping_add(1);
+                }
+            } else {
+                // Positional: treat as microgram name args (rare)
+                i = i.wrapping_add(1);
+            }
+        } else {
+            i = i.wrapping_add(1);
+        }
     }
 
     serde_json::Value::Object(map)
@@ -279,6 +405,87 @@ mod tests {
     fn explicit_prefix_overrides_mode() {
         let cmd = route_command("@claude help", TerminalMode::Shell);
         assert!(matches!(cmd, RoutedCommand::Ai { .. }));
+    }
+
+    #[test]
+    fn station_prefix_routes_to_station() {
+        let cmd = route_command(
+            "station> search_adverse_events --drug metformin",
+            TerminalMode::Shell,
+        );
+        if let RoutedCommand::Station { tool_name, params } = cmd {
+            assert_eq!(tool_name, "search_adverse_events");
+            assert_eq!(
+                params.get("drug").and_then(|v| v.as_str()),
+                Some("metformin")
+            );
+        } else {
+            panic!("Expected Station route");
+        }
+    }
+
+    #[test]
+    fn station_prefix_with_space() {
+        let cmd = route_command(
+            "station> compute_prr --drug aspirin --event rash",
+            TerminalMode::Shell,
+        );
+        if let RoutedCommand::Station { tool_name, params } = cmd {
+            assert_eq!(tool_name, "compute_prr");
+            assert_eq!(params.get("drug").and_then(|v| v.as_str()), Some("aspirin"));
+            assert_eq!(params.get("event").and_then(|v| v.as_str()), Some("rash"));
+        } else {
+            panic!("Expected Station route");
+        }
+    }
+
+    #[test]
+    fn mcg_prefix_routes_to_microgram() {
+        let cmd = route_command(
+            "mcg> prr-signal drug=metformin event=nausea",
+            TerminalMode::Shell,
+        );
+        if let RoutedCommand::Microgram { name, variables } = cmd {
+            assert_eq!(name, "prr-signal");
+            assert_eq!(
+                variables.get("drug").and_then(|v| v.as_str()),
+                Some("metformin")
+            );
+            assert_eq!(
+                variables.get("event").and_then(|v| v.as_str()),
+                Some("nausea")
+            );
+        } else {
+            panic!("Expected Microgram route");
+        }
+    }
+
+    #[test]
+    fn mcg_prefix_parses_numeric_values() {
+        let cmd = route_command("mcg> prr-signal a=10 b=20 c=30 d=40", TerminalMode::Shell);
+        if let RoutedCommand::Microgram { variables, .. } = cmd {
+            assert_eq!(variables.get("a").and_then(|v| v.as_f64()), Some(10.0));
+            assert_eq!(variables.get("d").and_then(|v| v.as_f64()), Some(40.0));
+        } else {
+            panic!("Expected Microgram route");
+        }
+    }
+
+    #[test]
+    fn mcg_no_args() {
+        let cmd = route_command("mcg> workflow-router", TerminalMode::Shell);
+        if let RoutedCommand::Microgram { name, variables } = cmd {
+            assert_eq!(name, "workflow-router");
+            assert!(variables.as_object().map_or(false, |m| m.is_empty()));
+        } else {
+            panic!("Expected Microgram route");
+        }
+    }
+
+    #[test]
+    fn station_prefix_overrides_any_mode() {
+        let cmd = route_command("station> get_drug_label --name aspirin", TerminalMode::Ai);
+        assert!(matches!(cmd, RoutedCommand::Station { .. }));
     }
 
     #[test]

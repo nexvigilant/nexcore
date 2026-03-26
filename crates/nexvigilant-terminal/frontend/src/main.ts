@@ -7,6 +7,8 @@ import { WebglAddon } from '@xterm/addon-webgl';
 import { Unicode11Addon } from '@xterm/addon-unicode11';
 import { mountChiIndicator } from './chi-indicator';
 import { mountRemotePanel } from './remote-panel';
+import * as toasts from './toast';
+import * as quickCmd from './quick-cmd';
 
 // ── Tauri IPC ──────────────────────────────────────────────────
 // Window.__TAURI__ type is declared in chi-indicator.ts.
@@ -42,7 +44,7 @@ const listen = tauriAvailable
 // ── Epistemic Color Theme ──────────────────────────────────────
 // 8 cognitive functions from learning theory, mapped to terminal colors
 
-const _EPISTEMIC_PALETTE: Record<string, string> = {
+const EPISTEMIC_PALETTE: Record<string, string> = {
   question:    '#ff9900', // Orange — interrogative acts
   evidence:    '#44cc44', // Green — grounded data
   hypothesis:  '#cc44ff', // Purple — provisional claims
@@ -52,6 +54,58 @@ const _EPISTEMIC_PALETTE: Record<string, string> = {
   primitive:   '#ff66b2', // Pink — T1 primitives
   relay:       '#00ffcc', // Teal — cross-domain transfers
 };
+
+// ── Epistemic Color Processor ────────────────────────────────
+// Detects cognitive signals in terminal output and injects ANSI true-color.
+// Patterns are matched per-line to avoid breaking ANSI escape sequences.
+
+interface EpistemicRule {
+  pattern: RegExp;
+  color: string;
+}
+
+function hexToAnsi(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return '\x1b[38;2;' + r + ';' + g + ';' + b + 'm';
+}
+
+const EPISTEMIC_RULES: EpistemicRule[] = [
+  // T1 Primitives — pink highlight for Lex Primitiva symbols
+  { pattern: /[∃∅∂ςκμσλνρπ∝→Σ×]/g, color: '#ff66b2' },
+  // Structural markers — yellow for section headers and separators
+  { pattern: /^(#{1,3}\s|──|══|├─|└─|│\s)/gm, color: '#cccc00' },
+  // Evidence signals — green for grounded data markers
+  { pattern: /\b(PASS|OK|✓|passed|confirmed|verified|evidence)\b/gi, color: '#44cc44' },
+  // Divergence signals — red for failures and disagreements
+  { pattern: /\b(FAIL|ERROR|✗|failed|rejected|panic|CRITICAL)\b/gi, color: '#ff4444' },
+  // Convergence signals — cyan for synthesis and agreement
+  { pattern: /\b(converge[ds]?|synthesis|unified|merged|consensus)\b/gi, color: '#00ccff' },
+  // Hypothesis markers — purple for provisional claims
+  { pattern: /\b(hypothesis|conjecture|proposed|provisional|candidate)\b/gi, color: '#cc44ff' },
+  // Relay markers — teal for cross-domain transfers
+  { pattern: /\b(transfer|relay|bridge|cross-domain|mapping)\b/gi, color: '#00ffcc' },
+];
+
+const ANSI_RESET = '\x1b[0m';
+
+/** Apply epistemic coloring to a chunk of terminal output. */
+function epistemicColorize(text: string): string {
+  // Skip if text is mostly ANSI sequences (already colored output)
+  if ((text.match(/\x1b\[/g) || []).length > text.length / 10) {
+    return text;
+  }
+  let result = text;
+  for (const rule of EPISTEMIC_RULES) {
+    // Reset lastIndex for global regexes
+    rule.pattern.lastIndex = 0;
+    result = result.replace(rule.pattern, (match) => {
+      return hexToAnsi(rule.color) + match + ANSI_RESET;
+    });
+  }
+  return result;
+}
 
 const NV_THEME = {
   background: '#0a0e14',
@@ -110,6 +164,50 @@ term.unicode.activeVersion = '11';
 const container = document.getElementById('terminal-container');
 if (container) {
   term.open(container);
+
+  // Ensure xterm.js gets keyboard focus on click anywhere in the container.
+  // WebKitGTK on Wayland may not automatically focus the hidden textarea.
+  // Use aggressive focus recovery: direct focus + textarea visibility trick.
+  const focusXterm = (): void => {
+    term.focus();
+    // On WebKitGTK, try to access the textarea directly
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement | null;
+    if (textarea) {
+      textarea.focus();
+      textarea.setSelectionRange(0, 0);
+    }
+  };
+
+  container.addEventListener('click', focusXterm);
+  container.addEventListener('mousedown', focusXterm);
+  container.addEventListener('touchstart', focusXterm);
+
+  // Periodically recover focus if lost (WebKitGTK may steal it).
+  // Only fires when the terminal area was the last clicked target —
+  // prevents stealing focus from the input bar, command palette, or app launcher.
+  let terminalLastClicked = true;
+  container.addEventListener('click', () => { terminalLastClicked = true; });
+  document.addEventListener('click', (e: MouseEvent) => {
+    if (!container.contains(e.target as Node)) {
+      terminalLastClicked = false;
+    }
+  });
+
+  let lastFocusTime = Date.now();
+  document.addEventListener('focus', () => {
+    lastFocusTime = Date.now();
+  });
+
+  setInterval(() => {
+    // Only recover focus if terminal area was last clicked AND no recent focus event
+    if (terminalLastClicked && !paletteOpen && !appLauncherOpen && Date.now() - lastFocusTime > 5000) {
+      const rect = container.getBoundingClientRect();
+      if (rect.top < window.innerHeight && rect.bottom > 0) {
+        focusXterm();
+        lastFocusTime = Date.now();
+      }
+    }
+  }, 2000);
 }
 
 // Try WebGL for GPU rendering, fall back to canvas
@@ -164,6 +262,12 @@ interface CloudEventResult {
 let sessionId: string | null = null;
 let ptyConnected = false;
 
+// Expose sessionId globally for remote panel PTY injection bridge
+Object.defineProperty(window, '__nvt_sessionId', {
+  get: () => sessionId,
+  configurable: true,
+});
+
 // ── Mode State ──────────────────────────────────────────────────
 
 const MODES = ['Normal', 'Focus', 'Agent', 'Pairing'] as const;
@@ -178,14 +282,33 @@ let appLauncherOpen = false;
 // ── PTY Data Flow ──────────────────────────────────────────────
 
 // Listen for PTY output events from Tauri backend
+// Epistemic coloring applied to output stream for cognitive signal highlighting.
+// Routes to per-tab terminal instance; falls back to global term for initial session.
+let epistemicEnabled = true;
+
 listen<string>('pty-output', (event) => {
   if (event.payload) {
-    term.write(event.payload);
+    const output = epistemicEnabled ? epistemicColorize(event.payload) : event.payload;
+    // Route to the active tab's terminal, or fall back to global term
+    const activeTab = tabs.find((t) => t.id === sessionId);
+    if (activeTab) {
+      activeTab.term.write(output);
+    } else {
+      term.write(output);
+    }
   }
 });
 
-// Listen for PTY exit events
+// Listen for PTY exit events — auto-respawn after brief delay
 listen<PtyExitPayload>('pty-exit', (event) => {
+  const exitSid = event.payload ? event.payload.session_id : null;
+
+  // Only handle exit for the current session — ignore stale events
+  if (exitSid && exitSid !== sessionId) {
+    console.log('[pty-exit] Ignoring stale exit for', exitSid, '(current:', sessionId, ')');
+    return;
+  }
+
   ptyConnected = false;
   term.write('\r\n\x1b[33m[Process exited');
   if (event.payload && event.payload.code !== undefined && event.payload.code !== null) {
@@ -193,15 +316,30 @@ listen<PtyExitPayload>('pty-exit', (event) => {
   }
   term.write(']\x1b[0m\r\n');
   updateStatusBar();
+
+  // Auto-respawn: start a new session after a short delay
+  term.write('\x1b[2m  Restarting session...\x1b[0m\r\n');
+  setTimeout(async () => {
+    await createSession();
+  }, 500);
 });
 
 // Send terminal input to PTY
 term.onData(async (data: string) => {
-  if (!sessionId || !ptyConnected) return;
+  if (!sessionId) return;
+  // Always attempt write if we have a session — ptyConnected may be stale
   try {
     await invoke('pty_write', { sessionId, data });
+    // If write succeeded, ensure ptyConnected reflects reality
+    if (!ptyConnected) {
+      ptyConnected = true;
+      updateStatusBar();
+    }
   } catch (e: unknown) {
     console.error('PTY write failed:', e);
+    // On failure, mark as disconnected
+    ptyConnected = false;
+    updateStatusBar();
   }
 });
 
@@ -218,13 +356,18 @@ term.onResize(async ({ cols, rows }: { cols: number; rows: number }) => {
 // ── Window Resize ──────────────────────────────────────────────
 
 window.addEventListener('resize', () => {
+  // Fit all tab terminals, not just the global one
   fitAddon.fit();
+  const activeTab = tabs.find((t) => t.id === activeTabId);
+  if (activeTab) activeTab.fitAddon.fit();
 });
 
 // ResizeObserver for more reliable container tracking
 if (container) {
   const resizeObserver = new ResizeObserver(() => {
     fitAddon.fit();
+    const activeTab = tabs.find((t) => t.id === activeTabId);
+    if (activeTab) activeTab.fitAddon.fit();
   });
   resizeObserver.observe(container);
 }
@@ -467,21 +610,68 @@ function escapeHtml(text: string): string {
   return div.innerHTML;
 }
 
-// ── Tab Management ──────────────────────────────────────────────
+// ── Tab Management (Per-Tab Terminal Instances) ──────────────────
 
 interface TabSession {
   id: string;
   label: string;
   tabEl: HTMLDivElement;
+  term: Terminal;
+  fitAddon: FitAddon;
+  /** Container div holding this tab's xterm.js instance. */
+  termContainer: HTMLDivElement;
+  connected: boolean;
 }
 
 const tabs: TabSession[] = [];
 let activeTabId: string | null = null;
 
+/** Get the currently active tab, if any. */
+function getActiveTab(): TabSession | undefined {
+  return tabs.find((t) => t.id === activeTabId);
+}
+
+/** Create a new xterm.js Terminal instance with NV theme. */
+function createTerminalInstance(): { term: Terminal; fitAddon: FitAddon; container: HTMLDivElement } {
+  const newTerm = new Terminal({
+    theme: NV_THEME,
+    fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Noto Sans Mono', monospace",
+    fontSize: 14,
+    lineHeight: 1.3,
+    cursorBlink: true,
+    cursorStyle: 'bar',
+    cursorWidth: 2,
+    scrollback: 10000,
+    allowProposedApi: true,
+    allowTransparency: true,
+    drawBoldTextInBrightColors: true,
+    minimumContrastRatio: 4.5,
+    // @ts-expect-error — unicodeVersion is valid at runtime but missing from TS types
+    unicodeVersion: '11',
+  });
+
+  const newFit = new FitAddon();
+  newTerm.loadAddon(newFit);
+
+  const newUnicode = new Unicode11Addon();
+  newTerm.loadAddon(newUnicode);
+  newTerm.unicode.activeVersion = '11';
+
+  // Create a hidden container for this terminal
+  const termDiv = document.createElement('div');
+  termDiv.className = 'tab-terminal-container';
+  termDiv.style.display = 'none';
+  termDiv.style.width = '100%';
+  termDiv.style.height = '100%';
+
+  return { term: newTerm, fitAddon: newFit, container: termDiv };
+}
+
 function addTab(sid: string): void {
   const tabBar = document.getElementById('tab-bar');
   const addBtn = document.getElementById('tab-add');
-  if (!tabBar || !addBtn) return;
+  const mainContainer = document.getElementById('terminal-container');
+  if (!tabBar || !addBtn || !mainContainer) return;
 
   const label = 'Session ' + (tabs.length + 1);
   const tabEl = document.createElement('div');
@@ -504,26 +694,81 @@ function addTab(sid: string): void {
   tabEl.addEventListener('click', () => switchTab(sid));
 
   tabBar.insertBefore(tabEl, addBtn);
-  tabs.push({ id: sid, label, tabEl });
-  setActiveTab(sid);
+
+  // Create per-tab terminal instance
+  const { term: tabTerm, fitAddon: tabFit, container: termDiv } = createTerminalInstance();
+  mainContainer.appendChild(termDiv);
+  tabTerm.open(termDiv);
+
+  // Wire per-tab input → PTY
+  tabTerm.onData(async (data: string) => {
+    if (!sid) return;
+    try {
+      await invoke('pty_write', { sessionId: sid, data });
+    } catch (e: unknown) {
+      console.error('PTY write failed for tab', sid, ':', e);
+    }
+  });
+
+  // Wire per-tab resize → PTY
+  tabTerm.onResize(async ({ cols, rows }: { cols: number; rows: number }) => {
+    const tab = tabs.find((t) => t.id === sid);
+    if (!tab || !tab.connected) return;
+    try {
+      await invoke('pty_resize', { sessionId: sid, cols, rows });
+    } catch (e: unknown) {
+      console.error('PTY resize failed for tab', sid, ':', e);
+    }
+  });
+
+  // Try WebGL for this terminal
+  try {
+    const webgl = new WebglAddon();
+    webgl.onContextLoss(() => webgl.dispose());
+    tabTerm.loadAddon(webgl);
+  } catch {
+    /* canvas fallback */
+  }
+
+  const tabSession: TabSession = {
+    id: sid,
+    label,
+    tabEl,
+    term: tabTerm,
+    fitAddon: tabFit,
+    termContainer: termDiv,
+    connected: true,
+  };
+
+  tabs.push(tabSession);
+  switchTab(sid);
 }
 
 function setActiveTab(sid: string): void {
   activeTabId = sid;
   for (const t of tabs) {
     t.tabEl.classList.toggle('active', t.id === sid);
+    // Show/hide terminal containers
+    t.termContainer.style.display = t.id === sid ? 'block' : 'none';
   }
 }
 
 function switchTab(sid: string): void {
   if (sid === sessionId) return;
-  // For now, we share one terminal — tab switching updates sessionId
-  // Future: each tab gets its own Terminal instance
   sessionId = sid;
-  ptyConnected = true; // Assume connected if tab exists
+  const tab = tabs.find((t) => t.id === sid);
+  if (tab) {
+    ptyConnected = tab.connected;
+  }
   setActiveTab(sid);
   updateStatusBar();
-  term.focus();
+  // Fit and focus the newly visible terminal
+  if (tab) {
+    setTimeout(() => {
+      tab.fitAddon.fit();
+      tab.term.focus();
+    }, 10);
+  }
 }
 
 async function killTab(sid: string): Promise<void> {
@@ -535,7 +780,11 @@ async function killTab(sid: string): Promise<void> {
   const idx = tabs.findIndex((t) => t.id === sid);
   if (idx >= 0) {
     const removed = tabs[idx];
-    if (removed) removed.tabEl.remove();
+    if (removed) {
+      removed.tabEl.remove();
+      removed.term.dispose();
+      removed.termContainer.remove();
+    }
     tabs.splice(idx, 1);
   }
   // Switch to another tab if the killed one was active
@@ -678,6 +927,13 @@ document.addEventListener('keydown', async (e: KeyboardEvent) => {
       await refreshAgentEvents();
     }
   }
+  // Ctrl+Shift+E: Toggle epistemic coloring
+  if (e.ctrlKey && e.shiftKey && e.key === 'E') {
+    e.preventDefault();
+    epistemicEnabled = !epistemicEnabled;
+    const state = epistemicEnabled ? 'ON' : 'OFF';
+    term.write('\r\n\x1b[2m  [Epistemic coloring: ' + state + ']\x1b[0m\r\n');
+  }
 });
 
 // ── Session Management ─────────────────────────────────────────
@@ -744,7 +1000,7 @@ function showWelcome(): void {
   const reset = '\x1b[0m';
   const blue = '\x1b[38;2;96;165;250m';
 
-  term.write(emerald + '  NexVigilant Terminal' + reset + dim + ' v0.1.0' + reset + '\r\n');
+  term.write(emerald + '  NexVigilant Terminal' + reset + dim + ' v0.2.0' + reset + '\r\n');
   term.write(dim + '  Full Unicode ' + reset + '\u2713' + dim + '  GPU Rendering ' + reset + '\u2713' + dim + '  Epistemic Colors ' + reset + '\u2713' + reset + '\r\n');
   term.write(dim + '  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500' + reset + '\r\n');
   term.write(blue + '  Ctrl+Shift+N' + reset + dim + '  New Session    ' + reset);
@@ -753,6 +1009,7 @@ function showWelcome(): void {
   term.write(blue + 'Ctrl+Shift+P' + reset + dim + '  Command Palette' + reset + '\r\n');
   term.write(blue + '  Ctrl+Shift+A' + reset + dim + '  App Launcher  ' + reset);
   term.write(blue + 'Ctrl+Shift+D' + reset + dim + '  Dashboard' + reset + '\r\n');
+  term.write(blue + '  Ctrl+Shift+E' + reset + dim + '  Epistemic Colors' + reset + '\r\n');
   term.write('\r\n');
 }
 
@@ -808,6 +1065,24 @@ async function init(): Promise<void> {
     tabAddBtn.addEventListener('click', () => createSession());
   }
 
+  // Wire Nucleus portal links (open in system browser)
+  const nucleusLinks = document.querySelectorAll('.nucleus-link');
+  nucleusLinks.forEach((link) => {
+    link.addEventListener('click', async (e: Event) => {
+      e.preventDefault();
+      const url = (link as HTMLElement).dataset.url;
+      if (!url) return;
+      try {
+        // Use Tauri shell plugin to open in system browser
+        await invoke('plugin:shell|open', { path: url });
+      } catch {
+        // Fallback: window.open
+        window.open(url, '_blank');
+      }
+      toasts.info('Opening', url);
+    });
+  });
+
   // Wire side panel refresh buttons
   const cloudRefresh = document.getElementById('cloud-refresh');
   if (cloudRefresh) {
@@ -827,6 +1102,41 @@ async function init(): Promise<void> {
 
   updateStatusBar();
 
+  // Wire fallback input bar (WebKitGTK/Wayland keyboard workaround)
+  const inputField = document.getElementById('input-field') as HTMLInputElement | null;
+  if (inputField) {
+    inputField.addEventListener('keydown', async (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const text = inputField.value;
+        inputField.value = '';
+
+        if (!sessionId) {
+          term.write('\x1b[31m[No session — creating one...]\x1b[0m\r\n');
+          await createSession();
+          return;
+        }
+        try {
+          await invoke('pty_write', { sessionId, data: text + '\r' });
+        } catch (err: unknown) {
+          term.write('\x1b[31m[pty_write failed: ' + err + ']\x1b[0m\r\n');
+        }
+      } else if (e.key === 'c' && e.ctrlKey) {
+        // Ctrl+C — send interrupt signal
+        e.preventDefault();
+        if (sessionId) {
+          try {
+            await invoke('pty_write', { sessionId, data: '\x03' });
+          } catch (err: unknown) {
+            console.error('Ctrl+C failed:', err);
+          }
+        }
+      }
+    });
+    // Auto-focus the input bar since xterm.js can't get focus
+    inputField.focus();
+  }
+
   // Mount chi health indicator into the title-bar right section
   const titleBarRight = document.querySelector('.title-bar .right') as HTMLElement | null;
   if (titleBarRight) {
@@ -843,7 +1153,61 @@ async function init(): Promise<void> {
     });
   }
 
+  // Mount quick command bar (: trigger)
+  quickCmd.mount();
+
+  // Wire toast notifications to terminal events
+  listen<{ session_id: string; code: number | null }>('pty-exit', () => {
+    toasts.warn('Session Exited', 'PTY process terminated');
+  });
+  listen<{ action: string; success: boolean; diff_count: number; chi: number; health_band: string }>(
+    'controller-state-changed',
+    (event) => {
+      const p = event.payload;
+      if (!p.success) {
+        toasts.warn('Action Failed', p.action);
+      }
+      if (p.health_band === 'Critical') {
+        toasts.critical('Health Critical', 'Chi: ' + p.chi.toFixed(2));
+      }
+    },
+  );
+
+  // Startup toast
+  toasts.success('NexVigilant Terminal v0.2.0', 'Press : for quick commands');
+
   term.focus();
+
+  // ── Live Service Health Polling ───────────────────────────────
+  // Checks nexcore-mcp, nexcore-api, and NexVigilant Station health
+  // every 30 seconds. Updates status bar indicators.
+
+  async function pollServiceHealth(): Promise<void> {
+    const mcpDot = document.querySelector('#svc-mcp .status-dot') as HTMLElement | null;
+    const apiDot = document.querySelector('#svc-api .status-dot') as HTMLElement | null;
+    const stnDot = document.querySelector('#svc-station .status-dot') as HTMLElement | null;
+
+    try {
+      const services = await invoke('cloud_list_services') as ServiceInfoResult[] | null;
+      if (services) {
+        for (const svc of services) {
+          const name = svc.name.toLowerCase();
+          const cls = 'status-dot ' + (svc.health === 'healthy' ? 'connected' : 'disconnected');
+          if (name.includes('mcp') && mcpDot) mcpDot.className = cls;
+          else if (name.includes('api') && apiDot) apiDot.className = cls;
+          else if (name.includes('station') && stnDot) stnDot.className = cls;
+        }
+      }
+    } catch {
+      // Outside Tauri or IPC failed
+    }
+  }
+
+  // Initial poll + repeat every 30s
+  if (tauriAvailable) {
+    setTimeout(() => pollServiceHealth(), 2000);
+    setInterval(() => pollServiceHealth(), 30000);
+  }
 }
 
 init();

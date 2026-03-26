@@ -99,6 +99,33 @@
       align-items: center;
       gap: 12px;
     }
+    /* Fallback input bar */
+    .input-bar {
+      display: flex;
+      align-items: center;
+      height: 32px;
+      padding: 0 8px;
+      background: #0d1117;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+      gap: 6px;
+    }
+    .input-prompt {
+      color: var(--emerald);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .input-field {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      outline: none;
+      caret-color: var(--emerald);
+    }
+    .input-field::placeholder { color: var(--text-muted); }
     /* xterm.js overrides */
     .xterm { height: 100%; }
     .xterm-viewport { overflow-y: auto !important; }
@@ -338,6 +365,147 @@
       color: var(--text-muted);
       text-align: center;
     }
+    /* Service indicators in status bar */
+    .svc-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    .svc-indicator .status-dot {
+      width: 5px;
+      height: 5px;
+    }
+    /* Tab terminal containers */
+    .tab-terminal-container {
+      position: absolute;
+      inset: 0;
+    }
+    .tab-terminal-container .xterm { height: 100%; }
+    /* Toast notifications */
+    .toast-container {
+      position: fixed;
+      top: 40px;
+      right: 12px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      pointer-events: none;
+      max-width: 360px;
+    }
+    .toast {
+      pointer-events: auto;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: var(--font);
+      background: #111822;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      animation: toast-in 200ms ease-out;
+      cursor: pointer;
+      max-width: 360px;
+    }
+    .toast.dismissing { animation: toast-out 200ms ease-in forwards; }
+    .toast-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+    .toast-body { flex: 1; }
+    .toast-title { font-weight: 600; margin-bottom: 2px; }
+    .toast-message { color: var(--text-dim); font-size: 10px; }
+    .toast-time { color: var(--text-muted); font-size: 9px; margin-top: 2px; }
+    .toast.info    { border-left: 3px solid var(--blue); }
+    .toast.success { border-left: 3px solid var(--emerald); }
+    .toast.warning { border-left: 3px solid #fbbf24; }
+    .toast.critical { border-left: 3px solid var(--red); }
+    .toast.info .toast-icon    { color: var(--blue); }
+    .toast.success .toast-icon { color: var(--emerald); }
+    .toast.warning .toast-icon { color: #fbbf24; }
+    .toast.critical .toast-icon { color: var(--red); }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes toast-out {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(40px); }
+    }
+    /* Quick command bar */
+    .quick-cmd-bar {
+      position: fixed;
+      bottom: 56px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1500;
+      width: 480px;
+      background: #111822;
+      border: 1px solid var(--emerald);
+      border-radius: 6px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      display: none;
+    }
+    .quick-cmd-bar.visible { display: flex; }
+    .quick-cmd-prefix {
+      padding: 8px 4px 8px 12px;
+      color: var(--emerald);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .quick-cmd-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      padding: 8px 12px 8px 0;
+      outline: none;
+    }
+    .quick-cmd-input::placeholder { color: var(--text-muted); }
+    .quick-cmd-hints {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 11px;
+    }
+    .quick-cmd-hint {
+      padding: 4px 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+    }
+    .quick-cmd-hint:hover { background: #1a2a3e; }
+    .quick-cmd-hint .cmd { color: var(--emerald); }
+    .quick-cmd-hint .desc { color: var(--text-muted); font-size: 10px; }
+    /* Nucleus portal links */
+    .nucleus-link {
+      display: inline-block;
+      padding: 3px 8px;
+      margin: 2px;
+      border-radius: 3px;
+      font-size: 10px;
+      color: var(--blue);
+      background: #60a5fa10;
+      border: 1px solid #60a5fa30;
+      text-decoration: none;
+      cursor: pointer;
+      -webkit-app-region: no-drag;
+      transition: background 150ms;
+    }
+    .nucleus-link:hover {
+      background: #60a5fa25;
+      color: #93c5fd;
+    }
   </style>
   <link rel="stylesheet" href="xterm.css" />
 </head>
@@ -357,8 +525,21 @@
       <div class="tab-add" id="tab-add" title="New Session (Ctrl+Shift+N)">+</div>
     </div>
     <div class="main-area">
-      <div id="terminal-container"></div>
+      <div id="terminal-container" tabindex="0"></div>
       <div class="side-panel hidden" id="side-panel">
+        <div class="side-panel-section" style="flex: 0 0 auto;">
+          <div class="side-panel-header">
+            <span>Nucleus Portal</span>
+          </div>
+          <div class="side-panel-body" id="nucleus-links" style="padding: 4px 6px;">
+            <a class="nucleus-link" href="#" data-url="http://localhost:9002" title="Main Portal">Dashboard</a>
+            <a class="nucleus-link" href="#" data-url="http://localhost:9002/observatory" title="3D Signal Visualization">Observatory</a>
+            <a class="nucleus-link" href="#" data-url="http://localhost:9002/academy" title="PV Education">Academy</a>
+            <a class="nucleus-link" href="#" data-url="http://localhost:9002/vigilance" title="Signal Detection">Vigilance</a>
+            <a class="nucleus-link" href="#" data-url="http://localhost:9002/glass" title="Glass Dashboard">Glass</a>
+            <a class="nucleus-link" href="#" data-url="https://mcp.nexvigilant.com/tools" title="MCP Station Tools">Station</a>
+          </div>
+        </div>
         <div class="side-panel-section">
           <div class="side-panel-header">
             <span>Cloud Services</span>
@@ -368,7 +549,7 @@
         </div>
         <div class="side-panel-section">
           <div class="side-panel-header">
-            <span>Agent Activity</span>
+            <span>Agent Fleet</span>
             <span class="refresh-btn" id="agent-refresh" title="Refresh">&#x21bb;</span>
           </div>
           <div class="side-panel-body" id="agent-events-list"></div>
@@ -376,15 +557,30 @@
       </div>
     </div>
     <div id="remote-panel-container"></div>
+    <!-- Fallback input bar: WebKitGTK/Wayland does not reliably focus xterm.js textarea -->
+    <div class="input-bar" id="input-bar">
+      <span class="input-prompt">$</span>
+      <input type="text" id="input-field" class="input-field"
+             placeholder="Type command here..." autocomplete="off" spellcheck="false" />
+    </div>
     <div class="status-bar">
       <div class="left">
-        <span>NexVigilant Terminal v0.1.0</span>
+        <span>NexVigilant Terminal v0.2.0</span>
       </div>
       <div class="right">
+        <span class="svc-indicator" id="svc-mcp" title="nexcore-mcp">MCP <span class="status-dot disconnected"></span></span>
+        <span class="svc-indicator" id="svc-api" title="nexcore-api">API <span class="status-dot disconnected"></span></span>
+        <span class="svc-indicator" id="svc-station" title="NexVigilant Station">STN <span class="status-dot disconnected"></span></span>
         <span>UTF-8</span>
         <span>bash</span>
       </div>
     </div>
+  </div>
+  <div class="toast-container" id="toast-container"></div>
+  <div class="quick-cmd-bar" id="quick-cmd-bar">
+    <span class="quick-cmd-prefix">:</span>
+    <input type="text" class="quick-cmd-input" id="quick-cmd-input" placeholder="command..." autocomplete="off" spellcheck="false" />
+    <div class="quick-cmd-hints" id="quick-cmd-hints"></div>
   </div>
   <script src="app.js"></script>
 </body>

@@ -99,6 +99,8 @@ pub enum PtyError {
     IoError(std::io::Error),
     /// Process has already exited.
     ProcessExited,
+    /// No data available (spurious readiness, not EOF).
+    WouldBlock,
     /// stdin pipe not available.
     StdinUnavailable,
     /// stdout pipe not available.
@@ -111,6 +113,7 @@ impl std::fmt::Display for PtyError {
             Self::SpawnFailed(e) => write!(f, "process spawn failed: {e}"),
             Self::IoError(e) => write!(f, "PTY I/O error: {e}"),
             Self::ProcessExited => write!(f, "process has exited"),
+            Self::WouldBlock => write!(f, "no data available"),
             Self::StdinUnavailable => write!(f, "stdin pipe not available"),
             Self::StdoutUnavailable => write!(f, "stdout pipe not available"),
         }
@@ -121,7 +124,10 @@ impl std::error::Error for PtyError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::SpawnFailed(e) | Self::IoError(e) => Some(e),
-            Self::ProcessExited | Self::StdinUnavailable | Self::StdoutUnavailable => None,
+            Self::ProcessExited
+            | Self::WouldBlock
+            | Self::StdinUnavailable
+            | Self::StdoutUnavailable => None,
         }
     }
 }
@@ -254,8 +260,8 @@ impl PtyProcess {
             }
             Ok(Err(e)) => Err(PtyError::IoError(e)),
             Err(_would_block) => {
-                // Spurious readiness — no data yet.
-                Ok(Vec::new())
+                // Spurious readiness — no data yet. Distinct from EOF.
+                Err(PtyError::WouldBlock)
             }
         }
     }
@@ -374,6 +380,9 @@ mod tests {
     fn pty_error_display() {
         let err = PtyError::ProcessExited;
         assert_eq!(format!("{err}"), "process has exited");
+
+        let err = PtyError::WouldBlock;
+        assert_eq!(format!("{err}"), "no data available");
 
         let err = PtyError::StdinUnavailable;
         assert_eq!(format!("{err}"), "stdin pipe not available");

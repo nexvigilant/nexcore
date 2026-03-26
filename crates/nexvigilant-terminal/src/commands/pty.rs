@@ -78,7 +78,27 @@ pub async fn pty_spawn(
         }
     }
 
-    let config = PtyConfig::new(&shell, &working_dir).with_size(PtySize::new(cols, rows));
+    // Ensure ~/.cargo/bin and common tool paths are in PATH.
+    // When launched from a desktop environment (COSMIC DE, GNOME, etc.),
+    // the Tauri app doesn't inherit shell profile PATH additions.
+    let enriched_path = {
+        let current = std::env::var("PATH").unwrap_or_default();
+        let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+        let cargo_bin = format!("{home}/.cargo/bin");
+        let local_bin = format!("{home}/.local/bin");
+        let mut paths: Vec<&str> = current.split(':').collect();
+        if !paths.contains(&cargo_bin.as_str()) {
+            paths.insert(0, &cargo_bin);
+        }
+        if !paths.contains(&local_bin.as_str()) {
+            paths.insert(1, &local_bin);
+        }
+        paths.join(":")
+    };
+
+    let config = PtyConfig::new(&shell, &working_dir)
+        .with_size(PtySize::new(cols, rows))
+        .with_env("PATH", &enriched_path);
 
     let process = PtyProcess::spawn(config).map_err(|e| format!("PTY spawn failed: {e}"))?;
 
@@ -95,36 +115,53 @@ pub async fn pty_spawn(
 
     tokio::spawn(async move {
         loop {
-            let data = {
+            // Acquire lock with a bounded read timeout so writes can interleave.
+            // Without this, the reader holds the lock during the entire async read,
+            // deadlocking any pty_write calls.
+            let read_result = {
                 let mut procs = processes.lock().await;
                 match procs.get_mut(&sid) {
                     Some(proc) => {
                         if proc.has_exited() {
-                            break;
+                            None // signals break
+                        } else {
+                            Some(
+                                tokio::time::timeout(
+                                    std::time::Duration::from_millis(50),
+                                    proc.read(8192),
+                                )
+                                .await,
+                            )
                         }
-                        proc.read(8192).await
                     }
-                    None => break,
+                    None => None, // signals break
                 }
-            };
+            }; // Lock released here — writers can proceed
 
-            match data {
-                Ok(bytes) if bytes.is_empty() => {
-                    // Process exited
+            match read_result {
+                None => break, // Process exited or removed
+                Some(Err(_timeout)) => {
+                    // No data within 50ms — yield so pty_write can acquire lock
+                    tokio::task::yield_now().await;
+                    continue;
+                }
+                Some(Ok(Ok(bytes))) if bytes.is_empty() => {
+                    // Real EOF — process closed its stdout.
                     break;
                 }
-                Ok(bytes) => {
-                    // Convert to string, preserving raw bytes for terminal
+                Some(Ok(Ok(bytes))) => {
                     let text = String::from_utf8_lossy(&bytes);
                     if let Err(e) = app_handle.emit("pty-output", text.as_ref()) {
                         tracing::debug!(error = %e, "Failed to emit pty-output event");
                         break;
                     }
                 }
-                Err(e) => {
-                    tracing::debug!(error = %e, session = %sid, "PTY read error");
-                    // Short sleep on error to avoid busy loop
-                    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                Some(Ok(Err(e))) => {
+                    let is_would_block = e.to_string().contains("no data available");
+                    if !is_would_block {
+                        tracing::debug!(error = %e, session = %sid, "PTY read error");
+                    }
+                    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
                 }
             }
         }

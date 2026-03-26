@@ -286,19 +286,20 @@ pub fn capture_state(
 /// produces a `RemoteResult` with state diffs, enabling Claude to
 /// observe the effect of each action and steer accordingly.
 #[tauri::command]
-pub fn remote_execute(
+pub async fn remote_execute(
     action: RemoteAction,
     terminal: tauri::State<'_, super::terminal::TerminalState>,
     health: tauri::State<'_, super::health::HealthState>,
     cloud: tauri::State<'_, super::cloud::CloudState>,
     shell: tauri::State<'_, super::shell::NexShellState>,
+    pty: tauri::State<'_, super::pty::PtyState>,
     app: tauri::AppHandle,
-) -> RemoteResult {
+) -> Result<RemoteResult, String> {
     let before = capture_state(&terminal, &health, &cloud);
     let start = Instant::now();
 
     let (success, payload, error) =
-        dispatch_action(&action, &terminal, &health, &cloud, &shell, &app);
+        dispatch_action(&action, &terminal, &health, &cloud, &shell, &pty, &app).await;
 
     let after = capture_state(&terminal, &health, &cloud);
     let diff = before.diff(&after);
@@ -333,7 +334,7 @@ pub fn remote_execute(
         let _ = tauri::Emitter::emit(&app, "controller-state-changed", &event_json);
     }
 
-    RemoteResult {
+    Ok(RemoteResult {
         success,
         action: action_name.into(),
         before,
@@ -343,7 +344,7 @@ pub fn remote_execute(
         payload,
         error,
         seq: next_seq(),
-    }
+    })
 }
 
 /// Event payload emitted after each controller action.
@@ -373,12 +374,13 @@ pub fn remote_action_count() -> u64 {
 }
 
 /// Dispatch a remote action to the appropriate subsystem.
-fn dispatch_action(
+async fn dispatch_action(
     action: &RemoteAction,
     terminal: &tauri::State<'_, super::terminal::TerminalState>,
     health: &tauri::State<'_, super::health::HealthState>,
     cloud: &tauri::State<'_, super::cloud::CloudState>,
     shell: &tauri::State<'_, super::shell::NexShellState>,
+    pty: &tauri::State<'_, super::pty::PtyState>,
     app: &tauri::AppHandle,
 ) -> (bool, serde_json::Value, Option<String>) {
     match action {
@@ -475,15 +477,43 @@ fn dispatch_action(
             (true, serde_json::to_value(&state).unwrap_or_default(), None)
         }
 
-        RemoteAction::SpawnPty { .. }
-        | RemoteAction::PtyWrite { .. }
-        | RemoteAction::PtyKill { .. } => {
-            // PTY operations require async — return guidance
-            (
-                false,
-                serde_json::Value::Null,
-                Some("PTY operations are async — use pty_spawn/pty_write/pty_kill IPC commands directly. Remote controller async bridging planned for v0.2.0.".into()),
+        RemoteAction::SpawnPty {
+            shell,
+            working_dir,
+            cols,
+            rows,
+        } => {
+            match super::pty::pty_spawn(
+                pty.clone(),
+                app.clone(),
+                shell.clone(),
+                working_dir.clone(),
+                *cols,
+                *rows,
             )
+            .await
+            {
+                Ok(result) => (
+                    true,
+                    serde_json::to_value(&result).unwrap_or_default(),
+                    None,
+                ),
+                Err(e) => (false, serde_json::Value::Null, Some(e)),
+            }
+        }
+
+        RemoteAction::PtyWrite { session_id, data } => {
+            match super::pty::pty_write(pty.clone(), session_id.clone(), data.clone()).await {
+                Ok(()) => (true, serde_json::Value::Null, None),
+                Err(e) => (false, serde_json::Value::Null, Some(e)),
+            }
+        }
+
+        RemoteAction::PtyKill { session_id } => {
+            match super::pty::pty_kill(pty.clone(), session_id.clone()).await {
+                Ok(()) => (true, serde_json::Value::Null, None),
+                Err(e) => (false, serde_json::Value::Null, Some(e)),
+            }
         }
 
         RemoteAction::Batch { actions } => {
@@ -491,8 +521,10 @@ fn dispatch_action(
             let mut all_success = true;
 
             for sub_action in actions {
-                let (success, payload, error) =
-                    dispatch_action(sub_action, terminal, health, cloud, shell, app);
+                let (success, payload, error) = Box::pin(dispatch_action(
+                    sub_action, terminal, health, cloud, shell, pty, app,
+                ))
+                .await;
                 if !success {
                     all_success = false;
                 }

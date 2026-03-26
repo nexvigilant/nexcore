@@ -16,6 +16,7 @@
 
 #![warn(missing_docs)]
 pub mod ai;
+pub mod artifacts;
 pub mod audit;
 pub mod chi_monitor;
 pub mod config;
@@ -25,10 +26,13 @@ pub mod health;
 pub mod keybindings;
 pub mod layout;
 pub mod metering;
+pub mod microgram;
 pub mod preferences;
 pub mod protocol;
 pub mod pty;
 pub mod registry;
+pub mod relay;
 pub mod router;
 pub mod sandbox;
 pub mod session;
+pub mod station;

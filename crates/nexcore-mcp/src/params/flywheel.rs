@@ -163,6 +163,62 @@ pub struct FlywheelRealityParams {
 }
 
 // ============================================================================
+// Tool 4a: flywheel_evaluate_live — Live Metrics → VDAG Reality Gradient
+// ============================================================================
+
+/// Parameters for flywheel_evaluate_live — feed live system metrics directly.
+///
+/// Maps Guardian, Immunity, and session observables into the 5-loop cascade
+/// via [`nexcore_flywheel::live::LiveMetrics`], then grades with VDAG.
+#[derive(Debug, Default, Serialize, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct FlywheelEvaluateLiveParams {
+    // -- Guardian surface --
+    /// Registered Guardian sensors (from guardian_status).
+    pub sensor_count: Option<u32>,
+    /// Registered Guardian actuators (from guardian_status).
+    pub actuator_count: Option<u32>,
+    /// Guardian iteration count.
+    pub guardian_iterations: Option<u32>,
+    /// Signals detected in last homeostasis tick.
+    pub signals_detected: Option<u32>,
+    /// Actions taken in last homeostasis tick.
+    pub actions_taken: Option<u32>,
+
+    // -- Immunity surface --
+    /// Total antibodies in the registry.
+    pub antibody_count: Option<u32>,
+    /// Critical-severity antibodies.
+    pub critical_antibodies: Option<u32>,
+
+    // -- Session surface --
+    /// Tool calls in current session.
+    pub tool_calls: Option<u32>,
+    /// Commits in current session.
+    pub commits: Option<u32>,
+    /// Files modified in current session.
+    pub files_modified: Option<u32>,
+    /// Total sessions in brain.db.
+    pub total_sessions: Option<u32>,
+    /// Sessions in last 24 hours.
+    pub sessions_last_24h: Option<u32>,
+
+    // -- Automation surface --
+    /// Active hooks count.
+    pub active_hooks: Option<u32>,
+    /// Total skills count.
+    pub skill_count: Option<u32>,
+    /// Automation coverage ratio (0.0-1.0).
+    pub automation_coverage: Option<f64>,
+
+    // -- Goal overrides --
+    /// Goal description (default: "All loops healthy").
+    pub goal_description: Option<String>,
+    /// Target state: "thriving", "stressed", "critical", "failed" (default: "thriving").
+    pub target_state: Option<String>,
+}
+
+// ============================================================================
 // Tool 4: flywheel_learn — Learning Loop Analysis
 // ============================================================================
 
@@ -174,4 +230,68 @@ pub struct FlywheelRealityParams {
 pub struct FlywheelLearnParams {
     /// Array of CascadeRecord JSON objects from prior evaluations.
     pub history: Vec<serde_json::Value>,
+}
+
+// ============================================================================
+// Tool 6: flywheel_evaluate_extended — Live Metrics + Extension Loops
+// ============================================================================
+
+/// Parameters for flywheel_evaluate_extended — full 8-loop evaluation.
+///
+/// Combines LiveMetrics (5 core loops) with extension loops (trust, immunity,
+/// skill maturation) for a comprehensive Reality Gradient score.
+#[derive(Debug, Default, Serialize, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct FlywheelEvaluateExtendedParams {
+    // -- Core LiveMetrics (same as evaluate_live) --
+    /// Registered Guardian sensors.
+    pub sensor_count: Option<u32>,
+    /// Registered Guardian actuators.
+    pub actuator_count: Option<u32>,
+    /// Guardian iteration count.
+    pub guardian_iterations: Option<u32>,
+    /// Signals detected in last homeostasis tick.
+    pub signals_detected: Option<u32>,
+    /// Actions taken in last homeostasis tick.
+    pub actions_taken: Option<u32>,
+    /// Total antibodies in the registry.
+    pub antibody_count: Option<u32>,
+    /// Critical-severity antibodies.
+    pub critical_antibodies: Option<u32>,
+    /// Tool calls in current session.
+    pub tool_calls: Option<u32>,
+    /// Commits in current session.
+    pub commits: Option<u32>,
+    /// Files modified in current session.
+    pub files_modified: Option<u32>,
+    /// Total sessions in brain.db.
+    pub total_sessions: Option<u32>,
+    /// Sessions in last 24 hours.
+    pub sessions_last_24h: Option<u32>,
+    /// Active hooks count.
+    pub active_hooks: Option<u32>,
+    /// Total skills count.
+    pub skill_count: Option<u32>,
+    /// Automation coverage ratio (0.0-1.0).
+    pub automation_coverage: Option<f64>,
+
+    // -- Trust extension --
+    /// Global trust score (0.0-1.0).
+    pub trust_score: Option<f64>,
+    /// Number of verified operations.
+    pub verified_operations: Option<u32>,
+    /// Trust violations detected.
+    pub trust_violations: Option<u32>,
+
+    // -- Immunity extension --
+    /// PAMP antibody count.
+    pub pamp_count: Option<u32>,
+    /// DAMP antibody count.
+    pub damp_count: Option<u32>,
+
+    // -- Skill maturation extension --
+    /// Diamond-level skills count.
+    pub diamond_skills: Option<u32>,
+    /// Skill enforcement ratio (0.0-1.0).
+    pub enforcement_ratio: Option<f64>,
 }

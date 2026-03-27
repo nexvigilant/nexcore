@@ -1,6 +1,7 @@
 //! Node registry: tracks which flywheel nodes exist and their status.
 
 use crate::node::{FlywheelTier, NodeDescriptor, NodeStatus};
+use crate::vdag::RealityRating;
 use serde::{Deserialize, Serialize};
 
 /// Registry of all flywheel nodes and their lifecycle status.
@@ -156,6 +157,46 @@ impl NodeRegistry {
         (live, staging, draft)
     }
 
+    /// Auto-promote a node based on VDAG Reality Rating.
+    ///
+    /// Promotion gates:
+    /// - Draft → Staging: requires `SafetyValidated` or higher (score >= 0.20)
+    /// - Staging → Live: requires `ScaleConfirmed` or higher (score >= 0.80)
+    /// - Live → Live: no promotion (already at top)
+    ///
+    /// Returns `Some((old_tier, new_tier))` if promoted, `None` if blocked.
+    pub fn auto_promote(
+        &mut self,
+        name: &str,
+        rating: RealityRating,
+    ) -> Option<(FlywheelTier, FlywheelTier)> {
+        let node = self.find(name)?;
+        let current_tier = node.tier;
+
+        let meets_gate = match current_tier {
+            FlywheelTier::Draft => matches!(
+                rating,
+                RealityRating::SafetyValidated
+                    | RealityRating::EfficacyDemonstrated
+                    | RealityRating::ScaleConfirmed
+                    | RealityRating::ProductionReady
+            ),
+            FlywheelTier::Staging => matches!(
+                rating,
+                RealityRating::ScaleConfirmed | RealityRating::ProductionReady
+            ),
+            FlywheelTier::Live => false, // Already at top
+        };
+
+        if meets_gate {
+            self.promote(name);
+            let new_tier = self.find(name)?.tier;
+            Some((current_tier, new_tier))
+        } else {
+            None
+        }
+    }
+
     /// Returns the total number of registered nodes.
     pub fn len(&self) -> usize {
         self.nodes.len()
@@ -244,6 +285,56 @@ mod tests {
         assert_eq!(
             reg.find("insight").map(|n| n.status),
             Some(NodeStatus::Active)
+        );
+    }
+
+    // ── Auto-promote tests ──────────────────────────────────────────
+
+    #[test]
+    fn auto_promote_staging_needs_scale_confirmed() {
+        let mut reg = NodeRegistry::default();
+        // EfficacyDemonstrated is NOT enough for Staging→Live
+        assert!(
+            reg.auto_promote("skill-maturation", RealityRating::EfficacyDemonstrated)
+                .is_none()
+        );
+        assert_eq!(
+            reg.find("skill-maturation").map(|n| n.tier),
+            Some(FlywheelTier::Staging)
+        );
+
+        // ScaleConfirmed IS enough
+        let result = reg.auto_promote("skill-maturation", RealityRating::ScaleConfirmed);
+        assert!(result.is_some());
+        let (old, new) = result.unwrap();
+        assert_eq!(old, FlywheelTier::Staging);
+        assert_eq!(new, FlywheelTier::Live);
+    }
+
+    #[test]
+    fn auto_promote_live_stays_live() {
+        let mut reg = NodeRegistry::default();
+        assert!(
+            reg.auto_promote("homeostasis", RealityRating::ProductionReady)
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn auto_promote_testing_theater_blocks() {
+        let mut reg = NodeRegistry::default();
+        assert!(
+            reg.auto_promote("skill-maturation", RealityRating::TestingTheater)
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn auto_promote_nonexistent_returns_none() {
+        let mut reg = NodeRegistry::default();
+        assert!(
+            reg.auto_promote("ghost", RealityRating::ProductionReady)
+                .is_none()
         );
     }
 

@@ -12,12 +12,18 @@
 //! ## T1 Primitive Grounding: ς (State) + κ (Comparison) + ∂ (Boundary) + → (Causality) + N (Quantity)
 
 use crate::params::flywheel::{
-    FlywheelCascadeParams, FlywheelLearnParams, FlywheelRealityParams, FlywheelVitalsParams,
+    FlywheelCascadeParams, FlywheelEvaluateExtendedParams, FlywheelEvaluateLiveParams,
+    FlywheelLearnParams, FlywheelRealityParams, FlywheelVitalsParams,
 };
 use nexcore_flywheel::{
-    loops::{cascade, CascadeInput, ElasticInput, FrictionInput, GyroscopicInput, MomentumInput, RimInput},
-    thresholds::FlywheelThresholds,
+    extensions::{ExtensionInputs, ImmunityInput, SkillMaturationInput, TrustInput},
+    live::LiveMetrics,
     loops::SystemState,
+    loops::{
+        CascadeInput, ElasticInput, FrictionInput, GyroscopicInput, MomentumInput, RimInput,
+        cascade,
+    },
+    thresholds::FlywheelThresholds,
     vdag::{self, CascadeRecord, FlywheelGoal},
     vitals::FlywheelVitals,
 };
@@ -401,6 +407,211 @@ pub fn flywheel_learn(params: FlywheelLearnParams) -> Result<CallToolResult, Mcp
         "records_skipped": skipped,
         "insights": insights_json,
         "source": "nexcore-flywheel vdag::analyze_history()"
+    });
+
+    Ok(CallToolResult::success(vec![Content::text(
+        result.to_string(),
+    )]))
+}
+
+// ============================================================================
+// Tool 5: flywheel_evaluate_live
+// ============================================================================
+
+/// Evaluate the flywheel using live system metrics from Guardian, Immunity, and session data.
+///
+/// Maps real observables into the 5-loop cascade via `LiveMetrics`, then grades
+/// with VDAG Reality Gradient. All fields optional — omit to use defaults (0).
+pub fn flywheel_evaluate_live(
+    params: FlywheelEvaluateLiveParams,
+) -> Result<CallToolResult, McpError> {
+    let metrics = LiveMetrics {
+        sensor_count: params.sensor_count.unwrap_or(0),
+        actuator_count: params.actuator_count.unwrap_or(0),
+        guardian_iterations: params.guardian_iterations.unwrap_or(0),
+        signals_detected: params.signals_detected.unwrap_or(0),
+        actions_taken: params.actions_taken.unwrap_or(0),
+        antibody_count: params.antibody_count.unwrap_or(0),
+        critical_antibodies: params.critical_antibodies.unwrap_or(0),
+        tool_calls: params.tool_calls.unwrap_or(0),
+        commits: params.commits.unwrap_or(0),
+        files_modified: params.files_modified.unwrap_or(0),
+        total_sessions: params.total_sessions.unwrap_or(0),
+        sessions_last_24h: params.sessions_last_24h.unwrap_or(0),
+        active_hooks: params.active_hooks.unwrap_or(0),
+        skill_count: params.skill_count.unwrap_or(0),
+        automation_coverage: params.automation_coverage.unwrap_or(0.0),
+    };
+
+    let cascade_input = metrics.to_cascade_input();
+
+    let target = params
+        .target_state
+        .as_deref()
+        .map(|s| match s {
+            "stressed" => SystemState::Stressed,
+            "critical" => SystemState::Critical,
+            "failed" => SystemState::Failed,
+            _ => SystemState::Thriving,
+        })
+        .unwrap_or(SystemState::Thriving);
+
+    let goal = FlywheelGoal {
+        description: params
+            .goal_description
+            .unwrap_or_else(|| "All loops healthy".to_string()),
+        target_state: target,
+        loop_weights: [0.2; 5],
+    };
+
+    let thresholds = FlywheelThresholds::default();
+    let graded = vdag::evaluate(&cascade_input, &thresholds, &goal);
+
+    let per_loop: Vec<serde_json::Value> = graded
+        .reality
+        .per_loop
+        .iter()
+        .map(|e| {
+            json!({
+                "loop_name": e.loop_name,
+                "quality": e.quality.to_string(),
+                "score": e.quality.score(),
+                "weight": e.weight,
+                "achieved_target": e.achieved_target,
+            })
+        })
+        .collect();
+
+    let result = json!({
+        "system_state": graded.cascade.system_state,
+        "reality": {
+            "score": graded.reality.score,
+            "rating": graded.reality.rating.to_string(),
+            "executable": graded.reality.executable,
+            "per_loop": per_loop,
+        },
+        "loops": {
+            "rim": { "state": graded.cascade.rim.state, "ratio": graded.cascade.rim.ratio },
+            "momentum": { "l": graded.cascade.momentum.l, "classification": graded.cascade.momentum.classification.to_string() },
+            "friction": { "net_drain": graded.cascade.friction.net_drain, "classification": graded.cascade.friction.classification.to_string() },
+            "gyroscopic": { "score": graded.cascade.gyroscopic.score, "state": graded.cascade.gyroscopic.state },
+            "elastic": { "state": graded.cascade.elastic.state, "cycles_remaining": graded.cascade.elastic.cycles_remaining },
+        },
+        "live_metrics_used": {
+            "sensor_count": metrics.sensor_count,
+            "actuator_count": metrics.actuator_count,
+            "guardian_iterations": metrics.guardian_iterations,
+            "signals_detected": metrics.signals_detected,
+            "actions_taken": metrics.actions_taken,
+            "antibody_count": metrics.antibody_count,
+            "tool_calls": metrics.tool_calls,
+            "total_sessions": metrics.total_sessions,
+            "automation_coverage": metrics.automation_coverage,
+        },
+        "source": "nexcore-flywheel live::LiveMetrics → vdag::evaluate()"
+    });
+
+    Ok(CallToolResult::success(vec![Content::text(
+        result.to_string(),
+    )]))
+}
+
+// ============================================================================
+// Tool 6: flywheel_evaluate_extended
+// ============================================================================
+
+/// Full 8-loop evaluation: 5 core loops (from LiveMetrics) + 3 extension loops
+/// (trust, immunity, skill maturation). Weights are renormalized so extensions
+/// don't overwhelm core evidence.
+pub fn flywheel_evaluate_extended(
+    params: FlywheelEvaluateExtendedParams,
+) -> Result<CallToolResult, McpError> {
+    let metrics = LiveMetrics {
+        sensor_count: params.sensor_count.unwrap_or(0),
+        actuator_count: params.actuator_count.unwrap_or(0),
+        guardian_iterations: params.guardian_iterations.unwrap_or(0),
+        signals_detected: params.signals_detected.unwrap_or(0),
+        actions_taken: params.actions_taken.unwrap_or(0),
+        antibody_count: params.antibody_count.unwrap_or(0),
+        critical_antibodies: params.critical_antibodies.unwrap_or(0),
+        tool_calls: params.tool_calls.unwrap_or(0),
+        commits: params.commits.unwrap_or(0),
+        files_modified: params.files_modified.unwrap_or(0),
+        total_sessions: params.total_sessions.unwrap_or(0),
+        sessions_last_24h: params.sessions_last_24h.unwrap_or(0),
+        active_hooks: params.active_hooks.unwrap_or(0),
+        skill_count: params.skill_count.unwrap_or(0),
+        automation_coverage: params.automation_coverage.unwrap_or(0.0),
+    };
+
+    let extensions = ExtensionInputs {
+        trust: if params.trust_score.is_some() || params.verified_operations.is_some() {
+            Some(TrustInput {
+                trust_score: params.trust_score.unwrap_or(0.0),
+                verified_operations: params.verified_operations.unwrap_or(0),
+                violations: params.trust_violations.unwrap_or(0),
+            })
+        } else {
+            None
+        },
+        immunity: if params.pamp_count.is_some() || params.damp_count.is_some() {
+            Some(ImmunityInput {
+                antibody_count: params.antibody_count.unwrap_or(0),
+                critical_count: params.critical_antibodies.unwrap_or(0),
+                pamp_count: params.pamp_count.unwrap_or(0),
+                damp_count: params.damp_count.unwrap_or(0),
+            })
+        } else {
+            None
+        },
+        skill_maturation: if params.diamond_skills.is_some() || params.enforcement_ratio.is_some() {
+            Some(SkillMaturationInput {
+                skill_count: params.skill_count.unwrap_or(0),
+                diamond_skills: params.diamond_skills.unwrap_or(0),
+                enforcement_ratio: params.enforcement_ratio.unwrap_or(0.0),
+            })
+        } else {
+            None
+        },
+    };
+
+    let cascade_input = metrics.to_cascade_input();
+    let thresholds = FlywheelThresholds::default();
+    let goal = FlywheelGoal::default();
+    let graded = vdag::evaluate_extended(&cascade_input, &thresholds, &goal, &extensions);
+
+    let per_loop: Vec<serde_json::Value> = graded
+        .reality
+        .per_loop
+        .iter()
+        .map(|e| {
+            json!({
+                "loop_name": e.loop_name,
+                "quality": e.quality.to_string(),
+                "score": e.quality.score(),
+                "weight": e.weight,
+                "achieved_target": e.achieved_target,
+            })
+        })
+        .collect();
+
+    let loop_count = graded.reality.per_loop.len();
+
+    let result = json!({
+        "system_state": graded.cascade.system_state,
+        "reality": {
+            "score": graded.reality.score,
+            "rating": graded.reality.rating.to_string(),
+            "executable": graded.reality.executable,
+            "loop_count": loop_count,
+            "per_loop": per_loop,
+        },
+        "extensions_active": {
+            "trust": extensions.trust.is_some(),
+            "immunity": extensions.immunity.is_some(),
+            "skill_maturation": extensions.skill_maturation.is_some(),
+        },
+        "source": "nexcore-flywheel vdag::evaluate_extended()"
     });
 
     Ok(CallToolResult::success(vec![Content::text(

@@ -63,6 +63,7 @@ nexcore-viz = { workspace = true }
 nexcore-synth = { workspace = true }
 nexcore-trust = { workspace = true }
 nexcore-guardian-engine = { workspace = true }
+nexcore-flywheel = { workspace = true }
 counter-awareness = { workspace = true }
 nexcore-signal-fence = { workspace = true }
 nexcore-station = { workspace = true }

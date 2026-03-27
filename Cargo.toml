@@ -141,6 +141,7 @@ nexcore-faers-etl = { path = "crates/nexcore-faers-etl", version = "1.0.0" }
 nexcore-fda-guidance = { path = "crates/nexcore-fda-guidance", version = "1.0.0" }
 nexcore-fhir = { path = "crates/nexcore-fhir", version = "1.0.0" }
 nexcore-firebase = { path = "crates/nexcore-firebase", version = "1.0.0" }
+nexcore-flywheel = { path = "crates/nexcore-flywheel", version = "0.1.0" }
 nexcore-forge-strategy = { path = "crates/nexcore-forge-strategy", version = "0.1.0" }
 nexcore-fs = { path = "crates/nexcore-fs", version = "0.1.0" }
 nexcore-ghost = { path = "crates/nexcore-ghost", version = "1.0.0" }
@@ -232,6 +233,7 @@ nexcore-value-mining = { path = "crates/nexcore-value-mining", version = "1.0.0"
 nexcore-vault = { path = "crates/nexcore-vault", version = "1.0.0" }
 nexcore-vigil = { path = "crates/nexcore-vigil", version = "0.1.0" }
 nexcore-vigilance = { path = "crates/nexcore-vigilance", version = "1.0.0" }
+nexcore-vos = { path = "crates/nexcore-vos", version = "0.1.0" }
 nexcore-viz = { path = "crates/nexcore-viz", version = "1.0.0" }
 nexcore-word = { path = "crates/nexcore-word", version = "1.0.0" }
 nexcore-zeta = { path = "crates/nexcore-zeta", version = "0.1.0" }

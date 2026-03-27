@@ -8503,6 +8503,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexcore-cns"
+version = "0.1.0"
+
+[[package]]
 name = "nexcore-codec"
 version = "0.1.0"
 
@@ -9000,6 +9004,14 @@ name = "nexcore-hash"
 version = "0.1.0"
 
 [[package]]
+name = "nexcore-helix"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "nexcore-homeostasis"
 version = "1.0.0"
 dependencies = [
@@ -9300,6 +9312,7 @@ dependencies = [
  "nexcore-faers-etl",
  "nexcore-fda-guidance",
  "nexcore-fhir",
+ "nexcore-flywheel",
  "nexcore-forge-strategy",
  "nexcore-foundry",
  "nexcore-fs",
@@ -10615,6 +10628,15 @@ name = "nexcore-viz"
 version = "1.0.0"
 dependencies = [
  "nexcore-constants",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-vos"
+version = "0.1.0"
+dependencies = [
+ "nexcore-pv-core",
  "serde",
  "serde_json",
 ]

@@ -10,6 +10,7 @@ import { mountRemotePanel } from './remote-panel';
 import { mountSessionFeed } from './session-feed';
 import * as toasts from './toast';
 import * as quickCmd from './quick-cmd';
+import { initGamepad, setGamepadSession } from './gamepad';
 
 // ── Tauri IPC ──────────────────────────────────────────────────
 // Window.__TAURI__ type is declared in chi-indicator.ts.
@@ -1099,6 +1100,36 @@ async function init(): Promise<void> {
   if (statusBarLeft) {
     modePillEl = createModePill();
     statusBarLeft.appendChild(modePillEl);
+
+    // Mount PS5 gamepad controller
+    const gamepadPill = initGamepad({
+      writePty: async (data: string) => {
+        if (!sessionId) return;
+        try {
+          await invoke('pty_write', { sessionId, data });
+        } catch (e: unknown) {
+          console.error('[gamepad] PTY write failed:', e);
+        }
+      },
+      cycleTab: (dir: number) => {
+        const idx = tabs.findIndex((t) => t.id === activeTabId);
+        if (tabs.length > 0) {
+          const next = (idx + dir + tabs.length) % tabs.length;
+          const tab = tabs[next];
+          if (tab) switchTab(tab.id);
+        }
+      },
+      newTab: () => { if (sessionId) addTab(sessionId); },
+      toggleCommandPalette: () => quickCmd.open(),
+      toast: (msg: string, type?: string) => {
+        if (type === 'warn') toasts.warn(msg);
+        else if (type === 'error') toasts.critical(msg);
+        else toasts.info(msg);
+      },
+      onModeChange: () => updateStatusBar(),
+      ...(sessionId ? { gpSessionId: sessionId } : {}),
+    });
+    statusBarLeft.appendChild(gamepadPill);
   }
 
   updateStatusBar();

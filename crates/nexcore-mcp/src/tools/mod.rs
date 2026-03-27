@@ -295,6 +295,9 @@ pub mod insight;
 // Caesura Detection (structural seam detection — ∂+ς+∝+ν)
 pub mod caesura;
 
+// Flywheel Loop Engine (5-loop cascade, VDAG, live metrics — ς+κ+∂+→+N)
+pub mod flywheel;
+
 // Formula-Derived Tools (KU extraction → MCP tools: F-004, F-007, F-008, F-011, F-015)
 pub mod formula;
 

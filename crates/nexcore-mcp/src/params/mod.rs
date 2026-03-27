@@ -51,6 +51,7 @@ pub mod dtree;
 pub mod edu;
 pub mod energy;
 pub mod faers;
+pub mod flywheel;
 pub mod forge;
 pub mod formula;
 pub mod foundation;

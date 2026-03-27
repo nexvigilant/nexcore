@@ -59,6 +59,11 @@ pub enum T1Primitive {
     Irreversibility,
     /// Exclusive disjunction; exactly one of N variants (enum, match).
     Sum,
+    /// Catch-all for unrecognized groundings in stored data.
+    /// Prevents deserialization failures when DB contains values
+    /// not yet in this enum (e.g. "conservation").
+    #[serde(other)]
+    Unknown,
 }
 
 impl fmt::Display for T1Primitive {
@@ -79,6 +84,7 @@ impl fmt::Display for T1Primitive {
             Self::Location => "location",
             Self::Irreversibility => "irreversibility",
             Self::Sum => "sum",
+            Self::Unknown => "unknown",
         };
         write!(f, "{s}")
     }
@@ -2119,6 +2125,13 @@ mod tests {
         let json = serde_json::to_string(&original).expect("serialize");
         let deserialized: T1Primitive = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(original, deserialized);
+    }
+
+    #[test]
+    fn test_unknown_variant_deser() {
+        let unknown: T1Primitive = serde_json::from_str("\"conservation\"").expect("deser unknown");
+        assert_eq!(unknown, T1Primitive::Unknown);
+        assert_eq!(unknown.to_string(), "unknown");
     }
 
     // ========== Confidence Decay Tests ==========

@@ -427,6 +427,60 @@ pub fn evaluate(
     }
 }
 
+/// Run cascade + grade with extension loops folded in.
+///
+/// Extension evidence is appended to the core 5-loop evidence. Weights are
+/// renormalized so that core loops share `1.0 - extension_weight_sum` and
+/// extension loops keep their declared weights.
+pub fn evaluate_extended(
+    input: &CascadeInput,
+    thresholds: &FlywheelThresholds,
+    goal: &FlywheelGoal,
+    extensions: &crate::extensions::ExtensionInputs,
+) -> GradedCascadeResult {
+    let cascade_result = cascade(input, thresholds);
+    let mut reality = grade_cascade(&cascade_result, goal);
+
+    // Fold in extension evidence
+    let ext_evidence = crate::extensions::evaluate_extensions(extensions);
+    if !ext_evidence.is_empty() {
+        let ext_weight_sum: f64 = ext_evidence.iter().map(|e| e.weight).sum();
+        let core_scale = (1.0 - ext_weight_sum).max(0.1); // Don't let core vanish
+
+        // Rescale core weights
+        let core_weight_sum: f64 = reality.per_loop.iter().map(|e| e.weight).sum();
+        if core_weight_sum > f64::EPSILON {
+            for e in &mut reality.per_loop {
+                e.weight = (e.weight / core_weight_sum) * core_scale;
+            }
+        }
+
+        // Append extensions
+        reality.per_loop.extend(ext_evidence);
+
+        // Recompute composite score
+        let total_weight: f64 = reality.per_loop.iter().map(|e| e.weight).sum();
+        let weighted_sum: f64 = reality
+            .per_loop
+            .iter()
+            .map(|e| e.weight * e.quality.score())
+            .sum();
+        reality.score = if total_weight.abs() < f64::EPSILON {
+            0.0
+        } else {
+            (weighted_sum / total_weight).clamp(0.0, 1.0)
+        };
+        reality.rating = classify_rating(reality.score);
+        reality.executable = reality.score >= 0.20;
+    }
+
+    GradedCascadeResult {
+        cascade: cascade_result,
+        reality,
+        goal: goal.clone(),
+    }
+}
+
 /// Analyze a history of cascade records to produce learning insights.
 ///
 /// - Single loop: identify which loops failed most recently.

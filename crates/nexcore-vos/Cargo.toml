@@ -1,0 +1,14 @@
+[package]
+name = "nexcore-vos"
+version = "0.1.0"
+edition = "2024"
+description = "Vigilance Operating System — CLI for nexcore-pv-core computation"
+
+[[bin]]
+name = "vos-compute"
+path = "src/main.rs"
+
+[dependencies]
+nexcore-pv-core = { path = "../nexcore-pv-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }

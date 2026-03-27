@@ -23,6 +23,10 @@ pub mod components;
 pub mod equations;
 /// Flywheel event envelope and typed event kinds.
 pub mod event;
+/// Extension loops — trust, immunity, skill maturation (alongside core 5).
+pub mod extensions;
+/// Live data adapter — maps Guardian/Immunity/session metrics to CascadeInput.
+pub mod live;
 /// Five autonomous feedback loops (rim, momentum, friction, gyroscopic, elastic).
 pub mod loops;
 /// Module-to-loop mapping for NexVigilant product modules.

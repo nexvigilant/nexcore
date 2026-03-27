@@ -190,6 +190,16 @@ async fn dispatch_inner(
         "foundation_spectral_overlap" => typed(params, tools::formula::spectral_overlap),
 
         // ====================================================================
+        // Flywheel Loop Engine Tools (5)
+        // ====================================================================
+        "flywheel_vitals" => typed(params, tools::flywheel::flywheel_vitals),
+        "flywheel_cascade" => typed(params, tools::flywheel::flywheel_cascade),
+        "flywheel_reality" => typed(params, tools::flywheel::flywheel_reality),
+        "flywheel_learn" => typed(params, tools::flywheel::flywheel_learn),
+        "flywheel_evaluate_live" => typed(params, tools::flywheel::flywheel_evaluate_live),
+        "flywheel_evaluate_extended" => typed(params, tools::flywheel::flywheel_evaluate_extended),
+
+        // ====================================================================
         // PV Signal Detection Tools (8)
         // ====================================================================
         "pv_signal_complete" => typed(params, tools::pv::signal_complete),
@@ -3067,6 +3077,7 @@ fn unified_catalog_data() -> serde_json::Value {
             "pv": ["pv_signal_complete", "pv_signal_prr", "pv_signal_ror", "pv_signal_ic", "pv_signal_ebgm", "pv_chi_square", "pv_signal_cooperative", "pv_naranjo_quick", "pv_who_umc_quick", "pv_signal_strength"],
             "pv_core": ["pv_core_ivf_assess", "pv_core_ivf_axioms", "pv_core_severity_assess", "pv_core_kaplan_meier", "pv_core_log_rank", "pv_core_cumulative_incidence", "pv_core_cox", "pv_core_hazard_ratio", "pv_core_fdr_adjust", "pv_core_bayesian_beta_binomial", "pv_core_bayesian_gamma_poisson", "pv_core_bayesian_sequential"],
             "benefit_risk": ["pv_qbri_compute", "pv_qbri_derive", "pv_qbri_equation", "qbr_compute", "qbr_simple", "qbr_therapeutic_window"],
+            "flywheel": ["flywheel_vitals", "flywheel_cascade", "flywheel_reality", "flywheel_learn", "flywheel_evaluate_live", "flywheel_evaluate_extended"],
             "signal": ["signal_detect", "signal_batch", "signal_thresholds"],
             "vigilance": ["vigilance_safety_margin", "vigilance_risk_score", "vigilance_harm_types", "vigilance_map_to_tov", "pv_signal_chart"],
             "guardian": ["guardian_homeostasis_tick", "guardian_evaluate_pv", "guardian_status", "guardian_reset", "guardian_inject_signal", "guardian_sensors_list", "guardian_actuators_list", "guardian_history", "guardian_subscribe", "guardian_originator_classify", "guardian_ceiling_for_originator", "guardian_space3d_compute", "guardian_adversarial_input", "adversarial_decision_probe", "pv_control_loop_tick", "fda_bridge_evaluate", "fda_bridge_batch"],

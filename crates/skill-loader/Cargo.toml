@@ -9,7 +9,7 @@ repository.workspace = true
 
 [dependencies]
 nexcore-error = { workspace = true }
-skill-core = { version = "0.1.0", path = "../skill-core"}
+skill-core = { version = "0.1.0", path = "../skill-core" }
 serde = { version = "1.0", features = ["derive"] }
 serde_yml = "0.0.12"
 nexcore-fs = { workspace = true }

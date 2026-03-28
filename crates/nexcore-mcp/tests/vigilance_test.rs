@@ -124,6 +124,87 @@ fn test_map_to_tov_invalid() {
 }
 
 // =============================================================================
+// Live Proof — 4 cases through dual-mode scorer
+// =============================================================================
+
+#[test]
+fn proof_dual_mode_live() {
+    let cases: Vec<(&str, &str, f64, f64, f64, f64, u64, &str)> = vec![
+        (
+            "Metformin",
+            "Lactic Acidosis",
+            71.42,
+            72.86,
+            4.80,
+            4.80,
+            18372,
+            "TRUE POSITIVE",
+        ),
+        (
+            "TestDrug-A",
+            "Hepatotoxicity",
+            8.0,
+            4.0,
+            -2.0,
+            0.5,
+            100,
+            "MASKING",
+        ),
+        ("TestDrug-B", "Rash", 2.5, 1.2, 0.3, 1.5, 15, "MARGINAL"),
+        (
+            "Placebo",
+            "Headache",
+            0.5,
+            0.3,
+            -1.5,
+            0.5,
+            50,
+            "TRUE NEGATIVE",
+        ),
+    ];
+
+    for (drug, event, prr, ror, ic, eb, n, label) in cases {
+        let params = RiskScoreGeometricParams {
+            drug: drug.to_string(),
+            event: event.to_string(),
+            prr,
+            ror_lower: ror,
+            ic025: ic,
+            eb05: eb,
+            n,
+            mode: "dual".to_string(),
+            weights: None,
+        };
+        let result = vigilance::risk_score_geometric(params).unwrap();
+        let text = &result.content[0].as_text().unwrap().text;
+        let json: serde_json::Value = serde_json::from_str(text).unwrap();
+
+        eprintln!("\n>>> {drug} + {event} [{label}]");
+        eprintln!(
+            "  Additive:  {} [{}]",
+            json["additive"]["score"], json["additive"]["level"]
+        );
+        eprintln!(
+            "  Geometric: {} [{}]",
+            json["geometric"]["composite_score"], json["geometric"]["level"]
+        );
+        eprintln!("  Signals:   {}", json["geometric"]["signals_detected"]);
+        eprintln!(
+            "  Divergence: {} | Masking: {}",
+            json["divergence"], json["compensatory_masking"]
+        );
+        eprintln!("  {}", json["divergence_explanation"]);
+
+        // Structural assertions
+        assert!(json["additive"]["score"].is_object() || json["additive"]["score"].is_number());
+        assert!(
+            json["geometric"]["composite_score"].is_object()
+                || json["geometric"]["composite_score"].is_number()
+        );
+    }
+}
+
+// =============================================================================
 // Non-Compensatory Geometric Scoring (ASDF v2.0)
 // =============================================================================
 

@@ -6133,6 +6133,48 @@ impl NexCoreMcpServer {
     ) -> Result<CallToolResult, McpError> {
         tools::publishing::read_epub(params)
     }
+
+    // ── Drug Entity Tools (4) — static catalog of 10 drugs ───────────────
+
+    #[tool(
+        description = "Get the complete safety profile for a drug from the static catalog. Returns identity, mechanism, drug class, indications, contraindications, all safety signals (PRR/ROR/IC), and label status. Supports: tirzepatide, semaglutide, donanemab, pembrolizumab, adalimumab, apixaban, dapagliflozin, osimertinib, secukinumab, upadacitinib."
+    )]
+    async fn drug_profile(
+        &self,
+        Parameters(params): Parameters<params::drug_tools::DrugProfileParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::drug_tools::drug_profile(params)
+    }
+
+    #[tool(
+        description = "Get all pharmacovigilance safety signals for a drug with PRR, ROR, and IC disproportionality statistics. Returns on-label vs off-label signal split and the strongest signal by PRR. Supports the same 10 catalog drugs as drug_profile."
+    )]
+    async fn drug_signals(
+        &self,
+        Parameters(params): Parameters<params::drug_tools::DrugSignalsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::drug_tools::drug_signals(params)
+    }
+
+    #[tool(
+        description = "Compare the safety profiles of two drugs using per-event PRR comparison. For each adverse event present in either drug's signal portfolio, returns which drug has the lower (safer) PRR, or neutral if equal. Useful for head-to-head benefit-risk analysis."
+    )]
+    async fn drug_compare(
+        &self,
+        Parameters(params): Parameters<params::drug_tools::DrugCompareParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::drug_tools::drug_compare(params)
+    }
+
+    #[tool(
+        description = "List all drugs in the catalog that belong to a given drug class. Pass a class name such as 'GLP1ReceptorAgonist', 'CheckpointInhibitor', 'JAKInhibitor', etc. Pass 'all' to list all 10 catalog drugs. Returns generic name, brand names, owner, signal count, and boxed warning status for each member."
+    )]
+    async fn drug_class_members(
+        &self,
+        Parameters(params): Parameters<params::drug_tools::DrugClassMembersParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::drug_tools::drug_class_members(params)
+    }
 }
 
 // ============================================================================

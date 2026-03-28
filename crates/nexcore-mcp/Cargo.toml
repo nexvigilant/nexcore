@@ -141,6 +141,8 @@ nexcore-registry = { workspace = true }
 nexcore-build-orchestrator = { workspace = true }
 # DAG Publish (topological crate publisher — plan, dry-run, status)
 dag-publish = { workspace = true }
+# PV Intelligence (competitive analysis graph — head-to-head, class effects, safety gaps, landscape)
+nexcore-pv-intelligence = { path = "../nexcore-pv-intelligence", version = "1.0.0" }
 # Skills Engine (advanced SQI, maturity, KSB, ecosystem, dependency graph, gap analysis)
 nexcore-skills-engine = { workspace = true }
 

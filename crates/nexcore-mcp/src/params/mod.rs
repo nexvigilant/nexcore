@@ -590,3 +590,7 @@ pub use station::*;
 // Root Cause Diagnosis (organizational 5 Whys + Ishikawa + constraint)
 pub mod root_cause;
 pub use root_cause::*;
+
+// PV Intelligence (competitive analysis — head-to-head, class effects, safety gaps, landscape)
+pub mod pv_intelligence;
+pub use pv_intelligence::*;

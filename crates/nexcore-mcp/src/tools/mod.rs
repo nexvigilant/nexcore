@@ -592,3 +592,6 @@ pub mod microgram;
 
 // Publishing (DOCX → EPUB pipeline, EPUB reader)
 pub mod publishing;
+
+// PV Intelligence (competitive analysis — head-to-head, class effects, safety gaps, landscape)
+pub mod pv_intelligence;

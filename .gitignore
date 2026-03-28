@@ -6,6 +6,7 @@ output/
 *.parquet
 *.bak
 *.workspace-backup
+*-local-command-caveat*.txt
 .gitmodules
 crates/nexcore-control-center/node_modules/
 crates/nexcore-control-center/target/

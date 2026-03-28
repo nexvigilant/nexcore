@@ -123,6 +123,20 @@ nexcore-ghost = { workspace = true }
 nexcore-jeopardy = { workspace = true }
 nexcore-mcp-hot = { workspace = true }
 nexcore-pharma-rd = { workspace = true }
+# Pharma company entity crates (12 companies — profile, signals, pipeline, boxed warnings)
+nexcore-pharma = { workspace = true }
+nexcore-pharma-abbvie = { workspace = true }
+nexcore-pharma-astrazeneca = { workspace = true }
+nexcore-pharma-bms = { workspace = true }
+nexcore-pharma-gsk = { workspace = true }
+nexcore-pharma-jnj = { workspace = true }
+nexcore-pharma-lilly = { workspace = true }
+nexcore-pharma-merck = { workspace = true }
+nexcore-pharma-novartis = { workspace = true }
+nexcore-pharma-novo-nordisk = { workspace = true }
+nexcore-pharma-pfizer = { workspace = true }
+nexcore-pharma-roche = { workspace = true }
+nexcore-pharma-takeda = { workspace = true }
 nexcore-state-theory = { workspace = true }
 # Clinical Trial Validation Paradigm (software validation methodology)
 nexcore-ctvp = { workspace = true }

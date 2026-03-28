@@ -598,3 +598,6 @@ pub mod pv_intelligence;
 
 // Drug entity tools (profile, signals, compare, class members — catalog of 10 drugs)
 pub mod drug_tools;
+
+// Pharma company entity tools (profile, signals, pipeline, boxed warnings — 12 companies)
+pub mod pharma_tools;

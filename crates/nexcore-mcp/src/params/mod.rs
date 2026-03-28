@@ -595,6 +595,10 @@ pub use station::*;
 pub mod root_cause;
 pub use root_cause::*;
 
+// Pharma company entity tools (profile, signals, pipeline, boxed warnings — 12 companies)
+pub mod pharma_tools;
+pub use pharma_tools::*;
+
 // PV Intelligence (competitive analysis — head-to-head, class effects, safety gaps, landscape)
 pub mod pv_intelligence;
 pub use pv_intelligence::*;

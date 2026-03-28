@@ -141,6 +141,19 @@ nexcore-registry = { workspace = true }
 nexcore-build-orchestrator = { workspace = true }
 # DAG Publish (topological crate publisher — plan, dry-run, status)
 dag-publish = { workspace = true }
+
+# Drug entity catalog (10 drugs — profile, signals, compare, class members)
+nexcore-drug = { workspace = true }
+nexcore-drug-adalimumab = { workspace = true }
+nexcore-drug-apixaban = { workspace = true }
+nexcore-drug-dapagliflozin = { workspace = true }
+nexcore-drug-donanemab = { workspace = true }
+nexcore-drug-osimertinib = { workspace = true }
+nexcore-drug-pembrolizumab = { workspace = true }
+nexcore-drug-secukinumab = { workspace = true }
+nexcore-drug-semaglutide = { workspace = true }
+nexcore-drug-tirzepatide = { workspace = true }
+nexcore-drug-upadacitinib = { workspace = true }
 # PV Intelligence (competitive analysis graph — head-to-head, class effects, safety gaps, landscape)
 nexcore-pv-intelligence = { path = "../nexcore-pv-intelligence", version = "1.0.0" }
 # Skills Engine (advanced SQI, maturity, KSB, ecosystem, dependency graph, gap analysis)

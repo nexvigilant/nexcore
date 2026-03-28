@@ -2750,6 +2750,12 @@ async fn dispatch_inner(
         "dag_publish_dry_run" => typed(params, tools::dag_publish::dag_publish_dry_run),
         "dag_publish_status" => typed(params, tools::dag_publish::dag_publish_status),
 
+        // ── Drug entity tools (profile, signals, compare, class members) ──
+        "drug_profile" => typed(params, tools::drug_tools::drug_profile),
+        "drug_signals" => typed(params, tools::drug_tools::drug_signals),
+        "drug_compare" => typed(params, tools::drug_tools::drug_compare),
+        "drug_class_members" => typed(params, tools::drug_tools::drug_class_members),
+
         // ── Build Orchestrator (CI/CD pipeline management) ────────────────
         "build_orchestrator_dry_run" => typed(
             params,
@@ -3278,6 +3284,7 @@ fn unified_catalog_data() -> serde_json::Value {
             "cccp": ["cccp_gap_analysis", "cccp_plan", "cccp_epa_readiness", "cccp_evaluate", "cccp_phase_info"],
             "build_orchestrator": ["build_orchestrator_dry_run", "build_orchestrator_stages", "build_orchestrator_workspace", "build_orchestrator_history", "build_orchestrator_metrics"],
             "dag_publish": ["dag_publish_plan", "dag_publish_dry_run", "dag_publish_status"],
+            "drug": ["drug_profile", "drug_signals", "drug_compare", "drug_class_members"],
             "skills_engine": ["skill_quality_index", "skill_maturity", "skill_ksb_verify", "skill_ecosystem_score", "skill_dependency_graph", "skill_gap_analysis", "skill_evolution_track"],
             "ncbi": ["ncbi_esearch", "ncbi_esummary", "ncbi_efetch", "ncbi_elink", "ncbi_search_and_fetch", "ncbi_search_and_summarize"],
             "entropy": ["entropy_compute"],

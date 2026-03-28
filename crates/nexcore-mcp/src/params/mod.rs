@@ -535,6 +535,10 @@ pub use build_orchestrator::*;
 pub mod dag_publish;
 pub use dag_publish::*;
 
+// Drug entity tools (profile, signals, compare, class members)
+pub mod drug_tools;
+pub use drug_tools::*;
+
 // Skills Engine (advanced skill analysis and quality metrics)
 pub mod skills_engine;
 pub use skills_engine::*;

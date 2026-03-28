@@ -595,3 +595,6 @@ pub mod publishing;
 
 // PV Intelligence (competitive analysis — head-to-head, class effects, safety gaps, landscape)
 pub mod pv_intelligence;
+
+// Drug entity tools (profile, signals, compare, class members — catalog of 10 drugs)
+pub mod drug_tools;

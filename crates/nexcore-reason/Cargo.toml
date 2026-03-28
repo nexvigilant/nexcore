@@ -6,12 +6,13 @@ rust-version.workspace = true
 authors.workspace = true
 description = "Causal reasoning engine — DAG construction, inference, counterfactual testing"
 license.workspace = true
+repository.workspace = true
 
 [dependencies]
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 nexcore-lex-primitiva = { workspace = true }
-nexcore-foundry = { path = "../nexcore-foundry" }
+nexcore-foundry = { path = "../nexcore-foundry", version = "1.0.0" }
 nexcore-error = { workspace = true }
 
 [dev-dependencies]

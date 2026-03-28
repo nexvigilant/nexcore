@@ -4,12 +4,13 @@ name = "nexcore-digestive"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 description = "Digestive system for data processing — sequential pipeline: Mouth(parse) → Stomach(decompose) → Intestine(triage) → Liver(transform)"
 
 [dependencies]
 nexcore-chrono = { workspace = true }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 

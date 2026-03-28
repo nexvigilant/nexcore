@@ -6,13 +6,13 @@ edition = "2024"
 rust-version = "1.85"
 description = "Linux platform implementation for NexCore PAL — sysfs, evdev, DRM backends"
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
-license = "LicenseRef-NexVigilant-Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 keywords = ["linux", "platform", "hal", "drm", "evdev"]
 categories = ["os::linux-apis", "hardware-support"]
 
 [dependencies]
-nexcore-pal = { version = "0.1.0", path = "../nexcore-pal", registry = "nexcore" }
+nexcore-pal = { version = "0.1.0", path = "../nexcore-pal" }
 nix = { version = "0.29", features = ["signal", "process", "fs", "mount", "reboot", "hostname"] }
 tracing = { version = "0.1.40" }
 

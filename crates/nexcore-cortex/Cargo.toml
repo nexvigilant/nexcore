@@ -5,7 +5,7 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 description = "Local LLM inference engine using HuggingFace Candle with NexCloud fine-tuning"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [lib]
@@ -18,7 +18,7 @@ candle-nn = { version = "0.9" }
 candle-transformers = { version = "0.9" }
 hf-hub = { version = "0.4", default-features = false, features = ["ureq"] }
 tokenizers = { version = "0.22" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 tracing = { version = "0.1.40" }

@@ -4,7 +4,8 @@ name = "nexcore-mcp"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 description = "MCP server exposing NexVigilant Core APIs to Claude Code"
 
 [[bin]]
@@ -16,7 +17,7 @@ path = "src/main.rs"
 academy-forge = { workspace = true }
 
 # Autonomous State Machine
-nexcore-asm = { path = "../nexcore-asm" }
+nexcore-asm = { path = "../nexcore-asm", version = "0.1.0" }
 
 # NexCore unified crate (all modules consolidated)
 nexcore-vigilance = { workspace = true, features = ["viz"] }
@@ -47,9 +48,9 @@ nexcore-organize = { workspace = true }
 nexcore-sentinel = { workspace = true }
 nexcore-measure = { workspace = true }
 nexcore-anatomy = { workspace = true }
-nexcore-dataframe = { path = "../nexcore-dataframe" }
+nexcore-dataframe = { path = "../nexcore-dataframe", version = "0.1.0" }
 nexcore-faers-etl = { workspace = true }
-nexcore-fda-guidance = { path = "../nexcore-fda-guidance" }
+nexcore-fda-guidance = { path = "../nexcore-fda-guidance", version = "1.0.0" }
 nexcore-pharos = { workspace = true }
 nexcore-edit-distance = { workspace = true }
 nexcore-integrity = { workspace = true }
@@ -128,10 +129,10 @@ nexcore-ctvp = { workspace = true }
 # Pharmacovigilance DSL extracted from vigilance megacrate
 nexcore-pvdsl = { workspace = true }
 # TRIAL Framework (universal experimentation — FDA clinical trial methodology)
-nexcore-trial = { path = "../nexcore-trial" }
+nexcore-trial = { path = "../nexcore-trial", version = "1.0.0" }
 # The Foundry (dual-pipeline assembly line — typed artifacts + causal reasoning)
-nexcore-foundry = { path = "../nexcore-foundry" }
-nexcore-reason = { path = "../nexcore-reason" }
+nexcore-foundry = { path = "../nexcore-foundry", version = "1.0.0" }
+nexcore-reason = { path = "../nexcore-reason", version = "1.0.0" }
 # Pharmacovigilance Operating System substrate
 nexcore-pvos = { workspace = true }
 # Skill Ecosystem Registry (compliance, ToV monitoring, promotion)
@@ -142,11 +143,11 @@ nexcore-build-orchestrator = { workspace = true }
 nexcore-skills-engine = { workspace = true }
 
 # Chemivigilance Platform (7 new crates — SMILES, descriptors, alerts, QSAR, metabolites, SafetyBrief)
-nexcore-molcore = { path = "../nexcore-molcore" }
-nexcore-structural-alerts = { path = "../nexcore-structural-alerts" }
-nexcore-qsar = { path = "../nexcore-qsar" }
-nexcore-metabolite = { path = "../nexcore-metabolite" }
-nexcore-chemivigilance = { path = "../nexcore-chemivigilance" }
+nexcore-molcore = { path = "../nexcore-molcore", version = "0.1.0" }
+nexcore-structural-alerts = { path = "../nexcore-structural-alerts", version = "0.1.0" }
+nexcore-qsar = { path = "../nexcore-qsar", version = "0.1.0" }
+nexcore-metabolite = { path = "../nexcore-metabolite", version = "0.1.0" }
+nexcore-chemivigilance = { path = "../nexcore-chemivigilance", version = "0.1.0" }
 
 # MCP server framework
 rmcp = { version = "0.14", features = ["server", "transport-io", "transport-streamable-http-server"] }

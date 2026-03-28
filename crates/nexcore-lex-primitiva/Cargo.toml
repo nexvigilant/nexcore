@@ -5,7 +5,7 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 description = "The 16 irreducible Lex Primitiva symbols with mathematical constants grounding"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 keywords = ["primitives", "type-theory", "grounding", "mathematics"]
 categories = ["data-structures", "mathematics"]
@@ -23,7 +23,7 @@ serde_json = { version = "1.0.120" }
 clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
 
 [dev-dependencies]
-stem-math = { version = "0.1.0", path = "../stem-math", registry = "nexcore" }
+stem-math = { version = "0.1.0", path = "../stem-math" }
 proptest = { version = "1.6.0" }
 
 [lints]

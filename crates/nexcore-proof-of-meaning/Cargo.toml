@@ -5,7 +5,8 @@ version = "1.0.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 description = "Chemistry-inspired semantic transformation engine — provable regulatory terminology equivalence"
 
 [dependencies]
@@ -15,7 +16,7 @@ serde_json = { version = "1.0.120" }
 nexcore-id = { workspace = true }
 nexcore-chrono = { workspace = true }
 ordered-float = { version = "4", features = ["serde"] }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 
 
 [lints]

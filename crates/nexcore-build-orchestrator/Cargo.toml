@@ -4,7 +4,8 @@ name = "nexcore-build-orchestrator"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 description = "Full-stack build orchestrator with CI/CD pipeline, live dashboard, and CLI"
 
 [[bin]]
@@ -19,9 +20,9 @@ path = "bin/orchestrator_cli.rs"
 [dependencies]
 nexcore-error = { workspace = true }
 # Workspace (always)
-nexcore-build-gate = { version = "1.0.0", path = "../nexcore-build-gate", registry = "nexcore" }
-nexcore-measure = { version = "1.0.0", path = "../nexcore-measure", registry = "nexcore" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-build-gate = { version = "1.0.0", path = "../nexcore-build-gate" }
+nexcore-measure = { version = "1.0.0", path = "../nexcore-measure" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 nexcore-chrono = { workspace = true }

@@ -4,7 +4,8 @@ name = "nexcore-faers-etl"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 rust-version = "1.85"
 description = "Stream FAERS quarterly ASCII files and generate drug-event contingency tables for signal detection"
 
@@ -18,11 +19,11 @@ path = "src/lib.rs"
 
 [dependencies]
 # Workspace crates (signals consolidated into vigilance::pv::signals)
-nexcore-edit-distance = { version = "1.0.0", path = "../nexcore-edit-distance", registry = "nexcore" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
-nexcore-vigilance = { version = "1.0.0", path = "../nexcore-vigilance", registry = "nexcore" }
+nexcore-edit-distance = { version = "1.0.0", path = "../nexcore-edit-distance" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
+nexcore-vigilance = { version = "1.0.0", path = "../nexcore-vigilance" }
 
-stem-math = { version = "0.1.0", path = "../stem-math", registry = "nexcore" }
+stem-math = { version = "0.1.0", path = "../stem-math" }
 
 # Workspace dependencies
 tokio = { version = "1.38.0", features = ["full"] }
@@ -32,7 +33,7 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
-nexcore-dataframe = { path = "../nexcore-dataframe" }
+nexcore-dataframe = { path = "../nexcore-dataframe", version = "0.1.0" }
 rayon = { version = "1.10.0" }
 nexcore-chrono = { workspace = true }
 

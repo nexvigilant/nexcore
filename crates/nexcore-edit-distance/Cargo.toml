@@ -5,12 +5,13 @@ description = "Generic edit distance framework: pluggable operations, cost model
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 rust-version = "1.85"
 
 [dependencies]
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
-stem-math = { version = "0.1.0", path = "../stem-math", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
+stem-math = { version = "0.1.0", path = "../stem-math" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 

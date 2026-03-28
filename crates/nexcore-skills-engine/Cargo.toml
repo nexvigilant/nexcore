@@ -4,20 +4,20 @@ name = "nexcore-skills-engine"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 rust-version = "1.85"
 description = "Skill registry, routing, validation, taxonomy, and code generation engine"
 
 [dependencies]
 nexcore-error = { workspace = true }
-nexcore-constants = { version = "1.0.0", path = "../nexcore-constants", registry = "nexcore" }
-nexcore-edit-distance = { version = "1.0.0", path = "../nexcore-edit-distance", registry = "nexcore" }
-nexcore-dtree = { version = "1.0.0", path = "../nexcore-dtree", registry = "nexcore" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
-nexcore-measure = { version = "1.0.0", path = "../nexcore-measure", registry = "nexcore" }
+nexcore-constants = { version = "1.0.0", path = "../nexcore-constants" }
+nexcore-edit-distance = { version = "1.0.0", path = "../nexcore-edit-distance" }
+nexcore-dtree = { version = "1.0.0", path = "../nexcore-dtree" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
+nexcore-measure = { version = "1.0.0", path = "../nexcore-measure" }
 nexcore-primitives = { workspace = true }
-nexcore-flywheel = { path = "../nexcore-flywheel" }
+nexcore-flywheel = { path = "../nexcore-flywheel", version = "0.1.0" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 serde_yml = { version = "0.0.12" }

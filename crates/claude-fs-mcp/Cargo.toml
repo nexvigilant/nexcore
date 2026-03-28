@@ -4,7 +4,8 @@ name = "claude-fs-mcp"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 description = "MCP server for full-access .claude filesystem operations with automatic backups"
 
 [[bin]]

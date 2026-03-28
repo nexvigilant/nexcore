@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 description = "Crystalbook Numeral System — base-9 arithmetic from the 8 Laws of System Homeostasis"
 authors = ["Matthew A. Campion <matthew@nexvigilant.com>"]
-license = "SEE LICENSE IN LICENSE"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [dependencies]

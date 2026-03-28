@@ -5,10 +5,15 @@
 //! - `realistic()` — Production settings
 //! - `stress_test()` — Aggressive thresholds for chaos engineering
 
+use nexcore_primitives::glossary::comparison::Threshold;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 /// Configuration for the HomeostasisMachine control loop.
+///
+/// Thresholds use `Threshold<f64>` from the Primitive Glossary — the compiler
+/// enforces that all proportionality comparisons go through typed gate methods
+/// (`above()`, `below()`) rather than raw `>` / `<` on floats.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ControlLoopConfig {
     /// How often the control loop runs a SENSE→ACT cycle.
@@ -20,13 +25,13 @@ pub struct ControlLoopConfig {
     pub signal_half_life: Duration,
 
     /// Proportionality ratio above which dampening is triggered.
-    pub warning_threshold: f64,
+    pub warning_threshold: Threshold<f64>,
 
     /// Critical proportionality ratio.
-    pub critical_threshold: f64,
+    pub critical_threshold: Threshold<f64>,
 
     /// Storm-level proportionality ratio.
-    pub storm_threshold: f64,
+    pub storm_threshold: Threshold<f64>,
 
     /// Hill curve: half-max concentration (K).
     pub hill_k: f64,
@@ -54,9 +59,9 @@ impl ControlLoopConfig {
         Self {
             loop_interval: Duration::from_secs(2),
             signal_half_life: Duration::from_secs(15),
-            warning_threshold: 3.0,
-            critical_threshold: 5.0,
-            storm_threshold: 10.0,
+            warning_threshold: Threshold::new(3.0),
+            critical_threshold: Threshold::new(5.0),
+            storm_threshold: Threshold::new(10.0),
             hill_k: 5.0,
             hill_n: 2.0,
             hill_max_response: 100.0,
@@ -73,9 +78,9 @@ impl ControlLoopConfig {
         Self {
             loop_interval: Duration::from_secs(10),
             signal_half_life: Duration::from_secs(300),
-            warning_threshold: 3.0,
-            critical_threshold: 5.0,
-            storm_threshold: 10.0,
+            warning_threshold: Threshold::new(3.0),
+            critical_threshold: Threshold::new(5.0),
+            storm_threshold: Threshold::new(10.0),
             hill_k: 5.0,
             hill_n: 2.0,
             hill_max_response: 100.0,
@@ -91,9 +96,9 @@ impl ControlLoopConfig {
         Self {
             loop_interval: Duration::from_secs(1),
             signal_half_life: Duration::from_secs(5),
-            warning_threshold: 2.0,
-            critical_threshold: 3.0,
-            storm_threshold: 5.0,
+            warning_threshold: Threshold::new(2.0),
+            critical_threshold: Threshold::new(3.0),
+            storm_threshold: Threshold::new(5.0),
             hill_k: 3.0,
             hill_n: 3.0,
             hill_max_response: 100.0,
@@ -151,7 +156,9 @@ mod tests {
     #[test]
     fn stress_test_aggressive_thresholds() {
         let cfg = ControlLoopConfig::stress_test();
-        assert!(cfg.warning_threshold < ControlLoopConfig::demo().warning_threshold);
+        assert!(
+            cfg.warning_threshold.value() < ControlLoopConfig::demo().warning_threshold.value()
+        );
         assert_eq!(cfg.loop_interval, Duration::from_secs(1));
     }
 

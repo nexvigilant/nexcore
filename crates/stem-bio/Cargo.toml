@@ -12,9 +12,9 @@ categories = ["science"]
 publish = true
 
 [dependencies]
-stem-core = { version = "0.1.0", path = "../stem-core", registry = "nexcore" }
+stem-core = { version = "0.1.0", path = "../stem-core" }
 nexcore-hormone-types = { version = "1.0.0", path = "../nexcore-hormone-types" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }
 
 [dev-dependencies]

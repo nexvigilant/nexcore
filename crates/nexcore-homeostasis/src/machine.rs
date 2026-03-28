@@ -197,9 +197,9 @@ impl HomeostasisMachine {
         );
 
         let storm_detector = StormDetector::new(
-            config.warning_threshold,
-            config.critical_threshold,
-            config.storm_threshold,
+            *config.warning_threshold.value(),
+            *config.critical_threshold.value(),
+            *config.storm_threshold.value(),
             0.1, // acceleration_warning
             0.3, // acceleration_critical
             config.storm_min_duration,
@@ -595,7 +595,7 @@ impl HomeostasisMachine {
         let proportionality = state.proportionality;
 
         // 4. Over-responding: proportionality > critical → dampen 30%.
-        if proportionality > self.config.critical_threshold {
+        if self.config.critical_threshold.above(&proportionality) {
             let target = self.current_response_level * 0.7;
             return ActionData::new(
                 ActionType::Dampen,
@@ -605,7 +605,7 @@ impl HomeostasisMachine {
         }
 
         // 5. Over-responding: proportionality > warning → dampen 10%.
-        if proportionality > self.config.warning_threshold {
+        if self.config.warning_threshold.above(&proportionality) {
             let target = self.current_response_level * 0.9;
             return ActionData::new(
                 ActionType::Dampen,

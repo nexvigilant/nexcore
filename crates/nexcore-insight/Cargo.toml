@@ -5,7 +5,7 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 description = "Insight engine: pattern detection, novelty recognition, connection mapping, and observation compression grounded in Lex Primitiva T1 primitives"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 keywords = ["insight", "pattern-detection", "novelty", "primitives"]
 categories = ["data-structures", "algorithms"]
@@ -14,14 +14,14 @@ categories = ["data-structures", "algorithms"]
 path = "src/lib.rs"
 
 [dependencies]
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 nexcore-chrono = { workspace = true }
 nexcore-id = { workspace = true }
 
 nexcore-error = { workspace = true }
-nexcore-flywheel = { path = "../nexcore-flywheel" }
+nexcore-flywheel = { path = "../nexcore-flywheel", version = "0.1.0" }
 
 [dev-dependencies]
 

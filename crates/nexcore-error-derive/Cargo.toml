@@ -6,6 +6,7 @@ rust-version.workspace = true
 authors.workspace = true
 description = "Derive macro for nexcore-error: #[derive(Error)] replacement for thiserror"
 license.workspace = true
+repository.workspace = true
 
 [lib]
 proc-macro = true

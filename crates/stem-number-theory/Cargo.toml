@@ -13,8 +13,8 @@ publish = true
 
 [dependencies]
 nexcore-error = { workspace = true }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
-stem-core = { version = "0.1.0", path = "../stem-core", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
+stem-core = { version = "0.1.0", path = "../stem-core" }
 serde = { version = "1.0.204", features = ["derive"] }
 
 [dev-dependencies]

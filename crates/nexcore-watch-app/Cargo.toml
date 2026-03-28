@@ -4,7 +4,8 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 authors.workspace = true
-license = "LicenseRef-NexVigilant-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 description = "NexCore watch app — NativeActivity + Slint UI for Galaxy Watch7"
 
 [lib]
@@ -18,7 +19,7 @@ default = []
 slint-ui = ["dep:slint", "dep:android-activity", "dep:ndk", "dep:slint-build"]
 
 [dependencies]
-nexcore-watch-core = { path = "../nexcore-watch-core" }
+nexcore-watch-core = { path = "../nexcore-watch-core", version = "1.0.0" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 

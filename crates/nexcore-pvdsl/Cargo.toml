@@ -4,16 +4,16 @@ name = "nexcore-pvdsl"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 rust-version = "1.85"
 description = "Pharmacovigilance Domain-Specific Language with custom bytecode compiler"
 
 [dependencies]
-nexcore-edit-distance = { version = "1.0.0", path = "../nexcore-edit-distance", registry = "nexcore" }
+nexcore-edit-distance = { version = "1.0.0", path = "../nexcore-edit-distance" }
 nexcore-error = { workspace = true }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
-nexcore-pv-core = { version = "1.0.0", path = "../nexcore-pv-core", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
+nexcore-pv-core = { version = "1.0.0", path = "../nexcore-pv-core" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 

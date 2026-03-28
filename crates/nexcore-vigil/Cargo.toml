@@ -4,7 +4,7 @@ name = "nexcore-vigil"
 version = "0.1.0"
 edition = "2024"
 authors = ["NexVigilant Team", "Matthew Campion"]
-license = "MIT"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 rust-version = "1.85"
 description = "Always-on vigilance orchestrator - voice, webhooks, scheduler integration"
@@ -18,7 +18,7 @@ tokio = { version = "1.36", features = ["full", "tracing"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 nexcore-chrono = { workspace = true }
-nexcore-id = { version = "0.1.0", path = "../nexcore-id", features = ["serde"], registry = "nexcore"}
+nexcore-id = { version = "0.1.0", path = "../nexcore-id", features = ["serde"]}
 async-trait = "0.1.77"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
@@ -39,21 +39,21 @@ reqwest = { version = "0.13.1", features = ["json"] }
 regex = "1.12.2"
 config = "0.15.19"
 parking_lot = "0.12"
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore"}
-nexcore-forge-strategy = { version = "0.1.0", path = "../nexcore-forge-strategy", registry = "nexcore"}
-nexcore-vigilance = { version = "1.0.0", path = "../nexcore-vigilance", registry = "nexcore"}
-nexcore-skill-exec = { version = "1.0.0", path = "../nexcore-skill-exec", registry = "nexcore"}
-nexcore-browser = { version = "0.1.0", path = "../nexcore-browser", registry = "nexcore"}
-nexcore-cortex = { version = "0.1.0", path = "../nexcore-cortex", registry = "nexcore"}
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva"}
+nexcore-forge-strategy = { version = "0.1.0", path = "../nexcore-forge-strategy"}
+nexcore-vigilance = { version = "1.0.0", path = "../nexcore-vigilance"}
+nexcore-skill-exec = { version = "1.0.0", path = "../nexcore-skill-exec"}
+nexcore-browser = { version = "0.1.0", path = "../nexcore-browser"}
+nexcore-cortex = { version = "0.1.0", path = "../nexcore-cortex"}
 nexcore-codec = { workspace = true }
 toml = "0.8"
 
 # Biological subsystem crates (Nervous System integration)
-nexcore-cytokine = { version = "1.0.0", path = "../nexcore-cytokine", registry = "nexcore"}
-nexcore-hormones = { version = "1.0.0", path = "../nexcore-hormones", registry = "nexcore"}
-nexcore-synapse = { version = "1.0.0", path = "../nexcore-synapse", registry = "nexcore"}
-nexcore-immunity = { version = "0.1.0", path = "../nexcore-immunity", registry = "nexcore"}
-nexcore-energy = { version = "0.1.0", path = "../nexcore-energy", registry = "nexcore"}
+nexcore-cytokine = { version = "1.0.0", path = "../nexcore-cytokine"}
+nexcore-hormones = { version = "1.0.0", path = "../nexcore-hormones"}
+nexcore-synapse = { version = "1.0.0", path = "../nexcore-synapse"}
+nexcore-immunity = { version = "0.1.0", path = "../nexcore-immunity"}
+nexcore-energy = { version = "0.1.0", path = "../nexcore-energy"}
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["async_tokio"] }

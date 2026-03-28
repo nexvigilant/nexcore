@@ -5,13 +5,15 @@ edition.workspace = true
 rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
 description = "Self-regulating system framework inspired by biological homeostasis"
 
 [dependencies]
-nexcore-flywheel = { path = "../nexcore-flywheel" }
-nexcore-homeostasis-primitives = { path = "../nexcore-homeostasis-primitives" }
-nexcore-homeostasis-storm = { path = "../nexcore-homeostasis-storm" }
-nexcore-homeostasis-memory = { path = "../nexcore-homeostasis-memory" }
+nexcore-flywheel = { path = "../nexcore-flywheel", version = "0.1.0" }
+nexcore-primitives = { path = "../nexcore-primitives", version = "1.0.0" }
+nexcore-homeostasis-primitives = { path = "../nexcore-homeostasis-primitives", version = "1.0.0" }
+nexcore-homeostasis-storm = { path = "../nexcore-homeostasis-storm", version = "1.0.0" }
+nexcore-homeostasis-memory = { path = "../nexcore-homeostasis-memory", version = "1.0.0" }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 nexcore-error = { workspace = true }

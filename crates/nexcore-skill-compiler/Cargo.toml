@@ -4,7 +4,8 @@ name = "nexcore-skill-compiler"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 description = "Skill Compiler - compose 2+ skills into a single compound skill binary"
 keywords = ["skills", "compiler", "composition", "orchestration"]
 categories = ["command-line-utilities"]
@@ -15,8 +16,8 @@ path = "bin/skill-compile.rs"
 
 [dependencies]
 nexcore-error = { workspace = true }
-nexcore-skill-exec = { version = "1.0.0", path = "../nexcore-skill-exec", registry = "nexcore" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-skill-exec = { version = "1.0.0", path = "../nexcore-skill-exec" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 toml = { version = "0.8.15" }

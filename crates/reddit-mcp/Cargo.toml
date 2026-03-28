@@ -5,7 +5,7 @@ version = "1.0.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 description = "MCP server for Reddit API integration"
 
@@ -15,10 +15,10 @@ path = "src/main.rs"
 
 [dependencies]
 # Reddit API client
-nexcore-social = { version = "1.0.0", path = "../nexcore-social", registry = "nexcore" }
+nexcore-social = { version = "1.0.0", path = "../nexcore-social" }
 
 # Value mining (signal detection)
-nexcore-value-mining = { version = "1.0.0", path = "../nexcore-value-mining", registry = "nexcore" }
+nexcore-value-mining = { version = "1.0.0", path = "../nexcore-value-mining" }
 
 # MCP server framework
 rmcp = { version = "0.14", features = ["server", "transport-io"] }

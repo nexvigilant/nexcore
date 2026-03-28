@@ -18,7 +18,7 @@ edition = "2024"
 rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "NexVigilant Core (nexcore) — The Vigilance Kernel for pharmacovigilance and intelligent automation"
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [workspace.dependencies]

@@ -6,7 +6,7 @@ edition = "2024"
 rust-version = "1.85"
 description = "Platform Abstraction Layer — hardware-agnostic traits for NexCore OS"
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
-license = "LicenseRef-NexVigilant-Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 keywords = ["platform", "hal", "abstraction", "no-std", "os"]
 categories = ["no-std", "hardware-support", "os"]
@@ -14,7 +14,7 @@ categories = ["no-std", "hardware-support", "os"]
 [dependencies]
 # Zero external dependencies — no_std core traits only
 # Optional grounding support
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore", optional = true }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", optional = true }
 serde = { version = "1.0.204", features = ["derive"], optional = true }
 
 [features]

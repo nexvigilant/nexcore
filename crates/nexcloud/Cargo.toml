@@ -4,7 +4,7 @@ name = "nexcloud"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 rust-version = "1.85"
 description = "Rust-native cloud platform: 35-type taxonomy + process supervisor + reverse proxy"
@@ -38,7 +38,7 @@ nexcore-chrono = { workspace = true }
 bytes = { workspace = true }
 http = "1.2"
 nix = { version = "0.29", features = ["signal", "process", "fs", "mount", "reboot", "hostname"] }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 
 [dev-dependencies]
 tempfile = { workspace = true }

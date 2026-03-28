@@ -4,11 +4,12 @@ name = "nexcore-compilation-space"
 version = "0.1.0"
 edition = "2024"
 description = "The Full Compilation Space — 7-axis framework for modeling code transformations"
-license = "LicenseRef-NexVigilant-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 
 [dependencies]
 serde = { version = "1.0.204", features = ["derive"] }
-stem-math = { version = "0.1.0", path = "../stem-math", registry = "nexcore" }
+stem-math = { version = "0.1.0", path = "../stem-math" }
 
 [lints]
 workspace = true

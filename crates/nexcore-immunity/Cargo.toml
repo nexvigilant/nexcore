@@ -8,16 +8,16 @@ version = "0.1.0"
 edition = "2024"
 authors = ["Matthew Alexander Campion, PharmD <matthew@nexvigilant.com>"]
 description = "Antipattern immunity system - self-healing code through learned antibodies"
-license = "LicenseRef-NexVigilant-Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 keywords = ["antipattern", "immunity", "homeostasis", "code-quality"]
 categories = ["development-tools"]
 
 [dependencies]
 nexcore-error = { workspace = true }
-nexcore-flywheel = { path = "../nexcore-flywheel" }
+nexcore-flywheel = { path = "../nexcore-flywheel", version = "0.1.0" }
 nexcore-fs = { workspace = true }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 nexcore-spliceosome = { version = "1.0.0", path = "../nexcore-spliceosome" }
 regex = { version = "1.10.5" }
 serde = { version = "1.0.204", features = ["derive"] }

@@ -4,7 +4,7 @@ name = "nexcore-harm-taxonomy"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 rust-version = "1.85"
 description = "Harm Classification Taxonomy (ToV §9): 8 harm types A-H, conservation law connections, manifestation levels"
@@ -12,7 +12,7 @@ keywords = ["pharmacovigilance", "harm-taxonomy", "safety", "type-theory"]
 categories = ["science", "algorithms"]
 
 [dependencies]
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }
 
 [lints]

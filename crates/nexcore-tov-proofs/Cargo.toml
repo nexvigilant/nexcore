@@ -4,14 +4,15 @@ name = "nexcore-tov-proofs"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 description = "Curry-Howard proof verification for Theory of Vigilance - Theorems as Types, Proofs as Programs"
 keywords = ["proof-verification", "curry-howard", "type-theory", "vigilance", "formal-methods"]
 categories = ["algorithms", "science", "mathematics"]
 
 [dependencies]
-nexcore-constants = { version = "1.0.0", path = "../nexcore-constants", registry = "nexcore" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-constants = { version = "1.0.0", path = "../nexcore-constants" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 typenum = { version = "1.17.0" }
 
 [features]

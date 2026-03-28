@@ -3,7 +3,8 @@
 name = "counter-awareness"
 version = "1.0.0"
 edition = "2024"
-license = "LicenseRef-NexVigilant-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 rust-version = "1.85"
 description = "Detection/counter-detection matrix formalization for multi-spectral awareness resistance"
 

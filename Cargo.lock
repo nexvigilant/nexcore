@@ -9020,6 +9020,7 @@ dependencies = [
  "nexcore-homeostasis-memory",
  "nexcore-homeostasis-primitives",
  "nexcore-homeostasis-storm",
+ "nexcore-primitives",
  "serde",
  "serde_json",
  "tokio",

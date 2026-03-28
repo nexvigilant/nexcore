@@ -4,7 +4,8 @@ version = "1.0.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 description = "SOP-Anatomy-Code triple mapping: 18 governance sections through biological anatomy to software code structures. I.R.O.N.M.A.N. reactor and Capability Transfer Protocol."
 
 [dependencies]

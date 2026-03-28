@@ -4,7 +4,8 @@ name = "nexcore-transcriptase"
 version = "1.0.0"
 edition = "2024"
 rust-version = "1.85"
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "Reverse transcriptase engine — bidirectional data-to-schema pipeline with fidelity verification and violation synthesis"
 keywords = ["transcription", "schema-inference", "code-generation", "fidelity"]
@@ -22,7 +23,7 @@ path = "src/main.rs"
 
 [dependencies]
 nexcore-error = { workspace = true }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }

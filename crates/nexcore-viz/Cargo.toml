@@ -5,7 +5,8 @@ version = "1.0.0"
 edition = "2024"
 rust-version = "1.85"
 description = "STEM visualization engine — SVG diagrams for taxonomy, type composition, confidence propagation, and DAG topology"
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 
 [dependencies]
 nexcore-constants = { workspace = true }

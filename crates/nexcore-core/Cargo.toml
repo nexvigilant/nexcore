@@ -3,18 +3,19 @@
 name = "nexcore-core"
 version = "1.0.0"
 edition = "2021"
-license = "LicenseRef-NexVigilant-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 authors = ["NexVigilant Team"]
 description = "NexVigilant Core Unified PV Execution Kernel"
 
 [dependencies]
-nexcore-vigilance = { version = "1.0.0", path = "../nexcore-vigilance", registry = "nexcore" }
-nexcore-brain = { version = "1.0.0", path = "../nexcore-brain", registry = "nexcore" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-vigilance = { version = "1.0.0", path = "../nexcore-vigilance" }
+nexcore-brain = { version = "1.0.0", path = "../nexcore-brain" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
-nexcore-id = { version = "0.1.0", path = "../nexcore-id", registry = "nexcore", features = ["serde"] }
+nexcore-id = { version = "0.1.0", path = "../nexcore-id", features = ["serde"] }
 duckdb = { version = "1.4.4", features = ["bundled", "chrono"] }
 utoipa = { version = "5.3", features = ["axum_extras", "chrono"] }
 

@@ -7,6 +7,7 @@ rust-version.workspace = true
 authors.workspace = true
 description = "Generalized OpenFDA REST API client covering all endpoints with rate limiting, caching, and V33 contingency"
 license.workspace = true
+repository.workspace = true
 
 [lib]
 name = "nexcore_openfda"

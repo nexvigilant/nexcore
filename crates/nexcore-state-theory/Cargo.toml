@@ -3,7 +3,7 @@
 name = "nexcore-state-theory"
 version = "0.1.0"
 edition = "2024"
-license = "LicenseRef-NexVigilant-Proprietary"
+license = "MIT OR Apache-2.0"
 rust-version = "1.85"
 description = "Universal Theory of State — domain-agnostic state machine foundations"
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
@@ -14,7 +14,7 @@ categories = ["data-structures", "no-std"]
 
 [dependencies]
 serde = { version = "1.0.204", features = ["derive"] }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 
 [dev-dependencies]
 proptest = "1.4"

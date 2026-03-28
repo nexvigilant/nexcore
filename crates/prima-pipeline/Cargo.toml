@@ -4,7 +4,8 @@ name = "prima-pipeline"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "Universal Concept Translator: Prima source -> T1 primitives -> Execution"
 
@@ -13,8 +14,8 @@ name = "prima-translate"
 path = "src/main.rs"
 
 [dependencies]
-prima = { version = "0.1.0", path = "../prima", registry = "nexcore" }
-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore", package = "nexcore-lex-primitiva" }
+prima = { version = "0.1.0", path = "../prima" }
+lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", package = "nexcore-lex-primitiva" }
 tokio = { version = "1.38.0", features = ["full"] }
 nexcore-error = { workspace = true }
 tracing = { version = "0.1.40" }

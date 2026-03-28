@@ -6,14 +6,14 @@ edition = "2024"
 rust-version = "1.85"
 description = "State Operating System — 15-layer runtime for state machine orchestration"
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
-license-file = "LICENSE"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 keywords = ["state-machine", "operating-system", "orchestration", "runtime"]
 categories = ["data-structures", "asynchronous"]
 
 [dependencies]
-nexcore-state-theory = { version = "0.1.0", path = "../nexcore-state-theory", registry = "nexcore" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore", optional = true }
+nexcore-state-theory = { version = "0.1.0", path = "../nexcore-state-theory" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", optional = true }
 serde = { workspace = true }
 
 [dev-dependencies]

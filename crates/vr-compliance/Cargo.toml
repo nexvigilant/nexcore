@@ -4,7 +4,8 @@ description = "PRPaaS compliance engine — GDPR, SOC 2, export controls, and au
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 rust-version = "1.85"
 
 [dependencies]

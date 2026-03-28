@@ -5,7 +5,8 @@ version = "1.0.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["Matthew Campion, PharmD <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 description = "Forward-only compound discovery loop. Assess state, reject regression, search for novelty, arrive at new state. Based on T1 primitive decomposition of Walt Disney's curiosity doctrine."
 
 [dependencies]
@@ -16,7 +17,7 @@ tracing-subscriber = { workspace = true }
 clap = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-nexcore-dataframe = { path = "../nexcore-dataframe" }
+nexcore-dataframe = { path = "../nexcore-dataframe", version = "0.1.0" }
 
 [dev-dependencies]
 tempfile = { workspace = true }

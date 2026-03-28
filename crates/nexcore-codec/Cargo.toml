@@ -2,7 +2,8 @@
 name = "nexcore-codec"
 version = "0.1.0"
 edition = "2024"
-license = "LicenseRef-NexVigilant-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 authors = ["NexVigilant Team"]
 description = "Zero-dependency codec library (hex, base64, percent-encoding) for NexCore ecosystem"
 rust-version = "1.85"

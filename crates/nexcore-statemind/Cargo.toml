@@ -5,11 +5,12 @@ version = "1.0.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 description = "DNA chemistry analysis pipeline: nucleotide encoding, FFT spectral analysis, nearest-neighbor thermodynamics, 3D projection, resonance mapping, mutation stability, k-means clustering, and Theory of Vigilance safety margin computation."
 
 [dependencies]
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 

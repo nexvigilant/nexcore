@@ -4,17 +4,17 @@ name = "nexcore-mesh"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 rust-version = "1.85"
 description = "Runtime mesh networking with discovery, gossip, and resilience — grounded to 14/16 T1 primitives"
 
 [dependencies]
 nexcore-error = { workspace = true }
-nexcore-primitives = { version = "1.0.0", path = "../nexcore-primitives", registry = "nexcore" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
-nexcore-cytokine = { version = "1.0.0", path = "../nexcore-cytokine", registry = "nexcore" }
-nexcore-clearance = { version = "1.0.0", path = "../nexcore-clearance", registry = "nexcore" }
+nexcore-primitives = { version = "1.0.0", path = "../nexcore-primitives" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
+nexcore-cytokine = { version = "1.0.0", path = "../nexcore-cytokine" }
+nexcore-clearance = { version = "1.0.0", path = "../nexcore-clearance" }
 nexcore-chrono = { workspace = true }
 tokio = { version = "1.38.0", features = ["full"] }
 dashmap = { version = "6.0.1" }

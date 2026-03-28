@@ -6,6 +6,7 @@ rust-version.workspace = true
 authors.workspace = true
 description = "Universal experimentation framework derived from FDA clinical trial methodology"
 license.workspace = true
+repository.workspace = true
 
 [dependencies]
 nexcore-error = { workspace = true }

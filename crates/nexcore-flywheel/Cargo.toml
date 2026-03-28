@@ -3,7 +3,8 @@ name = "nexcore-flywheel"
 version = "0.1.0"
 edition = "2024"
 description = "Three-node flywheel bridge with five autonomous loops for self-reinforcing feedback"
-license = "LicenseRef-NexVigilant-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 
 [dependencies]
 nexcore-chrono = { workspace = true }

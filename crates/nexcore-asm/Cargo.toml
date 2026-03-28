@@ -5,13 +5,13 @@ edition = "2024"
 rust-version = "1.85"
 description = "Autonomous State Machine — runtime state machines with guarded transitions, autonomous ticking, and persistence"
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
-license-file = "LICENSE"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 keywords = ["state-machine", "autonomous", "transitions", "guards"]
 categories = ["data-structures"]
 
 [dependencies]
-nexcore-state-theory = { version = "0.1.0", path = "../nexcore-state-theory", registry = "nexcore" }
+nexcore-state-theory = { version = "0.1.0", path = "../nexcore-state-theory" }
 chrono = { workspace = true }
 serde = { workspace = true }
 

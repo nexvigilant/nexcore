@@ -4,7 +4,8 @@ name = "nexcore-compliance"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 rust-version = "1.85"
 description = "Regulatory compliance engine: SAM.gov integration, OSCAL-inspired DSL, FDA/ICH/CIOMS controls"
 
@@ -15,7 +16,7 @@ path = "src/lib.rs"
 [dependencies]
 nexcore-error = { workspace = true }
 # Workspace dependencies
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 tracing = { version = "0.1.40" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }

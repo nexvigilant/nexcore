@@ -5,14 +5,14 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 description = "Zero-dependency error handling for NexVigilant Core ecosystem"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 keywords = ["error", "result", "no-std"]
 categories = ["no-std", "rust-patterns"]
 
 [dependencies]
 # Replaces: thiserror, anyhow
-nexcore-error-derive = { path = "../nexcore-error-derive", optional = true }
+nexcore-error-derive = { path = "../nexcore-error-derive", version = "1.0.0", optional = true }
 serde = { workspace = true, optional = true }
 
 [features]

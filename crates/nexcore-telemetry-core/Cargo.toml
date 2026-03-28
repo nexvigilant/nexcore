@@ -4,7 +4,7 @@ name = "nexcore-telemetry-core"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 rust-version = "1.85"
 description = "Core telemetry aggregation and source monitoring for NexVigilant Core"
@@ -16,8 +16,8 @@ nexcore-error = { workspace = true }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 nexcore-chrono = { workspace = true }
-nexcore-id = { version = "0.1.0", path = "../nexcore-id", registry = "nexcore", features = ["serde"] }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-id = { version = "0.1.0", path = "../nexcore-id", features = ["serde"] }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 nexcore-fs = { workspace = true }
 similar = "2.5"
 

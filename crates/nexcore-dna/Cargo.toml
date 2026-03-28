@@ -5,12 +5,13 @@ version = "1.0.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 description = "DNA-based computation: nucleotide types, data storage, biological operations, a 64-instruction Codon VM, assembler, and disassembler. Zero external dependencies."
 
 [dependencies]
-nexcore-edit-distance = { version = "1.0.0", path = "../nexcore-edit-distance", registry = "nexcore" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-edit-distance = { version = "1.0.0", path = "../nexcore-edit-distance" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 reqwest = { workspace = true }

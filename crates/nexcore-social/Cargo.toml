@@ -5,16 +5,16 @@ version = "1.0.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 description = "Social media API clients for value signal detection"
 
 [dependencies]
 # Social types (extracted for cross-hold consumption)
-nexcore-social-types = { version = "1.0.0", path = "../nexcore-social-types", registry = "nexcore" }
+nexcore-social-types = { version = "1.0.0", path = "../nexcore-social-types" }
 
 # Lex Primitiva grounding
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 
 # HTTP client
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }

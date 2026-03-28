@@ -4,7 +4,7 @@ name = "nexcore-brain"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 rust-version = "1.85"
 description = "Antigravity-style brain system for Claude Code - working memory, artifact versioning, and content-addressable code tracking"
@@ -24,35 +24,35 @@ serde_json = { version = "1.0.120" }
 
 # Date/time and UUIDs
 nexcore-chrono = { workspace = true }
-nexcore-id = { version = "0.1.0", path = "../nexcore-id", registry = "nexcore", features = ["serde"] }
+nexcore-id = { version = "0.1.0", path = "../nexcore-id", features = ["serde"] }
 
 # Cryptographic hashing for content-addressable storage
 nexcore-hash = { workspace = true }
-nexcore-codec = { version = "0.1.0", path = "../nexcore-codec", registry = "nexcore" }
+nexcore-codec = { version = "0.1.0", path = "../nexcore-codec" }
 
 # File system operations
 nexcore-fs = { workspace = true }
 
 # Foundation primitives (BathroomLock for file write protection)
-nexcore-constants = { version = "1.0.0", path = "../nexcore-constants", registry = "nexcore" }
+nexcore-constants = { version = "1.0.0", path = "../nexcore-constants" }
 
 # Tracing for diagnostics
 tracing = { version = "0.1.40" }
 
 # Persistent SQLite storage (dual-write alongside JSON files)
-nexcore-db = { version = "1.0.0", path = "../nexcore-db", registry = "nexcore" }
+nexcore-db = { version = "1.0.0", path = "../nexcore-db" }
 
 # Amplitude growth learning model
-nexcore-synapse = { version = "1.0.0", path = "../nexcore-synapse", registry = "nexcore" }
+nexcore-synapse = { version = "1.0.0", path = "../nexcore-synapse" }
 
 # Lex Primitiva grounding
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 
 # NMD surveillance bridge (learning events → implicit knowledge)
-nexcore-immunity = { version = "0.1.0", path = "../nexcore-immunity", registry = "nexcore" }
+nexcore-immunity = { version = "0.1.0", path = "../nexcore-immunity" }
 
 # Insight trait adapter
-nexcore-insight = { version = "0.1.0", path = "../nexcore-insight", registry = "nexcore", optional = true }
+nexcore-insight = { version = "0.1.0", path = "../nexcore-insight", optional = true }
 
 # CLI
 clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }

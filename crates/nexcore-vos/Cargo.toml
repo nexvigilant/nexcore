@@ -3,12 +3,14 @@ name = "nexcore-vos"
 version = "0.1.0"
 edition = "2024"
 description = "Vigilance Operating System — CLI for nexcore-pv-core computation"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nexvigilant/nexcore"
 
 [[bin]]
 name = "vos-compute"
 path = "src/main.rs"
 
 [dependencies]
-nexcore-pv-core = { path = "../nexcore-pv-core" }
+nexcore-pv-core = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

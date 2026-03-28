@@ -3,14 +3,15 @@ name = "nexcore-structural-alerts"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "ICH M7 structural alert library with substructure matching"
 
 [dependencies]
 nexcore-error = { workspace = true }
-nexcore-molcore = { path = "../nexcore-molcore" }
-prima-chem = { path = "../prima-chem" }
+nexcore-molcore = { path = "../nexcore-molcore", version = "0.1.0" }
+prima-chem = { path = "../prima-chem", version = "0.1.0" }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 

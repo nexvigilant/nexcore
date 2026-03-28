@@ -5,7 +5,8 @@ version = "1.0.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 description = "Innovation exploration for NexVigilant Core primitive ecosystem — new T2-C types, cross-domain bridges, and combination space fill"
 
 # Zero dependencies.

@@ -54,7 +54,8 @@ nt = "nextest run --workspace"
 index = "sparse+http://localhost:8000/api/v1/crates/"
 
 [registry]
-default = "nexcore"
+# default = "nexcore"  # Disabled: publish to crates.io by default
+# Use `cargo publish --registry nexcore` for local Kellnr
 
 [target.aarch64-unknown-linux-gnu]
 linker = "aarch64-linux-gnu-gcc"

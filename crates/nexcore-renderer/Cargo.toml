@@ -4,7 +4,8 @@ name = "nexcore-renderer"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 description = "NexVigilant Browser - 100% Rust rendering engine"
 
 [[bin]]
@@ -42,10 +43,10 @@ url = "2"
 pollster = "0.4"
 
 # Prima language (template engine for nex:// pages)
-prima = { version = "0.1.0", path = "../prima", registry = "nexcore" }
+prima = { version = "0.1.0", path = "../prima" }
 
 # Lex Primitiva grounding
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 
 # Error handling
 nexcore-error = { workspace = true }

@@ -2,7 +2,8 @@
 name = "nexcore-ccim"
 version = "0.1.0"
 edition = "2024"
-license = "LicenseRef-NexVigilant-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 authors = ["NexVigilant Team"]
 description = "Capability Compound Interest Machine — sovereign development acceleration modeled as financial instrument"
 rust-version = "1.85"

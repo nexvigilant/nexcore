@@ -4,7 +4,8 @@ name = "skill-hunter"
 version = "0.1.0"
 edition = "2021"
 description = "Gamified skill validator - hunt down issues in your skill ecosystem"
-license = "MIT"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 
 [[bin]]
 name = "skill-hunter"
@@ -18,7 +19,7 @@ nexcore-fs = { workspace = true }
 console = "0.15"
 indicatif = "0.17"
 rand = "0.8"
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 
 [lints]
 workspace = true

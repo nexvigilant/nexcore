@@ -5,7 +5,8 @@ version = "1.0.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 description = "Transformer attention mechanism modeled as data pipeline: token embedding → self-attention → feed-forward → prediction"
 
 [dependencies]
@@ -17,7 +18,7 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
-nexcore-dataframe = { path = "../nexcore-dataframe" }
+nexcore-dataframe = { path = "../nexcore-dataframe", version = "0.1.0" }
 
 [dev-dependencies]
 proptest = { version = "1.6.0" }

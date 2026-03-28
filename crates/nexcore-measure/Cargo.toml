@@ -5,7 +5,8 @@ description = "Mathematically rigorous crate and workspace quality measurement: 
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 rust-version = "1.85"
 
 [[bin]]
@@ -14,8 +15,8 @@ path = "bin/nexcore_measure.rs"
 
 [dependencies]
 nexcore-error = { workspace = true }
-nexcore-constants = { version = "1.0.0", path = "../nexcore-constants", registry = "nexcore" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-constants = { version = "1.0.0", path = "../nexcore-constants" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 toml = { version = "0.8.15" }

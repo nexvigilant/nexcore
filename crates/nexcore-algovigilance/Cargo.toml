@@ -4,7 +4,7 @@ name = "nexcore-algovigilance"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 rust-version = "1.85"
 description = "Algorithmic vigilance: ICSR deduplication, signal triage with decay, and federated persistence"
@@ -14,8 +14,8 @@ categories = ["algorithms", "science"]
 [dependencies]
 nexcore-error = { workspace = true }
 # NexCore internal
-nexcore-dtree = { version = "1.0.0", path = "../nexcore-dtree", registry = "nexcore" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-dtree = { version = "1.0.0", path = "../nexcore-dtree" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 nexcore-proof-of-meaning = { workspace = true }
 
 # Serialization

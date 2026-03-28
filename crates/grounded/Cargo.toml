@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
 description = "GROUNDED: Giving Reasoning Observable, Unified, Nested, Developmental, Evidence-based Dynamics"
 
 [dependencies]

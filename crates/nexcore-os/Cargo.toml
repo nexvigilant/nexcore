@@ -6,52 +6,52 @@ edition = "2024"
 rust-version = "1.85"
 description = "NexCore OS — Operating system core runtime with STOS-based boot sequence"
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
-license = "LicenseRef-NexVigilant-Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 keywords = ["os", "runtime", "boot", "state-machine", "operating-system"]
 categories = ["os", "embedded"]
 
 [dependencies]
 nexcore-error = { workspace = true }
-nexcore-pal = { version = "0.1.0", path = "../nexcore-pal", registry = "nexcore" }
-nexcore-network = { version = "0.1.0", path = "../nexcore-network", registry = "nexcore" }
-nexcore-audio = { version = "0.1.0", path = "../nexcore-audio", registry = "nexcore" }
-nexcore-state-os = { version = "0.1.0", path = "../nexcore-state-os", registry = "nexcore" }
-nexcore-cytokine = { version = "1.0.0", path = "../nexcore-cytokine", registry = "nexcore" }
-nexcore-energy = { version = "0.1.0", path = "../nexcore-energy", registry = "nexcore" }
-nexcore-clearance = { version = "1.0.0", path = "../nexcore-clearance", registry = "nexcore" }
-nexcore-vault = { version = "1.0.0", path = "../nexcore-vault", registry = "nexcore" }
-nexcore-brain = { version = "1.0.0", path = "../nexcore-brain", registry = "nexcore" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
-nexcore-trust = { version = "0.1.0", path = "../nexcore-trust", registry = "nexcore" }
-nexcore-pal-linux = { version = "0.1.0", path = "../nexcore-pal-linux", registry = "nexcore" }
+nexcore-pal = { version = "0.1.0", path = "../nexcore-pal" }
+nexcore-network = { version = "0.1.0", path = "../nexcore-network" }
+nexcore-audio = { version = "0.1.0", path = "../nexcore-audio" }
+nexcore-state-os = { version = "0.1.0", path = "../nexcore-state-os" }
+nexcore-cytokine = { version = "1.0.0", path = "../nexcore-cytokine" }
+nexcore-energy = { version = "0.1.0", path = "../nexcore-energy" }
+nexcore-clearance = { version = "1.0.0", path = "../nexcore-clearance" }
+nexcore-vault = { version = "1.0.0", path = "../nexcore-vault" }
+nexcore-brain = { version = "1.0.0", path = "../nexcore-brain" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
+nexcore-trust = { version = "0.1.0", path = "../nexcore-trust" }
+nexcore-pal-linux = { version = "0.1.0", path = "../nexcore-pal-linux" }
 nexcore-hash = { workspace = true }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 tracing = { version = "0.1.40" }
 nexcore-chrono = { workspace = true }
 nexcore-fs = { workspace = true }
-nexcore-tov = { version = "1.0.0", path = "../nexcore-tov", registry = "nexcore" }
-nexcore-primitives = { version = "1.0.0", path = "../nexcore-primitives", registry = "nexcore" }
-nexcore-dtree = { version = "1.0.0", path = "../nexcore-dtree", registry = "nexcore" }
-nexcore-ribosome = { version = "1.0.0", path = "../nexcore-ribosome", registry = "nexcore" }
-nexcore-pv-core = { version = "1.0.0", path = "../nexcore-pv-core", registry = "nexcore" }
-nexcore-id = { version = "0.1.0", path = "../nexcore-id", features = ["serde"], registry = "nexcore" }
-antitransformer = { version = "1.0.0", path = "../antitransformer", registry = "nexcore" }
-stem-math = { version = "0.1.0", path = "../stem-math", registry = "nexcore" }
-nexcore-integumentary = { version = "1.0.0", path = "../nexcore-integumentary", registry = "nexcore" }
-nexcore-skeletal = { version = "1.0.0", path = "../nexcore-skeletal", registry = "nexcore" }
-nexcore-muscular = { version = "1.0.0", path = "../nexcore-muscular", registry = "nexcore" }
-nexcore-circulatory = { version = "1.0.0", path = "../nexcore-circulatory", registry = "nexcore" }
-nexcore-respiratory = { version = "1.0.0", path = "../nexcore-respiratory", registry = "nexcore" }
-nexcore-digestive = { version = "1.0.0", path = "../nexcore-digestive", registry = "nexcore" }
-nexcore-lymphatic = { version = "1.0.0", path = "../nexcore-lymphatic", registry = "nexcore" }
-nexcore-nervous = { version = "1.0.0", path = "../nexcore-nervous", registry = "nexcore" }
-nexcore-hormones = { version = "1.0.0", path = "../nexcore-hormones", registry = "nexcore" }
-nexcore-urinary = { version = "1.0.0", path = "../nexcore-urinary", registry = "nexcore" }
-nexcore-reproductive = { version = "1.0.0", path = "../nexcore-reproductive", registry = "nexcore" }
-nexcore-browser = { version = "0.1.0", path = "../nexcore-browser", optional = true, registry = "nexcore" }
-nexcore-insight = { version = "0.1.0", path = "../nexcore-insight", optional = true, registry = "nexcore" }
+nexcore-tov = { version = "1.0.0", path = "../nexcore-tov" }
+nexcore-primitives = { version = "1.0.0", path = "../nexcore-primitives" }
+nexcore-dtree = { version = "1.0.0", path = "../nexcore-dtree" }
+nexcore-ribosome = { version = "1.0.0", path = "../nexcore-ribosome" }
+nexcore-pv-core = { version = "1.0.0", path = "../nexcore-pv-core" }
+nexcore-id = { version = "0.1.0", path = "../nexcore-id", features = ["serde"] }
+antitransformer = { version = "1.0.0", path = "../antitransformer" }
+stem-math = { version = "0.1.0", path = "../stem-math" }
+nexcore-integumentary = { version = "1.0.0", path = "../nexcore-integumentary" }
+nexcore-skeletal = { version = "1.0.0", path = "../nexcore-skeletal" }
+nexcore-muscular = { version = "1.0.0", path = "../nexcore-muscular" }
+nexcore-circulatory = { version = "1.0.0", path = "../nexcore-circulatory" }
+nexcore-respiratory = { version = "1.0.0", path = "../nexcore-respiratory" }
+nexcore-digestive = { version = "1.0.0", path = "../nexcore-digestive" }
+nexcore-lymphatic = { version = "1.0.0", path = "../nexcore-lymphatic" }
+nexcore-nervous = { version = "1.0.0", path = "../nexcore-nervous" }
+nexcore-hormones = { version = "1.0.0", path = "../nexcore-hormones" }
+nexcore-urinary = { version = "1.0.0", path = "../nexcore-urinary" }
+nexcore-reproductive = { version = "1.0.0", path = "../nexcore-reproductive" }
+nexcore-browser = { version = "0.1.0", path = "../nexcore-browser", optional = true }
+nexcore-insight = { version = "0.1.0", path = "../nexcore-insight", optional = true }
 reqwest = { workspace = true }
 dashmap = "6.0.1"
 async-trait = "0.1.81"
@@ -64,7 +64,7 @@ insight = ["dep:nexcore-insight"]
 browser = ["dep:nexcore-browser"]
 
 [dev-dependencies]
-nexcore-pal-linux = { version = "0.1.0", path = "../nexcore-pal-linux", registry = "nexcore" }
+nexcore-pal-linux = { version = "0.1.0", path = "../nexcore-pal-linux" }
 tempfile = { version = "3.10.1" }
 
 

@@ -5,7 +5,8 @@ version = "1.0.0"
 edition = "2024"
 rust-version = "1.85"
 description = "Persistent SQLite storage for NexCore Brain working memory"
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 
 [dependencies]
 nexcore-error = { workspace = true }

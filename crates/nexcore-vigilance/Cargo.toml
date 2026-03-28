@@ -4,26 +4,26 @@ name = "nexcore-vigilance"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 rust-version = "1.85"
 description = "NexVigilant Core: The Vigilance Kernel - Theory of Vigilance, Guardian-AV, and consolidated domain modules"
 
 [dependencies]
-nexcore-constants = { version = "1.0.0", path = "../nexcore-constants", registry = "nexcore" }
-nexcore-edit-distance = { version = "1.0.0", path = "../nexcore-edit-distance", registry = "nexcore" }
-nexcore-tov = { version = "1.0.0", path = "../nexcore-tov", registry = "nexcore" }
-nexcore-harm-taxonomy = { version = "1.0.0", path = "../nexcore-harm-taxonomy", registry = "nexcore" }
-nexcore-pv-core = { version = "1.0.0", path = "../nexcore-pv-core", registry = "nexcore" }
-nexcore-pvdsl = { version = "1.0.0", path = "../nexcore-pvdsl", registry = "nexcore" }
-nexcore-pvos = { version = "1.0.0", path = "../nexcore-pvos", registry = "nexcore" }
-nexcore-skills-engine = { version = "1.0.0", path = "../nexcore-skills-engine", registry = "nexcore" }
-nexcore-guardian-engine = { version = "1.0.0", path = "../nexcore-guardian-engine", registry = "nexcore" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-constants = { version = "1.0.0", path = "../nexcore-constants" }
+nexcore-edit-distance = { version = "1.0.0", path = "../nexcore-edit-distance" }
+nexcore-tov = { version = "1.0.0", path = "../nexcore-tov" }
+nexcore-harm-taxonomy = { version = "1.0.0", path = "../nexcore-harm-taxonomy" }
+nexcore-pv-core = { version = "1.0.0", path = "../nexcore-pv-core" }
+nexcore-pvdsl = { version = "1.0.0", path = "../nexcore-pvdsl" }
+nexcore-pvos = { version = "1.0.0", path = "../nexcore-pvos" }
+nexcore-skills-engine = { version = "1.0.0", path = "../nexcore-skills-engine" }
+nexcore-guardian-engine = { version = "1.0.0", path = "../nexcore-guardian-engine" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.120"
 nexcore-chrono = { workspace = true }
-nexcore-id = { version = "0.1.0", path = "../nexcore-id", features = ["serde"], registry = "nexcore" }
+nexcore-id = { version = "0.1.0", path = "../nexcore-id", features = ["serde"] }
 nexcore-error = { workspace = true }
 
 # AI clients (consolidated from nexcore-ai)
@@ -43,7 +43,7 @@ rand = "0.9.0"
 # Guardian compliance (consolidated from nexcore-guardian)
 regex = "1.10.5"
 sha2 = "0.10.8"
-nexcore-codec = { version = "0.1.0", path = "../nexcore-codec", registry = "nexcore" }
+nexcore-codec = { version = "0.1.0", path = "../nexcore-codec" }
 
 # Command Center (consolidated from nexcore-command-center)
 rust_decimal = { version = "1.37", features = ["serde", "serde-with-str"] }
@@ -70,7 +70,7 @@ tracing = "0.1.40"
 rayon = "1.10.0"
 
 # Decision tree engine (CART)
-nexcore-dtree = { version = "1.0.0", path = "../nexcore-dtree", registry = "nexcore" }
+nexcore-dtree = { version = "1.0.0", path = "../nexcore-dtree" }
 
 # nexcore-foundation = { workspace = true }  # CONSOLIDATED into vigilance::foundation
 
@@ -82,23 +82,23 @@ syn = { version = "2.0.71", features = ["full"] }
 # base64 — REPLACED by nexcore-codec (already in deps from hex migration)
 
 # Browser sensing (for BrowserSensor)
-nexcore-browser = { version = "0.1.0", path = "../nexcore-browser", registry = "nexcore" }
+nexcore-browser = { version = "0.1.0", path = "../nexcore-browser" }
 
 # Cytokine signaling (for CytokineSensor/Actuator)
-nexcore-cytokine = { version = "1.0.0", path = "../nexcore-cytokine", registry = "nexcore" }
+nexcore-cytokine = { version = "1.0.0", path = "../nexcore-cytokine" }
 
 # Ribosome (schema contract registry, for RibosomeDampSensor)
-nexcore-ribosome = { version = "1.0.0", path = "../nexcore-ribosome", registry = "nexcore" }
+nexcore-ribosome = { version = "1.0.0", path = "../nexcore-ribosome" }
 # Biological pipeline crates (for GroundsTo impls)
-nexcore-transcriptase = { version = "1.0.0", path = "../nexcore-transcriptase", registry = "nexcore" }
-nexcore-phenotype = { version = "1.0.0", path = "../nexcore-phenotype", registry = "nexcore" }
-nexcore-hormones = { version = "1.0.0", path = "../nexcore-hormones", registry = "nexcore" }
-signal = { version = "1.0.0", path = "../signal", registry = "nexcore" }
-nexcore-signal-types = { version = "1.0.0", path = "../nexcore-signal-types", registry = "nexcore" }
+nexcore-transcriptase = { version = "1.0.0", path = "../nexcore-transcriptase" }
+nexcore-phenotype = { version = "1.0.0", path = "../nexcore-phenotype" }
+nexcore-hormones = { version = "1.0.0", path = "../nexcore-hormones" }
+signal = { version = "1.0.0", path = "../signal" }
+nexcore-signal-types = { version = "1.0.0", path = "../nexcore-signal-types" }
 nexcore-primitives = { workspace = true }
-nexcore-measure = { version = "1.0.0", path = "../nexcore-measure", registry = "nexcore" }
-stem-math = { version = "0.1.0", path = "../stem-math", registry = "nexcore" }
-nexcore-labs = { version = "1.0.0", path = "../nexcore-labs", registry = "nexcore" }
+nexcore-measure = { version = "1.0.0", path = "../nexcore-measure" }
+stem-math = { version = "0.1.0", path = "../stem-math" }
+nexcore-labs = { version = "1.0.0", path = "../nexcore-labs" }
 nexcore-proof-of-meaning = { workspace = true }
 
 [dev-dependencies]

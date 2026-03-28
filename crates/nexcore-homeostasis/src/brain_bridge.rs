@@ -75,7 +75,7 @@ mod tests {
         let restored = restore_homeostasis_config(&session).unwrap().unwrap();
         assert_eq!(restored.loop_interval, config.loop_interval);
         assert_eq!(restored.signal_half_life, config.signal_half_life);
-        assert!((restored.warning_threshold - config.warning_threshold).abs() < f64::EPSILON);
+        assert!((*restored.warning_threshold.value() - *config.warning_threshold.value()).abs() < f64::EPSILON);
         assert!((restored.hill_k - config.hill_k).abs() < f64::EPSILON);
         assert!((restored.hill_n - config.hill_n).abs() < f64::EPSILON);
     }

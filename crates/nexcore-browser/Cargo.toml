@@ -4,7 +4,7 @@ name = "nexcore-browser"
 version = "0.1.0"
 edition = "2024"
 authors = ["NexVigilant Team", "Matthew Campion"]
-license = "MIT"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 rust-version = "1.85"
 description = "Browser automation foundation for Vigil/Guardian ecosystem"
@@ -12,7 +12,7 @@ description = "Browser automation foundation for Vigil/Guardian ecosystem"
 [dependencies]
 nexcore-error = { workspace = true }
 # Lex Primitiva
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 
 # Browser automation
 chromiumoxide = { version = "0.7", features = ["tokio-runtime"], default-features = false }

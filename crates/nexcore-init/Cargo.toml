@@ -6,7 +6,7 @@ edition = "2024"
 rust-version = "1.85"
 description = "NexCore Init — PID 1 init process for NexCore OS"
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
-license = "LicenseRef-NexVigilant-Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 keywords = ["init", "os", "boot", "pid1"]
 categories = ["os"]
@@ -16,11 +16,11 @@ name = "nexcore-init"
 path = "src/main.rs"
 
 [dependencies]
-nexcore-pal = { version = "0.1.0", path = "../nexcore-pal", registry = "nexcore" }
-nexcore-pal-linux = { version = "0.1.0", path = "../nexcore-pal-linux", registry = "nexcore" }
-nexcore-os = { version = "0.1.0", path = "../nexcore-os", registry = "nexcore" }
-nexcore-shell = { version = "0.1.0", path = "../nexcore-shell", registry = "nexcore" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-pal = { version = "0.1.0", path = "../nexcore-pal" }
+nexcore-pal-linux = { version = "0.1.0", path = "../nexcore-pal-linux" }
+nexcore-os = { version = "0.1.0", path = "../nexcore-os" }
+nexcore-shell = { version = "0.1.0", path = "../nexcore-shell" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 tracing = { version = "0.1.40" }
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 

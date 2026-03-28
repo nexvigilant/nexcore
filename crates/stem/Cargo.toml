@@ -14,11 +14,11 @@ publish = true
 [dependencies]
 nexcore-error = { workspace = true }
 # Derive macros (must stay separate crate - proc-macro requirement)
-stem-derive = { version = "0.1.0", path = "../stem-derive", registry = "nexcore" }
+stem-derive = { version = "0.1.0", path = "../stem-derive" }
 # Direct dependencies (formerly from sub-crates)
-nexcore-constants = { version = "1.0.0", path = "../nexcore-constants", registry = "nexcore" }
+nexcore-constants = { version = "1.0.0", path = "../nexcore-constants" }
 nexcore-hormone-types = { version = "1.0.0", path = "../nexcore-hormone-types" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }
 tracing = { version = "0.1.40" }
 tokio = { version = "1.38.0", features = ["full"] }

@@ -6,6 +6,7 @@ rust-version.workspace = true
 authors.workspace = true
 description = "Typed artifact schemas for The Foundry assembly line architecture"
 license.workspace = true
+repository.workspace = true
 
 [dependencies]
 serde = { workspace = true, features = ["derive"] }

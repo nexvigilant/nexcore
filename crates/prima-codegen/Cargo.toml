@@ -4,7 +4,8 @@ name = "prima-codegen"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "Prima Universal Code Generator - T1 primitives to target languages"
 
@@ -14,8 +15,8 @@ path = "src/bin/codegen.rs"
 
 [dependencies]
 nexcore-error = { workspace = true }
-prima = { version = "0.1.0", path = "../prima", registry = "nexcore" }
-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore", package = "nexcore-lex-primitiva" }
+prima = { version = "0.1.0", path = "../prima" }
+lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", package = "nexcore-lex-primitiva" }
 clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }

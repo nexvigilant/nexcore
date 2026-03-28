@@ -1,8 +1,10 @@
 [package]
 name = "wksp-types"
+description = "Shared workspace types for the NexCore ecosystem"
 version.workspace = true
 edition.workspace = true
-license = "LicenseRef-NexVigilant-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 
 [dependencies]
 serde = { workspace = true }

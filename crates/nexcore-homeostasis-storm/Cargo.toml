@@ -5,10 +5,11 @@ edition.workspace = true
 rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
 description = "Storm detection and prevention for the Homeostasis Machine"
 
 [dependencies]
-nexcore-homeostasis-primitives = { path = "../nexcore-homeostasis-primitives" }
+nexcore-homeostasis-primitives = { path = "../nexcore-homeostasis-primitives", version = "1.0.0" }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 nexcore-error = { workspace = true }

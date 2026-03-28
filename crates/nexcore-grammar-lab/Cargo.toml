@@ -5,15 +5,15 @@ version = "1.0.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
 description = "Grammar algorithms for state functions — experimental Chomsky-Lex Primitiva laboratory"
 
 [dependencies]
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
-stem-core = { version = "0.1.0", path = "../stem-core", registry = "nexcore" }
-stem-math = { version = "0.1.0", path = "../stem-math", registry = "nexcore" }
-stem-phys = { version = "0.1.0", path = "../stem-phys", registry = "nexcore" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
+stem-core = { version = "0.1.0", path = "../stem-core" }
+stem-math = { version = "0.1.0", path = "../stem-math" }
+stem-phys = { version = "0.1.0", path = "../stem-phys" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.120"
 

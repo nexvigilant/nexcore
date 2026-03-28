@@ -3,13 +3,14 @@
 name = "nexcore-trust"
 version = "0.1.0"
 edition = "2024"
-license = "LicenseRef-NexVigilant-Proprietary"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 description = "Bayesian trust engine: Beta(alpha, beta) scoring, asymmetric evidence weighting, temporal decay, multi-dimensional trust (Mayer et al.), and network transitivity"
 
 [dependencies]
-nexcore-flywheel = { version = "0.1.0", path = "../nexcore-flywheel", registry = "nexcore" }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore" }
-stem-math = { version = "0.1.0", path = "../stem-math", registry = "nexcore" }
+nexcore-flywheel = { version = "0.1.0", path = "../nexcore-flywheel" }
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
+stem-math = { version = "0.1.0", path = "../stem-math" }
 
 [lints]
 workspace = true

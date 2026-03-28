@@ -4,15 +4,16 @@ name = "skill-loader"
 version = "0.1.0"
 edition = "2024"
 description = "Load SKILL.md files and bridge to Rust skill crates"
-license = "MIT"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 
 [dependencies]
 nexcore-error = { workspace = true }
-skill-core = { version = "0.1.0", path = "../skill-core", registry = "nexcore"}
+skill-core = { version = "0.1.0", path = "../skill-core"}
 serde = { version = "1.0", features = ["derive"] }
 serde_yml = "0.0.12"
 nexcore-fs = { workspace = true }
-nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva", registry = "nexcore"}
+nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva"}
 
 [lints]
 workspace = true

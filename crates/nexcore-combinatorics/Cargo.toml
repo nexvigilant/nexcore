@@ -3,7 +3,8 @@ name = "nexcore-combinatorics"
 version = "0.1.0"
 edition = "2024"
 description = "Combinatorial algorithms from Dudeney cross-domain transfer: Catalan numbers, derangements, cycle decomposition, Josephus problem, linear extensions"
-license = "MIT"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
 
 [dependencies]
 nexcore-lex-primitiva = { workspace = true }

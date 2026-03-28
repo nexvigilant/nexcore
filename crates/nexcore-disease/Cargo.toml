@@ -1,0 +1,16 @@
+[package]
+name = "nexcore-disease"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Disease domain models — epidemiology, treatment landscape, safety burden, and unmet needs"
+
+[dependencies]
+nexcore-error = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

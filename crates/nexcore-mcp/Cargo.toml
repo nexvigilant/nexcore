@@ -139,6 +139,8 @@ nexcore-pvos = { workspace = true }
 nexcore-registry = { workspace = true }
 # Build Orchestrator (CI/CD pipeline management)
 nexcore-build-orchestrator = { workspace = true }
+# DAG Publish (topological crate publisher — plan, dry-run, status)
+dag-publish = { workspace = true }
 # Skills Engine (advanced SQI, maturity, KSB, ecosystem, dependency graph, gap analysis)
 nexcore-skills-engine = { workspace = true }
 
@@ -238,6 +240,9 @@ nexcore-cortex = { workspace = true }
 # Lex Primitiva (primitive basis, compound growth)
 nexcore-lex-primitiva = { workspace = true }
 nexcore-primitives = { workspace = true }
+
+# Publishing (DOCX → EPUB pipeline, EPUB reader)
+nexcore-publishing = { workspace = true }
 
 # Proof of Meaning (chemistry-inspired semantic equivalence engine)
 nexcore-proof-of-meaning = { workspace = true }

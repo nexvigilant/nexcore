@@ -32,6 +32,9 @@ pub mod git;
 pub mod npm;
 pub mod service;
 
+// DAG Publish introspection (plan, dry-run, status — read-only, no cargo publish)
+pub mod dag_publish;
+
 // Cargo Toolchain (structured build/check/test/clippy/fmt/tree)
 pub mod brain_db;
 pub mod brain_verify;
@@ -586,3 +589,6 @@ pub mod station;
 
 // Microgram Decision Trees (run, test, catalog, coverage, bench, chain execution)
 pub mod microgram;
+
+// Publishing (DOCX → EPUB pipeline, EPUB reader)
+pub mod publishing;

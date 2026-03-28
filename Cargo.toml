@@ -24,6 +24,7 @@ repository = "https://github.com/nexvigilant/nexcore"
 [workspace.dependencies]
 # anyhow — REMOVED: replaced by nexcore-error
 axum = { version = "0.8.0", features = ["macros", "ws"] }
+dag-publish = { path = "tools/dag-publish" }
 # base64 — REPLACED by nexcore-codec (sovereignty campaign Phase 2)
 burn = { version = "0.20", default-features = false, features = ["ndarray", "autodiff", "std"] }
 burn-ndarray = { version = "0.20", features = ["std"] }
@@ -127,6 +128,17 @@ nexcore-cytokine = { path = "crates/nexcore-cytokine", version = "1.0.0" }
 nexcore-db = { path = "crates/nexcore-db", version = "1.0.0" }
 nexcore-declension = { path = "crates/nexcore-declension", version = "1.0.0" }
 nexcore-digestive = { path = "crates/nexcore-digestive", version = "1.0.0" }
+nexcore-disease = { path = "crates/nexcore-disease", version = "1.0.0" }
+nexcore-disease-t2dm = { path = "crates/nexcore-disease-t2dm", version = "1.0.0" }
+nexcore-disease-alzheimers = { path = "crates/nexcore-disease-alzheimers", version = "1.0.0" }
+nexcore-disease-obesity = { path = "crates/nexcore-disease-obesity", version = "1.0.0" }
+nexcore-disease-nsclc = { path = "crates/nexcore-disease-nsclc", version = "1.0.0" }
+nexcore-disease-ra = { path = "crates/nexcore-disease-ra", version = "1.0.0" }
+nexcore-disease-af = { path = "crates/nexcore-disease-af", version = "1.0.0" }
+nexcore-disease-psoriasis = { path = "crates/nexcore-disease-psoriasis", version = "1.0.0" }
+nexcore-disease-hf = { path = "crates/nexcore-disease-hf", version = "1.0.0" }
+nexcore-disease-crohns = { path = "crates/nexcore-disease-crohns", version = "1.0.0" }
+nexcore-disease-mm = { path = "crates/nexcore-disease-mm", version = "1.0.0" }
 nexcore-dna = { path = "crates/nexcore-dna", version = "1.0.0" }
 nexcore-domain-primitives = { path = "crates/nexcore-domain-primitives", version = "0.1.0" }
 nexcore-downloads-scanner = { path = "crates/nexcore-downloads-scanner", version = "0.1.0" }
@@ -182,6 +194,7 @@ nexcore-pal-linux = { path = "crates/nexcore-pal-linux", version = "0.1.0" }
 nexcore-perplexity = { path = "crates/nexcore-perplexity", version = "1.0.0" }
 nexcore-pharma-rd = { path = "crates/nexcore-pharma-rd", version = "1.0.0" }
 nexcore-pharmacovigilance = { path = "crates/nexcore-pharmacovigilance", version = "1.0.0" }
+nexcore-pharma = { path = "crates/nexcore-pharma", version = "1.0.0" }
 nexcore-pharos = { path = "crates/nexcore-pharos", version = "1.0.0" }
 nexcore-phenotype = { path = "crates/nexcore-phenotype", version = "1.0.0" }
 nexcore-primitive-scanner = { path = "crates/nexcore-primitive-scanner", version = "1.0.0" }
@@ -189,6 +202,7 @@ nexcore-primitives = { path = "crates/nexcore-primitives", version = "1.0.0" }
 nexcore-pty = { path = "crates/nexcore-pty", version = "0.1.0" }
 nexcore-preemptive-pv = { path = "crates/nexcore-preemptive-pv", version = "1.0.0" }
 nexcore-proof-of-meaning = { path = "crates/nexcore-proof-of-meaning", version = "1.0.0" }
+nexcore-publishing = { path = "crates/nexcore-publishing", version = "1.0.0" }
 nexcore-pv-core = { path = "crates/nexcore-pv-core", version = "1.0.0" }
 nexcore-pvdsl = { path = "crates/nexcore-pvdsl", version = "1.0.0" }
 nexcore-pvos = { path = "crates/nexcore-pvos", version = "1.0.0" }

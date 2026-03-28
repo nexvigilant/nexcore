@@ -4,8 +4,8 @@
 //! via `nexcore_vigilance::viz` (requires the `viz` feature on nexcore-vigilance).
 
 use crate::params::{
-    MapToTovParams, PvSignalChartParams, PvSignalComparisonParams, RiskScoreParams,
-    SafetyMarginParams,
+    MapToTovParams, PvSignalChartParams, PvSignalComparisonParams, RiskScoreGeometricParams,
+    RiskScoreParams, SafetyMarginParams,
 };
 use crate::tooling::attach_forensic_meta;
 use nexcore_vigilance::guardian::{OriginatorType, RiskContext, calculate_risk_score};
@@ -69,6 +69,120 @@ pub fn risk_score(params: RiskScoreParams) -> Result<CallToolResult, McpError> {
 
     let mut res = CallToolResult::success(vec![Content::text(json.to_string())]);
     attach_forensic_meta(&mut res, result.score.value / 10.0, None, "risk_score");
+    Ok(res)
+}
+
+/// Non-compensatory risk scoring via geometric mean aggregation (ASDF v2.0)
+pub fn risk_score_geometric(params: RiskScoreGeometricParams) -> Result<CallToolResult, McpError> {
+    let context = RiskContext {
+        drug: params.drug.clone(),
+        event: params.event.clone(),
+        prr: params.prr,
+        ror_lower: params.ror_lower,
+        ic025: params.ic025,
+        eb05: params.eb05,
+        n: params.n,
+        originator: OriginatorType::default(),
+    };
+
+    // Parse optional custom weights
+    let custom_weights: Option<[f64; 4]> = params.weights.as_ref().and_then(|w| {
+        if w.len() == 4 {
+            let arr = [w[0], w[1], w[2], w[3]];
+            let sum: f64 = arr.iter().sum();
+            if (sum - 1.0).abs() < 0.01 {
+                Some(arr)
+            } else {
+                None // Invalid weights — fall back to default
+            }
+        } else {
+            None
+        }
+    });
+    let weights_ref = custom_weights.as_ref();
+
+    let mode = params.mode.to_lowercase();
+
+    let json = match mode.as_str() {
+        "additive" => {
+            let result = calculate_risk_score(&context);
+            json!({
+                "mode": "additive",
+                "drug": params.drug,
+                "event": params.event,
+                "score": result.score,
+                "level": result.level,
+                "factors": result.factors,
+            })
+        }
+        "geometric" => {
+            let result = nexcore_guardian_engine::noncompensatory::calculate_noncompensatory_score(
+                &context,
+                weights_ref,
+            );
+            json!({
+                "mode": "geometric_noncompensatory",
+                "drug": params.drug,
+                "event": params.event,
+                "composite_score": result.composite,
+                "level": result.level,
+                "signals_detected": format!("{}/4", result.signals_detected),
+                "n_weight": result.n_weight,
+                "dimensions": result.dimensions,
+                "factors": result.factors,
+                "weights_used": weights_ref.unwrap_or(
+                    &nexcore_guardian_engine::noncompensatory::DEFAULT_WEIGHTS
+                ),
+            })
+        }
+        _ => {
+            // "dual" mode — side-by-side comparison with masking detection
+            let dual = nexcore_guardian_engine::noncompensatory::calculate_dual_mode(
+                &context,
+                weights_ref,
+            );
+            json!({
+                "mode": "dual_comparison",
+                "drug": params.drug,
+                "event": params.event,
+                "additive": {
+                    "score": dual.additive.score,
+                    "level": dual.additive.level,
+                    "factors": dual.additive.factors,
+                },
+                "geometric": {
+                    "composite_score": dual.geometric.composite,
+                    "level": dual.geometric.level,
+                    "signals_detected": format!("{}/4", dual.geometric.signals_detected),
+                    "dimensions": dual.geometric.dimensions,
+                    "factors": dual.geometric.factors,
+                },
+                "divergence": dual.divergence,
+                "compensatory_masking": dual.compensatory_masking,
+                "divergence_explanation": dual.divergence_explanation,
+                "weights_used": weights_ref.unwrap_or(
+                    &nexcore_guardian_engine::noncompensatory::DEFAULT_WEIGHTS
+                ),
+            })
+        }
+    };
+
+    let confidence = match mode.as_str() {
+        "geometric" => {
+            let r = nexcore_guardian_engine::noncompensatory::calculate_noncompensatory_score(
+                &context,
+                weights_ref,
+            );
+            r.composite.value / 100.0
+        }
+        _ => {
+            let r = calculate_risk_score(&context);
+            r.score.value / 100.0
+        }
+    };
+
+    let mut res = CallToolResult::success(vec![Content::text(json.to_string())]);
+    attach_forensic_meta(&mut res, confidence, None, "risk_score_geometric");
     Ok(res)
 }
 

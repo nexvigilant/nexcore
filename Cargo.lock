@@ -3488,6 +3488,7 @@ dependencies = [
  "clap",
  "nexcore-error",
  "serde",
+ "serde_json",
  "tempfile",
  "toml 0.8.23",
 ]
@@ -8720,6 +8721,115 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexcore-disease"
+version = "1.0.0"
+dependencies = [
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-disease-af"
+version = "1.0.0"
+dependencies = [
+ "nexcore-disease",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-disease-alzheimers"
+version = "1.0.0"
+dependencies = [
+ "nexcore-disease",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-disease-crohns"
+version = "1.0.0"
+dependencies = [
+ "nexcore-disease",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-disease-hf"
+version = "1.0.0"
+dependencies = [
+ "nexcore-disease",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-disease-mm"
+version = "1.0.0"
+dependencies = [
+ "nexcore-disease",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-disease-nsclc"
+version = "1.0.0"
+dependencies = [
+ "nexcore-disease",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-disease-obesity"
+version = "1.0.0"
+dependencies = [
+ "nexcore-disease",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-disease-psoriasis"
+version = "1.0.0"
+dependencies = [
+ "nexcore-disease",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-disease-ra"
+version = "1.0.0"
+dependencies = [
+ "nexcore-disease",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-disease-t2dm"
+version = "1.0.0"
+dependencies = [
+ "nexcore-disease",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "nexcore-dna"
 version = "1.0.0"
 dependencies = [
@@ -8760,6 +8870,115 @@ name = "nexcore-downloads-scanner"
 version = "0.1.0"
 dependencies = [
  "tempfile",
+]
+
+[[package]]
+name = "nexcore-drug"
+version = "1.0.0"
+dependencies = [
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-drug-adalimumab"
+version = "1.0.0"
+dependencies = [
+ "nexcore-drug",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-drug-apixaban"
+version = "1.0.0"
+dependencies = [
+ "nexcore-drug",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-drug-dapagliflozin"
+version = "1.0.0"
+dependencies = [
+ "nexcore-drug",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-drug-donanemab"
+version = "1.0.0"
+dependencies = [
+ "nexcore-drug",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-drug-osimertinib"
+version = "1.0.0"
+dependencies = [
+ "nexcore-drug",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-drug-pembrolizumab"
+version = "1.0.0"
+dependencies = [
+ "nexcore-drug",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-drug-secukinumab"
+version = "1.0.0"
+dependencies = [
+ "nexcore-drug",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-drug-semaglutide"
+version = "1.0.0"
+dependencies = [
+ "nexcore-drug",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-drug-tirzepatide"
+version = "1.0.0"
+dependencies = [
+ "nexcore-drug",
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-drug-upadacitinib"
+version = "1.0.0"
+dependencies = [
+ "nexcore-drug",
+ "nexcore-error",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -9261,6 +9480,7 @@ dependencies = [
  "axum 0.8.8",
  "core-true",
  "counter-awareness",
+ "dag-publish",
  "disney-loop",
  "flate2",
  "grounded",
@@ -9356,6 +9576,7 @@ dependencies = [
  "nexcore-primitive-scanner",
  "nexcore-primitives",
  "nexcore-proof-of-meaning",
+ "nexcore-publishing",
  "nexcore-pv-core",
  "nexcore-pvdsl",
  "nexcore-pvos",
@@ -9737,10 +9958,129 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexcore-pharma"
+version = "1.0.0"
+dependencies = [
+ "nexcore-error",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-pharma-abbvie"
+version = "1.0.0"
+dependencies = [
+ "nexcore-error",
+ "nexcore-pharma",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-pharma-astrazeneca"
+version = "1.0.0"
+dependencies = [
+ "nexcore-error",
+ "nexcore-pharma",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-pharma-bms"
+version = "1.0.0"
+dependencies = [
+ "nexcore-error",
+ "nexcore-pharma",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-pharma-gsk"
+version = "1.0.0"
+dependencies = [
+ "nexcore-error",
+ "nexcore-pharma",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-pharma-jnj"
+version = "1.0.0"
+dependencies = [
+ "nexcore-error",
+ "nexcore-pharma",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-pharma-lilly"
+version = "1.0.0"
+dependencies = [
+ "nexcore-error",
+ "nexcore-pharma",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-pharma-merck"
+version = "1.0.0"
+dependencies = [
+ "nexcore-error",
+ "nexcore-pharma",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-pharma-novartis"
+version = "1.0.0"
+dependencies = [
+ "nexcore-error",
+ "nexcore-pharma",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-pharma-pfizer"
+version = "1.0.0"
+dependencies = [
+ "nexcore-error",
+ "nexcore-pharma",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "nexcore-pharma-rd"
 version = "1.0.0"
 dependencies = [
  "nexcore-lex-primitiva",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-pharma-roche"
+version = "1.0.0"
+dependencies = [
+ "nexcore-error",
+ "nexcore-pharma",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-pharma-takeda"
+version = "1.0.0"
+dependencies = [
+ "nexcore-error",
+ "nexcore-pharma",
  "serde",
  "serde_json",
 ]
@@ -9854,6 +10194,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexcore-publishing"
+version = "1.0.0"
+dependencies = [
+ "quick-xml 0.37.5",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "zip 4.6.1",
+]
+
+[[package]]
 name = "nexcore-pv-core"
 version = "1.0.0"
 dependencies = [
@@ -9878,6 +10229,15 @@ dependencies = [
  "serde_json",
  "signal",
  "tempfile",
+]
+
+[[package]]
+name = "nexcore-pv-intelligence"
+version = "1.0.0"
+dependencies = [
+ "nexcore-error",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -19436,6 +19796,20 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.116",
+]
+
+[[package]]
+name = "zip"
+version = "4.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "caa8cd6af31c3b31c6631b8f483848b91589021b28fffe50adada48d4f4d2ed1"
+dependencies = [
+ "arbitrary",
+ "crc32fast",
+ "flate2",
+ "indexmap 2.13.0",
+ "memchr",
+ "zopfli",
 ]
 
 [[package]]

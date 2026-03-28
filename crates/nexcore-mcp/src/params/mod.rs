@@ -143,6 +143,7 @@ pub mod prima;
 pub mod primitive_scanner;
 pub mod primitive_validation;
 pub mod principles;
+pub mod publishing;
 pub mod registry;
 pub mod relay;
 pub mod value_mining;
@@ -529,6 +530,10 @@ pub use knowledge_vault::*;
 // Build Orchestrator (CI/CD pipeline management)
 pub mod build_orchestrator;
 pub use build_orchestrator::*;
+
+// DAG Publish introspection (plan, dry-run, status)
+pub mod dag_publish;
+pub use dag_publish::*;
 
 // Skills Engine (advanced skill analysis and quality metrics)
 pub mod skills_engine;

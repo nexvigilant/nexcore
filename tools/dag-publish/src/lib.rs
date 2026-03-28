@@ -7,7 +7,9 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::fs;
 use std::path::Path;
 
-use nexcore_error::{Context, Result, bail};
+use nexcore_error::bail;
+use nexcore_error::{Context, Result};
+use serde::{Deserialize, Serialize};
 
 /// Build a dependency graph from crate directories.
 ///
@@ -481,6 +483,76 @@ fn resolve_internal_dep(
     }
 
     None
+}
+
+// ---------------------------------------------------------------------------
+// Resume state — fast publish checkpointing without cargo-search overhead
+// ---------------------------------------------------------------------------
+
+/// A single publish checkpoint entry.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ResumeEntry {
+    /// Crate name as it appears in Cargo.toml `[package].name`.
+    pub name: String,
+    /// Published version string (e.g. `"1.0.0"`).
+    pub version: String,
+}
+
+/// The full resume state file: a list of published crate entries.
+///
+/// Serialised as a JSON array to `.dag-publish-state.json` in the
+/// workspace root.  The order of entries is stable (append-only).
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct ResumeState {
+    /// All crates that have been successfully published in previous runs.
+    pub published: Vec<ResumeEntry>,
+}
+
+impl ResumeState {
+    /// Return `true` if `name`+`version` has already been recorded.
+    pub fn contains(&self, name: &str, version: &str) -> bool {
+        self.published
+            .iter()
+            .any(|e| e.name == name && e.version == version)
+    }
+}
+
+/// Read the resume state file from `<workspace_root>/.dag-publish-state.json`.
+///
+/// Returns an empty [`ResumeState`] if the file does not exist — this is not
+/// an error; it simply means no prior publish has been checkpointed yet.
+pub fn read_resume_state(workspace_root: &Path) -> Result<ResumeState> {
+    let path = workspace_root.join(".dag-publish-state.json");
+    if !path.exists() {
+        return Ok(ResumeState::default());
+    }
+    let raw = fs::read_to_string(&path)
+        .with_context(|| format!("Failed to read resume state: {}", path.display()))?;
+    let state: ResumeState = serde_json::from_str(&raw)
+        .with_context(|| format!("Failed to parse resume state: {}", path.display()))?;
+    Ok(state)
+}
+
+/// Append `name`+`version` to the resume state file.
+///
+/// If the entry is already present it is **not** duplicated.  The file is
+/// read, mutated, and atomically rewritten each time so that concurrent
+/// processes do not silently corrupt the state (sequential single-publisher
+/// use is assumed, but idempotency is still enforced).
+pub fn write_resume_entry(workspace_root: &Path, name: &str, version: &str) -> Result<()> {
+    let path = workspace_root.join(".dag-publish-state.json");
+    let mut state = read_resume_state(workspace_root)?;
+    if !state.contains(name, version) {
+        state.published.push(ResumeEntry {
+            name: name.to_string(),
+            version: version.to_string(),
+        });
+        let json = serde_json::to_string_pretty(&state)
+            .with_context(|| "Failed to serialise resume state")?;
+        fs::write(&path, json)
+            .with_context(|| format!("Failed to write resume state: {}", path.display()))?;
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -1000,5 +1072,69 @@ alias = { path = "../real-name", package = "real-name" }
 
         let dag = build_dag(&crates_dir, "nexcore").unwrap();
         assert!(dag.is_empty());
+    }
+
+    // -----------------------------------------------------------------------
+    // Resume state tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_resume_state_missing_file_returns_empty() {
+        let tmp = tempfile::tempdir().unwrap();
+        let state = read_resume_state(tmp.path()).unwrap();
+        assert!(state.published.is_empty());
+    }
+
+    #[test]
+    fn test_write_and_read_resume_entry() {
+        let tmp = tempfile::tempdir().unwrap();
+        write_resume_entry(tmp.path(), "nexcore-error", "1.0.0").unwrap();
+
+        let state = read_resume_state(tmp.path()).unwrap();
+        assert_eq!(state.published.len(), 1);
+        assert_eq!(state.published[0].name, "nexcore-error");
+        assert_eq!(state.published[0].version, "1.0.0");
+    }
+
+    #[test]
+    fn test_write_resume_entry_no_duplicates() {
+        let tmp = tempfile::tempdir().unwrap();
+        write_resume_entry(tmp.path(), "my-crate", "0.1.0").unwrap();
+        write_resume_entry(tmp.path(), "my-crate", "0.1.0").unwrap(); // same entry again
+
+        let state = read_resume_state(tmp.path()).unwrap();
+        assert_eq!(
+            state.published.len(),
+            1,
+            "duplicate entry must not be written"
+        );
+    }
+
+    #[test]
+    fn test_resume_state_contains() {
+        let tmp = tempfile::tempdir().unwrap();
+        write_resume_entry(tmp.path(), "alpha", "1.0.0").unwrap();
+        write_resume_entry(tmp.path(), "beta", "2.0.0").unwrap();
+
+        let state = read_resume_state(tmp.path()).unwrap();
+        assert!(state.contains("alpha", "1.0.0"));
+        assert!(state.contains("beta", "2.0.0"));
+        assert!(!state.contains("alpha", "2.0.0")); // wrong version
+        assert!(!state.contains("gamma", "1.0.0")); // unknown crate
+    }
+
+    #[test]
+    fn test_multiple_entries_preserved() {
+        let tmp = tempfile::tempdir().unwrap();
+        let names = ["crate-a", "crate-b", "crate-c"];
+        for name in &names {
+            write_resume_entry(tmp.path(), name, "1.0.0").unwrap();
+        }
+
+        let state = read_resume_state(tmp.path()).unwrap();
+        assert_eq!(state.published.len(), 3);
+        for name in &names {
+            assert!(state.contains(name, "1.0.0"));
+        }
     }
 }

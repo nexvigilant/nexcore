@@ -871,6 +871,16 @@ impl NexCoreMcpServer {
     }
 
     #[tool(
+        description = "Non-compensatory risk scoring via geometric mean aggregation. A zero in any dimension (PRR, ROR, IC025, EBGM05) collapses the composite score — one strong metric cannot mask weak evidence. Modes: 'geometric' (default Bayesian-heavy weights), 'additive' (legacy), or 'dual' (side-by-side with masking detection). Based on ASDF v2.0 multiplicative aggregation methodology."
+    )]
+    async fn vigilance_risk_score_geometric(
+        &self,
+        Parameters(params): Parameters<params::vigilance::RiskScoreGeometricParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::vigilance::risk_score_geometric(params)
+    }
+
+    #[tool(
         description = "List all 8 ToV harm types (A-H) with their conservation laws, letters, and affected hierarchy levels."
     )]
     async fn vigilance_harm_types(&self) -> Result<CallToolResult, McpError> {
@@ -6098,6 +6108,30 @@ impl NexCoreMcpServer {
         Parameters(params): Parameters<params::terminal_remote::TerminalRemoteHealthStreamParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::terminal_remote::health_stream(params)
+    }
+
+    // ========================================================================
+    // Publishing Tools (2)
+    // ========================================================================
+
+    #[tool(
+        description = "Convert a DOCX manuscript to a publication-ready EPUB 3.0 ebook. Runs a 7-stage pipeline: INGEST, METADATA, STRUCTURE, STYLE, COVER, GENERATE, VALIDATE. Supports Kindle/KDP compliance checking."
+    )]
+    async fn publish_docx_to_epub(
+        &self,
+        Parameters(params): Parameters<params::publishing::PublishDocxParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::publishing::publish_docx_to_epub(params)
+    }
+
+    #[tool(
+        description = "Read and extract content from an EPUB file. Returns metadata and table of contents by default. Specify a chapter index to read specific chapter content as plain text or HTML."
+    )]
+    async fn read_epub(
+        &self,
+        Parameters(params): Parameters<params::publishing::ReadEpubParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::publishing::read_epub(params)
     }
 }
 

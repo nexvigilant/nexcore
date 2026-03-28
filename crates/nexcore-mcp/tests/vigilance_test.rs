@@ -2,7 +2,9 @@
 //!
 //! Covers safety margin, risk scoring, ToV mapping, and harm types.
 
-use nexcore_mcp::params::{MapToTovParams, RiskScoreParams, SafetyMarginParams};
+use nexcore_mcp::params::{
+    MapToTovParams, RiskScoreGeometricParams, RiskScoreParams, SafetyMarginParams,
+};
 use nexcore_mcp::tools::vigilance;
 
 #[test]
@@ -119,4 +121,160 @@ fn test_map_to_tov_invalid() {
     let text = &content.content[0].as_text().unwrap();
     assert!(text.text.contains("error"));
     assert!(text.text.contains("Invalid level"));
+}
+
+// =============================================================================
+// Non-Compensatory Geometric Scoring (ASDF v2.0)
+// =============================================================================
+
+#[test]
+fn test_geometric_dual_mode_true_positive() {
+    // All 4 metrics above threshold — both modes should agree
+    let params = RiskScoreGeometricParams {
+        drug: "Metformin".to_string(),
+        event: "Lactic Acidosis".to_string(),
+        prr: 5.0,
+        ror_lower: 3.0,
+        ic025: 1.5,
+        eb05: 4.0,
+        n: 100,
+        mode: "dual".to_string(),
+        weights: None,
+    };
+
+    let result = vigilance::risk_score_geometric(params);
+    assert!(result.is_ok());
+    let content = result.unwrap();
+    let text = &content.content[0].as_text().unwrap().text;
+
+    // Must contain dual comparison structure
+    assert!(
+        text.contains("dual_comparison"),
+        "Expected dual mode, got: {text}"
+    );
+    assert!(text.contains("Metformin"));
+    assert!(text.contains("Lactic Acidosis"));
+    assert!(text.contains("compensatory_masking"));
+    assert!(text.contains("divergence_explanation"));
+
+    // Parse and verify no masking for balanced signals
+    let json: serde_json::Value = serde_json::from_str(text).unwrap();
+    assert_eq!(json["compensatory_masking"], false);
+}
+
+#[test]
+fn test_geometric_detects_masking() {
+    // PRR strong, Bayesian metrics absent — geometric should be much lower
+    let params = RiskScoreGeometricParams {
+        drug: "TestDrug".to_string(),
+        event: "TestEvent".to_string(),
+        prr: 8.0,
+        ror_lower: 4.0,
+        ic025: -2.0, // below threshold
+        eb05: 0.5,   // below threshold
+        n: 100,
+        mode: "dual".to_string(),
+        weights: None,
+    };
+
+    let result = vigilance::risk_score_geometric(params);
+    assert!(result.is_ok());
+    let content = result.unwrap();
+    let text = &content.content[0].as_text().unwrap().text;
+
+    let json: serde_json::Value = serde_json::from_str(text).unwrap();
+
+    // Additive score should be higher than geometric (the masking)
+    let additive_level = json["additive"]["level"].as_str().unwrap();
+    let geometric_level = json["geometric"]["level"].as_str().unwrap();
+
+    // Additive gives credit for 2/4 strong metrics; geometric penalizes the 2 absent
+    assert!(
+        json["divergence"].as_f64().unwrap() >= 1.0,
+        "Expected divergence >= 1.0 for imbalanced evidence, got {}. Additive={additive_level}, Geometric={geometric_level}",
+        json["divergence"]
+    );
+}
+
+#[test]
+fn test_geometric_mode_standalone() {
+    // Pure geometric mode
+    let params = RiskScoreGeometricParams {
+        drug: "Semaglutide".to_string(),
+        event: "Pancreatitis".to_string(),
+        prr: 3.0,
+        ror_lower: 2.0,
+        ic025: 0.5,
+        eb05: 3.0,
+        n: 50,
+        mode: "geometric".to_string(),
+        weights: None,
+    };
+
+    let result = vigilance::risk_score_geometric(params);
+    assert!(result.is_ok());
+    let content = result.unwrap();
+    let text = &content.content[0].as_text().unwrap().text;
+
+    assert!(text.contains("geometric_noncompensatory"));
+    assert!(text.contains("composite_score"));
+    assert!(text.contains("dimensions"));
+    assert!(text.contains("signals_detected"));
+
+    let json: serde_json::Value = serde_json::from_str(text).unwrap();
+    assert_eq!(json["signals_detected"], "4/4");
+    // Bayesian-heavy weights should be in output
+    assert!(text.contains("0.35"));
+}
+
+#[test]
+fn test_geometric_custom_weights() {
+    // Override with equal weights
+    let params = RiskScoreGeometricParams {
+        drug: "TestDrug".to_string(),
+        event: "TestEvent".to_string(),
+        prr: 5.0,
+        ror_lower: 3.0,
+        ic025: 1.0,
+        eb05: 3.0,
+        n: 50,
+        mode: "geometric".to_string(),
+        weights: Some(vec![0.25, 0.25, 0.25, 0.25]),
+    };
+
+    let result = vigilance::risk_score_geometric(params);
+    assert!(result.is_ok());
+    let content = result.unwrap();
+    let text = &content.content[0].as_text().unwrap().text;
+
+    // Verify custom weights appear in output
+    let json: serde_json::Value = serde_json::from_str(text).unwrap();
+    let weights = json["weights_used"].as_array().unwrap();
+    assert_eq!(weights[0].as_f64().unwrap(), 0.25);
+    assert_eq!(weights[3].as_f64().unwrap(), 0.25);
+}
+
+#[test]
+fn test_geometric_additive_mode_fallback() {
+    // Pure additive mode through the new tool
+    let params = RiskScoreGeometricParams {
+        drug: "TestDrug".to_string(),
+        event: "TestEvent".to_string(),
+        prr: 5.0,
+        ror_lower: 3.0,
+        ic025: 1.0,
+        eb05: 3.0,
+        n: 50,
+        mode: "additive".to_string(),
+        weights: None,
+    };
+
+    let result = vigilance::risk_score_geometric(params);
+    assert!(result.is_ok());
+    let content = result.unwrap();
+    let text = &content.content[0].as_text().unwrap().text;
+
+    assert!(text.contains("\"mode\":\"additive\""));
+    assert!(text.contains("\"score\":"));
+    assert!(text.contains("\"level\":"));
 }

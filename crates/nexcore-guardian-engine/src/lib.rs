@@ -59,6 +59,11 @@ pub mod spatial_bridge;
 /// Convergence analysis — multi-signal consensus and threshold crystallization.
 pub mod convergence;
 
+/// Non-compensatory risk scoring via multiplicative (geometric mean) aggregation.
+/// Inspired by ASDF v2.0 Sophistication Index — a zero in any dimension collapses
+/// the composite score, preventing one strong metric from masking weak evidence.
+pub mod noncompensatory;
+
 #[cfg(feature = "insight")]
 pub mod insight_adapter;
 
@@ -289,32 +294,43 @@ fn validate_risk_context(context: &RiskContext) -> Result<(), RiskValidationErro
     Ok(())
 }
 
-/// Check which metric thresholds are exceeded
+/// Check which metric thresholds are exceeded.
+/// Thresholds sourced from `SignalCriteria::evans()` — single source of truth.
 /// Returns (raw_score, metrics_triggered, factor_strings)
 fn check_metric_thresholds(ctx: &RiskContext) -> (f64, u32, Vec<String>) {
+    let evans = nexcore_pv_core::thresholds::SignalCriteria::evans();
     let mut score = 0.0;
     let mut count = 0u32;
     let mut factors = Vec::new();
 
-    if ctx.prr >= 2.0 {
+    if ctx.prr >= evans.prr_threshold {
         score += 25.0;
         count += 1;
-        factors.push(format!("PRR >= 2.0 ({:.2})", ctx.prr));
+        factors.push(format!("PRR >= {} ({:.2})", evans.prr_threshold, ctx.prr));
     }
-    if ctx.ror_lower > 1.0 {
+    if ctx.ror_lower > evans.ror_lower_threshold {
         score += 25.0;
         count += 1;
-        factors.push(format!("ROR lower CI > 1.0 ({:.2})", ctx.ror_lower));
+        factors.push(format!(
+            "ROR lower CI > {} ({:.2})",
+            evans.ror_lower_threshold, ctx.ror_lower
+        ));
     }
-    if ctx.ic025 > 0.0 {
+    if ctx.ic025 > evans.ic025_threshold {
         score += 25.0;
         count += 1;
-        factors.push(format!("IC025 > 0 ({:.3})", ctx.ic025));
+        factors.push(format!(
+            "IC025 > {} ({:.3})",
+            evans.ic025_threshold, ctx.ic025
+        ));
     }
-    if ctx.eb05 >= 2.0 {
+    if ctx.eb05 >= evans.eb05_threshold {
         score += 25.0;
         count += 1;
-        factors.push(format!("EB05 >= 2.0 ({:.2})", ctx.eb05));
+        factors.push(format!(
+            "EB05 >= {} ({:.2})",
+            evans.eb05_threshold, ctx.eb05
+        ));
     }
     (score, count, factors)
 }

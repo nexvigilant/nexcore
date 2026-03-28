@@ -2745,6 +2745,11 @@ async fn dispatch_inner(
         "knowledge_vault_move" => typed(params, tools::knowledge_vault::knowledge_vault_move),
         "knowledge_vault_tags" => typed(params, tools::knowledge_vault::knowledge_vault_tags),
 
+        // ── DAG Publish introspection (plan, dry-run, status — read-only) ──
+        "dag_publish_plan" => typed(params, tools::dag_publish::dag_publish_plan),
+        "dag_publish_dry_run" => typed(params, tools::dag_publish::dag_publish_dry_run),
+        "dag_publish_status" => typed(params, tools::dag_publish::dag_publish_status),
+
         // ── Build Orchestrator (CI/CD pipeline management) ────────────────
         "build_orchestrator_dry_run" => typed(
             params,
@@ -3272,6 +3277,7 @@ fn unified_catalog_data() -> serde_json::Value {
             "knowledge_vault": ["knowledge_vault_read", "knowledge_vault_search", "knowledge_vault_list", "knowledge_vault_write", "knowledge_vault_move", "knowledge_vault_tags"],
             "cccp": ["cccp_gap_analysis", "cccp_plan", "cccp_epa_readiness", "cccp_evaluate", "cccp_phase_info"],
             "build_orchestrator": ["build_orchestrator_dry_run", "build_orchestrator_stages", "build_orchestrator_workspace", "build_orchestrator_history", "build_orchestrator_metrics"],
+            "dag_publish": ["dag_publish_plan", "dag_publish_dry_run", "dag_publish_status"],
             "skills_engine": ["skill_quality_index", "skill_maturity", "skill_ksb_verify", "skill_ecosystem_score", "skill_dependency_graph", "skill_gap_analysis", "skill_evolution_track"],
             "ncbi": ["ncbi_esearch", "ncbi_esummary", "ncbi_efetch", "ncbi_elink", "ncbi_search_and_fetch", "ncbi_search_and_summarize"],
             "entropy": ["entropy_compute"],

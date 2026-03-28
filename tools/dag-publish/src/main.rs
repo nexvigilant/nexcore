@@ -1,5 +1,4 @@
 use std::collections::BTreeSet;
-use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
@@ -7,7 +6,9 @@ use std::time::{Duration, Instant};
 use clap::Parser;
 use nexcore_error::{Context, Result, bail};
 
-use dag_publish::{build_dag, group_into_phases, topological_sort};
+use dag_publish::{
+    build_dag, group_into_phases, read_resume_state, topological_sort, write_resume_entry,
+};
 
 #[derive(Parser)]
 #[command(name = "dag-publish")]
@@ -44,6 +45,14 @@ struct Cli {
     /// Skip crates that are already published on crates.io
     #[arg(long)]
     skip_published: bool,
+
+    /// Resume a previous publish run using the local state cache (.dag-publish-state.json).
+    ///
+    /// Faster than --skip-published because it reads the local file instead of
+    /// running `cargo search` for every crate.  The state file is updated after
+    /// each successful publish so interrupted runs can be continued safely.
+    #[arg(long)]
+    resume: bool,
 
     /// Only publish crates matching this prefix (e.g., "stem-" or "nexcore-")
     #[arg(long)]
@@ -186,6 +195,37 @@ fn parse_rate_limit_wait(stderr: &str) -> Option<u64> {
     }
 }
 
+/// Read the version of a crate from its `[package].version` field.
+///
+/// `crates_dir` is the directory that contains all crate subdirectories.
+/// Returns `None` if the version cannot be determined (file missing, parse
+/// error, or no `[package].version` key).
+fn crate_version(crates_dir: &std::path::Path, name: &str) -> Option<String> {
+    // Crate directory might be named differently from the package name, so we
+    // scan for a Cargo.toml whose `[package].name` matches.
+    let entries = std::fs::read_dir(crates_dir).ok()?;
+    for entry in entries.flatten() {
+        let cargo_path = entry.path().join("Cargo.toml");
+        if !cargo_path.exists() {
+            continue;
+        }
+        let contents = std::fs::read_to_string(&cargo_path).ok()?;
+        let doc: toml::Value = contents.parse().ok()?;
+        let pkg_name = doc
+            .get("package")
+            .and_then(|p| p.get("name"))
+            .and_then(|n| n.as_str())?;
+        if pkg_name == name {
+            return doc
+                .get("package")
+                .and_then(|p| p.get("version"))
+                .and_then(|v| v.as_str())
+                .map(|v| v.to_string());
+        }
+    }
+    None
+}
+
 fn validate_crate_name(name: &str) -> Result<()> {
     if name.is_empty() {
         bail!("Crate name cannot be empty");
@@ -221,7 +261,30 @@ fn publish(order: &[String], cli: &Cli) -> Result<()> {
 
     let start = Instant::now();
 
-    // Pre-check: find already published crates
+    // Load resume state (fast local cache) if --resume is set.
+    let resume_state = if cli.resume {
+        let workspace_root = cli
+            .crates_dir
+            .parent()
+            .context("crates_dir has no parent (workspace root)")?;
+        let state = read_resume_state(workspace_root)?;
+        eprintln!(
+            "Resume mode: {} crates already checkpointed",
+            state.published.len()
+        );
+        Some(state)
+    } else {
+        None
+    };
+
+    // Derive workspace root for resume state writes.
+    let workspace_root_for_resume: Option<std::path::PathBuf> = if cli.resume {
+        cli.crates_dir.parent().map(|p| p.to_path_buf())
+    } else {
+        None
+    };
+
+    // Pre-check: find already published crates via cargo search (--skip-published only)
     let already_published: BTreeSet<String> = if cli.skip_published {
         eprintln!("Checking which crates are already on crates.io...");
         filtered
@@ -242,6 +305,21 @@ fn publish(order: &[String], cli: &Cli) -> Result<()> {
 
     for (i, name) in filtered.iter().enumerate() {
         validate_crate_name(name)?;
+
+        // --resume: skip if this name+version is in the local state file.
+        if let Some(ref state) = resume_state {
+            let version =
+                crate_version(&cli.crates_dir, name).unwrap_or_else(|| "unknown".to_string());
+            if state.contains(name, &version) {
+                eprintln!(
+                    "[{}/{}] SKIP {name} v{version} (resume: already checkpointed)",
+                    i + 1,
+                    total
+                );
+                skipped.push(name.to_string());
+                continue;
+            }
+        }
 
         if already_published.contains(*name) {
             eprintln!("[{}/{}] SKIP {name} (already published)", i + 1, total);
@@ -275,6 +353,15 @@ fn publish(order: &[String], cli: &Cli) -> Result<()> {
                 published.push(name.to_string());
                 eprintln!("  ✓ {name} published");
                 success = true;
+
+                // Checkpoint the successful publish into the resume state file.
+                if let Some(ref root) = workspace_root_for_resume {
+                    let version = crate_version(&cli.crates_dir, name)
+                        .unwrap_or_else(|| "unknown".to_string());
+                    if let Err(e) = write_resume_entry(root, name, &version) {
+                        eprintln!("  warning: failed to write resume checkpoint for {name}: {e}");
+                    }
+                }
 
                 // Rate limit delay (skip after last crate)
                 if i + 1 < total && cli.delay > 0 {

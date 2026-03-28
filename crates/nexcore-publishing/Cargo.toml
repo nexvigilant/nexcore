@@ -1,0 +1,21 @@
+[package]
+name = "nexcore-publishing"
+description = "Book publishing pipeline — DOCX to EPUB 3.0 and Kindle-compliant ebooks"
+version = "1.0.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "MIT OR Apache-2.0"
+repository.workspace = true
+rust-version = "1.85"
+
+[dependencies]
+quick-xml = "0.37"
+serde = { workspace = true }
+serde_json = { workspace = true }
+zip = { version = "4.2", default-features = false, features = ["deflate"] }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints]
+workspace = true

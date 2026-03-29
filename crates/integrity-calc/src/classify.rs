@@ -53,3 +53,40 @@ pub fn classify_with_threshold(hill_score: f64, threshold: f64) -> Classificatio
         confidence,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn low_score_is_human() {
+        let c = classify_with_threshold(0.1, 0.64);
+        assert_eq!(c.verdict, Verdict::Human);
+    }
+
+    #[test]
+    fn high_score_is_generated() {
+        let c = classify_with_threshold(0.9, 0.64);
+        assert_eq!(c.verdict, Verdict::Generated);
+    }
+
+    #[test]
+    fn probability_bounded() {
+        let c = classify_with_threshold(0.5, 0.64);
+        assert!(c.probability >= 0.0);
+        assert!(c.probability <= 1.0);
+    }
+
+    #[test]
+    fn confidence_bounded() {
+        let c = classify_with_threshold(0.5, 0.64);
+        assert!(c.confidence >= 0.0);
+        assert!(c.confidence <= 1.0);
+    }
+
+    #[test]
+    fn verdict_display() {
+        assert_eq!(Verdict::Human.to_string(), "human");
+        assert_eq!(Verdict::Generated.to_string(), "generated");
+    }
+}

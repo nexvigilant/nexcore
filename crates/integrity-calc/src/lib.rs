@@ -111,6 +111,52 @@ impl PipelineResult {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pipeline_too_few_tokens() {
+        let result = run_pipeline("hello world", 3, "pv_education");
+        assert!(!result.error.is_empty());
+    }
+
+    #[test]
+    fn pipeline_sufficient_tokens() {
+        let text = (0..60)
+            .map(|i| format!("word{i}"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let result = run_pipeline(&text, 3, "pv_education");
+        assert!(result.error.is_empty());
+        assert!(result.total_tokens >= MIN_TOKENS);
+    }
+
+    #[test]
+    fn pipeline_result_bounded() {
+        let text = (0..100)
+            .map(|i| format!("token{}", i % 30))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let result = run_pipeline(&text, 3, "pv_education");
+        assert!(result.probability >= 0.0 && result.probability <= 1.0);
+        assert!(result.confidence >= 0.0 && result.confidence <= 1.0);
+        assert!(result.hill_score >= 0.0);
+    }
+
+    #[test]
+    fn error_result_is_human() {
+        let result = PipelineResult::error("test".into());
+        assert_eq!(result.verdict, classify::Verdict::Human);
+        assert_eq!(result.probability, 0.0);
+    }
+
+    #[test]
+    fn min_tokens_is_50() {
+        assert_eq!(MIN_TOKENS, 50);
+    }
+}
+
 /// Run the full integrity detection pipeline.
 pub fn run_pipeline(text: &str, bloom_level: u8, preset: &str) -> PipelineResult {
     // Stage 1: Tokenize

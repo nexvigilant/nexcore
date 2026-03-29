@@ -33,3 +33,62 @@ pub fn arrhenius_probability(activation_energy: f64, score: f64, scale: f64) -> 
     let raw = (-activation_energy / effective).exp();
     raw.min(1.0)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn beer_lambert_basic() {
+        let weights = [0.5, 0.5];
+        let features = [0.8, 0.6];
+        let result = beer_lambert_weighted_sum(&weights, &features);
+        assert!((result - 0.7).abs() < 1e-10);
+    }
+
+    #[test]
+    fn beer_lambert_empty() {
+        assert_eq!(beer_lambert_weighted_sum(&[], &[]), 0.0);
+    }
+
+    #[test]
+    fn hill_at_midpoint() {
+        // At x = k_half, Hill should return 0.5
+        let result = hill_amplify(0.5, 0.5, 2.0);
+        assert!((result - 0.5).abs() < 1e-10);
+    }
+
+    #[test]
+    fn hill_zero_input() {
+        assert_eq!(hill_amplify(0.0, 0.5, 2.0), 0.0);
+    }
+
+    #[test]
+    fn hill_negative_input() {
+        assert_eq!(hill_amplify(-1.0, 0.5, 2.0), 0.0);
+    }
+
+    #[test]
+    fn hill_approaches_one() {
+        let result = hill_amplify(100.0, 0.5, 2.0);
+        assert!(result > 0.99);
+    }
+
+    #[test]
+    fn arrhenius_zero_score() {
+        assert_eq!(arrhenius_probability(3.0, 0.0, 10.0), 0.0);
+    }
+
+    #[test]
+    fn arrhenius_high_score() {
+        let result = arrhenius_probability(3.0, 1.0, 10.0);
+        assert!(result > 0.5);
+        assert!(result <= 1.0);
+    }
+
+    #[test]
+    fn arrhenius_bounded_by_one() {
+        let result = arrhenius_probability(0.001, 100.0, 100.0);
+        assert!(result <= 1.0);
+    }
+}

@@ -94,3 +94,64 @@ pub fn entropy_profile(tokens: &[String], window_size: usize, step: usize) -> En
         values,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn entropy_of_empty() {
+        assert_eq!(shannon_entropy(&[]), 0.0);
+    }
+
+    #[test]
+    fn entropy_of_single_token() {
+        let tokens = vec!["hello".to_string()];
+        assert_eq!(shannon_entropy(&tokens), 0.0);
+    }
+
+    #[test]
+    fn entropy_of_uniform_distribution() {
+        let tokens: Vec<String> = vec!["a", "b", "c", "d"]
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect();
+        let h = shannon_entropy(&tokens);
+        // log2(4) = 2.0
+        assert!((h - 2.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn entropy_of_repeated_tokens() {
+        let tokens: Vec<String> = vec!["same"; 10]
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect();
+        assert_eq!(shannon_entropy(&tokens), 0.0);
+    }
+
+    #[test]
+    fn entropy_profile_empty() {
+        let profile = entropy_profile(&[], 50, 25);
+        assert_eq!(profile.window_count, 0);
+        assert_eq!(profile.mean, 0.0);
+    }
+
+    #[test]
+    fn entropy_profile_small_input() {
+        let tokens: Vec<String> = vec!["a", "b", "c"]
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect();
+        let profile = entropy_profile(&tokens, 50, 25);
+        assert_eq!(profile.window_count, 1);
+        assert!(profile.mean > 0.0);
+    }
+
+    #[test]
+    fn entropy_non_negative() {
+        let tokens: Vec<String> = (0..100).map(|i| format!("word{}", i % 20)).collect();
+        let h = shannon_entropy(&tokens);
+        assert!(h >= 0.0);
+    }
+}

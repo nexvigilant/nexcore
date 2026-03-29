@@ -80,3 +80,67 @@ impl BloomThresholds {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bloom_levels_count() {
+        assert_eq!(BLOOM_LEVELS.len(), 7);
+    }
+
+    #[test]
+    fn bloom_level_names() {
+        assert_eq!(BloomThresholds::level_name(1), Some("Remember"));
+        assert_eq!(BloomThresholds::level_name(6), Some("Create"));
+        assert_eq!(BloomThresholds::level_name(7), Some("Meta-Create"));
+        assert_eq!(BloomThresholds::level_name(0), None);
+        assert_eq!(BloomThresholds::level_name(8), None);
+    }
+
+    #[test]
+    fn threshold_for_valid_levels() {
+        let bt = BloomThresholds::pv_education();
+        for level in 1..=7 {
+            assert!(bt.threshold_for_level(level).is_some(), "level {level}");
+        }
+    }
+
+    #[test]
+    fn threshold_for_invalid_levels() {
+        let bt = BloomThresholds::pv_education();
+        assert!(bt.threshold_for_level(0).is_none());
+        assert!(bt.threshold_for_level(8).is_none());
+    }
+
+    #[test]
+    fn thresholds_decrease_with_level() {
+        let bt = BloomThresholds::pv_education();
+        // Higher Bloom level should have equal or lower threshold
+        for i in 1..7 {
+            let t1 = bt.threshold_for_level(i).unwrap_or(1.0);
+            let t2 = bt.threshold_for_level(i + 1).unwrap_or(1.0);
+            assert!(t2 <= t1, "level {}: {} > level {}: {}", i, t1, i + 1, t2);
+        }
+    }
+
+    #[test]
+    fn strict_lower_than_pv() {
+        let strict = BloomThresholds::strict();
+        let pv = BloomThresholds::pv_education();
+        for level in 1..=7 {
+            let s = strict.threshold_for_level(level).unwrap_or(0.0);
+            let p = pv.threshold_for_level(level).unwrap_or(0.0);
+            assert!(s <= p, "strict level {} not stricter: {} > {}", level, s, p);
+        }
+    }
+
+    #[test]
+    fn from_name_defaults() {
+        let default = BloomThresholds::from_name("unknown");
+        assert_eq!(default.name, "pv_education");
+        let strict = BloomThresholds::from_name("strict");
+        assert_eq!(strict.name, "strict");
+    }
+}

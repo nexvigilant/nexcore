@@ -46,7 +46,10 @@
     clippy::let_underscore_must_use,
     reason = "Ribosome contract translation code favors explicit schema math and compatibility with prior persisted contracts"
 )]
-
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
+#![forbid(unsafe_code)]
 pub mod grounding;
 pub mod pv_contracts;
 pub mod stall_monitor;
@@ -829,6 +832,7 @@ impl Default for Ribosome {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
     use serde_json::json;
 

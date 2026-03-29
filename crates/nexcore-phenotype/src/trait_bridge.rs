@@ -225,6 +225,7 @@ pub fn health_to_mutation_risk(
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
 
     fn make_healthy_muscular() -> MuscularHealth {

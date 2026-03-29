@@ -392,6 +392,7 @@ pub fn batch_complete(algorithms_run: u64, signals_found: u64) -> Cytokine {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
 
     // ── Severity mapping ──────────────────────────────────────────────────

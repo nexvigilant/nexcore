@@ -257,6 +257,7 @@ pub fn global_bus() -> &'static CytokineBus {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
     use crate::{FnReceptor, ReceptorFilter};
     use std::sync::atomic::{AtomicU32, Ordering};

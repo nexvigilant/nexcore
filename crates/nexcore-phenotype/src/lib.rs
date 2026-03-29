@@ -35,7 +35,10 @@
     not(test),
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
-
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
+#![forbid(unsafe_code)]
 pub mod commensal;
 pub mod error;
 pub mod grounding;
@@ -407,6 +410,7 @@ fn generate_normal(kind: &SchemaKind) -> serde_json::Value {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
     use nexcore_transcriptase::infer;
 

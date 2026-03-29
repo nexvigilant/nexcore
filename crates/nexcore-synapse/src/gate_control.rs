@@ -739,6 +739,7 @@ impl GateController {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
 
     fn block_signal(name: &str, severity: f64) -> HookSignal {

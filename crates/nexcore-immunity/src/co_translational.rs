@@ -328,6 +328,7 @@ impl UpfComplex {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
 
     fn make_marker(phase: &str, categories: Vec<TaskCategory>, grounding: f32) -> EjcMarker {

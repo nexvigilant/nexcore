@@ -201,6 +201,7 @@ impl GroundsTo for RibosomeError {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
     use nexcore_lex_primitiva::tier::Tier;
 

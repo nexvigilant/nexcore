@@ -299,6 +299,7 @@ fn linear_regression_slope(values: &[f64]) -> f64 {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
 
     fn make_obs(name: &str, tools: Vec<&str>, confidence: f64) -> ExecutionObservation {

@@ -150,6 +150,7 @@ pub fn skin_max_threat(condition: &SkinCondition) -> ThreatLevel {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
     use nexcore_integumentary::{DermisSensors, SensorReading, SensorKind};
 

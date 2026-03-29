@@ -80,7 +80,10 @@
     clippy::as_conversions,
     reason = "Immunity models prioritize explicit biological mappings and compatibility with persisted registry data"
 )]
-
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
+#![forbid(unsafe_code)]
 pub mod adaptive;
 pub mod co_translational;
 pub mod error;
@@ -129,6 +132,7 @@ pub mod prelude {
 
 #[cfg(test)]
 mod integration_tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
 
     #[test]

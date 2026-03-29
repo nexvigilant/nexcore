@@ -837,6 +837,7 @@ impl ReferralEngine {
     reason = "Test-only fixture setup with fixed constants"
 )]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
 
     fn make_unwrap_symptom(file_path: &str) -> SurfaceSymptom {

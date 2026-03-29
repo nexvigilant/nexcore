@@ -455,6 +455,7 @@ fn outcome_masking(data: &mut serde_json::Value) -> PvHarmMutation {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
 
     fn baseline() -> serde_json::Value {

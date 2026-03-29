@@ -68,6 +68,7 @@ pub fn consume_immunity_events(bus: &FlywheelBus) -> Vec<FlywheelEvent> {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
     use nexcore_flywheel::{EventKind, FlywheelBus, node::FlywheelTier};
 

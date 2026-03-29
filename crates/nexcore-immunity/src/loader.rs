@@ -76,6 +76,7 @@ pub fn load_from_str(content: &str) -> ImmunityResult<AntibodyRegistry> {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
 
     const MINIMAL_REGISTRY: &str = r#"

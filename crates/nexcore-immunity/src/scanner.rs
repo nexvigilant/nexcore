@@ -287,6 +287,7 @@ impl ImmunityScanner {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
     use crate::loader::load_from_str;
 
@@ -369,6 +370,7 @@ fn main() {
         let code = r##"
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     fn test_something() {
         let x = some_option.unwrap();
     }

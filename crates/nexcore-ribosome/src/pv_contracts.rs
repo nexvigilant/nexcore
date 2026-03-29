@@ -385,6 +385,7 @@ pub fn evaluate_drift(result: &DriftResult, category: PvContractCategory) -> PvD
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
     use crate::{DriftResult, SchemaDrift};
     use nexcore_chrono::DateTime;

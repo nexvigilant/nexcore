@@ -336,6 +336,7 @@ pub fn field_from_signals(signals: &[Cytokine]) -> GradientField {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
     use crate::Scope;
 

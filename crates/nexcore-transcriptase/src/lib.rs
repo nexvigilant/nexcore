@@ -39,7 +39,10 @@
     clippy::wildcard_enum_match_arm,
     reason = "Schema inference engine prioritizes explicit deterministic logic over style-only lint constraints"
 )]
-
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
+#![forbid(unsafe_code)]
 pub mod grounding;
 
 use serde::{Deserialize, Serialize};
@@ -829,6 +832,7 @@ impl std::fmt::Display for SchemaViolation {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
 
     // ── Schema Inference ────────────────────────────────────────────────

@@ -70,7 +70,10 @@
     clippy::indexing_slicing,
     reason = "Synapse domain types are intentionally closed and map structures preserve compatibility with existing serialized state"
 )]
-
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
+#![forbid(unsafe_code)]
 pub mod error;
 pub mod gate_control;
 pub mod grounding;
@@ -651,6 +654,7 @@ impl SynapseBank {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
     use nexcore_chrono::Duration;
 

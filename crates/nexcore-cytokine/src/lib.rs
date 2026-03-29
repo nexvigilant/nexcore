@@ -60,7 +60,10 @@
     clippy::indexing_slicing,
     reason = "Domain signaling schemas are intentionally stable and use bounded numeric conversions and legacy container shapes"
 )]
-
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
+#![forbid(unsafe_code)]
 pub mod composites;
 pub mod grounding;
 pub mod neurotransmitter;

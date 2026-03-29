@@ -384,6 +384,7 @@ fn extract_channels(details: &serde_json::Value) -> Vec<UpfChannel> {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
 
     fn make_adaptive_action(category: &str, severity: f32, channel: &str) -> SmgAction {

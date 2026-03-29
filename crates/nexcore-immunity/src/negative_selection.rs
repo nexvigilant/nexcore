@@ -772,6 +772,7 @@ impl NegativeSelector {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
 
     fn make_selector() -> NegativeSelector {

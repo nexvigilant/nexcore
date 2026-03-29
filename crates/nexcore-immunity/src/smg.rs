@@ -194,6 +194,7 @@ impl SmgComplex {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
     use super::*;
 
     fn make_anomaly(channel: UpfChannel, severity: f32) -> UpfAnomaly {

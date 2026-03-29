@@ -85,3 +85,67 @@ pub fn zipf_analysis(frequencies: &HashMap<String, usize>) -> ZipfResult {
         deviation,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    #[test]
+    fn empty_frequencies() {
+        let result = zipf_analysis(&HashMap::new());
+        assert_eq!(result.alpha, 0.0);
+        assert_eq!(result.deviation, 1.0);
+    }
+
+    #[test]
+    fn single_token() {
+        let mut freq = HashMap::new();
+        freq.insert("a".into(), 10);
+        let result = zipf_analysis(&freq);
+        assert_eq!(result.alpha, 0.0);
+    }
+
+    #[test]
+    fn r_squared_bounded() {
+        let mut freq = HashMap::new();
+        for i in 0..20 {
+            freq.insert(format!("word{i}"), 20 - i);
+        }
+        let result = zipf_analysis(&freq);
+        assert!(result.r_squared >= 0.0 && result.r_squared <= 1.0);
+    }
+
+    #[test]
+    fn zipf_deviation_nonnegative() {
+        let mut freq = HashMap::new();
+        for i in 0..10 {
+            freq.insert(format!("w{i}"), (10 - i) * 3);
+        }
+        let result = zipf_analysis(&freq);
+        assert!(result.deviation >= 0.0);
+    }
+
+    #[test]
+    fn perfect_zipf_low_deviation() {
+        // freq[rank] = 1/rank approximation
+        let mut freq = HashMap::new();
+        for rank in 1..=50 {
+            freq.insert(format!("w{rank}"), 1000 / rank);
+        }
+        let result = zipf_analysis(&freq);
+        // alpha should be close to 1.0, deviation close to 0
+        assert!(result.deviation < 0.5, "deviation={}", result.deviation);
+    }
+
+    #[test]
+    fn uniform_distribution_high_deviation() {
+        let mut freq = HashMap::new();
+        for i in 0..20 {
+            freq.insert(format!("w{i}"), 10); // all same freq
+        }
+        let result = zipf_analysis(&freq);
+        // Uniform = alpha near 0, deviation = |0 - 1| = ~1
+        assert!(result.deviation > 0.5, "deviation={}", result.deviation);
+    }
+}

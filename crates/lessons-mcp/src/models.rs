@@ -137,3 +137,112 @@ fn increment_primitive(map: &mut HashMap<String, (PrimitiveTier, usize)>, p: &Ex
         .and_modify(|(_, c)| *c += 1)
         .or_insert((p.tier.clone(), 1));
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_lesson(title: &str, content: &str, ctx: &str, tags: &[&str]) -> Lesson {
+        Lesson {
+            id: 0,
+            title: title.into(),
+            content: content.into(),
+            context: ctx.into(),
+            tags: tags.iter().map(|s| s.to_string()).collect(),
+            primitives: vec![],
+            created_at: DateTime::now(),
+            source: String::new(),
+        }
+    }
+
+    #[test]
+    fn db_default_empty() {
+        let db = LessonsDb::default();
+        assert!(db.lessons.is_empty());
+        assert_eq!(db.next_id, 0);
+    }
+
+    #[test]
+    fn db_add_increments_id() {
+        let mut db = LessonsDb::default();
+        let id1 = db.add(make_lesson("L1", "c1", "hooks", &[]));
+        let id2 = db.add(make_lesson("L2", "c2", "hooks", &[]));
+        assert_eq!(id1, 0);
+        assert_eq!(id2, 1);
+        assert_eq!(db.lessons.len(), 2);
+    }
+
+    #[test]
+    fn db_get_by_id() {
+        let mut db = LessonsDb::default();
+        db.add(make_lesson("Found", "body", "skills", &[]));
+        assert!(db.get(0).is_some());
+        assert!(db.get(999).is_none());
+    }
+
+    #[test]
+    fn db_search_title() {
+        let mut db = LessonsDb::default();
+        db.add(make_lesson("Hook Timeout", "fix it", "hooks", &[]));
+        db.add(make_lesson("Skill Bug", "also fix", "skills", &[]));
+        assert_eq!(db.search("timeout").len(), 1);
+        assert_eq!(db.search("fix").len(), 2);
+        assert_eq!(db.search("nonexistent").len(), 0);
+    }
+
+    #[test]
+    fn db_search_case_insensitive() {
+        let mut db = LessonsDb::default();
+        db.add(make_lesson("UPPER", "lower", "hooks", &[]));
+        assert_eq!(db.search("upper").len(), 1);
+    }
+
+    #[test]
+    fn db_by_context() {
+        let mut db = LessonsDb::default();
+        db.add(make_lesson("H1", "c", "hooks", &[]));
+        db.add(make_lesson("S1", "c", "skills", &[]));
+        db.add(make_lesson("H2", "c", "hooks", &[]));
+        assert_eq!(db.by_context("hooks").len(), 2);
+        assert_eq!(db.by_context("HOOKS").len(), 2); // case insensitive
+        assert_eq!(db.by_context("mcp").len(), 0);
+    }
+
+    #[test]
+    fn db_by_tag() {
+        let mut db = LessonsDb::default();
+        db.add(make_lesson("L1", "c", "hooks", &["safety", "critical"]));
+        db.add(make_lesson("L2", "c", "hooks", &["safety"]));
+        db.add(make_lesson("L3", "c", "hooks", &["perf"]));
+        assert_eq!(db.by_tag("safety").len(), 2);
+        assert_eq!(db.by_tag("SAFETY").len(), 2);
+        assert_eq!(db.by_tag("perf").len(), 1);
+    }
+
+    #[test]
+    fn primitives_summary() {
+        let mut db = LessonsDb::default();
+        let mut l = make_lesson("L1", "c", "hooks", &[]);
+        l.primitives = vec![
+            ExtractedPrimitive::t1("Sequence", "seq"),
+            ExtractedPrimitive::t1("Sequence", "seq again"),
+            ExtractedPrimitive::t2p("Transform", "xform"),
+        ];
+        db.add(l);
+        let summary = db.primitives_summary();
+        assert_eq!(summary.get("Sequence").map(|(_, c)| *c), Some(2));
+        assert_eq!(summary.get("Transform").map(|(_, c)| *c), Some(1));
+    }
+
+    #[test]
+    fn primitive_tier_constructors() {
+        let t1 = ExtractedPrimitive::t1("A", "d");
+        assert_eq!(t1.tier, PrimitiveTier::T1);
+        let t2p = ExtractedPrimitive::t2p("B", "d");
+        assert_eq!(t2p.tier, PrimitiveTier::T2P);
+        let t2c = ExtractedPrimitive::t2c("C", "d");
+        assert_eq!(t2c.tier, PrimitiveTier::T2C);
+        let t3 = ExtractedPrimitive::t3("D", "d");
+        assert_eq!(t3.tier, PrimitiveTier::T3);
+    }
+}

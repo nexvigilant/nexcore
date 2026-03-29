@@ -85,3 +85,71 @@ fn add_t3_primitives(text: &str, prims: &mut Vec<ExtractedPrimitive>) {
         ));
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty_text_no_primitives() {
+        assert!(suggest_primitives("").is_empty());
+    }
+
+    #[test]
+    fn sequence_detected() {
+        let prims = suggest_primitives("iterate over a sequence of items");
+        assert!(prims.iter().any(|p| p.name.contains("Sequence")));
+    }
+
+    #[test]
+    fn mapping_detected() {
+        let prims = suggest_primitives("lookup the key in the map");
+        assert!(prims.iter().any(|p| p.name.contains("Mapping")));
+    }
+
+    #[test]
+    fn state_detected() {
+        let prims = suggest_primitives("update the mutable state");
+        assert!(prims.iter().any(|p| p.name.contains("State")));
+    }
+
+    #[test]
+    fn threshold_detected() {
+        let prims = suggest_primitives("enforce a timeout limit");
+        assert!(prims.iter().any(|p| p.name.contains("Threshold")));
+    }
+
+    #[test]
+    fn pipeline_detected() {
+        let prims = suggest_primitives("compose a pipeline chain");
+        assert!(prims.iter().any(|p| p.name.contains("Pipeline")));
+    }
+
+    #[test]
+    fn tool_interceptor_detected() {
+        let prims = suggest_primitives("PreToolUse hook blocks write");
+        assert!(prims.iter().any(|p| p.name.contains("ToolInterceptor")));
+    }
+
+    #[test]
+    fn session_lifecycle_detected() {
+        let prims = suggest_primitives("SessionStart fires at boot");
+        assert!(prims.iter().any(|p| p.name.contains("SessionLifecycle")));
+    }
+
+    #[test]
+    fn multiple_tiers_extracted() {
+        let prims = suggest_primitives("iterate and validate with timeout in a pipeline");
+        let has_t1 = prims
+            .iter()
+            .any(|p| p.tier == crate::models::PrimitiveTier::T1);
+        let has_t2p = prims
+            .iter()
+            .any(|p| p.tier == crate::models::PrimitiveTier::T2P);
+        let has_t2c = prims
+            .iter()
+            .any(|p| p.tier == crate::models::PrimitiveTier::T2C);
+        let tier_count = [has_t1, has_t2p, has_t2c].iter().filter(|&&b| b).count();
+        assert!(tier_count >= 2, "expected multiple tiers, got {tier_count}");
+    }
+}

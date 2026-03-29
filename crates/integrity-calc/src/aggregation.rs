@@ -75,3 +75,92 @@ pub fn aggregate(features: &RawFeatures) -> AggregationResult {
         hill_score,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn weights_sum_to_ten() {
+        let sum: f64 = WEIGHTS.iter().sum();
+        assert!((sum - 10.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn weights_are_five() {
+        assert_eq!(WEIGHTS.len(), 5);
+    }
+
+    #[test]
+    fn normalize_inverted_zero() {
+        assert!((normalize_inverted(0.0, 1.0) - 1.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn normalize_inverted_at_typical() {
+        assert!((normalize_inverted(1.0, 1.0)).abs() < 1e-10);
+    }
+
+    #[test]
+    fn normalize_inverted_over_typical() {
+        assert_eq!(normalize_inverted(2.0, 1.0), 0.0);
+    }
+
+    #[test]
+    fn normalize_deviation_zero() {
+        assert_eq!(normalize_deviation(0.0, 1.0), 0.0);
+    }
+
+    #[test]
+    fn normalize_deviation_at_max() {
+        assert!((normalize_deviation(1.0, 1.0) - 1.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn normalize_deviation_clamped() {
+        assert_eq!(normalize_deviation(5.0, 1.0), 1.0);
+    }
+
+    #[test]
+    fn aggregate_zero_features() {
+        let raw = RawFeatures {
+            zipf_deviation: 0.0,
+            entropy_std: 1.0,
+            burstiness: 0.3,
+            perplexity_var: 0.5,
+            ttr_deviation: 0.0,
+        };
+        let result = aggregate(&raw);
+        assert!(result.composite >= 0.0 && result.composite <= 1.0);
+        assert!(result.hill_score >= 0.0 && result.hill_score <= 1.0);
+    }
+
+    #[test]
+    fn aggregate_max_suspicion() {
+        let raw = RawFeatures {
+            zipf_deviation: 2.0,
+            entropy_std: 0.0,
+            burstiness: 0.0,
+            perplexity_var: 0.0,
+            ttr_deviation: 1.0,
+        };
+        let result = aggregate(&raw);
+        assert!(result.composite > 0.5);
+        assert!(result.hill_score > 0.5);
+    }
+
+    #[test]
+    fn normalized_bounded() {
+        let raw = RawFeatures {
+            zipf_deviation: 0.5,
+            entropy_std: 0.5,
+            burstiness: 0.15,
+            perplexity_var: 0.25,
+            ttr_deviation: 0.15,
+        };
+        let result = aggregate(&raw);
+        for n in &result.normalized {
+            assert!(*n >= 0.0 && *n <= 1.0, "normalized={n}");
+        }
+    }
+}

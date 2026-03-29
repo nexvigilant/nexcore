@@ -92,3 +92,73 @@ pub fn burstiness_analysis(
         per_token,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    fn make(words: &[&str]) -> (Vec<String>, HashMap<String, usize>) {
+        let tokens: Vec<String> = words.iter().map(|w| w.to_string()).collect();
+        let mut freq = HashMap::new();
+        for t in &tokens {
+            *freq.entry(t.clone()).or_insert(0) += 1;
+        }
+        (tokens, freq)
+    }
+
+    #[test]
+    fn inter_arrival_no_match() {
+        let tokens: Vec<String> = vec!["a", "b"].into_iter().map(|s| s.into()).collect();
+        assert!(inter_arrival_times(&tokens, "z").is_empty());
+    }
+
+    #[test]
+    fn inter_arrival_single() {
+        let tokens: Vec<String> = vec!["a", "b"].into_iter().map(|s| s.into()).collect();
+        assert!(inter_arrival_times(&tokens, "a").is_empty());
+    }
+
+    #[test]
+    fn inter_arrival_regular() {
+        let tokens: Vec<String> = vec!["a", "b", "a", "b", "a"]
+            .into_iter()
+            .map(|s| s.into())
+            .collect();
+        assert_eq!(inter_arrival_times(&tokens, "a"), vec![2, 2]);
+    }
+
+    #[test]
+    fn single_burstiness_regular() {
+        let b = single_burstiness(&[5, 5, 5, 5]);
+        assert!(b.is_some());
+        assert!(b.unwrap_or(1.0) <= 0.0);
+    }
+
+    #[test]
+    fn single_burstiness_empty() {
+        assert!(single_burstiness(&[]).is_none());
+    }
+
+    #[test]
+    fn analysis_empty() {
+        let result = burstiness_analysis(&[], &HashMap::new());
+        assert_eq!(result.tokens_analyzed, 0);
+        assert_eq!(result.coefficient, 0.0);
+    }
+
+    #[test]
+    fn analysis_all_unique() {
+        let (tokens, freq) = make(&["a", "b", "c", "d"]);
+        let result = burstiness_analysis(&tokens, &freq);
+        assert_eq!(result.tokens_analyzed, 0);
+    }
+
+    #[test]
+    fn analysis_repeated() {
+        let (tokens, freq) = make(&["a", "b", "a", "c", "a", "b", "a"]);
+        let result = burstiness_analysis(&tokens, &freq);
+        assert!(result.tokens_analyzed > 0);
+        assert!(result.coefficient >= -1.0 && result.coefficient <= 1.0);
+    }
+}

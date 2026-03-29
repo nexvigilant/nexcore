@@ -59,3 +59,37 @@ impl Response {
         Self::error(json!(null), -32700, &format!("Parse error: {}", msg))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn success_response() {
+        let r = Response::success(json!(1), json!({"ok": true}));
+        assert_eq!(r.jsonrpc, "2.0");
+        assert!(r.result.is_some());
+        assert!(r.error.is_none());
+    }
+
+    #[test]
+    fn error_response() {
+        let r = Response::error(json!(2), -32600, "bad request");
+        assert!(r.result.is_none());
+        assert!(r.error.is_some());
+        assert_eq!(r.error.as_ref().map(|e| e.code), Some(-32600));
+    }
+
+    #[test]
+    fn method_not_found_code() {
+        let r = Response::method_not_found(json!(3), "foo");
+        assert_eq!(r.error.as_ref().map(|e| e.code), Some(-32601));
+    }
+
+    #[test]
+    fn parse_error_code() {
+        let r = Response::parse_error("bad json");
+        assert_eq!(r.error.as_ref().map(|e| e.code), Some(-32700));
+        assert_eq!(r.id, json!(null));
+    }
+}

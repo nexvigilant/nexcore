@@ -113,7 +113,7 @@ impl fmt::Display for Perishability {
 
 impl PartialOrd for Perishability {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.urgency_rank().cmp(&other.urgency_rank()).reverse())
+        Some(self.cmp(other))
     }
 }
 

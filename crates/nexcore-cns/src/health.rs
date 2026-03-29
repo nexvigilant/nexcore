@@ -2,7 +2,7 @@
 
 use core::fmt;
 
-use crate::digit::{CnsDigit, Polarity, conjugate_pair};
+use crate::digit::{CnsDigit, conjugate_pair};
 
 /// Status of a conjugate pair.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -224,7 +224,7 @@ impl HealthVector {
             (CnsDigit::III, CnsDigit::VI),
             (CnsDigit::IV, CnsDigit::V),
         ];
-        for (i, (a_score, b_score, status)) in pairs.iter().enumerate() {
+        for (i, (a_score, _b_score, status)) in pairs.iter().enumerate() {
             if *status == ConjugateStatus::Broken {
                 let (law_a, law_b) = pair_laws[i];
                 if a_score.is_vice() {

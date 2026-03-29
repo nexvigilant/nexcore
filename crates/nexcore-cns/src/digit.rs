@@ -147,20 +147,30 @@ impl CnsDigit {
             Polarity::ViceModerate | Polarity::ViceSevere
         )
     }
+}
+
+impl std::ops::Add for CnsDigit {
+    type Output = Self;
 
     /// Addition mod 9 (Z₉ group operation).
-    pub fn add(self, other: Self) -> Self {
+    fn add(self, other: Self) -> Self {
         let sum = (self.value() + other.value()) % 9;
         // SAFETY: sum is always 0-8 since both inputs are 0-8 and we mod 9
         Self::from_value(sum).unwrap_or(Self::Void)
     }
+}
+
+impl std::ops::Mul for CnsDigit {
+    type Output = Self;
 
     /// Multiplication mod 9.
-    pub fn mul(self, other: Self) -> Self {
+    fn mul(self, other: Self) -> Self {
         let product = (u16::from(self.value()) * u16::from(other.value())) % 9;
         Self::from_value(product as u8).unwrap_or(Self::Void)
     }
+}
 
+impl CnsDigit {
     /// Additive inverse in Z₉. The conjugate pair partner.
     pub fn inverse(self) -> Self {
         if self == Self::Void {

@@ -55,6 +55,11 @@ impl CnsNumber {
         self.digits.len()
     }
 
+    /// Is the number empty (no digits)?
+    pub fn is_empty(&self) -> bool {
+        self.digits.is_empty()
+    }
+
     /// Is this the void (zero)?
     pub fn is_void(&self) -> bool {
         self.digits.len() == 1 && self.digits[0] == CnsDigit::Void

@@ -4,9 +4,9 @@
 //! FDA DOAC approval documents, RE-LY/ROCKET-AF/ARISTOTLE/ENGAGE trial data.
 
 use nexcore_disease::{
-    Biomarker, BiomarkerType, ClassEffect, Demographics, Disease, DiseaseId, DrugWithdrawal,
-    Epidemiology, EvidenceLevel, LineOfTherapy, NeedSeverity, SafetyBurden, TherapeuticArea,
-    TreatmentLine, Trend, UnmetNeed,
+    Biomarker, BiomarkerType, ClassEffect, Demographics, Disease, DiseaseId, Epidemiology,
+    EvidenceLevel, LineOfTherapy, NeedSeverity, SafetyBurden, TherapeuticArea, TreatmentLine,
+    Trend, UnmetNeed,
 };
 
 /// Returns the canonical Atrial Fibrillation disease model.

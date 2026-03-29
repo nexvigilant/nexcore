@@ -99,10 +99,8 @@ fn grade_immunity(input: &ImmunityInput) -> EvidenceQuality {
     } else {
         0.0
     };
-    if critical_ratio > 0.5 {
-        EvidenceQuality::Strong // Strong evidence of threat
-    } else if input.antibody_count >= 10 {
-        EvidenceQuality::Strong // Strong coverage
+    if critical_ratio > 0.5 || input.antibody_count >= 10 {
+        EvidenceQuality::Strong // Strong evidence or coverage
     } else if input.antibody_count >= 5 {
         EvidenceQuality::Moderate
     } else {

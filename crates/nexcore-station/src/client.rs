@@ -155,22 +155,26 @@ impl<F: ObservatoryFeed> StationClient<F> {
             Ok(resp) => telemetry::emit_resolve_finish(
                 &trace_id,
                 domain,
-                case_id,
-                Some(resp.confidence.value),
-                Some(&resp.trust_tier),
-                latency,
-                None,
+                telemetry::ResolutionMetadata {
+                    case: case_id,
+                    confidence: Some(resp.confidence.value),
+                    trust_tier: Some(&resp.trust_tier),
+                    latency_ms: latency,
+                    error: None,
+                },
             ),
             Err(err) => telemetry::emit_resolve_finish(
                 &trace_id,
                 domain,
-                case_id,
-                None,
-                None,
-                latency,
-                Some(err.to_string()),
+                telemetry::ResolutionMetadata {
+                    case: case_id,
+                    confidence: None,
+                    trust_tier: None,
+                    latency_ms: latency,
+                    error: Some(err.to_string()),
+                },
             ),
-        }
+        };
 
         result
     }

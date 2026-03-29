@@ -359,7 +359,12 @@ impl HttpObservatoryFeed {
     ) -> Result<serde_json::Value, StationError> {
         let url = format!("{}?domain={}", self.base_url, urlencoding::encode(domain));
         let started = std::time::Instant::now();
-        telemetry::emit_feed_http("feed_http_start", trace_id, domain, None, None, None);
+        telemetry::emit_feed_http(
+            "feed_http_start",
+            trace_id,
+            domain,
+            telemetry::HttpFeedMetadata::default(),
+        );
 
         let response = self.client.get(&url).send().map_err(|e| {
             let reason = format!("GET {url} failed: {e}");
@@ -367,9 +372,11 @@ impl HttpObservatoryFeed {
                 "feed_http_error",
                 trace_id,
                 domain,
-                Some(started.elapsed().as_millis()),
-                None,
-                Some(reason.clone()),
+                telemetry::HttpFeedMetadata {
+                    latency_ms: Some(started.elapsed().as_millis()),
+                    http_status: None,
+                    error: Some(reason.clone()),
+                },
             );
             StationError::HttpError { reason }
         })?;
@@ -381,9 +388,11 @@ impl HttpObservatoryFeed {
                 "feed_http_error",
                 trace_id,
                 domain,
-                Some(started.elapsed().as_millis()),
-                Some(status_code),
-                Some(reason.clone()),
+                telemetry::HttpFeedMetadata {
+                    latency_ms: Some(started.elapsed().as_millis()),
+                    http_status: Some(status_code),
+                    error: Some(reason.clone()),
+                },
             );
             return Err(StationError::HttpError { reason });
         }
@@ -395,9 +404,11 @@ impl HttpObservatoryFeed {
                 "feed_http_parse_error",
                 trace_id,
                 domain,
-                Some(started.elapsed().as_millis()),
-                Some(status_code),
-                Some(reason.clone()),
+                telemetry::HttpFeedMetadata {
+                    latency_ms: Some(started.elapsed().as_millis()),
+                    http_status: Some(status_code),
+                    error: Some(reason.clone()),
+                },
             );
             StationError::HttpError { reason }
         });
@@ -407,9 +418,11 @@ impl HttpObservatoryFeed {
                 "feed_http_success",
                 trace_id,
                 domain,
-                Some(started.elapsed().as_millis()),
-                Some(status_code),
-                None,
+                telemetry::HttpFeedMetadata {
+                    latency_ms: Some(started.elapsed().as_millis()),
+                    http_status: Some(status_code),
+                    error: None,
+                },
             );
         }
 
@@ -461,19 +474,22 @@ impl ObservatoryFeed for HttpObservatoryFeed {
                 "feed_quality_metrics",
                 &trace_id,
                 domain,
-                Some(started.elapsed().as_millis()),
-                None,
-                None,
+                telemetry::HttpFeedMetadata {
+                    latency_ms: Some(started.elapsed().as_millis()),
+                    ..Default::default()
+                },
             ),
             Err(e) => telemetry::emit_feed_http(
                 "feed_quality_error",
                 &trace_id,
                 domain,
-                Some(started.elapsed().as_millis()),
-                None,
-                Some(e.to_string()),
+                telemetry::HttpFeedMetadata {
+                    latency_ms: Some(started.elapsed().as_millis()),
+                    error: Some(e.to_string()),
+                    ..Default::default()
+                },
             ),
-        }
+        };
         parsed
     }
 }

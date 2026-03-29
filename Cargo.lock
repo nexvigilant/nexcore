@@ -9524,6 +9524,17 @@ dependencies = [
  "nexcore-dna",
  "nexcore-domain-primitives",
  "nexcore-downloads-scanner",
+ "nexcore-drug",
+ "nexcore-drug-adalimumab",
+ "nexcore-drug-apixaban",
+ "nexcore-drug-dapagliflozin",
+ "nexcore-drug-donanemab",
+ "nexcore-drug-osimertinib",
+ "nexcore-drug-pembrolizumab",
+ "nexcore-drug-secukinumab",
+ "nexcore-drug-semaglutide",
+ "nexcore-drug-tirzepatide",
+ "nexcore-drug-upadacitinib",
  "nexcore-dtree",
  "nexcore-edit-distance",
  "nexcore-education-machine",
@@ -9568,7 +9579,20 @@ dependencies = [
  "nexcore-organize",
  "nexcore-os",
  "nexcore-perplexity",
+ "nexcore-pharma",
+ "nexcore-pharma-abbvie",
+ "nexcore-pharma-astrazeneca",
+ "nexcore-pharma-bms",
+ "nexcore-pharma-gsk",
+ "nexcore-pharma-jnj",
+ "nexcore-pharma-lilly",
+ "nexcore-pharma-merck",
+ "nexcore-pharma-novartis",
+ "nexcore-pharma-novo-nordisk",
+ "nexcore-pharma-pfizer",
  "nexcore-pharma-rd",
+ "nexcore-pharma-roche",
+ "nexcore-pharma-takeda",
  "nexcore-pharmacovigilance",
  "nexcore-pharos",
  "nexcore-phenotype",
@@ -9578,6 +9602,7 @@ dependencies = [
  "nexcore-proof-of-meaning",
  "nexcore-publishing",
  "nexcore-pv-core",
+ "nexcore-pv-intelligence",
  "nexcore-pvdsl",
  "nexcore-pvos",
  "nexcore-qbr",
@@ -10038,6 +10063,16 @@ dependencies = [
 
 [[package]]
 name = "nexcore-pharma-novartis"
+version = "1.0.0"
+dependencies = [
+ "nexcore-error",
+ "nexcore-pharma",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-pharma-novo-nordisk"
 version = "1.0.0"
 dependencies = [
  "nexcore-error",

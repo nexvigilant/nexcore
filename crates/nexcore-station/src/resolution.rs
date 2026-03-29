@@ -142,11 +142,13 @@ impl<F: crate::observatory::ObservatoryFeed> StationClient<F> {
         telemetry::emit_resolve_finish(
             &trace_id,
             &request.domain,
-            case_id,
-            Some(response.confidence.value),
-            None,
-            started.elapsed().as_millis(),
-            None,
+            telemetry::ResolutionMetadata {
+                case: case_id,
+                confidence: Some(response.confidence.value),
+                trust_tier: None,
+                latency_ms: started.elapsed().as_millis(),
+                error: None,
+            },
         );
 
         response

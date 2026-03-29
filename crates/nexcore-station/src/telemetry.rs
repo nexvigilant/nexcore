@@ -159,29 +159,39 @@ pub fn emit_resolve_start(trace_id: &str, domain: &str) {
     });
 }
 
+/// Metadata for a resolution finish event.
+#[derive(Debug, Clone)]
+pub struct ResolutionMetadata<'a> {
+    pub case: u8,
+    pub confidence: Option<f64>,
+    pub trust_tier: Option<&'a TrustTier>,
+    pub latency_ms: u128,
+    pub error: Option<String>,
+}
+
 /// Emit a resolution finish event.
-pub fn emit_resolve_finish(
-    trace_id: &str,
-    domain: &str,
-    case: u8,
-    confidence: Option<f64>,
-    trust_tier: Option<&TrustTier>,
-    latency_ms: u128,
-    error: Option<String>,
-) {
+pub fn emit_resolve_finish(trace_id: &str, domain: &str, meta: ResolutionMetadata<'_>) {
     emit(StationTelemetryEvent {
         ts_ms: now_ms(),
         event_type: "resolve_finish",
         trace_id: trace_id.to_string(),
         domain: domain.to_string(),
-        case: Some(case),
-        confidence,
-        trust_tier: trust_tier.map(trust_tier_label),
-        latency_ms: Some(latency_ms),
+        case: Some(meta.case),
+        confidence: meta.confidence,
+        trust_tier: meta.trust_tier.map(trust_tier_label),
+        latency_ms: Some(meta.latency_ms),
         http_status: None,
-        status: Some(if error.is_some() { "error" } else { "ok" }),
-        error,
+        status: Some(if meta.error.is_some() { "error" } else { "ok" }),
+        error: meta.error,
     });
+}
+
+/// Metadata for an HTTP feed event.
+#[derive(Debug, Clone, Default)]
+pub struct HttpFeedMetadata {
+    pub latency_ms: Option<u128>,
+    pub http_status: Option<u16>,
+    pub error: Option<String>,
 }
 
 /// Emit an HTTP feed event.
@@ -189,9 +199,7 @@ pub fn emit_feed_http(
     event_type: &'static str,
     trace_id: &str,
     domain: &str,
-    latency_ms: Option<u128>,
-    http_status: Option<u16>,
-    error: Option<String>,
+    meta: HttpFeedMetadata,
 ) {
     emit(StationTelemetryEvent {
         ts_ms: now_ms(),
@@ -201,9 +209,9 @@ pub fn emit_feed_http(
         case: None,
         confidence: None,
         trust_tier: None,
-        latency_ms,
-        http_status,
-        status: Some(if error.is_some() { "error" } else { "ok" }),
-        error,
+        latency_ms: meta.latency_ms,
+        http_status: meta.http_status,
+        status: Some(if meta.error.is_some() { "error" } else { "ok" }),
+        error: meta.error,
     });
 }

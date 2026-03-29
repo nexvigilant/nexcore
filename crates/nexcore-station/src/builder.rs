@@ -170,10 +170,8 @@ impl StationBuilder {
                     "name": tool.name,
                     "description": tool.description,
                 });
-                if let Some(schema) = &tool.input_schema {
-                    if let Some(obj) = payload.as_object_mut() {
-                        obj.insert("inputSchema".to_string(), schema.clone());
-                    }
+                if let (Some(schema), Some(obj)) = (&tool.input_schema, payload.as_object_mut()) {
+                    obj.insert("inputSchema".to_string(), schema.clone());
                 }
                 payload
             })

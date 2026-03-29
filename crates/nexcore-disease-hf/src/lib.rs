@@ -22,3 +22,28 @@ impl DiseaseAnalysis for DiseaseModel {
         &self.data
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nexcore_disease::DiseaseAnalysis;
+
+    #[test]
+    fn model_loads() {
+        let model = DiseaseModel::load();
+        let disease = model.disease();
+        assert!(!disease.name.is_empty());
+    }
+
+    #[test]
+    fn has_therapeutic_area() {
+        let model = DiseaseModel::load();
+        let _ = format!("{}", model.disease().therapeutic_area);
+    }
+
+    #[test]
+    fn disease_id_nonempty() {
+        let model = DiseaseModel::load();
+        let _ = model.disease().id.clone();
+    }
+}

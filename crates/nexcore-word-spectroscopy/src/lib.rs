@@ -1,0 +1,1 @@
+//! nexcore-word-spectroscopy stub.

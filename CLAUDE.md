@@ -186,7 +186,7 @@ Key thresholds: PSI >0.25 = significant drift, KS alpha=0.05, RRF k=60, hybrid a
 
 | Domain | Benchmark |
 |--------|-----------|
-| **Test Coverage** | Every crate achieves >80% line coverage. Foundation crates achieve >95%. |
+| **Test Coverage** | Target: >80% line coverage per crate (Foundation: >95%). 16 crates currently at 0% — active gap, not achieved. |
 | **Doc Coverage** | Every public function, type, and module has rustdoc documentation. `cargo doc` generates complete API reference. |
 | **Clippy** | Zero clippy warnings workspace-wide. `cargo clippy -- -D warnings` passes on every commit. |
 | **DAG Health** | Zero layer violations. Service never depends on Foundation directly. DAG validation passes on every build. |
@@ -212,7 +212,7 @@ Key thresholds: PSI >0.25 = significant drift, KS alpha=0.05, RRF k=60, hybrid a
 Every `crates/*/CLAUDE.md` file describes the aspirational state of that crate. When working in a crate and finding code below its CLAUDE.md standard, prioritize closing the gap over new feature work.
 
 Per-crate minimum bar:
-- Test coverage: >80% (Foundation: >95%)
+- Test coverage: target >80% (Foundation: >95%) — 16 crates at 0%, prioritize when touching
 - Doc coverage: all public items
 - Clippy: zero warnings
 - No stubs: all documented types and functions implemented

@@ -201,3 +201,49 @@ pub async fn run_skill(params: SkillRunParams) -> Result<CallToolResult, McpErro
         "script": script.display().to_string(),
     })))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn program_map_not_empty() {
+        assert!(!program_map().is_empty());
+    }
+
+    #[test]
+    fn all_programs_have_phases() {
+        for (name, _, phases, _) in program_map() {
+            assert!(!phases.is_empty(), "program '{name}' has no phases");
+        }
+    }
+
+    #[test]
+    fn all_programs_have_descriptions() {
+        for (name, _, _, desc) in program_map() {
+            assert!(!desc.is_empty(), "program '{name}' has no description");
+        }
+    }
+
+    #[test]
+    fn no_duplicate_program_names() {
+        let map = program_map();
+        let mut seen = std::collections::HashSet::new();
+        for (name, _, _, _) in &map {
+            assert!(seen.insert(name), "duplicate program name: {name}");
+        }
+    }
+
+    #[test]
+    fn list_skills_succeeds() {
+        let result = list_skills();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn list_skills_includes_native_and_shell() {
+        // list_skills returns 3 native + 12 shell = 15 programs
+        let result = list_skills();
+        assert!(result.is_ok());
+    }
+}

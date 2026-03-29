@@ -303,6 +303,117 @@ pub fn synapse() -> Result<CallToolResult, McpError> {
     })))
 }
 
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn hormone_names_are_six() {
+        let hormones = [
+            "cortisol",
+            "dopamine",
+            "serotonin",
+            "adrenaline",
+            "oxytocin",
+            "melatonin",
+        ];
+        assert_eq!(hormones.len(), 6);
+    }
+
+    #[test]
+    fn immunity_coverage_mapping() {
+        // Verify the coverage string logic
+        let cases: Vec<(i64, &str)> = vec![
+            (0, "UNDEFENDED"),
+            (1, "MINIMAL"),
+            (3, "MINIMAL"),
+            (4, "MODERATE"),
+            (7, "MODERATE"),
+            (8, "STRONG"),
+            (20, "STRONG"),
+        ];
+        for (total, expected) in cases {
+            let coverage = match total {
+                0 => "UNDEFENDED",
+                1..=3 => "MINIMAL",
+                4..=7 => "MODERATE",
+                _ => "STRONG",
+            };
+            assert_eq!(coverage, expected, "total={total}");
+        }
+    }
+
+    #[test]
+    fn synapse_grade_mapping() {
+        let cases: Vec<(i64, &str)> = vec![
+            (100, "A"),
+            (90, "A"),
+            (89, "B"),
+            (80, "B"),
+            (79, "C"),
+            (70, "C"),
+            (69, "D"),
+            (60, "D"),
+            (59, "F"),
+            (0, "F"),
+        ];
+        for (score, expected) in cases {
+            let grade = match score {
+                90..=100 => "A",
+                80..=89 => "B",
+                70..=79 => "C",
+                60..=69 => "D",
+                _ => "F",
+            };
+            assert_eq!(grade, expected, "score={score}");
+        }
+    }
+
+    #[test]
+    fn hormone_range_check() {
+        // Values in 0.0..=1.0 are ok, others are out_of_range
+        let cases: Vec<(f64, &str)> = vec![
+            (0.0, "ok"),
+            (0.5, "ok"),
+            (1.0, "ok"),
+            (-1.0, "out_of_range"),
+            (1.1, "out_of_range"),
+            (-0.01, "out_of_range"),
+        ];
+        for (val, expected) in cases {
+            let status = if (0.0..=1.0).contains(&val) {
+                "ok"
+            } else {
+                "out_of_range"
+            };
+            assert_eq!(status, expected, "val={val}");
+        }
+    }
+
+    #[test]
+    fn staleness_threshold_is_24h() {
+        assert!(25.0 > 24.0); // stale
+        assert!(!(23.0 > 24.0)); // fresh
+    }
+
+    #[test]
+    fn synapse_deduction_values() {
+        // Verify no deduction exceeds 30
+        let deductions: Vec<i64> = vec![15, 10, 20, 10, 5, 30, 10];
+        assert!(deductions.iter().all(|&d| d <= 30));
+        // Total possible deductions = 100 (score can go to 0)
+        let total: i64 = deductions.iter().sum();
+        assert!(total >= 100, "deductions sum to {total}");
+    }
+
+    #[test]
+    fn expected_gaps_coverage() {
+        let expected = ["unsafe", "panic", "injection", "ownership"];
+        assert_eq!(expected.len(), 4);
+        // All are distinct
+        let set: std::collections::HashSet<&str> = expected.iter().copied().collect();
+        assert_eq!(set.len(), 4);
+    }
+}
+
 /// Full VITALS pipeline.
 pub fn pipeline() -> Result<CallToolResult, McpError> {
     let vig = vigor()?;

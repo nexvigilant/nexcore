@@ -145,3 +145,75 @@ pub fn file_age_hours(path: &std::path::Path) -> Option<f64> {
     let elapsed = std::time::SystemTime::now().duration_since(modified).ok()?;
     Some(elapsed.as_secs_f64() / 3600.0)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn brain_dir_ends_with_brain() {
+        let p = brain_dir();
+        assert!(p.ends_with(".claude/brain"), "got: {}", p.display());
+    }
+
+    #[test]
+    fn brain_db_path_ends_with_db() {
+        let p = brain_db_path();
+        assert!(p.ends_with("brain.db"), "got: {}", p.display());
+    }
+
+    #[test]
+    fn implicit_dir_ends_with_implicit() {
+        let p = implicit_dir();
+        assert!(p.ends_with(".claude/implicit"), "got: {}", p.display());
+    }
+
+    #[test]
+    fn skills_dir_ends_with_skills() {
+        let p = skills_dir();
+        assert!(p.ends_with(".claude/skills"), "got: {}", p.display());
+    }
+
+    #[test]
+    fn settings_path_ends_with_json() {
+        let p = settings_path();
+        assert!(p.ends_with("settings.json"), "got: {}", p.display());
+    }
+
+    #[test]
+    fn text_result_contains_text() {
+        let r = text_result("hello");
+        assert!(!r.content.is_empty());
+    }
+
+    #[test]
+    fn json_result_contains_json() {
+        let v = serde_json::json!({"key": "val"});
+        let r = json_result(&v);
+        assert!(!r.content.is_empty());
+    }
+
+    #[test]
+    fn mcp_err_has_message() {
+        let e = mcp_err("test error");
+        assert_eq!(e.message, "test error");
+    }
+
+    #[test]
+    fn count_lines_on_missing_file() {
+        let p = std::path::Path::new("/tmp/nonexistent-skills-mcp-test-file");
+        assert_eq!(count_lines(p), 0);
+    }
+
+    #[test]
+    fn read_jsonl_on_missing_file() {
+        let p = std::path::Path::new("/tmp/nonexistent-skills-mcp-test-file");
+        assert!(read_jsonl_file(p).is_empty());
+    }
+
+    #[test]
+    fn file_age_on_missing_returns_none() {
+        let p = std::path::Path::new("/tmp/nonexistent-skills-mcp-test-file");
+        assert!(file_age_hours(p).is_none());
+    }
+}

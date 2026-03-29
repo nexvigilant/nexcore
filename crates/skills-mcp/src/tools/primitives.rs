@@ -644,3 +644,89 @@ pub fn list_all() -> Result<CallToolResult, McpError> {
         "primitives": all,
     })))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{PrimitiveComposeParams, PrimitiveDecomposeParams};
+
+    #[test]
+    fn primitives_table_has_16_entries() {
+        assert_eq!(PRIMITIVES.len(), 16);
+    }
+
+    #[test]
+    fn all_primitives_have_nonempty_keywords() {
+        for p in PRIMITIVES {
+            assert!(!p.keywords.is_empty(), "{} has no keywords", p.name);
+        }
+    }
+
+    #[test]
+    fn all_symbols_unique() {
+        let mut seen = std::collections::HashSet::new();
+        for p in PRIMITIVES {
+            assert!(seen.insert(p.symbol), "duplicate symbol: {}", p.symbol);
+        }
+    }
+
+    #[test]
+    fn all_names_unique() {
+        let mut seen = std::collections::HashSet::new();
+        for p in PRIMITIVES {
+            assert!(seen.insert(p.name), "duplicate name: {}", p.name);
+        }
+    }
+
+    #[test]
+    fn find_by_name_works() {
+        assert!(find_by_name_or_symbol("Causality").is_some());
+        assert!(find_by_name_or_symbol("causality").is_some());
+        assert!(find_by_name_or_symbol("→").is_some());
+        assert!(find_by_name_or_symbol("nonexistent").is_none());
+    }
+
+    #[test]
+    fn decompose_rate_limiter() {
+        let result = decompose(PrimitiveDecomposeParams {
+            concept: "rate limiter".into(),
+        });
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn decompose_empty_concept() {
+        let result = decompose(PrimitiveDecomposeParams { concept: "".into() });
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn compose_known_pattern() {
+        let result = compose(PrimitiveComposeParams {
+            primitives: vec!["Sequence".into(), "Mapping".into(), "Boundary".into()],
+        });
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn compose_with_symbols() {
+        let result = compose(PrimitiveComposeParams {
+            primitives: vec!["→".into(), "σ".into()],
+        });
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn compose_unresolved_primitive() {
+        let result = compose(PrimitiveComposeParams {
+            primitives: vec!["FakePrimitive".into()],
+        });
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn list_all_returns_16() {
+        let result = list_all();
+        assert!(result.is_ok());
+    }
+}

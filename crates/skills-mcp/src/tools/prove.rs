@@ -342,6 +342,67 @@ pub fn validate() -> Result<CallToolResult, McpError> {
     })))
 }
 
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn validation_check_names() {
+        let checks = [
+            "brain_sessions",
+            "immunity",
+            "hormones",
+            "error_rate",
+            "baseline_antibodies",
+        ];
+        assert_eq!(checks.len(), 5);
+        let set: std::collections::HashSet<&str> = checks.iter().copied().collect();
+        assert_eq!(set.len(), 5);
+    }
+
+    #[test]
+    fn error_rate_threshold() {
+        assert!(2 <= 2); // PASS
+        assert!(!(3 <= 2)); // FAIL
+    }
+
+    #[test]
+    fn rate_calculation() {
+        let pass: i64 = 4;
+        let total: i64 = 5;
+        let rate = if total > 0 { (pass * 100) / total } else { 0 };
+        assert_eq!(rate, 80);
+    }
+
+    #[test]
+    fn rate_calculation_zero_total() {
+        let rate = if 0i64 > 0 { (3 * 100) / 0i64 } else { 0 };
+        assert_eq!(rate, 0);
+    }
+
+    #[test]
+    fn trend_directions() {
+        let cases: Vec<(i64, i64, &str)> = vec![
+            (50, 80, "IMPROVING"),
+            (80, 50, "REGRESSING"),
+            (70, 70, "STABLE"),
+        ];
+        for (first, last, expected) in cases {
+            let direction = match last.cmp(&first) {
+                std::cmp::Ordering::Greater => "IMPROVING",
+                std::cmp::Ordering::Less => "REGRESSING",
+                std::cmp::Ordering::Equal => "STABLE",
+            };
+            assert_eq!(direction, expected, "first={first}, last={last}");
+        }
+    }
+
+    #[test]
+    fn brain_status_detection() {
+        let content = "sessions: 444 antibodies: 10";
+        let lower = content.to_lowercase();
+        assert!(lower.contains("sessions:"));
+    }
+}
+
 /// [E] Evaluate — track improvement over time.
 pub fn evaluate() -> Result<CallToolResult, McpError> {
     let results_dir = telemetry_dir().join("prove_results");

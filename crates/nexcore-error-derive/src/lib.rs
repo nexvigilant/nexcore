@@ -5,7 +5,7 @@
 //!
 //! # Usage
 //!
-//! ```ignore
+//! ```
 //! use nexcore_error_derive::Error;
 //!
 //! #[derive(Debug, Error)]

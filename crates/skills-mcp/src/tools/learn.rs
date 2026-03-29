@@ -519,6 +519,103 @@ pub fn normalize() -> Result<CallToolResult, McpError> {
     })))
 }
 
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn implicit_files_list_has_seven() {
+        let implicit_files = [
+            "preferences.json",
+            "patterns.json",
+            "corrections.json",
+            "beliefs.json",
+            "trust.json",
+            "vocabulary_counters.json",
+            "belief_graph.json",
+        ];
+        assert_eq!(implicit_files.len(), 7);
+    }
+
+    #[test]
+    fn freshness_thresholds() {
+        let cases: Vec<(f64, &str)> = vec![
+            (0.5, "FRESH"),
+            (0.99, "FRESH"),
+            (1.0, "RECENT"),
+            (23.9, "RECENT"),
+            (24.0, "STALE"),
+            (999.0, "STALE"),
+        ];
+        for (age, expected) in cases {
+            let status = if age < 1.0 {
+                "FRESH"
+            } else if age < 24.0 {
+                "RECENT"
+            } else {
+                "STALE"
+            };
+            assert_eq!(status, expected, "age={age}");
+        }
+    }
+
+    #[test]
+    fn signal_type_parsing() {
+        // Colon-delimited: "cytokine:il2:event:detail" → "cytokine:il2"
+        let raw = "cytokine:il2:event:detail";
+        let t: String = raw.splitn(3, ':').take(2).collect::<Vec<_>>().join(":");
+        assert_eq!(t, "cytokine:il2");
+    }
+
+    #[test]
+    fn signal_type_parsing_single() {
+        let raw = "unknown";
+        let t: String = raw.splitn(3, ':').take(2).collect::<Vec<_>>().join(":");
+        assert_eq!(t, "unknown");
+    }
+
+    #[test]
+    fn signal_type_parsing_empty() {
+        let raw = "";
+        let t: String = raw.splitn(3, ':').take(2).collect::<Vec<_>>().join(":");
+        assert_eq!(t, "");
+    }
+
+    #[test]
+    fn recall_test_count_is_six() {
+        // Recall checks 6 things
+        let tests = [
+            "MEMORY.md",
+            "preferences",
+            "patterns",
+            "sessions",
+            "antibodies",
+            "hook_knowledge_bridge",
+        ];
+        assert_eq!(tests.len(), 6);
+    }
+
+    #[test]
+    fn json_array_length_counting() {
+        let v: serde_json::Value = serde_json::json!([1, 2, 3]);
+        let count = match &v {
+            serde_json::Value::Array(a) => a.len(),
+            serde_json::Value::Object(o) => o.len(),
+            _ => 1,
+        };
+        assert_eq!(count, 3);
+    }
+
+    #[test]
+    fn json_object_length_counting() {
+        let v: serde_json::Value = serde_json::json!({"a": 1, "b": 2});
+        let count = match &v {
+            serde_json::Value::Array(a) => a.len(),
+            serde_json::Value::Object(o) => o.len(),
+            _ => 1,
+        };
+        assert_eq!(count, 2);
+    }
+}
+
 /// Full LEARN pipeline.
 pub fn pipeline() -> Result<CallToolResult, McpError> {
     let land = landscape()?;

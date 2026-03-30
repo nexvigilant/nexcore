@@ -74,8 +74,7 @@ pub mod grounding;
 pub mod molecular_weight;
 pub mod primitiva;
 pub mod semantic_path;
-#[cfg(test)]
-mod spatial_bridge;
+// spatial_bridge moved to stem-math (avoids circular dep for crates.io publish)
 pub mod state_mode;
 pub mod symbols;
 pub mod synthesizer;

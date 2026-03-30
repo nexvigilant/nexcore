@@ -25,7 +25,6 @@ serde_json = { version = "1.0.120" }
 clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
 
 [dev-dependencies]
-stem-math = { version = "0.1.0", path = "../stem-math" }
 proptest = { version = "1.6.0" }
 
 [lints]

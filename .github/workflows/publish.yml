@@ -47,14 +47,16 @@ jobs:
             ~/.cargo/registry/cache/
           key: cargo-registry-${{ hashFiles('Cargo.lock') }}
 
-      - name: Override sccache (not available in CI)
+      - name: Strip local-only build config for CI
         run: |
-          mkdir -p .cargo
-          echo '[build]' >> .cargo/config.toml.ci
-          echo 'rustc-wrapper = ""' >> .cargo/config.toml.ci
-          # Remove sccache wrapper from config
-          sed -i 's/rustc-wrapper = "sccache"/# rustc-wrapper disabled in CI/' .cargo/config.toml
-          sed -i 's/RUSTC_WRAPPER = "sccache"/# RUSTC_WRAPPER disabled in CI/' .cargo/config.toml
+          # Remove sccache (not installed on runner)
+          sed -i 's/rustc-wrapper = "sccache"/# disabled in CI/' .cargo/config.toml
+          sed -i 's/RUSTC_WRAPPER = "sccache"/# disabled in CI/' .cargo/config.toml
+          # Remove mold linker (not installed on runner)
+          sed -i '/linker = "clang"/d' .cargo/config.toml
+          sed -i '/fuse-ld=mold/d' .cargo/config.toml
+          # Remove aarch64 cross-compile linkers
+          sed -i '/aarch64-linux-gnu-gcc/d' .cargo/config.toml
 
       - name: Build dag-publish
         run: cargo build -p dag-publish --release

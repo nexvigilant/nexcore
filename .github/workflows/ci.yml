@@ -23,10 +23,13 @@ jobs:
         with:
           path: target
           key: lint-${{ hashFiles('Cargo.lock') }}
-      - name: Disable sccache for CI
+      - name: Strip local-only build config for CI
         run: |
-          sed -i 's/rustc-wrapper = "sccache"/# rustc-wrapper disabled in CI/' .cargo/config.toml
-          sed -i 's/RUSTC_WRAPPER = "sccache"/# RUSTC_WRAPPER disabled in CI/' .cargo/config.toml
+          sed -i 's/rustc-wrapper = "sccache"/# disabled in CI/' .cargo/config.toml
+          sed -i 's/RUSTC_WRAPPER = "sccache"/# disabled in CI/' .cargo/config.toml
+          sed -i '/linker = "clang"/d' .cargo/config.toml
+          sed -i '/fuse-ld=mold/d' .cargo/config.toml
+          sed -i '/aarch64-linux-gnu-gcc/d' .cargo/config.toml
       - name: Format check
         run: cargo fmt --check
       - name: Clippy
@@ -44,10 +47,13 @@ jobs:
         with:
           path: target
           key: test-${{ hashFiles('Cargo.lock') }}
-      - name: Disable sccache for CI
+      - name: Strip local-only build config for CI
         run: |
-          sed -i 's/rustc-wrapper = "sccache"/# rustc-wrapper disabled in CI/' .cargo/config.toml
-          sed -i 's/RUSTC_WRAPPER = "sccache"/# RUSTC_WRAPPER disabled in CI/' .cargo/config.toml
+          sed -i 's/rustc-wrapper = "sccache"/# disabled in CI/' .cargo/config.toml
+          sed -i 's/RUSTC_WRAPPER = "sccache"/# disabled in CI/' .cargo/config.toml
+          sed -i '/linker = "clang"/d' .cargo/config.toml
+          sed -i '/fuse-ld=mold/d' .cargo/config.toml
+          sed -i '/aarch64-linux-gnu-gcc/d' .cargo/config.toml
       - name: Run tests
         run: cargo test --workspace --lib
 
@@ -63,9 +69,12 @@ jobs:
         with:
           path: target
           key: build-${{ hashFiles('Cargo.lock') }}
-      - name: Disable sccache for CI
+      - name: Strip local-only build config for CI
         run: |
-          sed -i 's/rustc-wrapper = "sccache"/# rustc-wrapper disabled in CI/' .cargo/config.toml
-          sed -i 's/RUSTC_WRAPPER = "sccache"/# RUSTC_WRAPPER disabled in CI/' .cargo/config.toml
+          sed -i 's/rustc-wrapper = "sccache"/# disabled in CI/' .cargo/config.toml
+          sed -i 's/RUSTC_WRAPPER = "sccache"/# disabled in CI/' .cargo/config.toml
+          sed -i '/linker = "clang"/d' .cargo/config.toml
+          sed -i '/fuse-ld=mold/d' .cargo/config.toml
+          sed -i '/aarch64-linux-gnu-gcc/d' .cargo/config.toml
       - name: Build workspace
         run: cargo build --workspace

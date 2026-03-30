@@ -2655,6 +2655,7 @@ async fn dispatch_inner(
         "antivector_classify" => typed(params, tools::antivector::antivector_classify),
         "antivector_compute" => typed(params, tools::antivector::antivector_compute),
         "antivector_report" => typed(params, tools::antivector::antivector_report),
+        "antivector_label_check" => typed(params, tools::antivector::antivector_label_check),
 
         // ── Antibodies (Adaptive Immune) ──────────────────────────────────
         "antibody_compute_affinity" => typed(params, tools::antibodies::antibody_compute_affinity),
@@ -3286,7 +3287,7 @@ fn unified_catalog_data() -> serde_json::Value {
             "reason": ["reason_infer", "reason_counterfactual"],
             "word": ["word_analyze", "word_popcount", "word_hamming_distance", "word_parity", "word_rotate", "word_log2", "word_isqrt", "word_binary_gcd", "word_bit_test", "word_align_up"],
             "harm_taxonomy": ["harm_classify", "harm_definition", "harm_catalog", "harm_exhaustiveness", "harm_axiom_connection", "harm_axiom_catalog", "harm_combinations", "harm_manifestation_derive"],
-            "antivector": ["antivector_classify", "antivector_compute", "antivector_report"],
+            "antivector": ["antivector_classify", "antivector_compute", "antivector_report", "antivector_label_check"],
             "antibodies": ["antibody_compute_affinity", "antibody_classify_response", "antibody_ig_info", "antibody_ig_catalog"],
             "jeopardy": ["jeopardy_clue_values", "jeopardy_categories", "jeopardy_score_board", "jeopardy_should_buzz", "jeopardy_optimal_dd_wager", "jeopardy_optimal_final_wager", "jeopardy_board_control_value", "jeopardy_compound_velocity"],
             "audio": ["audio_spec_compute", "audio_spec_presets", "audio_format_info", "audio_rate_info", "audio_convert_sample", "audio_resample", "audio_codec_catalog", "audio_device_capabilities", "audio_mixer_pan", "audio_stream_transitions"],

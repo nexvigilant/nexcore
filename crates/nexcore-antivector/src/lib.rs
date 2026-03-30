@@ -41,9 +41,11 @@
 pub mod annihilate;
 pub mod classify;
 pub mod compute;
+pub mod label_check;
 pub mod types;
 
 pub use annihilate::*;
 pub use classify::*;
 pub use compute::*;
+pub use label_check::*;
 pub use types::*;

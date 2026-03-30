@@ -381,6 +381,22 @@ fn publish(order: &[String], cli: &Cli) -> Result<()> {
                 continue;
             }
 
+            // "already exists" means the crate is published — treat as success
+            // so downstream dependents can resolve it
+            if stderr_text.contains("already exists") {
+                eprintln!("  ⊘ {name} already exists on crates.io (treating as success)");
+                skipped.push(name.to_string());
+                success = true;
+
+                // Checkpoint so --resume skips it next time
+                if let Some(ref root) = workspace_root_for_resume {
+                    let version = crate_version(&cli.crates_dir, name)
+                        .unwrap_or_else(|| "unknown".to_string());
+                    let _ = write_resume_entry(root, name, &version);
+                }
+                break;
+            }
+
             // Non-rate-limit failure — log last line and move on
             let last_line = stderr_text.lines().last().unwrap_or("unknown error");
             eprintln!("  ✗ FAILED: {last_line}");

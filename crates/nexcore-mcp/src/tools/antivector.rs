@@ -199,3 +199,32 @@ pub fn antivector_report(p: AntivectorReportParams) -> Result<CallToolResult, Mc
         "outcome": report.outcome,
     }))
 }
+
+/// Check whether an anti-vector is already deployed in the drug label.
+pub fn antivector_label_check(
+    p: crate::params::antivector::AntivectorLabelCheckParams,
+) -> Result<CallToolResult, McpError> {
+    let result = nexcore_antivector::check_label_deployment(
+        &p.drug,
+        &p.event,
+        p.adr_section.as_deref(),
+        p.warnings_section.as_deref(),
+        p.boxed_warning.as_deref(),
+    );
+
+    ok_json(json!({
+        "drug": result.drug,
+        "event": result.event,
+        "status": format!("{:?}", result.status),
+        "event_in_adr_section": result.event_in_adr_section,
+        "event_in_warnings": result.event_in_warnings,
+        "event_in_boxed_warning": result.event_in_boxed_warning,
+        "has_dose_guidance": result.has_dose_guidance,
+        "has_monitoring": result.has_monitoring,
+        "has_contraindication": result.has_contraindication,
+        "has_rems": result.has_rems,
+        "has_medication_guide": result.has_medication_guide,
+        "deployed_measures": result.deployed_measures.iter().map(|m| format!("{m:?}")).collect::<Vec<_>>(),
+        "recommendation": result.recommendation,
+    }))
+}

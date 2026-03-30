@@ -585,6 +585,7 @@ pub mod diagram;
 pub use diagram::*;
 
 // Hook testing harness
+pub mod hook_error_id;
 pub mod hook_test;
 pub use hook_test::*;
 

@@ -10370,6 +10370,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexcore-relay"
+version = "1.0.0"
+dependencies = [
+ "nexcore-error",
+ "nexcore-primitives",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "nexcore-renderer"
 version = "1.0.0"
 dependencies = [

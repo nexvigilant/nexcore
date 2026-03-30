@@ -931,6 +931,16 @@ impl NexCoreMcpServer {
         tools::antivector::antivector_report(params)
     }
 
+    #[tool(
+        description = "Check whether an anti-vector is already deployed in the drug label. Takes DailyMed label sections and checks for existing countermeasures (dose guidance, monitoring, contraindications, REMS). Returns deployment status and recommendation."
+    )]
+    async fn antivector_label_check(
+        &self,
+        Parameters(params): Parameters<params::antivector::AntivectorLabelCheckParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::antivector::antivector_label_check(params)
+    }
+
     // ========================================================================
     // Compliance Tools (3) - SAM.gov, OSCAL, ICH Controls
     // ========================================================================
@@ -5846,6 +5856,16 @@ impl NexCoreMcpServer {
         Parameters(params): Parameters<params::hook_test::HookTestAllParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::hook_test::hook_test_all(params)
+    }
+
+    #[tool(
+        description = "Identify failing hooks by scanning settings.json registrations. Tests each command-type hook with mock input and reports MISSING, NOT_EXECUTABLE, ERROR, TIMEOUT, or BLOCKS status. Filter by event and/or matcher."
+    )]
+    async fn hook_error_identify(
+        &self,
+        Parameters(params): Parameters<params::hook_error_id::HookErrorIdentifyParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::hook_error_id::hook_error_identify(params)
     }
 
     // ========================================================================

@@ -580,6 +580,7 @@ pub mod ast_query;
 pub mod diagram;
 
 // Hook testing harness
+pub mod hook_error_id;
 pub mod hook_test;
 
 // Jupyter & Voila (kernel management, server status, notebook rendering)

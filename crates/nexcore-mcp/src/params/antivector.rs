@@ -65,3 +65,18 @@ pub struct AntivectorReportParams {
 fn default_confidence_report() -> f64 {
     0.5
 }
+
+/// Check whether an anti-vector is already deployed in the drug label.
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct AntivectorLabelCheckParams {
+    /// Drug name.
+    pub drug: String,
+    /// Adverse event to check.
+    pub event: String,
+    /// Text from the Adverse Reactions section (from DailyMed).
+    pub adr_section: Option<String>,
+    /// Text from the Warnings/Precautions section.
+    pub warnings_section: Option<String>,
+    /// Text from the Boxed Warning section.
+    pub boxed_warning: Option<String>,
+}

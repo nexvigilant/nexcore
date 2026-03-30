@@ -898,6 +898,40 @@ impl NexCoreMcpServer {
     }
 
     // ========================================================================
+    // Anti-Vector Tools (3) - Structured countermeasures that annihilate harm vectors
+    // ========================================================================
+
+    #[tool(
+        description = "Classify a harm type (A-I) into its anti-vector strategy. Returns primary anti-vector class (mechanistic/epistemic/architectural), recommended risk minimization measures, and common biases to assess. The inversion table of the harm taxonomy."
+    )]
+    async fn antivector_classify(
+        &self,
+        Parameters(params): Parameters<params::antivector::AntivectorClassifyParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::antivector::antivector_classify(params)
+    }
+
+    #[tool(
+        description = "Compute a complete anti-vector for a drug-event harm vector. Returns mechanistic (pathway intervention), epistemic (bias counter-evidence), and architectural (risk minimization) components with annihilation result."
+    )]
+    async fn antivector_compute(
+        &self,
+        Parameters(params): Parameters<params::antivector::AntivectorComputeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::antivector::antivector_compute(params)
+    }
+
+    #[tool(
+        description = "Generate a human-readable annihilation report for a drug-event pair. Shows mechanistic, epistemic, and architectural anti-vector components with final outcome (residual harm / annihilated / surplus protection)."
+    )]
+    async fn antivector_report(
+        &self,
+        Parameters(params): Parameters<params::antivector::AntivectorReportParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::antivector::antivector_report(params)
+    }
+
+    // ========================================================================
     // Compliance Tools (3) - SAM.gov, OSCAL, ICH Controls
     // ========================================================================
 

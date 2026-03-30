@@ -107,6 +107,7 @@ nexcore-qbr = { workspace = true }
 nexcore-constants = { workspace = true }
 nexcore-pharmacovigilance = { workspace = true }
 nexcore-harm-taxonomy = { workspace = true }
+nexcore-antivector = { workspace = true }
 pvos-primitive-expansion = { workspace = true }
 # Platform/orchestration/security domain crates
 nexcore-orchestration = { workspace = true }

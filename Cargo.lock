@@ -8250,6 +8250,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexcore-antivector"
+version = "0.1.0"
+dependencies = [
+ "nexcore-error",
+ "nexcore-harm-taxonomy",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "nexcore-api"
 version = "1.0.0"
 dependencies = [
@@ -8304,7 +8314,7 @@ dependencies = [
 
 [[package]]
 name = "nexcore-audio"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -8424,7 +8434,7 @@ dependencies = [
 
 [[package]]
 name = "nexcore-cargo"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -8505,11 +8515,11 @@ dependencies = [
 
 [[package]]
 name = "nexcore-cns"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "nexcore-codec"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "nexcore-cognition"
@@ -8875,7 +8885,7 @@ dependencies = [
 
 [[package]]
 name = "nexcore-downloads-scanner"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "tempfile",
 ]
@@ -9054,7 +9064,7 @@ dependencies = [
 
 [[package]]
 name = "nexcore-error-derive"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -9150,7 +9160,7 @@ dependencies = [
 
 [[package]]
 name = "nexcore-fs"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "nexcore-ghost"
@@ -9228,7 +9238,7 @@ dependencies = [
 
 [[package]]
 name = "nexcore-hash"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "nexcore-helix"
@@ -9325,7 +9335,7 @@ dependencies = [
 
 [[package]]
 name = "nexcore-id"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "criterion",
  "serde",
@@ -9499,6 +9509,7 @@ dependencies = [
  "nexcore-algovigilance",
  "nexcore-anatomy",
  "nexcore-antibodies",
+ "nexcore-antivector",
  "nexcore-asm",
  "nexcore-audio",
  "nexcore-brain",

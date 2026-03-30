@@ -500,6 +500,10 @@ pub use word::*;
 pub mod harm_taxonomy;
 pub use harm_taxonomy::*;
 
+// Anti-Vector: structured countermeasures that annihilate harm vectors
+pub mod antivector;
+pub use antivector::*;
+
 // Antibodies: adaptive immune recognition (affinity, Ig class, response classification)
 pub mod antibodies;
 pub use antibodies::*;

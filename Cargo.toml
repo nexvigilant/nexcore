@@ -99,6 +99,7 @@ nexcore-aggregate = { path = "crates/nexcore-aggregate", version = "1.0.0" }
 nexcore-algovigilance = { path = "crates/nexcore-algovigilance", version = "1.0.0" }
 nexcore-anatomy = { path = "crates/nexcore-anatomy", version = "1.0.0" }
 nexcore-antibodies = { path = "crates/nexcore-antibodies", version = "1.0.0" }
+nexcore-antivector = { path = "crates/nexcore-antivector", version = "0.1.0" }
 nexcore-api = { path = "crates/nexcore-api", version = "1.0.0" }
 nexcore-audio = { path = "crates/nexcore-audio", version = "0.1.1" }
 nexcore-bicone = { path = "crates/nexcore-bicone", version = "0.1.0" }

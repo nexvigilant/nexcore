@@ -1,0 +1,18 @@
+[package]
+name = "nexcore-antivector"
+version = "0.1.0"
+edition = "2024"
+description = "Anti-vector computation: structured countermeasures that annihilate harm vectors"
+license = "MIT OR Apache-2.0"
+homepage = "https://nexvigilant.com"
+repository = "https://github.com/nexvigilant/nexcore"
+keywords = ["pharmacovigilance", "safety", "antivector", "countermeasure", "signal-detection"]
+categories = ["science", "algorithms"]
+
+[dependencies]
+nexcore-harm-taxonomy = { workspace = true }
+nexcore-error = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+[dev-dependencies]

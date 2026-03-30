@@ -522,6 +522,9 @@ pub mod word;
 // Harm Taxonomy: ToV §9 harm classification (types A-I, laws, axioms)
 pub mod harm_taxonomy;
 
+// Anti-Vector: structured countermeasures that annihilate harm vectors
+pub mod antivector;
+
 // Antibodies: adaptive immune recognition (affinity, Ig class)
 pub mod antibodies;
 

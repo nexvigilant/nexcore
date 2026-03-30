@@ -1,0 +1,84 @@
+name: Publish Crates
+
+on:
+  workflow_dispatch:
+    inputs:
+      filter:
+        description: 'Crate name prefix filter (e.g., "stem-", "nexcore-pv"). Leave empty for all.'
+        required: false
+        default: ''
+      limit:
+        description: 'Max crates to publish in this run (0 = unlimited)'
+        required: false
+        default: '50'
+      delay:
+        description: 'Seconds between publishes (crates.io rate limit)'
+        required: false
+        default: '8'
+      dry_run:
+        description: 'Dry run (show order only, no publish)'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
+
+jobs:
+  publish:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    timeout-minutes: 360  # 6 hours max
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.85"
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+          key: cargo-registry-${{ hashFiles('Cargo.lock') }}
+
+      - name: Build dag-publish
+        run: cargo build -p dag-publish --release
+
+      - name: Configure crates.io token
+        run: cargo login ${{ secrets.CRATES_IO_TOKEN }}
+
+      - name: Publish (dry run)
+        if: ${{ inputs.dry_run }}
+        run: |
+          ARGS="--crates-dir crates --include-tools --skip-published --show-phases"
+          if [ -n "${{ inputs.filter }}" ]; then
+            ARGS="$ARGS --filter ${{ inputs.filter }}"
+          fi
+          ./target/release/dag-publish $ARGS
+
+      - name: Publish crates
+        if: ${{ !inputs.dry_run }}
+        run: |
+          ARGS="--crates-dir crates --include-tools --skip-published"
+          ARGS="$ARGS --delay ${{ inputs.delay }}"
+          if [ -n "${{ inputs.filter }}" ]; then
+            ARGS="$ARGS --filter ${{ inputs.filter }}"
+          fi
+          if [ "${{ inputs.limit }}" != "0" ]; then
+            ARGS="$ARGS --limit ${{ inputs.limit }}"
+          fi
+          ./target/release/dag-publish $ARGS
+
+      - name: Verify publish count
+        if: ${{ !inputs.dry_run }}
+        run: |
+          echo "Checking crates.io for nexcore crates..."
+          sleep 10  # Let index propagate
+          count=$(cargo search nexcore --limit 100 2>/dev/null | wc -l)
+          echo "Crates found on crates.io: $count"

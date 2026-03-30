@@ -377,6 +377,8 @@ fn migrate_implicit(conn: &Connection, implicit_dir: &Path, stats: &mut Migratio
                 context: c.context,
                 learned_at: c.learned_at,
                 application_count: c.application_count,
+                source: String::from("json_import"),
+                believability: 0.5,
             };
             if let Err(e) = implicit::insert_correction(conn, &row) {
                 stats.errors.push(format!("Correction: {e}"));

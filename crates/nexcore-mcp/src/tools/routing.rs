@@ -1186,6 +1186,15 @@ pub fn tool_registry() -> Vec<ToolMeta> {
             alternatives: &[],
         },
         ToolMeta {
+            name: "implicit_add_correction",
+            category: "brain",
+            highway_class: 3,
+            outputs: &["correction_added"],
+            inputs: &["mistake", "correction", "source"],
+            depends_on: &[],
+            alternatives: &[],
+        },
+        ToolMeta {
             name: "code_tracker_changed",
             category: "brain",
             highway_class: 3,

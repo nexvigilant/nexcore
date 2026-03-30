@@ -209,13 +209,34 @@ pub fn sync_pattern(
     });
 }
 
-/// Mirror a correction to SQLite.
+/// Mirror a correction to SQLite with believability weighting.
 pub fn sync_correction(
     mistake: &str,
     correction: &str,
     context: Option<&str>,
     learned_at: DateTime,
     application_count: u32,
+) {
+    sync_correction_weighted(
+        mistake,
+        correction,
+        context,
+        learned_at,
+        application_count,
+        "unknown",
+        0.5,
+    );
+}
+
+/// Mirror a correction to SQLite with explicit source and believability.
+pub fn sync_correction_weighted(
+    mistake: &str,
+    correction: &str,
+    context: Option<&str>,
+    learned_at: DateTime,
+    application_count: u32,
+    source: &str,
+    believability: f64,
 ) {
     with_db("sync_correction", |pool| {
         pool.with_conn(|conn| {
@@ -228,6 +249,8 @@ pub fn sync_correction(
                     context: context.map(String::from),
                     learned_at,
                     application_count,
+                    source: source.to_string(),
+                    believability,
                 },
             )
         })

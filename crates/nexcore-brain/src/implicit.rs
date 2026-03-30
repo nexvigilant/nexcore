@@ -330,10 +330,26 @@ pub struct Correction {
     /// When this correction was last reinforced (applied or confirmed).
     #[serde(default = "DateTime::now")]
     pub updated_at: DateTime,
+
+    /// Source of the correction (compiler, test, human, hook, model, training)
+    #[serde(default = "default_correction_source")]
+    pub source: String,
+
+    /// Believability weight (0.0-1.0) — Dalio's credibility scoring
+    #[serde(default = "default_correction_believability")]
+    pub believability: f64,
 }
 
 fn default_correction_confidence() -> f64 {
     0.8
+}
+
+fn default_correction_source() -> String {
+    String::from("unknown")
+}
+
+fn default_correction_believability() -> f64 {
+    0.5
 }
 
 impl Correction {
@@ -349,6 +365,8 @@ impl Correction {
             application_count: 0,
             confidence: 0.8,
             updated_at: now,
+            source: String::from("unknown"),
+            believability: 0.5,
         }
     }
 
@@ -1181,14 +1199,16 @@ impl ImplicitKnowledge {
             );
         }
 
-        // Corrections
+        // Corrections — sync with believability weighting
         for corr in &self.corrections {
-            crate::db::sync_correction(
+            crate::db::sync_correction_weighted(
                 &corr.mistake,
                 &corr.correction,
                 corr.context.as_deref(),
                 corr.learned_at,
                 corr.application_count,
+                &corr.source,
+                corr.believability,
             );
         }
 

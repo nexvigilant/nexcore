@@ -471,6 +471,67 @@ pub fn implicit_find_corrections(
     )]))
 }
 
+/// Add a correction with believability weighting (Dalio's radical openness).
+/// Source auto-detects believability if not explicitly provided.
+pub fn implicit_add_correction(
+    params: crate::params::BrainImplicitAddCorrectionParams,
+) -> Result<CallToolResult, McpError> {
+    let source = params.source.unwrap_or_else(|| String::from("model"));
+
+    // Auto-detect believability from source if not provided
+    let believability = params
+        .believability
+        .unwrap_or_else(|| match source.as_str() {
+            "compiler" => 1.0,
+            "test" => 0.95,
+            "human" => 0.90,
+            "hook" => 0.85,
+            "incident" => 0.95,
+            "probe" => 0.70,
+            "model" => 0.50,
+            "training" => 0.30,
+            _ => 0.50,
+        });
+
+    // Add to JSON implicit store
+    let mut knowledge =
+        ImplicitKnowledge::load().map_err(|e| McpError::internal_error(e.to_string(), None))?;
+
+    let mut correction =
+        nexcore_brain::implicit::Correction::new(&params.mistake, &params.correction);
+    correction.context = params.context.clone();
+    correction.source = source.clone();
+    correction.believability = believability;
+
+    knowledge.add_correction(correction);
+    knowledge
+        .save()
+        .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+
+    // Also sync to brain.db with believability
+    nexcore_brain::db::sync_correction_weighted(
+        &params.mistake,
+        &params.correction,
+        params.context.as_deref(),
+        nexcore_chrono::DateTime::now(),
+        0,
+        &source,
+        believability,
+    );
+
+    let result = serde_json::json!({
+        "status": "added",
+        "mistake": params.mistake,
+        "correction": params.correction,
+        "source": source,
+        "believability": believability,
+    });
+
+    Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+        result.to_string(),
+    )]))
+}
+
 /// List patterns filtered by T1 primitive grounding
 pub fn implicit_patterns_by_grounding(
     params: crate::params::BrainImplicitPatternsByGroundingParams,

@@ -155,6 +155,22 @@ pub struct BrainImplicitFindCorrectionsParams {
     pub threshold: Option<f64>,
 }
 
+/// Parameters for adding a correction with believability weighting
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct BrainImplicitAddCorrectionParams {
+    /// What was wrong (the mistake)
+    pub mistake: String,
+    /// What should have been done (the correction)
+    pub correction: String,
+    /// Context when this occurred
+    pub context: Option<String>,
+    /// Source of the correction: compiler, test, human, hook, model, training, incident
+    pub source: Option<String>,
+    /// Believability weight (0.0-1.0). Auto-detected from source if omitted.
+    pub believability: Option<f64>,
+}
+
 /// Parameters for listing patterns by T1 grounding
 #[derive(Debug, Deserialize, JsonSchema)]
 #[serde(crate = "rmcp::serde")]

@@ -205,6 +205,10 @@ pub struct CorrectionRow {
     pub learned_at: DateTime,
     /// Times applied
     pub application_count: u32,
+    /// Source of the correction (compiler, test, human, hook, model, training)
+    pub source: String,
+    /// Believability weight (0.0-1.0) — Dalio's credibility scoring
+    pub believability: f64,
 }
 
 /// Insert a correction.
@@ -214,14 +218,16 @@ pub struct CorrectionRow {
 /// Returns an error if the insert fails.
 pub fn insert_correction(conn: &Connection, c: &CorrectionRow) -> Result<()> {
     conn.execute(
-        "INSERT INTO corrections (mistake, correction, context, learned_at, application_count)
-         VALUES (?1, ?2, ?3, ?4, ?5)",
+        "INSERT INTO corrections (mistake, correction, context, learned_at, application_count, source, believability)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
         params![
             c.mistake,
             c.correction,
             c.context,
             c.learned_at.to_rfc3339(),
             c.application_count,
+            c.source,
+            c.believability,
         ],
     )?;
     Ok(())
@@ -234,8 +240,8 @@ pub fn insert_correction(conn: &Connection, c: &CorrectionRow) -> Result<()> {
 /// Returns an error on query failure.
 pub fn list_corrections(conn: &Connection) -> Result<Vec<CorrectionRow>> {
     let mut stmt = conn.prepare(
-        "SELECT id, mistake, correction, context, learned_at, application_count
-         FROM corrections ORDER BY learned_at DESC",
+        "SELECT id, mistake, correction, context, learned_at, application_count, source, believability
+         FROM corrections ORDER BY believability DESC, learned_at DESC",
     )?;
     let rows = stmt
         .query_map([], |row| {
@@ -246,6 +252,10 @@ pub fn list_corrections(conn: &Connection) -> Result<Vec<CorrectionRow>> {
                 context: row.get(3)?,
                 learned_at: parse_dt(row.get::<_, String>(4)?),
                 application_count: row.get(5)?,
+                source: row
+                    .get::<_, String>(6)
+                    .unwrap_or_else(|_| String::from("unknown")),
+                believability: row.get::<_, f64>(7).unwrap_or(0.5),
             })
         })?
         .collect::<std::result::Result<Vec<_>, _>>()?;
@@ -547,6 +557,8 @@ mod tests {
                     context: Some("error handling".into()),
                     learned_at: DateTime::now(),
                     application_count: 0,
+                    source: "compiler".into(),
+                    believability: 1.0,
                 },
             )?;
             let all = list_corrections(conn)?;

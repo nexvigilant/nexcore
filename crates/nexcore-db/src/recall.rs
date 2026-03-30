@@ -268,8 +268,8 @@ mod tests {
                  INSERT INTO patterns (id, pattern_type, description, examples, detected_at, updated_at, confidence, occurrence_count)
                  VALUES ('p1', 'naming', 'Uses snake_case for function names', '[\"compute_prr\"]', datetime('now'), datetime('now'), 0.8, 5);
 
-                 INSERT INTO corrections (mistake, correction, context, learned_at, application_count)
-                 VALUES ('used unwrap', 'use error propagation with ?', 'In library code', datetime('now'), 3);",
+                 INSERT INTO corrections (mistake, correction, context, learned_at, application_count, source, believability)
+                 VALUES ('used unwrap', 'use error propagation with ?', 'In library code', datetime('now'), 3, 'compiler', 1.0);",
             )?;
 
             // Populate FTS indexes

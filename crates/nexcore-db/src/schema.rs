@@ -8,7 +8,7 @@ use rusqlite::Connection;
 use crate::error::{DbError, Result};
 
 /// Current schema version. Increment when adding migrations.
-pub const CURRENT_SCHEMA_VERSION: u32 = 9;
+pub const CURRENT_SCHEMA_VERSION: u32 = 12;
 
 /// Initialize the database schema (create all tables if they don't exist).
 ///
@@ -45,6 +45,9 @@ pub fn initialize(conn: &Connection) -> Result<()> {
             apply_v7(conn)?;
             apply_v8(conn)?;
             apply_v9(conn)?;
+            apply_v10(conn)?;
+            apply_v11(conn)?;
+            apply_v12(conn)?;
             conn.execute(
                 "INSERT INTO schema_version (version) VALUES (?1)",
                 [CURRENT_SCHEMA_VERSION],
@@ -228,6 +231,15 @@ fn migrate(conn: &Connection, from_version: u32) -> Result<()> {
     }
     if from_version < 9 {
         apply_v9(conn)?;
+    }
+    if from_version < 10 {
+        apply_v10(conn)?;
+    }
+    if from_version < 11 {
+        apply_v11(conn)?;
+    }
+    if from_version < 12 {
+        apply_v12(conn)?;
     }
 
     conn.execute(
@@ -634,6 +646,114 @@ fn apply_v9(conn: &Connection) -> Result<()> {
             ON skill_scores(scored_at);
         ",
     )?;
+    Ok(())
+}
+
+/// V10: Anatomy clusters and flywheel tables (reconciling prior direct-SQL migrations).
+fn apply_v10(conn: &Connection) -> Result<()> {
+    conn.execute_batch(
+        "
+        CREATE TABLE IF NOT EXISTS anatomy_clusters (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            cluster_name        TEXT NOT NULL UNIQUE,
+            cluster_code        TEXT NOT NULL UNIQUE,
+            description         TEXT,
+            station_configs     TEXT DEFAULT '[]',
+            pages               TEXT DEFAULT '[]',
+            microgram_families  TEXT DEFAULT '[]',
+            coverage_score      REAL DEFAULT 0.0,
+            created_at          TEXT DEFAULT (datetime('now')),
+            updated_at          TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_clusters_code
+            ON anatomy_clusters(cluster_code);
+        CREATE INDEX IF NOT EXISTS idx_clusters_coverage
+            ON anatomy_clusters(coverage_score);
+
+        CREATE TABLE IF NOT EXISTS flywheel_evaluations (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at      TEXT DEFAULT (datetime('now')),
+            score           INTEGER NOT NULL,
+            verdict         TEXT NOT NULL,
+            rim             INTEGER,
+            momentum        INTEGER,
+            friction        INTEGER,
+            gyro            INTEGER,
+            elastic         INTEGER,
+            auto_pct        INTEGER,
+            fatigue_pct     INTEGER,
+            sessions_total  INTEGER,
+            sessions_24h    INTEGER,
+            hooks           INTEGER,
+            skills          INTEGER,
+            antibodies      INTEGER,
+            critical        INTEGER,
+            promotions      TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS flywheel_velocity (
+            id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at              TEXT DEFAULT (datetime('now')),
+            session_band            TEXT NOT NULL,
+            momentum                TEXT NOT NULL,
+            commits                 INTEGER,
+            files_modified          INTEGER,
+            tool_calls              INTEGER,
+            estimated_fix_time_ms   INTEGER
+        );
+        ",
+    )?;
+    Ok(())
+}
+
+/// V11: Academy certifications table (reconciling prior direct-SQL migration).
+fn apply_v11(conn: &Connection) -> Result<()> {
+    conn.execute_batch(
+        "
+        CREATE TABLE IF NOT EXISTS academy_certifications (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            agent_id        TEXT NOT NULL,
+            track           TEXT NOT NULL DEFAULT 'foundation',
+            level           INTEGER NOT NULL DEFAULT 0,
+            modules_passed  TEXT NOT NULL DEFAULT '[]',
+            modules_failed  TEXT NOT NULL DEFAULT '[]',
+            intake_score    INTEGER NOT NULL DEFAULT 0,
+            certified_at    TEXT,
+            valid_until     TEXT,
+            session_id      TEXT,
+            created_at      TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_cert_agent
+            ON academy_certifications(agent_id);
+        ",
+    )?;
+    Ok(())
+}
+
+/// V12: Believability-weighted learning — add source and believability to
+/// corrections and beliefs tables. Dalio's principle: weight feedback by
+/// the track record of its source (compiler=1.0, test=0.95, human=0.90,
+/// model=0.50, training=0.30).
+fn apply_v12(conn: &Connection) -> Result<()> {
+    // corrections: source identifies WHERE the correction came from,
+    // believability scores HOW much to trust it during retrieval.
+    conn.execute_batch(
+        "
+        ALTER TABLE corrections ADD COLUMN source TEXT NOT NULL DEFAULT 'unknown';
+        ALTER TABLE corrections ADD COLUMN believability REAL NOT NULL DEFAULT 0.5;
+        ",
+    )?;
+
+    // beliefs: source_type and believability augment the existing confidence
+    // field. confidence = subjective certainty, believability = credibility
+    // of the evidence source.
+    conn.execute_batch(
+        "
+        ALTER TABLE beliefs ADD COLUMN source_type TEXT NOT NULL DEFAULT 'unknown';
+        ALTER TABLE beliefs ADD COLUMN believability REAL NOT NULL DEFAULT 0.5;
+        ",
+    )?;
+
     Ok(())
 }
 

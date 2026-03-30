@@ -124,6 +124,7 @@ nexcore-crystalbook = { path = "crates/nexcore-crystalbook", version = "0.1.0" }
 nexcore-cognition = { path = "crates/nexcore-cognition", version = "0.1.0" }
 nexcore-cortex = { path = "crates/nexcore-cortex", version = "0.1.0" }
 nexcore-ctvp = { path = "crates/nexcore-ctvp", version = "1.0.0" }
+nexcore-cybercinetics = { path = "crates/nexcore-cybercinetics", version = "1.0.0" }
 nexcore-cytokine = { path = "crates/nexcore-cytokine", version = "1.0.0" }
 nexcore-db = { path = "crates/nexcore-db", version = "1.0.0" }
 nexcore-declension = { path = "crates/nexcore-declension", version = "1.0.0" }

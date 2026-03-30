@@ -1,0 +1,16 @@
+[package]
+name = "nexcore-cybercinetics"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license = "MIT OR Apache-2.0"
+repository.workspace = true
+description = "Feedback-controlled kinetic governance — ∂(→(ν, ς, ρ)) typed as Rust"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

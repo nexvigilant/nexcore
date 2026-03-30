@@ -1,0 +1,31 @@
+# Auto-label PRs by file area
+source:
+  - changed-files:
+    - any-glob-to-any-file: 'crates/**'
+
+tests:
+  - changed-files:
+    - any-glob-to-any-file: 'crates/*/tests/**'
+
+docs:
+  - changed-files:
+    - any-glob-to-any-file: '**/*.md'
+
+config:
+  - changed-files:
+    - any-glob-to-any-file:
+      - '.github/**'
+      - 'Cargo.toml'
+      - '.cargo/**'
+
+ci:
+  - changed-files:
+    - any-glob-to-any-file: '.github/workflows/**'
+
+tools:
+  - changed-files:
+    - any-glob-to-any-file: 'tools/**'
+
+scripts:
+  - changed-files:
+    - any-glob-to-any-file: 'scripts/**'

@@ -43,6 +43,7 @@ pub mod compliance;
 pub mod compositor;
 pub mod cortex;
 pub mod crew;
+pub mod cybercinetics;
 pub mod declension;
 pub mod dna;
 pub mod docs;

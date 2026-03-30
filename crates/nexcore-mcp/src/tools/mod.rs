@@ -189,6 +189,7 @@ pub mod fda;
 pub mod fda_metrics;
 
 // Cytokine Signaling (typed event bus based on immune system patterns)
+pub mod cybercinetics;
 pub mod cytokine;
 
 // Value Mining (economic signal detection using PV algorithms)

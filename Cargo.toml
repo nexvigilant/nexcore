@@ -100,20 +100,20 @@ nexcore-algovigilance = { path = "crates/nexcore-algovigilance", version = "1.0.
 nexcore-anatomy = { path = "crates/nexcore-anatomy", version = "1.0.0" }
 nexcore-antibodies = { path = "crates/nexcore-antibodies", version = "1.0.0" }
 nexcore-api = { path = "crates/nexcore-api", version = "1.0.0" }
-nexcore-audio = { path = "crates/nexcore-audio", version = "0.1.0" }
+nexcore-audio = { path = "crates/nexcore-audio", version = "0.1.1" }
 nexcore-bicone = { path = "crates/nexcore-bicone", version = "0.1.0" }
 nexcore-brain = { path = "crates/nexcore-brain", version = "1.0.0" }
 nexcore-build-orchestrator = { path = "crates/nexcore-build-orchestrator", version = "1.0.0" }
 nexcore-browser = { path = "crates/nexcore-browser", version = "0.1.0" }
 nexcore-caesura = { path = "crates/nexcore-caesura", version = "1.0.0" }
-nexcore-cargo = { path = "crates/nexcore-cargo", version = "1.0.0" }
+nexcore-cargo = { path = "crates/nexcore-cargo", version = "1.0.1" }
 nexcore-cardiovascular = { path = "crates/nexcore-cardiovascular", version = "1.0.0" }
 nexcore-ccp = { path = "crates/nexcore-ccp", version = "1.0.0" }
 nexcore-cccp = { path = "crates/nexcore-cccp", version = "1.0.0" }
 nexcore-ccim = { path = "crates/nexcore-ccim", version = "0.1.0" }
 nexcore-chrono = { path = "crates/nexcore-chrono", version = "0.1.0", features = ["serde"] }
 nexcore-circulatory = { path = "crates/nexcore-circulatory", version = "1.0.0" }
-nexcore-codec = { path = "crates/nexcore-codec", version = "0.1.0" }
+nexcore-codec = { path = "crates/nexcore-codec", version = "0.1.1" }
 nexcore-clearance = { path = "crates/nexcore-clearance", version = "1.0.0" }
 nexcore-combinatorics = { path = "crates/nexcore-combinatorics", version = "0.1.0" }
 nexcore-compilation-space = { path = "crates/nexcore-compilation-space", version = "0.1.0" }
@@ -155,30 +155,30 @@ nexcore-disease-crohns = { path = "crates/nexcore-disease-crohns", version = "1.
 nexcore-disease-mm = { path = "crates/nexcore-disease-mm", version = "1.0.0" }
 nexcore-dna = { path = "crates/nexcore-dna", version = "1.0.0" }
 nexcore-domain-primitives = { path = "crates/nexcore-domain-primitives", version = "0.1.0" }
-nexcore-downloads-scanner = { path = "crates/nexcore-downloads-scanner", version = "0.1.0" }
+nexcore-downloads-scanner = { path = "crates/nexcore-downloads-scanner", version = "0.1.1" }
 nexcore-dtree = { path = "crates/nexcore-dtree", version = "1.0.0" }
 nexcore-edit-distance = { path = "crates/nexcore-edit-distance", version = "1.0.0" }
 nexcore-education-machine = { path = "crates/nexcore-education-machine", version = "0.1.0" }
 nexcore-energy = { path = "crates/nexcore-energy", version = "0.1.0" }
 nexcore-engram = { path = "crates/nexcore-engram", version = "0.1.0" }
 nexcore-error = { path = "crates/nexcore-error", version = "0.1.0" }
-nexcore-error-derive = { path = "crates/nexcore-error-derive", version = "1.0.0" }
+nexcore-error-derive = { path = "crates/nexcore-error-derive", version = "1.0.1" }
 nexcore-faers-etl = { path = "crates/nexcore-faers-etl", version = "1.0.0" }
 nexcore-fda-guidance = { path = "crates/nexcore-fda-guidance", version = "1.0.0" }
 nexcore-fhir = { path = "crates/nexcore-fhir", version = "1.0.0" }
 nexcore-firebase = { path = "crates/nexcore-firebase", version = "1.0.0" }
 nexcore-flywheel = { path = "crates/nexcore-flywheel", version = "0.1.0" }
 nexcore-forge-strategy = { path = "crates/nexcore-forge-strategy", version = "0.1.0" }
-nexcore-fs = { path = "crates/nexcore-fs", version = "0.1.0" }
+nexcore-fs = { path = "crates/nexcore-fs", version = "0.1.1" }
 nexcore-ghost = { path = "crates/nexcore-ghost", version = "1.0.0" }
 nexcore-grammar-lab = { path = "crates/nexcore-grammar-lab", version = "1.0.0" }
 nexcore-guardian-engine = { path = "crates/nexcore-guardian-engine", version = "1.0.0" }
 nexcore-harm-taxonomy = { path = "crates/nexcore-harm-taxonomy", version = "1.0.0" }
-nexcore-hash = { path = "crates/nexcore-hash", version = "0.1.0" }
+nexcore-hash = { path = "crates/nexcore-hash", version = "0.1.1" }
 # nexcore-hooks — REMOVED 2026-02-22 (dead crate, see ~/.claude/hooks/archive/AUDIT-2026-02-22.md)
 nexcore-hormone-types = { path = "crates/nexcore-hormone-types", version = "1.0.0" }
 nexcore-hormones = { path = "crates/nexcore-hormones", version = "1.0.0" }
-nexcore-id = { path = "crates/nexcore-id", version = "0.1.0", features = ["serde"] }
+nexcore-id = { path = "crates/nexcore-id", version = "0.1.1", features = ["serde"] }
 nexcore-immunity = { path = "crates/nexcore-immunity", version = "0.1.0" }
 nexcore-insight = { path = "crates/nexcore-insight", version = "0.1.0" }
 nexcore-integumentary = { path = "crates/nexcore-integumentary", version = "1.0.0" }

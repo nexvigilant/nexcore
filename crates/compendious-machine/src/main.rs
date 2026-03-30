@@ -1038,52 +1038,336 @@ fn run_mcp_server() {
 mod tests {
     use super::*;
 
+    // ---- helpers ----
+
+    fn machine() -> CompendiousMachine {
+        CompendiousMachine::new()
+    }
+
+    fn mcp_req(method: &str, params: Option<Value>) -> McpRequest {
+        McpRequest {
+            jsonrpc: "2.0".to_string(),
+            id: Some(json!(1)),
+            method: method.to_string(),
+            params,
+        }
+    }
+
+    // ---- CompendiousMachine::new / Default ----
+
+    #[test]
+    fn test_new_and_default_equivalent() {
+        // Both constructors must produce a machine with identical domain target counts.
+        let a = CompendiousMachine::new();
+        let b = CompendiousMachine::default();
+        assert_eq!(
+            a.domain_targets.len(),
+            b.domain_targets.len(),
+            "new() and default() should produce identical machines"
+        );
+    }
+
+    // ---- score_text ----
+
     #[test]
     fn test_verbose_scores_lower() {
-        let machine = CompendiousMachine::new();
-
+        let m = machine();
         let verbose = "In order to facilitate the implementation of the aforementioned solution, it is important to note that we should consider the various factors.";
         let compendious = "Three factors affect implementation: cost, time, complexity.";
-
-        let v_score = machine.score_text(verbose, None);
-        let c_score = machine.score_text(compendious, None);
-
-        assert!(v_score.score.is_finite());
-        assert!(c_score.score.is_finite());
-        assert!(v_score.score >= 0.0);
-        assert!(c_score.score >= 0.0);
-        // Core invariant: the concise text must score strictly higher than the verbose one.
+        let v = m.score_text(verbose, None);
+        let c = m.score_text(compendious, None);
+        assert!(v.score.is_finite());
+        assert!(c.score.is_finite());
+        assert!(v.score >= 0.0);
+        assert!(c.score >= 0.0);
         assert!(
-            c_score.score > v_score.score,
+            c.score > v.score,
             "compendious text should score higher than verbose text: {:.4} vs {:.4}",
-            c_score.score,
-            v_score.score
+            c.score,
+            v.score
         );
     }
 
     #[test]
-    fn test_pattern_detection() {
-        let machine = CompendiousMachine::new();
-        let text = "In order to make a decision, it is important to note that we should give consideration to all factors.";
+    fn test_score_empty_string() {
+        let m = machine();
+        let result = m.score_text("", None);
+        // Empty text: expression_cost = 0, score = 0.
+        assert_eq!(result.expression_cost, 0);
+        assert_eq!(result.score, 0.0);
+        assert!(result.score.is_finite());
+    }
 
-        let patterns = machine.analyze_patterns(text);
+    #[test]
+    fn test_score_components_range() {
+        let m = machine();
+        let text = "Analyze adverse events in clinical data.";
+        let r = m.score_text(text, None);
+        assert!(r.information_bits >= 0.0);
+        assert!(r.completeness >= 0.0 && r.completeness <= 1.0);
+        assert!(r.readability >= 0.0 && r.readability <= 1.0);
+        assert!(r.expression_cost > 0);
+    }
+
+    #[test]
+    fn test_score_with_required_elements_all_present() {
+        let m = machine();
+        let text = "Signal detection uses PRR and ROR algorithms.";
+        let required = Some(vec!["PRR".to_string(), "ROR".to_string()]);
+        let r = m.score_text(text, required);
+        assert!(
+            (r.completeness - 1.0).abs() < 1e-9,
+            "all required elements present: completeness should be 1.0, got {:.4}",
+            r.completeness
+        );
+    }
+
+    #[test]
+    fn test_score_with_required_elements_partial() {
+        let m = machine();
+        let text = "Signal detection uses PRR.";
+        let required = Some(vec!["PRR".to_string(), "EBGM".to_string()]);
+        let r = m.score_text(text, required);
+        assert!(
+            (r.completeness - 0.5).abs() < 1e-9,
+            "half required elements present: completeness should be 0.5, got {:.4}",
+            r.completeness
+        );
+    }
+
+    #[test]
+    fn test_score_with_required_elements_none_present() {
+        let m = machine();
+        let text = "Entirely unrelated sentence.";
+        let required = Some(vec!["PRR".to_string(), "EBGM".to_string()]);
+        let r = m.score_text(text, required);
+        assert_eq!(
+            r.completeness, 0.0,
+            "no required elements present: completeness should be 0.0, got {:.4}",
+            r.completeness
+        );
+        assert_eq!(r.score, 0.0, "score must be zero when completeness=0");
+    }
+
+    // ---- interpret_score bands ----
+
+    #[test]
+    fn test_interpret_score_bands() {
+        let m = machine();
+        // Force known scores by crafting the result struct directly via score_text
+        // on carefully chosen inputs, then verify the interpretation string.
+        // Alternatively test all five branches via the private method through public API.
+        // We use single-word + required_elements=missing to drive completeness to 0 for
+        // the zero band, then verify each band label appears in interpretation.
+
+        // Verbose band: Cs < 0.5 — achieved by requiring a missing element (C=0 → Cs=0)
+        let zero = m.score_text("word.", Some(vec!["absent_token_xyz".to_string()]));
+        assert_eq!(zero.score, 0.0);
+        assert!(
+            zero.interpretation.to_lowercase().contains("verbose"),
+            "score 0.0 should be 'Verbose', got: {}",
+            zero.interpretation
+        );
+
+        // Efficient band: 1.0 <= Cs < 2.0
+        let efficient = m.score_text("Analyze adverse events carefully.", None);
+        assert!(
+            efficient.score >= 0.0,
+            "score should be non-negative: {:.4}",
+            efficient.score
+        );
+        // We can only verify the label is one of the valid strings since exact score
+        // depends on unique word counting.
+        let valid_labels = [
+            "Verbose",
+            "Adequate",
+            "Efficient",
+            "Excellent",
+            "Exceptional",
+        ];
+        assert!(
+            valid_labels
+                .iter()
+                .any(|l| efficient.interpretation.contains(l)),
+            "interpretation '{}' should be one of the valid labels",
+            efficient.interpretation
+        );
+
+        // Headline-density text: a very short, high-unique-word sentence should
+        // score higher, potentially in Excellent/Exceptional range.
+        let dense = m.score_text("PRR ROR IC EBGM FAERS signal pharmacovigilance.", None);
+        assert!(dense.score > 0.0);
+    }
+
+    // ---- identify_limiting_factor ----
+
+    #[test]
+    fn test_limiting_factor_completeness() {
+        let m = machine();
+        // Force completeness = 0 → it must be the limiting factor.
+        let r = m.score_text(
+            "Analyze events.",
+            Some(vec!["absent_xyz_token".to_string()]),
+        );
+        assert!(
+            r.limiting_factor.contains("Completeness"),
+            "when completeness=0, limiting factor should be Completeness, got: {}",
+            r.limiting_factor
+        );
+    }
+
+    #[test]
+    fn test_limiting_factor_readability() {
+        let m = machine();
+        // Long run-on sentence drives readability below other factors.
+        let long_sentence = "The system will attempt to perform an analysis of all the various underlying data structures and components present within the broader architectural context of the application framework in order to facilitate decision making.";
+        let r = m.score_text(long_sentence, None);
+        // Readability should be < 1.0 and should be named as limiting factor.
+        assert!(r.readability < 1.0);
+        assert!(
+            r.limiting_factor.contains("Readability"),
+            "long run-on sentence: limiting factor should be Readability, got: {}",
+            r.limiting_factor
+        );
+    }
+
+    // ---- readability ----
+
+    #[test]
+    fn test_readability_penalty() {
+        let m = machine();
+        // Short sentence: readability = 1.0
+        let short = "Execute test now.";
+        let r_short = m.score_text(short, None).readability;
+        assert!(
+            (r_short - 1.0).abs() < f64::EPSILON,
+            "short sentence should have R=1.0, got {:.4}",
+            r_short
+        );
+        // Very long single sentence: readability < 1.0
+        let long = "The system will attempt to perform an analysis of all the various underlying data structures and components that are present within the broader architectural context of the application framework.";
+        let r_long = m.score_text(long, None).readability;
+        assert!(
+            r_long < 1.0,
+            "long sentence should have R < 1.0, got {:.4}",
+            r_long
+        );
+        // Readability never drops below 0.5 (clamped).
+        assert!(
+            r_long >= 0.5,
+            "readability should be clamped at 0.5, got {:.4}",
+            r_long
+        );
+    }
+
+    #[test]
+    fn test_readability_exactly_at_boundary() {
+        let m = machine();
+        // Exactly 20-word single sentence — readability must be 1.0.
+        let twenty_words = "One two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty.";
+        let r = m.score_text(twenty_words, None).readability;
+        assert!(
+            (r - 1.0).abs() < f64::EPSILON,
+            "20-word sentence should have R=1.0, got {:.4}",
+            r
+        );
+    }
+
+    // ---- restore_sentence_casing (tested via compress_text output) ----
+
+    #[test]
+    fn test_restore_sentence_casing_first_letter_capitalized() {
+        let m = machine();
+        // Input is all lowercase after pattern substitution; compressed output
+        // must start with a capital letter.
+        let text = "in order to succeed, analyze the data.";
+        let result = m.compress_text(text, None, None);
+        let first_char = result.compressed.chars().next();
+        assert!(
+            first_char.map(|c| c.is_uppercase()).unwrap_or(false),
+            "compressed text must start with uppercase, got: {:?}",
+            &result.compressed[..result.compressed.len().min(20)]
+        );
+    }
+
+    // ---- analyze_patterns ----
+
+    #[test]
+    fn test_pattern_detection() {
+        let m = machine();
+        let text = "In order to make a decision, it is important to note that we should give consideration to all factors.";
+        let patterns = m.analyze_patterns(text);
         assert!(!patterns.is_empty());
         assert!(patterns.iter().any(|p| p.pattern.contains("in order to")));
     }
 
     #[test]
-    fn test_compression() {
-        let machine = CompendiousMachine::new();
-        let text = "In order to make a decision at this point in time, we need to give consideration to the basic fundamentals.";
+    fn test_analyze_patterns_clean_text_returns_empty() {
+        let m = machine();
+        // Tightly written text with no known verbose patterns.
+        let text = "Signal detected. PRR exceeds threshold. Investigate.";
+        let patterns = m.analyze_patterns(text);
+        assert!(
+            patterns.is_empty(),
+            "clean text should yield no verbose patterns, got: {:?}",
+            patterns
+        );
+    }
 
-        let result = machine.compress_text(text, None, None);
-        // At least 3 known patterns in the input must have been detected and applied.
+    #[test]
+    fn test_analyze_patterns_sorted_by_savings_descending() {
+        let m = machine();
+        // Use a text that contains patterns of different word counts so savings differ.
+        let text = "Due to the fact that we need to give consideration to this, in order to proceed, and for the purpose of clarity, we should perform an analysis.";
+        let patterns = m.analyze_patterns(text);
+        assert!(
+            patterns.len() >= 2,
+            "expected multiple patterns, got {}",
+            patterns.len()
+        );
+        for window in patterns.windows(2) {
+            assert!(
+                window[0].savings >= window[1].savings,
+                "patterns should be sorted descending by savings: {} < {}",
+                window[0].savings,
+                window[1].savings
+            );
+        }
+    }
+
+    #[test]
+    fn test_analyze_patterns_replacement_empty_shown_as_delete() {
+        let m = machine();
+        // "it is important to note that" maps to "" — replacement should show "[DELETE]"
+        let text = "It is important to note that this matters.";
+        let patterns = m.analyze_patterns(text);
+        let throat_clear = patterns
+            .iter()
+            .find(|p| p.pattern == "it is important to note that");
+        assert!(
+            throat_clear.is_some(),
+            "should detect 'it is important to note that'"
+        );
+        let p = throat_clear.unwrap();
+        assert_eq!(
+            p.replacement, "[DELETE]",
+            "empty replacement should display as [DELETE], got: {}",
+            p.replacement
+        );
+    }
+
+    // ---- compress_text ----
+
+    #[test]
+    fn test_compression() {
+        let m = machine();
+        let text = "In order to make a decision at this point in time, we need to give consideration to the basic fundamentals.";
+        let result = m.compress_text(text, None, None);
         assert!(
             result.patterns_applied.len() >= 3,
             "expected at least 3 patterns applied, got {}",
             result.patterns_applied.len()
         );
-        // Score must strictly improve, not just stay the same.
         assert!(
             result.improvement_percent > 0.0,
             "expected positive improvement, got {:.2}%",
@@ -1093,27 +1377,105 @@ mod tests {
     }
 
     #[test]
+    fn test_compression_no_patterns_no_degradation() {
+        let m = machine();
+        // Text with no known verbose patterns: compressed = original (after casing normalization).
+        let text = "Signal detected. PRR exceeds threshold. Investigate now.";
+        let result = m.compress_text(text, None, None);
+        assert!(
+            result.patterns_applied.is_empty(),
+            "clean text: no patterns should be applied"
+        );
+        // Score should not degrade.
+        assert!(
+            result.compressed_score.score >= result.original_score.score - 1e-9,
+            "compression must not degrade score: {:.4} < {:.4}",
+            result.compressed_score.score,
+            result.original_score.score
+        );
+    }
+
+    #[test]
+    fn test_compression_preserve_skips_matching_pattern() {
+        let m = machine();
+        // "in order to" is a known pattern; preserving "order" should prevent its replacement.
+        let text = "In order to succeed.";
+        let result = m.compress_text(text, None, Some(vec!["order".to_string()]));
+        assert!(
+            result.patterns_applied.is_empty(),
+            "pattern containing preserved term 'order' must be skipped"
+        );
+        // The original phrase must still be present in the compressed output.
+        assert!(
+            result.compressed.to_lowercase().contains("order"),
+            "preserved term 'order' must survive in compressed output: {}",
+            result.compressed
+        );
+    }
+
+    #[test]
+    fn test_compression_preserve_empty_applies_all_patterns() {
+        let m = machine();
+        let text = "In order to make a decision at this point in time.";
+        let result_no_preserve = m.compress_text(text, None, None);
+        let result_empty_preserve = m.compress_text(text, None, Some(vec![]));
+        assert_eq!(
+            result_no_preserve.patterns_applied.len(),
+            result_empty_preserve.patterns_applied.len(),
+            "empty preserve list should behave identically to None"
+        );
+    }
+
+    #[test]
+    fn test_compression_default_target_cs_is_two() {
+        let m = machine();
+        // Passing no target_cs and Some(2.0) must produce the same target_achieved outcome.
+        let text = "In order to act, decide.";
+        let r_none = m.compress_text(text, None, None);
+        let r_two = m.compress_text(text, Some(2.0), None);
+        assert_eq!(
+            r_none.target_achieved, r_two.target_achieved,
+            "default target_cs=2.0 must match explicit Some(2.0)"
+        );
+    }
+
+    #[test]
+    fn test_target_cs_achieved_flag() {
+        let m = machine();
+        let verbose = "In order to make a decision at this point in time, it is important to note that we should give consideration to the basic fundamentals.";
+        let result = m.compress_text(verbose, Some(0.5), None);
+        assert!(
+            result.target_achieved,
+            "expected target_achieved=true with target=0.5, got compressed Cs={:.4}",
+            result.compressed_score.score
+        );
+        let result_high = m.compress_text(verbose, Some(50.0), None);
+        assert!(
+            !result_high.target_achieved,
+            "expected target_achieved=false with target=50.0, got Cs={:.4}",
+            result_high.compressed_score.score
+        );
+    }
+
+    // ---- compare_texts ----
+
+    #[test]
     fn test_compare_texts() {
-        let machine = CompendiousMachine::new();
+        let m = machine();
         let original = "In order to achieve success we need to give consideration to the various underlying factors.";
         let optimized = "To succeed, consider the underlying factors.";
-
-        let result = machine.compare_texts(original, optimized);
-
-        // Optimized must score higher than original.
+        let result = m.compare_texts(original, optimized);
         assert!(
             result.optimized.score > result.original.score,
             "optimized should score higher: {:.4} vs {:.4}",
             result.optimized.score,
             result.original.score
         );
-        // Improvement percent must be positive.
         assert!(
             result.improvement_percent > 0.0,
             "expected positive improvement, got {:.2}%",
             result.improvement_percent
         );
-        // Tokens saved must be positive (shorter text).
         assert!(
             result.tokens_saved > 0,
             "expected positive tokens_saved, got {}",
@@ -1122,11 +1484,41 @@ mod tests {
     }
 
     #[test]
-    fn test_get_domain_target_known() {
-        let machine = CompendiousMachine::new();
+    fn test_compare_texts_identical_zero_improvement() {
+        let m = machine();
+        let text = "Analyze signal data carefully.";
+        let result = m.compare_texts(text, text);
+        assert!(
+            result.improvement_percent.abs() < 1e-9,
+            "identical texts: improvement should be 0, got {:.4}",
+            result.improvement_percent
+        );
+        assert_eq!(
+            result.tokens_saved, 0,
+            "identical texts: tokens_saved should be 0, got {}",
+            result.tokens_saved
+        );
+    }
 
-        // Known combination: journalism/headline = 4.0
-        let target = machine.get_domain_target("journalism", "headline");
+    #[test]
+    fn test_compare_texts_negative_tokens_saved_when_longer() {
+        let m = machine();
+        let short = "Act now.";
+        let long = "In order to act, you should consider doing it now.";
+        let result = m.compare_texts(short, long);
+        assert!(
+            result.tokens_saved < 0,
+            "longer optimized text should produce negative tokens_saved, got {}",
+            result.tokens_saved
+        );
+    }
+
+    // ---- get_domain_target ----
+
+    #[test]
+    fn test_get_domain_target_known() {
+        let m = machine();
+        let target = m.get_domain_target("journalism", "headline");
         assert_eq!(target.domain, "journalism");
         assert_eq!(target.content_type, "headline");
         assert!(
@@ -1138,10 +1530,8 @@ mod tests {
 
     #[test]
     fn test_get_domain_target_fallback() {
-        let machine = CompendiousMachine::new();
-
-        // Unknown combination: should return generic fallback at 1.8.
-        let target = machine.get_domain_target("unknown_domain", "unknown_type");
+        let m = machine();
+        let target = m.get_domain_target("unknown_domain", "unknown_type");
         assert_eq!(target.domain, "unknown_domain");
         assert_eq!(target.content_type, "unknown_type");
         assert!(
@@ -1152,48 +1542,323 @@ mod tests {
     }
 
     #[test]
-    fn test_target_cs_achieved_flag() {
-        let machine = CompendiousMachine::new();
+    fn test_get_domain_target_all_known_combinations_valid() {
+        let m = machine();
+        let known = [
+            ("technical", "api_reference", 2.5),
+            ("technical", "tutorial", 1.7),
+            ("technical", "readme", 2.0),
+            ("business", "executive_summary", 2.5),
+            ("business", "proposal", 2.0),
+            ("business", "email", 2.0),
+            ("academic", "abstract", 3.0),
+            ("academic", "paper_body", 1.4),
+            ("legal", "contract", 1.8),
+            ("legal", "brief", 2.0),
+            ("medical", "clinical_note", 2.5),
+            ("medical", "patient_instructions", 1.6),
+            ("journalism", "headline", 4.0),
+            ("journalism", "lead_paragraph", 2.5),
+            ("journalism", "article_body", 1.8),
+            ("pharmacovigilance", "icsr_narrative", 2.3),
+            ("pharmacovigilance", "signal_report", 2.5),
+            ("pharmacovigilance", "regulatory_alert", 3.0),
+        ];
+        for (domain, content_type, expected_cs) in known {
+            let t = m.get_domain_target(domain, content_type);
+            assert!(
+                (t.target_cs - expected_cs).abs() < 1e-9,
+                "{}/{}: expected {}, got {}",
+                domain,
+                content_type,
+                expected_cs,
+                t.target_cs
+            );
+            assert!(
+                !t.rationale.is_empty(),
+                "rationale must be non-empty for {}/{}",
+                domain,
+                content_type
+            );
+        }
+    }
 
-        // High-verbosity text: after compression should improve, and with a low
-        // target_cs (0.5) the target_achieved flag must be true.
-        let verbose = "In order to make a decision at this point in time, it is important to note that we should give consideration to the basic fundamentals.";
-        let result = machine.compress_text(verbose, Some(0.5), None);
-        assert!(
-            result.target_achieved,
-            "expected target_achieved=true with target=0.5, got compressed Cs={:.4}",
-            result.compressed_score.score
+    // ---- get_tool_definitions ----
+
+    #[test]
+    fn test_get_tool_definitions_contains_all_tools() {
+        let defs = get_tool_definitions();
+        let tools = defs["tools"].as_array().expect("tools must be array");
+        let names: Vec<&str> = tools.iter().filter_map(|t| t["name"].as_str()).collect();
+        for expected in [
+            "score_text",
+            "compress_text",
+            "compare_texts",
+            "analyze_patterns",
+            "get_domain_target",
+        ] {
+            assert!(
+                names.contains(&expected),
+                "tool '{}' missing from tool definitions; found: {:?}",
+                expected,
+                names
+            );
+        }
+        assert_eq!(
+            tools.len(),
+            5,
+            "expected exactly 5 tools, got {}",
+            tools.len()
         );
+    }
 
-        // With an unreachably high target (50.0), target_achieved must be false.
-        let result_high = machine.compress_text(verbose, Some(50.0), None);
-        assert!(
-            !result_high.target_achieved,
-            "expected target_achieved=false with target=50.0, got Cs={:.4}",
-            result_high.compressed_score.score
+    // ---- handle_mcp_request ----
+
+    #[test]
+    fn test_mcp_initialize() {
+        let m = machine();
+        let req = mcp_req("initialize", None);
+        let resp = handle_mcp_request(&m, &req).expect("initialize must return a response");
+        assert_eq!(resp.jsonrpc, "2.0");
+        assert!(resp.error.is_none());
+        let result = resp.result.expect("initialize must have result");
+        assert!(result["protocolVersion"].is_string());
+        assert_eq!(
+            result["serverInfo"]["name"].as_str(),
+            Some("compendious-machine")
         );
     }
 
     #[test]
-    fn test_readability_penalty() {
-        let machine = CompendiousMachine::new();
+    fn test_mcp_tools_list() {
+        let m = machine();
+        let req = mcp_req("tools/list", None);
+        let resp = handle_mcp_request(&m, &req).expect("tools/list must return a response");
+        assert!(resp.error.is_none());
+        let result = resp.result.expect("tools/list must have result");
+        let tools = result["tools"].as_array().expect("tools must be array");
+        assert_eq!(tools.len(), 5);
+    }
 
-        // Short sentence (5 words) should get readability=1.0 (no penalty).
-        let short = "Execute test now.";
-        let r_short = machine.score_text(short, None).readability;
-        assert!(
-            (r_short - 1.0).abs() < f64::EPSILON,
-            "short sentence should have R=1.0, got {:.4}",
-            r_short
-        );
+    #[test]
+    fn test_mcp_notification_returns_none() {
+        let m = machine();
+        let req = McpRequest {
+            jsonrpc: "2.0".to_string(),
+            id: None,
+            method: "notifications/initialized".to_string(),
+            params: None,
+        };
+        let resp = handle_mcp_request(&m, &req);
+        assert!(resp.is_none(), "notifications must return None");
+    }
 
-        // Very long single sentence (>>20 words) should get R < 1.0.
-        let long = "The system will attempt to perform an analysis of all the various underlying data structures and components that are present within the broader architectural context of the application framework.";
-        let r_long = machine.score_text(long, None).readability;
-        assert!(
-            r_long < 1.0,
-            "long sentence should have R < 1.0, got {:.4}",
-            r_long
+    #[test]
+    fn test_mcp_unknown_method_returns_error() {
+        let m = machine();
+        let req = mcp_req("nonexistent/method", None);
+        let resp = handle_mcp_request(&m, &req).expect("unknown method must return a response");
+        assert!(resp.error.is_some(), "unknown method must set error field");
+        let err = resp.error.unwrap();
+        assert_eq!(err.code, -32601);
+    }
+
+    #[test]
+    fn test_mcp_tool_call_score_text() {
+        let m = machine();
+        let req = mcp_req(
+            "tools/call",
+            Some(json!({
+                "name": "score_text",
+                "arguments": { "text": "Analyze PRR and ROR signals." }
+            })),
         );
+        let resp = handle_mcp_request(&m, &req).expect("score_text call must return a response");
+        assert!(resp.error.is_none());
+        let result = resp.result.expect("tools/call must have result");
+        let text = result["content"][0]["text"]
+            .as_str()
+            .expect("text field must exist");
+        assert!(
+            text.contains("Compendious Score"),
+            "score_text response must contain 'Compendious Score'"
+        );
+    }
+
+    #[test]
+    fn test_mcp_tool_call_compress_text() {
+        let m = machine();
+        let req = mcp_req(
+            "tools/call",
+            Some(json!({
+                "name": "compress_text",
+                "arguments": {
+                    "text": "In order to make a decision, give consideration to the basic fundamentals.",
+                    "target_cs": 1.5
+                }
+            })),
+        );
+        let resp = handle_mcp_request(&m, &req).expect("compress_text call must return response");
+        assert!(resp.error.is_none());
+        let result = resp.result.expect("tools/call must have result");
+        let text = result["content"][0]["text"].as_str().expect("text field");
+        assert!(
+            text.contains("Compression Result"),
+            "compress_text must include 'Compression Result'"
+        );
+    }
+
+    #[test]
+    fn test_mcp_tool_call_compare_texts() {
+        let m = machine();
+        let req = mcp_req(
+            "tools/call",
+            Some(json!({
+                "name": "compare_texts",
+                "arguments": {
+                    "original": "In order to succeed, give consideration to all factors.",
+                    "optimized": "To succeed, consider all factors."
+                }
+            })),
+        );
+        let resp = handle_mcp_request(&m, &req).expect("compare_texts call must return response");
+        assert!(resp.error.is_none());
+        let result = resp.result.expect("tools/call must have result");
+        let text = result["content"][0]["text"].as_str().expect("text field");
+        assert!(text.contains("Text Comparison"));
+    }
+
+    #[test]
+    fn test_mcp_tool_call_analyze_patterns() {
+        let m = machine();
+        let req = mcp_req(
+            "tools/call",
+            Some(json!({
+                "name": "analyze_patterns",
+                "arguments": { "text": "In order to act at this point in time." }
+            })),
+        );
+        let resp =
+            handle_mcp_request(&m, &req).expect("analyze_patterns call must return response");
+        assert!(resp.error.is_none());
+        let result = resp.result.expect("tools/call must have result");
+        let text = result["content"][0]["text"].as_str().expect("text field");
+        assert!(text.contains("Pattern Analysis"));
+    }
+
+    #[test]
+    fn test_mcp_tool_call_get_domain_target() {
+        let m = machine();
+        let req = mcp_req(
+            "tools/call",
+            Some(json!({
+                "name": "get_domain_target",
+                "arguments": { "domain": "medical", "content_type": "clinical_note" }
+            })),
+        );
+        let resp =
+            handle_mcp_request(&m, &req).expect("get_domain_target call must return response");
+        assert!(resp.error.is_none());
+        let result = resp.result.expect("tools/call must have result");
+        let text = result["content"][0]["text"].as_str().expect("text field");
+        assert!(text.contains("Domain Target"));
+        assert!(text.contains("medical"));
+        assert!(text.contains("2.5"));
+    }
+
+    #[test]
+    fn test_mcp_tool_call_unknown_tool() {
+        let m = machine();
+        let req = mcp_req(
+            "tools/call",
+            Some(json!({
+                "name": "nonexistent_tool",
+                "arguments": {}
+            })),
+        );
+        let resp = handle_mcp_request(&m, &req).expect("unknown tool must return a response");
+        assert!(
+            resp.error.is_none(),
+            "unknown tool uses isError in result, not error field"
+        );
+        let result = resp.result.expect("tools/call must have result");
+        let is_error = result
+            .get("isError")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+        assert!(
+            is_error,
+            "unknown tool call must set isError=true in result"
+        );
+    }
+
+    // ---- serde round-trip ----
+
+    #[test]
+    fn test_mcp_request_serde_round_trip() {
+        let json_str = r#"{"jsonrpc":"2.0","id":42,"method":"tools/list","params":null}"#;
+        let req: McpRequest = serde_json::from_str(json_str).expect("must deserialize McpRequest");
+        assert_eq!(req.method, "tools/list");
+        assert_eq!(req.id, Some(json!(42)));
+    }
+
+    #[test]
+    fn test_mcp_response_skips_none_fields() {
+        let resp = McpResponse {
+            jsonrpc: "2.0".to_string(),
+            id: Some(json!(1)),
+            result: Some(json!({"ok": true})),
+            error: None,
+        };
+        let encoded = serde_json::to_string(&resp).expect("must serialize");
+        assert!(
+            !encoded.contains("\"error\""),
+            "None error must be omitted from JSON"
+        );
+    }
+
+    #[test]
+    fn test_compendious_result_serde_round_trip() {
+        let r = CompendiousResult {
+            score: 2.5,
+            information_bits: 40.0,
+            expression_cost: 10,
+            completeness: 1.0,
+            readability: 0.9,
+            limiting_factor: "Readability (0.90)".to_string(),
+            interpretation: "Excellent".to_string(),
+        };
+        let json = serde_json::to_string(&r).expect("serialize");
+        let back: CompendiousResult = serde_json::from_str(&json).expect("deserialize");
+        assert!((back.score - 2.5).abs() < 1e-9);
+        assert_eq!(back.expression_cost, 10);
+    }
+
+    #[test]
+    fn test_domain_target_serde_round_trip() {
+        let t = DomainTarget {
+            domain: "medical".to_string(),
+            content_type: "clinical_note".to_string(),
+            target_cs: 2.5,
+            rationale: "Time-critical".to_string(),
+        };
+        let json = serde_json::to_string(&t).expect("serialize");
+        let back: DomainTarget = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.domain, "medical");
+        assert!((back.target_cs - 2.5).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_pattern_match_serde_round_trip() {
+        let p = PatternMatch {
+            pattern: "in order to".to_string(),
+            found: "in order to".to_string(),
+            replacement: "to".to_string(),
+            savings: 2,
+        };
+        let json = serde_json::to_string(&p).expect("serialize");
+        let back: PatternMatch = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.savings, 2);
+        assert_eq!(back.replacement, "to");
     }
 }

@@ -990,6 +990,30 @@ impl NexCoreMcpServer {
     }
 
     // ========================================================================
+    // Cybercinetics Tools (2) - Feedback Controller ∂(→(ν, ς, ρ))
+    // ========================================================================
+
+    #[tool(
+        description = "Run one tick of the cybercinetics feedback controller. Evaluates frequency decay (ν), causal chain fidelity (→), and recursion saturation (ρ) to produce a verdict: STABLE, FREQ_DECAY, FIDELITY_DEGRADED, RECURSION_SATURATED, or COMPOUND."
+    )]
+    async fn feedback_controller_tick(
+        &self,
+        Parameters(params): Parameters<params::cybercinetics::FeedbackControllerTickParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cybercinetics::controller_tick(params)
+    }
+
+    #[tool(
+        description = "Report hook-binary binding registry health. Reads settings.json to discover registered hooks, reports aggregate fidelity and flags degraded bindings below threshold."
+    )]
+    async fn feedback_registry_status(
+        &self,
+        Parameters(params): Parameters<params::cybercinetics::FeedbackRegistryStatusParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::cybercinetics::registry_status(params)
+    }
+
+    // ========================================================================
     // Guardian Tools (4) - Homeostasis Control Loop
     // ========================================================================
 

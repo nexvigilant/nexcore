@@ -1,6 +1,6 @@
 [package]
 name = "nexcore-cns"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "Crystalbook Numeral System — base-9 arithmetic from the 8 Laws of System Homeostasis"
 authors = ["Matthew A. Campion <matthew@nexvigilant.com>"]

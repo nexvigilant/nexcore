@@ -8667,6 +8667,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexcore-cybercinetics"
+version = "1.0.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "nexcore-cytokine"
 version = "1.0.0"
 dependencies = [
@@ -9516,6 +9524,7 @@ dependencies = [
  "nexcore-constants",
  "nexcore-cortex",
  "nexcore-ctvp",
+ "nexcore-cybercinetics",
  "nexcore-cytokine",
  "nexcore-dataframe",
  "nexcore-db",

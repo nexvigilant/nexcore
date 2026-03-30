@@ -309,6 +309,26 @@ impl<S: Clone + PartialEq + fmt::Debug> BindingRegistry<S> {
             .filter(|b| b.fidelity < threshold)
             .collect()
     }
+
+    /// Batch degrade all bindings that missed their last execution window.
+    ///
+    /// `factor` is the degradation multiplier (0.0–1.0) applied to each
+    /// binding whose fidelity is above `floor`. Bindings already at or
+    /// below `floor` are left unchanged.
+    ///
+    /// Returns the count of bindings that were degraded.
+    pub fn decay_all(&mut self, factor: f64, floor: f64) -> usize {
+        let factor = factor.clamp(0.0, 1.0);
+        let floor = floor.clamp(0.0, 1.0);
+        let mut count = 0;
+        for binding in &mut self.bindings {
+            if binding.fidelity > floor {
+                binding.fidelity = (binding.fidelity * factor).max(floor);
+                count += 1;
+            }
+        }
+        count
+    }
 }
 
 #[cfg(test)]
@@ -467,5 +487,38 @@ mod tests {
         let nu = Nu::new(5.0, 0.0);
         assert!(!nu.is_decayed());
         assert!(nu.health_ratio().is_infinite());
+    }
+
+    #[test]
+    fn decay_all_degrades_above_floor() {
+        let ctrl: Controller<&str> = Controller::new("idle", 10.0, 5.0, 3, 0.80);
+        let mut reg = BindingRegistry::new(ctrl);
+        reg.register(HookBinding::new("a.sh", "bin-a", "Start"));
+        reg.register(HookBinding::new("b.sh", "bin-b", "Stop"));
+        let count = reg.decay_all(0.9, 0.5);
+        assert_eq!(count, 2);
+        assert!((reg.bindings[0].fidelity - 0.9).abs() < f64::EPSILON);
+        assert!((reg.bindings[1].fidelity - 0.9).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn decay_all_respects_floor() {
+        let ctrl: Controller<&str> = Controller::new("idle", 10.0, 5.0, 3, 0.80);
+        let mut reg = BindingRegistry::new(ctrl);
+        let mut b1 = HookBinding::new("a.sh", "bin-a", "Start");
+        b1.degrade(0.3); // already below floor of 0.5
+        reg.register(b1);
+        reg.register(HookBinding::new("b.sh", "bin-b", "Stop"));
+        let count = reg.decay_all(0.8, 0.5);
+        assert_eq!(count, 1); // only b2 was above floor
+        assert!((reg.bindings[0].fidelity - 0.3).abs() < f64::EPSILON); // unchanged
+        assert!((reg.bindings[1].fidelity - 0.8).abs() < f64::EPSILON); // degraded
+    }
+
+    #[test]
+    fn decay_all_empty_registry() {
+        let ctrl: Controller<&str> = Controller::new("idle", 10.0, 5.0, 3, 0.80);
+        let mut reg = BindingRegistry::new(ctrl);
+        assert_eq!(reg.decay_all(0.9, 0.1), 0);
     }
 }

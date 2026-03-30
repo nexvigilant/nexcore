@@ -6,8 +6,11 @@ rust-version.workspace = true
 authors.workspace = true
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 description = "Firebase Auth, Firestore, and Stripe REST API clients for NexVigilant backend"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [features]
 default = ["client"]
 client = ["dep:reqwest"]

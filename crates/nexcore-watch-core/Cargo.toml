@@ -6,8 +6,11 @@ rust-version.workspace = true
 authors.workspace = true
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 description = "NexCore watch core — pure computation for signal detection, Guardian status, and P0-P5 alerts"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [lib]
 name = "nexcore_watch_core"
 

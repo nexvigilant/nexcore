@@ -6,7 +6,10 @@ description = "Crystalbook Numeral System — base-9 arithmetic from the 8 Laws 
 authors = ["Matthew A. Campion <matthew@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 
+keywords = ["nexcore", "pharmacovigilance"]
+categories = ["development-tools"]
 [dependencies]
 
 [dev-dependencies]

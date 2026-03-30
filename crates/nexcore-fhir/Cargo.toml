@@ -6,8 +6,11 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 description = "Focused FHIR R4 types for pharmacovigilance — AdverseEvent, Patient, Medication, and PV-relevant resources"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 nexcore-lex-primitiva = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

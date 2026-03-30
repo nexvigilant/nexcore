@@ -6,9 +6,12 @@ edition = "2024"
 authors = ["NexVigilant Team", "Matthew Campion"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 rust-version = "1.85"
 description = "Always-on vigilance orchestrator - voice, webhooks, scheduler integration"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [[bin]]
 name = "friday"
 path = "src/main.rs"

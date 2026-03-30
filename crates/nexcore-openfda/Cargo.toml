@@ -8,7 +8,11 @@ authors.workspace = true
 description = "Generalized OpenFDA REST API client covering all endpoints with rate limiting, caching, and V33 contingency"
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
 
+keywords = ["nexcore", "mcp", "api"]
+categories = ["web-programming"]
 [lib]
 name = "nexcore_openfda"
 path = "src/lib.rs"

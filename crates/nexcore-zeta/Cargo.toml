@@ -6,6 +6,7 @@ rust-version = "1.85"
 description = "Riemann Zeta function and L-function computation"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 keywords = ["zeta", "riemann", "number-theory", "mathematics"]
 categories = ["science", "mathematics"]
 publish = true

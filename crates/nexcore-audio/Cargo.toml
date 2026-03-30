@@ -8,6 +8,7 @@ description = "NexCore Audio — OS audio subsystem with PCM formats, mixing, an
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 keywords = ["audio", "pcm", "mixer", "streaming", "os"]
 categories = ["multimedia::audio"]
 

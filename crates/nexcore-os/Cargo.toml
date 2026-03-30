@@ -8,6 +8,8 @@ description = "NexCore OS — Operating system core runtime with STOS-based boot
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
+readme = "README.md"
 keywords = ["os", "runtime", "boot", "state-machine", "operating-system"]
 categories = ["os", "embedded"]
 

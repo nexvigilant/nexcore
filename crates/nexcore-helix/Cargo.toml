@@ -5,9 +5,12 @@ edition = "2024"
 authors = ["Matthew A. Campion <matthew@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 rust-version = "1.85"
 description = "Helix Computing — conservation law as computable geometry. ∃ = ∂(×(ς, ∅)) encoded as a 5-turn knowledge helix."
 
+keywords = ["nexcore", "knowledge-management", "automation"]
+categories = ["development-tools"]
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }

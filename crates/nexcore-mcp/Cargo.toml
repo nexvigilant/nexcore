@@ -6,8 +6,12 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
 description = "MCP server exposing NexVigilant Core APIs to Claude Code"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [[bin]]
 name = "nexcore-mcp"
 path = "src/main.rs"
@@ -54,6 +58,7 @@ nexcore-fda-guidance = { path = "../nexcore-fda-guidance", version = "1.0.0" }
 nexcore-pharos = { workspace = true }
 nexcore-edit-distance = { workspace = true }
 nexcore-integrity = { workspace = true }
+nexcore-cybercinetics = { workspace = true }
 nexcore-hormones = { workspace = true }
 nexcore-immunity = { workspace = true }
 nexcore-insight = { workspace = true }

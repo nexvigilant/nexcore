@@ -6,7 +6,10 @@ edition = "2024"
 description = "Cross-domain transfer confidence computation skill"
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 
+keywords = ["nexcore", "knowledge-management", "automation"]
+categories = ["development-tools"]
 [dependencies]
 skill-core = { version = "0.1.0", path = "../skill-core" }
 serde = { version = "1.0", features = ["derive"] }

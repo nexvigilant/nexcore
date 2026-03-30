@@ -6,6 +6,7 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 description = "Deterministic academy logic: KSB quality scoring, course validation, formatting, and pipeline stage configuration"
 keywords = ["pharmacovigilance", "academy", "ksb", "quality", "validation"]
 categories = ["science", "education"]

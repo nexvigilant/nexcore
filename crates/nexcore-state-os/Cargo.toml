@@ -8,6 +8,8 @@ description = "State Operating System — 15-layer runtime for state machine orc
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
+readme = "README.md"
 keywords = ["state-machine", "operating-system", "orchestration", "runtime"]
 categories = ["data-structures", "asynchronous"]
 

@@ -7,7 +7,11 @@ authors.workspace = true
 description = "Typed artifact schemas for The Foundry assembly line architecture"
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
 
+keywords = ["nexcore", "knowledge-management", "automation"]
+categories = ["development-tools"]
 [dependencies]
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }

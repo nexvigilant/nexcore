@@ -6,8 +6,12 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
 description = "Typed event signaling system based on immune cytokine patterns"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 nexcore-error = { workspace = true }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }

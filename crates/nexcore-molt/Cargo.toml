@@ -7,6 +7,7 @@ description = "Embeddable Tcl scripting engine for NexCore — domain-agnostic M
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 keywords = ["scripting", "tcl", "embed", "molt"]
 categories = ["command-line-interface"]
 

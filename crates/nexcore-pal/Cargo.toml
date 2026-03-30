@@ -8,6 +8,7 @@ description = "Platform Abstraction Layer — hardware-agnostic traits for NexCo
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 keywords = ["platform", "hal", "abstraction", "no-std", "os"]
 categories = ["no-std", "hardware-support", "os"]
 

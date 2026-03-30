@@ -8,6 +8,7 @@ description = "Bayesian event prediction engine — learns transition probabilit
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 keywords = ["prediction", "markov", "bayesian", "sequence", "learning"]
 categories = ["algorithms", "data-structures"]
 

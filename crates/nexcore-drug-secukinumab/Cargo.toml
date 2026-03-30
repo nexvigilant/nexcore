@@ -4,9 +4,12 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 rust-version.workspace = true
 description = "Secukinumab (Cosentyx) — drug safety model for Novartis"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 nexcore-drug = { path = "../nexcore-drug" }
 nexcore-error = { workspace = true }

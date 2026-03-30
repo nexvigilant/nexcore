@@ -4,9 +4,12 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 rust-version.workspace = true
 description = "Drug entity domain models — identity, classification, indications, safety signals, and label status"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 nexcore-error = { workspace = true }
 serde = { workspace = true }

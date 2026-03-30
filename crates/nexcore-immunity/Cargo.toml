@@ -10,6 +10,8 @@ authors = ["Matthew Alexander Campion, PharmD <matthew@nexvigilant.com>"]
 description = "Antipattern immunity system - self-healing code through learned antibodies"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
+readme = "README.md"
 keywords = ["antipattern", "immunity", "homeostasis", "code-quality"]
 categories = ["development-tools"]
 

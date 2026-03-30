@@ -4,9 +4,12 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 rust-version.workspace = true
 description = "Pharmacovigilance intelligence graph — Company x Drug x Disease composition with competitive analysis"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 nexcore-error = { workspace = true }
 serde = { workspace = true }

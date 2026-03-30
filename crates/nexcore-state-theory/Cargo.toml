@@ -9,6 +9,7 @@ description = "Universal Theory of State — domain-agnostic state machine found
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
 license-file = "LICENSE"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 keywords = ["state-machine", "typestate", "formal-verification", "theory"]
 categories = ["data-structures", "no-std"]
 

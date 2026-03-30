@@ -6,9 +6,13 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
+readme = "README.md"
 rust-version = "1.85"
 description = "NexVigilant Core: The Vigilance Kernel - Theory of Vigilance, Guardian-AV, and consolidated domain modules"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 nexcore-constants = { version = "1.0.0", path = "../nexcore-constants" }
 nexcore-edit-distance = { version = "1.0.0", path = "../nexcore-edit-distance" }

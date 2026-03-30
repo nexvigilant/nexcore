@@ -6,8 +6,11 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 description = "Automated primitive extraction with CLI, MCP, and hook integration"
 
+keywords = ["nexcore", "mcp", "api"]
+categories = ["web-programming"]
 [dependencies]
 # Core
 serde = { version = "1.0.204", features = ["derive"] }

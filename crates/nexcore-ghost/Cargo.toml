@@ -7,8 +7,11 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 rust-version = "1.85"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 ring = "0.17"
 nexcore-codec = { version = "0.1.0", path = "../nexcore-codec" }

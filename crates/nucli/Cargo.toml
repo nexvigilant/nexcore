@@ -6,8 +6,11 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 description = "Nucleotide text encoder: bijective byte↔DNA mapping with exhaustive proofs."
 
+keywords = ["nexcore", "foundation", "primitives"]
+categories = ["development-tools"]
 [dependencies]
 nexcore-lex-primitiva = { workspace = true }
 

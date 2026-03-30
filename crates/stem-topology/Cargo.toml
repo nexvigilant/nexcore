@@ -6,8 +6,11 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 description = "Topological Data Analysis (TDA) for pharmacovigilance signal detection"
 
+keywords = ["nexcore", "mathematics", "science"]
+categories = ["science", "algorithms"]
 [dependencies]
 nexcore-lex-primitiva = { workspace = true }
 stem-complex = { workspace = true }

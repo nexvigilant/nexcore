@@ -7,8 +7,12 @@ rust-version = "1.85"
 authors = ["Matthew Campion, PharmD <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
 description = "Forward-only compound discovery loop. Assess state, reject regression, search for novelty, arrive at new state. Based on T1 primitive decomposition of Walt Disney's curiosity doctrine."
 
+keywords = ["nexcore", "foundation", "primitives"]
+categories = ["development-tools"]
 [dependencies]
 tokio = { workspace = true }
 nexcore-error = { workspace = true }

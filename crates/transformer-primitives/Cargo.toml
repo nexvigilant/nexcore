@@ -7,8 +7,11 @@ rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 description = "Transformer attention mechanism modeled as data pipeline: token embedding → self-attention → feed-forward → prediction"
 
+keywords = ["nexcore", "machine-learning", "ai"]
+categories = ["science", "algorithms"]
 [dependencies]
 nexcore-lex-primitiva = { workspace = true }
 tokio = { version = "1.38.0", features = ["full"] }

@@ -7,8 +7,11 @@ rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 description = "Perplexity AI Sonar API client for search-grounded research"
 
+keywords = ["nexcore", "mcp", "api"]
+categories = ["web-programming"]
 [dependencies]
 nexcore-error = { workspace = true }
 # Lex Primitiva grounding

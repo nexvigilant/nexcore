@@ -7,8 +7,11 @@ rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 description = "Grammar algorithms for state functions — experimental Chomsky-Lex Primitiva laboratory"
 
+keywords = ["nexcore", "compiler", "language"]
+categories = ["compilers"]
 [dependencies]
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 stem-core = { version = "0.1.0", path = "../stem-core" }

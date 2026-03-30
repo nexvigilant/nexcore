@@ -4,9 +4,12 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 rust-version.workspace = true
 description = "Tirzepatide (Mounjaro/Zepbound) — drug safety model for Eli Lilly and Company"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 nexcore-drug = { path = "../nexcore-drug" }
 nexcore-error = { workspace = true }

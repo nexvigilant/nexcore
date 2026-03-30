@@ -6,7 +6,10 @@ authors.workspace = true
 description = "NexVigilant Station — PV tool resolution gate with confidence-scored config discovery"
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [features]
 default = []
 live-feed = ["dep:reqwest"]

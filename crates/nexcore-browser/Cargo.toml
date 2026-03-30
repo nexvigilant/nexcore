@@ -6,9 +6,12 @@ edition = "2024"
 authors = ["NexVigilant Team", "Matthew Campion"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 rust-version = "1.85"
 description = "Browser automation foundation for Vigil/Guardian ecosystem"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 nexcore-error = { workspace = true }
 # Lex Primitiva

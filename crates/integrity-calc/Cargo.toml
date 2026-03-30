@@ -6,8 +6,11 @@ rust-version.workspace = true
 authors.workspace = true
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 description = "Text integrity detection pipeline — entropy, perplexity, burstiness, Zipf's law, Bloom threshold classification"
 
+keywords = ["nexcore", "foundation", "primitives"]
+categories = ["development-tools"]
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }

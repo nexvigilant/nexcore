@@ -6,9 +6,13 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
+readme = "README.md"
 rust-version = "1.85"
 description = "Universal computational primitives (Chemistry, Physics, Math) for the NexVigilant Core ecosystem"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 nexcore-constants = { workspace = true }
 nexcore-lex-primitiva = { workspace = true }

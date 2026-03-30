@@ -5,7 +5,10 @@ edition = "2024"
 description = "Bicone geometry analysis — mathematical extractions from width sequences"
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 
+keywords = ["nexcore", "mathematics", "science"]
+categories = ["science", "algorithms"]
 [dependencies]
 nexcore-error = { workspace = true }
 nexcore-lex-primitiva = { workspace = true }

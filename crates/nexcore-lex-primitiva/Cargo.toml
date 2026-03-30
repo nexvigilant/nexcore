@@ -7,6 +7,8 @@ rust-version = "1.85"
 description = "The 16 irreducible Lex Primitiva symbols with mathematical constants grounding"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
+readme = "README.md"
 keywords = ["primitives", "type-theory", "grounding", "mathematics"]
 categories = ["data-structures", "mathematics"]
 

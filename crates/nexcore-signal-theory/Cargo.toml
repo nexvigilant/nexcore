@@ -8,6 +8,7 @@ description = "Universal Theory of Signals — domain-agnostic signal detection 
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 keywords = ["signal-detection", "boundary", "formal-verification", "theory"]
 categories = ["science", "no-std"]
 

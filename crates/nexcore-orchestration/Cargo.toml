@@ -6,8 +6,11 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 description = "Multi-agent lifecycle, registry, consensus, work queue, and status server for NexVigilant Core"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 nexcore-error = { workspace = true }
 nexcore-vigilance = { version = "1.0.0", path = "../nexcore-vigilance" }

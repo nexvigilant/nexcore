@@ -5,9 +5,12 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 rust-version.workspace = true
 description = "NexVigilant Terminal — multi-tenant, AI-augmented terminal sessions"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 vr-core = { workspace = true }
 nexcore-id = { workspace = true }

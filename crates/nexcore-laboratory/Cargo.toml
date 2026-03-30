@@ -5,9 +5,12 @@ version = "1.0.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 rust-version = "1.85"
 description = "Virtual laboratory for word/concept experiments using Lex Primitiva molecular weight and T1 primitive decomposition"
 
+keywords = ["nexcore", "foundation", "primitives"]
+categories = ["development-tools"]
 [dependencies]
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }

@@ -6,8 +6,11 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 description = "Shared types and math for the Homeostasis Machine — biological self-regulation for software"
 
+keywords = ["nexcore", "biology", "medical"]
+categories = ["science"]
 [dependencies]
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }

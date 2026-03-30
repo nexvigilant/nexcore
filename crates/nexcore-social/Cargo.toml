@@ -7,8 +7,11 @@ rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 description = "Social media API clients for value signal detection"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 # Social types (extracted for cross-hold consumption)
 nexcore-social-types = { version = "1.0.0", path = "../nexcore-social-types" }

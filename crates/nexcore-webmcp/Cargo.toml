@@ -7,7 +7,10 @@ authors.workspace = true
 description = "WebMCP config registry — NexVigilant's agent routing infrastructure. Stores, serves, and syncs browser automation configs."
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }

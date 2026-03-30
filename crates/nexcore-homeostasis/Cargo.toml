@@ -6,8 +6,11 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 description = "Self-regulating system framework inspired by biological homeostasis"
 
+keywords = ["nexcore", "biology", "medical"]
+categories = ["science"]
 [dependencies]
 nexcore-flywheel = { path = "../nexcore-flywheel", version = "0.1.0" }
 nexcore-primitives = { path = "../nexcore-primitives", version = "1.0.0" }

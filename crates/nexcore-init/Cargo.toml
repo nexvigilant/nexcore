@@ -8,6 +8,7 @@ description = "NexCore Init — PID 1 init process for NexCore OS"
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 keywords = ["init", "os", "boot", "pid1"]
 categories = ["os"]
 

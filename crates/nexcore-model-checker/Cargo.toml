@@ -8,6 +8,7 @@ description = "Model checking algorithms for CTL/LTL verification of state machi
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 keywords = ["model-checking", "temporal-logic", "ctl", "ltl", "verification"]
 categories = ["algorithms", "science"]
 

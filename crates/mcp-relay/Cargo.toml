@@ -5,8 +5,11 @@ version = "0.1.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 description = "Stdio-to-Unix-socket relay for MCP hot-reload. Bridges Claude Code (stdio) to nexcore-mcp daemon (socket)."
 
+keywords = ["nexcore", "mcp", "api"]
+categories = ["web-programming"]
 [[bin]]
 name = "mcp-relay"
 path = "src/main.rs"

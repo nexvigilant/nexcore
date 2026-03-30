@@ -5,9 +5,12 @@ version = "1.0.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 authors = ["NexVigilant Team"]
 description = "NexVigilant Core Unified PV Execution Kernel"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 nexcore-vigilance = { version = "1.0.0", path = "../nexcore-vigilance" }
 nexcore-brain = { version = "1.0.0", path = "../nexcore-brain" }

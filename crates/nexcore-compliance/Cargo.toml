@@ -6,9 +6,12 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 rust-version = "1.85"
 description = "Regulatory compliance engine: SAM.gov integration, OSCAL-inspired DSL, FDA/ICH/CIOMS controls"
 
+keywords = ["nexcore", "pharmacovigilance"]
+categories = ["development-tools"]
 [lib]
 name = "nexcore_compliance"
 path = "src/lib.rs"

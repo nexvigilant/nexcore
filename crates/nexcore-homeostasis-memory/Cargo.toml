@@ -6,8 +6,11 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 description = "Incident memory and response playbooks for the Homeostasis Machine"
 
+keywords = ["nexcore", "knowledge-management", "automation"]
+categories = ["development-tools"]
 [dependencies]
 nexcore-homeostasis-primitives = { path = "../nexcore-homeostasis-primitives", version = "1.0.0" }
 nexcore-lex-primitiva = { workspace = true }

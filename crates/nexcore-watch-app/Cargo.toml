@@ -6,8 +6,11 @@ rust-version.workspace = true
 authors.workspace = true
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 description = "NexCore watch app — NativeActivity + Slint UI for Galaxy Watch7"
 
+keywords = ["nexcore", "pharmacovigilance"]
+categories = ["development-tools"]
 [lib]
 name = "nexcore_watch_app"
 crate-type = ["cdylib"]

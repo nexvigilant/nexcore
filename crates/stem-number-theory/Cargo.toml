@@ -7,6 +7,7 @@ rust-version = "1.85"
 description = "Classical number theory: primes, arithmetic functions, factorization"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/stem"
+homepage.workspace = true
 keywords = ["number-theory", "primes", "factorization", "mathematics"]
 categories = ["science", "mathematics"]
 publish = true

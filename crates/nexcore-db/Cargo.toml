@@ -7,7 +7,10 @@ rust-version = "1.85"
 description = "Persistent SQLite storage for NexCore Brain working memory"
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 
+keywords = ["nexcore", "database", "storage"]
+categories = ["database"]
 [dependencies]
 nexcore-error = { workspace = true }
 rusqlite = { version = "0.32", features = ["bundled", "serde_json"] }

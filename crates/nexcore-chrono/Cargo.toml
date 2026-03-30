@@ -6,6 +6,7 @@ rust-version = "1.85"
 description = "Sovereign DateTime engine — UTC timestamps, calendar dates, durations with zero external dependencies"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 keywords = ["datetime", "utc", "chrono", "sovereignty"]
 categories = ["date-and-time", "no-std"]
 

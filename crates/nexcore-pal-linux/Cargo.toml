@@ -8,6 +8,7 @@ description = "Linux platform implementation for NexCore PAL — sysfs, evdev, D
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 keywords = ["linux", "platform", "hal", "drm", "evdev"]
 categories = ["os::linux-apis", "hardware-support"]
 

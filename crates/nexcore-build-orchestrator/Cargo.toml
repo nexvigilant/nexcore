@@ -6,8 +6,11 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 description = "Full-stack build orchestrator with CI/CD pipeline, live dashboard, and CLI"
 
+keywords = ["nexcore", "build-tools", "publishing"]
+categories = ["development-tools"]
 [[bin]]
 name = "build-orchestrator"
 path = "src/main.rs"

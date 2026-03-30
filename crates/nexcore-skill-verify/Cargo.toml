@@ -7,7 +7,11 @@ rust-version = "1.85"
 description = "Skill verification infrastructure for Claude Code skills"
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
 
+keywords = ["nexcore", "knowledge-management", "automation"]
+categories = ["development-tools"]
 [dependencies]
 nexcore-error = { workspace = true }
 serde = { version = "1.0", features = ["derive"] }

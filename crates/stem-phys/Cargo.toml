@@ -7,6 +7,7 @@ rust-version = "1.85"
 description = "Physics primitives: conservation, forces, waves, scaling"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/stem"
+homepage.workspace = true
 keywords = ["physics", "conservation", "forces", "primitives"]
 categories = ["science"]
 publish = true

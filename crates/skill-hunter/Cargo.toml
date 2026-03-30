@@ -6,7 +6,10 @@ edition = "2021"
 description = "Gamified skill validator - hunt down issues in your skill ecosystem"
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 
+keywords = ["nexcore", "knowledge-management", "automation"]
+categories = ["development-tools"]
 [[bin]]
 name = "skill-hunter"
 path = "src/main.rs"

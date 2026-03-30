@@ -8,6 +8,7 @@ description = "Process-level network signal container — default-deny fence gro
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 keywords = ["signal-detection", "network-security", "process-monitor", "firewall"]
 categories = ["network-programming", "os"]
 

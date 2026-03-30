@@ -6,9 +6,12 @@ edition = "2024"
 rust-version = "1.85"
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "Prima Universal Code Generator - T1 primitives to target languages"
 
+keywords = ["nexcore", "compiler", "language"]
+categories = ["compilers"]
 [[bin]]
 name = "prima-codegen"
 path = "src/bin/codegen.rs"

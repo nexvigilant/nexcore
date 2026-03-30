@@ -6,7 +6,10 @@ rust-version = "1.85"
 description = "SQLite registry for Claude Code skills, agents, metrics, and KPIs"
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 
+keywords = ["nexcore", "mathematics", "science"]
+categories = ["science", "algorithms"]
 [dependencies]
 nexcore-error = { workspace = true }
 rusqlite = { workspace = true }

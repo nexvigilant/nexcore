@@ -6,9 +6,12 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 rust-version = "1.85"
 description = "Rust-native cloud platform: 35-type taxonomy + process supervisor + reverse proxy"
 
+keywords = ["nexcore", "mcp", "api"]
+categories = ["web-programming"]
 [[bin]]
 name = "nexcloud"
 path = "src/main.rs"

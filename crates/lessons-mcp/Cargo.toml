@@ -6,8 +6,11 @@ rust-version.workspace = true
 authors.workspace = true
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 description = "MCP server for capturing lessons learned about hooks with primitive extraction"
 
+keywords = ["nexcore", "mcp", "api"]
+categories = ["web-programming"]
 [dependencies]
 nexcore-error = { workspace = true }
 serde = { workspace = true }

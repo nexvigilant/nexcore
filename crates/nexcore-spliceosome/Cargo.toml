@@ -7,7 +7,10 @@ authors.workspace = true
 description = "Pre-translation structural expectation generator for NMD pipeline surveillance"
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 
+keywords = ["nexcore", "biology", "medical"]
+categories = ["science"]
 [dependencies]
 nexcore-chrono = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

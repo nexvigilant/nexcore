@@ -6,8 +6,11 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 description = "MCP server for Claude Code documentation - consolidated from projects/claude-code-docs-mcp"
 
+keywords = ["nexcore", "mcp", "api"]
+categories = ["web-programming"]
 [[bin]]
 name = "nexcore-docs-mcp"
 path = "src/main.rs"

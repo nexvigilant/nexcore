@@ -6,8 +6,11 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 description = "MCP server for Google Vids editing via Google Slides API with JWT/OAuth auth"
 
+keywords = ["nexcore", "mcp", "api"]
+categories = ["web-programming"]
 [[bin]]
 name = "gvids-mcp"
 path = "src/main.rs"

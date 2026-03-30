@@ -6,8 +6,11 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 description = "Urinary system for filtration — Nephron(log filtering) + Reabsorption(metric reclaim) + Excretion(waste disposal) + Retention policies(tubular reabsorption)"
 
+keywords = ["nexcore", "mathematics", "science"]
+categories = ["science", "algorithms"]
 [dependencies]
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }

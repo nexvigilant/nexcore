@@ -7,8 +7,12 @@ rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
 description = "WHO-grounded pharmacovigilance taxonomy: 22 T2-P primitives, 20 T2-C composites, 104 T3 domain concepts across detection/assessment/understanding/prevention, Chomsky grammar classification, and cross-domain transfer confidence."
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }

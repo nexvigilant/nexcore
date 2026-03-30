@@ -6,8 +6,11 @@ rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 description = "Extract structured knowledge from NexCore Rust source into IR for Academy and Observatory"
 
+keywords = ["nexcore", "knowledge-management", "automation"]
+categories = ["development-tools"]
 [[bin]]
 name = "forge-validate"
 path = "src/bin/forge-validate.rs"

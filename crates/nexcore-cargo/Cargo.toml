@@ -7,7 +7,10 @@ authors.workspace = true
 description = "Typed transport for PV rails — separates cargo (domain payload) from freight (conveyance)"
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 
+keywords = ["nexcore", "mcp", "api"]
+categories = ["web-programming"]
 [dependencies]
 serde = { workspace = true }
 

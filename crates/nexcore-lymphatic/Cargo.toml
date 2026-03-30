@@ -6,8 +6,11 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 description = "Lymphatic system for overflow drainage — Output styles(lymph drainage) + Notification hooks(lymph nodes) + Thymic selection(self vs non-self) + Passive overflow"
 
+keywords = ["nexcore", "pharmacovigilance"]
+categories = ["development-tools"]
 [dependencies]
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }

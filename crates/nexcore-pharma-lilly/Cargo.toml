@@ -4,9 +4,12 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 rust-version.workspace = true
 description = "Pharmaceutical company model for Eli Lilly — products, pipeline, safety profiles"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 nexcore-pharma = { path = "../nexcore-pharma" }
 nexcore-error = { workspace = true }

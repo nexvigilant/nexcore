@@ -7,8 +7,11 @@ rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 description = "MCP server for Reddit API integration"
 
+keywords = ["nexcore", "mcp", "api"]
+categories = ["web-programming"]
 [[bin]]
 name = "reddit-mcp"
 path = "src/main.rs"

@@ -6,8 +6,11 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 description = "Muscular system for tool execution — Skeletal(voluntary tools) + Smooth(autonomic tools) + Cardiac(main event loop), Size Principle, antagonistic pairs"
 
+keywords = ["nexcore", "pharmacovigilance"]
+categories = ["development-tools"]
 [dependencies]
 nexcore-chrono = { workspace = true }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }

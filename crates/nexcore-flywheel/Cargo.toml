@@ -5,7 +5,10 @@ edition = "2024"
 description = "Three-node flywheel bridge with five autonomous loops for self-reinforcing feedback"
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 
+keywords = ["nexcore", "pharmacovigilance"]
+categories = ["development-tools"]
 [dependencies]
 nexcore-chrono = { workspace = true }
 nexcore-error = { workspace = true }

@@ -7,7 +7,10 @@ authors.workspace = true
 description = "Consultants' Client Care Process — 5-phase PV consulting workflow engine"
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 
+keywords = ["nexcore", "mcp", "api"]
+categories = ["web-programming"]
 [dependencies]
 nexcore-vigilance = { workspace = true }
 chrono = { workspace = true }

@@ -6,8 +6,11 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 description = "Nervous system for event routing — Reflex arcs(hook dispatch) + Myelination(hot path caching) + Sensory integration(context assembly) + Motor coordination(tool chains)"
 
+keywords = ["nexcore", "foundation", "primitives"]
+categories = ["development-tools"]
 [dependencies]
 nexcore-chrono = { workspace = true }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }

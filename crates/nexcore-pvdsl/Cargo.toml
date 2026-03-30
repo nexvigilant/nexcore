@@ -6,9 +6,13 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
+readme = "README.md"
 rust-version = "1.85"
 description = "Pharmacovigilance Domain-Specific Language with custom bytecode compiler"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 nexcore-edit-distance = { version = "1.0.0", path = "../nexcore-edit-distance" }
 nexcore-error = { workspace = true }

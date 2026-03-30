@@ -20,6 +20,8 @@ authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "NexVigilant Core (nexcore) — The Vigilance Kernel for pharmacovigilance and intelligent automation"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage = "https://nexvigilant.com"
+readme = "README.md"
 
 [workspace.dependencies]
 # anyhow — REMOVED: replaced by nexcore-error

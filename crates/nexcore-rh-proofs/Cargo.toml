@@ -6,6 +6,7 @@ rust-version = "1.85"
 description = "Type-level Riemann Hypothesis proof infrastructure via Curry-Howard correspondence"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 keywords = ["riemann-hypothesis", "proof", "curry-howard", "number-theory"]
 categories = ["science", "mathematics"]
 publish = true

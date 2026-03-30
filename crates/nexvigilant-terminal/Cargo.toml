@@ -5,9 +5,12 @@ edition = "2024"
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 rust-version = "1.85"
 description = "NexVigilant Terminal — Tauri desktop app for agent observability and cloud shell"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [[bin]]
 name = "nexvigilant-terminal"
 path = "src/main.rs"

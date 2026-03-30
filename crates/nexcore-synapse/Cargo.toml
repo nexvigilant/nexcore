@@ -8,7 +8,11 @@ rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
+readme = "README.md"
 
+keywords = ["nexcore", "biology", "medical"]
+categories = ["science"]
 [dependencies]
 nexcore-chrono = { workspace = true }
 nexcore-error = { workspace = true }

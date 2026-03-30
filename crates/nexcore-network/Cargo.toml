@@ -8,6 +8,7 @@ description = "NexCore OS networking subsystem — connection management, DNS, f
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 keywords = ["networking", "dns", "firewall", "routing", "os"]
 categories = ["network-programming", "os"]
 

@@ -4,10 +4,13 @@ version = "0.1.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 authors = ["NexVigilant Team"]
 description = "Capability Compound Interest Machine — sovereign development acceleration modeled as financial instrument"
 rust-version = "1.85"
 
+keywords = ["nexcore", "machine-learning", "ai"]
+categories = ["science", "algorithms"]
 [dependencies]
 nexcore-constants = { workspace = true }
 serde = { workspace = true }

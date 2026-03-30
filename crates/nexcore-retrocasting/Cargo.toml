@@ -5,9 +5,12 @@ edition = "2024"
 rust-version = "1.85"
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "Retrocasting engine: links FAERS safety signals to molecular structures for pre-market safety prediction"
 
+keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
+categories = ["science"]
 [dependencies]
 nexcore-error = { workspace = true }
 nexcore-compound-registry = { path = "../nexcore-compound-registry", version = "0.1.0" }

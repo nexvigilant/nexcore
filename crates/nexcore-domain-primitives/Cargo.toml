@@ -8,6 +8,7 @@ description = "Domain primitive extraction: tier taxonomy (T1/T2-P/T2-C/T3), dep
 license = "MIT OR Apache-2.0"
 publish = true
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 keywords = ["primitives", "domain", "taxonomy", "transfer", "extraction"]
 categories = ["algorithms", "science"]
 

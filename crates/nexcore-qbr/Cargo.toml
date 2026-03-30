@@ -5,6 +5,7 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 rust-version = "1.85"
 description = "Quantitative Benefit-Risk: computable, confidence-bounded benefit-risk assessment from contingency data"
 keywords = ["benefit-risk", "pharmacovigilance", "signal-detection", "qbr"]

@@ -5,9 +5,12 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 rust-version = "1.85"
 description = "Stoichiometric engine for balanced primitive equations — the cargo container for the 15 Lex Primitiva"
 
+keywords = ["nexcore", "mathematics", "science"]
+categories = ["science", "algorithms"]
 [dependencies]
 nexcore-lex-primitiva = { workspace = true }
 nexcore-primitives = { workspace = true }

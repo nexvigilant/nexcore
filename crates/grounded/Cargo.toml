@@ -7,8 +7,12 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
 description = "GROUNDED: Giving Reasoning Observable, Unified, Nested, Developmental, Evidence-based Dynamics"
 
+keywords = ["nexcore", "pharmacovigilance"]
+categories = ["development-tools"]
 [dependencies]
 nexcore-error = { workspace = true }
 serde = { workspace = true }

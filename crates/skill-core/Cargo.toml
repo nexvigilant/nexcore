@@ -7,7 +7,10 @@ edition = "2024"
 description = "Core traits and types for Claude Code skills as Rust crates"
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 
+keywords = ["nexcore", "knowledge-management", "automation"]
+categories = ["development-tools"]
 [dependencies]
 nexcore-error = { workspace = true }
 serde = { version = "1.0", features = ["derive"] }

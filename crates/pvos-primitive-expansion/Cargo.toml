@@ -7,8 +7,11 @@ rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 description = "Research-synthesized PVOS expansion: 17 primitive-grounded types across location, frequency, bridges, gaps, and exploratory modules"
 
+keywords = ["nexcore", "foundation", "primitives"]
+categories = ["development-tools"]
 [dependencies]
 tokio = { version = "1.38.0", features = ["full"] }
 nexcore-error = { workspace = true }

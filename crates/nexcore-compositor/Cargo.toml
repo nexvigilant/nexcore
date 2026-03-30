@@ -8,6 +8,7 @@ description = "NexCore Compositor — display server for watch, phone, and deskt
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 keywords = ["compositor", "display-server", "window-manager", "rendering"]
 categories = ["rendering", "gui"]
 

@@ -6,6 +6,7 @@ edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository.workspace = true
+homepage.workspace = true
 description = "Skill Execution Engine - Real execution of Claude Code skills via shell, binary, or library invocation"
 keywords = ["skills", "execution", "orchestration", "automation"]
 categories = ["command-line-utilities"]

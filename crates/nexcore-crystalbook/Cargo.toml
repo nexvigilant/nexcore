@@ -5,9 +5,12 @@ edition = "2024"
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
 rust-version = "1.85"
 description = "The Crystalbook — immutable, content-addressed scientific documents with Merkle integrity and cryptographic seal chains"
 
+keywords = ["nexcore", "mathematics", "science"]
+categories = ["science", "algorithms"]
 [lib]
 path = "src/lib.rs"
 

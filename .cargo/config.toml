@@ -51,11 +51,15 @@ tc = "test -p nexcore-vigilance --lib"
 nt = "nextest run --workspace"
 
 [registries.nexcore]
+index = "sparse+https://crates.nexvigilant.com/api/v1/crates/"
+
+[registries.nexcore-local]
 index = "sparse+http://localhost:8000/api/v1/crates/"
 
 [registry]
 # default = "nexcore"  # Disabled: publish to crates.io by default
-# Use `cargo publish --registry nexcore` for local Kellnr
+# Publish to Kellnr: cargo publish --registry nexcore
+# Publish to crates.io: cargo publish (default)
 
 [target.aarch64-unknown-linux-gnu]
 linker = "aarch64-linux-gnu-gcc"

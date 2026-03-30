@@ -23,6 +23,10 @@ jobs:
         with:
           path: target
           key: lint-${{ hashFiles('Cargo.lock') }}
+      - name: Disable sccache for CI
+        run: |
+          sed -i 's/rustc-wrapper = "sccache"/# rustc-wrapper disabled in CI/' .cargo/config.toml
+          sed -i 's/RUSTC_WRAPPER = "sccache"/# RUSTC_WRAPPER disabled in CI/' .cargo/config.toml
       - name: Format check
         run: cargo fmt --check
       - name: Clippy
@@ -40,6 +44,10 @@ jobs:
         with:
           path: target
           key: test-${{ hashFiles('Cargo.lock') }}
+      - name: Disable sccache for CI
+        run: |
+          sed -i 's/rustc-wrapper = "sccache"/# rustc-wrapper disabled in CI/' .cargo/config.toml
+          sed -i 's/RUSTC_WRAPPER = "sccache"/# RUSTC_WRAPPER disabled in CI/' .cargo/config.toml
       - name: Run tests
         run: cargo test --workspace --lib
 
@@ -55,5 +63,9 @@ jobs:
         with:
           path: target
           key: build-${{ hashFiles('Cargo.lock') }}
+      - name: Disable sccache for CI
+        run: |
+          sed -i 's/rustc-wrapper = "sccache"/# rustc-wrapper disabled in CI/' .cargo/config.toml
+          sed -i 's/RUSTC_WRAPPER = "sccache"/# RUSTC_WRAPPER disabled in CI/' .cargo/config.toml
       - name: Build workspace
         run: cargo build --workspace

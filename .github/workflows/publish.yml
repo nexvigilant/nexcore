@@ -47,6 +47,15 @@ jobs:
             ~/.cargo/registry/cache/
           key: cargo-registry-${{ hashFiles('Cargo.lock') }}
 
+      - name: Override sccache (not available in CI)
+        run: |
+          mkdir -p .cargo
+          echo '[build]' >> .cargo/config.toml.ci
+          echo 'rustc-wrapper = ""' >> .cargo/config.toml.ci
+          # Remove sccache wrapper from config
+          sed -i 's/rustc-wrapper = "sccache"/# rustc-wrapper disabled in CI/' .cargo/config.toml
+          sed -i 's/RUSTC_WRAPPER = "sccache"/# RUSTC_WRAPPER disabled in CI/' .cargo/config.toml
+
       - name: Build dag-publish
         run: cargo build -p dag-publish --release
 

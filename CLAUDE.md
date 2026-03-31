@@ -67,13 +67,13 @@ Core primitives, no domain knowledge.
 
 ### Domain (2-25 internal deps)
 Business logic, uses foundation types.
-- `nexcore-vigilance` (57 modules, 76 PVOS — the domain monolith, 25 deps)
+- `nexcore-vigilance` (61 modules, 76 PVOS — the domain monolith, 8 deps)
 - `nexcore-tov` (Theory of Vigilance axioms)
 - `nexcore-faers-etl`, `nexcore-pvos`, `nexcore-dtree`
 - `nexcore-energy`, `nexcore-cytokine`, `nexcore-hormones`
 - `nexcore-immunity`, `nexcore-synapse`, `nexcore-phenotype`
 - `nexcore-statemind` (DNA pipeline), `nexcore-value-mining` (economic signal detection)
-- `prima-*` (7 crates — Prima language ecosystem)
+- `prima-*` (6 crates — Prima language ecosystem)
 
 ### Orchestration (3-5 internal deps)
 Workflow coordination.
@@ -82,9 +82,9 @@ Workflow coordination.
 - `nexcore-build-gate`
 - `nexcore-skill-*`, `nexcore-signal-*`
 
-### Service (5-76 internal deps)
+### Service (5-190 internal deps)
 External interfaces. Only layer with binary targets.
-- `nexcore-mcp` (verify tool count: `nexcore_health_probe`, **76 internal deps** — pulls from everywhere)
+- `nexcore-mcp` (verify tool count: `nexcore_health_probe`, **190 internal deps** — pulls from everywhere)
 - `nexcore-api` (196 REST routes)
 - `nexcore-cli`, `nexcore-guardian-cli`
 

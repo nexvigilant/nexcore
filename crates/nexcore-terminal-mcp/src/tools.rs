@@ -405,6 +405,20 @@ impl TerminalMcp {
         }
     }
 
+    #[tool(
+        description = "Check vigil-autopilot status — active/stopped, prompt count, queue depth."
+    )]
+    async fn terminal_autopilot_status(&self) -> Result<CallToolResult, McpError> {
+        let output = tokio::process::Command::new("vigil-autopilot")
+            .arg("--status")
+            .output()
+            .await;
+        match output {
+            Ok(o) => Self::ok_result(&String::from_utf8_lossy(&o.stdout)),
+            Err(e) => Self::err_result(&format!("Status failed: {e}")),
+        }
+    }
+
     #[tool(description = "Terminal MCP server health check.")]
     async fn terminal_health(&self) -> Result<CallToolResult, McpError> {
         let sessions = self.sessions.lock().await;

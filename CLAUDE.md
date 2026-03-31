@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # CLAUDE.md — NexCore
 
-Rust monorepo: 231 workspace members across 4 layers, Edition 2024 (Rust 1.85+).
+Rust monorepo: 281 workspace members across 4 layers, Edition 2024 (Rust 1.85+).
 
 ## Benchmark Governance (INVARIANT)
 
@@ -33,7 +33,7 @@ cargo build -p nexcore-mcp --release   # MCP server (~2min, restart Claude Code 
 cargo build -p nexcore-api --release   # REST API server
 cargo build -p nexcore-brain --release # Brain CLI
 
-# Justfile (86 recipes — preferred entry point)
+# justfile (114 recipes — preferred entry point)
 just check-crate <crate>  # cargo check single crate
 just test-crate <crate>   # cargo test single crate
 just test-match <crate> <pattern>  # Test with pattern filter
@@ -60,7 +60,7 @@ Dependency flows DOWN only: Service → Orchestration → Domain → Foundation.
 Core primitives, no domain knowledge.
 - `nexcore-primitives`, `nexcore-lex-primitiva` (15 operational + × axiomatic = 16 in enum)
 - `nexcore-id`, `nexcore-constants`, `nexcore-macros`
-- `stem-*` (6 crates: core, derive, phys, math, plus 2 more)
+- `stem-*` (9 crates: core, derive, phys, math, bio, finance, spatial, plus 2 more)
 - `nexcore-config`, `nexcore-traits`
 - `nexcore-prima` (Lex Primitiva language interpreter)
 - `nucli` (bijective byte↔DNA nucleotide codec, zero deps, 10 exhaustive proofs)
@@ -85,7 +85,7 @@ Workflow coordination.
 ### Service (5-76 internal deps)
 External interfaces. Only layer with binary targets.
 - `nexcore-mcp` (verify tool count: `nexcore_health_probe`, **76 internal deps** — pulls from everywhere)
-- `nexcore-api` (84+ REST routes)
+- `nexcore-api` (196 REST routes)
 - `nexcore-cli`, `nexcore-guardian-cli`
 
 ### MCP Architecture (Direct stdio)

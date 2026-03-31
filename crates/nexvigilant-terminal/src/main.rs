@@ -19,6 +19,7 @@
     windows_subsystem = "windows"
 )]
 
+use nexvigilant_terminal::commands::claude::ClaudeCodeState;
 use nexvigilant_terminal::commands::cloud::CloudState;
 use nexvigilant_terminal::commands::health::HealthState;
 use nexvigilant_terminal::commands::pty::PtyState;
@@ -44,6 +45,7 @@ fn main() {
         .manage(CloudState::new())
         .manage(NexShellState::new())
         .manage(StationState::new())
+        .manage(ClaudeCodeState::new())
         .invoke_handler(tauri::generate_handler![
             // PTY process management (real POSIX PTY)
             nexvigilant_terminal::commands::pty::pty_spawn,
@@ -82,6 +84,11 @@ fn main() {
             nexvigilant_terminal::commands::station::station_health,
             nexvigilant_terminal::commands::station::station_tools,
             nexvigilant_terminal::commands::station::station_call,
+            // Claude Code first-class integration
+            nexvigilant_terminal::commands::claude::claude_start,
+            nexvigilant_terminal::commands::claude::claude_stop,
+            nexvigilant_terminal::commands::claude::claude_status,
+            nexvigilant_terminal::commands::claude::claude_restart,
             // Persistent config
             nexvigilant_terminal::commands::config::config_load,
             nexvigilant_terminal::commands::config::config_save,

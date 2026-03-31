@@ -10814,6 +10814,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexcore-terminal-mcp"
+version = "0.1.0"
+dependencies = [
+ "nexcore-chrono",
+ "nexcore-terminal",
+ "rmcp",
+ "schemars 1.2.1",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "nexcore-topology"
 version = "1.0.0"
 dependencies = [

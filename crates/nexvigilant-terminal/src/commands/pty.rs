@@ -96,9 +96,21 @@ pub async fn pty_spawn(
         paths.join(":")
     };
 
+    // Terminal environment for proper TUI rendering.
+    // Claude Code, vim, htop, etc. all depend on these being correct.
+    let term_value = std::env::var("TERM").unwrap_or_else(|_| "xterm-256color".to_string());
+    let lang_value = std::env::var("LANG").unwrap_or_else(|_| "en_US.UTF-8".to_string());
+
     let config = PtyConfig::new(&shell, &working_dir)
         .with_size(PtySize::new(cols, rows))
-        .with_env("PATH", &enriched_path);
+        .with_env("PATH", &enriched_path)
+        .with_env("TERM", &term_value)
+        .with_env("COLORTERM", "truecolor")
+        .with_env("LANG", &lang_value)
+        .with_env("LC_ALL", &lang_value)
+        // Claude Code TUI rendering hints
+        .with_env("FORCE_COLOR", "1")
+        .with_env("CLICOLOR_FORCE", "1");
 
     let process = PtyProcess::spawn(config).map_err(|e| format!("PTY spawn failed: {e}"))?;
 

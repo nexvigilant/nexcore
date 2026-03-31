@@ -263,6 +263,7 @@ nexcore-synapse = { path = "crates/nexcore-synapse", version = "1.0.0" }
 nexcore-synth = { path = "crates/nexcore-synth", version = "0.1.0" }
 nexcore-telemetry-core = { path = "crates/nexcore-telemetry-core", version = "1.0.0" }
 nexcore-terminal = { path = "crates/nexcore-terminal", version = "0.1.0" }
+nexcore-terminal-mcp = { path = "crates/nexcore-terminal-mcp", version = "0.1.0" }
 nexcore-tov = { path = "crates/nexcore-tov", version = "1.0.0" }
 nexcore-tov-grounded = { path = "crates/nexcore-tov-grounded", version = "1.0.0" }
 nexcore-tov-proofs = { path = "crates/nexcore-tov-proofs", version = "1.0.0" }

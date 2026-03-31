@@ -3,6 +3,7 @@
 // Commands route to PTY injection, Tauri IPC, or internal actions.
 
 import * as toasts from './toast';
+import * as claude from './claude-client';
 
 interface QuickCommand {
   name: string;
@@ -57,6 +58,28 @@ const COMMANDS: QuickCommand[] = [
   // Micrograms
   { name: 'mg', desc: 'Microgram dashboard', pty: '/mg dashboard' },
   { name: 'mg-test', desc: 'Test all micrograms', pty: '/mg test-all' },
+
+  // Claude Code
+  { name: 'claude', desc: 'Start Claude Code with Station MCP', fn: async () => {
+    const state = claude.getState();
+    if (state === 'running' || state === 'starting') {
+      toasts.info('Claude Code', 'Already running. Use :claude-stop to stop.');
+      return;
+    }
+    await claude.start();
+  }},
+  { name: 'claude-stop', desc: 'Stop Claude Code', fn: async () => {
+    await claude.stop();
+  }},
+  { name: 'claude-restart', desc: 'Restart Claude Code', fn: async () => {
+    await claude.restart();
+  }},
+  { name: 'claude-status', desc: 'Check Claude Code status', fn: async () => {
+    const s = await claude.status();
+    if (s) {
+      toasts.info('Claude Code', `${s.state} | Station: ${s.station_connected ? 'connected' : 'disconnected'}`);
+    }
+  }},
 
   // Terminal control
   { name: 'theme', desc: 'Toggle epistemic colors', fn: () => {

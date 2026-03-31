@@ -14,7 +14,9 @@ use serde::{Deserialize, Serialize};
 
 /// Managed state wrapping the real `nexcore_shell::Shell`.
 pub struct NexShellState {
+    /// The NexCore Shell instance managing apps, login, and AI partner.
     pub shell: Mutex<Shell>,
+    /// Command palette for fuzzy-search quick actions.
     pub palette: Mutex<CommandPalette>,
 }
 

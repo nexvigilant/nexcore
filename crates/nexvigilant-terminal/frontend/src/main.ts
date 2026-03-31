@@ -10,6 +10,7 @@ import { mountRemotePanel } from './remote-panel';
 import { mountSessionFeed } from './session-feed';
 import * as toasts from './toast';
 import * as quickCmd from './quick-cmd';
+import * as claude from './claude-client';
 import { initGamepad, setGamepadSession } from './gamepad';
 
 // ── Tauri IPC ──────────────────────────────────────────────────
@@ -936,6 +937,25 @@ document.addEventListener('keydown', async (e: KeyboardEvent) => {
     const state = epistemicEnabled ? 'ON' : 'OFF';
     term.write('\r\n\x1b[2m  [Epistemic coloring: ' + state + ']\x1b[0m\r\n');
   }
+  // Ctrl+Shift+C: Toggle Claude Code mode
+  if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+    e.preventDefault();
+    const state = claude.getState();
+    if (state === 'running' || state === 'starting') {
+      claude.stop();
+      term.write('\r\n\x1b[33m  [Claude Code stopped]\x1b[0m\r\n');
+    } else {
+      term.write('\r\n\x1b[36m  [Starting Claude Code with Station MCP...]\x1b[0m\r\n');
+      claude.start().then((result) => {
+        if (result && result.session_id) {
+          // Switch PTY output to the Claude session
+          sessionId = result.session_id;
+          ptyConnected = true;
+          updateStatusBar();
+        }
+      });
+    }
+  }
 });
 
 // ── Session Management ─────────────────────────────────────────
@@ -1011,7 +1031,8 @@ function showWelcome(): void {
   term.write(blue + 'Ctrl+Shift+P' + reset + dim + '  Command Palette' + reset + '\r\n');
   term.write(blue + '  Ctrl+Shift+A' + reset + dim + '  App Launcher  ' + reset);
   term.write(blue + 'Ctrl+Shift+D' + reset + dim + '  Dashboard' + reset + '\r\n');
-  term.write(blue + '  Ctrl+Shift+E' + reset + dim + '  Epistemic Colors' + reset + '\r\n');
+  term.write(blue + '  Ctrl+Shift+E' + reset + dim + '  Epistemic Colors' + reset);
+  term.write(blue + 'Ctrl+Shift+C' + reset + dim + '  Claude Code' + reset + '\r\n');
   term.write('\r\n');
 }
 
@@ -1244,5 +1265,89 @@ async function init(): Promise<void> {
     setInterval(() => pollServiceHealth(), 30000);
   }
 }
+
+// ── Split View Controller ─────────────────────────────────────
+// Terminal + Nucleus Portal side by side
+
+type SplitMode = 'terminal' | 'portal' | 'split';
+let splitMode: SplitMode = 'terminal';
+
+function setSplitMode(mode: SplitMode): void {
+  splitMode = mode;
+  const termContainer = document.getElementById('terminal-container');
+  const nucleusContainer = document.getElementById('nucleus-frame-container');
+  const toggleNucleus = document.getElementById('toggle-nucleus');
+  const toggleSplit = document.getElementById('toggle-split');
+  if (!termContainer || !nucleusContainer) return;
+
+  switch (mode) {
+    case 'terminal':
+      termContainer.style.display = 'block';
+      termContainer.style.flex = '1';
+      nucleusContainer.style.display = 'none';
+      if (toggleSplit) toggleSplit.style.color = 'var(--text-muted)';
+      if (toggleNucleus) toggleNucleus.style.color = 'var(--text-muted)';
+      break;
+    case 'portal':
+      termContainer.style.display = 'none';
+      nucleusContainer.style.display = 'block';
+      nucleusContainer.style.flex = '1';
+      if (toggleNucleus) toggleNucleus.style.color = 'var(--blue)';
+      if (toggleSplit) toggleSplit.style.color = 'var(--text-muted)';
+      break;
+    case 'split':
+      termContainer.style.display = 'block';
+      termContainer.style.flex = '1';
+      nucleusContainer.style.display = 'block';
+      nucleusContainer.style.flex = '1';
+      if (toggleSplit) toggleSplit.style.color = 'var(--emerald)';
+      if (toggleNucleus) toggleNucleus.style.color = 'var(--blue)';
+      break;
+  }
+  window.dispatchEvent(new Event('resize'));
+}
+
+// Wire split-view buttons
+const toggleNucleusBtn = document.getElementById('toggle-nucleus');
+const toggleSplitBtn = document.getElementById('toggle-split');
+if (toggleNucleusBtn) {
+  toggleNucleusBtn.addEventListener('click', () => {
+    setSplitMode(splitMode === 'portal' ? 'terminal' : 'portal');
+  });
+}
+if (toggleSplitBtn) {
+  toggleSplitBtn.addEventListener('click', () => {
+    setSplitMode(splitMode === 'split' ? 'terminal' : 'split');
+  });
+}
+
+// Wire Nucleus links to navigate iframe + auto-split
+document.querySelectorAll('.nucleus-link').forEach((link) => {
+  link.addEventListener('click', (e: Event) => {
+    e.preventDefault();
+    const url = (link as HTMLElement).dataset.url;
+    const frame = document.getElementById('nucleus-frame') as HTMLIFrameElement | null;
+    if (url && frame) {
+      frame.src = url;
+      if (splitMode === 'terminal') setSplitMode('split');
+    }
+  });
+});
+
+// Keyboard shortcuts: Ctrl+Shift+S (split), Ctrl+Shift+P (portal)
+document.addEventListener('keydown', (e: KeyboardEvent) => {
+  if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+    e.preventDefault();
+    setSplitMode(splitMode === 'split' ? 'terminal' : 'split');
+  }
+  if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+    e.preventDefault();
+    // Only override if not already handled by command palette
+    const paletteVisible = document.querySelector('.overlay-backdrop:not(.hidden)');
+    if (!paletteVisible) {
+      setSplitMode(splitMode === 'portal' ? 'terminal' : 'portal');
+    }
+  }
+});
 
 init();

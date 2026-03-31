@@ -612,7 +612,9 @@
         <span class="brand">NexVigilant Terminal</span>
         <span class="status-dot disconnected" id="connection-status" title="Disconnected"></span>
       </div>
-      <div class="right">
+      <div class="right" style="-webkit-app-region:no-drag;">
+        <button id="toggle-nucleus" title="Toggle Nucleus Portal (Ctrl+Shift+P)" style="background:none;border:1px solid var(--border);color:var(--blue);font-family:var(--font);font-size:10px;padding:2px 8px;border-radius:3px;cursor:pointer;">Portal</button>
+        <button id="toggle-split" title="Split View (Ctrl+Shift+S)" style="background:none;border:1px solid var(--border);color:var(--emerald);font-family:var(--font);font-size:10px;padding:2px 8px;border-radius:3px;cursor:pointer;">Split</button>
         <span id="session-info">No session</span>
         <span id="terminal-size">--x--</span>
       </div>
@@ -621,7 +623,10 @@
       <div class="tab-add" id="tab-add" title="New Session (Ctrl+Shift+N)">+</div>
     </div>
     <div class="main-area">
-      <div id="terminal-container" tabindex="0"></div>
+      <div id="terminal-container" tabindex="0" style="flex:1;position:relative;"></div>
+      <div id="nucleus-frame-container" style="flex:1;display:none;border-left:1px solid var(--border);overflow:hidden;">
+        <iframe id="nucleus-frame" src="http://localhost:9002" style="width:100%;height:100%;border:none;background:var(--bg-primary);"></iframe>
+      </div>
       <div class="side-panel hidden" id="side-panel">
         <!-- Claude Session Feed (SSE from localhost:9800) -->
         <div class="side-panel-section" id="sf-section" style="display:none; flex: 1 1 auto;">
@@ -710,5 +715,79 @@
     <div class="quick-cmd-hints" id="quick-cmd-hints"></div>
   </div>
   <script src="app.js"></script>
+  <script>
+    // Split-view controller: Terminal + Nucleus Portal
+    (function() {
+      const termContainer = document.getElementById('terminal-container');
+      const nucleusContainer = document.getElementById('nucleus-frame-container');
+      const nucleusFrame = document.getElementById('nucleus-frame');
+      const toggleNucleus = document.getElementById('toggle-nucleus');
+      const toggleSplit = document.getElementById('toggle-split');
+      const nucleusLinks = document.querySelectorAll('.nucleus-link');
+      let splitMode = 'terminal'; // 'terminal' | 'portal' | 'split'
+
+      function setMode(mode) {
+        splitMode = mode;
+        switch(mode) {
+          case 'terminal':
+            termContainer.style.display = 'block';
+            termContainer.style.flex = '1';
+            nucleusContainer.style.display = 'none';
+            toggleSplit.style.color = 'var(--text-muted)';
+            toggleNucleus.style.color = 'var(--text-muted)';
+            break;
+          case 'portal':
+            termContainer.style.display = 'none';
+            nucleusContainer.style.display = 'block';
+            nucleusContainer.style.flex = '1';
+            toggleNucleus.style.color = 'var(--blue)';
+            toggleSplit.style.color = 'var(--text-muted)';
+            break;
+          case 'split':
+            termContainer.style.display = 'block';
+            termContainer.style.flex = '1';
+            nucleusContainer.style.display = 'block';
+            nucleusContainer.style.flex = '1';
+            toggleSplit.style.color = 'var(--emerald)';
+            toggleNucleus.style.color = 'var(--blue)';
+            break;
+        }
+        // Trigger terminal resize after layout change
+        window.dispatchEvent(new Event('resize'));
+      }
+
+      toggleNucleus.addEventListener('click', function() {
+        setMode(splitMode === 'portal' ? 'terminal' : 'portal');
+      });
+
+      toggleSplit.addEventListener('click', function() {
+        setMode(splitMode === 'split' ? 'terminal' : 'split');
+      });
+
+      // Navigate Nucleus iframe when clicking portal links
+      nucleusLinks.forEach(function(link) {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          var url = this.getAttribute('data-url');
+          if (url) {
+            nucleusFrame.src = url;
+            if (splitMode === 'terminal') setMode('split');
+          }
+        });
+      });
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+          e.preventDefault();
+          setMode(splitMode === 'portal' ? 'terminal' : 'portal');
+        }
+        if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+          e.preventDefault();
+          setMode(splitMode === 'split' ? 'terminal' : 'split');
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

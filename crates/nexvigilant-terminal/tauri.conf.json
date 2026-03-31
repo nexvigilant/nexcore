@@ -12,19 +12,20 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "NexVigilant Terminal",
-        "width": 1400,
-        "height": 900,
+        "label": "main",
+        "title": "NexVigilant Desktop",
+        "width": 1600,
+        "height": 1000,
         "resizable": true,
         "fullscreen": false,
         "decorations": true,
         "transparent": false,
-        "minWidth": 800,
+        "minWidth": 900,
         "minHeight": 600
       }
     ],
     "security": {
-      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'"
+      "csp": "default-src 'self' http://localhost:9002 https://nexvigilant.com https://algovigilance.net; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; frame-src http://localhost:9002 https://nexvigilant.com https://algovigilance.net"
     }
   },
   "bundle": {

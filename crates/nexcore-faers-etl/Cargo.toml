@@ -44,8 +44,12 @@ nexcore-chrono = { workspace = true }
 # HTTP client for OpenFDA API
 reqwest = { version = "0.12", features = ["json"] }
 
-# DuckDB for local FAERS storage
-duckdb = { version = "1.1", features = ["bundled"] }
+# DuckDB for local FAERS storage (feature-gated: adds ~5min compile time from C++ bundled build)
+duckdb = { version = "1.1", features = ["bundled"], optional = true }
+
+[features]
+default = []
+duckdb-store = ["duckdb"]
 
 [dev-dependencies]
 proptest = { version = "1.6.0" }

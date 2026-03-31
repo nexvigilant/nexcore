@@ -9477,7 +9477,6 @@ dependencies = [
  "proptest",
  "serde",
  "serde_json",
- "stem-math",
 ]
 
 [[package]]

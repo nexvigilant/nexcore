@@ -65,6 +65,7 @@ pub mod compound_detector;
 pub mod constants;
 #[cfg(test)]
 mod core_true_proofs;
+pub mod distance;
 pub mod dossier;
 pub mod external_grounding;
 pub mod extraction;

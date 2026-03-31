@@ -533,6 +533,8 @@ async fn dispatch_inner(
         "lex_primitiva_dominant_shift" => typed(params, tools::lex_primitiva::dominant_shift),
         "lex_primitiva_synth" => typed(params, tools::synth::lex_primitiva_synth),
         "lex_primitiva_state_mode" => typed(params, tools::lex_primitiva::get_state_mode),
+        "lex_primitiva_distance" => typed(params, tools::lex_primitiva::primitive_distance),
+        "lex_primitiva_nearest" => typed(params, tools::lex_primitiva::nearest_neighbors),
         "lex_primitiva_audit" => return tools::lex_primitiva::audit(),
 
         // ====================================================================
@@ -3185,7 +3187,7 @@ fn unified_catalog_data() -> serde_json::Value {
             "pv_pipeline": ["pv_pipeline"],
             "pv_axioms": ["pv_axioms_ksb_lookup", "pv_axioms_regulation_search", "pv_axioms_traceability_chain", "pv_axioms_domain_dashboard", "pv_axioms_query"],
             "pharos": ["pharos_run", "pharos_status", "pharos_report"],
-            "lex_primitiva": ["lex_primitiva_list", "lex_primitiva_get", "lex_primitiva_tier", "lex_primitiva_composition", "lex_primitiva_reverse_compose", "lex_primitiva_reverse_lookup", "lex_primitiva_molecular_weight", "lex_primitiva_dominant_shift", "lex_primitiva_state_mode", "lex_primitiva_audit", "lex_primitiva_synth"],
+            "lex_primitiva": ["lex_primitiva_list", "lex_primitiva_get", "lex_primitiva_tier", "lex_primitiva_composition", "lex_primitiva_reverse_compose", "lex_primitiva_reverse_lookup", "lex_primitiva_molecular_weight", "lex_primitiva_dominant_shift", "lex_primitiva_state_mode", "lex_primitiva_distance", "lex_primitiva_nearest", "lex_primitiva_audit", "lex_primitiva_synth"],
             "laboratory": ["lab_experiment", "lab_compare", "lab_react", "lab_batch"],
             "skill_tokens": ["skill_token_analyze"],
             "cep": ["cep_execute_stage", "cep_pipeline_stages", "cep_validate_extraction", "cep_extract_primitives", "cep_domain_translate", "cep_classify_primitive"],

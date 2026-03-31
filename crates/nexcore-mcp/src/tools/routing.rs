@@ -2806,6 +2806,24 @@ pub fn tool_registry() -> Vec<ToolMeta> {
             depends_on: &[],
             alternatives: &["lex_primitiva_reverse_compose"],
         },
+        ToolMeta {
+            name: "lex_primitiva_distance",
+            category: "lex_primitiva",
+            highway_class: 1,
+            outputs: &["distance", "similarity", "shared", "only_in_a", "only_in_b"],
+            inputs: &["primitives_a", "primitives_b"],
+            depends_on: &[],
+            alternatives: &["lex_primitiva_nearest"],
+        },
+        ToolMeta {
+            name: "lex_primitiva_nearest",
+            category: "lex_primitiva",
+            highway_class: 1,
+            outputs: &["neighbors"],
+            inputs: &["primitives"],
+            depends_on: &[],
+            alternatives: &["lex_primitiva_distance"],
+        },
         // mcp (2 tools)
         ToolMeta {
             name: "mcp_server_get",

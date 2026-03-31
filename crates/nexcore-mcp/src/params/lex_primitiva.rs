@@ -101,6 +101,36 @@ pub struct LexPrimitivaDominantShiftParams {
     pub added_primitive: String,
 }
 
+/// Parameters for computing symmetric difference distance between two compositions.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct LexPrimitivaDistanceParams {
+    /// Primitive names for concept A (e.g., ["Comparison", "Boundary", "Causality"])
+    pub a: Vec<String>,
+    /// Primitive names for concept B
+    pub b: Vec<String>,
+    /// Optional label for concept A
+    #[serde(default)]
+    pub name_a: Option<String>,
+    /// Optional label for concept B
+    #[serde(default)]
+    pub name_b: Option<String>,
+}
+
+/// Parameters for finding nearest neighbors in the built-in concept catalog.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct LexPrimitivaNearestParams {
+    /// Primitive names composing the query concept
+    pub primitives: Vec<String>,
+    /// Optional concept name for labeling
+    #[serde(default)]
+    pub name: Option<String>,
+    /// Number of neighbors to return (default 5, max 23)
+    #[serde(default)]
+    pub k: Option<usize>,
+}
+
 /// Parameters for self-synthesis of new primitives
 #[derive(Debug, Deserialize, JsonSchema)]
 #[serde(crate = "rmcp::serde")]

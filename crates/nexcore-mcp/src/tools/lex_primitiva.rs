@@ -3615,6 +3615,115 @@ fn mode_primitive(primitives: &[LexPrimitiva]) -> Option<LexPrimitiva> {
 ///
 /// Validates structural health of the entire grounding landscape:
 /// - Every composition has a dominant primitive
+/// Compute symmetric difference distance between two primitive compositions.
+/// Algorithm 2 (COMPARE) from the Lex Primitiva proof notebook.
+pub fn primitive_distance(
+    params: crate::params::LexPrimitivaDistanceParams,
+) -> Result<CallToolResult, McpError> {
+    use nexcore_lex_primitiva::distance;
+
+    let resolve_set = |names: &[String]| -> (Vec<LexPrimitiva>, Vec<String>) {
+        let mut resolved = Vec::new();
+        let mut unknown = Vec::new();
+        for name in names {
+            match find_primitive(name) {
+                Some(p) => resolved.push(p),
+                None => unknown.push(name.clone()),
+            }
+        }
+        (resolved, unknown)
+    };
+
+    let (prims_a, unknown_a) = resolve_set(&params.a);
+    let (prims_b, unknown_b) = resolve_set(&params.b);
+
+    if !unknown_a.is_empty() || !unknown_b.is_empty() {
+        let json = json!({
+            "error": "unknown_primitives",
+            "unknown_in_a": unknown_a,
+            "unknown_in_b": unknown_b,
+            "hint": "Use names like 'Sequence', 'Boundary' or symbols like 'σ', '∂'",
+        });
+        return Ok(CallToolResult::success(vec![Content::text(
+            json.to_string(),
+        )]));
+    }
+
+    let comp_a = PrimitiveComposition::new(prims_a);
+    let comp_b = PrimitiveComposition::new(prims_b);
+    let result = distance::distance(&comp_a, &comp_b);
+
+    let json = json!({
+        "distance": result.distance,
+        "max_distance": result.max_distance,
+        "similarity": (result.similarity * 1000.0).round() / 1000.0,
+        "shared": result.shared,
+        "only_in_a": result.only_in_a,
+        "only_in_b": result.only_in_b,
+        "name_a": params.name_a,
+        "name_b": params.name_b,
+    });
+    Ok(CallToolResult::success(vec![Content::text(
+        json.to_string(),
+    )]))
+}
+
+/// Find k nearest neighbors to a query composition from the built-in concept catalog.
+/// Catalog spans computing, biology, pharmacovigilance, economics, and physics.
+pub fn nearest_neighbors(
+    params: crate::params::LexPrimitivaNearestParams,
+) -> Result<CallToolResult, McpError> {
+    use nexcore_lex_primitiva::distance;
+
+    let mut resolved = Vec::new();
+    let mut unknown = Vec::new();
+    for name in &params.primitives {
+        match find_primitive(name) {
+            Some(p) => resolved.push(p),
+            None => unknown.push(name.clone()),
+        }
+    }
+
+    if !unknown.is_empty() {
+        let json = json!({
+            "error": "unknown_primitives",
+            "unknown": unknown,
+            "hint": "Use names like 'Sequence', 'Boundary' or symbols like 'σ', '∂'",
+        });
+        return Ok(CallToolResult::success(vec![Content::text(
+            json.to_string(),
+        )]));
+    }
+
+    let comp = PrimitiveComposition::new(resolved);
+    let k = params.k.unwrap_or(5).min(23); // cap at catalog size
+    let results = distance::nearest_neighbors(&comp, k);
+
+    let neighbors: Vec<serde_json::Value> = results
+        .iter()
+        .map(|n| {
+            json!({
+                "name": n.name,
+                "distance": n.distance,
+                "similarity": (n.similarity * 1000.0).round() / 1000.0,
+                "shared": n.shared,
+                "unique_to_concept": n.unique,
+            })
+        })
+        .collect();
+
+    let json = json!({
+        "query": params.name.as_deref().unwrap_or("unnamed"),
+        "query_primitives": params.primitives,
+        "k": k,
+        "neighbors": neighbors,
+        "catalog_size": distance::builtin_catalog().len(),
+    });
+    Ok(CallToolResult::success(vec![Content::text(
+        json.to_string(),
+    )]))
+}
+
 /// - Dominant is a member of the composition's primitives
 /// - Confidence is in valid range (0.0, 1.0]
 /// - No empty compositions

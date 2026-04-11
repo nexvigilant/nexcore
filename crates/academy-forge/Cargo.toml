@@ -12,6 +12,10 @@ description = "Extract structured knowledge from NexCore Rust source into IR for
 keywords = ["nexcore", "knowledge-management", "automation"]
 categories = ["development-tools"]
 [[bin]]
+name = "academy-forge"
+path = "src/bin/academy-forge.rs"
+
+[[bin]]
 name = "forge-validate"
 path = "src/bin/forge-validate.rs"
 
@@ -27,6 +31,9 @@ quote = { workspace = true }
 # Serialization
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
+
+# CLI
+clap = { workspace = true }
 
 # Error handling
 nexcore-error = { workspace = true }

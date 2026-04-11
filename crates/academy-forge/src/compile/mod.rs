@@ -33,11 +33,11 @@
 //! use std::path::PathBuf;
 //! use academy_forge::compile::{compile, CompileParams};
 //!
-//! let params = CompileParams {
-//!     input_path: PathBuf::from("content/pathways/tov-01.json"),
-//!     output_dir: PathBuf::from("src/data/tov-01"),
-//!     overwrite: false,
-//! };
+//! let params = CompileParams::new(
+//!     PathBuf::from("content/pathways/tov-01.json"),
+//!     PathBuf::from("src/data/tov-01"),
+//!     false,
+//! );
 //!
 //! let result = compile(&params).expect("compile failed");
 //! println!("Wrote {} files across {} stages", result.files_written.len(), result.stages_compiled);
@@ -138,11 +138,12 @@ pub struct CompileResult {
 /// use std::path::PathBuf;
 /// use academy_forge::compile::{compile, CompileParams};
 ///
-/// let result = compile(&CompileParams {
-///     input_path: PathBuf::from("content/pathways/tov-01.json"),
-///     output_dir: PathBuf::from("src/data/tov-01"),
-///     overwrite: true,
-/// }).unwrap();
+/// let params = CompileParams::new(
+///     PathBuf::from("content/pathways/tov-01.json"),
+///     PathBuf::from("src/data/tov-01"),
+///     true,
+/// );
+/// let result = compile(&params).unwrap();
 ///
 /// assert!(result.stages_compiled > 0);
 /// ```

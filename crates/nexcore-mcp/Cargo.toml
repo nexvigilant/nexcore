@@ -38,6 +38,7 @@ nexcore-forge-strategy = { workspace = true }
 nexcore-brain = { workspace = true }
 nexcore-ccim = { workspace = true }
 nexcore-oracle = { workspace = true }
+nexcore-processor = { workspace = true, features = ["immunity"] }
 nexcore-db = { workspace = true }
 nexcore-synapse = { workspace = true }
 nexcore-config = { workspace = true }
@@ -48,6 +49,7 @@ nexcore-compliance = { workspace = true }
 nexcore-algovigilance = { workspace = true }
 nexcore-dna = { workspace = true }
 nexcore-dtree = { workspace = true }
+nexcore-ml-pipeline = { workspace = true }
 nexcore-organize = { workspace = true }
 nexcore-sentinel = { workspace = true }
 nexcore-measure = { workspace = true }

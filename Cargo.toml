@@ -195,6 +195,7 @@ nexcore-mcp = { path = "crates/nexcore-mcp", version = "1.0.0" }
 nexcore-mcp-hot = { path = "crates/nexcore-mcp-hot", version = "1.0.0" }
 nexcore-measure = { path = "crates/nexcore-measure", version = "1.0.0" }
 nexcore-mesh = { path = "crates/nexcore-mesh", version = "1.0.0" }
+nexcore-ml-pipeline = { path = "crates/nexcore-ml-pipeline", version = "0.1.0" }
 nexcore-model-checker = { path = "crates/nexcore-model-checker", version = "0.1.0" }
 nexcore-muscular = { path = "crates/nexcore-muscular", version = "1.0.0" }
 nexcore-nervous = { path = "crates/nexcore-nervous", version = "1.0.0" }
@@ -226,6 +227,7 @@ nexcore-pharos = { path = "crates/nexcore-pharos", version = "1.0.0" }
 nexcore-phenotype = { path = "crates/nexcore-phenotype", version = "1.0.0" }
 nexcore-primitive-scanner = { path = "crates/nexcore-primitive-scanner", version = "1.0.0" }
 nexcore-primitives = { path = "crates/nexcore-primitives", version = "1.0.0" }
+nexcore-processor = { path = "crates/nexcore-processor", version = "1.0.0" }
 nexcore-pty = { path = "crates/nexcore-pty", version = "0.1.0" }
 nexcore-preemptive-pv = { path = "crates/nexcore-preemptive-pv", version = "1.0.0" }
 nexcore-proof-of-meaning = { path = "crates/nexcore-proof-of-meaning", version = "1.0.0" }

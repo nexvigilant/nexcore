@@ -5035,6 +5035,60 @@ impl NexCoreMcpServer {
     }
 
     // ========================================================================
+    // ML Pipeline Tools (5) — Autonomous PV signal detection via random forest
+    // ========================================================================
+
+    #[tool(
+        description = "Extract a 12-element PV feature vector from FAERS contingency data. Features: PRR, ROR, IC, EBGM, log(cases), HCP ratio, consumer ratio, serious ratio, death ratio, hospitalization ratio, median TTO, reporting velocity."
+    )]
+    async fn ml_feature_extract(
+        &self,
+        Parameters(params): Parameters<params::ml_pipeline::MlFeatureExtractParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ml_pipeline::ml_feature_extract(params)
+    }
+
+    #[tool(
+        description = "Train a random forest model on labeled PV feature data. Input: samples with 12-element feature vectors and 'signal'/'noise' labels. Returns model_id, training accuracy, AUC, F1, and feature importance rankings."
+    )]
+    async fn ml_train(
+        &self,
+        Parameters(params): Parameters<params::ml_pipeline::MlTrainParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ml_pipeline::ml_train(params)
+    }
+
+    #[tool(
+        description = "Predict signal probability for drug-event pairs using a trained ML model. Returns prediction ('signal'/'noise') and probability score for each pair."
+    )]
+    async fn ml_predict(
+        &self,
+        Parameters(params): Parameters<params::ml_pipeline::MlPredictParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ml_pipeline::ml_predict(params)
+    }
+
+    #[tool(
+        description = "Evaluate a trained ML model on held-out test data. Returns AUC, precision, recall, F1, accuracy, and confusion matrix."
+    )]
+    async fn ml_evaluate(
+        &self,
+        Parameters(params): Parameters<params::ml_pipeline::MlEvaluateParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ml_pipeline::ml_evaluate(params)
+    }
+
+    #[tool(
+        description = "Run the full autonomous ML pipeline: ingest raw FAERS data → extract features → train random forest → evaluate → predict. One-shot end-to-end signal detection with ML. Returns train/test metrics and predictions."
+    )]
+    async fn ml_pipeline_run(
+        &self,
+        Parameters(params): Parameters<params::ml_pipeline::MlPipelineRunParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::ml_pipeline::ml_pipeline_run(params)
+    }
+
+    // ========================================================================
     // Cargo Toolchain Tools (6) — Structured build/check/test/clippy/fmt/tree
     // ========================================================================
 
@@ -6252,6 +6306,20 @@ impl NexCoreMcpServer {
         Parameters(params): Parameters<params::drug_tools::DrugClassMembersParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::drug_tools::drug_class_members(params)
+    }
+
+    // ========================================================================
+    // Generic Processor Framework (1) — ∂(σ(μ)) + {ς}
+    // ========================================================================
+
+    #[tool(
+        description = "Run PRR values through a generic processor pipeline demonstrating the ∂(σ(μ)) framework. Takes a list of PRR values, applies boundary validation (rejects ≤0), classifies signal strength (strong/moderate/weak/inverse), and reports batch results with success rate. Demonstrates Boundary, Pipeline, and BatchProcessor patterns."
+    )]
+    async fn processor_demo_pipeline(
+        &self,
+        Parameters(params): Parameters<params::ProcessorDemoParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::processor::demo_pipeline(params)
     }
 }
 

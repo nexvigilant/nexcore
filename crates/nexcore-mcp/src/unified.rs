@@ -1537,6 +1537,15 @@ async fn dispatch_inner(
         "dtree_info" => typed(params, tools::dtree::dtree_info),
 
         // ====================================================================
+        // ML Pipeline (5) — Autonomous PV signal detection
+        // ====================================================================
+        "ml_feature_extract" => typed(params, tools::ml_pipeline::ml_feature_extract),
+        "ml_train" => typed(params, tools::ml_pipeline::ml_train),
+        "ml_predict" => typed(params, tools::ml_pipeline::ml_predict),
+        "ml_evaluate" => typed(params, tools::ml_pipeline::ml_evaluate),
+        "ml_pipeline_run" => typed(params, tools::ml_pipeline::ml_pipeline_run),
+
+        // ====================================================================
         // Edit Distance Framework (5)
         // ====================================================================
         "edit_distance_compute" => typed(params, tools::edit_distance::edit_distance_compute),
@@ -3145,6 +3154,7 @@ fn unified_catalog_data() -> serde_json::Value {
             "phenotype": ["phenotype_mutate", "phenotype_verify"],
             "pvdsl": ["pvdsl_compile", "pvdsl_execute", "pvdsl_eval", "pvdsl_functions"],
             "dtree": ["dtree_train", "dtree_predict", "dtree_importance", "dtree_prune", "dtree_export", "dtree_info"],
+            "ml_pipeline": ["ml_feature_extract", "ml_train", "ml_predict", "ml_evaluate", "ml_pipeline_run"],
             "game_theory": ["game_theory_nash_2x2", "forge_payoff_matrix", "forge_nash_solve", "forge_quality_score", "forge_code_generate"],
             "epidemiology": ["epidemiology_relative_risk", "epidemiology_odds_ratio", "epidemiology_attributable_risk", "epidemiology_nnt_nnh", "epidemiology_attributable_fraction", "epidemiology_population_attributable_fraction", "epidemiology_incidence_rate", "epidemiology_prevalence", "epidemiology_kaplan_meier", "epidemiology_smr", "epidemiology_mappings"],
             "chemivigilance": ["chem_parse_smiles", "chem_descriptors", "chem_fingerprint", "chem_similarity", "chem_structural_alerts", "chem_predict_toxicity", "chem_predict_metabolites", "chem_predict_degradants", "chem_safety_brief", "chem_substructure", "chem_watchlist", "chem_alert_library", "chem_ring_scan", "chem_aromaticity", "chem_molecular_formula", "chem_predict_mutagenicity", "chem_predict_hepatotoxicity", "chem_predict_cardiotoxicity", "chem_assess_applicability_domain"],

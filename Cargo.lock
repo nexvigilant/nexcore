@@ -22,6 +22,7 @@ checksum = "366ffbaa4442f4684d91e2cd7c5ea7c4ed8add41959a31447066e279e432b618"
 name = "academy-forge"
 version = "1.0.0"
 dependencies = [
+ "clap",
  "nexcore-error",
  "nexcore-fs",
  "quote",
@@ -8427,6 +8428,7 @@ dependencies = [
 name = "nexcore-cardiovascular"
 version = "1.0.0"
 dependencies = [
+ "nexcore-energy",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
@@ -8497,6 +8499,7 @@ dependencies = [
 name = "nexcore-circulatory"
 version = "1.0.0"
 dependencies = [
+ "nexcore-cardiovascular",
  "nexcore-chrono",
  "nexcore-lex-primitiva",
  "serde",
@@ -9483,6 +9486,7 @@ dependencies = [
 name = "nexcore-lymphatic"
 version = "1.0.0"
 dependencies = [
+ "nexcore-circulatory",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
@@ -9587,6 +9591,7 @@ dependencies = [
  "nexcore-measure",
  "nexcore-mesh",
  "nexcore-metabolite",
+ "nexcore-ml-pipeline",
  "nexcore-model-checker",
  "nexcore-molcore",
  "nexcore-muscular",
@@ -9618,6 +9623,7 @@ dependencies = [
  "nexcore-preemptive-pv",
  "nexcore-primitive-scanner",
  "nexcore-primitives",
+ "nexcore-processor",
  "nexcore-proof-of-meaning",
  "nexcore-publishing",
  "nexcore-pv-core",
@@ -9755,6 +9761,17 @@ dependencies = [
  "nexcore-error",
  "nexcore-molcore",
  "prima-chem",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-ml-pipeline"
+version = "0.1.0"
+dependencies = [
+ "nexcore-dtree",
+ "nexcore-error",
+ "proptest",
  "serde",
  "serde_json",
 ]
@@ -10229,6 +10246,9 @@ dependencies = [
 [[package]]
 name = "nexcore-processor"
 version = "1.0.0"
+dependencies = [
+ "regex",
+]
 
 [[package]]
 name = "nexcore-proof-of-meaning"

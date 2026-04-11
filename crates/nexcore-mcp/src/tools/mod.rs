@@ -138,6 +138,9 @@ pub mod dna;
 // Decision Tree Engine (CART binary splitting, pruning, importance)
 pub mod dtree;
 
+// ML Pipeline (autonomous PV signal detection via random forest)
+pub mod ml_pipeline;
+
 // Edit Distance Framework (generic ops, costs, solvers, transfer)
 pub mod edit_distance;
 
@@ -606,3 +609,6 @@ pub mod drug_tools;
 
 // Pharma company entity tools (profile, signals, pipeline, boxed warnings — 12 companies)
 pub mod pharma_tools;
+
+// Generic Processor Framework (∂(σ(μ)) + {ς} — pipeline, boundary, batch)
+pub mod processor;

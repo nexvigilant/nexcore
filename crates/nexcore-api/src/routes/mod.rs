@@ -22,6 +22,7 @@ pub mod guardian_ws;
 pub mod health;
 pub mod mesh;
 pub mod messages;
+pub mod ml_pipeline;
 pub mod publications;
 pub mod pv;
 pub mod pvdsl;

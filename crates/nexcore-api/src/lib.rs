@@ -134,6 +134,7 @@ fn setup_api_routes(state: ApiState) -> Router<ApiState> {
         .nest("/pvdsl", routes::pvdsl::router())
         .nest("/reporting", routes::reporting::router())
         .nest("/signal", routes::signal::router())
+        .nest("/ml", routes::ml_pipeline::router())
         .nest("/benefit-risk", routes::benefit_risk::router())
         .nest("/sos", routes::sos::router())
         .nest("/mesh", routes::mesh::router())

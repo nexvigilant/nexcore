@@ -31,6 +31,7 @@ nexcore-state-os = { workspace = true }
 nexcore-mesh = { workspace = true }
 nexcore-mcp = { workspace = true }
 signal = { workspace = true }
+nexcore-ml-pipeline = { workspace = true }
 vr-tenant = { workspace = true }
 vr-core = { workspace = true }
 nexcore-hash = { workspace = true }

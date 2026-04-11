@@ -21,3 +21,6 @@ workspace = true
 
 [dev-dependencies]
 nexcore-cardiovascular = { path = "../nexcore-cardiovascular" }
+nexcore-circulatory = { path = "../nexcore-circulatory" }
+nexcore-energy = { path = "../nexcore-energy" }
+nexcore-lymphatic = { path = "../nexcore-lymphatic" }

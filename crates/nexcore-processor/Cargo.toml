@@ -1,0 +1,14 @@
+[package]
+name = "nexcore-processor"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Generic processor framework — ∂(σ(μ)) + {ς, →, ∝}"
+
+[dependencies]
+
+[dev-dependencies]

@@ -392,3 +392,42 @@ pub fn pv_signal_comparison(params: PvSignalComparisonParams) -> Result<CallTool
     );
     Ok(result)
 }
+
+/// Parse a raw RSK chain output into a typed Verdict struct.
+/// This is the driveshaft between the RSK engine (Excrete) and Guardian navigator (Absorb).
+pub fn verdict_from_chain(
+    params: crate::params::VerdictFromChainParams,
+) -> Result<CallToolResult, McpError> {
+    use nexcore_vigilance::verdict::Verdict;
+    use std::collections::HashMap;
+
+    // Convert JSON object to HashMap<String, Value>
+    let map: HashMap<String, serde_json::Value> = match params.chain_output {
+        serde_json::Value::Object(obj) => obj.into_iter().collect(),
+        _ => {
+            return Ok(CallToolResult::error(vec![Content::text(
+                json!({
+                    "error": "chain_output must be a JSON object",
+                    "received_type": "non-object",
+                })
+                .to_string(),
+            )]));
+        }
+    };
+
+    match Verdict::from_chain_output(&map) {
+        Ok(mut verdict) => {
+            verdict.drug = params.drug;
+            verdict.event = params.event;
+            let json = serde_json::to_value(&verdict).unwrap_or_else(|_| json!({}));
+            Ok(CallToolResult::success(vec![Content::text(json.to_string())]))
+        }
+        Err(e) => Ok(CallToolResult::error(vec![Content::text(
+            json!({
+                "error": format!("Failed to parse chain output: {}", e),
+                "hint": "Ensure the chain_output contains signal_detected, causality, regulatory_action, and deadline_days fields",
+            })
+            .to_string(),
+        )])),
+    }
+}

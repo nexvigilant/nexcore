@@ -78,3 +78,15 @@ pub struct MapToTovParams {
     /// Safety level: 1-8 (Molecular to Regulatory)
     pub level: u8,
 }
+
+/// Parameters for parsing a chain output into a typed Verdict
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(crate = "rmcp::serde")]
+pub struct VerdictFromChainParams {
+    /// Drug name
+    pub drug: String,
+    /// Adverse event name
+    pub event: String,
+    /// Chain output as a flat JSON object (from pv-signal-to-action or vehicle-full-cascade)
+    pub chain_output: serde_json::Value,
+}

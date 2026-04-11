@@ -242,13 +242,14 @@ async fn dispatch_inner(
         "pvdsl_functions" => tools::pvdsl::pvdsl_functions(),
 
         // ====================================================================
-        // Vigilance Tools (5)
+        // Vigilance Tools (6)
         // ====================================================================
         "vigilance_safety_margin" => typed(params, tools::vigilance::safety_margin),
         "vigilance_risk_score" => typed(params, tools::vigilance::risk_score),
         "vigilance_harm_types" => tools::vigilance::harm_types(),
         "vigilance_map_to_tov" => typed(params, tools::vigilance::map_to_tov),
         "pv_signal_chart" => typed(params, tools::vigilance::pv_signal_chart),
+        "vigilance_verdict_from_chain" => typed(params, tools::vigilance::verdict_from_chain),
 
         // ====================================================================
         // Compliance Tools (5)

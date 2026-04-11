@@ -897,6 +897,16 @@ impl NexCoreMcpServer {
         tools::vigilance::map_to_tov(params)
     }
 
+    #[tool(
+        description = "Parse a raw RSK chain output JSON into a typed Verdict struct. The driveshaft between the RSK engine (Excrete) and Guardian navigator (Absorb). Takes drug + event + chain_output (JSON object from pv-signal-to-action or vehicle-full-cascade) and returns a typed Verdict with signal_strength, causality, regulatory_action, deadline_days, correction_factor, source_type, and timestamp."
+    )]
+    async fn vigilance_verdict_from_chain(
+        &self,
+        Parameters(params): Parameters<params::vigilance::VerdictFromChainParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::vigilance::verdict_from_chain(params)
+    }
+
     // ========================================================================
     // Anti-Vector Tools (3) - Structured countermeasures that annihilate harm vectors
     // ========================================================================

@@ -157,6 +157,10 @@ pub mod cep;
 // Aerospace → PV domain translation
 pub mod control;
 
+// Verdict — RSK engine/Guardian interface contract (driveshaft)
+// Typed output the RSK engine excretes; Guardian absorbs for prioritization + routing
+pub mod verdict;
+
 // Telemetry (LLM usage monitoring)
 pub mod telemetry;
 

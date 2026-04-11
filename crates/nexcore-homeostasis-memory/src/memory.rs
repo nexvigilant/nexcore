@@ -452,8 +452,8 @@ mod tests {
         let id = memory.create_incident(make_sig(IncidentSeverity::High), IncidentSeverity::High);
         memory
             .resolve_incident(&id, HealthStatus::Healthy, true)
-            .unwrap();
-        let inc = memory.get_incident(&id).unwrap();
+            .expect("Memory operation failed");
+        let inc = memory.get_incident(&id).expect("Memory operation failed");
         assert!(!inc.is_active());
         assert!(inc.response_effective);
         assert!(inc.duration_secs.is_some());
@@ -476,11 +476,11 @@ mod tests {
         let id1 = memory.create_incident(sig.clone(), IncidentSeverity::High);
         memory
             .resolve_incident(&id1, HealthStatus::Healthy, true)
-            .unwrap();
+            .expect("Memory operation failed");
         let id2 = memory.create_incident(sig.clone(), IncidentSeverity::High);
         memory
             .resolve_incident(&id2, HealthStatus::Healthy, true)
-            .unwrap();
+            .expect("Memory operation failed");
 
         let results = memory.find_similar_incidents(&sig, Some(0.9));
         assert!(results.len() >= 2);
@@ -498,7 +498,7 @@ mod tests {
         let id2 = memory.create_incident(sig.clone(), IncidentSeverity::Medium);
         memory
             .resolve_incident(&id2, HealthStatus::Healthy, true)
-            .unwrap();
+            .expect("Memory operation failed");
 
         let results = memory.find_similar_incidents(&sig, Some(0.9));
         assert_eq!(results.len(), 1);
@@ -516,7 +516,7 @@ mod tests {
             let id = memory.create_incident(sig.clone(), IncidentSeverity::High);
             memory
                 .resolve_incident(&id, HealthStatus::Healthy, true)
-                .unwrap();
+                .expect("Memory operation failed");
         }
 
         assert_eq!(memory.stats().total_playbooks, 0);
@@ -532,7 +532,7 @@ mod tests {
             let id = memory.create_incident(sig.clone(), IncidentSeverity::High);
             memory
                 .resolve_incident(&id, HealthStatus::Healthy, true)
-                .unwrap();
+                .expect("Memory operation failed");
         }
         // No playbook yet (3rd resolution finds 2 similar, below threshold).
         assert_eq!(memory.stats().total_playbooks, 0);
@@ -541,7 +541,7 @@ mod tests {
         let id4 = memory.create_incident(sig.clone(), IncidentSeverity::High);
         memory
             .resolve_incident(&id4, HealthStatus::Healthy, true)
-            .unwrap();
+            .expect("Memory operation failed");
         assert!(memory.stats().total_playbooks > 0);
     }
 
@@ -554,7 +554,7 @@ mod tests {
             let id = memory.create_incident(sig.clone(), IncidentSeverity::High);
             memory
                 .resolve_incident(&id, HealthStatus::Healthy, true)
-                .unwrap();
+                .expect("Memory operation failed");
         }
 
         let playbook_id = memory.get_playbook_for_incident(&sig);
@@ -578,7 +578,7 @@ mod tests {
             let id = memory.create_incident(sig.clone(), IncidentSeverity::High);
             memory
                 .resolve_incident(&id, HealthStatus::Healthy, true)
-                .unwrap();
+                .expect("Memory operation failed");
         }
 
         assert_eq!(memory.stats().total_playbooks, 0);
@@ -594,7 +594,7 @@ mod tests {
             let id = memory.create_incident(sig.clone(), IncidentSeverity::High);
             memory
                 .resolve_incident(&id, HealthStatus::Healthy, true)
-                .unwrap();
+                .expect("Memory operation failed");
         }
         assert!(memory.stats().total_playbooks > 0);
 
@@ -602,7 +602,7 @@ mod tests {
         let id = memory.create_incident(sig.clone(), IncidentSeverity::High);
         memory
             .resolve_incident(&id, HealthStatus::Healthy, true)
-            .unwrap();
+            .expect("Memory operation failed");
         assert_eq!(memory.stats().total_playbooks, 1);
     }
 
@@ -615,13 +615,13 @@ mod tests {
         let id1 = memory.create_incident(make_sig(IncidentSeverity::High), IncidentSeverity::High);
         memory
             .resolve_incident(&id1, HealthStatus::Healthy, true)
-            .unwrap();
+            .expect("Memory operation failed");
 
         let id2 =
             memory.create_incident(make_sig(IncidentSeverity::Medium), IncidentSeverity::Medium);
         memory
             .resolve_incident(&id2, HealthStatus::Warning, false)
-            .unwrap();
+            .expect("Memory operation failed");
 
         let _id3 = memory.create_incident(make_sig(IncidentSeverity::Low), IncidentSeverity::Low);
 
@@ -639,7 +639,7 @@ mod tests {
             memory.create_incident(make_sig(IncidentSeverity::Medium), IncidentSeverity::Medium);
         memory
             .resolve_incident(&id, HealthStatus::Healthy, true)
-            .unwrap();
+            .expect("Memory operation failed");
 
         let insights = memory.insights();
         assert!(insights.is_object());
@@ -661,7 +661,7 @@ mod tests {
             );
             memory
                 .resolve_incident(&id, HealthStatus::Healthy, true)
-                .unwrap();
+                .expect("Memory operation failed");
         }
         let id = memory.create_incident(
             make_sig_system("db", IncidentSeverity::Low),
@@ -669,12 +669,14 @@ mod tests {
         );
         memory
             .resolve_incident(&id, HealthStatus::Healthy, true)
-            .unwrap();
+            .expect("Memory operation failed");
 
         let insights = memory.insights();
-        let top = insights["top_affected_systems"].as_array().unwrap();
+        let top = insights["top_affected_systems"]
+            .as_array()
+            .expect("Memory operation failed");
         assert!(!top.is_empty());
         // Most frequent system appears first.
-        assert_eq!(top[0][0].as_str().unwrap(), "api");
+        assert_eq!(top[0][0].as_str().expect("Memory operation failed"), "api");
     }
 }

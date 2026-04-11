@@ -401,7 +401,9 @@ mod tests {
             make_signature(0.8, IncidentSeverity::High),
             HealthStatus::Warning,
         );
-        store.record_incident(inc).unwrap();
+        store
+            .record_incident(inc)
+            .expect("Memory store operation failed");
         assert!(store.get_incident("inc-001").is_some());
         assert_eq!(store.active_incidents().len(), 1);
     }
@@ -412,7 +414,7 @@ mod tests {
         let sig = make_signature(0.5, IncidentSeverity::Medium);
         store
             .record_incident(Incident::new("dup", sig.clone(), HealthStatus::Warning))
-            .unwrap();
+            .expect("Memory store operation failed");
         let result = store.record_incident(Incident::new("dup", sig, HealthStatus::Warning));
         assert!(result.is_err());
     }
@@ -422,10 +424,10 @@ mod tests {
         let mut store = MemoryStore::with_defaults();
         store
             .record_incident(resolved_incident("r1", 0.7, IncidentSeverity::High))
-            .unwrap();
+            .expect("Memory store operation failed");
         store
             .record_incident(resolved_incident("r2", 0.3, IncidentSeverity::Low))
-            .unwrap();
+            .expect("Memory store operation failed");
 
         let stats = store.stats();
         assert_eq!(stats.total_incidents, 2);
@@ -438,10 +440,10 @@ mod tests {
         let mut store = MemoryStore::with_defaults();
         store
             .record_incident(resolved_incident("s1", 0.8, IncidentSeverity::High))
-            .unwrap();
+            .expect("Memory store operation failed");
         store
             .record_incident(resolved_incident("s2", 0.2, IncidentSeverity::Low))
-            .unwrap();
+            .expect("Memory store operation failed");
 
         let query = make_signature(0.75, IncidentSeverity::High);
         let results = store.find_similar(&query, Some(0.5));
@@ -464,7 +466,7 @@ mod tests {
                     0.5,
                     IncidentSeverity::Medium,
                 ))
-                .unwrap();
+                .expect("Memory store operation failed");
         }
         assert!(store.incidents.len() <= 3);
     }
@@ -474,9 +476,9 @@ mod tests {
         let mut store = MemoryStore::with_defaults();
         store
             .record_incident(resolved_incident("j1", 0.6, IncidentSeverity::Medium))
-            .unwrap();
-        let json = store.to_json().unwrap();
-        let restored = MemoryStore::from_json(&json).unwrap();
+            .expect("Memory store operation failed");
+        let json = store.to_json().expect("Memory store operation failed");
+        let restored = MemoryStore::from_json(&json).expect("Memory store operation failed");
         assert_eq!(restored.stats().total_incidents, 1);
     }
 
@@ -500,7 +502,9 @@ mod tests {
                 abort_on_failure: true,
             }],
         );
-        store.register_playbook(pb).unwrap();
+        store
+            .register_playbook(pb)
+            .expect("Memory store operation failed");
 
         let matches = store.match_playbooks(&trigger);
         assert_eq!(matches.len(), 1);

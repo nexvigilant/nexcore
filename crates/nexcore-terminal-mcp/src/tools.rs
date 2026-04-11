@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use tokio::task::JoinHandle;
 
 // ── Param structs ──────────────────────────────────────────────
 
@@ -95,6 +96,8 @@ pub struct TerminalMcp {
     sessions: Arc<Mutex<HashMap<String, PtyProcess>>>,
     counter: Arc<std::sync::atomic::AtomicU64>,
     output_buffer: Arc<Mutex<HashMap<String, String>>>,
+    /// Background reader tasks — aborted on session kill to prevent zombies.
+    reader_tasks: Arc<Mutex<HashMap<String, JoinHandle<()>>>>,
     pub tool_router: ToolRouter<Self>,
 }
 
@@ -104,6 +107,7 @@ impl TerminalMcp {
             sessions: Arc::new(Mutex::new(HashMap::new())),
             counter: Arc::new(std::sync::atomic::AtomicU64::new(1)),
             output_buffer: Arc::new(Mutex::new(HashMap::new())),
+            reader_tasks: Arc::new(Mutex::new(HashMap::new())),
             tool_router: Self::tool_router(),
         }
     }
@@ -113,6 +117,12 @@ impl TerminalMcp {
             .counter
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         format!("mcp-pty-{n:04}")
+    }
+
+    fn ok_json(value: &serde_json::Value) -> Result<CallToolResult, McpError> {
+        let text = serde_json::to_string_pretty(value)
+            .unwrap_or_else(|e| format!("{{\"error\": \"JSON serialization failed: {e}\"}}"));
+        Ok(CallToolResult::success(vec![Content::text(&text)]))
     }
 
     fn ok_result(text: &str) -> Result<CallToolResult, McpError> {
@@ -157,11 +167,11 @@ impl TerminalMcp {
         let mut sessions = self.sessions.lock().await;
         sessions.insert(session_id.clone(), process);
 
-        // Start background output reader
+        // Start background output reader — tracked for cleanup on kill.
         let sessions_ref = Arc::clone(&self.sessions);
         let buffer_ref = Arc::clone(&self.output_buffer);
         let sid = session_id.clone();
-        tokio::spawn(async move {
+        let handle = tokio::spawn(async move {
             loop {
                 let read_result = {
                     let mut procs = sessions_ref.lock().await;
@@ -196,6 +206,10 @@ impl TerminalMcp {
                 }
             }
         });
+        self.reader_tasks
+            .lock()
+            .await
+            .insert(session_id.clone(), handle);
 
         let json = serde_json::json!({
             "session_id": session_id,
@@ -203,7 +217,7 @@ impl TerminalMcp {
             "rows": rows,
             "shell": shell,
         });
-        Self::ok_result(&serde_json::to_string_pretty(&json).unwrap_or_default())
+        Self::ok_json(&json)
     }
 
     #[tool(
@@ -258,7 +272,7 @@ impl TerminalMcp {
             "bytes_read": output.len(),
             "output": output,
         });
-        Self::ok_result(&serde_json::to_string_pretty(&json).unwrap_or_default())
+        Self::ok_json(&json)
     }
 
     #[tool(
@@ -297,7 +311,7 @@ impl TerminalMcp {
             "output": output,
             "bytes": output.len(),
         });
-        Self::ok_result(&serde_json::to_string_pretty(&json).unwrap_or_default())
+        Self::ok_json(&json)
     }
 
     #[tool(description = "Resize a terminal session to new dimensions.")]
@@ -328,6 +342,10 @@ impl TerminalMcp {
                 return Self::err_result(&format!("Kill failed: {e}"));
             }
             self.output_buffer.lock().await.remove(&params.session_id);
+            // Abort background reader to prevent zombie task.
+            if let Some(handle) = self.reader_tasks.lock().await.remove(&params.session_id) {
+                handle.abort();
+            }
             Self::ok_result(&format!("Killed {}", params.session_id))
         } else {
             Self::err_result(&format!("No session: {}", params.session_id))
@@ -347,7 +365,8 @@ impl TerminalMcp {
                 "exited": proc.has_exited(),
             }));
         }
-        Self::ok_result(&serde_json::to_string_pretty(&infos).unwrap_or_default())
+        let json = serde_json::Value::Array(infos);
+        Self::ok_json(&json)
     }
 
     #[tool(description = "Send Ctrl+C (SIGINT) to interrupt the running process.")]
@@ -428,9 +447,9 @@ impl TerminalMcp {
             "server": "nexcore-terminal-mcp",
             "sessions_active": active,
             "sessions_total": sessions.len(),
-            "version": "0.1.0",
+            "version": env!("CARGO_PKG_VERSION"),
         });
-        Self::ok_result(&serde_json::to_string_pretty(&json).unwrap_or_default())
+        Self::ok_json(&json)
     }
 }
 

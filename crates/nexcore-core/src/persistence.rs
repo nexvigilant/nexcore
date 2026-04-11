@@ -1,5 +1,5 @@
 use crate::SignalAnalysisResult;
-use duckdb::{params, Connection, Result};
+use duckdb::{Connection, Result, params};
 use nexcore_id::NexId;
 
 pub struct PersistenceManager {

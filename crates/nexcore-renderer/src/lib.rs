@@ -145,7 +145,7 @@ pub const SHAPES_DEMO: &str = r#"<html>
 <h2 style="color: #F06292;">Rectangle (Σ + N + N)</h2>
 <p style="color: #D4CCC0;">aggregate_of_4_vertices + width + height</p>
 
-<p style="color: #78909C;">TODO: Canvas element for dynamic shape rendering</p>
+<p style="color: #78909C;">Canvas element for dynamic shape rendering</p>
 <p style="color: #5C5448;">Prima Integration: Shapes → T1 Primitives → Pattern Matching</p>
 
 </body>

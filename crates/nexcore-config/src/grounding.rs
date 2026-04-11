@@ -7,6 +7,7 @@
 use nexcore_lex_primitiva::grounding::GroundsTo;
 use nexcore_lex_primitiva::primitiva::{LexPrimitiva, PrimitiveComposition};
 
+use crate::AllConfigs;
 use crate::asr::{
     AsrConfig, DoDChecklist, DoDItem, FlywheelConfig, FlywheelStage, Model, RoutingConfig,
 };
@@ -21,7 +22,6 @@ use crate::git::{
 };
 use crate::hooks::{HookEvent, HookMeta, HookRegistry, HookTier};
 use crate::vocab::{SkillChain, SkillMapping, VocabSkillMap};
-use crate::AllConfigs;
 
 // ============================================================================
 // AllConfigs: T3 (ς + × + π + μ + σ + ∃), dominant ×

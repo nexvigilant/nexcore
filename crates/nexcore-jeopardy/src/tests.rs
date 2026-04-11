@@ -1279,7 +1279,7 @@ mod confidence_integration_tests {
     #[test]
     fn clamped_confidence_flows_through_buzz_decision() {
         // Confidence::new(1.5) clamps to 1.0 — should always buzz
-        let board = Board::new(Round::Jeopardy, &[]).unwrap();
+        let board = Board::new(Round::Jeopardy, &[]).expect("Failed to initialize Jeopardy board");
         let state = GameState::new(&["Alice", "Bob", "Carol"], board);
         let clue = Clue::new(Category::SignalDetection, ClueValue(200), 0.5, false);
         let clamped = Confidence::new(1.5); // clamps to 1.0
@@ -1290,7 +1290,7 @@ mod confidence_integration_tests {
     #[test]
     fn clamped_negative_confidence_passes_buzz() {
         // Confidence::new(-0.5) clamps to 0.0 — should always pass
-        let board = Board::new(Round::Jeopardy, &[]).unwrap();
+        let board = Board::new(Round::Jeopardy, &[]).expect("Failed to initialize Jeopardy board");
         let state = GameState::new(&["Alice", "Bob", "Carol"], board);
         let clue = Clue::new(Category::SignalDetection, ClueValue(200), 0.5, false);
         let clamped = Confidence::new(-0.5); // clamps to 0.0
@@ -1300,7 +1300,8 @@ mod confidence_integration_tests {
 
     #[test]
     fn zero_confidence_daily_double_wager_is_zero() {
-        let board = Board::new(Round::Jeopardy, &[CluePosition::new(4, 0)]).unwrap();
+        let board = Board::new(Round::Jeopardy, &[CluePosition::new(4, 0)])
+            .expect("Failed to initialize Jeopardy board");
         let state = GameState::new(&["Alice", "Bob", "Carol"], board);
         let wager = optimal_daily_double_wager(&state, Confidence::new(0.0));
         assert!(wager.is_ok());
@@ -1311,7 +1312,8 @@ mod confidence_integration_tests {
 
     #[test]
     fn max_confidence_daily_double_wager_is_max() {
-        let board = Board::new(Round::Jeopardy, &[CluePosition::new(4, 0)]).unwrap();
+        let board = Board::new(Round::Jeopardy, &[CluePosition::new(4, 0)])
+            .expect("Failed to initialize Jeopardy board");
         let state = GameState::new(&["Alice", "Bob", "Carol"], board);
         let wager = optimal_daily_double_wager(&state, Confidence::new(1.0));
         assert!(wager.is_ok());
@@ -1410,7 +1412,7 @@ mod confidence_integration_tests {
 
     #[test]
     fn score_selections_returns_all_available() {
-        let board = Board::new(Round::Jeopardy, &[]).unwrap();
+        let board = Board::new(Round::Jeopardy, &[]).expect("Failed to initialize Jeopardy board");
         let expected_count = board.remaining_count();
         let scores = score_selections(&board);
         assert_eq!(

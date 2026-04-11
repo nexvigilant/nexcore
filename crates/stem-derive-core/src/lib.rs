@@ -19,14 +19,14 @@ pub fn impl_stem_newtype(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                 return Err(syn::Error::new_spanned(
                     name,
                     "requires tuple struct with one field",
-                ))
+                ));
             }
         },
         syn::Data::Enum(_) | syn::Data::Union(_) => {
             return Err(syn::Error::new_spanned(
                 name,
                 "can only be applied to tuple structs",
-            ))
+            ));
         }
     }
 

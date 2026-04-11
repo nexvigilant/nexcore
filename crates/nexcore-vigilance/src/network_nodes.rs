@@ -76,18 +76,27 @@ impl NetworkNode {
         let c = (background_total_cases as f64) - a;
         let d = (total_network_reports as f64) - a - b - c;
 
-        // PRR = (a / (a+b)) / (c / (c+d))
+        let n = a + b + c + d;
         let prr = if (c / (c + d)) > 0.0 && (a + b) > 0.0 {
             (a / (a + b)) / (c / (c + d))
         } else {
             0.0
         };
 
+        let chi_square =
+            if (a + b) > 0.0 && (c + d) > 0.0 && (a + c) > 0.0 && (b + d) > 0.0 && n > 0.0 {
+                let ad_bc = (a * d - b * c).abs();
+                let yates = (ad_bc - n / 2.0).max(0.0);
+                (n * yates * yates) / ((a + b) * (c + d) * (a + c) * (b + d))
+            } else {
+                0.0
+            };
+
         NodeIdentification {
             prr,
-            chi_square: 0.0, // TODO: Implement Chi-square
+            chi_square,
             confidence: 0.9,
-            is_match: prr >= 2.0 && a >= 3.0,
+            is_match: prr >= 2.0 && chi_square >= 4.0 && a >= 3.0,
         }
     }
 

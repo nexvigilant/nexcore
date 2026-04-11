@@ -6,9 +6,9 @@
 use nexcore_lex_primitiva::grounding::GroundsTo;
 use nexcore_lex_primitiva::primitiva::{LexPrimitiva, PrimitiveComposition};
 
-use crate::persistence::PersistenceManager;
 use crate::SignalAnalysisResult;
 use crate::SignalMetrics;
+use crate::persistence::PersistenceManager;
 
 // ============================================================================
 // SignalAnalysisResult: T3 (ς + × + N + → + ν + ∂ + σ), dominant ς

@@ -15,21 +15,51 @@ use serde::{Deserialize, Serialize};
 /// Default Station endpoint.
 pub const DEFAULT_STATION_URL: &str = "https://mcp.nexvigilant.com";
 
-/// Station HTTP client configuration.
+/// Station HTTP client configuration with shared connection pool.
 #[derive(Debug, Clone)]
 pub struct StationConfig {
     /// Base URL for the Station (e.g., "https://mcp.nexvigilant.com").
     pub base_url: String,
     /// Request timeout.
     pub timeout: Duration,
+    /// Shared HTTP client — reuses connection pool across calls.
+    client: reqwest::Client,
+}
+
+impl StationConfig {
+    /// Create a new config with the given base URL and timeout.
+    ///
+    /// # Errors
+    ///
+    /// Returns `StationError::Http` if the HTTP client cannot be built.
+    pub fn new(base_url: impl Into<String>, timeout: Duration) -> Result<Self, StationError> {
+        let client = reqwest::Client::builder()
+            .timeout(timeout)
+            .pool_max_idle_per_host(4)
+            .build()
+            .map_err(|e| StationError::Http(e.to_string()))?;
+        Ok(Self {
+            base_url: base_url.into(),
+            timeout,
+            client,
+        })
+    }
 }
 
 impl Default for StationConfig {
     fn default() -> Self {
+        let base_url = std::env::var("NEXVIGILANT_STATION_URL")
+            .unwrap_or_else(|_| DEFAULT_STATION_URL.to_string());
+        let timeout = Duration::from_secs(30);
+        let client = reqwest::Client::builder()
+            .timeout(timeout)
+            .pool_max_idle_per_host(4)
+            .build()
+            .unwrap_or_default();
         Self {
-            base_url: std::env::var("NEXVIGILANT_STATION_URL")
-                .unwrap_or_else(|_| DEFAULT_STATION_URL.to_string()),
-            timeout: Duration::from_secs(30),
+            base_url,
+            timeout,
+            client,
         }
     }
 }
@@ -94,14 +124,10 @@ pub async fn call_station_tool(
         },
     };
 
-    let client = reqwest::Client::builder()
-        .timeout(config.timeout)
-        .build()
-        .map_err(|e| StationError::Http(e.to_string()))?;
-
     let json_body = serde_json::to_string(&body).map_err(|e| StationError::Parse(e.to_string()))?;
 
-    let response = client
+    let response = config
+        .client
         .post(&url)
         .header("content-type", "application/json")
         .body(json_body)

@@ -2,7 +2,7 @@
 [package]
 name = "nexcore-config"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
 description = "Type-safe configuration consolidation for NexVigilant Core ecosystem"
 license = "MIT OR Apache-2.0"

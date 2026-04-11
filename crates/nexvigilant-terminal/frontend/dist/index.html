@@ -59,6 +59,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      -webkit-app-region: no-drag;
     }
     /* Status dot */
     .status-dot {
@@ -75,11 +76,62 @@
       background: var(--red);
       box-shadow: 0 0 6px var(--red);
     }
+    /* Tab bar */
+    .tab-bar {
+      display: flex;
+      align-items: center;
+      height: 28px;
+      padding: 0 4px;
+      background: var(--bg-bar);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      gap: 2px;
+      overflow-x: auto;
+    }
+    .tab-bar::-webkit-scrollbar { height: 0; }
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 4px 4px 0 0;
+      border: 1px solid transparent;
+      border-bottom: none;
+      white-space: nowrap;
+      user-select: none;
+      -webkit-app-region: no-drag;
+    }
+    .tab:hover { color: var(--text-dim); background: #ffffff08; }
+    .tab.active {
+      color: var(--text);
+      background: var(--bg-primary);
+      border-color: var(--border);
+    }
+    .tab .close-btn {
+      font-size: 13px;
+      line-height: 1;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0 2px;
+    }
+    .tab .close-btn:hover { color: var(--red); }
+    .tab-add {
+      padding: 2px 8px;
+      font-size: 14px;
+      color: var(--text-muted);
+      cursor: pointer;
+      -webkit-app-region: no-drag;
+    }
+    .tab-add:hover { color: var(--emerald); }
     /* Terminal fills everything */
     #terminal-container {
       flex: 1;
       padding: 4px;
       overflow: hidden;
+      position: relative;
     }
     /* Status bar */
     .status-bar {
@@ -138,245 +190,6 @@
     .xterm-viewport::-webkit-scrollbar-thumb:hover {
       background: var(--text-muted);
     }
-    /* Mode pill in status bar */
-    .mode-pill {
-      padding: 1px 6px;
-      border-radius: 3px;
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      cursor: pointer;
-      -webkit-app-region: no-drag;
-      transition: background 200ms, color 200ms;
-    }
-    .mode-pill[data-mode="Normal"]  { color: var(--text-dim); background: transparent; border: 1px solid var(--border); }
-    .mode-pill[data-mode="Focus"]   { color: #fbbf24; background: #fbbf2418; border: 1px solid #fbbf2440; }
-    .mode-pill[data-mode="Agent"]   { color: var(--emerald); background: #34d39918; border: 1px solid #34d39940; }
-    .mode-pill[data-mode="Pairing"] { color: #c084fc; background: #c084fc18; border: 1px solid #c084fc40; }
-    /* Overlay backdrop */
-    .overlay-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 1000;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding-top: 80px;
-    }
-    .overlay-backdrop.hidden { display: none; }
-    /* Command palette */
-    .palette-box {
-      width: 520px;
-      max-height: 400px;
-      background: #111822;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-    }
-    .palette-input {
-      width: 100%;
-      padding: 10px 14px;
-      background: #0d1117;
-      border: none;
-      border-bottom: 1px solid var(--border);
-      color: var(--text);
-      font-family: var(--font);
-      font-size: 14px;
-      outline: none;
-    }
-    .palette-input::placeholder { color: var(--text-muted); }
-    .palette-results {
-      max-height: 340px;
-      overflow-y: auto;
-    }
-    .palette-item {
-      padding: 8px 14px;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #1a223340;
-    }
-    .palette-item:hover { background: #1a2a3e; }
-    .palette-item .label { color: var(--text); }
-    .palette-item .source { color: var(--text-muted); font-size: 10px; }
-    /* App launcher */
-    .app-list {
-      width: 320px;
-      background: #111822;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-    }
-    .app-list-header {
-      padding: 8px 12px;
-      font-size: 11px;
-      color: var(--emerald);
-      font-weight: 600;
-      border-bottom: 1px solid var(--border);
-    }
-    .app-item {
-      padding: 8px 12px;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .app-item:hover { background: #1a2a3e; }
-    .app-item .name { color: var(--text); }
-    .app-item .state { font-size: 10px; color: var(--text-muted); }
-    /* Tab bar */
-    .tab-bar {
-      display: flex;
-      align-items: center;
-      height: 28px;
-      padding: 0 4px;
-      background: var(--bg-bar);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-      gap: 2px;
-      overflow-x: auto;
-    }
-    .tab-bar::-webkit-scrollbar { height: 0; }
-    .tab {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 2px 10px;
-      font-size: 11px;
-      color: var(--text-muted);
-      cursor: pointer;
-      border-radius: 4px 4px 0 0;
-      border: 1px solid transparent;
-      border-bottom: none;
-      white-space: nowrap;
-      user-select: none;
-      -webkit-app-region: no-drag;
-    }
-    .tab:hover { color: var(--text-dim); background: #ffffff08; }
-    .tab.active {
-      color: var(--text);
-      background: var(--bg-primary);
-      border-color: var(--border);
-    }
-    .tab .close-btn {
-      font-size: 13px;
-      line-height: 1;
-      color: var(--text-muted);
-      cursor: pointer;
-      padding: 0 2px;
-    }
-    .tab .close-btn:hover { color: var(--red); }
-    .tab-add {
-      padding: 2px 8px;
-      font-size: 14px;
-      color: var(--text-muted);
-      cursor: pointer;
-      -webkit-app-region: no-drag;
-    }
-    .tab-add:hover { color: var(--emerald); }
-    /* Main content area: terminal + side panel */
-    .main-area {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
-    /* Side panel (cloud + agents) */
-    .side-panel {
-      width: 280px;
-      flex-shrink: 0;
-      background: var(--bg-bar);
-      border-left: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .side-panel.hidden { display: none; }
-    .side-panel-section {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .side-panel-section + .side-panel-section {
-      border-top: 1px solid var(--border);
-    }
-    .side-panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px 10px;
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .side-panel-header .refresh-btn {
-      cursor: pointer;
-      color: var(--text-muted);
-      font-size: 12px;
-      -webkit-app-region: no-drag;
-    }
-    .side-panel-header .refresh-btn:hover { color: var(--emerald); }
-    .side-panel-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 4px 0;
-    }
-    .side-panel-body::-webkit-scrollbar { width: 4px; }
-    .side-panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-    /* Service row */
-    .svc-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 4px 10px;
-      font-size: 11px;
-    }
-    .svc-row:hover { background: #ffffff06; }
-    .svc-name { color: var(--text); }
-    .svc-badge {
-      font-size: 9px;
-      padding: 1px 5px;
-      border-radius: 3px;
-      font-weight: 600;
-    }
-    .svc-badge.healthy { color: var(--emerald); background: #34d39915; }
-    .svc-badge.unhealthy { color: var(--red); background: #f8717115; }
-    .svc-badge.unknown { color: var(--text-muted); background: #55667715; }
-    /* Agent event row */
-    .agent-row {
-      padding: 4px 10px;
-      font-size: 11px;
-      border-bottom: 1px solid #1a223320;
-    }
-    .agent-row .agent-time { color: var(--text-muted); font-size: 9px; }
-    .agent-row .agent-svc { color: var(--blue); }
-    .agent-row .agent-msg { color: var(--text-dim); }
-    .agent-empty {
-      padding: 12px 10px;
-      font-size: 11px;
-      color: var(--text-muted);
-      text-align: center;
-    }
-    /* Service indicators in status bar */
-    .svc-indicator {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      font-size: 10px;
-      color: var(--text-muted);
-    }
-    .svc-indicator .status-dot {
-      width: 5px;
-      height: 5px;
-    }
     /* Tab terminal containers */
     .tab-terminal-container {
       position: absolute;
@@ -433,175 +246,21 @@
       from { opacity: 1; transform: translateX(0); }
       to { opacity: 0; transform: translateX(40px); }
     }
-    /* Quick command bar */
-    .quick-cmd-bar {
-      position: fixed;
-      bottom: 56px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1500;
-      width: 480px;
-      background: #111822;
-      border: 1px solid var(--emerald);
-      border-radius: 6px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-      display: none;
-    }
-    .quick-cmd-bar.visible { display: flex; }
-    .quick-cmd-prefix {
-      padding: 8px 4px 8px 12px;
-      color: var(--emerald);
-      font-size: 14px;
-      font-weight: 600;
-    }
-    .quick-cmd-input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      color: var(--text);
-      font-family: var(--font);
-      font-size: 14px;
-      padding: 8px 12px 8px 0;
-      outline: none;
-    }
-    .quick-cmd-input::placeholder { color: var(--text-muted); }
-    .quick-cmd-hints {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: #0d1117;
-      border: 1px solid var(--border);
-      border-top: none;
-      border-radius: 0 0 6px 6px;
-      max-height: 200px;
-      overflow-y: auto;
-      font-size: 11px;
-    }
-    .quick-cmd-hint {
-      padding: 4px 12px;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-    }
-    .quick-cmd-hint:hover { background: #1a2a3e; }
-    .quick-cmd-hint .cmd { color: var(--emerald); }
-    .quick-cmd-hint .desc { color: var(--text-muted); font-size: 10px; }
-    /* Nucleus portal links */
-    .nucleus-link {
-      display: inline-block;
-      padding: 3px 8px;
-      margin: 2px;
+    /* Mode pill */
+    .mode-pill {
+      padding: 1px 6px;
       border-radius: 3px;
       font-size: 10px;
-      color: var(--blue);
-      background: #60a5fa10;
-      border: 1px solid #60a5fa30;
-      text-decoration: none;
+      font-weight: 600;
+      letter-spacing: 0.5px;
       cursor: pointer;
       -webkit-app-region: no-drag;
-      transition: background 150ms;
+      transition: background 200ms, color 200ms;
     }
-    .nucleus-link:hover {
-      background: #60a5fa25;
-      color: #93c5fd;
-    }
-    /* Session Feed styles */
-    .sf-metrics {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-    }
-    .sf-metric {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 3px 0;
-      background: #0d111780;
-      border-radius: 4px;
-    }
-    .sf-val {
-      font-size: 16px;
-      font-weight: 800;
-      color: #38bdf8;
-      line-height: 1.2;
-      font-variant-numeric: tabular-nums;
-    }
-    .sf-lbl {
-      font-size: 8px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .sf-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 2px 0;
-      font-size: 10px;
-      border-bottom: 1px solid #1a223320;
-      animation: sf-slide 0.2s ease;
-    }
-    .sf-item:last-child { border-bottom: none; }
-    @keyframes sf-slide {
-      from { opacity: 0; transform: translateY(-4px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .sf-dot {
-      width: 5px;
-      height: 5px;
-      border-radius: 2px;
-      flex-shrink: 0;
-    }
-    .sf-label {
-      flex: 1;
-      color: var(--text-dim);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .sf-time {
-      color: var(--text-muted);
-      font-size: 9px;
-      flex-shrink: 0;
-    }
-    .sf-prop {
-      display: block;
-      color: var(--text-dim);
-      font-size: 10px;
-      margin-top: 2px;
-    }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-    #sf-conn-dot { animation: pulse 2s infinite; }
-    /* Session tabs */
-    .sf-tab {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-size: 9px;
-      font-family: monospace;
-      color: var(--text-muted);
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.15s;
-      border: 1px solid transparent;
-    }
-    .sf-tab:hover { background: #ffffff08; }
-    .sf-tab.active {
-      color: var(--text);
-      background: #38bdf810;
-      border-color: #38bdf830;
-    }
-    .sf-tab-count {
-      font-size: 8px;
-      color: var(--text-muted);
-      background: #ffffff08;
-      padding: 0 3px;
-      border-radius: 2px;
-    }
-    #sf-tabs::-webkit-scrollbar { height: 0; }
+    .mode-pill[data-mode="Normal"]  { color: var(--text-dim); background: transparent; border: 1px solid var(--border); }
+    .mode-pill[data-mode="Focus"]   { color: #fbbf24; background: #fbbf2418; border: 1px solid #fbbf2440; }
+    .mode-pill[data-mode="Agent"]   { color: var(--emerald); background: #34d39918; border: 1px solid #34d39940; }
+    .mode-pill[data-mode="Pairing"] { color: #c084fc; background: #c084fc18; border: 1px solid #c084fc40; }
   </style>
   <link rel="stylesheet" href="xterm.css" />
 </head>
@@ -612,9 +271,7 @@
         <span class="brand">NexVigilant Terminal</span>
         <span class="status-dot disconnected" id="connection-status" title="Disconnected"></span>
       </div>
-      <div class="right" style="-webkit-app-region:no-drag;">
-        <button id="toggle-nucleus" title="Toggle Nucleus Portal (Ctrl+Shift+P)" style="background:none;border:1px solid var(--border);color:var(--blue);font-family:var(--font);font-size:10px;padding:2px 8px;border-radius:3px;cursor:pointer;">Portal</button>
-        <button id="toggle-split" title="Split View (Ctrl+Shift+S)" style="background:none;border:1px solid var(--border);color:var(--emerald);font-family:var(--font);font-size:10px;padding:2px 8px;border-radius:3px;cursor:pointer;">Split</button>
+      <div class="right">
         <span id="session-info">No session</span>
         <span id="terminal-size">--x--</span>
       </div>
@@ -622,172 +279,24 @@
     <div class="tab-bar" id="tab-bar">
       <div class="tab-add" id="tab-add" title="New Session (Ctrl+Shift+N)">+</div>
     </div>
-    <div class="main-area">
-      <div id="terminal-container" tabindex="0" style="flex:1;position:relative;"></div>
-      <div id="nucleus-frame-container" style="flex:1;display:none;border-left:1px solid var(--border);overflow:hidden;">
-        <iframe id="nucleus-frame" src="http://localhost:9002" style="width:100%;height:100%;border:none;background:var(--bg-primary);"></iframe>
-      </div>
-      <div class="side-panel hidden" id="side-panel">
-        <!-- Claude Session Feed (SSE from localhost:9800) -->
-        <div class="side-panel-section" id="sf-section" style="display:none; flex: 1 1 auto;">
-          <div class="side-panel-header">
-            <span>Claude Session</span>
-            <span style="display:flex;align-items:center;gap:6px;">
-              <span id="sf-elapsed" style="font-size:10px;color:var(--text-muted);font-variant-numeric:tabular-nums">0:00</span>
-              <span id="sf-conn-dot" style="width:6px;height:6px;border-radius:50%;background:#f87171;display:inline-block" title="Disconnected"></span>
-            </span>
-          </div>
-          <div class="side-panel-body" style="padding:0;">
-            <!-- Session tabs -->
-            <div id="sf-tabs" style="display:flex;gap:2px;padding:4px 6px;overflow-x:auto;border-bottom:1px solid var(--border);flex-shrink:0;"></div>
-            <div style="padding:6px 8px;">
-            <!-- Compact metrics -->
-            <div class="sf-metrics">
-              <div class="sf-metric"><span class="sf-val" id="sf-tools">0</span><span class="sf-lbl">Tools</span></div>
-              <div class="sf-metric"><span class="sf-val" id="sf-files">0</span><span class="sf-lbl">Files</span></div>
-              <div class="sf-metric"><span class="sf-val" id="sf-reads">0</span><span class="sf-lbl">Reads</span></div>
-              <div class="sf-metric"><span class="sf-val" id="sf-writes">0</span><span class="sf-lbl">Writes</span></div>
-              <div class="sf-metric"><span class="sf-val" id="sf-bash">0</span><span class="sf-lbl">Bash</span></div>
-              <div class="sf-metric"><span class="sf-val" id="sf-mcp">0</span><span class="sf-lbl">MCP</span></div>
-            </div>
-            <!-- Activity bar -->
-            <div id="sf-bar" style="display:flex;height:4px;border-radius:2px;overflow:hidden;background:#334155;margin:6px 0;"></div>
-            <!-- Verdict banner (hidden until verdict) -->
-            <div id="sf-verdict" style="display:none;text-align:center;padding:4px 6px;border:1px solid var(--border);border-radius:4px;margin-bottom:6px;font-size:11px;"></div>
-            <!-- Live feed -->
-            <div id="sf-feed-list" style="max-height:240px;overflow-y:auto;"></div>
-            </div>
-          </div>
-        </div>
-        <div class="side-panel-section" style="flex: 0 0 auto;">
-          <div class="side-panel-header">
-            <span>Nucleus Portal</span>
-          </div>
-          <div class="side-panel-body" id="nucleus-links" style="padding: 4px 6px;">
-            <a class="nucleus-link" href="#" data-url="http://localhost:9002" title="Main Portal">Dashboard</a>
-            <a class="nucleus-link" href="#" data-url="http://localhost:9002/observatory" title="3D Signal Visualization">Observatory</a>
-            <a class="nucleus-link" href="#" data-url="http://localhost:9002/academy" title="PV Education">Academy</a>
-            <a class="nucleus-link" href="#" data-url="http://localhost:9002/vigilance" title="Signal Detection">Vigilance</a>
-            <a class="nucleus-link" href="#" data-url="http://localhost:9002/glass" title="Glass Dashboard">Glass</a>
-            <a class="nucleus-link" href="#" data-url="https://mcp.nexvigilant.com/tools" title="MCP Station Tools">Station</a>
-          </div>
-        </div>
-        <div class="side-panel-section">
-          <div class="side-panel-header">
-            <span>Cloud Services</span>
-            <span class="refresh-btn" id="cloud-refresh" title="Refresh">&#x21bb;</span>
-          </div>
-          <div class="side-panel-body" id="cloud-services-list"></div>
-        </div>
-        <div class="side-panel-section">
-          <div class="side-panel-header">
-            <span>Agent Fleet</span>
-            <span class="refresh-btn" id="agent-refresh" title="Refresh">&#x21bb;</span>
-          </div>
-          <div class="side-panel-body" id="agent-events-list"></div>
-        </div>
-      </div>
-    </div>
-    <div id="remote-panel-container"></div>
-    <!-- Fallback input bar: WebKitGTK/Wayland does not reliably focus xterm.js textarea -->
+    <div id="terminal-container" tabindex="0"></div>
+    <!-- Fallback input bar: WebKitGTK/Wayland keyboard workaround -->
     <div class="input-bar" id="input-bar">
       <span class="input-prompt">$</span>
       <input type="text" id="input-field" class="input-field"
-             placeholder="Type command here..." autocomplete="off" spellcheck="false" />
+             placeholder="Type here if keyboard doesn't work in terminal..." autocomplete="off" spellcheck="false" />
     </div>
     <div class="status-bar">
       <div class="left">
-        <span>NexVigilant Terminal v0.2.0</span>
+        <span>NexVigilant Terminal v0.3.0</span>
       </div>
       <div class="right">
-        <span class="svc-indicator" id="svc-mcp" title="nexcore-mcp">MCP <span class="status-dot disconnected"></span></span>
-        <span class="svc-indicator" id="svc-api" title="nexcore-api">API <span class="status-dot disconnected"></span></span>
-        <span class="svc-indicator" id="svc-station" title="NexVigilant Station">STN <span class="status-dot disconnected"></span></span>
         <span>UTF-8</span>
         <span>bash</span>
       </div>
     </div>
   </div>
   <div class="toast-container" id="toast-container"></div>
-  <div class="quick-cmd-bar" id="quick-cmd-bar">
-    <span class="quick-cmd-prefix">:</span>
-    <input type="text" class="quick-cmd-input" id="quick-cmd-input" placeholder="command..." autocomplete="off" spellcheck="false" />
-    <div class="quick-cmd-hints" id="quick-cmd-hints"></div>
-  </div>
   <script src="app.js"></script>
-  <script>
-    // Split-view controller: Terminal + Nucleus Portal
-    (function() {
-      const termContainer = document.getElementById('terminal-container');
-      const nucleusContainer = document.getElementById('nucleus-frame-container');
-      const nucleusFrame = document.getElementById('nucleus-frame');
-      const toggleNucleus = document.getElementById('toggle-nucleus');
-      const toggleSplit = document.getElementById('toggle-split');
-      const nucleusLinks = document.querySelectorAll('.nucleus-link');
-      let splitMode = 'terminal'; // 'terminal' | 'portal' | 'split'
-
-      function setMode(mode) {
-        splitMode = mode;
-        switch(mode) {
-          case 'terminal':
-            termContainer.style.display = 'block';
-            termContainer.style.flex = '1';
-            nucleusContainer.style.display = 'none';
-            toggleSplit.style.color = 'var(--text-muted)';
-            toggleNucleus.style.color = 'var(--text-muted)';
-            break;
-          case 'portal':
-            termContainer.style.display = 'none';
-            nucleusContainer.style.display = 'block';
-            nucleusContainer.style.flex = '1';
-            toggleNucleus.style.color = 'var(--blue)';
-            toggleSplit.style.color = 'var(--text-muted)';
-            break;
-          case 'split':
-            termContainer.style.display = 'block';
-            termContainer.style.flex = '1';
-            nucleusContainer.style.display = 'block';
-            nucleusContainer.style.flex = '1';
-            toggleSplit.style.color = 'var(--emerald)';
-            toggleNucleus.style.color = 'var(--blue)';
-            break;
-        }
-        // Trigger terminal resize after layout change
-        window.dispatchEvent(new Event('resize'));
-      }
-
-      toggleNucleus.addEventListener('click', function() {
-        setMode(splitMode === 'portal' ? 'terminal' : 'portal');
-      });
-
-      toggleSplit.addEventListener('click', function() {
-        setMode(splitMode === 'split' ? 'terminal' : 'split');
-      });
-
-      // Navigate Nucleus iframe when clicking portal links
-      nucleusLinks.forEach(function(link) {
-        link.addEventListener('click', function(e) {
-          e.preventDefault();
-          var url = this.getAttribute('data-url');
-          if (url) {
-            nucleusFrame.src = url;
-            if (splitMode === 'terminal') setMode('split');
-          }
-        });
-      });
-
-      // Keyboard shortcuts
-      document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey && e.shiftKey && e.key === 'P') {
-          e.preventDefault();
-          setMode(splitMode === 'portal' ? 'terminal' : 'portal');
-        }
-        if (e.ctrlKey && e.shiftKey && e.key === 'S') {
-          e.preventDefault();
-          setMode(splitMode === 'split' ? 'terminal' : 'split');
-        }
-      });
-    })();
-  </script>
 </body>
 </html>

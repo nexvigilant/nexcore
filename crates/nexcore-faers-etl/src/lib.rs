@@ -783,9 +783,10 @@ mod tests {
             Column::from_strs(columns::DRUG, &["ASP", "ASP", "ASP", "MET"]),
             Column::from_strs(columns::EVENT, &["HA", "HA", "HA", "NA"]),
         ])
-        .unwrap_or_else(|e| panic!("{e}"));
+        .unwrap_or_else(|e| panic!("FAERS ETL test failed: {e}"));
 
-        let c = transform_count_drug_events(df).unwrap_or_else(|e| panic!("{e}"));
+        let c = transform_count_drug_events(df)
+            .unwrap_or_else(|e| panic!("FAERS ETL test failed: {e}"));
 
         // ASP+HA should have count 3 — find the row
         let mut found = false;
@@ -812,8 +813,9 @@ mod tests {
             Column::from_strs(columns::EVENT, &["X", "Y"]),
             Column::from_u64s(columns::N, vec![5, 2]),
         ])
-        .unwrap_or_else(|e| panic!("{e}"));
-        let c = transform_filter_minimum(df).unwrap_or_else(|e| panic!("{e}"));
+        .unwrap_or_else(|e| panic!("FAERS ETL test failed: {e}"));
+        let c =
+            transform_filter_minimum(df).unwrap_or_else(|e| panic!("FAERS ETL test failed: {e}"));
         assert_eq!(c.height(), 1);
     }
 
@@ -824,8 +826,9 @@ mod tests {
             Column::from_strs(columns::EVENT, &["EX", "EY", "EX"]),
             Column::from_u64s(columns::N, vec![10, 5, 8]),
         ])
-        .unwrap_or_else(|e| panic!("{e}"));
-        let b = build_contingency_tables_from_counts(&df).unwrap_or_else(|e| panic!("{e}"));
+        .unwrap_or_else(|e| panic!("FAERS ETL test failed: {e}"));
+        let b = build_contingency_tables_from_counts(&df)
+            .unwrap_or_else(|e| panic!("FAERS ETL test failed: {e}"));
         assert_eq!(b.drugs.len(), 3);
         assert_eq!(b.tables.a[0], 10);
         assert_eq!(b.tables.b[0], 5);
@@ -840,15 +843,18 @@ mod tests {
             Column::from_strs(columns::EVENT, &["X", "Y", "X", "Y", "X", "Y"]),
             Column::from_u64s(columns::N, vec![50, 5, 10, 100, 20, 500]),
         ])
-        .unwrap_or_else(|e| panic!("{e}"));
-        let r = run_signal_detection_pipeline(&df).unwrap_or_else(|e| panic!("{e}"));
+        .unwrap_or_else(|e| panic!("FAERS ETL test failed: {e}"));
+        let r = run_signal_detection_pipeline(&df)
+            .unwrap_or_else(|e| panic!("FAERS ETL test failed: {e}"));
         assert_eq!(r.len(), 6);
         let ax = r
             .iter()
             .find(|r| r.drug.as_str() == "A" && r.event.as_str() == "X");
         assert!(ax.is_some());
         assert_eq!(
-            ax.unwrap_or_else(|| panic!("missing")).case_count.value(),
+            ax.expect("Expected valid CaseCount assessment")
+                .case_count
+                .value(),
             50
         );
     }
@@ -856,7 +862,8 @@ mod tests {
     #[test]
     fn test_to_dataframe() {
         let r = test_signal("D", true);
-        let df = signals_to_dataframe(&[r]).unwrap_or_else(|e| panic!("{e}"));
+        let df =
+            signals_to_dataframe(&[r]).unwrap_or_else(|e| panic!("FAERS ETL test failed: {e}"));
         assert_eq!(df.height(), 1);
         assert_eq!(df.width(), 16);
     }

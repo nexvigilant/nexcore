@@ -1,6 +1,6 @@
 //! Configuration validation traits and utilities
 
-use nexcore_error::{nexerror, Result};
+use nexcore_error::{Result, nexerror};
 use std::path::Path;
 
 /// Validation trait for configuration types

@@ -233,8 +233,11 @@ impl WalkDirIter {
         for item in read {
             match item {
                 Ok(de) => {
-                    // TODO: when follow_links=false, use symlink_metadata()
-                    let meta_result = de.metadata();
+                    let meta_result = if self.follow_links {
+                        de.metadata()
+                    } else {
+                        fs::symlink_metadata(de.path())
+                    };
                     match meta_result {
                         Ok(meta) => {
                             let child = DirEntry {

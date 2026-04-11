@@ -209,7 +209,7 @@ fn test_validate_signals_parquet() {
         )
         .expect("Any signal count failed");
 
-    let signal_rate = any_signal as f64 / total as f64 * 100.0;
+    let signal_rate = ((any_signal as f64) / (total as f64)) * 100.0;
     eprintln!("\n--- Signal Detection Summary ---");
     eprintln!("  PRR signals:  {prr_signals:>8}");
     eprintln!("  ROR signals:  {ror_signals:>8}");
@@ -273,13 +273,13 @@ fn test_validate_known_signal_pairs() {
         let result: Result<(String, String, i32, f64, f64, f64, f64), _> =
             db.query_row(&query, [], |row| {
                 Ok((
-                    row.get::<_, String>(0)?,
-                    row.get::<_, String>(1)?,
-                    row.get::<_, i32>(2)?,
-                    row.get::<_, f64>(3)?,
-                    row.get::<_, f64>(4)?,
-                    row.get::<_, f64>(5)?,
-                    row.get::<_, f64>(6)?,
+                    row.get::<usize, String>(0)?,
+                    row.get::<usize, String>(1)?,
+                    row.get::<usize, i32>(2)?,
+                    row.get::<usize, f64>(3)?,
+                    row.get::<usize, f64>(4)?,
+                    row.get::<usize, f64>(5)?,
+                    row.get::<usize, f64>(6)?,
                 ))
             });
 
@@ -301,13 +301,13 @@ fn test_validate_known_signal_pairs() {
                 let exists: Result<(String, String, i32, f64, f64, f64, f64), _> =
                     db.query_row(&exists_query, [], |row| {
                         Ok((
-                            row.get::<_, String>(0)?,
-                            row.get::<_, String>(1)?,
-                            row.get::<_, i32>(2)?,
-                            row.get::<_, f64>(3)?,
-                            row.get::<_, f64>(4)?,
-                            row.get::<_, f64>(5)?,
-                            row.get::<_, f64>(6)?,
+                            row.get::<usize, String>(0)?,
+                            row.get::<usize, String>(1)?,
+                            row.get::<usize, i32>(2)?,
+                            row.get::<usize, f64>(3)?,
+                            row.get::<usize, f64>(4)?,
+                            row.get::<usize, f64>(5)?,
+                            row.get::<usize, f64>(6)?,
                         ))
                     });
                 match exists {
@@ -324,7 +324,7 @@ fn test_validate_known_signal_pairs() {
         }
     }
 
-    let hit_rate = found as f64 / known_pairs.len() as f64;
+    let hit_rate = (found as f64) / (known_pairs.len() as f64);
     eprintln!(
         "\nKnown signal validation: {found}/{} ({:.0}%)",
         known_pairs.len(),
@@ -359,13 +359,13 @@ fn test_top_signals_report() {
     let rows = stmt
         .query_map([], |row| {
             Ok((
-                row.get::<_, String>(0)?,
-                row.get::<_, String>(1)?,
-                row.get::<_, i32>(2)?,
-                row.get::<_, f64>(3)?,
-                row.get::<_, f64>(4)?,
-                row.get::<_, f64>(5)?,
-                row.get::<_, f64>(6)?,
+                row.get::<usize, String>(0)?,
+                row.get::<usize, String>(1)?,
+                row.get::<usize, i32>(2)?,
+                row.get::<usize, f64>(3)?,
+                row.get::<usize, f64>(4)?,
+                row.get::<usize, f64>(5)?,
+                row.get::<usize, f64>(6)?,
             ))
         })
         .expect("Query failed");

@@ -13,8 +13,8 @@
 //! Every type implements [`GroundsTo`] tracing to T1 Lex Primitiva.
 
 #![forbid(unsafe_code)]
-#![deny(
 #![warn(missing_docs)]
+#![deny(
     clippy::unwrap_used,
     clippy::expect_used,
     clippy::panic,
@@ -331,7 +331,7 @@ impl GroundsTo for Hold {
             LexPrimitiva::Quantity,
             LexPrimitiva::State,
         ])
-        .with_dominant(LexPrimitiva::Boundary, 0.70)
+        .with_dominant(LexPrimitiva::Boundary, 0.7)
         .with_state_mode(StateMode::Modal)
     }
 
@@ -481,7 +481,7 @@ impl GroundsTo for Compartment {
             LexPrimitiva::Mapping,
             LexPrimitiva::State,
         ])
-        .with_dominant(LexPrimitiva::Sequence, 0.60)
+        .with_dominant(LexPrimitiva::Sequence, 0.6)
         .with_state_mode(StateMode::Modal)
     }
 
@@ -748,7 +748,7 @@ impl GroundsTo for Bay {
             LexPrimitiva::Quantity,
             LexPrimitiva::Existence,
         ])
-        .with_dominant(LexPrimitiva::Product, 0.60)
+        .with_dominant(LexPrimitiva::Product, 0.6)
     }
 }
 

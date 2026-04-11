@@ -10227,6 +10227,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexcore-processor"
+version = "1.0.0"
+
+[[package]]
 name = "nexcore-proof-of-meaning"
 version = "1.0.0"
 dependencies = [
@@ -10918,6 +10922,7 @@ dependencies = [
 name = "nexcore-urinary"
 version = "1.0.0"
 dependencies = [
+ "nexcore-cardiovascular",
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",

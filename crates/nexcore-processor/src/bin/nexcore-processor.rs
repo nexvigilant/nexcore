@@ -260,34 +260,37 @@ struct SignalScores {
 }
 
 async fn compute_signals(drug: &str, event: &str) -> Option<SignalScores> {
-    let args = serde_json::json!({"drug": drug, "event": event});
+    // Use FAERS disproportionality — params are drug_name + event_name
+    let args = serde_json::json!({"drug_name": drug, "event_name": event});
+    let dispro = call_station("faers_nexvigilant_com_faers_disproportionality", &args).await;
 
-    let prr = call_station("calculate_nexvigilant_com_compute_prr", &args).await;
-    let ror = call_station("calculate_nexvigilant_com_compute_ror", &args).await;
+    let prr_val = dispro
+        .as_ref()
+        .and_then(|r| r.get("prr").and_then(|v| v.as_f64()));
+    let ror_val = dispro
+        .as_ref()
+        .and_then(|r| r.get("ror").and_then(|v| v.as_f64()));
+    let ic_val = dispro
+        .as_ref()
+        .and_then(|r| r.get("ic").and_then(|v| v.as_f64()));
+    let ebgm_val = dispro
+        .as_ref()
+        .and_then(|r| r.get("ebgm").and_then(|v| v.as_f64()));
 
-    let prr_val = prr.as_ref().and_then(|r| {
-        r.get("prr")
-            .or_else(|| r.get("value"))
-            .and_then(|v| v.as_f64())
-    });
-    let ror_val = ror.as_ref().and_then(|r| {
-        r.get("ror")
-            .or_else(|| r.get("value"))
-            .and_then(|v| v.as_f64())
-    });
-
-    if prr_val.is_none() && ror_val.is_none() {
+    if prr_val.is_none() && ror_val.is_none() && ic_val.is_none() && ebgm_val.is_none() {
         return None;
     }
 
-    let signal =
-        prr_val.map(|v| v > 2.0).unwrap_or(false) || ror_val.map(|v| v > 2.0).unwrap_or(false);
+    let signal = prr_val.map(|v| v > 2.0).unwrap_or(false)
+        || ror_val.map(|v| v > 2.0).unwrap_or(false)
+        || ic_val.map(|v| v > 0.0).unwrap_or(false)
+        || ebgm_val.map(|v| v > 2.0).unwrap_or(false);
 
     Some(SignalScores {
         prr: prr_val,
         ror: ror_val,
-        ic: None,
-        ebgm: None,
+        ic: ic_val,
+        ebgm: ebgm_val,
         signal_detected: signal,
     })
 }
@@ -406,6 +409,8 @@ async fn cmd_analyze(drug: &str, event: &str, patient: &str, reporter: &str) -> 
         "signals": signals.as_ref().map(|s| serde_json::json!({
             "prr": s.prr,
             "ror": s.ror,
+            "ic": s.ic,
+            "ebgm": s.ebgm,
             "signal_detected": s.signal_detected,
         })),
         "verdict": {

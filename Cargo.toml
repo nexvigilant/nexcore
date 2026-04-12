@@ -155,6 +155,7 @@ nexcore-disease-hf = { path = "crates/nexcore-disease-hf", version = "1.0.0" }
 nexcore-disease-crohns = { path = "crates/nexcore-disease-crohns", version = "1.0.0" }
 nexcore-disease-mm = { path = "crates/nexcore-disease-mm", version = "1.0.0" }
 nexcore-dna = { path = "crates/nexcore-dna", version = "1.0.0" }
+nexcore-dna-ml = { path = "crates/nexcore-dna-ml", version = "0.1.0" }
 nexcore-domain-primitives = { path = "crates/nexcore-domain-primitives", version = "0.1.0" }
 nexcore-downloads-scanner = { path = "crates/nexcore-downloads-scanner", version = "0.1.1" }
 nexcore-dtree = { path = "crates/nexcore-dtree", version = "1.0.0" }

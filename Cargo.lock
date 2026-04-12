@@ -8865,6 +8865,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexcore-dna-ml"
+version = "0.1.0"
+dependencies = [
+ "nexcore-dna",
+ "nexcore-error",
+ "nexcore-ml-pipeline",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "nexcore-docs-mcp"
 version = "1.0.0"
 dependencies = [

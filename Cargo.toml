@@ -280,6 +280,7 @@ nexcore-vigil = { path = "crates/nexcore-vigil", version = "0.1.0" }
 nexcore-vigilance = { path = "crates/nexcore-vigilance", version = "1.0.0" }
 nexcore-vos = { path = "crates/nexcore-vos", version = "0.1.0" }
 nexcore-viz = { path = "crates/nexcore-viz", version = "1.0.0" }
+nexcore-web = { path = "crates/nexcore-web", version = "0.1.0" }
 nexcore-word = { path = "crates/nexcore-word", version = "1.0.0" }
 nexcore-zeta = { path = "crates/nexcore-zeta", version = "0.1.0" }
 nucli = { path = "crates/nucli", version = "1.0.0" }

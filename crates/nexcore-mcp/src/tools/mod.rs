@@ -615,3 +615,6 @@ pub mod pharma_tools;
 
 // Generic Processor Framework (∂(σ(μ)) + {ς} — pipeline, boundary, batch)
 pub mod processor;
+
+// Web Autonomy (fetch, search, extract, crawl, metadata, links)
+pub mod web;

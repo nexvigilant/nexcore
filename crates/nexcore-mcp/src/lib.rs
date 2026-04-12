@@ -5133,6 +5133,70 @@ impl NexCoreMcpServer {
     }
 
     // ========================================================================
+    // Web Autonomy Tools (6) — Fetch, search, extract, links, metadata, crawl
+    // ========================================================================
+
+    #[tool(
+        description = "Fetch a URL and return clean extracted text. Strips HTML tags, scripts, styles. Returns title, text content, status code, and response time."
+    )]
+    async fn web_fetch(
+        &self,
+        Parameters(params): Parameters<params::web::WebFetchParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::web::web_fetch_tool(params).await
+    }
+
+    #[tool(
+        description = "Search the web using DuckDuckGo. No API key required. Returns titles, URLs, and snippets for up to 10 results."
+    )]
+    async fn web_search(
+        &self,
+        Parameters(params): Parameters<params::web::WebSearchToolParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::web::web_search_tool(params).await
+    }
+
+    #[tool(
+        description = "Extract content from a web page using a CSS selector. Returns all matching elements as text."
+    )]
+    async fn web_extract(
+        &self,
+        Parameters(params): Parameters<params::web::WebExtractParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::web::web_extract_tool(params).await
+    }
+
+    #[tool(
+        description = "Extract all links from a web page. Returns URLs, anchor text, and internal/external classification."
+    )]
+    async fn web_links(
+        &self,
+        Parameters(params): Parameters<params::web::WebLinksParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::web::web_links_tool(params).await
+    }
+
+    #[tool(
+        description = "Extract page metadata: title, description, OpenGraph tags, canonical URL, language, and keywords."
+    )]
+    async fn web_metadata(
+        &self,
+        Parameters(params): Parameters<params::web::WebMetadataParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::web::web_metadata_tool(params).await
+    }
+
+    #[tool(
+        description = "Crawl a website from a seed URL. Breadth-first traversal with configurable depth, page limit, and same-domain filtering. Returns extracted text per page."
+    )]
+    async fn web_crawl(
+        &self,
+        Parameters(params): Parameters<params::web::WebCrawlParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::web::web_crawl_tool(params).await
+    }
+
+    // ========================================================================
     // Cargo Toolchain Tools (6) — Structured build/check/test/clippy/fmt/tree
     // ========================================================================
 

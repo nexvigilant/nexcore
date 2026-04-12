@@ -612,3 +612,6 @@ pub use pharma_tools::*;
 // PV Intelligence (competitive analysis — head-to-head, class effects, safety gaps, landscape)
 pub mod pv_intelligence;
 pub use pv_intelligence::*;
+
+// Web Autonomy (fetch, search, extract, crawl, metadata)
+pub mod web;

@@ -1556,6 +1556,16 @@ async fn dispatch_inner(
         "dna_ml_pipeline_run" => typed(params, tools::dna_ml::dna_ml_pipeline_run),
 
         // ====================================================================
+        // Web Autonomy (6) — fetch, search, extract, links, metadata, crawl
+        // ====================================================================
+        "web_fetch" => typed_async(params, tools::web::web_fetch_tool).await,
+        "web_search" => typed_async(params, tools::web::web_search_tool).await,
+        "web_extract" => typed_async(params, tools::web::web_extract_tool).await,
+        "web_links" => typed_async(params, tools::web::web_links_tool).await,
+        "web_metadata" => typed_async(params, tools::web::web_metadata_tool).await,
+        "web_crawl" => typed_async(params, tools::web::web_crawl_tool).await,
+
+        // ====================================================================
         // Edit Distance Framework (5)
         // ====================================================================
         "edit_distance_compute" => typed(params, tools::edit_distance::edit_distance_compute),
@@ -3166,6 +3176,7 @@ fn unified_catalog_data() -> serde_json::Value {
             "dtree": ["dtree_train", "dtree_predict", "dtree_importance", "dtree_prune", "dtree_export", "dtree_info"],
             "ml_pipeline": ["ml_feature_extract", "ml_train", "ml_predict", "ml_evaluate", "ml_pipeline_run"],
             "dna_ml": ["dna_ml_encode", "dna_ml_similarity", "dna_ml_pipeline_run"],
+            "web": ["web_fetch", "web_search", "web_extract", "web_links", "web_metadata", "web_crawl"],
             "game_theory": ["game_theory_nash_2x2", "forge_payoff_matrix", "forge_nash_solve", "forge_quality_score", "forge_code_generate"],
             "epidemiology": ["epidemiology_relative_risk", "epidemiology_odds_ratio", "epidemiology_attributable_risk", "epidemiology_nnt_nnh", "epidemiology_attributable_fraction", "epidemiology_population_attributable_fraction", "epidemiology_incidence_rate", "epidemiology_prevalence", "epidemiology_kaplan_meier", "epidemiology_smr", "epidemiology_mappings"],
             "chemivigilance": ["chem_parse_smiles", "chem_descriptors", "chem_fingerprint", "chem_similarity", "chem_structural_alerts", "chem_predict_toxicity", "chem_predict_metabolites", "chem_predict_degradants", "chem_safety_brief", "chem_substructure", "chem_watchlist", "chem_alert_library", "chem_ring_scan", "chem_aromaticity", "chem_molecular_formula", "chem_predict_mutagenicity", "chem_predict_hepatotoxicity", "chem_predict_cardiotoxicity", "chem_assess_applicability_domain"],

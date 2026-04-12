@@ -50,6 +50,7 @@ nexcore-algovigilance = { workspace = true }
 nexcore-dna = { workspace = true }
 nexcore-dna-ml = { workspace = true }
 nexcore-dtree = { workspace = true }
+nexcore-web = { workspace = true }
 nexcore-ml-pipeline = { workspace = true }
 nexcore-organize = { workspace = true }
 nexcore-sentinel = { workspace = true }

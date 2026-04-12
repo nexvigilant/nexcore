@@ -324,10 +324,27 @@ fn in_cfg_test(line_num: usize, regions: &[std::ops::Range<usize>]) -> bool {
 }
 
 fn near_test_attr(line_num: usize, lines: &[&str]) -> bool {
-    let start = line_num.saturating_sub(6);
-    for i in start..line_num.saturating_sub(1) {
+    // Look back up to 30 lines for #[test], checking brace depth
+    let start = line_num.saturating_sub(31);
+    for i in (start..line_num.saturating_sub(1)).rev() {
         if i < lines.len() && lines[i].trim() == "#[test]" {
-            return true;
+            // Verify we're still inside the test fn's braces
+            let mut depth = 0i32;
+            for j in i..line_num {
+                if j < lines.len() {
+                    for ch in lines[j].chars() {
+                        if ch == '{' {
+                            depth += 1;
+                        }
+                        if ch == '}' {
+                            depth -= 1;
+                        }
+                    }
+                }
+            }
+            if depth > 0 {
+                return true;
+            }
         }
     }
     false

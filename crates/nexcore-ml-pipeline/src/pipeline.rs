@@ -160,15 +160,76 @@ pub fn run(
         })
         .collect();
 
+    // Stage 8: Optional cross-validation
+    let cv_metrics = if config.cross_validate {
+        Some(cross_validate(&dataset, &config)?)
+    } else {
+        None
+    };
+
     Ok(PipelineResult {
         train_metrics,
         test_metrics,
+        cv_metrics,
         n_trees: forest.n_trees(),
         n_train_samples: train_set.len(),
         n_test_samples: test_set.len(),
         model_version: artifact.version,
         test_predictions,
     })
+}
+
+/// Run k-fold cross-validation on the dataset.
+///
+/// Trains a separate model on each fold, evaluates on the held-out fold,
+/// and returns mean/std metrics across all folds.
+///
+/// # Errors
+/// Returns `PipelineError` if any fold fails to train.
+pub fn cross_validate(
+    dataset: &Dataset,
+    config: &PipelineConfig,
+) -> Result<crate::types::CvMetrics, PipelineError> {
+    let folds = dataset.k_fold(config.n_folds);
+    let mut fold_aucs = Vec::with_capacity(folds.len());
+    let mut fold_f1s = Vec::with_capacity(folds.len());
+    let mut fold_accs = Vec::with_capacity(folds.len());
+
+    for (train_fold, test_fold) in &folds {
+        let forest = RandomForest::train(train_fold, config.forest.clone())?;
+        let metrics = forest.evaluate(test_fold);
+        fold_aucs.push(metrics.auc);
+        fold_f1s.push(metrics.f1);
+        fold_accs.push(metrics.accuracy);
+    }
+
+    let k = folds.len();
+    let mean_auc = fold_aucs.iter().sum::<f64>() / k as f64;
+    let mean_f1 = fold_f1s.iter().sum::<f64>() / k as f64;
+    let mean_accuracy = fold_accs.iter().sum::<f64>() / k as f64;
+
+    let std_auc = std_dev(&fold_aucs, mean_auc);
+    let std_f1 = std_dev(&fold_f1s, mean_f1);
+
+    Ok(crate::types::CvMetrics {
+        k,
+        mean_auc,
+        std_auc,
+        mean_f1,
+        std_f1,
+        mean_accuracy,
+        fold_aucs,
+    })
+}
+
+/// Compute sample standard deviation.
+fn std_dev(values: &[f64], mean: f64) -> f64 {
+    if values.len() < 2 {
+        return 0.0;
+    }
+    let variance =
+        values.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / (values.len() - 1) as f64;
+    variance.sqrt()
 }
 
 /// Run prediction-only using a pre-trained model.

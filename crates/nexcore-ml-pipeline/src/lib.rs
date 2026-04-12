@@ -54,7 +54,8 @@ pub mod prelude {
     pub use crate::persist::ModelArtifact;
     pub use crate::pipeline::{self, PipelineConfig};
     pub use crate::types::{
-        ContingencyTable, Dataset, FEATURE_NAMES, ForestConfig, Metrics, OutcomeBreakdown,
-        PipelineResult, Prediction, RawPairData, ReporterBreakdown, Sample, TemporalData,
+        ContingencyTable, CvMetrics, Dataset, FEATURE_NAMES, ForestConfig, Metrics,
+        OutcomeBreakdown, PipelineResult, Prediction, RawPairData, ReporterBreakdown, Sample,
+        TemporalData,
     };
 }

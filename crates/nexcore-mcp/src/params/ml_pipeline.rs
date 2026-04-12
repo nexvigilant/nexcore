@@ -115,6 +115,12 @@ pub struct MlPipelineRunParams {
     /// Train/test split ratio (default: 0.8).
     #[serde(default)]
     pub train_ratio: Option<f64>,
+    /// Run k-fold cross-validation (default: false).
+    #[serde(default)]
+    pub cross_validate: Option<bool>,
+    /// Number of CV folds (default: 5).
+    #[serde(default)]
+    pub n_folds: Option<usize>,
 }
 
 /// A raw FAERS-like data entry for pipeline input.

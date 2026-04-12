@@ -286,6 +286,8 @@ pub fn ml_pipeline_run(params: MlPipelineRunParams) -> Result<CallToolResult, Mc
             ..ForestConfig::default()
         },
         train_ratio: params.train_ratio.unwrap_or(0.8),
+        cross_validate: params.cross_validate.unwrap_or(false),
+        n_folds: params.n_folds.unwrap_or(5),
         ..PipelineConfig::default()
     };
 
@@ -326,6 +328,15 @@ pub fn ml_pipeline_run(params: MlPipelineRunParams) -> Result<CallToolResult, Mc
                         "accuracy": result.test_metrics.accuracy,
                     },
                     "test_predictions": predictions,
+                    "cv_metrics": result.cv_metrics.as_ref().map(|cv| json!({
+                        "k": cv.k,
+                        "mean_auc": cv.mean_auc,
+                        "std_auc": cv.std_auc,
+                        "mean_f1": cv.mean_f1,
+                        "std_f1": cv.std_f1,
+                        "mean_accuracy": cv.mean_accuracy,
+                        "fold_aucs": cv.fold_aucs,
+                    })),
                 }))
                 .unwrap_or_default(),
             )]))

@@ -285,6 +285,9 @@ pub struct PipelineResult {
     pub train_metrics: Metrics,
     /// Test metrics (from holdout or cross-validation).
     pub test_metrics: Metrics,
+    /// Cross-validation metrics (None if CV not used).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cv_metrics: Option<CvMetrics>,
     /// Number of trees trained.
     pub n_trees: usize,
     /// Number of training samples.
@@ -295,6 +298,25 @@ pub struct PipelineResult {
     pub model_version: String,
     /// Predictions on test set.
     pub test_predictions: Vec<Prediction>,
+}
+
+/// Cross-validation metrics (mean and std across k folds).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CvMetrics {
+    /// Number of folds.
+    pub k: usize,
+    /// Mean AUC across folds.
+    pub mean_auc: f64,
+    /// Std dev of AUC across folds.
+    pub std_auc: f64,
+    /// Mean F1 across folds.
+    pub mean_f1: f64,
+    /// Std dev of F1 across folds.
+    pub std_f1: f64,
+    /// Mean accuracy across folds.
+    pub mean_accuracy: f64,
+    /// Per-fold AUC values.
+    pub fold_aucs: Vec<f64>,
 }
 
 /// Evaluation metrics.

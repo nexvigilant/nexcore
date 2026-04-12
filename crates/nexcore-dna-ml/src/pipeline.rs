@@ -323,4 +323,69 @@ mod tests {
         assert_eq!(result.total_features, 12);
         assert_eq!(result.dna_feature_count, 0);
     }
+
+    #[test]
+    fn rejects_empty_dataset() {
+        let config = DnaMlConfig::default();
+        let err = run(&[], &[], &config);
+        assert!(err.is_err());
+    }
+
+    #[test]
+    fn rejects_label_data_mismatch() {
+        let (data, _) = make_test_data();
+        let labels = vec!["signal".into()]; // 1 label, 6 data
+        let err = run(&data, &labels, &DnaMlConfig::default());
+        assert!(err.is_err());
+    }
+
+    #[test]
+    fn single_class_still_runs() {
+        let (data, _) = make_test_data();
+        // All same label — forest trains but AUC undefined
+        let labels: Vec<String> = data.iter().map(|_| "signal".into()).collect();
+        let config = DnaMlConfig {
+            n_trees: 5,
+            max_depth: 3,
+            ..Default::default()
+        };
+        // Should not panic — may error on train or produce degenerate metrics
+        let _ = run(&data, &labels, &config);
+    }
+
+    #[test]
+    fn augment_preserves_original_features() {
+        let features = vec![
+            vec![1.0, 2.0, 3.0],
+            vec![4.0, 5.0, 6.0],
+            vec![7.0, 8.0, 9.0],
+        ];
+        let augmented = augment_with_dna(&features);
+        assert_eq!(augmented.len(), 3);
+        // Original 3 features + 5 DNA = 8
+        assert_eq!(augmented[0].len(), 8);
+        // First 3 values unchanged
+        assert!((augmented[0][0] - 1.0).abs() < f64::EPSILON);
+        assert!((augmented[0][1] - 2.0).abs() < f64::EPSILON);
+        assert!((augmented[0][2] - 3.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn augment_empty_returns_empty() {
+        let result = augment_with_dna(&[]);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn feature_names_match_dimension() {
+        let (data, labels) = make_test_data();
+        let config = DnaMlConfig {
+            n_trees: 5,
+            max_depth: 3,
+            use_dna_features: true,
+            ..Default::default()
+        };
+        let result = run(&data, &labels, &config).unwrap();
+        assert_eq!(result.feature_names.len(), result.total_features);
+    }
 }

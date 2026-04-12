@@ -161,7 +161,7 @@ fn analyze_file(path: &Path, content: &str) -> Vec<Violation> {
     let is_test_file = path.file_name().is_some_and(|n| {
         let s = n.to_string_lossy();
         s.ends_with("_test.rs") || s.ends_with("_tests.rs") || s == "tests.rs"
-    });
+    }) || path.components().any(|c| c.as_os_str() == "tests");
     let is_example = path.components().any(|c| c.as_os_str() == "examples");
 
     let cfg_test_regions = find_cfg_test_regions(&lines);

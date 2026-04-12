@@ -44,6 +44,7 @@
     reason = "Circulatory domain types are intentionally closed and use bounded transport metrics"
 )]
 
+pub mod cardio_bridge;
 pub mod claude_code;
 pub mod grounding;
 
@@ -225,7 +226,7 @@ impl BloodPressure {
         if self.total == 0 {
             return 0.0;
         }
-        self.available as f64 / self.total as f64
+        (self.available as f64) / (self.total as f64)
     }
 
     /// Whether pressure is in healthy range (0.7 to 1.0).

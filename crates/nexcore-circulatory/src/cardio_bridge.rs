@@ -39,7 +39,8 @@ pub fn vitals_to_blood_pressure(vitals: &CardiacVitals) -> BloodPressure {
     // cardiac_output = stroke_volume * heart_rate / 60
     // total represents max capacity; available represents utilized fraction
     let total = (vitals.cardiac_output.value() * 100.0) as usize;
-    let available = (vitals.cardiac_output.value() * vitals.stroke_volume.min(1.0) * 100.0) as usize;
+    let available =
+        (vitals.cardiac_output.value() * vitals.stroke_volume.min(1.0) * 100.0) as usize;
     BloodPressure::new(total.max(1), available)
 }
 

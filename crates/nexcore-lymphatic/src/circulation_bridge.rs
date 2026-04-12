@@ -40,10 +40,7 @@ pub fn pulse_to_overflow(pulse: &Pulse) -> Vec<OverflowItem> {
     // Also create an item for the pressure reading itself if unhealthy
     if !healthy {
         items.push(OverflowItem::new(
-            format!(
-                "pressure-alert:ratio={:.2}",
-                pulse.pressure.ratio()
-            ),
+            format!("pressure-alert:ratio={:.2}", pulse.pressure.ratio()),
             "circulatory",
             1, // High priority
         ));

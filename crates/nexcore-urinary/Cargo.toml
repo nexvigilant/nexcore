@@ -13,6 +13,7 @@ keywords = ["nexcore", "mathematics", "science"]
 categories = ["science", "algorithms"]
 [dependencies]
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
+nexcore-lymphatic = { version = "1.0.0", path = "../nexcore-lymphatic" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 

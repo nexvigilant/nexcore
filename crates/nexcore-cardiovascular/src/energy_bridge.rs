@@ -84,7 +84,10 @@ mod tests {
     fn test_energy_driven_pump_anabolic() {
         let mut heart = Heart::new();
         let result = energy_driven_pump(&mut heart, &Regime::Anabolic);
-        assert!(result.stroke_volume > 0.0, "Anabolic pump should produce output");
+        assert!(
+            result.stroke_volume > 0.0,
+            "Anabolic pump should produce output"
+        );
         assert!(result.beat_number > 0);
     }
 
@@ -93,7 +96,10 @@ mod tests {
         let mut heart = Heart::new();
         let result = energy_driven_pump(&mut heart, &Regime::Crisis);
         // Crisis demand is 0.1 → preload 10.0 → small stroke volume
-        assert!(result.stroke_volume > 0.0, "Crisis should still pump something");
+        assert!(
+            result.stroke_volume > 0.0,
+            "Crisis should still pump something"
+        );
     }
 
     #[test]

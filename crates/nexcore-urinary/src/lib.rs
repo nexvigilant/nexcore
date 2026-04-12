@@ -30,6 +30,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod claude_code;
 pub mod grounding;
+pub mod lymph_bridge;
 
 /// Category of data being filtered.
 ///
@@ -102,7 +103,7 @@ impl Nephron {
         if self.items_filtered == 0 {
             0.0
         } else {
-            self.items_reabsorbed as f64 / self.items_filtered as f64
+            (self.items_reabsorbed as f64) / (self.items_filtered as f64)
         }
     }
 }
@@ -141,7 +142,7 @@ impl GlomerularFiltration {
         if self.input_count == 0 {
             0.0
         } else {
-            self.passed_count as f64 / self.input_count as f64
+            (self.passed_count as f64) / (self.input_count as f64)
         }
     }
 }
@@ -185,7 +186,7 @@ impl Reabsorption {
         if self.reclaimed_count == 0 {
             0
         } else {
-            self.reclaimed_bytes / self.reclaimed_count as u64
+            self.reclaimed_bytes / (self.reclaimed_count as u64)
         }
     }
 }
@@ -229,7 +230,7 @@ impl Excretion {
         if self.disposed_count == 0 {
             0
         } else {
-            self.disposed_bytes / self.disposed_count as u64
+            self.disposed_bytes / (self.disposed_count as u64)
         }
     }
 }
@@ -311,7 +312,7 @@ impl Bladder {
 
     /// Get current utilization as fraction of capacity (0.0 to 1.0).
     pub fn utilization(&self) -> f64 {
-        self.items.len() as f64 / self.capacity as f64
+        (self.items.len() as f64) / (self.capacity as f64)
     }
 
     /// Check if auto-flush threshold has been exceeded.

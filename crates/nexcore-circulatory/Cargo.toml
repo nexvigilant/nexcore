@@ -12,6 +12,7 @@ description = "Circulatory system for data transport — Heart(pump/collect/dist
 keywords = ["nexcore", "mcp", "api"]
 categories = ["web-programming"]
 [dependencies]
+nexcore-cardiovascular = { version = "1.0.0", path = "../nexcore-cardiovascular" }
 nexcore-chrono = { workspace = true }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }

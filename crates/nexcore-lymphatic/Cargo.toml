@@ -12,6 +12,7 @@ description = "Lymphatic system for overflow drainage — Output styles(lymph dr
 keywords = ["nexcore", "pharmacovigilance"]
 categories = ["development-tools"]
 [dependencies]
+nexcore-circulatory = { version = "1.0.0", path = "../nexcore-circulatory" }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }

@@ -38,6 +38,7 @@
 )]
 
 pub mod blood;
+pub mod energy_bridge;
 pub mod grounding;
 pub mod heart;
 pub mod pathology;
@@ -106,7 +107,7 @@ mod tests {
     fn cardiac_output_is_sv_times_hr() {
         let heart = Heart::new();
         let co = heart.cardiac_output();
-        let expected = heart.stroke_volume * heart.rate.value() / 60.0;
+        let expected = (heart.stroke_volume * heart.rate.value()) / 60.0;
         assert!((co.value() - expected).abs() < 0.01);
     }
 

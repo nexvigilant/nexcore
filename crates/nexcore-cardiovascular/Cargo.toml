@@ -12,6 +12,7 @@ description = "Cardiovascular data transport system — heart pump, vessel hiera
 keywords = ["nexcore", "mcp", "api"]
 categories = ["web-programming"]
 [dependencies]
+nexcore-energy = { version = "0.1.0", path = "../nexcore-energy" }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }

@@ -42,6 +42,7 @@
     reason = "Lymphatic output-channel model intentionally uses fixed-domain transport structs and simple bounded metrics"
 )]
 
+pub mod circulation_bridge;
 pub mod grounding;
 
 use serde::{Deserialize, Serialize};
@@ -372,7 +373,7 @@ impl LymphNode {
         if self.inspection_count == 0 {
             return 0.0;
         }
-        self.threats_detected as f64 / self.inspection_count as f64
+        (self.threats_detected as f64) / (self.inspection_count as f64)
     }
 }
 
@@ -491,7 +492,7 @@ impl ThymicSelection {
         if total_candidates == 0 {
             self.rejection_rate = 0.0;
         } else {
-            self.rejection_rate = rejected as f64 / total_candidates as f64;
+            self.rejection_rate = (rejected as f64) / (total_candidates as f64);
         }
     }
 }
@@ -569,7 +570,7 @@ impl OverflowHandler {
             return !self.overflow_queue.is_empty();
         }
         // Load > 80% of capacity OR overflow queue is non-empty
-        let load_fraction = self.current_load as f64 / self.max_capacity as f64;
+        let load_fraction = (self.current_load as f64) / (self.max_capacity as f64);
         load_fraction > 0.8 || !self.overflow_queue.is_empty()
     }
 
@@ -579,7 +580,7 @@ impl OverflowHandler {
         if self.max_capacity == 0 {
             return if self.current_load == 0 { 0.0 } else { 1.0 };
         }
-        self.current_load as f64 / self.max_capacity as f64
+        (self.current_load as f64) / (self.max_capacity as f64)
     }
 }
 

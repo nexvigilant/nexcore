@@ -215,6 +215,7 @@ impl fmt::Display for CnsDigit {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::ops::{Add, Mul};
 
     #[test]
     fn all_digits_roundtrip() {

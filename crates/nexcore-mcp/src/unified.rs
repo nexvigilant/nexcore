@@ -249,7 +249,9 @@ async fn dispatch_inner(
         "vigilance_harm_types" => tools::vigilance::harm_types(),
         "vigilance_map_to_tov" => typed(params, tools::vigilance::map_to_tov),
         "pv_signal_chart" => typed(params, tools::vigilance::pv_signal_chart),
-        "vigilance_verdict_from_chain" => typed(params, tools::vigilance::verdict_from_chain),
+        "vigilance_verdict_from_chain" | "verdict_from_chain" => {
+            typed(params, tools::vigilance::verdict_from_chain)
+        }
 
         // ====================================================================
         // Compliance Tools (5)

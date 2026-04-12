@@ -40,8 +40,11 @@
 pub mod batch;
 pub mod boundary;
 pub mod error;
+#[cfg(any(feature = "immunity", test))]
+pub mod immunity;
 pub mod pipeline;
 pub mod processor;
+pub mod pv;
 pub mod state;
 
 // Re-exports for ergonomic use

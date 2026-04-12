@@ -8277,6 +8277,7 @@ dependencies = [
  "nexcore-id",
  "nexcore-mcp",
  "nexcore-mesh",
+ "nexcore-ml-pipeline",
  "nexcore-primitives",
  "nexcore-pv-core",
  "nexcore-qbr",

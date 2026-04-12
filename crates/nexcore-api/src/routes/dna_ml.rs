@@ -233,7 +233,7 @@ pub async fn encode_handler(
     let maxs = req.maxs.unwrap_or_else(|| vec![1.0; dim]);
 
     let strand = encode::encode_features(&req.features, &mins, &maxs);
-    let bases: String = strand.bases.iter().map(|n| format!("{n:?}")).collect();
+    let bases: String = strand.bases.iter().map(|n| n.as_char()).collect();
     let quantized = encode::quantize_features(&req.features, &mins, &maxs);
 
     Ok(Json(DnaMlEncodeResponse {

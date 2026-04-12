@@ -19,7 +19,7 @@ pub fn dna_ml_encode(params: DnaMlEncodeParams) -> Result<CallToolResult, McpErr
     let maxs = params.maxs.unwrap_or_else(|| vec![1.0; dim]);
 
     let strand = encode::encode_features(&params.features, &mins, &maxs);
-    let bases: String = strand.bases.iter().map(|n| format!("{n:?}")).collect();
+    let bases: String = strand.bases.iter().map(|n| n.as_char()).collect();
 
     Ok(CallToolResult::success(vec![Content::text(
         serde_json::to_string_pretty(&json!({

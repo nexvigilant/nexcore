@@ -17,6 +17,10 @@ immunity = ["regex"]
 regex = { version = "1", optional = true }
 
 clap = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["rt", "macros"] }
 
 [[bin]]
 name = "nexcore-processor"

@@ -1,0 +1,20 @@
+[package]
+name = "suit-comms"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+description = "Communication subsystem for wearable suit — link selection, security validation, and multi-band routing across BLE/Wi-Fi/5G/LoRa/Satcom/VHF"
+
+keywords = ["communications", "radio", "security", "wearable"]
+categories = ["embedded", "network-programming"]
+
+[dependencies]
+nexcore-error = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

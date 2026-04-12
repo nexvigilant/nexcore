@@ -288,6 +288,14 @@ sweep-quick:
 sweep-report:
     ./scripts/quality-sweep --report-only
 
+# Wallace Protocol: scan workspace for unwrap/expect/clone violations
+wallace:
+    cargo run -p nexcore-wallace --bin wallace -- pipeline crates/
+
+# Wallace Protocol: scan a single crate
+wallace-crate crate:
+    cargo run -p nexcore-wallace --bin wallace -- crate crates/{{crate}}
+
 # Detect unused dependencies
 dep-scan:
     ./scripts/dep-prune --dry-run

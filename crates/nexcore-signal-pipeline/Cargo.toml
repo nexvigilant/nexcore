@@ -12,7 +12,12 @@ description = "PV signal detection pipeline: ingest, normalize, detect, threshol
 
 keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
 categories = ["science"]
+[[bin]]
+name = "signal-pipeline"
+path = "src/bin/signal-pipeline.rs"
+
 [dependencies]
+clap = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 nexcore-cargo = { workspace = true }

@@ -7,9 +7,9 @@
 //! Ingestion is a pure sequence operation: source → parse → emit `RawReport`s.
 //!
 //! ## Example
-//! ```rust
-//! use signal::ingest::JsonIngestor;
-//! use crate::core::Ingest;
+//! ```rust,no_run
+//! use nexcore_signal_pipeline::ingest::JsonIngestor;
+//! use nexcore_signal_pipeline::core::Ingest;
 //!
 //! let ingestor = JsonIngestor::from_str(r#"[{"id":"1","drugs":["aspirin"],"events":["bleeding"]}]"#);
 //! let reports = ingestor.ingest().ok();

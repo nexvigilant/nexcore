@@ -21,10 +21,10 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use crate::core::{DrugEventPair, ContingencyTable, SignalStrength};
+//! use nexcore_signal_pipeline::core::{DrugEventPair, ContingencyTable, SignalStrength};
 //!
 //! let pair = DrugEventPair::new("aspirin", "bleeding");
-//! let table = ContingencyTable { a: 15, b: 100, c: 20, d: 10_000 };
+//! let table = ContingencyTable::new(15, 100, 20, 10_000);
 //! let strength = table.prr().map(SignalStrength::from_prr);
 //! ```
 

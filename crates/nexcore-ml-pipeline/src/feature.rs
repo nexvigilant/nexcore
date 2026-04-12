@@ -142,17 +142,15 @@ fn compute_ic(a: f64, b: f64, c: f64, _d: f64, n: f64) -> f64 {
     (observed / expected).log2()
 }
 
-/// Simplified EBGM = (a + 0.5) / E with shrinkage toward prior.
+/// Simplified EBGM = (a + alpha) / (E + alpha) with shrinkage toward prior.
+/// Alpha=0.5 is the Haldane correction, consistent with PRR/ROR/IC.
 fn compute_ebgm(a: f64, b: f64, c: f64, _d: f64, n: f64) -> f64 {
     let expected = ((a + b) * (a + c)) / n;
     if expected < f64::EPSILON {
         return 0.0;
     }
-    // Simplified EBGM: shrinkage estimator
-    let alpha = 0.5; // prior weight
-    let observed = a;
-    let shrunk = (observed + alpha) / (expected + alpha);
-    shrunk
+    let alpha = 0.5; // Haldane prior weight
+    (a + alpha) / (expected + alpha)
 }
 
 #[cfg(test)]

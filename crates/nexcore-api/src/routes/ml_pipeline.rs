@@ -12,9 +12,8 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use nexcore_ml_pipeline::prelude::{
-    ContingencyTable, Dataset, ForestConfig, OutcomeBreakdown, PipelineConfig, RandomForest,
-    RawPairData, ReporterBreakdown, Sample, TemporalData, extract_features, feature_names,
-    pipeline,
+    ContingencyTable, ForestConfig, OutcomeBreakdown, PipelineConfig, RawPairData,
+    ReporterBreakdown, TemporalData, extract_features, feature_names, pipeline,
 };
 
 use super::common::ApiError;
@@ -338,10 +337,4 @@ pub async fn run_pipeline(
         },
         test_predictions,
     }))
-}
-
-// Suppress unused warnings for types that may be used in future endpoints
-#[allow(dead_code)]
-fn _unused_dataset_rf_sample() -> (Dataset, RandomForest, Sample) {
-    unimplemented!()
 }

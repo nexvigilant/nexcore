@@ -109,21 +109,31 @@ pub fn run(
         });
     }
 
-    // Stage 3: Train/test split
+    // Stage 3: Cross-validation (if enabled) — run BEFORE final model
+    // so CV metrics describe the same data the final model trains on.
+    let cv_metrics = if config.cross_validate {
+        Some(cross_validate(&dataset, &config)?)
+    } else {
+        None
+    };
+
+    // Stage 4: Train/test split
     let (train_set, test_set) = dataset.split(config.train_ratio);
 
     if train_set.is_empty() {
         return Err(PipelineError::NoLabels);
     }
 
-    // Stage 4: Training
+    // Stage 5: Training
+    // When CV is enabled, CV already validated performance on the full dataset.
+    // The train/test split still produces holdout predictions for inspection.
     let forest = RandomForest::train(&train_set, config.forest.clone())?;
 
-    // Stage 5: Evaluation
+    // Stage 6: Evaluation
     let train_metrics = forest.evaluate(&train_set);
     let test_metrics = forest.evaluate(&test_set);
 
-    // Stage 6: Persistence
+    // Stage 7: Persistence
     let artifact = ModelArtifact::new(
         forest.clone(),
         train_metrics.clone(),
@@ -135,7 +145,7 @@ pub fn run(
         artifact.save(path)?;
     }
 
-    // Stage 7: Test predictions
+    // Stage 8: Test predictions
     let importances = forest.feature_importance();
     let top_features: Vec<(String, f64)> = {
         let mut imp = importances.clone();
@@ -159,13 +169,6 @@ pub fn run(
             }
         })
         .collect();
-
-    // Stage 8: Optional cross-validation
-    let cv_metrics = if config.cross_validate {
-        Some(cross_validate(&dataset, &config)?)
-    } else {
-        None
-    };
 
     Ok(PipelineResult {
         train_metrics,

@@ -88,16 +88,34 @@ impl Dataset {
     }
 
     /// Split into train/test by ratio (e.g., 0.8 = 80% train).
-    /// Uses deterministic split (first N for train, rest for test).
+    /// Deterministic Fisher-Yates shuffle (seed=42) before splitting to ensure
+    /// both classes are represented in both sets regardless of input ordering.
     #[must_use]
     pub fn split(&self, train_ratio: f64) -> (Self, Self) {
+        let mut indices: Vec<usize> = (0..self.samples.len()).collect();
+        // Deterministic Fisher-Yates shuffle
+        let mut state: u64 = 42;
+        for i in (1..indices.len()).rev() {
+            state = state
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
+            let j = (state >> 33) as usize % (i + 1);
+            indices.swap(i, j);
+        }
+
         let n_train = (self.samples.len() as f64 * train_ratio).round() as usize;
         let train = Self {
-            samples: self.samples[..n_train].to_vec(),
+            samples: indices[..n_train]
+                .iter()
+                .map(|&i| self.samples[i].clone())
+                .collect(),
             feature_names: self.feature_names.clone(),
         };
         let test = Self {
-            samples: self.samples[n_train..].to_vec(),
+            samples: indices[n_train..]
+                .iter()
+                .map(|&i| self.samples[i].clone())
+                .collect(),
             feature_names: self.feature_names.clone(),
         };
         (train, test)

@@ -50,10 +50,7 @@ impl RandomForest {
         }
 
         let n_features = data[0].len();
-        let max_features = config
-            .max_features
-            .unwrap_or_else(|| (n_features as f64).sqrt().ceil() as usize)
-            .min(n_features);
+        let _ = n_features; // used for validation; max_features disabled (see tree loop)
 
         // Collect class labels
         let mut class_labels: Vec<String> = labels.clone();
@@ -75,9 +72,14 @@ impl RandomForest {
                 .map(|&i| labels[i].clone())
                 .collect();
 
+            // With only 12 features, use all features at each split.
+            // Bootstrap sampling provides sufficient tree diversity.
+            // max_features subsampling in nexcore-dtree evaluates features
+            // 0..max_f sequentially (not randomly), so capping would always
+            // exclude later features like velocity and TTO.
             let tree_config = TreeConfig {
                 max_depth: config.max_depth,
-                max_features: Some(max_features),
+                max_features: None, // all features — fixes feature selection bias
                 min_samples_split: config.min_samples_split,
                 min_samples_leaf: config.min_samples_leaf,
                 criterion: CriterionType::Gini,

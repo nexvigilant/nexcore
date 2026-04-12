@@ -87,14 +87,20 @@ impl Dataset {
         self.samples.is_empty()
     }
 
-    /// Split into train/test by ratio (e.g., 0.8 = 80% train).
-    /// Deterministic Fisher-Yates shuffle (seed=42) before splitting to ensure
-    /// both classes are represented in both sets regardless of input ordering.
+    /// Split into train/test by ratio (e.g., 0.8 = 80% train) with default seed.
     #[must_use]
     pub fn split(&self, train_ratio: f64) -> (Self, Self) {
+        self.split_with_seed(train_ratio, 42)
+    }
+
+    /// Split into train/test by ratio with configurable shuffle seed.
+    /// Deterministic Fisher-Yates shuffle ensures both classes are represented
+    /// in both sets regardless of input ordering.
+    #[must_use]
+    pub fn split_with_seed(&self, train_ratio: f64, seed: u64) -> (Self, Self) {
         let mut indices: Vec<usize> = (0..self.samples.len()).collect();
         // Deterministic Fisher-Yates shuffle
-        let mut state: u64 = 42;
+        let mut state: u64 = seed;
         for i in (1..indices.len()).rev() {
             state = state
                 .wrapping_mul(6_364_136_223_846_793_005)
@@ -409,5 +415,104 @@ mod tests {
         let feats = s.to_dtree_features();
         assert_eq!(feats.len(), 12);
         assert_eq!(feats[0], Feature::Continuous(3.5));
+    }
+
+    #[test]
+    fn split_shuffle_ensures_both_classes() {
+        // Worst case: all signals first, then all noise (sequential ordering).
+        // Without shuffle, 80/20 split puts only signals in train, only noise in test.
+        let mut samples = Vec::new();
+        for i in 0..10 {
+            samples.push(Sample {
+                drug: format!("signal_drug_{i}"),
+                event: "event".into(),
+                features: vec![5.0; 12],
+                label: Some("signal".into()),
+            });
+        }
+        for i in 0..10 {
+            samples.push(Sample {
+                drug: format!("noise_drug_{i}"),
+                event: "event".into(),
+                features: vec![0.5; 12],
+                label: Some("noise".into()),
+            });
+        }
+
+        let ds = Dataset::new(
+            samples,
+            FEATURE_NAMES.iter().map(|s| s.to_string()).collect(),
+        );
+        let (train, test) = ds.split(0.8);
+
+        // Both classes must appear in both splits
+        let train_signals = train
+            .samples
+            .iter()
+            .filter(|s| s.label.as_deref() == Some("signal"))
+            .count();
+        let train_noise = train
+            .samples
+            .iter()
+            .filter(|s| s.label.as_deref() == Some("noise"))
+            .count();
+        let test_signals = test
+            .samples
+            .iter()
+            .filter(|s| s.label.as_deref() == Some("signal"))
+            .count();
+        let test_noise = test
+            .samples
+            .iter()
+            .filter(|s| s.label.as_deref() == Some("noise"))
+            .count();
+
+        assert!(
+            train_signals > 0,
+            "Train must contain signals: got {train_signals}"
+        );
+        assert!(
+            train_noise > 0,
+            "Train must contain noise: got {train_noise}"
+        );
+        assert!(
+            test_signals > 0,
+            "Test must contain signals: got {test_signals}"
+        );
+        assert!(test_noise > 0, "Test must contain noise: got {test_noise}");
+        assert_eq!(train.len() + test.len(), 20);
+    }
+
+    #[test]
+    fn split_with_seed_deterministic() {
+        let samples: Vec<Sample> = (0..20)
+            .map(|i| Sample {
+                drug: format!("drug_{i}"),
+                event: "event".into(),
+                features: vec![i as f64; 12],
+                label: Some(if i < 10 { "signal" } else { "noise" }.into()),
+            })
+            .collect();
+        let ds = Dataset::new(
+            samples,
+            FEATURE_NAMES.iter().map(|s| s.to_string()).collect(),
+        );
+
+        let (train_a, _) = ds.split_with_seed(0.8, 99);
+        let (train_b, _) = ds.split_with_seed(0.8, 99);
+        assert_eq!(train_a.samples[0].drug, train_b.samples[0].drug);
+
+        // Different seed → different order
+        let (train_c, _) = ds.split_with_seed(0.8, 100);
+        // At least one sample should differ in position
+        let differs = train_a
+            .samples
+            .iter()
+            .zip(train_c.samples.iter())
+            .any(|(a, c)| a.drug != c.drug);
+        assert!(
+            differs,
+            "Different seeds should produce different orderings"
+        );
     }
 }

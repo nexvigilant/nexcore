@@ -8869,6 +8869,7 @@ dependencies = [
 name = "nexcore-dna-ml"
 version = "0.1.0"
 dependencies = [
+ "clap",
  "nexcore-dna",
  "nexcore-error",
  "nexcore-ml-pipeline",
@@ -10261,7 +10262,12 @@ dependencies = [
 name = "nexcore-processor"
 version = "1.0.0"
 dependencies = [
+ "clap",
  "regex",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]
@@ -10300,6 +10306,7 @@ dependencies = [
 name = "nexcore-pv-core"
 version = "1.0.0"
 dependencies = [
+ "clap",
  "grounded",
  "nexcore-cargo",
  "nexcore-chrono",
@@ -10556,6 +10563,7 @@ version = "1.0.0"
 dependencies = [
  "axum 0.8.8",
  "bytes",
+ "clap",
  "http-body-util",
  "nexcore-cargo",
  "nexcore-chrono",
@@ -11119,6 +11127,15 @@ name = "nexcore-vos"
 version = "0.1.0"
 dependencies = [
  "nexcore-pv-core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nexcore-wallace"
+version = "0.1.0"
+dependencies = [
+ "clap",
  "serde",
  "serde_json",
 ]

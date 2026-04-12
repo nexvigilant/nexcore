@@ -13,7 +13,12 @@ description = "Pharmacovigilance signal detection core: PRR, ROR, IC, EBGM, ChiÂ
 keywords = ["pharmacovigilance", "signal-detection", "drug-safety", "faers"]
 categories = ["science", "algorithms"]
 
+[[bin]]
+name = "pv-core"
+path = "src/bin/pv-core.rs"
+
 [dependencies]
+clap = { workspace = true }
 nexcore-cargo = { workspace = true }
 nexcore-edit-distance = { version = "1.0.0", path = "../nexcore-edit-distance" }
 nexcore-error = { workspace = true }

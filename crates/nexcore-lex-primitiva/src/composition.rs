@@ -85,10 +85,11 @@ impl CompositionAlgebra {
         let combined: Vec<LexPrimitiva> = a_set.union(&b_set).copied().collect();
         let changed = combined.len() != a.primitives.len();
         let composition = self.build_composition(combined, a.dominant);
+        let tier = Tier::classify(&composition);
         CompositionResult {
-            composition: composition.clone(),
+            composition,
             operation: CompositionOp::Union,
-            tier: Tier::classify(&composition),
+            tier,
             changed,
         }
     }
@@ -106,10 +107,11 @@ impl CompositionAlgebra {
         let changed = common.len() != a.primitives.len();
         let dominant = a.dominant.filter(|d| common.contains(d));
         let composition = self.build_composition(common, dominant);
+        let tier = Tier::classify(&composition);
         CompositionResult {
-            composition: composition.clone(),
+            composition,
             operation: CompositionOp::Intersect,
-            tier: Tier::classify(&composition),
+            tier,
             changed,
         }
     }
@@ -127,10 +129,11 @@ impl CompositionAlgebra {
         let changed = diff.len() != a.primitives.len();
         let dominant = a.dominant.filter(|d| diff.contains(d));
         let composition = self.build_composition(diff, dominant);
+        let tier = Tier::classify(&composition);
         CompositionResult {
-            composition: composition.clone(),
+            composition,
             operation: CompositionOp::Difference,
-            tier: Tier::classify(&composition),
+            tier,
             changed,
         }
     }
@@ -145,10 +148,11 @@ impl CompositionAlgebra {
         // Dominant is from B (the "result" of composition)
         let dominant = b.dominant.or(a.dominant);
         let composition = self.build_composition(combined, dominant);
+        let tier = Tier::classify(&composition);
         CompositionResult {
-            composition: composition.clone(),
+            composition,
             operation: CompositionOp::Compose,
-            tier: Tier::classify(&composition),
+            tier,
             changed,
         }
     }
@@ -166,10 +170,11 @@ impl CompositionAlgebra {
         let changed = projected.len() != comp.primitives.len();
         let dominant = comp.dominant.filter(|d| keep_set.contains(d));
         let composition = self.build_composition(projected, dominant);
+        let tier = Tier::classify(&composition);
         CompositionResult {
-            composition: composition.clone(),
+            composition,
             operation: CompositionOp::Project,
-            tier: Tier::classify(&composition),
+            tier,
             changed,
         }
     }
@@ -189,10 +194,11 @@ impl CompositionAlgebra {
             .collect();
         let changed = filtered.len() != comp.primitives.len();
         let composition = self.build_composition(filtered, comp.dominant);
+        let tier = Tier::classify(&composition);
         CompositionResult {
-            composition: composition.clone(),
+            composition,
             operation: CompositionOp::Filter,
-            tier: Tier::classify(&composition),
+            tier,
             changed,
         }
     }

@@ -1,0 +1,19 @@
+[package]
+name = "nexcore-wallace"
+version = "0.1.0"
+edition = "2024"
+description = "Wallace Protocol — fearless Rust code quality scanner. Classifies unwrap/expect/clone violations across nexcore crates."
+license = "MIT OR Apache-2.0"
+
+[[bin]]
+name = "wallace"
+path = "src/bin/wallace.rs"
+
+[lib]
+name = "nexcore_wallace"
+path = "src/lib.rs"
+
+[dependencies]
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

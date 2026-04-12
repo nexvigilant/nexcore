@@ -192,7 +192,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("🧪 Testing {}", name);
                 println!("🧬 DNA: {}", dna);
 
-                let strand = Strand::parse(dna).expect("Invalid DNA");
+                let strand = Strand::parse(dna)?;
                 let mut vm = CodonVM::new();
                 let _ = vm.load(&strand);
 
@@ -371,7 +371,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             use nexcore_dna::vm::CodonVM;
 
             let mut vm = CodonVM::new();
-            let strand = Strand::parse(dna).expect("Synthesis error: Invalid DNA generated");
+            let strand = Strand::parse(dna)?;
             let _ = vm.load(&strand);
 
             // Handle choice (IfElse) or math.

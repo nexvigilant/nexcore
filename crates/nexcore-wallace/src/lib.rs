@@ -259,6 +259,13 @@ fn classify_unwrap_expect(
     if is_in_string_literal(trimmed, ".unwrap()") || is_in_string_literal(trimmed, ".expect(") {
         return Classification::DetectionCode;
     }
+    // Multi-line string continuation: previous line ends with `\` (Rust string continuation)
+    if line_num >= 2 {
+        let prev = lines.get(line_num.saturating_sub(2)).map(|s| s.trim_end());
+        if prev.is_some_and(|p| p.ends_with('\\')) {
+            return Classification::DetectionCode;
+        }
+    }
     if has_allow_above(line_num, lines) {
         return Classification::Allowed;
     }
@@ -310,6 +317,10 @@ fn find_cfg_test_regions(lines: &[&str]) -> Vec<std::ops::Range<usize>> {
                 }
                 j += 1;
             }
+            // If file ends inside cfg(test) module, close region at EOF
+            if j >= lines.len() && depth > 0 {
+                regions.push(start..lines.len());
+            }
             i = if j < lines.len() { j + 1 } else { j };
         } else {
             i += 1;
@@ -351,7 +362,7 @@ fn near_test_attr(line_num: usize, lines: &[&str]) -> bool {
 }
 
 fn has_allow_above(line_num: usize, lines: &[&str]) -> bool {
-    let check_start = line_num.saturating_sub(4);
+    let check_start = line_num.saturating_sub(8);
     for i in check_start..line_num.saturating_sub(1) {
         if i < lines.len() {
             let t = lines[i].trim();
@@ -389,12 +400,23 @@ fn is_in_static_init(line_num: usize, lines: &[&str]) -> bool {
 }
 
 fn enclosing_fn_returns_result(line_num: usize, lines: &[&str]) -> Option<bool> {
-    let start = line_num.saturating_sub(41);
+    // Walk backward tracking brace depth to find the enclosing fn
+    let mut depth = 0i32;
     let mut fn_line_idx = None;
-    for i in (start..line_num.saturating_sub(1)).rev() {
+    for i in (0..line_num.saturating_sub(1)).rev() {
         if i < lines.len() {
+            // Walking backward: } means entering nested scope, { means exiting
+            for ch in lines[i].chars() {
+                if ch == '}' {
+                    depth += 1;
+                }
+                if ch == '{' {
+                    depth -= 1;
+                }
+            }
             let t = lines[i].trim();
-            if t.contains("fn ")
+            if depth <= 0
+                && t.contains("fn ")
                 && (t.starts_with("pub")
                     || t.starts_with("fn")
                     || t.starts_with("async")

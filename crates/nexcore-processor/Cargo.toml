@@ -16,5 +16,11 @@ immunity = ["regex"]
 [dependencies]
 regex = { version = "1", optional = true }
 
+clap = { workspace = true }
+
+[[bin]]
+name = "nexcore-processor"
+path = "src/bin/nexcore-processor.rs"
+
 [dev-dependencies]
 regex = "1"

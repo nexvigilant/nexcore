@@ -238,6 +238,8 @@ fn bind(
     action: KeybindingAction,
     scope: KeybindingScope,
 ) -> Keybinding {
+    // SAFETY: default keybinding literals are compile-time valid
+    #[allow(clippy::expect_used)]
     Keybinding {
         combo: KeyCombo::new(modifiers, key).expect("default keybinding keys are always valid"),
         action,

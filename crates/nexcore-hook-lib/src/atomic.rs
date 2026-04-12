@@ -272,17 +272,23 @@ pub mod signals {
     use regex::Regex;
     use std::sync::LazyLock;
 
-    // Compile regex patterns once
+    // Compile regex patterns once — all literals, infallible
+    #[allow(clippy::expect_used)]
     static PANIC_RE: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(r"panic!\s*\(").expect("valid regex"));
+    #[allow(clippy::expect_used)]
     static UNWRAP_RE: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(r"\.unwrap\(\)").expect("valid regex"));
+    #[allow(clippy::expect_used)]
     static EXPECT_RE: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(r"\.expect\(").expect("valid regex"));
+    #[allow(clippy::expect_used)]
     static UNSAFE_RE: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(r"\bunsafe\s*\{").expect("valid regex"));
+    #[allow(clippy::expect_used)]
     static TRANSMUTE_RE: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(r"mem::transmute").expect("valid regex"));
+    #[allow(clippy::expect_used)]
     static TODO_RE: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(r"(?i)todo!|fixme|xxx").expect("valid regex"));
 

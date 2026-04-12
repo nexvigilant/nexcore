@@ -48,6 +48,7 @@ nexcore-telemetry-core = { workspace = true }
 nexcore-compliance = { workspace = true }
 nexcore-algovigilance = { workspace = true }
 nexcore-dna = { workspace = true }
+nexcore-dna-ml = { workspace = true }
 nexcore-dtree = { workspace = true }
 nexcore-ml-pipeline = { workspace = true }
 nexcore-organize = { workspace = true }

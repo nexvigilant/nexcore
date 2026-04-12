@@ -46,6 +46,7 @@ pub mod crew;
 pub mod cybercinetics;
 pub mod declension;
 pub mod dna;
+pub mod dna_ml;
 pub mod docs;
 pub mod docs_claude;
 pub mod dtree;

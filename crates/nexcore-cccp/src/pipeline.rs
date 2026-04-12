@@ -123,6 +123,8 @@ impl Pipeline<Collected> {
 impl Pipeline<Assessed> {
     /// Access the gap analysis for inspection before planning.
     pub fn gap_analysis(&self) -> &GapAnalysis {
+        // SAFETY: typestate guarantees gap_analysis is Some in Assessed phase
+        #[allow(clippy::expect_used)]
         self.gap_analysis
             .as_ref()
             .expect("Assessed pipeline always has gap_analysis")
@@ -159,6 +161,8 @@ impl Pipeline<Planned> {
     /// Phase 4: Begin implementation — create tracker from plan.
     /// Transitions to `Pipeline<Implementing>`.
     pub fn begin_implementation(mut self) -> Pipeline<Implementing> {
+        // SAFETY: typestate guarantees plan is Some in Planned phase
+        #[allow(clippy::expect_used)]
         let ids: Vec<String> = self
             .plan
             .as_ref()
@@ -184,6 +188,8 @@ impl Pipeline<Planned> {
 impl Pipeline<Implementing> {
     /// Access the tracker for updates during implementation.
     pub fn tracker_mut(&mut self) -> &mut ImplementationTracker {
+        // SAFETY: typestate guarantees tracker is Some in Implementing phase
+        #[allow(clippy::expect_used)]
         self.tracker
             .as_mut()
             .expect("Implementing pipeline always has tracker")
@@ -197,6 +203,8 @@ impl Pipeline<Implementing> {
         desired: DomainStateVector,
         objectives: Vec<ObjectiveEvaluation>,
     ) -> Pipeline<Evaluated> {
+        // SAFETY: typestate guarantees gap_analysis is Some in Implementing phase
+        #[allow(clippy::expect_used)]
         let initial = self
             .gap_analysis
             .take()
@@ -227,6 +235,8 @@ impl Pipeline<Implementing> {
 impl Pipeline<Evaluated> {
     /// Access the final outcome evaluation.
     pub fn evaluation(&self) -> &OutcomeEvaluation {
+        // SAFETY: typestate guarantees evaluation is Some in Evaluated phase
+        #[allow(clippy::expect_used)]
         self.evaluation
             .as_ref()
             .expect("Evaluated pipeline always has evaluation")

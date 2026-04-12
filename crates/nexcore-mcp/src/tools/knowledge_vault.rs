@@ -379,6 +379,8 @@ pub fn knowledge_vault_tags(p: KnowledgeVaultTagsParams) -> Result<CallToolResul
     // Match #tag patterns (not inside code blocks)
     let tag_re = regex::Regex::new(r"(?:^|\s)#([a-zA-Z][a-zA-Z0-9_/-]*)").unwrap_or_else(|_| {
         // Fallback: match nothing
+        // SAFETY: fallback regex literal is infallible
+        #[allow(clippy::expect_used)]
         regex::Regex::new(r"^\b$").expect("fallback regex")
     });
 

@@ -5099,6 +5099,40 @@ impl NexCoreMcpServer {
     }
 
     // ========================================================================
+    // DNA-ML Tools (3) — DNA-encoded feature augmentation + random forest
+    // ========================================================================
+
+    #[tool(
+        description = "Encode a PV feature vector as a DNA strand. Quantizes floating-point features to bytes, then encodes as nucleotide sequence (A/T/G/C). Returns strand representation and quantized bytes."
+    )]
+    async fn dna_ml_encode(
+        &self,
+        Parameters(params): Parameters<params::dna_ml::DnaMlEncodeParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::dna_ml::dna_ml_encode(params)
+    }
+
+    #[tool(
+        description = "Compute DNA similarity between two PV feature vectors. Encodes both as DNA strands, then computes Hamming distance, GC content divergence, and longest common subsequence ratio."
+    )]
+    async fn dna_ml_similarity(
+        &self,
+        Parameters(params): Parameters<params::dna_ml::DnaMlSimilarityParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::dna_ml::dna_ml_similarity(params)
+    }
+
+    #[tool(
+        description = "Run the full DNA-ML pipeline: FAERS data → 12 PV features → DNA encoding → 5 similarity features → 17-dim augmented vector → random forest. Compares DNA-augmented model against PV-only baseline."
+    )]
+    async fn dna_ml_pipeline_run(
+        &self,
+        Parameters(params): Parameters<params::dna_ml::DnaMlPipelineRunParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::dna_ml::dna_ml_pipeline_run(params)
+    }
+
+    // ========================================================================
     // Cargo Toolchain Tools (6) — Structured build/check/test/clippy/fmt/tree
     // ========================================================================
 

@@ -15,6 +15,7 @@ pub mod community;
 pub mod core;
 pub mod core_api;
 pub mod delegation;
+pub mod dna_ml;
 pub mod foundation;
 pub mod guardian;
 pub mod guardian_product;

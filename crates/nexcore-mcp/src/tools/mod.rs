@@ -141,6 +141,9 @@ pub mod dtree;
 // ML Pipeline (autonomous PV signal detection via random forest)
 pub mod ml_pipeline;
 
+// DNA-ML Pipeline (DNA-encoded feature augmentation + random forest)
+pub mod dna_ml;
+
 // Edit Distance Framework (generic ops, costs, solvers, transfer)
 pub mod edit_distance;
 

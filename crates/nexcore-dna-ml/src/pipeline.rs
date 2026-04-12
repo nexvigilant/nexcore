@@ -13,6 +13,7 @@ use nexcore_ml_pipeline::types::RawPairData;
 
 /// Configuration for the DNA-ML pipeline.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(default)]
 pub struct DnaMlConfig {
     /// Number of trees in the random forest.
     pub n_trees: usize,
@@ -169,27 +170,38 @@ pub fn run(
 
     let dataset = Dataset::new(samples, names.clone());
 
-    // Stage 4: Train random forest
+    // Stage 4: Leave-one-out cross-validation
+    //
+    // For each sample, train on all others and predict the held-out sample.
+    // This gives unbiased generalization estimates on small datasets.
     let forest_config = ForestConfig {
         n_trees: config.n_trees,
         max_depth: Some(config.max_depth),
         max_features: config.max_features,
         min_samples_split: config.min_samples_split,
-        min_samples_leaf: 2,
+        min_samples_leaf: 1,
         seed: 42,
     };
 
-    let forest = RandomForest::train(&dataset, forest_config)
-        .map_err(|e| nexcore_error::NexError::new(format!("training: {e}")))?;
-
-    // Stage 5: Evaluate on training set
     let true_labels: Vec<String> = labels.to_vec();
     let mut predicted_labels = Vec::with_capacity(true_labels.len());
     let mut probabilities = Vec::with_capacity(true_labels.len());
 
-    for sample in &dataset.samples {
-        let dtree_features = sample.to_dtree_features();
-        let (prediction, probability) = forest.predict_one(&dtree_features);
+    for i in 0..dataset.samples.len() {
+        let train_samples: Vec<nexcore_ml_pipeline::types::Sample> = dataset
+            .samples
+            .iter()
+            .enumerate()
+            .filter(|(j, _)| *j != i)
+            .map(|(_, s)| s.clone())
+            .collect();
+        let train_ds = Dataset::new(train_samples, names.clone());
+
+        let forest = RandomForest::train(&train_ds, forest_config.clone())
+            .map_err(|e| nexcore_error::NexError::new(format!("training fold {i}: {e}")))?;
+
+        let test_features = dataset.samples[i].to_dtree_features();
+        let (prediction, probability) = forest.predict_one(&test_features);
         predicted_labels.push(prediction);
         probabilities.push(probability);
     }

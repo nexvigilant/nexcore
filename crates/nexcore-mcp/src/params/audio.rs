@@ -96,3 +96,45 @@ pub struct AudioStreamTransitionsParams {
     /// Stream state: "created", "running", "paused", "stopped", or "error".
     pub state: String,
 }
+
+// ========================================================================
+// Layer 0: Audio I/O Primitives (VAD, AEC, Noise Gate)
+// ========================================================================
+
+/// Process an audio frame through the Voice Activity Detector.
+/// Returns speech/silence classification with energy, ZCR, and state.
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct AudioVadProcessParams {
+    /// F32 audio samples (mono, [-1.0, 1.0]).
+    pub samples: Vec<f32>,
+    /// Energy threshold for speech detection. Default: 0.02.
+    pub energy_threshold: Option<f32>,
+    /// Zero-crossing rate ceiling. Frames above this are noise. Default: 0.4.
+    pub zcr_ceiling: Option<f32>,
+}
+
+/// Process an audio frame through the Noise Gate.
+/// Attenuates frames below the adaptive noise floor.
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct AudioNoiseGateParams {
+    /// F32 audio samples (mono, [-1.0, 1.0]).
+    pub samples: Vec<f32>,
+    /// Threshold multiplier over noise floor. Default: 2.0.
+    pub threshold_multiplier: Option<f32>,
+    /// Minimum gain when gate is closed (0.0=silence, 0.1=-20dB). Default: 0.0.
+    pub floor_gain: Option<f32>,
+}
+
+/// Transcribe a WAV file using faster-whisper STT.
+/// Returns text, segments with timing, confidence, and language.
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct AudioTranscribeParams {
+    /// Path to WAV file to transcribe.
+    pub path: String,
+    /// Whisper model name. Default: "medium.en".
+    pub model: Option<String>,
+    /// Language hint. Default: "en".
+    pub language: Option<String>,
+    /// Initial prompt for vocabulary priming.
+    pub initial_prompt: Option<String>,
+}

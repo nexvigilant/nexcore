@@ -1,0 +1,19 @@
+[package]
+name = "suit-compute"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Iron Vigil suit COMPUTE_DOMAIN — hardware orchestration, RTOS bridge, TMR voting"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "MIT OR Apache-2.0"
+repository.workspace = true
+homepage.workspace = true
+keywords = ["compute", "mcu", "redundancy", "ironvigil"]
+categories = ["science"]
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

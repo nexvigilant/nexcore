@@ -28,6 +28,12 @@ pub enum OpenFdaError {
     Unavailable { reason: String },
 }
 
+impl From<OpenFdaError> for nexcore_error::NexError {
+    fn from(err: OpenFdaError) -> Self {
+        nexcore_error::NexError::msg(err.to_string())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

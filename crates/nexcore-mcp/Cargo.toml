@@ -183,6 +183,12 @@ nexcore-pv-intelligence = { path = "../nexcore-pv-intelligence", version = "1.0.
 # Skills Engine (advanced SQI, maturity, KSB, ecosystem, dependency graph, gap analysis)
 nexcore-skills-engine = { workspace = true }
 
+# Iron Vigil Suit HUD (helmet, AR overlay, voice agent, haptics)
+suit-hud = { path = "../suit-hud", version = "0.1.0" }
+
+# Iron Vigil Suit Compute (flight, exo, soc, redundancy)
+suit-compute = { path = "../suit-compute", version = "0.1.0" }
+
 # Chemivigilance Platform (7 new crates — SMILES, descriptors, alerts, QSAR, metabolites, SafetyBrief)
 nexcore-molcore = { path = "../nexcore-molcore", version = "0.1.0" }
 nexcore-structural-alerts = { path = "../nexcore-structural-alerts", version = "0.1.0" }

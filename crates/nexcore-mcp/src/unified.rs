@@ -2721,6 +2721,20 @@ async fn dispatch_inner(
         "audio_device_capabilities" => typed(params, tools::audio::audio_device_capabilities),
         "audio_mixer_pan" => typed(params, tools::audio::audio_mixer_pan),
         "audio_stream_transitions" => typed(params, tools::audio::audio_stream_transitions),
+        // Layer 0: Audio I/O primitives (VAD, Noise Gate, STT)
+        "audio_vad_process" => typed(params, tools::audio::audio_vad_process),
+        "audio_noise_gate" => typed(params, tools::audio::audio_noise_gate),
+        "audio_transcribe" => typed(params, tools::audio::audio_transcribe),
+
+        // ── Suit HUD (Helmet, AR Overlay, Voice Agent, Haptics) ────────────
+        "helmet_state" => typed(params, tools::suit_hud::helmet_state),
+        "hud_frame_compose" => typed(params, tools::suit_hud::hud_frame_compose),
+        "haptic_cue" => typed(params, tools::suit_hud::haptic_cue),
+        "voice_agent_state" => typed(params, tools::suit_hud::voice_agent_state),
+
+        // ── Suit Compute (Flight, Exo, SoC, Redundancy) ────────────
+        "compute_flight_state" => typed(params, tools::suit_compute::compute_flight_state),
+        "compute_tmr_vote" => typed(params, tools::suit_compute::compute_tmr_vote),
 
         // ── Compilation Space (7D Transform Algebra) ───────────────────────
         "compilation_point_compare" => {
@@ -3324,7 +3338,8 @@ fn unified_catalog_data() -> serde_json::Value {
             "antivector": ["antivector_classify", "antivector_compute", "antivector_report", "antivector_label_check"],
             "antibodies": ["antibody_compute_affinity", "antibody_classify_response", "antibody_ig_info", "antibody_ig_catalog"],
             "jeopardy": ["jeopardy_clue_values", "jeopardy_categories", "jeopardy_score_board", "jeopardy_should_buzz", "jeopardy_optimal_dd_wager", "jeopardy_optimal_final_wager", "jeopardy_board_control_value", "jeopardy_compound_velocity"],
-            "audio": ["audio_spec_compute", "audio_spec_presets", "audio_format_info", "audio_rate_info", "audio_convert_sample", "audio_resample", "audio_codec_catalog", "audio_device_capabilities", "audio_mixer_pan", "audio_stream_transitions"],
+            "audio": ["audio_spec_compute", "audio_spec_presets", "audio_format_info", "audio_rate_info", "audio_convert_sample", "audio_resample", "audio_codec_catalog", "audio_device_capabilities", "audio_mixer_pan", "audio_stream_transitions", "audio_vad_process", "audio_noise_gate", "audio_transcribe"],
+            "suit_hud": ["helmet_state", "hud_frame_compose", "haptic_cue", "voice_agent_state"],
             "compilation_space": ["compilation_point_compare", "compilation_point_summary", "compilation_point_presets", "compilation_catalog_lookup", "compilation_chain_validate", "compilation_chain_presets", "compilation_axes_catalog", "compilation_abstraction_levels", "compilation_distance"],
             "pharmacovigilance": ["pv_taxonomy_summary", "pv_taxonomy_primitive", "pv_taxonomy_composite", "pv_taxonomy_concept", "pv_taxonomy_chomsky", "pv_taxonomy_who_pillars", "pv_taxonomy_transfer", "pv_taxonomy_transfer_matrix", "pv_taxonomy_lex_symbols"],
             "vault": ["vault_derive_key", "vault_encrypt", "vault_decrypt", "vault_generate_salt", "vault_config_sample"],

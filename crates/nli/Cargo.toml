@@ -1,0 +1,25 @@
+[package]
+name = "nli"
+version = "0.1.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+description = "Natural Language Interface — 4-layer ASR → intent → context → generation pipeline"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+nexcore-error-derive = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+futures = { workspace = true }
+async-trait = "0.1.81"
+serde_yaml = "0.9"
+
+[dev-dependencies]
+tokio = { workspace = true }
+mockall = "0.11"
+
+[lints]
+workspace = true

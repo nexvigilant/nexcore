@@ -18,6 +18,7 @@
 
 pub mod agent;
 pub mod consensus;
+pub mod engine;
 pub mod error;
 pub mod grounding;
 pub mod integration;
@@ -27,5 +28,8 @@ pub mod types;
 
 pub use agent::registry::AgentRegistry;
 pub use agent::{AgentRecord, AgentState, AgentTask};
+pub use engine::load::{DegradationLevel, LoadMonitor, LoadThresholds};
+pub use engine::metrics::{EngineSnapshot, LatencyTracker, SubsystemSnapshot, TaskTimer};
+pub use engine::{EngineConfig, Subsystem, TaskEngine};
 pub use error::{OrcError, OrcResult};
 pub use types::{AgentId, Priority, TaskGroupId};

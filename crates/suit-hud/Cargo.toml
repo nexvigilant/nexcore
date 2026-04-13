@@ -1,0 +1,21 @@
+[package]
+name = "suit-hud"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Iron Vigil suit HUD — helmet systems, AR overlay, voice agent, haptics"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "MIT OR Apache-2.0"
+repository.workspace = true
+homepage.workspace = true
+keywords = ["hud", "helmet", "voice", "haptics", "ironvigil"]
+categories = ["science"]
+
+[dependencies]
+wksp-types = { path = "../wksp-types", version = "1.0.0" }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+nexcore-audio = { path = "../nexcore-audio", version = "0.1.1" }
+
+[lints]
+workspace = true

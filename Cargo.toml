@@ -31,9 +31,9 @@ dag-publish = { path = "tools/dag-publish" }
 burn = { version = "0.20", default-features = false, features = ["ndarray", "autodiff", "std"] }
 burn-ndarray = { version = "0.20", features = ["std"] }
 bytes = "1.6.1"
-candle-core = "0.8"
-candle-nn = "0.8"
-candle-transformers = "0.8"
+candle-core = "0.9"
+candle-nn = "0.9"
+candle-transformers = "0.9"
 chrono = { version = "0.4.38", features = ["serde"] }
 clap = { version = "4.5.11", features = ["derive", "cargo", "env"] }
 # dirs — REPLACED by nexcore-fs::dirs (sovereignty campaign)

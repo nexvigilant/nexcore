@@ -39,8 +39,8 @@ impl NexError {
     #[must_use]
     pub fn context<C: fmt::Display + Send + Sync + 'static>(self, ctx: C) -> Self {
         Self {
-            inner: Box::new(format!("{}: {}", ctx, self.inner)),
-            source: self.source,
+            inner: Box::new(ctx),
+            source: Some(Box::new(self)),
         }
     }
 
@@ -60,7 +60,7 @@ impl NexError {
         C: fmt::Display + Send + Sync + 'static,
     {
         Self {
-            inner: Box::new(format!("{ctx}: {err}")),
+            inner: Box::new(ctx),
             source: Some(Box::new(err)),
         }
     }
@@ -84,11 +84,30 @@ impl fmt::Debug for NexError {
 }
 
 #[cfg(feature = "std")]
-impl<E> From<E> for NexError
-where
-    E: std::error::Error + Send + Sync + 'static,
-{
-    fn from(err: E) -> Self {
+impl std::error::Error for NexError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        self.source
+            .as_ref()
+            .map(|e| e.as_ref() as &(dyn std::error::Error + 'static))
+    }
+}
+
+impl From<String> for NexError {
+    fn from(s: String) -> Self {
+        Self::new(s)
+    }
+}
+
+impl From<&str> for NexError {
+    fn from(s: &str) -> Self {
+        Self::new(s)
+    }
+}
+
+/// Conversion from `std::io::Error`.
+#[cfg(feature = "std")]
+impl From<std::io::Error> for NexError {
+    fn from(err: std::io::Error) -> Self {
         Self {
             inner: Box::new(err.to_string()),
             source: Some(Box::new(err)),
@@ -96,39 +115,46 @@ where
     }
 }
 
-// ── String interop ──────────────────────────────────────────────
-// These conversions let NexError participate in String-based error
-// pipelines (MCP tool boundaries, JSON serialization, Cow<str>)
-// without adding serde as a dependency.
-
-impl From<NexError> for String {
-    fn from(err: NexError) -> Self {
-        err.to_string()
-    }
-}
-
-#[cfg(not(feature = "std"))]
-impl From<NexError> for alloc::borrow::Cow<'static, str> {
-    fn from(err: NexError) -> Self {
-        alloc::borrow::Cow::Owned(err.to_string())
-    }
-}
-
+/// Conversion from `Box<dyn std::error::Error + Send + Sync>`.
 #[cfg(feature = "std")]
-impl From<NexError> for std::borrow::Cow<'static, str> {
-    fn from(err: NexError) -> Self {
-        std::borrow::Cow::Owned(err.to_string())
+impl From<Box<dyn std::error::Error + Send + Sync + 'static>> for NexError {
+    fn from(err: Box<dyn std::error::Error + Send + Sync + 'static>) -> Self {
+        Self {
+            inner: Box::new(err.to_string()),
+            source: Some(err),
+        }
     }
 }
 
-/// Allows NexError to be used in `json!({"error": e})` contexts
-/// via serde's `Display`-based serialization. Gated behind `serde` feature.
-#[cfg(feature = "serde")]
-impl serde::Serialize for NexError {
-    fn serialize<S: serde::Serializer>(
-        &self,
-        serializer: S,
-    ) -> core::result::Result<S::Ok, S::Error> {
-        serializer.serialize_str(&self.to_string())
+/// Conversion from `serde_json::Error`.
+#[cfg(feature = "json")]
+impl From<serde_json::Error> for NexError {
+    fn from(err: serde_json::Error) -> Self {
+        Self {
+            inner: Box::new(err.to_string()),
+            source: Some(Box::new(err)),
+        }
+    }
+}
+
+/// Conversion from `rusqlite::Error`.
+#[cfg(feature = "sqlite")]
+impl From<rusqlite::Error> for NexError {
+    fn from(err: rusqlite::Error) -> Self {
+        Self {
+            inner: Box::new(err.to_string()),
+            source: Some(Box::new(err)),
+        }
+    }
+}
+
+/// Conversion from `reqwest::Error`.
+#[cfg(feature = "http")]
+impl From<reqwest::Error> for NexError {
+    fn from(err: reqwest::Error) -> Self {
+        Self {
+            inner: Box::new(err.to_string()),
+            source: Some(Box::new(err)),
+        }
     }
 }

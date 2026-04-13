@@ -12,6 +12,18 @@ homepage.workspace = true
 keywords = ["audio", "pcm", "mixer", "streaming", "os"]
 categories = ["multimedia::audio"]
 
+[[bin]]
+name = "nexcore-vad"
+path = "src/bin/vad_cli.rs"
+
+[[bin]]
+name = "nexcore-stt"
+path = "src/bin/stt_cli.rs"
+
+[[bin]]
+name = "nexcore-transcribe"
+path = "src/bin/transcribe_cli.rs"
+
 [dependencies]
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }

@@ -15,12 +15,18 @@ categories = ["no-std", "rust-patterns"]
 # Replaces: thiserror, anyhow
 nexcore-error-derive = { path = "../nexcore-error-derive", version = "1.0.0", optional = true }
 serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+rusqlite = { workspace = true, optional = true }
+reqwest = { workspace = true, optional = true }
 
 [features]
 default = ["std", "derive", "serde"]
 std = []
 derive = ["dep:nexcore-error-derive"]
 serde = ["dep:serde"]
+json = ["std", "dep:serde_json"]
+sqlite = ["std", "dep:rusqlite"]
+http = ["std", "dep:reqwest"]
 
 [lints]
 workspace = true

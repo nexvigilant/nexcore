@@ -86,6 +86,9 @@ pub struct NexCoreMcpServer {
     pub assist_index: Arc<RwLock<SkillKnowledgeIndex>>,
     /// Loaded configuration (optional - may not exist)
     pub config: Option<nexcore_config::ClaudeConfig>,
+    /// Parallel task execution engine (JARVIS).
+    /// Named subsystems with priority queuing and graceful degradation.
+    pub engine: Arc<nexcore_orchestration::TaskEngine>,
     /// Tool router
     pub tool_router: ToolRouter<Self>,
 }
@@ -103,10 +106,44 @@ impl NexCoreMcpServer {
             .and_then(|p| SkillKnowledgeIndex::scan(&p).ok())
             .unwrap_or_default();
 
+        // Initialize JARVIS task engine with default config.
+        // Subsystems registered async after construction.
+        let engine = Arc::new(nexcore_orchestration::TaskEngine::new(
+            nexcore_orchestration::EngineConfig::default(),
+        ));
+
+        // Register subsystems on a background task (async Mutex inside TaskEngine)
+        let engine_init = engine.clone();
+        tokio::spawn(async move {
+            use nexcore_orchestration::{Priority, Subsystem};
+
+            // Critical: guardian, vitals — never shed
+            engine_init
+                .register_subsystem(Subsystem::new("vitals", Priority::Critical))
+                .await;
+            // High: signal detection, threat processing
+            engine_init
+                .register_subsystem(Subsystem::new("signals", Priority::High))
+                .await;
+            // Normal: intelligence synthesis, FAERS queries, literature
+            engine_init
+                .register_subsystem(Subsystem::new("intel", Priority::Normal))
+                .await;
+            // Normal: computation (PRR, ROR, EBGM, causality)
+            engine_init
+                .register_subsystem(Subsystem::new("compute", Priority::Normal))
+                .await;
+            // Low: background analytics, telemetry, cleanup
+            engine_init
+                .register_subsystem(Subsystem::new("background", Priority::Low))
+                .await;
+        });
+
         Self {
             registry: Arc::new(RwLock::new(SkillRegistry::new())),
             assist_index: Arc::new(RwLock::new(assist_index)),
             config,
+            engine,
             tool_router: Self::tool_router(),
         }
     }
@@ -174,6 +211,38 @@ impl NexCoreMcpServer {
             serde_json::to_string_pretty(&health).unwrap_or_default(),
         )]))
     }
+
+    // ========================================================================
+    // Engine Tools (JARVIS Parallel Task Engine)
+    // ========================================================================
+
+    #[tool(
+        description = "Snapshot of the JARVIS parallel task execution engine. Returns active tasks, queue depth, latency percentiles (p95/p99), degradation level, and per-subsystem metrics. Use to monitor engine health and detect load shedding."
+    )]
+    pub async fn engine_snapshot(&self) -> Result<CallToolResult, McpError> {
+        let snapshot = self.engine.snapshot().await;
+        let json = serde_json::to_string_pretty(&snapshot)
+            .map_err(|e| McpError::internal_error(format!("serialize: {e}"), None))?;
+        Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+            json,
+        )]))
+    }
+
+    #[tool(
+        description = "List registered subsystems in the JARVIS task engine. Shows name, default priority, active/completed/failed counts, and degradation status for each subsystem."
+    )]
+    pub async fn engine_subsystems(&self) -> Result<CallToolResult, McpError> {
+        let snapshot = self.engine.snapshot().await;
+        let subsystems = serde_json::to_string_pretty(&snapshot.subsystems)
+            .map_err(|e| McpError::internal_error(format!("serialize: {e}"), None))?;
+        Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+            subsystems,
+        )]))
+    }
+
+    // ========================================================================
+    // Diagnostic Tools
+    // ========================================================================
 
     #[tool(
         description = "Query the PDP diagnostic engine state for a session. Returns current state (IDLE/PARSED/EVALUATED/COMPLETE), gate scores, and transition history. Reads from /tmp/pdp-parse-*.json and /tmp/pdp-eval-*.json."

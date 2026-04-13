@@ -1,0 +1,20 @@
+[package]
+name = "nexcore-pv-math"
+version = "1.0.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
+rust-version = "1.85"
+description = "WASM-compilable PV signal detection math: PRR, ROR, IC, EBGM, chi-square, Fisher, Naranjo, WHO-UMC"
+keywords = ["pharmacovigilance", "signal-detection", "wasm", "drug-safety"]
+categories = ["science", "algorithms", "wasm"]
+
+[dependencies]
+nexcore-error = { workspace = true }
+nexcore-signal-types = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+
+[lints]
+workspace = true

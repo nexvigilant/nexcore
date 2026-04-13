@@ -1,0 +1,24 @@
+[package]
+name = "nexcore-pv-wasm"
+version = "1.0.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nexvigilant/nexcore"
+homepage.workspace = true
+rust-version = "1.85"
+description = "WASM bindings for NexVigilant PV signal detection — PRR, ROR, IC, EBGM, Naranjo, WHO-UMC"
+keywords = ["pharmacovigilance", "wasm", "signal-detection"]
+categories = ["wasm"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+nexcore-pv-math = { path = "../nexcore-pv-math", version = "1.0.0" }
+wasm-bindgen = "0.2"
+serde = { workspace = true, features = ["derive"] }
+serde-wasm-bindgen = "0.6"
+
+[lints]
+workspace = true

@@ -12,8 +12,9 @@ use serde_json::json;
 
 use crate::params::audio::{
     AudioCodecCatalogParams, AudioConvertSampleParams, AudioDeviceCapabilitiesParams,
-    AudioFormatInfoParams, AudioMixerPanParams, AudioRateInfoParams, AudioResampleParams,
-    AudioSpecComputeParams, AudioSpecPresetsParams, AudioStreamTransitionsParams,
+    AudioFormatInfoParams, AudioMixerPanParams, AudioNoiseGateParams, AudioRateInfoParams,
+    AudioResampleParams, AudioSpecComputeParams, AudioSpecPresetsParams,
+    AudioStreamTransitionsParams, AudioTranscribeParams, AudioVadProcessParams,
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -286,4 +287,86 @@ pub fn audio_stream_transitions(
         "can_pause": state.can_pause(),
         "can_stop": state.can_stop(),
     }))
+}
+
+// ── Layer 0: Audio I/O Primitives ───────────────────────────────────────
+
+/// Process an audio frame through the Voice Activity Detector.
+pub fn audio_vad_process(p: AudioVadProcessParams) -> Result<CallToolResult, McpError> {
+    use nexcore_audio::vad::{VadConfig, VoiceDetector};
+
+    let config = VadConfig {
+        energy_threshold: p.energy_threshold.unwrap_or(0.02),
+        zcr_ceiling: p.zcr_ceiling.unwrap_or(0.4),
+        ..VadConfig::default()
+    };
+
+    let mut detector = VoiceDetector::new(config);
+    let result = detector.process(&p.samples);
+
+    ok_json(json!({
+        "is_speech": result.is_speech,
+        "energy": (result.energy * 10000.0).round() / 10000.0,
+        "zcr": (result.zcr * 1000.0).round() / 1000.0,
+        "threshold": (result.threshold * 10000.0).round() / 10000.0,
+        "state": format!("{:?}", result.state),
+        "sample_count": p.samples.len(),
+    }))
+}
+
+/// Process an audio frame through the Noise Gate.
+pub fn audio_noise_gate(p: AudioNoiseGateParams) -> Result<CallToolResult, McpError> {
+    use nexcore_audio::noise::{NoiseGate, NoiseGateConfig};
+
+    let config = NoiseGateConfig {
+        threshold_multiplier: p.threshold_multiplier.unwrap_or(2.0),
+        floor_gain: p.floor_gain.unwrap_or(0.0),
+        ..NoiseGateConfig::default()
+    };
+
+    let mut gate = NoiseGate::new(config);
+    let (output, result) = gate.process(&p.samples);
+
+    // Compute output energy for comparison
+    let input_rms = nexcore_audio::vad::rms_energy(&p.samples);
+    let output_rms = nexcore_audio::vad::rms_energy(&output);
+    let reduction_db = if input_rms > 0.0 && output_rms > 0.0 {
+        20.0 * (output_rms / input_rms).log10()
+    } else {
+        f32::NEG_INFINITY
+    };
+
+    ok_json(json!({
+        "state": format!("{:?}", result.state),
+        "gain": (result.gain * 1000.0).round() / 1000.0,
+        "noise_floor": (result.noise_floor * 10000.0).round() / 10000.0,
+        "threshold": (result.threshold * 10000.0).round() / 10000.0,
+        "input_rms": (input_rms * 10000.0).round() / 10000.0,
+        "output_rms": (output_rms * 10000.0).round() / 10000.0,
+        "reduction_db": if reduction_db.is_finite() { json!((reduction_db * 10.0).round() / 10.0) } else { json!(null) },
+        "sample_count": p.samples.len(),
+        "output_samples": output.len(),
+    }))
+}
+
+/// Transcribe a WAV file using faster-whisper STT.
+pub fn audio_transcribe(p: AudioTranscribeParams) -> Result<CallToolResult, McpError> {
+    use nexcore_audio::stt::{SttConfig, transcribe_file};
+    use std::path::Path;
+
+    let config = SttConfig {
+        model: p.model.unwrap_or_else(|| "medium.en".to_string()),
+        language: p.language.unwrap_or_else(|| "en".to_string()),
+        initial_prompt: p.initial_prompt.unwrap_or_default(),
+        ..SttConfig::default()
+    };
+
+    match transcribe_file(Path::new(&p.path), &config) {
+        Ok(transcript) => {
+            let value = serde_json::to_value(&transcript)
+                .unwrap_or_else(|_| json!({"error": "serialization failed"}));
+            ok_json(value)
+        }
+        Err(e) => err_result(&format!("STT error: {e}")),
+    }
 }

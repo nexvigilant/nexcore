@@ -1,0 +1,17 @@
+[package]
+name = "suit-power-mcp"
+version = "0.1.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+description = "MCP bridge for suit power management telemetry and control."
+
+[dependencies]
+suit-power = { path = "../suit-power", version = "0.1.0" }
+wksp-types = { path = "../wksp-types", version = "1.0.0" }
+nexcore-error = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+
+[lints]
+workspace = true

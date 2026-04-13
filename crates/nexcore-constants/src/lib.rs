@@ -37,3 +37,9 @@ pub use correction::Correction;
 pub use interval::ConfidenceInterval;
 pub use measured::Measured;
 pub use tier::Tier;
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+pub struct Vector3 {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+}

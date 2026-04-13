@@ -1,0 +1,22 @@
+[package]
+name = "suit-perception"
+version = "0.1.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+description = "Perception system for the suit — Sensor fusion, localization, and intent classification"
+
+[dependencies]
+nexcore-error = { workspace = true }
+nexcore-chrono = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+candle-core = { workspace = true }
+candle-nn = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true }
+suit-sensors = { path = "../suit-sensors" }
+suit-primitives = { path = "../suit-primitives" }
+heapless = "0.8"
+
+[lints]
+workspace = true

@@ -1,0 +1,33 @@
+[package]
+name = "perception"
+version = "0.1.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+description = "Environmental Perception pipeline — 4-layer data ingestion, normalization, fusion, and world model"
+license = "MIT OR Apache-2.0"
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+# NexCore workspace deps
+nexcore-error = { workspace = true }
+nexcore-id = { workspace = true }
+nexcore-chrono = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+futures = { workspace = true }
+reqwest = { workspace = true }
+
+# Crate-local deps
+async-trait = "0.1.81"
+serde_yaml = "0.9"
+sha2 = "0.10.8"
+tokio = { version = "1.38.0", features = ["full"] }
+
+[dev-dependencies]
+mockall = "0.11"
+tokio = { version = "1.38.0", features = ["full", "test-util"] }
+
+[lints]
+workspace = true

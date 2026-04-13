@@ -1,0 +1,1 @@
+//! suit-power-core — stub

@@ -1,0 +1,14 @@
+[package]
+name = "suit-safety"
+version = "0.1.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+description = "Safety system — ballistic recovery, fire suppression, e-stop, redundancy voting"
+
+[dependencies]
+wksp-types = { path = "../wksp-types", version = "1.0.0" }
+nexcore-error = { workspace = true }
+tracing = { workspace = true }
+
+[lints]
+workspace = true

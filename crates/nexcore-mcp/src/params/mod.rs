@@ -392,6 +392,10 @@ pub use observatory::*;
 pub mod stoichiometry;
 pub use stoichiometry::*;
 
+// Suit HUD (helmet, AR overlay, voice agent, haptics)
+pub mod suit_hud;
+pub use suit_hud::*;
+
 // TRIAL Framework (universal experimentation — protocol, power, randomize, interim, safety, endpoint, multiplicity, adapt, report)
 pub mod trial;
 pub use trial::*;
@@ -614,4 +618,6 @@ pub mod pv_intelligence;
 pub use pv_intelligence::*;
 
 // Web Autonomy (fetch, search, extract, crawl, metadata)
+pub mod suit_compute;
 pub mod web;
+pub use suit_compute::*;

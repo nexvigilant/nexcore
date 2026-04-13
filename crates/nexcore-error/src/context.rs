@@ -21,12 +21,14 @@ pub trait Context<T> {
         F: FnOnce() -> C;
 }
 
+/// Blanket impl for any `std::error::Error` type (enables `?` with `.context()`)
+#[cfg(feature = "std")]
 impl<T, E> Context<T> for core::result::Result<T, E>
 where
-    NexError: From<E>,
+    E: std::error::Error + Send + Sync + 'static,
 {
     fn context<C: fmt::Display + Send + Sync + 'static>(self, ctx: C) -> Result<T> {
-        self.map_err(|e| NexError::from(e).context(ctx))
+        self.map_err(|e| NexError::from_err(e, ctx))
     }
 
     fn with_context<C, F>(self, f: F) -> Result<T>
@@ -34,13 +36,14 @@ where
         C: fmt::Display + Send + Sync + 'static,
         F: FnOnce() -> C,
     {
-        self.map_err(|e| NexError::from(e).context(f()))
+        self.map_err(|e| NexError::from_err(e, f()))
     }
 }
 
-impl<T> Context<T> for core::option::Option<T> {
+#[cfg(not(feature = "std"))]
+impl<T> Context<T> for Result<T, NexError> {
     fn context<C: fmt::Display + Send + Sync + 'static>(self, ctx: C) -> Result<T> {
-        self.ok_or_else(|| NexError::msg(ctx))
+        self.map_err(|_| NexError::msg(ctx))
     }
 
     fn with_context<C, F>(self, f: F) -> Result<T>
@@ -48,6 +51,6 @@ impl<T> Context<T> for core::option::Option<T> {
         C: fmt::Display + Send + Sync + 'static,
         F: FnOnce() -> C,
     {
-        self.ok_or_else(|| NexError::msg(f()))
+        self.map_err(|_| NexError::msg(f()))
     }
 }

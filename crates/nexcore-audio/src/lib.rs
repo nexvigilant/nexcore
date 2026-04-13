@@ -48,21 +48,37 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+pub mod aec;
 pub mod buffer;
 pub mod codec;
 pub mod composites;
 pub mod device;
+pub mod disfluency;
 pub mod error;
+pub mod lang;
 pub mod mixer;
+pub mod noise;
+pub mod pipeline;
 pub mod prelude;
 pub mod sample;
 pub mod stream;
+pub mod stt;
+pub mod vad;
 
 // Re-export main types
+pub use aec::{AecConfig, AecResult, EchoCanceller};
 pub use buffer::AudioBuffer;
 pub use codec::{CodecId, ConversionSpec, ResampleQuality};
 pub use device::{AudioDevice, DeviceCapabilities, DeviceId, DeviceState, DeviceType};
+pub use disfluency::{DisfluencyConfig, FilterResult};
 pub use error::AudioError;
+pub use lang::{LangResult, Language};
 pub use mixer::{Mixer, MixerSource};
+pub use noise::{GateState, NoiseGate, NoiseGateConfig, NoiseGateResult};
+pub use pipeline::{
+    AsrPipeline, PipelineConfig, PipelineEvent, PipelineState, PostProcessResult, Utterance,
+};
 pub use sample::{AudioSpec, ChannelLayout, SampleFormat, SampleRate};
 pub use stream::{AudioStream, StreamDirection, StreamId, StreamState};
+pub use stt::{Segment, SttConfig, SttError, Transcript};
+pub use vad::{VadConfig, VadResult, VadState, VoiceDetector};

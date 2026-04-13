@@ -447,6 +447,9 @@ pub mod observatory;
 // Stoichiometry (encode/decode concepts as balanced primitive equations)
 pub mod stoichiometry;
 
+// Suit HUD (helmet, AR overlay, voice agent, haptics)
+pub mod suit_hud;
+
 // TRIAL Framework (universal experimentation — 10 MCP tools)
 pub mod trial;
 
@@ -617,4 +620,5 @@ pub mod pharma_tools;
 pub mod processor;
 
 // Web Autonomy (fetch, search, extract, crawl, metadata, links)
+pub mod suit_compute;
 pub mod web;

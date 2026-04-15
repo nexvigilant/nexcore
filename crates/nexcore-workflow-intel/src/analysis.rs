@@ -423,27 +423,42 @@ fn compute_stats(
 }
 
 /// Compute overall workflow health score.
+///
+/// Uses a weighted composite of 5 dimensions rather than per-gap penalty.
+/// Each dimension is 0.0–1.0, weighted to produce a final 0.0–1.0 score.
+///
+/// Dimensions:
+/// - Tool reliability (30%): fraction of tools with <15% failure rate
+/// - MCP utilization (15%): pct of tool calls through MCP (target: 15%+)
+/// - Verdict quality (20%): fully_demonstrated rate
+/// - Critical gap count (25%): inverse of severity-5 gap density (capped at 20)
+/// - Skill usage (10%): skill invocation rate
 fn compute_health_score(stats: &GapStats, gaps: &[WorkflowGap]) -> f64 {
-    let mut score: f64 = 1.0;
+    // Dimension 1: Tool reliability — what fraction of high-usage tools are healthy?
+    let total_gap_tools = gaps.iter().filter(|g| g.gap_type == "error_prone").count();
+    // Cap denominator at a reasonable tool count to avoid near-zero scores
+    let reliability = 1.0 - (total_gap_tools as f64 / 80.0).min(1.0);
 
-    // Penalize for gaps by severity
-    for gap in gaps {
-        score -= match gap.severity {
-            5 => 0.15,
-            4 => 0.10,
-            3 => 0.07,
-            2 => 0.04,
-            _ => 0.02,
-        };
-    }
+    // Dimension 2: MCP utilization — 0 at 0%, 1.0 at 15%+
+    let mcp_util = (stats.mcp_usage_pct / 15.0).min(1.0);
 
-    // Bonus for good metrics
-    if stats.mcp_usage_pct > 15.0 {
-        score += 0.05;
-    }
-    if stats.full_verdict_rate > 0.7 {
-        score += 0.05;
-    }
+    // Dimension 3: Verdict quality — fully_demonstrated rate
+    let verdict_quality = stats.full_verdict_rate;
+
+    // Dimension 4: Critical gap density — severity 5 gaps, with diminishing impact
+    let crit_gaps = gaps.iter().filter(|g| g.severity == 5).count();
+    // 0 critical = 1.0, 5 = 0.75, 10 = 0.50, 20+ = 0.0
+    let crit_score = 1.0 - (crit_gaps as f64 / 20.0).min(1.0);
+
+    // Dimension 5: Skill usage rate
+    let skill_score = stats.skill_invocation_rate.min(1.0);
+
+    // Weighted composite
+    let score = reliability * 0.30
+        + mcp_util * 0.15
+        + verdict_quality * 0.20
+        + crit_score * 0.25
+        + skill_score * 0.10;
 
     score.clamp(0.0, 1.0)
 }
@@ -516,5 +531,42 @@ mod tests {
         ];
         let score = compute_health_score(&stats, &gaps);
         assert!(score < 0.8);
+    }
+
+    #[test]
+    fn test_health_score_real_world_62_gaps() {
+        // Simulates the actual production scenario: 62 gaps, 40 at severity 5
+        let stats = GapStats {
+            sessions: 259,
+            sessions_with_errors: 0,
+            avg_tools_per_session: 155.0,
+            mcp_usage_pct: 4.3,
+            skill_invocation_rate: 1.0,
+            full_verdict_rate: 0.61,
+        };
+        let mut gaps = Vec::new();
+        for _ in 0..40 {
+            gaps.push(WorkflowGap {
+                gap_type: "error_prone".to_string(),
+                description: "test".to_string(),
+                severity: 5,
+                evidence: "test".to_string(),
+                suggestion: "test".to_string(),
+            });
+        }
+        for _ in 0..22 {
+            gaps.push(WorkflowGap {
+                gap_type: "error_prone".to_string(),
+                description: "test".to_string(),
+                severity: 3,
+                evidence: "test".to_string(),
+                suggestion: "test".to_string(),
+            });
+        }
+        let score = compute_health_score(&stats, &gaps);
+        // Must NOT floor to 0.00 — the whole point of the calibration
+        assert!(score > 0.15, "Score {score} floored — calibration failed");
+        // But should reflect poor health
+        assert!(score < 0.60, "Score {score} too generous for 62 gaps");
     }
 }

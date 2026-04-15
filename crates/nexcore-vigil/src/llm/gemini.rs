@@ -63,7 +63,10 @@ impl GeminiClient {
             ));
         }
 
-        Ok(String::from_utf8(output.stdout)?.trim().to_string())
+        Ok(String::from_utf8(output.stdout)
+            .map_err(|e| nexcore_error::NexError::new(e.to_string()))?
+            .trim()
+            .to_string())
     }
 }
 
@@ -132,15 +135,16 @@ Available actions:
                 .header("Authorization", &auth_header)
         };
 
-        let response: reqwest::Response = request.send().await?;
+        let ne = |e: reqwest::Error| nexcore_error::NexError::new(e.to_string());
+        let response: reqwest::Response = request.send().await.map_err(ne)?;
         if !response.status().is_success() {
             return Err(nexcore_error::nexerror!(
                 "API error: {}",
-                response.text().await?
+                response.text().await.map_err(ne)?
             ));
         }
 
-        let resp_json: serde_json::Value = response.json().await?;
+        let resp_json: serde_json::Value = response.json().await.map_err(ne)?;
 
         // Extract text from Gemini response structure
         let text = resp_json["candidates"][0]["content"]["parts"][0]["text"]

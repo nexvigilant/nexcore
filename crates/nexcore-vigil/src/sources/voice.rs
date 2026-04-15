@@ -38,7 +38,10 @@ impl Source for VoiceSource {
         let device = host
             .default_input_device()
             .ok_or_else(|| nexcore_error::nexerror!("no_input_device"))?;
-        let config: cpal::StreamConfig = device.default_input_config()?.into();
+        let config: cpal::StreamConfig = device
+            .default_input_config()
+            .map_err(|e| nexcore_error::NexError::new(e.to_string()))?
+            .into();
         let audio_buffer = Arc::new(Mutex::new(Vec::<f32>::new()));
         let buffer_clone = audio_buffer.clone();
         let cancel = self.cancel_token.clone();

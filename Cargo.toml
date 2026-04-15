@@ -282,6 +282,7 @@ nexcore-vos = { path = "crates/nexcore-vos", version = "0.1.0" }
 nexcore-viz = { path = "crates/nexcore-viz", version = "1.0.0" }
 nexcore-web = { path = "crates/nexcore-web", version = "0.1.0" }
 nexcore-word = { path = "crates/nexcore-word", version = "1.0.0" }
+nexcore-workflow-intel = { path = "crates/nexcore-workflow-intel", version = "0.1.0" }
 nexcore-zeta = { path = "crates/nexcore-zeta", version = "0.1.0" }
 nucli = { path = "crates/nucli", version = "1.0.0" }
 primitive-innovation = { path = "crates/primitive-innovation", version = "1.0.0" }
@@ -454,5 +455,20 @@ from_over_into = "allow"
 # Default is 1 (max optimization), which OOMs on nexcore-vigilance (75K LoC).
 # 16 units reduces peak memory ~4x with minimal perf impact for our use case.
 # ---------------------------------------------------------------------------
+[profile.dev]
+debug = 1                # Line tables only (faster than full debug)
+split-debuginfo = "unpacked"
+
+[profile.dev.package."*"]
+debug = 0                # No debug info for deps
+opt-level = 1            # Slight optimization for dep code
+
 [profile.release]
+lto = "thin"             # Faster than fat LTO
+codegen-units = 16       # Max parallelism during LLVM codegen
+
+[profile.dev-release]
+inherits = "release"
+opt-level = 1            # Fast iteration: opt1 + no LTO (~3x faster than release)
+lto = false
 codegen-units = 16

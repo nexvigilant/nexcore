@@ -272,6 +272,7 @@ prima-pipeline = { workspace = true }
 prima-academy = { workspace = true }
 prima-mcp-server = { workspace = true }
 nexcore-word = { workspace = true }
+nexcore-workflow-intel = { workspace = true }
 nexcore-grammar-lab = { workspace = true }
 primitive-innovation = { workspace = true }
 nexcore-primitive-scanner = { workspace = true }

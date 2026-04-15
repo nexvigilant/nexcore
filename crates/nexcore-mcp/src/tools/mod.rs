@@ -622,3 +622,6 @@ pub mod processor;
 // Web Autonomy (fetch, search, extract, crawl, metadata, links)
 pub mod suit_compute;
 pub mod web;
+
+// Workflow Intelligence (map, gaps, bottlenecks, live intel)
+pub mod workflow_intel;

@@ -81,6 +81,7 @@ Workflow coordination.
 - `nexcore-brain` (sessions, artifacts, working memory)
 - `nexcore-build-gate`
 - `nexcore-skill-*`, `nexcore-signal-*`
+- `nexcore-workflow-intel` (workflow mapping, gap analysis, bottleneck detection from brain.db)
 
 ### Service (5-190 internal deps)
 External interfaces. Only layer with binary targets.

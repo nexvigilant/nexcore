@@ -9781,6 +9781,7 @@ dependencies = [
  "nexcore-viz",
  "nexcore-web",
  "nexcore-word",
+ "nexcore-workflow-intel",
  "nexcore-zeta",
  "parking_lot",
  "prima",
@@ -11323,6 +11324,17 @@ dependencies = [
  "nexcore-lex-primitiva",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "nexcore-workflow-intel"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "tempfile",
 ]
 
 [[package]]

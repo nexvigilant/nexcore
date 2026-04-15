@@ -70,7 +70,7 @@ pub async fn npm_run(params: NpmRunParams) -> Result<CallToolResult, McpError> {
             });
             format_result(result, success)
         }
-        Err(e) => format_result(json!({"success": false, "error": e}), false),
+        Err(e) => format_result(json!({"success": false, "error": e.to_string()}), false),
     }
 }
 
@@ -96,7 +96,7 @@ pub async fn npm_install(params: NpmInstallParams) -> Result<CallToolResult, Mcp
             });
             format_result(result, success)
         }
-        Err(e) => format_result(json!({"success": false, "error": e}), false),
+        Err(e) => format_result(json!({"success": false, "error": e.to_string()}), false),
     }
 }
 
@@ -117,7 +117,7 @@ pub async fn npm_list(params: NpmListParams) -> Result<CallToolResult, McpError>
             });
             format_result(result, success)
         }
-        Err(e) => format_result(json!({"success": false, "error": e}), false),
+        Err(e) => format_result(json!({"success": false, "error": e.to_string()}), false),
     }
 }
 
@@ -139,6 +139,6 @@ pub async fn npm_outdated(params: NpmOutdatedParams) -> Result<CallToolResult, M
             });
             format_result(result, true)
         }
-        Err(e) => format_result(json!({"success": false, "error": e}), false),
+        Err(e) => format_result(json!({"success": false, "error": e.to_string()}), false),
     }
 }

@@ -13,28 +13,8 @@ jobs = 16  # Leave 4 cores for system (20 total)
 linker = "clang"
 rustflags = ["-C", "link-arg=-fuse-ld=mold"]
 
-[profile.dev]
-# Faster dev builds - disable debug info for dependencies
-debug = 1  # Line tables only (faster than full debug)
-split-debuginfo = "unpacked"  # Faster incremental linking
-
-[profile.dev.package."*"]
-# No debug info for dependencies (major speedup)
-debug = 0
-opt-level = 1  # Slight optimization for dep code
-
-[profile.test]
-# Match dev for consistency
-debug = 1
-
-[profile.test.package."*"]
-debug = 0
-opt-level = 1
-
-[profile.release]
-# Optimized release builds
-lto = "thin"  # Link-time optimization (faster than fat LTO)
-codegen-units = 4  # Balance between speed and optimization
+# Profile overrides belong in Cargo.toml, not here.
+# See workspace root Cargo.toml for [profile.*] sections.
 
 [env]
 # sccache configuration

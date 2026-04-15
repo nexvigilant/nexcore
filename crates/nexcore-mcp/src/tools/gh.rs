@@ -77,7 +77,7 @@ pub async fn gh_pr_create(params: GhPrCreateParams) -> Result<CallToolResult, Mc
             });
             format_result(result, success)
         }
-        Err(e) => format_result(json!({"success": false, "error": e}), false),
+        Err(e) => format_result(json!({"success": false, "error": e.to_string()}), false),
     }
 }
 
@@ -108,7 +108,7 @@ pub async fn gh_pr_view(params: GhPrViewParams) -> Result<CallToolResult, McpErr
             });
             format_result(result, success)
         }
-        Err(e) => format_result(json!({"success": false, "error": e}), false),
+        Err(e) => format_result(json!({"success": false, "error": e.to_string()}), false),
     }
 }
 
@@ -144,7 +144,7 @@ pub async fn gh_pr_list(params: GhPrListParams) -> Result<CallToolResult, McpErr
             });
             format_result(result, success)
         }
-        Err(e) => format_result(json!({"success": false, "error": e}), false),
+        Err(e) => format_result(json!({"success": false, "error": e.to_string()}), false),
     }
 }
 
@@ -171,7 +171,7 @@ pub async fn gh_issue_view(params: GhIssueViewParams) -> Result<CallToolResult, 
             });
             format_result(result, success)
         }
-        Err(e) => format_result(json!({"success": false, "error": e}), false),
+        Err(e) => format_result(json!({"success": false, "error": e.to_string()}), false),
     }
 }
 
@@ -223,6 +223,6 @@ pub async fn gh_api(params: GhApiParams) -> Result<CallToolResult, McpError> {
             });
             format_result(result, success)
         }
-        Err(e) => format_result(json!({"success": false, "error": e}), false),
+        Err(e) => format_result(json!({"success": false, "error": e.to_string()}), false),
     }
 }

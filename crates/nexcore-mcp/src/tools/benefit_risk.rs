@@ -129,7 +129,7 @@ fn measured_to_json(m: &nexcore_constants::Measured<f64>) -> Value {
 pub fn qbr_compute(p: QbrComputeParams) -> Result<CallToolResult, McpError> {
     let method = match parse_qbr_method(&p.method) {
         Ok(m) => m,
-        Err(msg) => return Ok(CallToolResult::error(vec![Content::text(msg)])),
+        Err(msg) => return Ok(CallToolResult::error(vec![Content::text(msg.to_string())])),
     };
 
     let input = nexcore_qbr::BenefitRiskInput {
@@ -196,7 +196,7 @@ pub fn qbr_compute(p: QbrComputeParams) -> Result<CallToolResult, McpError> {
 pub fn qbr_simple(p: QbrSimpleParams) -> Result<CallToolResult, McpError> {
     let method = match parse_qbr_method(&p.method) {
         Ok(m) => m,
-        Err(msg) => return Ok(CallToolResult::error(vec![Content::text(msg)])),
+        Err(msg) => return Ok(CallToolResult::error(vec![Content::text(msg.to_string())])),
     };
 
     let benefit_ct = table_to_ct(&p.benefit_table);

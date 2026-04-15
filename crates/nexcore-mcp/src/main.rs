@@ -36,8 +36,14 @@ async fn main() -> Result<()> {
 /// stdio mode — Claude Code spawns this, communicates via stdin/stdout.
 async fn run_stdio() -> Result<()> {
     let server = NexCoreMcpServer::new();
-    let service = server.serve(rmcp::transport::stdio()).await?;
-    service.waiting().await?;
+    let service = server
+        .serve(rmcp::transport::stdio())
+        .await
+        .map_err(|e| nexcore_error::NexError::new(e.to_string()))?;
+    service
+        .waiting()
+        .await
+        .map_err(|e| nexcore_error::NexError::new(e.to_string()))?;
     Ok(())
 }
 

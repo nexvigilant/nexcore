@@ -1,7 +1,12 @@
 use crate::models::Interaction;
-use nexcore_error::{Context, Result};
+use nexcore_error::{Context, NexError, Result};
 use nexcore_fs::walk::WalkDir;
 use nexcore_hash::sha256::Sha256;
+
+/// Convert any Display error to NexError.
+fn ne(e: impl std::fmt::Display) -> NexError {
+    NexError::new(e.to_string())
+}
 use qdrant_client::Qdrant;
 use qdrant_client::qdrant::{
     CreateCollectionBuilder, Distance, GetPointsBuilder, PointStruct, UpsertPointsBuilder,
@@ -24,7 +29,7 @@ pub struct MemoryLayer {
 impl MemoryLayer {
     /// Creates a new MemoryLayer instance.
     pub async fn new(ksb_root: PathBuf, _data_dir: PathBuf, qdrant_url: &str) -> Result<Self> {
-        let client = Qdrant::from_url(qdrant_url).build()?;
+        let client = Qdrant::from_url(qdrant_url).build().map_err(ne)?;
         Ok(Self {
             client: Arc::new(client),
             ksb_root,
@@ -33,14 +38,20 @@ impl MemoryLayer {
 
     /// Initializes the Qdrant collection and optionally triggers KSB indexing.
     pub async fn initialize(&self, skip_indexing: bool) -> Result<()> {
-        if !self.client.collection_exists(COLLECTION_NAME).await? {
+        if !self
+            .client
+            .collection_exists(COLLECTION_NAME)
+            .await
+            .map_err(ne)?
+        {
             info!(collection = %COLLECTION_NAME, "creating_qdrant_collection");
             self.client
                 .create_collection(
                     CreateCollectionBuilder::new(COLLECTION_NAME)
                         .vectors_config(VectorParamsBuilder::new(1536, Distance::Cosine)),
                 )
-                .await?;
+                .await
+                .map_err(ne)?;
         }
         if !skip_indexing {
             self.index_ksb().await?;
@@ -113,7 +124,8 @@ impl MemoryLayer {
             let content = tokio::fs::read_to_string(&path).await?;
             let hash = self.calculate_hash(&content);
             let file_id = path
-                .strip_prefix(&self.ksb_root)?
+                .strip_prefix(&self.ksb_root)
+                .map_err(ne)?
                 .to_string_lossy()
                 .to_string();
 
@@ -179,7 +191,8 @@ impl MemoryLayer {
                 )
                 .with_payload(true),
             )
-            .await?;
+            .await
+            .map_err(ne)?;
         Ok(results
             .result
             .into_iter()

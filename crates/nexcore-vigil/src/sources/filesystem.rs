@@ -29,15 +29,17 @@ impl Source for FilesystemSource {
 
         let (tx, mut rx) = mpsc::channel(100);
 
-        let mut watcher =
-            notify::recommended_watcher(move |res: notify::Result<notify::Event>| {
-                if let Ok(event) = res {
-                    let _ = tx.blocking_send(event);
-                }
-            })?;
+        let mut watcher = notify::recommended_watcher(move |res: notify::Result<notify::Event>| {
+            if let Ok(event) = res {
+                let _ = tx.blocking_send(event);
+            }
+        })
+        .map_err(|e| nexcore_error::NexError::new(e.to_string()))?;
 
         for path in &self.watch_paths {
-            watcher.watch(path, RecursiveMode::Recursive)?;
+            watcher
+                .watch(path, RecursiveMode::Recursive)
+                .map_err(|e| nexcore_error::NexError::new(e.to_string()))?;
         }
 
         while let Some(fs_event) = rx.recv().await {

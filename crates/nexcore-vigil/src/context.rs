@@ -2,11 +2,17 @@ use crate::memory::MemoryLayer;
 use crate::models::Event;
 use crate::projects::ProjectRegistry;
 use nexcore_chrono::DateTime;
+use nexcore_error::NexError;
 use std::fmt::Write;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tiktoken_rs::cl100k_base;
 use tokio::sync::RwLock;
+
+/// Convert fmt::Error to NexError.
+fn fmt_err(e: std::fmt::Error) -> NexError {
+    NexError::new(e.to_string())
+}
 
 /// v2.0 Context Assembler: Token-aware context compression and caching.
 pub struct ContextAssembler {
@@ -40,7 +46,7 @@ impl ContextAssembler {
 
         // 1. Core Identity
         if let Some(i) = self.get_instructions().await {
-            writeln!(context, "# Core Instructions\n\n{}\n", i)?;
+            writeln!(context, "# Core Instructions\n\n{}\n", i).map_err(fmt_err)?;
         }
 
         // 2. Project Status
@@ -48,20 +54,21 @@ impl ContextAssembler {
             context,
             "# Current Projects\n\n{}\n",
             self.registry.get_briefing()
-        )?;
+        )
+        .map_err(fmt_err)?;
 
         // 3. Relevant Knowledge (Top-K)
         let query = self.event_to_query(event);
         let docs = self.memory.search(&query, 5).await?;
         if !docs.is_empty() {
-            writeln!(context, "# Relevant Knowledge\n\n{:?}\n", docs)?;
+            writeln!(context, "# Relevant Knowledge\n\n{:?}\n", docs).map_err(fmt_err)?;
         }
 
         // 4. Conversation History (Token-aware pruning)
         {
             let buffer = self.conversation_buffer.read().await;
             if !buffer.is_empty() {
-                writeln!(context, "# Recent Conversation\n")?;
+                writeln!(context, "# Recent Conversation\n").map_err(fmt_err)?;
                 let mut history_str = String::new();
                 for (role, content) in buffer.iter().rev() {
                     let next_line = format!("**{}**: {}\n", role, content);
@@ -79,12 +86,12 @@ impl ContextAssembler {
         }
 
         // 5. System State & Current Event
-        writeln!(context, "\n# Current State")?;
-        writeln!(context, "- Time: {}", DateTime::now().to_rfc3339())?;
-        writeln!(context, "- Source: {}", event.source)?;
-        writeln!(context, "- Type: {}\n", event.event_type)?;
+        writeln!(context, "\n# Current State").map_err(fmt_err)?;
+        writeln!(context, "- Time: {}", DateTime::now().to_rfc3339()).map_err(fmt_err)?;
+        writeln!(context, "- Source: {}", event.source).map_err(fmt_err)?;
+        writeln!(context, "- Type: {}\n", event.event_type).map_err(fmt_err)?;
 
-        writeln!(context, "## Current Event Payload\n{}\n", event.payload)?;
+        writeln!(context, "## Current Event Payload\n{}\n", event.payload).map_err(fmt_err)?;
 
         Ok(context)
     }

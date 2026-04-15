@@ -158,7 +158,7 @@ pub fn forge_payoff_matrix(params: ForgePayoffMatrixParams) -> Result<CallToolRe
         Ok(m) => m,
         Err(e) => {
             return Ok(CallToolResult::success(vec![Content::text(
-                json!({"error": e}).to_string(),
+                json!({"error": e.to_string()}).to_string(),
             )]));
         }
     };
@@ -267,7 +267,7 @@ pub fn forge_nash_solve(params: ForgeNashSolveParams) -> Result<CallToolResult, 
         Ok(m) => m,
         Err(e) => {
             return Ok(CallToolResult::success(vec![Content::text(
-                json!({"error": e}).to_string(),
+                json!({"error": e.to_string()}).to_string(),
             )]));
         }
     };

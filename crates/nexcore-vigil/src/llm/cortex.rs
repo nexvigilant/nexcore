@@ -87,7 +87,10 @@ impl LLMClient for CortexClient {
         info!(source = %event.source, event_type = %event.event_type, "cortex_local_invoke");
 
         let prompt = Self::format_prompt(context, event);
-        let response = self.engine.generate(&prompt, &self.params)?;
+        let response = self
+            .engine
+            .generate(&prompt, &self.params)
+            .map_err(|e| nexcore_error::NexError::new(e.to_string()))?;
         let actions = Self::extract_actions(&response);
 
         Ok(Interaction {

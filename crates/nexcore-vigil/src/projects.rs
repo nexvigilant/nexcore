@@ -74,12 +74,15 @@ impl ProjectRegistry {
         let projects = self.projects.clone();
 
         tokio::task::spawn_blocking(move || {
-            let temp = tempfile::NamedTempFile::new_in(&data_dir)?;
+            let temp = tempfile::NamedTempFile::new_in(&data_dir)
+                .map_err(|e| nexcore_error::NexError::new(e.to_string()))?;
             serde_json::to_writer_pretty(&temp, &*projects)?;
-            temp.persist(data_dir.join("projects.json"))?;
+            temp.persist(data_dir.join("projects.json"))
+                .map_err(|e| nexcore_error::NexError::new(e.to_string()))?;
             Ok::<(), nexcore_error::NexError>(())
         })
-        .await??;
+        .await
+        .map_err(|e| nexcore_error::NexError::new(e.to_string()))??;
 
         Ok(())
     }

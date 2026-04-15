@@ -1,6 +1,11 @@
-use nexcore_error::Result;
+use nexcore_error::{NexError, Result};
 use serde::Deserialize;
 use std::path::PathBuf;
+
+/// Convert config errors to NexError.
+fn cfg_err(e: config::ConfigError) -> NexError {
+    NexError::new(e.to_string())
+}
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
@@ -24,15 +29,23 @@ impl Config {
     pub fn from_env() -> Result<Self> {
         let s = config::Config::builder()
             .add_source(config::Environment::default())
-            .set_default("qdrant_url", "http://localhost:6333")?
-            .set_default("ksb_root", "./ksb")?
-            .set_default("data_dir", "./data")?
-            .set_default("event_bus_size", 1000)?
-            .set_default("webhook_port", 8080)?
-            .set_default("friday_api_key", "secret-key")?
-            .set_default("llm_provider", "claude")?
-            .build()?;
+            .set_default("qdrant_url", "http://localhost:6333")
+            .map_err(cfg_err)?
+            .set_default("ksb_root", "./ksb")
+            .map_err(cfg_err)?
+            .set_default("data_dir", "./data")
+            .map_err(cfg_err)?
+            .set_default("event_bus_size", 1000)
+            .map_err(cfg_err)?
+            .set_default("webhook_port", 8080)
+            .map_err(cfg_err)?
+            .set_default("friday_api_key", "secret-key")
+            .map_err(cfg_err)?
+            .set_default("llm_provider", "claude")
+            .map_err(cfg_err)?
+            .build()
+            .map_err(cfg_err)?;
 
-        s.try_deserialize().map_err(Into::into)
+        s.try_deserialize().map_err(cfg_err)
     }
 }

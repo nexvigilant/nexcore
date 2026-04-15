@@ -92,6 +92,7 @@ impl TelemetryMonitor {
         // Set up file watcher for real-time updates
         let (tx, mut rx) = mpsc::channel(100);
 
+        let ne = |e: notify::Error| nexcore_error::NexError::new(e.to_string());
         let mut watcher = notify::recommended_watcher(move |res: Result<NotifyEvent, _>| {
             if let Ok(event) = res {
                 // Best-effort send from sync callback - receiver may be dropped
@@ -100,7 +101,8 @@ impl TelemetryMonitor {
                     // Channel closed, watcher will be dropped soon
                 }
             }
-        })?;
+        })
+        .map_err(ne)?;
 
         // Watch key telemetry files
         let stats_path = self.claude_dir.join("stats-cache.json");
@@ -108,13 +110,19 @@ impl TelemetryMonitor {
         let kinetics_path = self.claude_dir.join("prompt_kinetics");
 
         if stats_path.exists() {
-            watcher.watch(&stats_path, RecursiveMode::NonRecursive)?;
+            watcher
+                .watch(&stats_path, RecursiveMode::NonRecursive)
+                .map_err(ne)?;
         }
         if history_path.exists() {
-            watcher.watch(&history_path, RecursiveMode::NonRecursive)?;
+            watcher
+                .watch(&history_path, RecursiveMode::NonRecursive)
+                .map_err(ne)?;
         }
         if kinetics_path.exists() {
-            watcher.watch(&kinetics_path, RecursiveMode::Recursive)?;
+            watcher
+                .watch(&kinetics_path, RecursiveMode::Recursive)
+                .map_err(ne)?;
         }
 
         // Also do periodic scans every 30 seconds

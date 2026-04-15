@@ -10,6 +10,10 @@ use serde::Deserialize;
 use crate::executors::Executor;
 use crate::models::{ExecutorResult, ExecutorType};
 
+fn ne(e: reqwest::Error) -> nexcore_error::NexError {
+    nexcore_error::NexError::new(e.to_string())
+}
+
 /// Response from Maestro's session creation endpoint.
 #[derive(Debug, Deserialize)]
 struct SessionResponse {
@@ -53,13 +57,14 @@ impl MaestroExecutor {
                 "project_path": project_path,
             }))
             .send()
-            .await?;
+            .await
+            .map_err(ne)?;
 
         if !resp.status().is_success() {
             nexcore_error::bail!("Failed to create session: {}", resp.status());
         }
 
-        let session: SessionResponse = resp.json().await?;
+        let session: SessionResponse = resp.json().await.map_err(ne)?;
         Ok(session.id)
     }
 
@@ -71,7 +76,8 @@ impl MaestroExecutor {
             .post(&url)
             .json(&serde_json::json!({ "prompt": prompt }))
             .send()
-            .await?;
+            .await
+            .map_err(ne)?;
 
         if !resp.status().is_success() {
             nexcore_error::bail!(

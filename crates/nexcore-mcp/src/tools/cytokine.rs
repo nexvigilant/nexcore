@@ -299,7 +299,7 @@ pub fn telemetry_status() -> Result<CallToolResult, McpError> {
         }
         Err(e) => {
             let response = serde_json::json!({
-                "error": e,
+                "error": e.to_string(),
                 "hint": "Cytokine signals flow: hook → signals.jsonl → signal-receiver → cytokine_metrics.json",
             });
             Ok(CallToolResult::success(vec![Content::text(
@@ -319,7 +319,7 @@ pub fn recent(params: CytokineRecentParams) -> Result<CallToolResult, McpError> 
     let metrics = match read_cytokine_metrics() {
         Ok(m) => m,
         Err(e) => {
-            let response = serde_json::json!({ "error": e, "recent": [] });
+            let response = serde_json::json!({ "error": e.to_string(), "recent": [] });
             return Ok(CallToolResult::success(vec![Content::text(
                 response.to_string(),
             )]));

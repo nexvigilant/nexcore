@@ -621,3 +621,6 @@ pub use pv_intelligence::*;
 pub mod suit_compute;
 pub mod web;
 pub use suit_compute::*;
+
+// Workflow Intelligence (map, gaps, bottlenecks, live intel)
+pub mod workflow_intel;

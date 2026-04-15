@@ -35,14 +35,15 @@ pub fn get_config() -> Option<&'static ClaudeConfig> {
 /// - `Ok(ClaudeConfig)` if either file loads successfully
 /// - `Err` if both files fail to load or don't exist
 fn load_config_internal() -> Result<ClaudeConfig> {
-    let home = dirs::home_dir().context("No home directory found")?;
+    let home =
+        dirs::home_dir().ok_or_else(|| nexcore_error::NexError::new("No home directory found"))?;
 
     // Try consolidated config first
     let consolidated = home.join("nexcore/config.toml");
     if consolidated.exists() {
         let path_str = consolidated
             .to_str()
-            .context("Invalid UTF-8 in config path")?;
+            .ok_or_else(|| nexcore_error::NexError::new("Invalid UTF-8 in config path"))?;
         tracing::debug!("Loading consolidated config from {}", path_str);
         return Ok(ClaudeConfig::from_file(path_str)?);
     }
@@ -50,7 +51,9 @@ fn load_config_internal() -> Result<ClaudeConfig> {
     // Fallback to legacy JSON
     let legacy = home.join(".claude.json");
     if legacy.exists() {
-        let path_str = legacy.to_str().context("Invalid UTF-8 in config path")?;
+        let path_str = legacy
+            .to_str()
+            .ok_or_else(|| nexcore_error::NexError::new("Invalid UTF-8 in config path"))?;
         tracing::debug!("Loading legacy config from {}", path_str);
         return Ok(ClaudeConfig::from_file(path_str)?);
     }

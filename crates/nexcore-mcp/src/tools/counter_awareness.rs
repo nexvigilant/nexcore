@@ -51,7 +51,7 @@ pub fn detect(params: CaDetectParams) -> Result<CallToolResult, McpError> {
 
     let counters = match parse_counters(&params.counters) {
         Ok(c) => c,
-        Err(msg) => return Ok(CallToolResult::error(vec![Content::text(msg)])),
+        Err(msg) => return Ok(CallToolResult::error(vec![Content::text(msg.to_string())])),
     };
 
     let matrix = EffectivenessMatrix::default_physics();
@@ -108,7 +108,7 @@ pub fn fusion(params: CaFusionParams) -> Result<CallToolResult, McpError> {
 
     let counters = match parse_counters(&params.counters) {
         Ok(c) => c,
-        Err(msg) => return Ok(CallToolResult::error(vec![Content::text(msg)])),
+        Err(msg) => return Ok(CallToolResult::error(vec![Content::text(msg.to_string())])),
     };
 
     let threshold = params.threshold.unwrap_or(0.5);

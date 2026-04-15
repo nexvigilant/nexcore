@@ -6498,6 +6498,60 @@ impl NexCoreMcpServer {
     ) -> Result<CallToolResult, McpError> {
         tools::processor::demo_pipeline(params)
     }
+
+    // ========================================================================
+    // Workflow Intelligence Tools (5) — map, gaps, bottlenecks, live, suggest
+    // ========================================================================
+
+    #[tool(
+        description = "Build a DAG of tool transitions across recent sessions. Shows how tools chain together, most-used tools, and builtin vs MCP category breakdown. Use to understand actual workflow patterns."
+    )]
+    async fn workflow_map(
+        &self,
+        Parameters(params): Parameters<params::workflow_intel::WorkflowMapParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::workflow_intel::workflow_map(params)
+    }
+
+    #[tool(
+        description = "Analyze workflows for gaps and inefficiencies. Identifies missing automations, error-prone tools, underused capabilities. Returns health score (0-1) with prioritized recommendations."
+    )]
+    async fn workflow_gaps(
+        &self,
+        Parameters(params): Parameters<params::workflow_intel::WorkflowGapsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::workflow_intel::workflow_gaps(params)
+    }
+
+    #[tool(
+        description = "Find workflow bottlenecks — high-failure tools, repeated file reads, excessive bash usage. Returns impact-ranked list with recommendations."
+    )]
+    async fn workflow_bottlenecks(
+        &self,
+        Parameters(params): Parameters<params::workflow_intel::WorkflowGapsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::workflow_intel::workflow_bottlenecks(params)
+    }
+
+    #[tool(
+        description = "Live session intelligence. Given current tool sequence, finds similar past workflows, suggests next tools based on historical patterns, and surfaces velocity warnings."
+    )]
+    async fn workflow_live(
+        &self,
+        Parameters(params): Parameters<params::workflow_intel::WorkflowLiveParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::workflow_intel::workflow_live(params)
+    }
+
+    #[tool(
+        description = "Targeted workflow improvement recommendations. Combines gap analysis and bottleneck detection into a prioritized action list with expected impact."
+    )]
+    async fn workflow_suggest(
+        &self,
+        Parameters(params): Parameters<params::workflow_intel::WorkflowSuggestParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::workflow_intel::workflow_suggest(params)
+    }
 }
 
 // ============================================================================

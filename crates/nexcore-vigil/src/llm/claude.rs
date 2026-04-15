@@ -42,20 +42,22 @@ impl LLMClient for ClaudeClient {
             "system": "You are FRIDAY. To take an action, use the exact format: [ACTION: type] payload [/ACTION]"
         });
 
+        let ne = |e: reqwest::Error| nexcore_error::NexError::new(e.to_string());
         let response = self
             .client
             .post("https://api.anthropic.com/v1/messages")
             .json(&body)
             .send()
-            .await?;
+            .await
+            .map_err(ne)?;
         if !response.status().is_success() {
             return Err(nexcore_error::nexerror!(
                 "API error: {}",
-                response.text().await?
+                response.text().await.map_err(ne)?
             ));
         }
 
-        let resp_json: serde_json::Value = response.json().await?;
+        let resp_json: serde_json::Value = response.json().await.map_err(ne)?;
         let text = resp_json["content"][0]["text"].as_str().unwrap_or("");
 
         Ok(Interaction {

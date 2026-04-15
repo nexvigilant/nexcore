@@ -30,7 +30,7 @@ pub fn build_dag(crates_dir: &Path, registry_name: &str) -> Result<Vec<(String, 
     // The workspace root is two levels up from crates_dir (crates_dir = <root>/crates).
     let workspace_root = crates_dir
         .parent()
-        .context("crates_dir has no parent directory")?;
+        .ok_or_else(|| nexcore_error::nexerror!("crates_dir has no parent directory"))?;
     let workspace_toml_path = workspace_root.join("Cargo.toml");
 
     let workspace_internal_deps = if workspace_toml_path.exists() {
@@ -54,9 +54,9 @@ pub fn build_dag(crates_dir: &Path, registry_name: &str) -> Result<Vec<(String, 
         }
         let contents = fs::read_to_string(&cargo_path)
             .with_context(|| format!("Failed to read {}", cargo_path.display()))?;
-        let doc: toml::Value = contents
-            .parse()
-            .with_context(|| format!("Failed to parse {}", cargo_path.display()))?;
+        let doc: toml::Value = contents.parse::<toml::Value>().map_err(|e| {
+            nexcore_error::nexerror!("Failed to parse {}: {}", cargo_path.display(), e)
+        })?;
 
         let package_name = extract_package_name(&doc, dir);
         all_package_names.insert(package_name.clone());
@@ -77,7 +77,9 @@ pub fn build_dag(crates_dir: &Path, registry_name: &str) -> Result<Vec<(String, 
         };
 
         let contents = fs::read_to_string(&cargo_path)?;
-        let doc: toml::Value = contents.parse()?;
+        let doc: toml::Value = contents
+            .parse::<toml::Value>()
+            .map_err(|e| nexcore_error::nexerror!("Parse error: {}", e))?;
 
         let internal_deps = extract_internal_deps(
             &doc,
@@ -309,9 +311,9 @@ fn collect_crate_dirs(crates_dir: &Path) -> Result<Vec<String>> {
 fn parse_workspace_internal_deps(workspace_toml_path: &Path) -> Result<BTreeMap<String, String>> {
     let contents = fs::read_to_string(workspace_toml_path)
         .with_context(|| format!("Failed to read {}", workspace_toml_path.display()))?;
-    let doc: toml::Value = contents
-        .parse()
-        .with_context(|| format!("Failed to parse {}", workspace_toml_path.display()))?;
+    let doc: toml::Value = contents.parse::<toml::Value>().map_err(|e| {
+        nexcore_error::nexerror!("Failed to parse {}: {}", workspace_toml_path.display(), e)
+    })?;
 
     let mut internal_deps: BTreeMap<String, String> = BTreeMap::new();
 

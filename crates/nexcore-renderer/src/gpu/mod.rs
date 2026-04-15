@@ -84,7 +84,9 @@ impl GpuRenderer {
             ..Default::default()
         });
 
-        let surface = instance.create_surface(window)?;
+        let surface = instance
+            .create_surface(window)
+            .map_err(|e| nexcore_error::nexerror!("{e}"))?;
 
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
@@ -92,7 +94,8 @@ impl GpuRenderer {
                 compatible_surface: Some(&surface),
                 force_fallback_adapter: false,
             })
-            .await?;
+            .await
+            .map_err(|e| nexcore_error::nexerror!("{e}"))?;
 
         let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor {
@@ -103,7 +106,8 @@ impl GpuRenderer {
                 trace: wgpu::Trace::Off,
                 experimental_features: Default::default(),
             })
-            .await?;
+            .await
+            .map_err(|e| nexcore_error::nexerror!("{e}"))?;
 
         let surface_caps = surface.get_capabilities(&adapter);
         let surface_format = surface_caps
@@ -326,7 +330,10 @@ impl GpuRenderer {
         bg_color: Color,
         text_renderer: &mut TextRenderer,
     ) -> nexcore_error::Result<()> {
-        let output = self.surface.get_current_texture()?;
+        let output = self
+            .surface
+            .get_current_texture()
+            .map_err(|e| nexcore_error::nexerror!("{e}"))?;
         let view = output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());

@@ -62,8 +62,10 @@ impl PharosConfig {
     /// Load config from a TOML file, falling back to defaults.
     pub fn from_file(path: &std::path::Path) -> nexcore_error::Result<Self> {
         if path.exists() {
-            let content = std::fs::read_to_string(path)?;
-            let config: Self = toml::from_str(&content)?;
+            let content =
+                std::fs::read_to_string(path).map_err(|e| nexcore_error::nexerror!("{e}"))?;
+            let config: Self =
+                toml::from_str(&content).map_err(|e| nexcore_error::nexerror!("{e}"))?;
             Ok(config)
         } else {
             Ok(Self::default())

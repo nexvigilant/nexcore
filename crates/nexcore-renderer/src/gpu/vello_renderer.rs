@@ -64,7 +64,9 @@ impl VelloRenderer {
     /// Returns error if GPU initialization or Vello renderer creation fails.
     pub async fn new(window: Arc<Window>) -> nexcore_error::Result<Self> {
         let size = window.inner_size();
-        let gpu = init_gpu(window, size).await?;
+        let gpu = init_gpu(window, size)
+            .await
+            .map_err(|e| nexcore_error::nexerror!("{e}"))?;
 
         let vello_renderer = create_vello_renderer(&gpu.device)?;
 
@@ -340,14 +342,19 @@ impl VelloRenderer {
         // Encode as PNG
         let mut png_data = Vec::new();
         let png_encoder = image::codecs::png::PngEncoder::new(&mut png_data);
-        png_encoder.write_image(&rgba, width, height, image::ExtendedColorType::Rgba8)?;
+        png_encoder
+            .write_image(&rgba, width, height, image::ExtendedColorType::Rgba8)
+            .map_err(|e| nexcore_error::nexerror!("{e}"))?;
 
         Ok(png_data)
     }
 
     /// Acquire surface texture, blit, and present.
     fn present_to_surface(&mut self) -> nexcore_error::Result<()> {
-        let output = self.surface.get_current_texture()?;
+        let output = self
+            .surface
+            .get_current_texture()
+            .map_err(|e| nexcore_error::nexerror!("{e}"))?;
         let surface_view = output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
@@ -412,9 +419,15 @@ async fn init_gpu(
         ..Default::default()
     });
 
-    let surface = instance.create_surface(window)?;
-    let adapter = request_adapter(&instance, &surface).await?;
-    let (device, queue) = request_device(&adapter).await?;
+    let surface = instance
+        .create_surface(window)
+        .map_err(|e| nexcore_error::nexerror!("{e}"))?;
+    let adapter = request_adapter(&instance, &surface)
+        .await
+        .map_err(|e| nexcore_error::nexerror!("{e}"))?;
+    let (device, queue) = request_device(&adapter)
+        .await
+        .map_err(|e| nexcore_error::nexerror!("{e}"))?;
 
     let surface_caps = surface.get_capabilities(&adapter);
     let surface_format = pick_srgb_format(&surface_caps);
@@ -452,7 +465,7 @@ async fn request_adapter(
             force_fallback_adapter: false,
         })
         .await
-        .map_err(Into::into)
+        .map_err(|e| nexcore_error::nexerror!("Failed to request adapter: {e}"))
 }
 
 /// Request a device and queue from the adapter.
@@ -469,7 +482,7 @@ async fn request_device(
             experimental_features: Default::default(),
         })
         .await
-        .map_err(Into::into)
+        .map_err(|e| nexcore_error::nexerror!("{e}"))
 }
 
 /// Pick sRGB surface format, falling back to the first available.

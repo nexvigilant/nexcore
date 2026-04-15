@@ -77,17 +77,17 @@ async fn retry_request(
     for retry in 0..=max_retries {
         let req = request
             .try_clone()
-            .context("Failed to clone request for retry")?;
+            .ok_or_else(|| nexcore_error::nexerror!("Failed to clone request for retry"))?;
         match req.send().await {
             Ok(resp) if resp.status().is_success() => {
                 return Ok(resp);
             }
-            Ok(resp) if resp.status() == 429 => {
+            Ok(resp) if resp.status().as_u16() == 429 => {
                 let backoff = resp
                     .headers()
                     .get("retry-after")
-                    .and_then(|v| v.to_str().ok())
-                    .and_then(|s| s.parse::<u64>().ok())
+                    .and_then(|v: &reqwest::header::HeaderValue| v.to_str().ok())
+                    .and_then(|s: &str| s.parse::<u64>().ok())
                     .unwrap_or(2_u64.pow(retry));
                 tracing::warn!(
                     retry = retry,
@@ -112,7 +112,7 @@ async fn retry_request(
             }
             Ok(resp) => {
                 let status = resp.status();
-                let body = resp.text().await.unwrap_or_default();
+                let body: String = resp.text().await.unwrap_or_default();
                 return Err(nexcore_error::nexerror!("HTTP error {}: {}", status, body));
             }
             Err(e) => {

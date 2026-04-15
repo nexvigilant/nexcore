@@ -28,7 +28,7 @@ serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.120"
 nexcore-chrono = { workspace = true }
 nexcore-id = { version = "0.1.0", path = "../nexcore-id", features = ["serde"] }
-nexcore-error = { workspace = true }
+nexcore-error = { workspace = true, features = ["http", "json"] }
 
 # AI clients (consolidated from nexcore-ai)
 async-trait = "0.1.81"

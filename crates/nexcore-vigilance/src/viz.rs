@@ -26,7 +26,7 @@ pub fn render_prr_timeline_svg(
 
     let result: Result<(), nexcore_error::NexError> = (|| {
         let root = SVGBackend::with_string(&mut svg_buf, (width, height)).into_drawing_area();
-        root.fill(&WHITE)?;
+        root.fill(&WHITE).map_err(|e| e.to_string())?;
 
         let prr_values: Vec<(f64, f64)> = data
             .iter()
@@ -48,39 +48,49 @@ pub fn render_prr_timeline_svg(
             .margin(10)
             .x_label_area_size(40)
             .y_label_area_size(60)
-            .build_cartesian_2d(0.0..(data.len() as f64), 0.0..max_prr * 1.1)?;
+            .build_cartesian_2d(0.0..(data.len() as f64), 0.0..max_prr * 1.1)
+            .map_err(|e| e.to_string())?;
 
         chart
             .configure_mesh()
             .x_desc("Drug-Event Pair")
             .y_desc("PRR")
-            .draw()?;
+            .draw()
+            .map_err(|e| e.to_string())?;
 
         // PRR threshold line at 2.0
         chart
             .draw_series(LineSeries::new(
                 vec![(0.0, 2.0), (data.len() as f64, 2.0)],
                 &RED,
-            ))?
+            ))
+            .map_err(|e| e.to_string())?
             .label("Threshold (PRR=2.0)")
             .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], RED));
 
         // PRR values
         chart
-            .draw_series(LineSeries::new(prr_values.clone(), &BLUE))?
+            .draw_series(LineSeries::new(prr_values.clone(), &BLUE))
+            .map_err(|e| e.to_string())?
             .label("PRR")
             .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], BLUE));
 
         // Data points
-        chart.draw_series(
-            prr_values
-                .iter()
-                .map(|(x, y)| Circle::new((*x, *y), 3, BLUE.filled())),
-        )?;
+        chart
+            .draw_series(
+                prr_values
+                    .iter()
+                    .map(|(x, y)| Circle::new((*x, *y), 3, BLUE.filled())),
+            )
+            .map_err(|e| e.to_string())?;
 
-        chart.configure_series_labels().border_style(BLACK).draw()?;
+        chart
+            .configure_series_labels()
+            .border_style(BLACK)
+            .draw()
+            .map_err(|e| e.to_string())?;
 
-        root.present()?;
+        root.present().map_err(|e| e.to_string())?;
         Ok(())
     })();
 
@@ -105,7 +115,7 @@ pub fn render_signal_comparison_svg(
 
     let result: Result<(), nexcore_error::NexError> = (|| {
         let root = SVGBackend::with_string(&mut svg_buf, (width, height)).into_drawing_area();
-        root.fill(&WHITE)?;
+        root.fill(&WHITE).map_err(|e| e.to_string())?;
 
         let prr_values: Vec<(f64, f64)> = data
             .iter()
@@ -137,38 +147,47 @@ pub fn render_signal_comparison_svg(
             .margin(10)
             .x_label_area_size(40)
             .y_label_area_size(60)
-            .build_cartesian_2d(0.0..(data.len() as f64), 0.0..max_val * 1.1)?;
+            .build_cartesian_2d(0.0..(data.len() as f64), 0.0..max_val * 1.1)
+            .map_err(|e| e.to_string())?;
 
         chart
             .configure_mesh()
             .x_desc("Drug-Event Pair")
             .y_desc("Signal Strength")
-            .draw()?;
+            .draw()
+            .map_err(|e| e.to_string())?;
 
         // Threshold line
         chart
             .draw_series(LineSeries::new(
                 vec![(0.0, 2.0), (data.len() as f64, 2.0)],
                 &RED,
-            ))?
+            ))
+            .map_err(|e| e.to_string())?
             .label("Threshold")
             .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], RED));
 
         // PRR series
         chart
-            .draw_series(LineSeries::new(prr_values, &BLUE))?
+            .draw_series(LineSeries::new(prr_values, &BLUE))
+            .map_err(|e| e.to_string())?
             .label("PRR")
             .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], BLUE));
 
         // ROR series
         chart
-            .draw_series(LineSeries::new(ror_values, &GREEN))?
+            .draw_series(LineSeries::new(ror_values, &GREEN))
+            .map_err(|e| e.to_string())?
             .label("ROR")
             .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], GREEN));
 
-        chart.configure_series_labels().border_style(BLACK).draw()?;
+        chart
+            .configure_series_labels()
+            .border_style(BLACK)
+            .draw()
+            .map_err(|e| e.to_string())?;
 
-        root.present()?;
+        root.present().map_err(|e| e.to_string())?;
         Ok(())
     })();
 

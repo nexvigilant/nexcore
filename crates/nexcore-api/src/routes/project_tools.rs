@@ -5,6 +5,8 @@
 
 use crate::ApiState;
 use crate::mcp_bridge;
+#[cfg(not(feature = "mcp-bridge"))]
+use crate::mcp_bridge::NexCoreMcpServer;
 use crate::persistence::{
     CircleRole, DeliverableRecord, DeliverableStatus, DeliverableType, FeedEntryRecord,
     FeedEntryType, MemberStatus, ReviewStatus,
@@ -13,6 +15,7 @@ use crate::routes::common::ApiError;
 use axum::extract::{Json, Path, State};
 use axum::routing::post;
 use nexcore_chrono::DateTime;
+#[cfg(feature = "mcp-bridge")]
 use nexcore_mcp::NexCoreMcpServer;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;

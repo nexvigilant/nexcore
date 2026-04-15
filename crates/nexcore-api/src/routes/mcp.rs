@@ -16,6 +16,9 @@ use utoipa::ToSchema;
 
 use super::common::ApiError;
 use crate::mcp_bridge;
+#[cfg(not(feature = "mcp-bridge"))]
+use crate::mcp_bridge::NexCoreMcpServer;
+#[cfg(feature = "mcp-bridge")]
 use nexcore_mcp::NexCoreMcpServer;
 
 // ── Allowlist ────────────────────────────────

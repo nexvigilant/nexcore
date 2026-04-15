@@ -17,6 +17,18 @@ use std::sync::{Arc, OnceLock};
 use tokio::sync::Mutex;
 use utoipa::ToSchema;
 
+/// Blanket conversion: rusqlite::Error → NexError for this module.
+/// nexcore-error doesn't impl From<rusqlite::Error> globally to avoid coupling.
+trait IntoNexError<T> {
+    fn db(self) -> nexcore_error::Result<T>;
+}
+
+impl<T> IntoNexError<T> for Result<T, rusqlite::Error> {
+    fn db(self) -> nexcore_error::Result<T> {
+        self.map_err(|e| nexcore_error::nexerror!("database error: {e}"))
+    }
+}
+
 /// Global store instance
 static STORE: OnceLock<Arc<Mutex<GuardianStore>>> = OnceLock::new();
 
@@ -141,8 +153,9 @@ fn plan_query_limit(plan: &str) -> i64 {
 impl GuardianStore {
     /// Open (or create) the store at the given path
     pub fn open(db_path: &str) -> nexcore_error::Result<Self> {
-        let conn = Connection::open(db_path)?;
-        conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;")?;
+        let conn = Connection::open(db_path).db()?;
+        conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;")
+            .db()?;
 
         conn.execute_batch(
             "CREATE TABLE IF NOT EXISTS subscriptions (
@@ -186,7 +199,8 @@ impl GuardianStore {
 
             CREATE INDEX IF NOT EXISTS idx_query_history_user ON query_history(user_id);
             CREATE INDEX IF NOT EXISTS idx_query_history_time ON query_history(created_at);",
-        )?;
+        )
+        .db()?;
 
         tracing::info!("Guardian store initialized at {db_path}");
         Ok(Self { conn })
@@ -217,37 +231,42 @@ impl GuardianStore {
                 query_limit = ?6,
                 updated_at = ?7",
             params![user_id, stripe_customer_id, stripe_subscription_id, plan, status, limit, now],
-        )?;
+        ).db()?;
         Ok(())
     }
 
     /// Get subscription by user_id
     pub fn get_subscription(&self, user_id: &str) -> nexcore_error::Result<Option<Subscription>> {
-        let mut stmt = self.conn.prepare(
-            "SELECT user_id, stripe_customer_id, stripe_subscription_id, plan, status,
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT user_id, stripe_customer_id, stripe_subscription_id, plan, status,
                     query_limit, queries_used, period_start, period_end, created_at, updated_at
              FROM subscriptions WHERE user_id = ?1",
-        )?;
+            )
+            .db()?;
 
-        let mut rows = stmt.query_map(params![user_id], |row| {
-            Ok(Subscription {
-                user_id: row.get(0)?,
-                stripe_customer_id: row.get(1)?,
-                stripe_subscription_id: row.get(2)?,
-                plan: row.get(3)?,
-                status: row.get(4)?,
-                query_limit: row.get(5)?,
-                queries_used: row.get(6)?,
-                period_start: row.get(7)?,
-                period_end: row.get(8)?,
-                created_at: row.get(9)?,
-                updated_at: row.get(10)?,
+        let mut rows = stmt
+            .query_map(params![user_id], |row| {
+                Ok(Subscription {
+                    user_id: row.get(0)?,
+                    stripe_customer_id: row.get(1)?,
+                    stripe_subscription_id: row.get(2)?,
+                    plan: row.get(3)?,
+                    status: row.get(4)?,
+                    query_limit: row.get(5)?,
+                    queries_used: row.get(6)?,
+                    period_start: row.get(7)?,
+                    period_end: row.get(8)?,
+                    created_at: row.get(9)?,
+                    updated_at: row.get(10)?,
+                })
             })
-        })?;
+            .db()?;
 
         match rows.next() {
             Some(Ok(sub)) => Ok(Some(sub)),
-            Some(Err(e)) => Err(e.into()),
+            Some(Err(e)) => Err(nexcore_error::nexerror!("database error: {e}")),
             None => Ok(None),
         }
     }
@@ -257,31 +276,36 @@ impl GuardianStore {
         &self,
         stripe_customer_id: &str,
     ) -> nexcore_error::Result<Option<Subscription>> {
-        let mut stmt = self.conn.prepare(
-            "SELECT user_id, stripe_customer_id, stripe_subscription_id, plan, status,
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT user_id, stripe_customer_id, stripe_subscription_id, plan, status,
                     query_limit, queries_used, period_start, period_end, created_at, updated_at
              FROM subscriptions WHERE stripe_customer_id = ?1",
-        )?;
+            )
+            .db()?;
 
-        let mut rows = stmt.query_map(params![stripe_customer_id], |row| {
-            Ok(Subscription {
-                user_id: row.get(0)?,
-                stripe_customer_id: row.get(1)?,
-                stripe_subscription_id: row.get(2)?,
-                plan: row.get(3)?,
-                status: row.get(4)?,
-                query_limit: row.get(5)?,
-                queries_used: row.get(6)?,
-                period_start: row.get(7)?,
-                period_end: row.get(8)?,
-                created_at: row.get(9)?,
-                updated_at: row.get(10)?,
+        let mut rows = stmt
+            .query_map(params![stripe_customer_id], |row| {
+                Ok(Subscription {
+                    user_id: row.get(0)?,
+                    stripe_customer_id: row.get(1)?,
+                    stripe_subscription_id: row.get(2)?,
+                    plan: row.get(3)?,
+                    status: row.get(4)?,
+                    query_limit: row.get(5)?,
+                    queries_used: row.get(6)?,
+                    period_start: row.get(7)?,
+                    period_end: row.get(8)?,
+                    created_at: row.get(9)?,
+                    updated_at: row.get(10)?,
+                })
             })
-        })?;
+            .db()?;
 
         match rows.next() {
             Some(Ok(sub)) => Ok(Some(sub)),
-            Some(Err(e)) => Err(e.into()),
+            Some(Err(e)) => Err(nexcore_error::nexerror!("database error: {e}")),
             None => Ok(None),
         }
     }
@@ -296,7 +320,7 @@ impl GuardianStore {
         self.conn.execute(
             "UPDATE subscriptions SET status = ?1, updated_at = ?2 WHERE stripe_customer_id = ?3",
             params![status, now, stripe_customer_id],
-        )?;
+        ).db()?;
         Ok(())
     }
 
@@ -311,7 +335,7 @@ impl GuardianStore {
         self.conn.execute(
             "UPDATE subscriptions SET plan = ?1, query_limit = ?2, updated_at = ?3 WHERE stripe_customer_id = ?4",
             params![plan, limit, now, stripe_customer_id],
-        )?;
+        ).db()?;
         Ok(())
     }
 
@@ -321,14 +345,17 @@ impl GuardianStore {
         self.conn.execute(
             "UPDATE subscriptions SET queries_used = queries_used + 1, updated_at = ?1 WHERE user_id = ?2",
             params![now, user_id],
-        )?;
+        ).db()?;
 
         let mut stmt = self
             .conn
-            .prepare("SELECT queries_used, query_limit FROM subscriptions WHERE user_id = ?1")?;
-        let result = stmt.query_row(params![user_id], |row| {
-            Ok((row.get::<_, i64>(0)?, row.get::<_, i64>(1)?))
-        })?;
+            .prepare("SELECT queries_used, query_limit FROM subscriptions WHERE user_id = ?1")
+            .db()?;
+        let result = stmt
+            .query_row(params![user_id], |row| {
+                Ok((row.get::<_, i64>(0)?, row.get::<_, i64>(1)?))
+            })
+            .db()?;
         Ok(result)
     }
 
@@ -336,7 +363,7 @@ impl GuardianStore {
     pub fn check_rate_limit(&self, user_id: &str) -> nexcore_error::Result<bool> {
         let mut stmt = self.conn.prepare(
             "SELECT queries_used < query_limit FROM subscriptions WHERE user_id = ?1 AND status = 'active'",
-        )?;
+        ).db()?;
         let allowed = stmt
             .query_row(params![user_id], |row| row.get::<_, bool>(0))
             .unwrap_or(false);
@@ -349,7 +376,7 @@ impl GuardianStore {
         self.conn.execute(
             "UPDATE subscriptions SET queries_used = 0, period_start = ?1, updated_at = ?1 WHERE user_id = ?2",
             params![now, user_id],
-        )?;
+        ).db()?;
         Ok(())
     }
 
@@ -371,7 +398,7 @@ impl GuardianStore {
             "INSERT INTO api_keys (id, user_id, name, key_hash, key_prefix, created_at, revoked)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0)",
             params![key_id, user_id, name, key_hash, key_prefix, now],
-        )?;
+        ).db()?;
 
         Ok((key_id, raw_key))
     }
@@ -381,11 +408,14 @@ impl GuardianStore {
         let key_hash = hash_api_key(raw_key);
         let now = nexcore_chrono::DateTime::now().to_rfc3339();
 
-        let mut stmt = self.conn.prepare(
-            "SELECT ak.user_id FROM api_keys ak
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT ak.user_id FROM api_keys ak
              JOIN subscriptions s ON ak.user_id = s.user_id
              WHERE ak.key_hash = ?1 AND ak.revoked = 0 AND s.status = 'active'",
-        )?;
+            )
+            .db()?;
 
         let result = stmt.query_row(params![key_hash], |row| row.get::<_, String>(0));
 
@@ -401,16 +431,19 @@ impl GuardianStore {
                 Ok(Some(user_id))
             }
             Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-            Err(e) => Err(e.into()),
+            Err(e) => Err(nexcore_error::nexerror!("database error: {e}")),
         }
     }
 
     /// List API keys for a user (no raw keys — only metadata)
     pub fn list_api_keys(&self, user_id: &str) -> nexcore_error::Result<Vec<ApiKeyRecord>> {
-        let mut stmt = self.conn.prepare(
-            "SELECT id, user_id, name, key_prefix, created_at, last_used, revoked
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT id, user_id, name, key_prefix, created_at, last_used, revoked
              FROM api_keys WHERE user_id = ?1 ORDER BY created_at DESC",
-        )?;
+            )
+            .db()?;
 
         let keys = stmt
             .query_map(params![user_id], |row| {
@@ -423,7 +456,8 @@ impl GuardianStore {
                     last_used: row.get(5)?,
                     revoked: row.get::<_, i32>(6)? != 0,
                 })
-            })?
+            })
+            .db()?
             .filter_map(|r| r.ok())
             .collect();
 
@@ -432,10 +466,13 @@ impl GuardianStore {
 
     /// Revoke an API key
     pub fn revoke_api_key(&self, key_id: &str, user_id: &str) -> nexcore_error::Result<bool> {
-        let rows = self.conn.execute(
-            "UPDATE api_keys SET revoked = 1 WHERE id = ?1 AND user_id = ?2",
-            params![key_id, user_id],
-        )?;
+        let rows = self
+            .conn
+            .execute(
+                "UPDATE api_keys SET revoked = 1 WHERE id = ?1 AND user_id = ?2",
+                params![key_id, user_id],
+            )
+            .db()?;
         Ok(rows > 0)
     }
 
@@ -454,7 +491,7 @@ impl GuardianStore {
             "INSERT INTO query_history (user_id, endpoint, request_body, response_body, created_at)
              VALUES (?1, ?2, ?3, ?4, ?5)",
             params![user_id, endpoint, request_body, response_body, now],
-        )?;
+        ).db()?;
         Ok(())
     }
 
@@ -465,11 +502,14 @@ impl GuardianStore {
         limit: i64,
         offset: i64,
     ) -> nexcore_error::Result<Vec<serde_json::Value>> {
-        let mut stmt = self.conn.prepare(
-            "SELECT id, endpoint, request_body, response_body, created_at
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT id, endpoint, request_body, response_body, created_at
              FROM query_history WHERE user_id = ?1
              ORDER BY created_at DESC LIMIT ?2 OFFSET ?3",
-        )?;
+            )
+            .db()?;
 
         let rows = stmt
             .query_map(params![user_id, limit, offset], |row| {
@@ -480,7 +520,8 @@ impl GuardianStore {
                     "response": row.get::<_, Option<String>>(3)?,
                     "created_at": row.get::<_, String>(4)?,
                 }))
-            })?
+            })
+            .db()?
             .filter_map(|r| r.ok())
             .collect();
 

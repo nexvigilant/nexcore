@@ -10,11 +10,8 @@ target/
 .vscode/
 *.swp
 
-# Large crates not needed for API build
-crates/nexcore-hooks/
-crates/nexcore-control-center/
-crates/nexcore-tov-proofs/
-crates/nexcore-skill-verify/
+# Crate directories must NOT be excluded — cargo metadata needs them for workspace resolution
+# Even if a crate isn't compiled, its Cargo.toml must be parseable
 
 # Claude state
 .claude/
@@ -39,8 +36,17 @@ docs/
 notebooks/
 prototypes/
 scripts/
-tools/
+# tools/ MUST stay — dag-publish is a workspace dep of nexcore-mcp
 .build-orchestrator/
+wksp/
+nexcore-os-image/
+content/
+ferro-forge/
+boot/
+clippy_output.json
+
+# Large ML crate (734MB) — stubbed in Dockerfile
+crates/bert-burn/
 
 # Re-include crate subdirs falsely matched by above patterns
 !crates/**/ksb/

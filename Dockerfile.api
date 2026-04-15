@@ -1,5 +1,6 @@
 # Dockerfile.api — Cloud Run deployment for nexcore-api
 # Handles workspace isolation (excludes crates with local-only path deps)
+# Includes terminal support: PTY (nexcore-pty via libc), bash shell, procps
 
 # Stage 1: Cargo Chef Preparation
 FROM lukemathwalker/cargo-chef:latest-rust-1.85-bookworm AS chef
@@ -10,11 +11,20 @@ FROM chef AS planner
 COPY . .
 # Strip local-only build config (mold linker, sccache) but keep registry
 RUN mkdir -p .cargo && printf '[registries.nexcore]\nindex = "sparse+http://localhost:8000/api/v1/crates/"\n' > .cargo/config.toml
-# Remove workspace members excluded by .gcloudignore, then add crates to exclude list
+# Workspace fixups: create missing dirs + exclude crates not needed for API
 RUN mkdir -p crates/claude-knowledge-mcp
-RUN sed -i '/"tools\/\*"/d' Cargo.toml
-RUN sed -i '/^exclude = \[/,/^\]/ s/^\]/    "crates\/nexcore-mcp",\n    "crates\/nexcore-renderer",\n]/' Cargo.toml
-RUN cargo chef prepare --recipe-path recipe.json
+# tools/* stays in workspace (dag-publish is a transitive dep of nexcore-mcp → nexcore-api)
+# bert-burn is excluded via .gcloudignore (734MB ML model) — create stub for workspace resolution
+RUN if [ ! -f "crates/bert-burn/Cargo.toml" ]; then \
+      mkdir -p crates/bert-burn/src && \
+      printf '[package]\nname = "bert-burn"\nversion = "0.1.0"\nedition = "2024"\n' > crates/bert-burn/Cargo.toml && \
+      touch crates/bert-burn/src/lib.rs; \
+    fi
+# Do NOT exclude any crates from workspace — cargo metadata needs the full graph.
+# bert-burn gets a stub (excluded from Docker context via .dockerignore, 734MB ML model).
+# All other crates are in the Docker context and resolve naturally.
+# Prepare recipe without mcp-bridge feature (excludes nexcore-mcp's 190+ transitive deps)
+RUN cargo chef prepare --recipe-path recipe.json --bin nexcore-api
 
 # Stage 3: Dependency Cacher
 FROM chef AS cacher
@@ -26,7 +36,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libasound2-dev pkg-config clang g++ \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=planner /app/recipe.json recipe.json
-RUN cargo chef cook --release --recipe-path recipe.json
+# Cook deps without mcp-bridge feature (skips nexcore-mcp's 190+ transitive deps)
+RUN cargo chef cook --release --recipe-path recipe.json --no-default-features --bin nexcore-api
 
 # Stage 4: Builder
 FROM chef AS builder
@@ -42,12 +53,19 @@ RUN mkdir -p .cargo && printf '[registries.nexcore]\nindex = "sparse+http://loca
 RUN mkdir -p crates/claude-knowledge-mcp
 COPY --from=cacher /app/target target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
-# Remove tools/* member (excluded by .gcloudignore) + add crate exclusions
-RUN sed -i '/"tools\/\*"/d' Cargo.toml
-RUN sed -i '/^exclude = \[/,/^\]/ s/^\]/    "crates\/nexcore-mcp",\n    "crates\/nexcore-renderer",\n]/' Cargo.toml
-RUN cargo build --release --bin nexcore-api
+# Same workspace fixups as planner
+# tools/* stays in workspace (dag-publish is a transitive dep of nexcore-mcp → nexcore-api)
+RUN if [ ! -f "crates/bert-burn/Cargo.toml" ]; then \
+      mkdir -p crates/bert-burn/src && \
+      printf '[package]\nname = "bert-burn"\nversion = "0.1.0"\nedition = "2024"\n' > crates/bert-burn/Cargo.toml && \
+      touch crates/bert-burn/src/lib.rs; \
+    fi
+# No workspace exclusions needed — --no-default-features prevents nexcore-mcp compilation
+# Build WITHOUT mcp-bridge feature — avoids compiling 190+ nexcore-mcp transitive deps.
+# MCP tool calls route through Station HTTP (mcp.nexvigilant.com/rpc) instead.
+RUN cargo build --release --bin nexcore-api --no-default-features
 
-# Stage 5: Runtime (minimal)
+# Stage 5: Runtime (minimal + terminal support)
 FROM debian:bookworm-slim AS runtime
 WORKDIR /app
 
@@ -55,16 +73,31 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     libssl3 \
     libasound2 \
+    bash \
+    coreutils \
+    procps \
+    curl \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
-# Non-root user
-RUN useradd -m -u 1000 appuser
+# Non-root user with home directory for terminal sessions
+RUN useradd -m -u 1000 -s /bin/bash appuser
+
+# Terminal session workspace — each PTY spawns here
+RUN mkdir -p /home/appuser/workspace && chown appuser:appuser /home/appuser/workspace
 
 COPY --from=builder /app/target/release/nexcore-api /usr/local/bin/
 
 # Cloud Run injects PORT env var
 ENV PORT=3030
+# Cloud Run requires 0.0.0.0 binding (not 127.0.0.1)
+ENV BIND_ADDR=0.0.0.0
+ENV RUST_LOG=nexcore_api=info,tower_http=info
+# Terminal PTY shell
+ENV SHELL=/bin/bash
+ENV TERM=xterm-256color
 EXPOSE 3030
 
 USER appuser
+WORKDIR /home/appuser
 CMD ["nexcore-api"]

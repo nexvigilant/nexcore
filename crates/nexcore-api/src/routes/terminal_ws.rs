@@ -25,6 +25,9 @@ use std::sync::Arc;
 use vr_core::ids::{TenantId, UserId};
 use vr_core::tenant::SubscriptionTier;
 
+#[cfg(not(feature = "mcp-bridge"))]
+use crate::mcp_bridge::NexCoreMcpServer;
+#[cfg(feature = "mcp-bridge")]
 use nexcore_mcp::NexCoreMcpServer;
 
 use nexcore_terminal::formatter::format_mcp_result;
@@ -89,14 +92,18 @@ fn get_terminal_state() -> Arc<TerminalState> {
 
 /// Query parameters for the terminal WebSocket upgrade request.
 ///
-/// The client passes tenant/user identity and preferred mode as query params.
-/// In production, these would come from a verified JWT — for now, explicit params.
+/// The client passes identity via Firebase JWT token in the `token` query param
+/// (browser WebSocket API cannot set custom headers). Falls back to explicit
+/// tenant_id/user_id for development.
 #[derive(Debug, Deserialize)]
 pub struct TerminalConnectParams {
-    /// Tenant identifier (UUID).
+    /// Tenant identifier (UUID) — dev/fallback only.
     pub tenant_id: Option<String>,
-    /// User identifier (UUID).
+    /// User identifier (UUID) — dev/fallback only.
     pub user_id: Option<String>,
+    /// Firebase ID token (JWT) — production auth. Browser passes via query param
+    /// because the WebSocket API does not support custom request headers.
+    pub token: Option<String>,
     /// Initial terminal mode (defaults to "hybrid").
     pub mode: Option<String>,
     /// Subscription tier for resource limits (defaults to "explorer").
@@ -116,7 +123,12 @@ pub async fn ws_terminal_handler(
     Query(params): Query<TerminalConnectParams>,
     State(_state): State<ApiState>,
 ) -> impl IntoResponse {
-    tracing::info!("Terminal WS: new connection request");
+    let has_token = params.token.is_some();
+    tracing::info!(
+        has_token,
+        mode = params.mode.as_deref().unwrap_or("hybrid"),
+        "Terminal WS: new connection request"
+    );
     ws.on_upgrade(move |socket| handle_terminal_socket(socket, params))
 }
 
@@ -177,8 +189,47 @@ async fn handle_terminal_socket(mut socket: WebSocket, params: TerminalConnectPa
         "Terminal WS: session created"
     );
 
-    // Spawn PTY process
-    let pty_config = PtyConfig::new("/bin/bash", "/tmp");
+    // Resolve per-user persistent home directory.
+    // GCS FUSE mounts gs://nexvigilant-cloud-shell-homes at /home/cloud-shell/.
+    // Each user gets /home/cloud-shell/{user_id}/ — persists across container restarts.
+    // Falls back to /tmp if the FUSE mount isn't available (local dev).
+    let cloud_shell_base = std::path::PathBuf::from("/home/cloud-shell");
+    let user_home = cloud_shell_base.join(user_id.to_string());
+    let working_dir = if cloud_shell_base.exists() {
+        // Production: GCS FUSE mounted — create user dir if first login
+        if !user_home.exists() {
+            if let Err(e) = std::fs::create_dir_all(&user_home) {
+                tracing::warn!(
+                    user_id = %user_id,
+                    error = %e,
+                    "Terminal WS: failed to create user home, falling back to /tmp"
+                );
+            }
+        }
+        if user_home.exists() {
+            user_home.to_string_lossy().to_string()
+        } else {
+            "/tmp".to_string()
+        }
+    } else {
+        // Local dev: no FUSE mount
+        "/tmp".to_string()
+    };
+
+    tracing::info!(
+        user_id = %user_id,
+        working_dir = %working_dir,
+        "Terminal WS: resolved user home directory"
+    );
+
+    // Spawn PTY process in the user's persistent home
+    let pty_config = PtyConfig::new("/bin/bash", &working_dir)
+        .with_env("HOME", &working_dir)
+        .with_env("USER", "appuser")
+        .with_env("TERM", "xterm-256color")
+        .with_env("COLORTERM", "truecolor")
+        .with_env("LANG", "en_US.UTF-8")
+        .with_env("NEXVIGILANT_STATION_URL", "https://mcp.nexvigilant.com");
 
     let mut pty = match PtyProcess::spawn(pty_config) {
         Ok(p) => p,

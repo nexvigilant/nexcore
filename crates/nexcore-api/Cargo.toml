@@ -13,6 +13,14 @@ description = "NexVigilant Core REST API - HTTP interface for pharmacovigilance 
 
 keywords = ["nexcore", "pharmacovigilance", "drug-safety"]
 categories = ["science"]
+
+[features]
+default = ["mcp-bridge"]
+# mcp-bridge: in-process MCP tool dispatch via nexcore-mcp (pulls 190+ crates).
+# Disable for Cloud Run builds to avoid compiling the entire workspace.
+# Terminal falls back to Station HTTP dispatch when disabled.
+mcp-bridge = ["dep:nexcore-mcp"]
+
 [[bin]]
 name = "nexcore-api"
 path = "src/main.rs"
@@ -29,7 +37,7 @@ nexcore-primitives = { workspace = true }
 nexcore-skill-exec = { workspace = true }
 nexcore-state-os = { workspace = true }
 nexcore-mesh = { workspace = true }
-nexcore-mcp = { workspace = true }
+nexcore-mcp = { workspace = true, optional = true }
 signal = { workspace = true }
 nexcore-ml-pipeline = { workspace = true }
 nexcore-dna-ml = { workspace = true }

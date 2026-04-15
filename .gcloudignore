@@ -2,11 +2,9 @@
 target/
 **/target/
 
-# Exclude large crates not needed for API build
-crates/nexcore-hooks/
-crates/nexcore-control-center/
-crates/nexcore-tov-proofs/
-crates/nexcore-skill-verify/
+# Exclude large crates not needed for API build (but keep their dirs for workspace resolution)
+# Only exclude crates with large non-Rust assets that bloat the upload
+crates/bert-burn/
 
 # Exclude git
 .git/
@@ -35,7 +33,12 @@ crates/nexcore-skill-verify/
 /prototypes/
 /scripts/
 /.build-orchestrator/
-/tools/
+/wksp/
+/nexcore-os-image/
+/content/
+/ferro-forge/
+/boot/
+clippy_output.json
 
 # Exclude Claude state files (large)
 .claude/brain/

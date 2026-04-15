@@ -64,6 +64,20 @@ fn extract_key(headers: &HeaderMap) -> Option<String> {
     None
 }
 
+/// Extract token from query string (for WebSocket — browser WS API can't set headers).
+fn extract_token_from_query(uri: &axum::http::Uri) -> Option<String> {
+    uri.query().and_then(|q| {
+        q.split('&').find_map(|pair| {
+            let (k, v) = pair.split_once('=')?;
+            if k == "token" {
+                Some(v.to_string())
+            } else {
+                None
+            }
+        })
+    })
+}
+
 /// Middleware that requires a valid API key for protected routes
 pub async fn require_api_key(req: Request<Body>, next: Next) -> Response {
     let expected = get_api_key();
@@ -72,7 +86,8 @@ pub async fn require_api_key(req: Request<Body>, next: Next) -> Response {
         None => return next.run(req).await,
     };
 
-    let provided = extract_key(req.headers());
+    // Try headers first, then query param (for WebSocket upgrade requests)
+    let provided = extract_key(req.headers()).or_else(|| extract_token_from_query(req.uri()));
     let key = match provided {
         Some(k) => k,
         None => return unauthorized("Missing API key"),

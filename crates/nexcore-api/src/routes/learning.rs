@@ -3,7 +3,10 @@
 //! Dispatches to `learning_dag_resolve` MCP tool via in-process bridge.
 //! GET /api/v1/learning/dag
 
+#[cfg(not(feature = "mcp-bridge"))]
+use crate::mcp_bridge::NexCoreMcpServer;
 use axum::{Json, Router, extract::Query, routing::get};
+#[cfg(feature = "mcp-bridge")]
 use nexcore_mcp::NexCoreMcpServer;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;

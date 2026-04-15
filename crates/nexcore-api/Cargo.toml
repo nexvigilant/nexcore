@@ -67,8 +67,11 @@ tracing-subscriber = { workspace = true }
 utoipa = { workspace = true }
 utoipa-scalar = { version = "0.3", features = ["axum"] }
 
-# HTTP client (for FRIDAY/Qdrant health checks)
+# HTTP client (for FRIDAY/Qdrant health checks + JWKS fetch)
 reqwest = { workspace = true }
+
+# JWT verification (Firebase ID tokens)
+jsonwebtoken = { workspace = true }
 
 # Async
 futures = { workspace = true }

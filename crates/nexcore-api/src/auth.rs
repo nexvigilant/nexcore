@@ -18,7 +18,9 @@ use axum::{
     middleware::Next,
     response::{IntoResponse, Response},
 };
+use std::collections::HashMap;
 use std::sync::OnceLock;
+use tokio::sync::RwLock;
 
 /// Cached API key from environment (loaded once at first request)
 static API_KEY: OnceLock<Option<String>> = OnceLock::new();
@@ -154,13 +156,181 @@ async fn validate_guardian_key(key: &str) -> bool {
     }
 }
 
+// =============================================================================
+// Firebase JWT Verification (D007-P0-3 — RESOLVED)
+// =============================================================================
+
+/// Google's X.509 certificate endpoint for Firebase Auth tokens.
+const FIREBASE_CERTS_URL: &str =
+    "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com";
+
+/// Cached JWKS keys: kid → RSA DecodingKey. Refreshed every 60 minutes.
+static JWKS_CACHE: OnceLock<RwLock<JwksCache>> = OnceLock::new();
+
+struct JwksCache {
+    keys: HashMap<String, jsonwebtoken::DecodingKey>,
+    fetched_at: std::time::Instant,
+}
+
+impl JwksCache {
+    fn new() -> Self {
+        Self {
+            keys: HashMap::new(),
+            fetched_at: std::time::Instant::now()
+                .checked_sub(std::time::Duration::from_secs(7200))
+                .unwrap_or_else(std::time::Instant::now),
+        }
+    }
+
+    fn is_stale(&self) -> bool {
+        self.fetched_at.elapsed() > std::time::Duration::from_secs(3600)
+    }
+}
+
+fn get_jwks_cache() -> &'static RwLock<JwksCache> {
+    JWKS_CACHE.get_or_init(|| RwLock::new(JwksCache::new()))
+}
+
+/// Fetch Google's X.509 certificates and convert to DecodingKeys.
+async fn refresh_jwks() -> Result<HashMap<String, jsonwebtoken::DecodingKey>, String> {
+    let response = reqwest::get(FIREBASE_CERTS_URL)
+        .await
+        .map_err(|e| format!("JWKS fetch failed: {e}"))?;
+
+    let certs: HashMap<String, String> = response
+        .json()
+        .await
+        .map_err(|e| format!("JWKS parse failed: {e}"))?;
+
+    let mut keys = HashMap::new();
+    for (kid, pem) in &certs {
+        match jsonwebtoken::DecodingKey::from_rsa_pem(pem.as_bytes()) {
+            Ok(key) => {
+                keys.insert(kid.clone(), key);
+            }
+            Err(e) => {
+                tracing::warn!(kid = kid.as_str(), error = %e, "Failed to parse JWKS cert");
+            }
+        }
+    }
+
+    if keys.is_empty() {
+        return Err("No valid keys in JWKS response".to_string());
+    }
+
+    tracing::info!(key_count = keys.len(), "Refreshed Firebase JWKS keys");
+    Ok(keys)
+}
+
+/// Get a DecodingKey by kid, refreshing the cache if stale.
+async fn get_decoding_key(kid: &str) -> Option<jsonwebtoken::DecodingKey> {
+    let cache = get_jwks_cache();
+
+    // Fast path: read lock, key exists and cache is fresh
+    {
+        let read = cache.read().await;
+        if !read.is_stale() {
+            if let Some(key) = read.keys.get(kid) {
+                return Some(key.clone());
+            }
+        }
+    }
+
+    // Slow path: refresh keys
+    match refresh_jwks().await {
+        Ok(new_keys) => {
+            let result = new_keys.get(kid).cloned();
+            let mut write = cache.write().await;
+            write.keys = new_keys;
+            write.fetched_at = std::time::Instant::now();
+            result
+        }
+        Err(e) => {
+            tracing::error!(error = e.as_str(), "Failed to refresh JWKS");
+            // Fall back to cached keys even if stale
+            let read = cache.read().await;
+            read.keys.get(kid).cloned()
+        }
+    }
+}
+
+/// Firebase ID token claims we validate.
+#[derive(serde::Deserialize)]
+struct FirebaseClaims {
+    /// Subject (user ID) — must be non-empty
+    sub: String,
+    /// Audience — must match our project ID
+    aud: String,
+    /// Issuer — must be https://securetoken.google.com/{project-id}
+    iss: String,
+}
+
+/// Verify a Firebase ID token: signature (RS256), issuer, audience, expiry.
+///
+/// Replaces the D007-P0-3 stub. Now validates:
+/// 1. JWT header has a `kid` matching a Google public key
+/// 2. RS256 signature is valid
+/// 3. Token is not expired (jsonwebtoken checks `exp` automatically)
+/// 4. Issuer matches `https://securetoken.google.com/{project-id}`
+/// 5. Audience matches `{project-id}`
+/// 6. Subject (uid) is non-empty
 async fn verify_id_token(token: &str) -> bool {
-    // TODO(D007-P0-3): Replace with real JWT verification (jsonwebtoken crate + JWKS).
-    // Currently safe because Studio proxy verifies Firebase tokens server-side
-    // (nexcore-proxy.ts:48 verifyIdToken) before forwarding. Direct API callers
-    // use API_KEY or grd_ keys instead. This is a defense-in-depth gap, not an
-    // active bypass — but must be closed before removing the Studio proxy layer.
-    token.split('.').count() == 3
+    // Decode header to get kid (without verification)
+    let header = match jsonwebtoken::decode_header(token) {
+        Ok(h) => h,
+        Err(e) => {
+            tracing::debug!(error = %e, "Firebase JWT: invalid header");
+            return false;
+        }
+    };
+
+    let kid = match &header.kid {
+        Some(k) => k.clone(),
+        None => {
+            tracing::debug!("Firebase JWT: missing kid in header");
+            return false;
+        }
+    };
+
+    // Algorithm must be RS256
+    if header.alg != jsonwebtoken::Algorithm::RS256 {
+        tracing::debug!(alg = ?header.alg, "Firebase JWT: unexpected algorithm");
+        return false;
+    }
+
+    // Get the matching public key
+    let decoding_key = match get_decoding_key(&kid).await {
+        Some(k) => k,
+        None => {
+            tracing::debug!(kid = kid.as_str(), "Firebase JWT: no matching key for kid");
+            return false;
+        }
+    };
+
+    // Determine the expected project ID
+    let project_id = std::env::var("FIREBASE_PROJECT_ID")
+        .unwrap_or_else(|_| "nexvigilant-digital-clubhouse".to_string());
+
+    // Validate signature + standard claims (exp, iat, nbf)
+    let mut validation = jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::RS256);
+    validation.set_audience(&[&project_id]);
+    validation.set_issuer(&[format!("https://securetoken.google.com/{project_id}")]);
+
+    match jsonwebtoken::decode::<FirebaseClaims>(token, &decoding_key, &validation) {
+        Ok(data) => {
+            // Additional check: sub must be non-empty (Firebase requirement)
+            if data.claims.sub.is_empty() {
+                tracing::debug!("Firebase JWT: empty sub claim");
+                return false;
+            }
+            tracing::debug!(uid = data.claims.sub.as_str(), "Firebase JWT: verified");
+            true
+        }
+        Err(e) => {
+            tracing::debug!(error = %e, "Firebase JWT: verification failed");
+            false
+        }
+    }
 }
 
 fn unauthorized(message: &str) -> Response {
@@ -194,5 +364,45 @@ mod tests {
         let mut headers = HeaderMap::new();
         headers.insert("authorization", HeaderValue::from_static("Bearer my-token"));
         assert_eq!(extract_key(&headers), Some("my-token".to_string()));
+    }
+
+    #[test]
+    fn test_extract_token_from_query() {
+        let uri: axum::http::Uri = "/ws?mode=shell&token=abc123&tier=explorer"
+            .parse()
+            .expect("valid URI");
+        assert_eq!(extract_token_from_query(&uri), Some("abc123".to_string()));
+    }
+
+    #[test]
+    fn test_extract_token_from_query_missing() {
+        let uri: axum::http::Uri = "/ws?mode=shell".parse().expect("valid URI");
+        assert_eq!(extract_token_from_query(&uri), None);
+    }
+
+    #[tokio::test]
+    async fn test_verify_id_token_rejects_simple_string() {
+        // The old stub accepted "fake.token.jwt" — the new impl must reject it
+        assert!(!verify_id_token("fake.token.jwt").await);
+    }
+
+    #[tokio::test]
+    async fn test_verify_id_token_rejects_empty() {
+        assert!(!verify_id_token("").await);
+    }
+
+    #[tokio::test]
+    async fn test_verify_id_token_rejects_malformed_jwt() {
+        // Valid base64 header but garbage payload/signature
+        let fake =
+            "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.fake_signature";
+        assert!(!verify_id_token(fake).await);
+    }
+
+    #[test]
+    fn test_jwks_cache_starts_stale() {
+        let cache = JwksCache::new();
+        assert!(cache.is_stale());
+        assert!(cache.keys.is_empty());
     }
 }

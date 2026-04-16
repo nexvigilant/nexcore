@@ -158,13 +158,13 @@ fn setup_api_routes(state: ApiState) -> Router<ApiState> {
             "/guardian/ws/bridge",
             get(routes::guardian_ws::ws_bridge_handler),
         )
+        .layer(middleware::from_fn(metering::metering_layer))
+        .layer(middleware::from_fn(auth::require_api_key))
+        // Routes outside API key middleware — use their own auth
         .route(
             "/terminal/ws",
             get(routes::terminal_ws::ws_terminal_handler),
         )
-        .layer(middleware::from_fn(metering::metering_layer))
-        .layer(middleware::from_fn(auth::require_api_key))
-        // Billing routes outside auth — checkout is pre-auth, webhook uses Stripe signature
         .nest("/billing", routes::billing::router())
         .with_state(state)
 }

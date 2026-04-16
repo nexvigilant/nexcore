@@ -102,6 +102,16 @@ pub async fn require_api_key(req: Request<Body>, next: Next) -> Response {
     }
 }
 
+/// Validate a token (API key, Guardian key, or Firebase JWT).
+/// Used by routes outside the API key middleware (e.g., WebSocket endpoints).
+pub async fn validate_token(token: &str) -> bool {
+    let expected = get_api_key();
+    match expected {
+        Some(key) => validate_key(token, key).await,
+        None => true, // No API key configured — allow (dev mode)
+    }
+}
+
 async fn validate_key(provided: &str, expected: &str) -> bool {
     // 1. Global API key — backward compat for internal/MCP tools
     if constant_time_eq(provided.as_bytes(), expected.as_bytes()) {

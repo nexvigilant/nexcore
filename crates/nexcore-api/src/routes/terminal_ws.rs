@@ -122,14 +122,37 @@ pub async fn ws_terminal_handler(
     ws: WebSocketUpgrade,
     Query(params): Query<TerminalConnectParams>,
     State(_state): State<ApiState>,
-) -> impl IntoResponse {
-    let has_token = params.token.is_some();
+) -> Result<impl IntoResponse, axum::response::Response> {
+    // Authenticate via Firebase JWT token in query param
+    // (browser WebSocket API cannot set custom headers)
+    let token = params.token.as_deref().unwrap_or("");
+    if token.is_empty() {
+        tracing::debug!("Terminal WS: no token provided");
+        return Err((
+            axum::http::StatusCode::UNAUTHORIZED,
+            axum::Json(
+                serde_json::json!({"code": "UNAUTHORIZED", "message": "Missing auth token"}),
+            ),
+        )
+            .into_response());
+    }
+
+    if !crate::auth::validate_token(token).await {
+        tracing::debug!("Terminal WS: invalid token");
+        return Err((
+            axum::http::StatusCode::UNAUTHORIZED,
+            axum::Json(
+                serde_json::json!({"code": "UNAUTHORIZED", "message": "Invalid auth token"}),
+            ),
+        )
+            .into_response());
+    }
+
     tracing::info!(
-        has_token,
         mode = params.mode.as_deref().unwrap_or("hybrid"),
-        "Terminal WS: new connection request"
+        "Terminal WS: authenticated, upgrading"
     );
-    ws.on_upgrade(move |socket| handle_terminal_socket(socket, params))
+    Ok(ws.on_upgrade(move |socket| handle_terminal_socket(socket, params)))
 }
 
 /// Core terminal WebSocket loop.
@@ -222,7 +245,28 @@ async fn handle_terminal_socket(mut socket: WebSocket, params: TerminalConnectPa
         "Terminal WS: resolved user home directory"
     );
 
-    // Spawn PTY process in the user's persistent home
+    // Check if the NexVigilant Terminal desktop app is running.
+    // If so, use bridge mode (FIFO input + capture output) to share its PTY.
+    // Otherwise, spawn a standalone PTY (Cloud Run / dev fallback).
+    let use_bridge = super::terminal_bridge::is_bridge_available();
+
+    if use_bridge {
+        tracing::info!(
+            session_id = %session_id,
+            "Terminal WS: bridge mode — connecting to NexVigilant Terminal via FIFO"
+        );
+        handle_bridge_session(&mut socket, &term_state, &session_id, mode).await;
+        cleanup_bridge_session(&term_state, &session_id).await;
+        tracing::info!(session_id = %session_id, "Terminal WS: bridge session closed");
+        return;
+    }
+
+    // Standalone mode: spawn our own PTY (Cloud Run or local dev)
+    tracing::info!(
+        session_id = %session_id,
+        "Terminal WS: standalone mode — spawning local PTY"
+    );
+
     let pty_config = PtyConfig::new("/bin/bash", &working_dir)
         .with_env("HOME", &working_dir)
         .with_env("USER", "appuser")
@@ -1128,6 +1172,144 @@ async fn dispatch_ai_message(
             tracing::debug!("Terminal WS: client gone during AI max-rounds done send");
         }
     }
+}
+
+// =============================================================================
+// Bridge Mode
+// =============================================================================
+
+/// Bridge session loop — FIFO for input, capture polling for output.
+async fn handle_bridge_session(
+    socket: &mut WebSocket,
+    term_state: &TerminalState,
+    session_id: &vr_core::ids::TerminalSessionId,
+    mode: TerminalMode,
+) {
+    use super::terminal_bridge;
+
+    term_state
+        .registry
+        .update_status(session_id, SessionStatus::Active)
+        .await;
+
+    let welcome = WsServerMessage::Status {
+        session: SessionStatusMsg::new(
+            SessionStatus::Active,
+            "Bridge mode — connected to NexVigilant Terminal",
+            session_id.to_string(),
+            mode,
+        ),
+    };
+    if let Ok(json) = serde_json::to_string(&welcome) {
+        if socket.send(Message::Text(json.into())).await.is_err() {
+            return;
+        }
+    }
+
+    let _ = terminal_bridge::capture_output(0, true);
+
+    let mut poll_interval = tokio::time::interval(std::time::Duration::from_millis(200));
+
+    loop {
+        tokio::select! {
+            _ = poll_interval.tick() => {
+                match terminal_bridge::capture_output(100, true) {
+                    Ok(text) if !text.is_empty() => {
+                        let msg = WsServerMessage::output(&text);
+                        if let Ok(json) = serde_json::to_string(&msg) {
+                            if socket.send(Message::Text(json.into())).await.is_err() {
+                                break;
+                            }
+                        }
+                        term_state.registry.touch(session_id).await;
+                    }
+                    Ok(_) => {}
+                    Err(_) => {
+                        if !terminal_bridge::is_bridge_available() {
+                            let status = WsServerMessage::Status {
+                                session: SessionStatusMsg::new(
+                                    SessionStatus::Terminated,
+                                    "NexVigilant Terminal disconnected",
+                                    session_id.to_string(),
+                                    mode,
+                                ),
+                            };
+                            if let Ok(json) = serde_json::to_string(&status) {
+                                let _ = socket.send(Message::Text(json.into())).await;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            msg = socket.recv() => {
+                match msg {
+                    Some(Ok(Message::Text(text))) => {
+                        match serde_json::from_str::<WsClientMessage>(&text) {
+                            Ok(WsClientMessage::Input { data }) => {
+                                if let Err(e) = terminal_bridge::bridge_exec(&data).await {
+                                    let err = WsServerMessage::error("BRIDGE_WRITE_ERROR", e);
+                                    if let Ok(json) = serde_json::to_string(&err) {
+                                        if socket.send(Message::Text(json.into())).await.is_err() {
+                                            break;
+                                        }
+                                    }
+                                }
+                                term_state.registry.touch(session_id).await;
+                            }
+                            Ok(WsClientMessage::Command { command }) => {
+                                if let Err(e) = terminal_bridge::bridge_exec(&command).await {
+                                    let err = WsServerMessage::error("BRIDGE_EXEC_ERROR", e);
+                                    if let Ok(json) = serde_json::to_string(&err) {
+                                        if socket.send(Message::Text(json.into())).await.is_err() {
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            Ok(WsClientMessage::Ping) => {
+                                let pong = WsServerMessage::pong();
+                                if let Ok(json) = serde_json::to_string(&pong) {
+                                    if socket.send(Message::Text(json.into())).await.is_err() {
+                                        break;
+                                    }
+                                }
+                            }
+                            Ok(WsClientMessage::Resize { .. }) => {}
+                            Ok(_) => {}
+                            Err(_) => {
+                                let err = WsServerMessage::error("INVALID_MESSAGE", "Failed to parse");
+                                if let Ok(json) = serde_json::to_string(&err) {
+                                    if socket.send(Message::Text(json.into())).await.is_err() {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Some(Ok(Message::Ping(data))) => {
+                        if socket.send(Message::Pong(data)).await.is_err() {
+                            break;
+                        }
+                    }
+                    Some(Ok(Message::Close(_))) | None => break,
+                    _ => {}
+                }
+            }
+        }
+    }
+}
+
+/// Clean up a bridge session.
+async fn cleanup_bridge_session(
+    term_state: &TerminalState,
+    session_id: &vr_core::ids::TerminalSessionId,
+) {
+    term_state
+        .registry
+        .update_status(session_id, SessionStatus::Terminated)
+        .await;
 }
 
 // =============================================================================

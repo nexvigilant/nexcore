@@ -385,7 +385,8 @@ pub struct BaselineConfig {
 impl BaselineConfig {
     /// Parse from a JSON string.
     pub fn from_json(json: &str) -> nexcore_error::Result<Self> {
-        Ok(serde_json::from_str(json)?)
+        serde_json::from_str(json)
+            .map_err(|e| nexcore_error::NexError::from_err(e, "BaselineConfig::from_json"))
     }
 }
 

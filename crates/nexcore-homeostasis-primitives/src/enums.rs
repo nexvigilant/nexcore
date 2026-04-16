@@ -61,6 +61,30 @@ pub enum ActionType {
     Custom,
 }
 
+impl ActionType {
+    /// Is this a dampening action?
+    ///
+    /// Maps to Python's `Action.is_dampening()` in `response/actuators.py`.
+    pub const fn is_dampening(self) -> bool {
+        matches!(
+            self,
+            Self::Dampen
+                | Self::EmergencyDampen
+                | Self::EmergencyShutdown
+                | Self::ReturnToBaseline
+                | Self::ScaleDown
+                | Self::CircuitOpen
+        )
+    }
+
+    /// Is this an amplifying action?
+    ///
+    /// Maps to Python's `Action.is_amplifying()` in `response/actuators.py`.
+    pub const fn is_amplifying(self) -> bool {
+        matches!(self, Self::Amplify | Self::ScaleUp | Self::CircuitClose)
+    }
+}
+
 /// Categories of signals in the system.
 ///
 /// Maps to Python's `SignalType` enum in `core/signals.py`.
@@ -347,6 +371,58 @@ mod tests {
             let json = serde_json::to_string(&func).unwrap();
             let back: DecayFunction = serde_json::from_str(&json).unwrap();
             assert_eq!(back, func);
+        }
+    }
+
+    #[test]
+    fn action_type_is_dampening() {
+        assert!(ActionType::Dampen.is_dampening());
+        assert!(ActionType::EmergencyDampen.is_dampening());
+        assert!(ActionType::EmergencyShutdown.is_dampening());
+        assert!(ActionType::ReturnToBaseline.is_dampening());
+        assert!(ActionType::ScaleDown.is_dampening());
+        assert!(ActionType::CircuitOpen.is_dampening());
+
+        assert!(!ActionType::Amplify.is_dampening());
+        assert!(!ActionType::ScaleUp.is_dampening());
+        assert!(!ActionType::CircuitClose.is_dampening());
+        assert!(!ActionType::Idle.is_dampening());
+        assert!(!ActionType::Maintain.is_dampening());
+    }
+
+    #[test]
+    fn action_type_is_amplifying() {
+        assert!(ActionType::Amplify.is_amplifying());
+        assert!(ActionType::ScaleUp.is_amplifying());
+        assert!(ActionType::CircuitClose.is_amplifying());
+
+        assert!(!ActionType::Dampen.is_amplifying());
+        assert!(!ActionType::Idle.is_amplifying());
+        assert!(!ActionType::EmergencyShutdown.is_amplifying());
+    }
+
+    #[test]
+    fn action_type_dampening_and_amplifying_mutually_exclusive() {
+        for action in [
+            ActionType::Idle,
+            ActionType::Amplify,
+            ActionType::Maintain,
+            ActionType::Dampen,
+            ActionType::EmergencyDampen,
+            ActionType::EmergencyShutdown,
+            ActionType::ReturnToBaseline,
+            ActionType::ScaleUp,
+            ActionType::ScaleDown,
+            ActionType::CircuitOpen,
+            ActionType::CircuitClose,
+            ActionType::Alert,
+            ActionType::RateLimit,
+            ActionType::Custom,
+        ] {
+            assert!(
+                !(action.is_dampening() && action.is_amplifying()),
+                "ActionType::{action:?} is both dampening and amplifying"
+            );
         }
     }
 }

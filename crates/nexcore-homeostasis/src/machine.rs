@@ -347,6 +347,16 @@ impl HomeostasisMachine {
         tracing::info!("HomeostasisMachine stop requested");
     }
 
+    /// Whether the background control loop is currently running.
+    ///
+    /// Maps to Python's `HomeostasisMachine.is_running()` in
+    /// `core/control_loop.py`. Reads the shared `AtomicBool` toggled by
+    /// [`Self::start`] and [`Self::stop`].
+    #[must_use]
+    pub fn is_running(&self) -> bool {
+        self.running.load(Ordering::SeqCst)
+    }
+
     // ── Observation helpers ───────────────────────────────────────────────────
 
     /// Most recent `SystemState`, or a synthetic healthy state if no iteration
@@ -806,6 +816,18 @@ mod tests {
         assert_eq!(machine.threat_level(), 0.0);
         assert!(machine.is_healthy());
         assert!(!machine.is_in_storm());
+        assert!(!machine.is_running(), "fresh machine is not running");
+    }
+
+    #[test]
+    fn is_running_toggles_with_stop() {
+        let machine = test_machine();
+        assert!(!machine.is_running());
+        // Manually toggle the shared atomic as start() does (avoids spawning).
+        machine.running.store(true, Ordering::SeqCst);
+        assert!(machine.is_running());
+        machine.stop();
+        assert!(!machine.is_running());
     }
 
     // ── Test 2: step() with no sensors ───────────────────────────────────────

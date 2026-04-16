@@ -237,6 +237,24 @@ impl HomeostasisMachine {
         self.sensors.push(sensor);
     }
 
+    /// Register a [`SyncSensor`] from `nexcore-homeostasis-sensing` by wrapping
+    /// it in a [`SyncSensorAdapter`] and pushing it onto the sensor list.
+    ///
+    /// Thin convenience over [`Self::register_sensor`] — avoids the adapter
+    /// boilerplate at call sites for the common case where the sensor owns no
+    /// async I/O.
+    ///
+    /// [`SyncSensor`]: nexcore_homeostasis_sensing::SyncSensor
+    /// [`SyncSensorAdapter`]: crate::traits::SyncSensorAdapter
+    pub fn register_sync_sensor<S>(&mut self, sensor: S) -> std::sync::Arc<tokio::sync::Mutex<S>>
+    where
+        S: nexcore_homeostasis_sensing::SyncSensor + 'static,
+    {
+        let (adapter, handle) = crate::traits::SyncSensorAdapter::new(sensor);
+        self.register_sensor(Box::new(adapter));
+        handle
+    }
+
     /// Register an actuator to execute actions decided by the control loop.
     pub fn register_actuator(&mut self, actuator: Box<dyn Actuator>) {
         tracing::info!(actuator = actuator.name(), "registered actuator");
@@ -989,5 +1007,41 @@ mod tests {
             machine.threat_level()
         );
         assert_eq!(machine.threat_derivative, 0.0);
+    }
+
+    // ── Test 10: Integration — sensing crate sensor drives control loop ───────
+
+    /// Retirement-gate test for Python SDK.
+    ///
+    /// Verifies that an `ErrorRateSensor` from `nexcore-homeostasis-sensing`
+    /// can be registered via the `SyncSensorAdapter` bridge and drives a full
+    /// control-loop step, producing an anomalous reading when error rate
+    /// exceeds the critical threshold. This is the consumer wire-up required
+    /// by the parity-ledger retirement gate (pre-mortem Risk #3 mitigation).
+    #[tokio::test(flavor = "multi_thread")]
+    async fn sensing_crate_sensor_drives_control_loop() {
+        use nexcore_homeostasis_sensing::external::ErrorRateSensor;
+
+        let mut machine = test_machine();
+        // warning=1% errors, critical=5% errors (Python defaults).
+        let sensor = ErrorRateSensor::new(0.01, 0.05);
+        let handle = machine.register_sync_sensor(sensor);
+
+        // Record a 10% error rate — well above critical.
+        {
+            let mut s = handle.lock().await;
+            s.record(0.10);
+        }
+
+        // One control-loop iteration must sense the sensor and produce state.
+        let state = machine.step().unwrap();
+
+        // The sensor recorded an anomalous reading; the machine should see it.
+        assert!(
+            state.threat_level > 0.0,
+            "control loop should have picked up anomalous sensor reading, \
+             got threat_level={}",
+            state.threat_level
+        );
     }
 }

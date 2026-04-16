@@ -138,6 +138,249 @@ impl Actuator for LoggingActuator {
 }
 
 // =============================================================================
+// CallbackActuator
+// =============================================================================
+
+/// An actuator that delegates action execution to a user-provided async closure.
+///
+/// Maps to Python's `CallbackActuator` in `response/actuators.py`.
+/// Useful for integrating with external systems (Kubernetes, load balancers,
+/// alerting APIs) where the handler is supplied at construction time.
+///
+/// # Example
+///
+/// ```no_run
+/// use nexcore_homeostasis::traits::{Actuator, CallbackActuator};
+/// use nexcore_homeostasis::primitives::{ActionData, ActionResult, ActionType};
+///
+/// let actuator = CallbackActuator::new("k8s", |action| {
+///     Box::pin(async move {
+///         Ok(ActionResult::success(
+///             action.action_type,
+///             Some(action.target_response_level),
+///             0.0,
+///         ))
+///     })
+/// });
+/// assert_eq!(actuator.name(), "k8s");
+/// ```
+pub struct CallbackActuator<F>
+where
+    F: Fn(ActionData) -> Pin<Box<dyn Future<Output = Result<ActionResult>> + Send>> + Send + Sync,
+{
+    name: String,
+    handler: F,
+}
+
+impl<F> CallbackActuator<F>
+where
+    F: Fn(ActionData) -> Pin<Box<dyn Future<Output = Result<ActionResult>> + Send>> + Send + Sync,
+{
+    /// Create a new `CallbackActuator` wrapping the given async handler.
+    ///
+    /// The handler receives an owned [`ActionData`] so the returned future can
+    /// be `'static` and safely moved across await points.
+    pub fn new(name: impl Into<String>, handler: F) -> Self {
+        Self {
+            name: name.into(),
+            handler,
+        }
+    }
+}
+
+impl<F> Actuator for CallbackActuator<F>
+where
+    F: Fn(ActionData) -> Pin<Box<dyn Future<Output = Result<ActionResult>> + Send>> + Send + Sync,
+{
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn execute(
+        &self,
+        action: &ActionData,
+    ) -> Pin<Box<dyn Future<Output = Result<ActionResult>> + Send + '_>> {
+        (self.handler)(action.clone())
+    }
+}
+
+// =============================================================================
+// CompositeActuator
+// =============================================================================
+
+/// An actuator that fans an action out to multiple sub-actuators.
+///
+/// Maps to Python's `CompositeActuator` in `response/actuators.py`.
+/// Every sub-actuator receives the action in sequence. The composite result
+/// is successful only if every sub-actuator succeeded.
+pub struct CompositeActuator {
+    name: String,
+    actuators: Vec<Arc<dyn Actuator>>,
+}
+
+impl CompositeActuator {
+    /// Create a new composite from the given sub-actuators.
+    pub fn new(name: impl Into<String>, actuators: Vec<Arc<dyn Actuator>>) -> Self {
+        Self {
+            name: name.into(),
+            actuators,
+        }
+    }
+
+    /// Add a sub-actuator to the composite.
+    pub fn push(&mut self, actuator: Arc<dyn Actuator>) {
+        self.actuators.push(actuator);
+    }
+
+    /// Number of registered sub-actuators.
+    pub fn len(&self) -> usize {
+        self.actuators.len()
+    }
+
+    /// Whether the composite has zero sub-actuators.
+    pub fn is_empty(&self) -> bool {
+        self.actuators.is_empty()
+    }
+}
+
+impl Actuator for CompositeActuator {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn execute(
+        &self,
+        action: &ActionData,
+    ) -> Pin<Box<dyn Future<Output = Result<ActionResult>> + Send + '_>> {
+        let action = action.clone();
+        let actuators = self.actuators.clone();
+        Box::pin(async move {
+            let mut all_success = true;
+            for actuator in &actuators {
+                let result = actuator.execute(&action).await?;
+                if !result.success {
+                    all_success = false;
+                }
+            }
+            if all_success {
+                Ok(ActionResult::success(action.action_type, None, 0.0))
+            } else {
+                Ok(ActionResult::failure(
+                    action.action_type,
+                    "one or more sub-actuators failed",
+                    0.0,
+                ))
+            }
+        })
+    }
+}
+
+// =============================================================================
+// ThrottledActuator
+// =============================================================================
+
+/// An actuator wrapper that rate-limits execution.
+///
+/// Maps to Python's `ThrottledActuator` in `response/actuators.py`.
+/// Prevents excessive action execution that could itself cause system instability.
+/// Enforces two rate limits simultaneously:
+/// - Minimum interval between consecutive executions
+/// - Maximum executions per rolling 60-second window
+pub struct ThrottledActuator {
+    name: String,
+    wrapped: Arc<dyn Actuator>,
+    min_interval: std::time::Duration,
+    max_per_minute: u32,
+    state: Arc<RwLock<ThrottleState>>,
+}
+
+struct ThrottleState {
+    last_execution: Option<tokio::time::Instant>,
+    minute_start: tokio::time::Instant,
+    minute_count: u32,
+}
+
+impl ThrottledActuator {
+    /// Wrap an actuator with rate limiting.
+    pub fn new(
+        wrapped: Arc<dyn Actuator>,
+        min_interval: std::time::Duration,
+        max_per_minute: u32,
+    ) -> Self {
+        let name = format!("throttled_{}", wrapped.name());
+        Self {
+            name,
+            wrapped,
+            min_interval,
+            max_per_minute,
+            state: Arc::new(RwLock::new(ThrottleState {
+                last_execution: None,
+                minute_start: tokio::time::Instant::now(),
+                minute_count: 0,
+            })),
+        }
+    }
+}
+
+impl Actuator for ThrottledActuator {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn execute(
+        &self,
+        action: &ActionData,
+    ) -> Pin<Box<dyn Future<Output = Result<ActionResult>> + Send + '_>> {
+        let action = action.clone();
+        let wrapped = Arc::clone(&self.wrapped);
+        let state = Arc::clone(&self.state);
+        let min_interval = self.min_interval;
+        let max_per_minute = self.max_per_minute;
+        Box::pin(async move {
+            let now = tokio::time::Instant::now();
+            let mut s = state.write().await;
+
+            if let Some(last) = s.last_execution {
+                let elapsed = now.saturating_duration_since(last);
+                if elapsed < min_interval {
+                    return Ok(ActionResult::failure(
+                        action.action_type,
+                        format!(
+                            "throttled: {:.1}s < {:.1}s minimum interval",
+                            elapsed.as_secs_f64(),
+                            min_interval.as_secs_f64()
+                        ),
+                        0.0,
+                    ));
+                }
+            }
+
+            if now.saturating_duration_since(s.minute_start).as_secs() > 60 {
+                s.minute_count = 0;
+                s.minute_start = now;
+            }
+
+            if s.minute_count >= max_per_minute {
+                return Ok(ActionResult::failure(
+                    action.action_type,
+                    format!(
+                        "rate limit: {}/{} per minute",
+                        s.minute_count, max_per_minute
+                    ),
+                    0.0,
+                ));
+            }
+
+            s.last_execution = Some(now);
+            s.minute_count += 1;
+            drop(s);
+
+            wrapped.execute(&action).await
+        })
+    }
+}
+
+// =============================================================================
 // SimulatedThreatSource
 // =============================================================================
 
@@ -291,5 +534,105 @@ mod tests {
         });
         let result = sensor.read().await.unwrap();
         assert!(result.is_none());
+    }
+
+    #[tokio::test]
+    async fn callback_actuator_routes_to_handler() {
+        let actuator = CallbackActuator::new("test-cb", |action: ActionData| {
+            Box::pin(async move {
+                Ok(ActionResult::success(
+                    action.action_type,
+                    Some(action.target_response_level * 2.0),
+                    1.0,
+                ))
+            })
+        });
+        assert_eq!(actuator.name(), "test-cb");
+        let action = ActionData::new(ActionType::Dampen, 10.0, "test");
+        let result = actuator.execute(&action).await.unwrap();
+        assert!(result.success);
+        assert_eq!(result.actual_value, Some(20.0));
+    }
+
+    #[tokio::test]
+    async fn composite_actuator_all_succeed() {
+        let a1 = Arc::new(LoggingActuator::new("a1")) as Arc<dyn Actuator>;
+        let a2 = Arc::new(LoggingActuator::new("a2")) as Arc<dyn Actuator>;
+        let composite = CompositeActuator::new("comp", vec![a1, a2]);
+        assert_eq!(composite.len(), 2);
+        assert!(!composite.is_empty());
+        let action = ActionData::new(ActionType::Dampen, 5.0, "fan-out");
+        let result = composite.execute(&action).await.unwrap();
+        assert!(result.success);
+    }
+
+    #[tokio::test]
+    async fn composite_actuator_one_failure_fails_all() {
+        struct FailActuator;
+        impl Actuator for FailActuator {
+            fn name(&self) -> &str {
+                "fail"
+            }
+            fn execute(
+                &self,
+                action: &ActionData,
+            ) -> Pin<Box<dyn Future<Output = Result<ActionResult>> + Send + '_>> {
+                let at = action.action_type;
+                Box::pin(async move { Ok(ActionResult::failure(at, "nope", 0.0)) })
+            }
+        }
+        let ok = Arc::new(LoggingActuator::new("ok")) as Arc<dyn Actuator>;
+        let bad = Arc::new(FailActuator) as Arc<dyn Actuator>;
+        let composite = CompositeActuator::new("mixed", vec![ok, bad]);
+        let action = ActionData::new(ActionType::Dampen, 1.0, "test");
+        let result = composite.execute(&action).await.unwrap();
+        assert!(!result.success);
+    }
+
+    #[tokio::test]
+    async fn composite_actuator_empty_succeeds() {
+        let composite = CompositeActuator::new("empty", vec![]);
+        assert!(composite.is_empty());
+        let action = ActionData::new(ActionType::Idle, 0.0, "test");
+        let result = composite.execute(&action).await.unwrap();
+        assert!(result.success);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn throttled_actuator_enforces_min_interval() {
+        let inner = Arc::new(LoggingActuator::new("inner")) as Arc<dyn Actuator>;
+        let throttled = ThrottledActuator::new(inner, std::time::Duration::from_secs(5), 100);
+        let action = ActionData::new(ActionType::Dampen, 1.0, "test");
+
+        let r1 = throttled.execute(&action).await.unwrap();
+        assert!(r1.success, "first execution should pass");
+
+        // Second execution within interval should be throttled.
+        let r2 = throttled.execute(&action).await.unwrap();
+        assert!(!r2.success);
+        assert!(r2.error_message.unwrap().contains("throttled"));
+
+        // After interval elapses, execution should succeed again.
+        tokio::time::advance(std::time::Duration::from_secs(6)).await;
+        let r3 = throttled.execute(&action).await.unwrap();
+        assert!(r3.success);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn throttled_actuator_enforces_rate_limit() {
+        let inner = Arc::new(LoggingActuator::new("inner")) as Arc<dyn Actuator>;
+        let throttled = ThrottledActuator::new(inner, std::time::Duration::from_millis(1), 3);
+        let action = ActionData::new(ActionType::Dampen, 1.0, "test");
+
+        for _ in 0..3 {
+            tokio::time::advance(std::time::Duration::from_millis(10)).await;
+            let r = throttled.execute(&action).await.unwrap();
+            assert!(r.success);
+        }
+
+        tokio::time::advance(std::time::Duration::from_millis(10)).await;
+        let r = throttled.execute(&action).await.unwrap();
+        assert!(!r.success);
+        assert!(r.error_message.unwrap().contains("rate limit"));
     }
 }

@@ -17,6 +17,7 @@ nexcore-primitives = { path = "../nexcore-primitives", version = "1.0.0" }
 nexcore-homeostasis-primitives = { path = "../nexcore-homeostasis-primitives", version = "1.0.0" }
 nexcore-homeostasis-storm = { path = "../nexcore-homeostasis-storm", version = "1.0.0" }
 nexcore-homeostasis-memory = { path = "../nexcore-homeostasis-memory", version = "1.0.0" }
+nexcore-homeostasis-sensing = { path = "../nexcore-homeostasis-sensing", version = "1.0.0" }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 nexcore-error = { workspace = true }

@@ -2,15 +2,37 @@
 //!
 //! The control loop depends on these traits, not concrete implementations.
 //! Users provide sensors that read metrics and actuators that execute actions.
+//!
+//! ## Sync → Async Bridge
+//!
+//! [`SyncSensorAdapter`] bridges the synchronous [`SyncSensor`] interface
+//! (implemented by all concrete sensors in `nexcore-homeostasis-sensing`) to
+//! the async [`Sensor`] trait required by the control loop.
+//!
+//! Direction of data flow:
+//! ```text
+//! [concrete sensor] --record()--> [in-process history + assessment]
+//!                                         |
+//!                    SyncSensor::read_current()  (synchronous, &self)
+//!                                         |
+//!                    SyncSensorAdapter::read()   (async, returns Pin<Box<...>>)
+//!                                         |
+//!                    [Homeostasis control loop]
+//! ```
+//!
+//! The adapter wraps `Arc<Mutex<S>>` so that mutable state (value history,
+//! pattern matching) is safely shared between the recording side and the
+//! async read side without extra copying.
 
 use nexcore_error::Result;
 use nexcore_homeostasis_primitives::{
     ActionData, ActionResult, ActionType, SensorReading, SensorType,
 };
+use nexcore_homeostasis_sensing::SyncSensor;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 
 /// A sensor that produces readings.
 pub trait Sensor: Send + Sync {

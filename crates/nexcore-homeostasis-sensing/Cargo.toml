@@ -1,0 +1,27 @@
+[package]
+name = "nexcore-homeostasis-sensing"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Sensor taxonomy for the Homeostasis Machine — external threats (PAMPs), internal damage (DAMPs), and self-measurement (proprioception)"
+
+keywords = ["nexcore", "monitoring", "observability"]
+categories = ["science"]
+
+[dependencies]
+nexcore-homeostasis-primitives = { path = "../nexcore-homeostasis-primitives", version = "1.0.0" }
+nexcore-error = { workspace = true }
+nexcore-chrono = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+tracing = { workspace = true }
+tokio = { workspace = true, features = ["sync", "time"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["full", "test-util"] }
+
+[lints]
+workspace = true

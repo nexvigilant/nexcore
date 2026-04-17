@@ -8,7 +8,7 @@ use rusqlite::Connection;
 use crate::error::{DbError, Result};
 
 /// Current schema version. Increment when adding migrations.
-pub const CURRENT_SCHEMA_VERSION: u32 = 12;
+pub const CURRENT_SCHEMA_VERSION: u32 = 13;
 
 /// Initialize the database schema (create all tables if they don't exist).
 ///
@@ -48,6 +48,7 @@ pub fn initialize(conn: &Connection) -> Result<()> {
             apply_v10(conn)?;
             apply_v11(conn)?;
             apply_v12(conn)?;
+            apply_v13(conn)?;
             conn.execute(
                 "INSERT INTO schema_version (version) VALUES (?1)",
                 [CURRENT_SCHEMA_VERSION],
@@ -240,6 +241,9 @@ fn migrate(conn: &Connection, from_version: u32) -> Result<()> {
     }
     if from_version < 12 {
         apply_v12(conn)?;
+    }
+    if from_version < 13 {
+        apply_v13(conn)?;
     }
 
     conn.execute(
@@ -757,6 +761,58 @@ fn apply_v12(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
+/// Apply the V13 migration: perf_telemetry table for Claude I/O latency capture.
+///
+/// Replaces the dead token_efficiency pipeline (stalled 2026-02-20). One row
+/// per turn per session, keyed on (session_id, turn_id). Populated by
+/// UserPromptSubmit + Stop hooks under ~/.claude/hooks/bash/.
+///
+/// Axis 1 (input assembly): t0_ms, context_bytes, session_start_ms, hook_overhead_ms
+/// Axis 2 (output throughput): duration_ms, ttft_ms, input/output/cache tokens
+/// Axis 3 (tool latency): tool_calls, mcp_tool_calls, tool_total_ms
+///
+/// Cache fields harvested from transcript jsonl message.usage blocks.
+/// TTFT requires claude-runtime SSE instrumentation (phase 2) — zero-defaulted.
+fn apply_v13(conn: &Connection) -> Result<()> {
+    conn.execute_batch(
+        "
+        CREATE TABLE IF NOT EXISTS perf_telemetry (
+            id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id              TEXT    NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+            turn_id                 INTEGER NOT NULL,
+            model                   TEXT    NOT NULL DEFAULT '',
+
+            t0_ms                   INTEGER NOT NULL DEFAULT 0,
+            session_start_ms        INTEGER NOT NULL DEFAULT 0,
+            context_bytes           INTEGER NOT NULL DEFAULT 0,
+            hook_overhead_ms        INTEGER NOT NULL DEFAULT 0,
+
+            t_first_token_ms        INTEGER NOT NULL DEFAULT 0,
+            t_final_ms              INTEGER NOT NULL DEFAULT 0,
+            ttft_ms                 INTEGER NOT NULL DEFAULT 0,
+            duration_ms             INTEGER NOT NULL DEFAULT 0,
+            input_tokens            INTEGER NOT NULL DEFAULT 0,
+            output_tokens           INTEGER NOT NULL DEFAULT 0,
+            cache_creation_tokens   INTEGER NOT NULL DEFAULT 0,
+            cache_read_tokens       INTEGER NOT NULL DEFAULT 0,
+
+            tool_calls              INTEGER NOT NULL DEFAULT 0,
+            mcp_tool_calls          INTEGER NOT NULL DEFAULT 0,
+            tool_total_ms           INTEGER NOT NULL DEFAULT 0,
+
+            created_at              TEXT    NOT NULL DEFAULT (datetime('now')),
+
+            UNIQUE (session_id, turn_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_perf_session ON perf_telemetry(session_id);
+        CREATE INDEX IF NOT EXISTS idx_perf_created ON perf_telemetry(created_at);
+        CREATE INDEX IF NOT EXISTS idx_perf_ttft ON perf_telemetry(ttft_ms);
+        ",
+    )?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1032,5 +1088,81 @@ mod tests {
                 .expect("check table");
             assert!(exists, "Table '{}' should exist", table);
         }
+    }
+
+    #[test]
+    fn test_v13_perf_telemetry_table() {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        initialize(&conn).expect("init to current");
+
+        let exists: bool = conn
+            .query_row(
+                "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='table' AND name='perf_telemetry'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("check perf_telemetry");
+        assert!(exists, "perf_telemetry table should exist after V13");
+
+        // UNIQUE (session_id, turn_id) contract holds
+        conn.execute(
+            "INSERT INTO sessions (id, created_at) VALUES ('sess-perf', '2026-04-17')",
+            [],
+        )
+        .expect("insert session");
+        conn.execute(
+            "INSERT INTO perf_telemetry (session_id, turn_id, duration_ms) VALUES ('sess-perf', 0, 1000)",
+            [],
+        )
+        .expect("insert first turn");
+        let dup_result = conn.execute(
+            "INSERT INTO perf_telemetry (session_id, turn_id, duration_ms) VALUES ('sess-perf', 0, 9999)",
+            [],
+        );
+        assert!(
+            dup_result.is_err(),
+            "UNIQUE (session_id, turn_id) should reject duplicate"
+        );
+    }
+
+    #[test]
+    fn test_v12_to_v13_migration() {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        conn.execute_batch("PRAGMA journal_mode=WAL;").expect("wal");
+        conn.execute_batch("PRAGMA foreign_keys=ON;").expect("fk");
+        conn.execute_batch("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL);")
+            .expect("sv");
+        apply_v1(&conn).expect("v1");
+        apply_v2(&conn).expect("v2");
+        apply_v4(&conn).expect("v4");
+        apply_v5(&conn).expect("v5");
+        apply_v6(&conn).expect("v6");
+        apply_v7(&conn).expect("v7");
+        apply_v8(&conn).expect("v8");
+        apply_v9(&conn).expect("v9");
+        apply_v10(&conn).expect("v10");
+        apply_v11(&conn).expect("v11");
+        apply_v12(&conn).expect("v12");
+        conn.execute("INSERT INTO schema_version (version) VALUES (12)", [])
+            .expect("insert v12");
+
+        initialize(&conn).expect("migrate v12 -> v13");
+
+        let version: u32 = conn
+            .query_row("SELECT version FROM schema_version", [], |row| row.get(0))
+            .expect("version");
+        assert_eq!(version, 13);
+
+        let exists: bool = conn
+            .query_row(
+                "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='table' AND name='perf_telemetry'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("check perf_telemetry after migration");
+        assert!(
+            exists,
+            "perf_telemetry should exist after v12->v13 migration"
+        );
     }
 }

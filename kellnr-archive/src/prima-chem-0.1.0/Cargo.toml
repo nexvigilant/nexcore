@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Molecular primitives for Prima language - SMILES parsing, 3D geometry, reaction modeling"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "prima_chem"

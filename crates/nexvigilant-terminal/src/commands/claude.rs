@@ -77,10 +77,10 @@ pub struct ClaudeStatus {
 pub struct ClaudeCodeState {
     /// The PTY process running Claude.
     process: Arc<Mutex<Option<PtyProcess>>>,
-    /// Current state.
-    state: Arc<Mutex<ClaudeState>>,
-    /// Session ID for PTY events.
-    session_id: Arc<Mutex<Option<String>>>,
+    /// Current state — pub for cross-module access (repl routing).
+    pub state: Arc<Mutex<ClaudeState>>,
+    /// Session ID for PTY events — pub for cross-module access (repl forwarding).
+    pub session_id: Arc<Mutex<Option<String>>>,
     /// Working directory.
     working_dir: Arc<Mutex<Option<String>>>,
     /// Launch args.

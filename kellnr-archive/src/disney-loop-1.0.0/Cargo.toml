@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Forward-only compound discovery loop. Assess state, reject regression, search for novelty, arrive at new state. Based on T1 primitive decomposition of Walt Disney's curiosity doctrine."
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "disney_loop"

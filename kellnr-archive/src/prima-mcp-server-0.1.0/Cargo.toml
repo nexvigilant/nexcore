@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "MCP server that executes Prima functions as tools"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "prima_mcp_server"

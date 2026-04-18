@@ -21,7 +21,7 @@ autotests = false
 autobenches = false
 description = "Proc macros for Claude Code skills"
 readme = false
-license = "MIT"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "skill_macros"

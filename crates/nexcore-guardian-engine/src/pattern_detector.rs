@@ -73,8 +73,11 @@ impl std::fmt::Display for PatternType {
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum AlertSeverity {
+    /// Observed anomaly — log and surface, no auto-action.
     Warning = 1,
+    /// Confirmed pattern — escalate to on-call, throttle affected subsystem.
     High = 2,
+    /// Imminent patient-safety or system-integrity risk — immediate halt / red-line.
     Critical = 3,
 }
 

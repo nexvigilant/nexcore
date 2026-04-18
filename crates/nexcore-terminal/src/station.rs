@@ -51,11 +51,17 @@ impl Default for StationConfig {
         let base_url = std::env::var("NEXVIGILANT_STATION_URL")
             .unwrap_or_else(|_| DEFAULT_STATION_URL.to_string());
         let timeout = Duration::from_secs(30);
-        let client = reqwest::Client::builder()
+        let client = match reqwest::Client::builder()
             .timeout(timeout)
             .pool_max_idle_per_host(4)
             .build()
-            .unwrap_or_default();
+        {
+            Ok(c) => c,
+            Err(e) => {
+                tracing::warn!(error = %e, "Station HTTP client build failed, using default");
+                reqwest::Client::default()
+            }
+        };
         Self {
             base_url,
             timeout,

@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Pharmacovigilance Operating System — 15-layer T3 platform with T1 primitive grounding"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [lib]

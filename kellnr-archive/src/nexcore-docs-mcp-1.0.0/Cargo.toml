@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "MCP server for Claude Code documentation - consolidated from projects/claude-code-docs-mcp"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [[bin]]
 name = "nexcore-docs-mcp"

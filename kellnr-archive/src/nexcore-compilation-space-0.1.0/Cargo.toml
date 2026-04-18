@@ -21,7 +21,7 @@ autotests = false
 autobenches = false
 description = "The Full Compilation Space — 7-axis framework for modeling code transformations"
 readme = false
-license = "Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_compilation_space"

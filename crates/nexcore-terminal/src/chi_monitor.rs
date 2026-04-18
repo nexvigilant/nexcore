@@ -285,7 +285,8 @@ mod duration_serde {
 
     pub fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<Duration, D::Error> {
         let nanos = u128::deserialize(d)?;
-        Ok(Duration::from_nanos(nanos as u64))
+        let clamped = u64::try_from(nanos).unwrap_or(u64::MAX);
+        Ok(Duration::from_nanos(clamped))
     }
 }
 

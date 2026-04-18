@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "MCP server for Google Sheets API v4 with service account JWT auth"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "gsheets_mcp"

@@ -4,7 +4,7 @@ name = "nexcore-build-orchestrator"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 description = "Full-stack build orchestrator with CI/CD pipeline, live dashboard, and CLI"
 
 [[bin]]

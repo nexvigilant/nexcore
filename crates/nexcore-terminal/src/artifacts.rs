@@ -85,16 +85,9 @@ impl TerminalArtifact {
     }
 }
 
-/// Current UTC timestamp in ISO 8601 format.
+/// Current UTC timestamp in ISO 8601 format via nexcore-chrono.
 fn chrono_now() -> String {
-    // Use std::time to avoid chrono dependency — format manually
-    let now = std::time::SystemTime::now();
-    let secs = now
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs();
-    // Simple UTC timestamp (not perfect but sufficient for artifact ordering)
-    format!("{secs}")
+    nexcore_chrono::DateTime::now().to_string()
 }
 
 #[cfg(test)]

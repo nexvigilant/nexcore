@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "Cardiovascular data transport system — heart pump, vessel hierarchy, blood components, and pressure regulation"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_cardiovascular"

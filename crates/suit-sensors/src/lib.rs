@@ -1,3 +1,8 @@
+#![forbid(unsafe_code)]
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
+#![cfg_attr(not(test), deny(clippy::expect_used))]
+#![cfg_attr(not(test), deny(clippy::panic))]
+
 //! # Suit Sensors
 //!
 //! Raw hardware abstraction for suit sensor subsystems.
@@ -21,6 +26,8 @@
 
 /// Pilot biometric monitoring (HR, SpO2, temperature, GSR, respiration).
 pub mod biometrics;
+/// Operator-vigil environmental perception (RGB/IR/audio/thermal/load) — bridge to vigil-sense-fusion.
+pub mod environmental;
 /// Ground reaction force measurement.
 pub mod force_plate;
 /// Inertial measurement unit abstraction.

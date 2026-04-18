@@ -33,7 +33,7 @@ categories = [
     "science",
     "development-tools",
 ]
-license = "MIT OR Apache-2.0"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository = "https://github.com/nexvigilant/stem"
 
 [lib]

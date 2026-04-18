@@ -107,6 +107,12 @@ pub use scanner::ImmunityScanner;
 pub use adaptive::{NmdAdaptiveEngine, NmdLearningEvent, ThresholdAdjustment};
 pub use nexcore_spliceosome::{EjcMarker, TaskCategory};
 pub use smg::{SmgAction, SmgComplex, SmgConfig};
+
+// Immune-system cohesion: antibodies (adaptive recognition), antivector (annihilation),
+// cytokine (inflammatory signaling). Immunity orchestrates all three.
+pub use nexcore_antibodies as antibodies;
+pub use nexcore_antivector as antivector;
+pub use nexcore_cytokine as cytokine;
 pub use thymic::{CategoryObservation, ThymicConfig, ThymicGate};
 pub use types::{
     Antibody, AntibodyRegistry, AutoimmuneDiagnosis, AutoimmuneReport, AutoimmuneStatus,

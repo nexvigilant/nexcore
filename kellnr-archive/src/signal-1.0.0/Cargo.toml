@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Unified signal detection pipeline: ingest, normalize, detect, threshold, store, alert, report, stats, orchestrate"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [lib]

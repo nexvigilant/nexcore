@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "Type-safe configuration consolidation for NexVigilant Core ecosystem"
 readme = "README.md"
-license = "MIT"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_config"

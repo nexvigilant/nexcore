@@ -24,7 +24,7 @@ autotests = false
 autobenches = false
 description = "NexCore watch core — pure computation for signal detection, Guardian status, and P0-P5 alerts"
 readme = false
-license = "LicenseRef-NexVigilant-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 resolver = "2"
 
 [lib]

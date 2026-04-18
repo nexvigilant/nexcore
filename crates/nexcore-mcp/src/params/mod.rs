@@ -624,3 +624,6 @@ pub use suit_compute::*;
 
 // Workflow Intelligence (map, gaps, bottlenecks, live intel)
 pub mod workflow_intel;
+
+// nexcore-bio umbrella introspection (discover the biological surface)
+pub mod bio_umbrella;

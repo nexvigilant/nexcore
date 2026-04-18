@@ -3,7 +3,7 @@ name = "nexcore-workflow-intel"
 version = "0.1.0"
 edition = "2024"
 description = "Workflow intelligence — map workflows, identify gaps, improve live"
-license = "SEE LICENSE IN LICENSE"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 publish = false
 
 [dependencies]

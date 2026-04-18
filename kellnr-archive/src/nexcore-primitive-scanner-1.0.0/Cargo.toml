@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "Automated primitive extraction with CLI, MCP, and hook integration"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_primitive_scanner"

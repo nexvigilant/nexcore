@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 description = "6-phase DNA spectral vocabulary optimization pipeline per SOP-001. Encodes candidate words as DNA strands, measures resonance against an anchor word, classifies into 4 spectral tiers, and produces a vocabulary architecture."
 authors = ["Matthew Campion, PharmD"]
-license = "MIT"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [dependencies]
 nexcore-dna = { path = "../.." }

@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Mathematically rigorous crate and workspace quality measurement: information theory, graph theory, statistics"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_measure"

@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Perplexity AI Sonar API client for search-grounded research"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [lib]

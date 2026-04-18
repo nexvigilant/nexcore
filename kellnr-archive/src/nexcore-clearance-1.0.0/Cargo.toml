@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "5-level security classification with tiered enforcement for NexVigilant"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_clearance"

@@ -1,3 +1,8 @@
+#![forbid(unsafe_code)]
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
+#![cfg_attr(not(test), deny(clippy::expect_used))]
+#![cfg_attr(not(test), deny(clippy::panic))]
+
 //! # NexVigilant Core — Circulatory System
 //!
 //! Data transport pipeline modeled after the biological cardiovascular system.
@@ -47,6 +52,10 @@
 pub mod cardio_bridge;
 pub mod claude_code;
 pub mod grounding;
+
+// Blood carries signaling molecules — expose cytokines and hormones through the bloodstream.
+pub use nexcore_cytokine as cytokine;
+pub use nexcore_hormones as hormones;
 
 use serde::{Deserialize, Serialize};
 

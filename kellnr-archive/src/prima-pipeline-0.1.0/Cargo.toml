@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Universal Concept Translator: Prima source -> T1 primitives -> Execution"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "prima_pipeline"

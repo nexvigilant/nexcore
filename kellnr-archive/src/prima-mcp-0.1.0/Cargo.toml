@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Prima-to-MCP compiler - expose Prima functions as MCP tools"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "prima_mcp"

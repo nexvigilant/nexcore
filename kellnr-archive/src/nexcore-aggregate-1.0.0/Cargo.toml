@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "T1 fold/aggregate/recursive combinators — fills Σ, ρ, κ primitive gaps"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_aggregate"

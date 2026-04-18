@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "Lymphatic system for overflow drainage — Output styles(lymph drainage) + Notification hooks(lymph nodes) + Thymic selection(self vs non-self) + Passive overflow"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_lymphatic"

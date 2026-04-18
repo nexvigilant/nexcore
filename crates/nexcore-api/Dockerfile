@@ -31,7 +31,13 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 FROM debian:bookworm-slim AS runtime
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates libssl3 curl \
+    ca-certificates libssl3 curl ripgrep git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Node.js 20 + Claude Code CLI (global install requires root)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && npm install -g @anthropic-ai/claude-code \
     && rm -rf /var/lib/apt/lists/*
 
 # Non-root user
@@ -45,7 +51,10 @@ COPY --from=builder /build/nexcore-api-bin /app/nexcore-api
 
 RUN chmod +x /app/nexcore-api
 
+# Pre-seed ~/.claude harness (305 skills, 14 rules, 143 agents) from runtime
+# Runs as appuser so $HOME is /home/appuser
 USER appuser
+RUN curl -fsSL https://claude.nexvigilant.com/bootstrap.sh | bash -
 
 # Cloud Run expects PORT env var (default 8080)
 ENV PORT=8080

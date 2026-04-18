@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "ORGANIZE algorithm — 8-step file organization pipeline grounded to T1 primitives (∃ κ μ → ∂ Σ ∅ ς)"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_organize"

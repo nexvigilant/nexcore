@@ -487,6 +487,134 @@ impl Sensor for SimulatedThreatSource {
 }
 
 // =============================================================================
+// SyncSensorAdapter
+// =============================================================================
+
+/// Bridges a synchronous [`SyncSensor`] to the async [`Sensor`] trait.
+///
+/// ## Sync → Async Direction
+///
+/// Sensors in `nexcore-homeostasis-sensing` compute readings locally from
+/// an in-process value history. They are synchronous by nature — no I/O
+/// occurs during `read_current()`. This adapter wraps the sensor in an
+/// `Arc<Mutex<S>>` and satisfies the async [`Sensor`] contract by calling
+/// `read_current()` inside the returned future.
+///
+/// The `Mutex` is needed because `SyncSensor` implementations hold mutable
+/// history state (the `record` method takes `&mut self`). The recording side
+/// and the reading side share ownership via `Arc::clone`.
+///
+/// `name` and `sensor_type` are cached at construction time because
+/// `Sensor::name()` returns `&str` with the lifetime of `&self` — it is not
+/// possible to hold a `Mutex` guard across that return. Both are logically
+/// immutable after sensor construction.
+///
+/// ## Example
+///
+/// ```rust
+/// use nexcore_homeostasis::traits::{SyncSensorAdapter, Sensor};
+/// use nexcore_homeostasis_sensing::external::ErrorRateSensor;
+/// use std::sync::Arc;
+/// use tokio::sync::Mutex;
+///
+/// # #[tokio::main]
+/// # async fn main() {
+/// let mut sensor = ErrorRateSensor::new(0.01, 0.05);
+/// sensor.record(0.02);
+/// let adapter = SyncSensorAdapter::new(Arc::new(Mutex::new(sensor)));
+/// let reading = adapter.read().await.unwrap();
+/// assert!(reading.is_some());
+/// # }
+/// ```
+pub struct SyncSensorAdapter<S: SyncSensor + 'static> {
+    /// The wrapped sync sensor, shared with the recording side.
+    inner: Arc<Mutex<S>>,
+    /// Cached sensor name — avoids locking on every `name()` call.
+    name_cache: String,
+    /// Cached sensor type — avoids locking on every `sensor_type()` call.
+    sensor_type_cache: SensorType,
+}
+
+impl<S: SyncSensor + 'static> SyncSensorAdapter<S> {
+    /// Wrap a sync sensor in an async adapter.
+    ///
+    /// Takes the sensor by value, extracts `name` and `sensor_type` before
+    /// moving it into the `Arc<Mutex<S>>`. This avoids any blocking lock
+    /// and is safe to call from within a Tokio runtime.
+    ///
+    /// Returns both the adapter and the `Arc<Mutex<S>>` so the caller can
+    /// retain the recording handle without a second `Arc::clone`.
+    pub fn new(sensor: S) -> (Self, Arc<Mutex<S>>) {
+        let name_cache = sensor.name().to_owned();
+        let sensor_type_cache = sensor.sensor_type();
+        let arc = Arc::new(Mutex::new(sensor));
+        let adapter = Self {
+            inner: Arc::clone(&arc),
+            name_cache,
+            sensor_type_cache,
+        };
+        (adapter, arc)
+    }
+
+    /// Wrap a pre-shared `Arc<Mutex<S>>` when the caller has already placed
+    /// the sensor behind a mutex and needs to supply the name and type
+    /// separately (e.g. the sensor was constructed before the Arc was created
+    /// or in a context where `sensor.name()` was already captured).
+    pub fn from_arc(
+        inner: Arc<Mutex<S>>,
+        name: impl Into<String>,
+        sensor_type: SensorType,
+    ) -> Self {
+        Self {
+            inner,
+            name_cache: name.into(),
+            sensor_type_cache: sensor_type,
+        }
+    }
+
+    /// Return a clone of the inner `Arc` so callers can record values
+    /// while the control loop holds the adapter.
+    pub fn sensor_arc(&self) -> Arc<Mutex<S>> {
+        Arc::clone(&self.inner)
+    }
+}
+
+impl<S: SyncSensor + 'static> Sensor for SyncSensorAdapter<S> {
+    fn name(&self) -> &str {
+        &self.name_cache
+    }
+
+    fn sensor_type(&self) -> SensorType {
+        self.sensor_type_cache
+    }
+
+    fn read(&self) -> Pin<Box<dyn Future<Output = Result<Option<SensorReading>>> + Send + '_>> {
+        let inner = Arc::clone(&self.inner);
+        let name = self.name_cache.clone();
+        let sensor_type = self.sensor_type_cache;
+        Box::pin(async move {
+            let sensor = inner.lock().await;
+            match sensor.read_current() {
+                None => Ok(None),
+                Some((value, assessment)) => {
+                    if assessment.is_anomalous {
+                        Ok(Some(SensorReading::anomalous(
+                            value,
+                            name,
+                            sensor_type,
+                            assessment.severity,
+                            assessment.confidence,
+                        )))
+                    } else {
+                        Ok(Some(SensorReading::normal(value, name, sensor_type)))
+                    }
+                }
+            }
+        })
+    }
+}
+
+// =============================================================================
 // Tests
 // =============================================================================
 
@@ -656,5 +784,48 @@ mod tests {
         let r = throttled.execute(&action).await.unwrap();
         assert!(!r.success);
         assert!(r.error_message.unwrap().contains("rate limit"));
+    }
+
+    // ── SyncSensorAdapter ─────────────────────────────────────────────────────
+
+    /// Verify that `SyncSensorAdapter` wrapping an `ErrorRateSensor` returns
+    /// `None` from `read()` before any value has been recorded.
+    #[tokio::test]
+    async fn sync_sensor_adapter_returns_none_before_record() {
+        use nexcore_homeostasis_sensing::external::ErrorRateSensor;
+        let sensor = ErrorRateSensor::new(0.01, 0.05);
+        let (adapter, _arc) = SyncSensorAdapter::new(sensor);
+
+        assert_eq!(adapter.name(), "error_rate");
+        assert_eq!(adapter.sensor_type(), SensorType::ExternalThreat);
+
+        let reading = adapter.read().await.unwrap();
+        assert!(reading.is_none(), "no recording yet — must return None");
+    }
+
+    /// Verify that after recording an anomalous value, `SyncSensorAdapter::read()`
+    /// returns a `SensorReading` that correctly reflects the anomaly.
+    #[tokio::test]
+    async fn sync_sensor_adapter_produces_sensor_reading_after_record() {
+        use nexcore_homeostasis_sensing::external::ErrorRateSensor;
+        // warning=1%, critical=5% — recording 3% triggers the elevated_errors pattern.
+        let mut sensor = ErrorRateSensor::new(0.01, 0.05);
+        sensor.record(0.03); // above warning threshold → last_reading is now Some
+        let (adapter, _arc) = SyncSensorAdapter::new(sensor);
+
+        let reading = adapter
+            .read()
+            .await
+            .unwrap()
+            .expect("should have a reading");
+        assert!(
+            reading.is_anomalous,
+            "0.03 > warning 0.01 must produce anomalous reading"
+        );
+        assert_eq!(reading.sensor_name, "error_rate");
+        assert_eq!(reading.sensor_type, SensorType::ExternalThreat);
+        assert!(reading.anomaly_severity > 0.0);
+        assert!(reading.anomaly_confidence > 0.0);
+        assert_eq!(reading.value, 0.03);
     }
 }

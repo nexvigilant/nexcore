@@ -267,13 +267,20 @@ async fn handle_terminal_socket(mut socket: WebSocket, params: TerminalConnectPa
         "Terminal WS: standalone mode — spawning local PTY"
     );
 
-    let pty_config = PtyConfig::new("/bin/bash", &working_dir)
+    let mut pty_config = PtyConfig::new("/bin/bash", &working_dir)
         .with_env("HOME", &working_dir)
         .with_env("USER", "appuser")
         .with_env("TERM", "xterm-256color")
         .with_env("COLORTERM", "truecolor")
         .with_env("LANG", "en_US.UTF-8")
         .with_env("NEXVIGILANT_STATION_URL", "https://mcp.nexvigilant.com");
+
+    // Inject Anthropic API key so `claude` works out of the box.
+    // WS connection is Firebase-authenticated; only authed users reach this PTY.
+    // Phase 2 will replace this with a per-UID bridge token + nexcore-api proxy.
+    if let Ok(key) = std::env::var("ANTHROPIC_API_KEY") {
+        pty_config = pty_config.with_env("ANTHROPIC_API_KEY", &key);
+    }
 
     let mut pty = match PtyProcess::spawn(pty_config) {
         Ok(p) => p,

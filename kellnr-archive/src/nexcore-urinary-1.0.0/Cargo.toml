@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "Urinary system for filtration — Nephron(log filtering) + Reabsorption(metric reclaim) + Excretion(waste disposal) + Retention policies(tubular reabsorption)"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_urinary"

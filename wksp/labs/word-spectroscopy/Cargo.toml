@@ -3,7 +3,7 @@ name = "word-spectroscopy"
 version = "0.1.0"
 edition = "2024"
 description = "Virtual laboratory for word/concept spectroscopy via primitive decomposition"
-license = "MIT"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [dependencies]
 nexcore-laboratory = { workspace = true }

@@ -170,16 +170,32 @@ Key thresholds: PSI >0.25 = significant drift, KS alpha=0.05, RRF k=60, hybrid a
 
 ## Biological Crate System
 
-| Crate | Analog | Purpose |
-|-------|--------|---------|
-| `nexcore-cytokine` | Cytokines | Inter-crate event signaling |
-| `nexcore-hormones` | Hormones | System-wide config propagation |
-| `nexcore-immunity` | Immune system | Antipattern detection |
-| `nexcore-energy` | ATP/ADP | Token budget management |
-| `nexcore-synapse` | Synapses | Learning curves |
-| `nexcore-transcriptase` | Reverse transcriptase | Schema inference |
-| `nexcore-ribosome` | Ribosome | Schema-to-code generation |
-| `nexcore-phenotype` | Phenotype | Adversarial test generation |
+38 biological crates organized as a layered organism, wired through the
+`nexcore-bio` umbrella crate (Rust re-exports + optional PyO3 Python module).
+Canonical list: `nexcore_bio::AGGREGATED_CRATES` (verified by smoke test).
+
+| Layer | Crates | Role |
+|-------|--------|------|
+| **Organ systems** (15) | `anatomy`, `cardiovascular`, `circulatory`, `cns`, `cortex`, `digestive`, `integumentary`, `lymphatic`, `muscular`, `nervous`, `reproductive`, `respiratory`, `skeletal`, `synapse`, `urinary` | Macro-level system structure & function |
+| **Molecular / adaptive defense** (10) | `antibodies`, `antivector`, `dna`, `dna-ml`, `energy`, `metabolite`, `phenotype`, `ribosome`, `spliceosome`, `transcriptase` | Base-pair level: encoding, translation, adversarial testing |
+| **Signaling** (3) | `cytokine`, `hormones`, `hormone-types` | Inter-crate event signaling & persistent state modulation |
+| **Homeostasis cluster** (6) | `homeostasis`, `homeostasis-memory`, `homeostasis-primitives`, `homeostasis-sensing`, `homeostasis-storm`, `homeostat` (bin) | Self-regulation, feedback loops, founder health |
+| **Immunity + integrator** (2) | `immunity`, `guardian-engine` | Antipattern detection + top-level SENSE→COMPARE→ACT loop |
+| **Infrastructure** (2) | `organize`, `stem-bio` | Supporting primitives |
+
+**Aggregator:** `nexcore-bio` re-exports 32 of 33 (all except binary-only `homeostat`)
+as Rust modules and exposes a selected subset via PyO3:
+- Rust: `use nexcore_bio::{dna, cytokine, immunity, metabolite};`
+- Python: `maturin develop --release -F python` → `import nexcore_bio`
+- Currently wrapped: `aggregated_crates()`, `metabolite_predict(smiles)`,
+  `dna_encode_str/decode_str`, `cns_conjugate(digit)`, `immunity_scan(content)`.
+
+**Cross-wiring** (inter-crate edges, added 2026-04-18):
+- `nervous` → `cns`, `cortex`, `synapse`
+- `immunity` → `antibodies`, `antivector`, `cytokine`
+- `circulatory` → `cytokine`, `hormones` (blood carries signaling molecules)
+- `homeostasis` → `cytokine`, `hormones`, `nervous`
+- `guardian-engine` → `immunity`, `dna`, `metabolite`, `antibodies`, `antivector`
 
 ## Engineering Excellence Benchmarks
 
@@ -205,8 +221,9 @@ Key thresholds: PSI >0.25 = significant drift, KS alpha=0.05, RRF k=60, hybrid a
 
 | Domain | Benchmark |
 |--------|-----------|
-| **Bio Crate Discipline** | All 8 biological crates operate as a cohesive organism: cytokine signaling, hormone config, immune defense, energy budgets, synaptic learning, schema inference, code generation, and adversarial testing — all active and measured. |
-| **Safety Standard** | All 8 biological crates enforce `deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)`. This is the workspace safety gold standard. |
+| **Bio Crate Discipline** | 38 biological crates operate as a cohesive organism spanning organ systems, signaling, homeostasis, immunity, and molecular/adaptive defense — all reachable from the `nexcore-bio` umbrella and verified by `cargo test -p nexcore-bio`. See `nexcore_bio::AGGREGATED_CRATES` for the canonical list. |
+| **Safety Standard** | `deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)` is the workspace safety gold standard for bio crates. Canonical 8 (cytokine, hormones, immunity, energy, synapse, transcriptase, ribosome, phenotype) enforce strictly; remaining 30 inherit workspace lints + are candidates for escalation during next audit. |
+| **Python Surface** | `nexcore-bio` produces a single Python wheel (`import nexcore_bio`) covering all 38 crates via re-exports, with PyO3 wrappers for high-leverage entry points. Build: `cd crates/nexcore-bio && maturin develop --release -F python`. |
 
 ### Crate-Level Quality Bar
 

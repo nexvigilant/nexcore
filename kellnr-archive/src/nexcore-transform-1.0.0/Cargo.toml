@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Deterministic text transformation engine: segment, annotate, map concepts across domains, compile transformation plans"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_transform"

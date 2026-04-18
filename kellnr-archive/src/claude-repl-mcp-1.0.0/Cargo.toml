@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "MCP bridge to Claude Code CLI"
 readme = "README.md"
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "claude_repl_mcp"

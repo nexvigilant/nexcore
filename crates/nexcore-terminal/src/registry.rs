@@ -47,7 +47,7 @@ impl SessionRegistry {
             .filter(|s| s.tenant_id == *tenant_id && s.is_alive())
             .count();
 
-        active_count < usize::try_from(config.max_concurrent_sessions).unwrap_or(usize::MAX)
+        active_count < usize::try_from(config.max_concurrent_sessions).unwrap_or(100)
     }
 
     /// Register a new session. Returns an error if the tenant's limit is exceeded.
@@ -114,7 +114,8 @@ impl SessionRegistry {
                 SessionStatus::Active => session.activate(),
                 SessionStatus::Idle => session.mark_idle(),
                 SessionStatus::Terminated => session.terminate(),
-                SessionStatus::Creating | SessionStatus::Suspended => {
+                SessionStatus::Suspended => session.suspend(),
+                SessionStatus::Creating => {
                     session.status = status;
                 }
             }

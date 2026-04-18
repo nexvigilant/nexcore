@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Grammar algorithms for state functions — experimental Chomsky-Lex Primitiva laboratory"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [lib]

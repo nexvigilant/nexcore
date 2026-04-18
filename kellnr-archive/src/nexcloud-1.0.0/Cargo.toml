@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Rust-native cloud platform: process supervisor + reverse proxy for bare metal/VPS"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [lib]

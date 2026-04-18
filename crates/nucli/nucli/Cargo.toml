@@ -2,7 +2,7 @@
 name = "nucli"
 version = "0.1.0"
 edition = "2024"
-license = "MIT OR Apache-2.0"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 rust-version = "1.85"
 description = "Nucleotide text encoder: bijective byte↔DNA mapping with exhaustive proofs."
 

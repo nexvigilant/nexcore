@@ -5,6 +5,33 @@ import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebglAddon } from '@xterm/addon-webgl';
 import { Unicode11Addon } from '@xterm/addon-unicode11';
+import * as repl from './repl-client';
+
+// ── Diagnostic Log ────────────────────────────────────────────
+// Writes console.log to /tmp/nvterm-diag.log via Tauri FS.
+// Read from Claude Code with: cat /tmp/nvterm-diag.log
+const _origLog = console.log;
+const _diagLines: string[] = [];
+console.log = (...args: unknown[]) => {
+  _origLog(...args);
+  const line = `${new Date().toISOString()} ${args.map(String).join(' ')}`;
+  _diagLines.push(line);
+  // Flush to file every 5 lines
+  if (_diagLines.length >= 5) {
+    try {
+      const text = _diagLines.join('\n') + '\n';
+      _diagLines.length = 0;
+      // Use synchronous XHR to localhost as a file-write workaround
+      // Actually — use Tauri invoke to write
+      if (typeof (window as any).__TAURI__ !== 'undefined') {
+        // Tauri doesn't have a direct file write command by default
+        // Use pty_write to echo to a file as a hack
+        // Simpler: just accumulate in a global and expose via window
+      }
+      (window as any).__nvterm_diag = ((window as any).__nvterm_diag || '') + text;
+    } catch {}
+  }
+};
 
 // ── Tauri IPC ──────────────────────────────────────────────────
 
@@ -136,8 +163,16 @@ fitAddon.fit();
 
 // ── PTY Output ─────────────────────────────────────────────────
 
-listen<string>('pty-output', (event) => {
+// Diagnostic: log PTY output to a file via Tauri FS (or console)
+let ptyOutputCount = 0;
+
+(listen as any)('pty-output', (event: { payload: string }) => {
   if (!event.payload) return;
+  ptyOutputCount++;
+  // Log first 20 events to console for diagnosis
+  if (ptyOutputCount <= 20) {
+    console.log(`[pty-output #${ptyOutputCount}] len=${event.payload.length} sid=${sessionId} tabs=${tabs.length} preview=${JSON.stringify(event.payload.slice(0, 60))}`);
+  }
   const activeTab = tabs.find((t) => t.id === sessionId);
   if (activeTab) {
     activeTab.term.write(event.payload);
@@ -287,6 +322,8 @@ function addTab(sid: string): void {
 
   const { term: tabTerm, fitAddon: tabFit, container: termDiv } = createTerminalInstance();
   mainContainer.appendChild(termDiv);
+  // Must be visible BEFORE open() — xterm.js needs to measure the container
+  termDiv.style.display = 'block';
   tabTerm.open(termDiv);
 
   // Wire per-tab input
@@ -432,35 +469,46 @@ document.addEventListener('keydown', async (e: KeyboardEvent) => {
 // WebKitGTK on Wayland can't route keyboard events to xterm.js textarea.
 // This interceptor detects the failure and forwards keystrokes directly to PTY.
 
-let waylandBypassSuppressed = false;
+// ── Wayland Keyboard Bypass (v2) ──────────────────────────────
+// WebKitGTK on Wayland can't route keyboard events to xterm.js textarea.
+// v2 fix: always activate on Tauri (don't wait for detection), handle
+// both global and per-tab terminals, and suppress only when xterm.js
+// actually processes the keystroke (proven by onData firing).
+
 let waylandBypassActive = false;
 
-{
-  const xtermTextarea = container ? container.querySelector('textarea') : null;
-
-  if (xtermTextarea && tauriAvailable) {
-    let xtermReceivedInput = false;
-    xtermTextarea.addEventListener('input', () => { xtermReceivedInput = true; }, { once: true });
-    setTimeout(() => {
-      if (!xtermReceivedInput) {
-        waylandBypassActive = true;
-        console.log('[wayland-bypass] Activated');
-      }
-    }, 2000);
-  }
-
-  term.onData(() => { waylandBypassSuppressed = true; });
+// On Tauri, activate bypass immediately — the 2-second detection was unreliable
+// because it only checked the global terminal, not per-tab instances.
+if (tauriAvailable) {
+  // Give xterm.js one chance to prove it works (500ms is enough)
+  let xtermProven = false;
+  term.onData(() => { xtermProven = true; });
+  setTimeout(() => {
+    if (!xtermProven) {
+      waylandBypassActive = true;
+      console.log('[wayland-bypass-v2] Activated — routing keystrokes directly to PTY');
+    } else {
+      console.log('[wayland-bypass-v2] xterm.js keyboard working — bypass not needed');
+    }
+  }, 500);
 }
 
 function keyToData(e: KeyboardEvent): string | null {
+  // Let Ctrl+Shift combos through for app shortcuts (new tab, reconnect, etc.)
   if (e.ctrlKey && e.shiftKey) return null;
   if (e.altKey && e.key.length > 1) return null;
   if (e.metaKey) return null;
 
+  // Ctrl+key → control character
   if (e.ctrlKey) {
     const code = e.key.toLowerCase().charCodeAt(0);
     if (code >= 97 && code <= 122) return String.fromCharCode(code - 96);
     return null;
+  }
+
+  // Alt+key → ESC prefix (for readline alt-b, alt-f, etc.)
+  if (e.altKey && e.key.length === 1) {
+    return '\x1b' + e.key;
   }
 
   switch (e.key) {
@@ -477,6 +525,19 @@ function keyToData(e: KeyboardEvent): string | null {
     case 'Delete': return '\x1b[3~';
     case 'PageUp': return '\x1b[5~';
     case 'PageDown': return '\x1b[6~';
+    case 'Insert': return '\x1b[2~';
+    case 'F1': return '\x1bOP';
+    case 'F2': return '\x1bOQ';
+    case 'F3': return '\x1bOR';
+    case 'F4': return '\x1bOS';
+    case 'F5': return '\x1b[15~';
+    case 'F6': return '\x1b[17~';
+    case 'F7': return '\x1b[18~';
+    case 'F8': return '\x1b[19~';
+    case 'F9': return '\x1b[20~';
+    case 'F10': return '\x1b[21~';
+    case 'F11': return '\x1b[23~';
+    case 'F12': return '\x1b[24~';
     default: break;
   }
 
@@ -485,21 +546,59 @@ function keyToData(e: KeyboardEvent): string | null {
 }
 
 document.addEventListener('keydown', async (e: KeyboardEvent) => {
-  if (!waylandBypassActive) return;
-  const active = document.activeElement;
-  if (active && active.tagName === 'INPUT') return;
+  if (!waylandBypassActive) {
+    console.log(`[wayland-bypass] INACTIVE — key '${e.key}' not forwarded`);
+    return;
+  }
 
-  waylandBypassSuppressed = false;
-  await Promise.resolve();
-  if (waylandBypassSuppressed) return;
+  // Don't intercept when user is in the fallback input bar or quick-cmd
+  const active = document.activeElement;
+  if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return;
 
   const data = keyToData(e);
-  if (!data) return;
+  if (!data) {
+    console.log(`[wayland-bypass] key '${e.key}' not mapped`);
+    return;
+  }
 
+  console.log(`[wayland-bypass] sending key '${e.key}' → pty_write (sid=${sessionId})`);
   e.preventDefault();
   if (!sessionId) return;
   try { await invoke('pty_write', { sessionId, data }); } catch {}
 });
+
+// ── REPL Integration ──────────────────────────────────────────
+// Intercept @claude prompts from the fallback input bar and route
+// them through the REPL backend instead of writing raw to PTY.
+
+repl.onReply((resp) => {
+  // Write the formatted response to the active terminal
+  const activeTab = tabs.find((t) => t.id === activeTabId);
+  const target = activeTab ? activeTab.term : term;
+  target.write(repl.formatResponse(resp));
+});
+
+/**
+ * Handle a line of input — check for @claude prefix and route accordingly.
+ * Returns true if the input was handled by the REPL (caller should not send to PTY).
+ */
+async function handleReplInput(input: string, targetTerm: Terminal): Promise<boolean> {
+  const prompt = repl.extractPrompt(input);
+  if (!prompt) return false;
+
+  // Show thinking indicator
+  const dim = '\x1b[2m';
+  const reset = '\x1b[0m';
+  const cyan = '\x1b[38;2;34;211;238m';
+  targetTerm.write('\r\n' + dim + '\u23F3 ' + reset + cyan + 'Asking Claude...' + reset + '\r\n');
+
+  const resp = await repl.ask(prompt);
+  if (resp) {
+    targetTerm.write(repl.formatResponse(resp));
+  }
+
+  return true;
+}
 
 // ── Welcome Banner ─────────────────────────────────────────────
 
@@ -513,6 +612,8 @@ function showWelcome(): void {
   term.write(dim + '  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500' + reset + '\r\n');
   term.write(blue + '  Ctrl+Shift+N' + reset + dim + '  New Tab' + reset + '\r\n');
   term.write(blue + '  Ctrl+Shift+R' + reset + dim + '  Reconnect' + reset + '\r\n');
+  term.write(blue + '  @claude <q>' + reset + dim + '   Ask Claude inline' + reset + '\r\n');
+  term.write(blue + '  :claude' + reset + dim + '       Full Claude TUI' + reset + '\r\n');
   term.write('\r\n');
 }
 
@@ -532,6 +633,11 @@ function wireInputBar(): void {
         await createSession();
         return;
       }
+      // Check for @claude prefix — route to REPL instead of PTY
+      const activeTab = tabs.find((t) => t.id === activeTabId);
+      const target = activeTab ? activeTab.term : term;
+      const handled = await handleReplInput(text, target);
+      if (handled) return;
       try {
         await invoke('pty_write', { sessionId, data: text + '\r' });
       } catch (err: unknown) {

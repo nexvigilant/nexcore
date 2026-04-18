@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Adaptive immune layer for targeted threat recognition and neutralization. Complements nexcore-immunity (innate) with learned epitope-paratope binding."
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_antibodies"

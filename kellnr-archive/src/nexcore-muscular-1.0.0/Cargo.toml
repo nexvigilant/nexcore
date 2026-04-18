@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "Muscular system for tool execution — Skeletal(voluntary tools) + Smooth(autonomic tools) + Cardiac(main event loop), Size Principle, antagonistic pairs"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_muscular"

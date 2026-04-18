@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "Jeopardy!-inspired algorithm R&D investment optimizer using game theory primitives"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_jeopardy"

@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "Multi-agent lifecycle, registry, consensus, work queue, and status server for NexVigilant Core"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_orchestration"

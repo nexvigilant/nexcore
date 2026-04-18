@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Pharmacovigilance signal detection using PRR algorithm"
 readme = false
-license = "MIT"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "signal_detection"

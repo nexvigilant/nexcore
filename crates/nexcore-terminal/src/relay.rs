@@ -25,21 +25,51 @@ use std::time::{Duration, Instant};
 /// Default relay URL.
 pub const DEFAULT_RELAY_URL: &str = "http://localhost:8080";
 
-/// Relay connection configuration.
+/// Relay connection configuration with shared HTTP client.
 #[derive(Debug, Clone)]
 pub struct RelayConfig {
     /// Base URL for the relay server (e.g., "http://localhost:8080").
     pub base_url: String,
     /// Request timeout for the full round-trip.
     pub timeout: Duration,
+    /// Shared HTTP client — reuses connection pool across calls.
+    client: reqwest::Client,
+}
+
+impl RelayConfig {
+    /// Create a new config with the given base URL and timeout.
+    ///
+    /// # Errors
+    ///
+    /// Returns `RelayError::Http` if the HTTP client cannot be built.
+    pub fn new(base_url: impl Into<String>, timeout: Duration) -> Result<Self, RelayError> {
+        let client = reqwest::Client::builder()
+            .timeout(timeout)
+            .pool_max_idle_per_host(4)
+            .build()
+            .map_err(|e| RelayError::Http(e.to_string()))?;
+        Ok(Self {
+            base_url: base_url.into(),
+            timeout,
+            client,
+        })
+    }
 }
 
 impl Default for RelayConfig {
     fn default() -> Self {
+        let base_url =
+            std::env::var("NEXWATCH_RELAY_URL").unwrap_or_else(|_| DEFAULT_RELAY_URL.to_string());
+        let timeout = Duration::from_secs(30);
+        let client = reqwest::Client::builder()
+            .timeout(timeout)
+            .pool_max_idle_per_host(4)
+            .build()
+            .unwrap_or_default();
         Self {
-            base_url: std::env::var("NEXWATCH_RELAY_URL")
-                .unwrap_or_else(|_| DEFAULT_RELAY_URL.to_string()),
-            timeout: Duration::from_secs(30),
+            base_url,
+            timeout,
+            client,
         }
     }
 }
@@ -74,16 +104,12 @@ pub async fn query_relay(message: &str, config: &RelayConfig) -> Result<RelayRes
     let start = Instant::now();
     let url = format!("{}/query", config.base_url);
 
-    let client = reqwest::Client::builder()
-        .timeout(config.timeout)
-        .build()
-        .map_err(|e| RelayError::Http(e.to_string()))?;
-
     let body = QueryRequest {
         text: message.to_string(),
     };
 
-    let response = client
+    let response = config
+        .client
         .post(&url)
         .json(&body)
         .send()
@@ -163,13 +189,6 @@ impl std::fmt::Display for RelayError {
 
 impl std::error::Error for RelayError {}
 
-impl RelayConfig {
-    /// Check if URL starts with localhost (for tests).
-    fn url_starts_with_localhost(&self) -> bool {
-        self.base_url.contains("localhost")
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -177,7 +196,7 @@ mod tests {
     #[test]
     fn default_config_uses_localhost() {
         let config = RelayConfig::default();
-        assert!(config.url_starts_with_localhost());
+        assert!(config.base_url.contains("localhost"));
     }
 
     #[test]

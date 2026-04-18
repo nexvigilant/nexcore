@@ -1,3 +1,8 @@
+#![forbid(unsafe_code)]
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
+#![cfg_attr(not(test), deny(clippy::expect_used))]
+#![cfg_attr(not(test), deny(clippy::panic))]
+
 //! # Suit Safety System
 //!
 //! Safety-critical core: Ballistic recovery, fire suppression, E-stops, and voting logic.

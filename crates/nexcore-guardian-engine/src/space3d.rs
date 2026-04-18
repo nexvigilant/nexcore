@@ -25,34 +25,56 @@ use serde::{Deserialize, Serialize};
 // =============================================================================
 
 /// A point in 3D safety space with coordinates and metadata.
+///
+/// Dimensions follow the standard FMEA (Failure Mode and Effects Analysis)
+/// model: the Risk Priority Number is the product of the three axes. Each
+/// axis is wrapped in `Measured<f64>` so its confidence propagates into
+/// `rpn` via confidence composition.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SafetyPoint3D {
+    /// Expected harm magnitude on event occurrence (0.0 safe → 1.0 catastrophic).
     pub severity: Measured<f64>,
+    /// Probability that the event occurs (0.0 impossible → 1.0 certain).
     pub likelihood: Measured<f64>,
+    /// Probability that the event is detected *before* harm is realised
+    /// (0.0 undetectable → 1.0 always caught). Higher detectability **reduces** risk.
     pub detectability: Measured<f64>,
+    /// Composite Risk Priority Number (`severity × likelihood × (1 − detectability)`).
     pub rpn: Measured<f64>,
+    /// Discretised risk zone derived from `rpn` thresholds.
     pub zone: RiskZone,
+    /// Human-readable contributors for each dimension (audit trail).
     pub factors: SafetyFactors,
 }
 
-/// Factors contributing to each dimension.
+/// Contributing-factor notes captured per axis, used for regulatory audit trails.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SafetyFactors {
+    /// Free-text rationale for the severity score (e.g., `"boxed-warning hepatotoxicity"`).
     pub severity_factors: Vec<String>,
+    /// Free-text rationale for the likelihood score (e.g., `"PRR 4.2, N=142"`).
     pub likelihood_factors: Vec<String>,
+    /// Free-text rationale for the detectability score (e.g., `"routine LFT monitoring"`).
     pub detectability_factors: Vec<String>,
 }
 
-/// Risk zone in 3D space, derived from RPN thresholds.
+/// Risk zone in 3D space, derived from RPN thresholds. Maps to the 4-level
+/// traffic-light scheme used in NexVigilant Studio dashboards.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum RiskZone {
-    Green,  // RPN < 0.1
-    Yellow, // RPN 0.1-0.3
-    Orange, // RPN 0.3-0.6
-    Red,    // RPN > 0.6
+    /// RPN < 0.1 — routine surveillance, no intervention.
+    Green,
+    /// RPN 0.1–0.3 — enhanced monitoring, watchful waiting.
+    Yellow,
+    /// RPN 0.3–0.6 — active intervention required.
+    Orange,
+    /// RPN > 0.6 — immediate escalation, regulatory notification likely.
+    Red,
 }
 
 impl RiskZone {
+    /// Classify an RPN value into its risk zone using the canonical thresholds
+    /// (see the enum variant docs for band boundaries).
     #[must_use]
     pub fn from_rpn(rpn: f64) -> Self {
         match rpn {
@@ -63,6 +85,7 @@ impl RiskZone {
         }
     }
 
+    /// Tailwind-aligned hex colour for UI rendering of this zone.
     #[must_use]
     pub const fn hex_color(&self) -> &'static str {
         match self {
@@ -73,6 +96,7 @@ impl RiskZone {
         }
     }
 
+    /// RGB tuple for non-web renderers (3D scene, PDF export).
     #[must_use]
     pub const fn rgb(&self) -> (u8, u8, u8) {
         match self {
@@ -83,6 +107,7 @@ impl RiskZone {
         }
     }
 
+    /// Canonical short-form action string for the zone (safety-officer prompt).
     #[must_use]
     pub const fn action(&self) -> &'static str {
         match self {
@@ -261,17 +286,32 @@ pub fn calculate_detectability(
 // =============================================================================
 
 /// Parameters for computing a 3D safety point.
+///
+/// Inputs are the four canonical disproportionality metrics (PRR, ROR, IC, EBGM)
+/// plus report count and GVR-classified originator metadata. Missing metrics
+/// reduce confidence via `signal_metrics_present`, not by assuming zero.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SafetySpace3DInput {
+    /// Proportional Reporting Ratio (drug–event association vs background).
     pub prr: f64,
+    /// Reporting Odds Ratio — lower bound of the 95% confidence interval.
     pub ror_lower: f64,
+    /// Information Component — 2.5 % quantile of the Bayesian posterior (IC₀.₀₂₅).
     pub ic025: f64,
+    /// Empirical Bayes Geometric Mean — 5th-percentile lower bound (EB05).
     pub eb05: f64,
+    /// Total reported case count for the drug–event pair.
     pub n: u64,
+    /// Who generated this signal (tool / AgentWithR / AgentWithVR / AgentWithGVR).
+    /// Controls the Guardian confidence ceiling.
     #[serde(default)]
     pub originator: OriginatorType,
+    /// Optional 8-type harm classification from the Theory of Vigilance taxonomy.
     pub harm_type: Option<HarmType>,
+    /// Safety-critical hierarchy level (0 = foundation, 5 = service layer).
     pub hierarchy_level: u8,
+    /// How many of the 4 canonical metrics (PRR/ROR/IC/EBGM) were actually
+    /// computed for this input. Gates confidence — fewer metrics → lower ceiling.
     #[serde(default = "default_metrics")]
     pub signal_metrics_present: usize,
 }

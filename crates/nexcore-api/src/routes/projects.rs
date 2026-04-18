@@ -7,8 +7,8 @@
 use crate::ApiState;
 use crate::persistence::{
     CircleRole, DeliverableRecord, DeliverableStatus, DeliverableType, FeedEntryRecord,
-    FeedEntryType, MemberStatus, ProjectRecord, ProjectStage, ProjectStatus, ProjectType,
-    ReviewStatus,
+    FeedEntryType, LoopMethod, MemberStatus, ProjectRecord, ProjectStage, ProjectStatus,
+    ProjectType, ReviewStatus,
 };
 use crate::routes::common::ApiError;
 use axum::extract::{Json, Path, State};
@@ -29,6 +29,11 @@ pub struct Project {
     pub name: String,
     pub description: String,
     pub project_type: String,
+    /// Optional loop method — `"question"` | `"hypothesis"` | `"thesis"`.
+    /// When present, this Project participates in the Nucleus Loops
+    /// epistemic pipeline (see `/nucleus/community/loops/*`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub loop_method: Option<String>,
     pub stage: String,
     pub status: String,
     pub therapeutic_area: Option<String>,
@@ -50,6 +55,10 @@ pub struct CreateProjectRequest {
     pub name: String,
     pub description: String,
     pub project_type: Option<String>,
+    /// Optional loop method — `"question"` | `"hypothesis"` | `"thesis"`.
+    /// Unknown values are ignored (project created without loop classification).
+    #[serde(default)]
+    pub loop_method: Option<String>,
     pub therapeutic_area: Option<String>,
     pub drug_names: Option<Vec<String>>,
     pub indications: Option<Vec<String>>,
@@ -138,6 +147,7 @@ fn record_to_project(r: ProjectRecord) -> Project {
         name: r.name,
         description: r.description,
         project_type: enum_to_str(&r.project_type),
+        loop_method: r.loop_method.map(|m| loop_method_to_str(&m).to_string()),
         stage: enum_to_str(&r.stage),
         status: enum_to_str(&r.status),
         therapeutic_area: r.therapeutic_area,
@@ -151,6 +161,25 @@ fn record_to_project(r: ProjectRecord) -> Project {
         created_by: r.created_by,
         created_at: r.created_at,
         updated_at: r.updated_at,
+    }
+}
+
+/// Serialize a `LoopMethod` enum to its snake_case string form.
+fn loop_method_to_str(m: &LoopMethod) -> &'static str {
+    match m {
+        LoopMethod::Question => "question",
+        LoopMethod::Hypothesis => "hypothesis",
+        LoopMethod::Thesis => "thesis",
+    }
+}
+
+/// Parse a `LoopMethod` from its snake_case string. Unknown values return `None`.
+fn parse_loop_method(s: &str) -> Option<LoopMethod> {
+    match s.to_lowercase().trim() {
+        "question" | "questions" => Some(LoopMethod::Question),
+        "hypothesis" | "hypotheses" => Some(LoopMethod::Hypothesis),
+        "thesis" | "theses" => Some(LoopMethod::Thesis),
+        _ => None,
     }
 }
 
@@ -288,6 +317,7 @@ pub async fn create_project(
             .project_type
             .map(|t| parse_enum(&t))
             .unwrap_or(ProjectType::Custom),
+        loop_method: req.loop_method.as_deref().and_then(parse_loop_method),
         stage: ProjectStage::Initiate,
         status: ProjectStatus::Active,
         therapeutic_area: req.therapeutic_area,

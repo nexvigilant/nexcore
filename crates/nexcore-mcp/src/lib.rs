@@ -3242,6 +3242,20 @@ impl NexCoreMcpServer {
     }
 
     // ========================================================================
+    // nexcore-bio Umbrella (1) - Biological Organism Introspection
+    // ========================================================================
+
+    #[tool(
+        description = "Introspect the 38-crate biological organism aggregated by `nexcore-bio`. Returns each crate with its biological layer (organ/molecular/signaling/homeostasis/immune/infrastructure). Filter with `contains` (name substring, case-insensitive) and/or `layer`. No filters returns the full catalog. Station clients use this to discover the bio surface without reading Rust source."
+    )]
+    async fn nexcore_bio_introspect(
+        &self,
+        Parameters(params): Parameters<params::bio_umbrella::BioIntrospectParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::bio_umbrella::nexcore_bio_introspect(params)
+    }
+
+    // ========================================================================
     // Immunity Tools (6) - Antipattern Detection and Self-Regulation
     // ========================================================================
 

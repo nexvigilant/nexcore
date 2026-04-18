@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "AI text detector via statistical fingerprints — Zipf deviation, entropy uniformity, burstiness dampening, perplexity consistency, TTR anomaly"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "antitransformer"

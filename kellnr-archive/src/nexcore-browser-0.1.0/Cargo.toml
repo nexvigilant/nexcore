@@ -26,7 +26,7 @@ autotests = false
 autobenches = false
 description = "Browser automation foundation for Vigil/Guardian ecosystem"
 readme = false
-license = "MIT"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [lib]

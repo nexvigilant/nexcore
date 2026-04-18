@@ -34,7 +34,7 @@ categories = [
     "algorithms",
     "science",
 ]
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [lib]

@@ -2,8 +2,8 @@
 name = "nexcore-helix"
 version = "0.1.0"
 edition = "2024"
-authors = ["Matthew A. Campion <matthew@nexvigilant.com>"]
-license = "MIT OR Apache-2.0"
+authors = ["Matthew A. Campion <matthew@camp-corp.com>"]
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository = "https://github.com/nexvigilant/nexcore"
 homepage.workspace = true
 rust-version = "1.85"

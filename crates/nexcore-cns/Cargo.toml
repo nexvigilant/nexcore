@@ -3,8 +3,8 @@ name = "nexcore-cns"
 version = "0.1.1"
 edition = "2024"
 description = "Crystalbook Numeral System — base-9 arithmetic from the 8 Laws of System Homeostasis"
-authors = ["Matthew A. Campion <matthew@nexvigilant.com>"]
-license = "MIT OR Apache-2.0"
+authors = ["Matthew A. Campion <matthew@camp-corp.com>"]
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository = "https://github.com/nexvigilant/nexcore"
 homepage.workspace = true
 

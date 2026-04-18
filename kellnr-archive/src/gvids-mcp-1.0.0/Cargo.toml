@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "MCP server for Google Vids editing via Google Slides API with JWT/OAuth auth"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "gvids_mcp"

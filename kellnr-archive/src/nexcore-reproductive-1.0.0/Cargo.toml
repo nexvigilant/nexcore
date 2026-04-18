@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "Reproductive system for CI/CD — Gametes(build artifacts) + Fertilization(merge/test) + Trimester gates(validation phases) + Differentiation(env adaptation) + Birth(deployment)"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_reproductive"

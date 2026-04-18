@@ -4,7 +4,7 @@ name = "nexcore-mcp"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "MIT OR Apache-2.0"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository.workspace = true
 homepage.workspace = true
 readme = "README.md"
@@ -22,6 +22,10 @@ academy-forge = { workspace = true }
 
 # Autonomous State Machine
 nexcore-asm = { path = "../nexcore-asm", version = "0.1.0" }
+
+# In-process microgram runtime — replaces the `rsk mcg` subprocess bridge
+# formerly at src/tools/microgram.rs. See that file's module header for rationale.
+rsk = { workspace = true }
 
 # NexCore unified crate (all modules consolidated)
 nexcore-vigilance = { workspace = true, features = ["viz"] }
@@ -41,6 +45,7 @@ nexcore-oracle = { workspace = true }
 nexcore-processor = { workspace = true, features = ["immunity"] }
 nexcore-db = { workspace = true }
 nexcore-synapse = { workspace = true }
+nexcore-bio = { path = "../nexcore-bio" }
 nexcore-config = { workspace = true }
 nexcore-skill-exec = { workspace = true }
 nexcore-skill-compiler = { workspace = true }

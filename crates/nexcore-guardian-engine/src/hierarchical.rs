@@ -10,11 +10,17 @@ use std::collections::HashMap;
 /// Tier: T3 (Domain-Specific)
 /// Orchestrator for multiple homeostasis loops at different levels.
 pub struct HierarchicalHomeostasis<L: Level> {
+    /// The layered hierarchy (e.g., Foundation → Domain → Orchestration → Service)
+    /// this orchestrator coordinates. Level ordering defines propagation order.
     pub hierarchy: Hierarchy<L>,
+    /// One `HomeostasisLoop` per hierarchy level, keyed by level index.
+    /// Levels without a registered loop are skipped silently during `tick_all`.
     pub loops: HashMap<usize, HomeostasisLoop>,
 }
 
 impl<L: Level> HierarchicalHomeostasis<L> {
+    /// Construct an orchestrator around `hierarchy` with no loops attached yet.
+    /// Use [`Self::add_loop`] to register per-level control.
     pub fn new(hierarchy: Hierarchy<L>) -> Self {
         Self {
             hierarchy,
@@ -22,6 +28,8 @@ impl<L: Level> HierarchicalHomeostasis<L> {
         }
     }
 
+    /// Register a homeostasis loop for a specific hierarchy level. Replaces
+    /// any previously registered loop at that level.
     pub fn add_loop(&mut self, level_index: usize, homeostasis_loop: HomeostasisLoop) {
         self.loops.insert(level_index, homeostasis_loop);
     }

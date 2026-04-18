@@ -3,10 +3,10 @@
 name = "nexcore-state-theory"
 version = "0.1.0"
 edition = "2024"
-license = "MIT OR Apache-2.0"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 rust-version = "1.85"
 description = "Universal Theory of State — domain-agnostic state machine foundations"
-authors = ["Matthew Campion, PharmD <matthew@nexvigilant.com>"]
+authors = ["Matthew Campion, PharmD <matthew@camp-corp.com>"]
 repository = "https://github.com/nexvigilant/nexcore"
 homepage.workspace = true
 keywords = ["state-machine", "typestate", "formal-verification", "theory"]

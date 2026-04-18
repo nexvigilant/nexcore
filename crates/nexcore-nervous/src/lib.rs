@@ -26,6 +26,12 @@ use serde::{Deserialize, Serialize};
 pub mod claude_code;
 pub mod grounding;
 
+// Nervous-system cohesion: re-export sibling crates that form the neural substrate.
+// `cns` = numeral/health system, `cortex` = local inference, `synapse` = learning amplitude.
+pub use nexcore_cns as cns;
+pub use nexcore_cortex as cortex;
+pub use nexcore_synapse as synapse;
+
 /// Type of neuron in the nervous system
 ///
 /// **Biological mapping:** Neuron classification by function

@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Foundation binary word algorithms: typed newtypes (Word8-Word64) with composable trait algebra grounded to State (ς)"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_word"

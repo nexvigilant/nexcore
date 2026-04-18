@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "Typed event signaling system based on immune cytokine patterns"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_cytokine"

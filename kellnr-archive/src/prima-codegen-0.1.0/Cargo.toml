@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Prima Universal Code Generator - T1 primitives to target languages"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "prima_codegen"

@@ -4,6 +4,7 @@
 
 import * as toasts from './toast';
 import * as claude from './claude-client';
+import * as repl from './repl-client';
 
 interface QuickCommand {
   name: string;
@@ -78,6 +79,32 @@ const COMMANDS: QuickCommand[] = [
     const s = await claude.status();
     if (s) {
       toasts.info('Claude Code', `${s.state} | Station: ${s.station_connected ? 'connected' : 'disconnected'}`);
+    }
+  }},
+
+  // Claude REPL (headless inline)
+  { name: 'ask', desc: 'Ask Claude inline (headless)', fn: async (arg: string) => {
+    if (!arg.trim()) {
+      toasts.warn('Usage', ':ask <your question>');
+      return;
+    }
+    toasts.info('REPL', 'Asking Claude...');
+    const resp = await repl.ask(arg);
+    if (resp) {
+      if (resp.error) {
+        toasts.warn('Claude Error', resp.text.slice(0, 100));
+      } else {
+        toasts.success('Claude', resp.mode === 'tui' ? 'Forwarded to TUI' : 'Response received');
+      }
+    }
+  }},
+  { name: 'repl-clear', desc: 'Clear REPL session (fresh context)', fn: async () => {
+    await repl.clear();
+  }},
+  { name: 'repl-status', desc: 'Check REPL status', fn: async () => {
+    const s = await repl.status();
+    if (s) {
+      toasts.info('REPL', `busy: ${s.busy} | session: ${s.session_id || 'none'}`);
     }
   }},
 

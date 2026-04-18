@@ -124,6 +124,11 @@ impl TerminalSession {
         self.status = SessionStatus::Idle;
     }
 
+    /// Mark the session as suspended (SIGSTOP delivered to PTY process).
+    pub fn suspend(&mut self) {
+        self.status = SessionStatus::Suspended;
+    }
+
     /// Mark the session as terminated.
     pub fn terminate(&mut self) {
         self.status = SessionStatus::Terminated;
@@ -173,6 +178,15 @@ mod tests {
         assert_eq!(session.status, SessionStatus::Idle);
         session.touch();
         assert_eq!(session.status, SessionStatus::Active);
+    }
+
+    #[test]
+    fn suspend_sets_suspended_status() {
+        let mut session = TerminalSession::new(TenantId::new(), UserId::new(), TerminalMode::Shell);
+        session.activate();
+        session.suspend();
+        assert_eq!(session.status, SessionStatus::Suspended);
+        assert!(!session.is_alive());
     }
 
     #[test]

@@ -80,6 +80,8 @@ impl SandboxConfig {
                 max_session_duration_secs: 28800,
                 network_egress: NetworkPolicy::Full,
             },
+            // SubscriptionTier is #[non_exhaustive] — new variants get
+            // restrictive defaults. Review when tiers are added.
             _ => Self {
                 cpu_limit_millicores: 500,
                 memory_limit_mb: 256,

@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "CART-inspired decision tree engine: trainable binary splitting with pluggable criteria"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_dtree"

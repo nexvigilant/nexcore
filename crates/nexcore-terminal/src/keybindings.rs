@@ -231,17 +231,21 @@ impl KeybindingSet {
 
 // ── Default Bindings ───────────────────────────────────────
 
-/// Build one binding. Infallible because all default keys are known-valid.
+/// Build one binding from known-valid key literals.
+///
+/// Constructs `KeyCombo` directly with pre-validated lowercase keys,
+/// avoiding the fallible `KeyCombo::new()` path entirely.
 fn bind(
     modifiers: KeyModifiers,
     key: &str,
     action: KeybindingAction,
     scope: KeybindingScope,
 ) -> Keybinding {
-    // SAFETY: default keybinding literals are compile-time valid
-    #[allow(clippy::expect_used)]
     Keybinding {
-        combo: KeyCombo::new(modifiers, key).expect("default keybinding keys are always valid"),
+        combo: KeyCombo {
+            modifiers,
+            key: key.to_string(),
+        },
         action,
         scope,
         enabled: true,

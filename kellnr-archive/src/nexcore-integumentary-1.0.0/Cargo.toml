@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "Integumentary system for boundary protection — Epidermis(auth/validate) → Dermis(sensors) → Interface(display/respond)"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_integumentary"

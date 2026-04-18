@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Zero-dependency local encrypted secret manager using PBKDF2 + AES-256-GCM via ring"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_vault"

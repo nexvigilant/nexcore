@@ -3,7 +3,7 @@
 name = "stem-derive-core"
 version = "1.0.0"
 edition = "2024"
-license = "MIT OR Apache-2.0"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository.workspace = true
 homepage.workspace = true
 description = "Shared macro utilities for STEM derive macros — syn/quote/proc-macro2 helpers"

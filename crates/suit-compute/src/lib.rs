@@ -1,3 +1,8 @@
+#![forbid(unsafe_code)]
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
+#![cfg_attr(not(test), deny(clippy::expect_used))]
+#![cfg_attr(not(test), deny(clippy::panic))]
+
 //! # suit-compute — Iron Vigil Compute Domain
 //!
 //! Typed abstractions and orchestration logic for the Iron Vigil suit's distributed processing backbone.

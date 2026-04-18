@@ -367,6 +367,11 @@ impl FirestorePersistence {
                 "name": { "stringValue": project.name },
                 "description": { "stringValue": project.description },
                 "project_type": { "stringValue": serde_json::to_string(&project.project_type).unwrap_or_default() },
+                "loop_method": { "stringValue": project.loop_method.as_ref().map(|m| match m {
+                    crate::persistence::LoopMethod::Question => "question",
+                    crate::persistence::LoopMethod::Hypothesis => "hypothesis",
+                    crate::persistence::LoopMethod::Thesis => "thesis",
+                }).unwrap_or("") },
                 "stage": { "stringValue": serde_json::to_string(&project.stage).unwrap_or_default() },
                 "status": { "stringValue": serde_json::to_string(&project.status).unwrap_or_default() },
                 "therapeutic_area": { "stringValue": project.therapeutic_area.clone().unwrap_or_default() },
@@ -903,6 +908,14 @@ fn parse_project_doc(doc: &serde_json::Value) -> nexcore_error::Result<ProjectRe
         name: get_string(fields, "name"),
         description: get_string(fields, "description"),
         project_type: parse_enum_field(&get_string(fields, "project_type")),
+        loop_method: get_optional_string(fields, "loop_method").and_then(|s| {
+            match s.to_lowercase().trim() {
+                "question" => Some(crate::persistence::LoopMethod::Question),
+                "hypothesis" => Some(crate::persistence::LoopMethod::Hypothesis),
+                "thesis" => Some(crate::persistence::LoopMethod::Thesis),
+                _ => None,
+            }
+        }),
         stage: parse_enum_field(&get_string(fields, "stage")),
         status: parse_enum_field(&get_string(fields, "status")),
         therapeutic_area: get_optional_string(fields, "therapeutic_area"),

@@ -34,7 +34,7 @@ categories = [
     "data-structures",
     "algorithms",
 ]
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_ribosome"

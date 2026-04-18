@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Latin-inspired architectural primitives — declension classes, component cases, inflected tools, pro-drop inference, and agreement checking"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_declension"

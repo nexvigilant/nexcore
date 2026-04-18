@@ -29,7 +29,7 @@ keywords = [
     "infrastructure",
 ]
 categories = ["data-structures"]
-license = "MIT"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [lib]

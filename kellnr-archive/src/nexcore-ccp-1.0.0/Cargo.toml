@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "Claude Care Process pharmacokinetic engine — 5-phase FSM with PK math"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_ccp"

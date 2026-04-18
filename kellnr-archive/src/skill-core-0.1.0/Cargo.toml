@@ -21,7 +21,7 @@ autotests = false
 autobenches = false
 description = "Core traits and types for Claude Code skills as Rust crates"
 readme = false
-license = "MIT"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "skill_core"

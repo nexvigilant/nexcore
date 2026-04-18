@@ -48,7 +48,8 @@ pub async fn run() -> nexcore_error::Result<()> {
     print_banner();
 
     let config = rustyline::Config::builder().auto_add_history(true).build();
-    let mut rl = Editor::with_config(config)?;
+    let mut rl = Editor::with_config(config)
+        .map_err(|e| nexcore_error::NexError::from(format!("rustyline init failed: {e}")))?;
     rl.set_helper(Some(NvCompleter::new()));
 
     // Load persistent history (ignore errors on first run)

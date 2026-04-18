@@ -4,7 +4,7 @@ name = "nexcore-circulatory"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "MIT OR Apache-2.0"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository.workspace = true
 homepage.workspace = true
 description = "Circulatory system for data transport — Heart(pump/collect/distribute) → Vessels(route) → Blood(carry/detect/repair)"
@@ -15,6 +15,8 @@ categories = ["web-programming"]
 nexcore-cardiovascular = { version = "1.0.0", path = "../nexcore-cardiovascular" }
 nexcore-chrono = { workspace = true }
 nexcore-lex-primitiva = { version = "0.1.0", path = "../nexcore-lex-primitiva" }
+nexcore-cytokine = { version = "1.0.0", path = "../nexcore-cytokine" }
+nexcore-hormones = { version = "1.0.0", path = "../nexcore-hormones" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = { version = "1.0.120" }
 

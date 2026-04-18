@@ -30,7 +30,7 @@ keywords = [
     "agent",
 ]
 categories = ["development-tools"]
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_build_gate"

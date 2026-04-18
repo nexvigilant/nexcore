@@ -843,6 +843,11 @@ async fn dispatch_inner(
         "oracle_top_predictions" => typed(params, tools::oracle::oracle_top_predictions),
 
         // ====================================================================
+        // nexcore-bio umbrella introspection
+        // ====================================================================
+        "nexcore_bio_introspect" => typed(params, tools::bio_umbrella::nexcore_bio_introspect),
+
+        // ====================================================================
         // Immunity Tools (6)
         // ====================================================================
         "immunity_scan" => typed(params, tools::immunity::immunity_scan),

@@ -12,7 +12,7 @@ use crate::session::{SessionStatus, TerminalMode};
 
 /// Client → Server message sent over WebSocket.
 #[non_exhaustive]
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum WsClientMessage {
     /// Raw terminal input (keystrokes).
@@ -66,7 +66,7 @@ pub enum WsClientMessage {
 
 /// Server → Client message sent over WebSocket.
 #[non_exhaustive]
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum WsServerMessage {
     /// Terminal output (raw bytes from PTY or formatted text).
@@ -128,7 +128,7 @@ pub enum WsServerMessage {
 
 /// Session status payload within a `WsServerMessage::Status`.
 #[non_exhaustive]
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionStatusMsg {
     /// Current session status.
     pub status: SessionStatus,

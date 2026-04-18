@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Stream FAERS quarterly ASCII files and generate drug-event contingency tables for signal detection"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_faers_etl"

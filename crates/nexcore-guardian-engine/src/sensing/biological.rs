@@ -36,25 +36,55 @@ use std::path::PathBuf;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BiologicalPathology {
     /// Integumentary: boundary compromised (permissions too open)
-    BoundaryCompromised { system: String },
+    BoundaryCompromised {
+        /// Affected subsystem (e.g., `"auth"`, `"api-gateway"`).
+        system: String,
+    },
     /// Skeletal: structural erosion (CLAUDE.md missing, types losing precision)
-    Osteoporosis { system: String },
+    Osteoporosis {
+        /// Affected subsystem with weakened structural contracts.
+        system: String,
+    },
     /// Muscular: excessive fatigue, cardiac arrest
-    Atrophy { system: String },
+    Atrophy {
+        /// Affected subsystem showing throughput degradation.
+        system: String,
+    },
     /// Cardiovascular: pipeline clogging, server unresponsive
-    Atherosclerosis { system: String },
+    Atherosclerosis {
+        /// Affected subsystem with blocked data/request flow.
+        system: String,
+    },
     /// Respiratory: dead space too high, context pollution
-    Emphysema { system: String },
+    Emphysema {
+        /// Affected subsystem whose working memory / context is polluted.
+        system: String,
+    },
     /// Digestive: skill pipeline broken, reflux detected
-    Gerd { system: String },
+    Gerd {
+        /// Affected subsystem where inputs are rejected / regurgitated upstream.
+        system: String,
+    },
     /// Lymphatic: overflow not draining, autoimmune
-    Edema { system: String },
+    Edema {
+        /// Affected subsystem with backed-up queues or self-attack patterns.
+        system: String,
+    },
     /// Nervous: signal degradation, latency too high
-    Neuropathy { system: String },
+    Neuropathy {
+        /// Affected subsystem with increased message-path latency or loss.
+        system: String,
+    },
     /// Urinary: silent failure, filtration stopped
-    RenalFailure { system: String },
+    RenalFailure {
+        /// Affected subsystem where filtering / cleanup has halted silently.
+        system: String,
+    },
     /// Reproductive: deployment failing, pipeline broken
-    Infertility { system: String },
+    Infertility {
+        /// Affected subsystem whose release pipeline no longer produces artifacts.
+        system: String,
+    },
 }
 
 impl std::fmt::Display for BiologicalPathology {

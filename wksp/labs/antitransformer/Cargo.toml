@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 description = "AI text detector via statistical fingerprints — Zipf deviation, entropy uniformity, burstiness dampening, perplexity consistency, TTR anomaly — aggregated through Hill cooperative amplification and Arrhenius threshold gating"
 authors = ["Matthew Campion, PharmD; NexVigilant"]
-license = "MIT"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [dependencies]
 tokio = { workspace = true }

@@ -1,3 +1,8 @@
+#![forbid(unsafe_code)]
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
+#![cfg_attr(not(test), deny(clippy::expect_used))]
+#![cfg_attr(not(test), deny(clippy::panic))]
+
 //! # Voice Agent System (7.3)
 //! Audio-to-Intent pipeline: ASR, LLM routing, and TTS synthesis.
 

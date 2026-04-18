@@ -688,7 +688,10 @@ pub enum LegitimacyFailure {
     NoConsent,
 
     /// Consent exists but is not in Active status
-    ConsentNotActive { status: String },
+    ConsentNotActive {
+        /// Current consent status (`"Pending"`, `"Revoked"`, `"Expired"`, …).
+        status: String,
+    },
 
     /// Consent has expired
     ConsentExpired,
@@ -704,18 +707,35 @@ pub enum LegitimacyFailure {
 
     /// Action scope exceeds delegation scope
     ScopeExceeded {
+        /// Scope the caller attempted to exercise.
         action_scope: String,
+        /// Scope granted by the delegation (smaller than `action_scope`).
         delegation_scope: String,
     },
 
     /// Delegation chain exceeds maximum depth
-    ChainTooDeep { depth: usize, max: usize },
+    ChainTooDeep {
+        /// Observed chain depth.
+        depth: usize,
+        /// Configured maximum allowed depth.
+        max: usize,
+    },
 
     /// Insufficient evidence for the requested action
-    InsufficientEvidence { have: usize, need: usize },
+    InsufficientEvidence {
+        /// Count of evidence artifacts present.
+        have: usize,
+        /// Count of evidence artifacts required by policy.
+        need: usize,
+    },
 
     /// Originator capability insufficient (GVR check)
-    InsufficientCapability { required: String, actual: String },
+    InsufficientCapability {
+        /// Required originator class (`"AgentWithVR"`, `"AgentWithGVR"`, …).
+        required: String,
+        /// Actual originator class of the caller (a strictly weaker GVR level).
+        actual: String,
+    },
 }
 
 impl std::fmt::Display for LegitimacyFailure {
@@ -1281,23 +1301,35 @@ impl ActionJournal {
 pub enum GovernanceError {
     /// Invalid consent state transition attempted
     InvalidConsentTransition {
+        /// Current consent status.
         from: ConsentStatus,
+        /// Requested target status that violates the transition lattice.
         to: ConsentStatus,
+        /// Identifier of the affected consent record.
         consent_id: String,
     },
 
     /// Delegation chain exceeds maximum depth
     DelegationDepthExceeded {
+        /// Configured maximum delegation depth.
         max_depth: usize,
+        /// Depth the caller tried to reach.
         attempted_depth: usize,
+        /// Identifier of the delegation that triggered the overflow.
         delegation_id: String,
     },
 
     /// Circular delegation detected
-    CircularDelegation { delegation_ids: Vec<String> },
+    CircularDelegation {
+        /// Delegation IDs participating in the cycle, in traversal order.
+        delegation_ids: Vec<String>,
+    },
 
     /// Legitimacy check failed
-    LegitimacyFailed { failure: LegitimacyFailure },
+    LegitimacyFailed {
+        /// Specific legitimacy-failure reason surfaced by the governance check.
+        failure: LegitimacyFailure,
+    },
 }
 
 impl std::fmt::Display for GovernanceError {

@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "DNA-based computation: nucleotide types, data storage, biological operations, a 64-instruction Codon VM, assembler, and disassembler. Zero external dependencies."
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_dna"

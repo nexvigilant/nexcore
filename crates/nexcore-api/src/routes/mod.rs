@@ -23,6 +23,7 @@ pub mod guardian_ws;
 pub mod health;
 pub mod mesh;
 pub mod messages;
+pub mod microgram;
 pub mod ml_pipeline;
 pub mod publications;
 pub mod pv;
@@ -70,6 +71,7 @@ pub mod regulatory_intelligence;
 pub mod icsr;
 
 // Terminal (multi-tenant AI-augmented terminal WebSocket)
+pub mod terminal_bridge;
 pub mod terminal_ws;
 
 // AI Client (sovereign Claude API client — SSE streaming + tool dispatch)

@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Universal computational primitives (Chemistry, Physics, Math) for the NexVigilant Core ecosystem"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [lib]

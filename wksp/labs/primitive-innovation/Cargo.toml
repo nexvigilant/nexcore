@@ -3,7 +3,7 @@ name = "primitive-innovation"
 version = "0.1.0"
 edition = "2024"
 description = "Innovation exploration for NexCore primitive ecosystem — new T2-C types, cross-domain bridges, and combination space fill"
-license = "Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 authors = ["Matthew Campion, PharmD; NexVigilant"]
 
 [dependencies]

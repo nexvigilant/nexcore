@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "Claude Code hooks - Pre/Post tool use interceptors merged from .claude/hooks/"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [[bin]]
 name = "atomic-agent-enforcer"

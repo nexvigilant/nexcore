@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Pure-Rust SSH brute-force protection daemon — a fail2ban replacement"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_sentinel"

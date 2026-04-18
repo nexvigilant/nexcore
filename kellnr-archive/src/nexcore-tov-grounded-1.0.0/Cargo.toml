@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "Grounded Theory of Vigilance primitives"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [lib]

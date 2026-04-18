@@ -22,6 +22,9 @@ nexcore-pty = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 reqwest = { workspace = true }
+# In-process microgram runtime. Replaces the prior `rsk mcg run` subprocess
+# bridge — see src/microgram.rs.
+rsk = { workspace = true }
 
 [lints]
 workspace = true

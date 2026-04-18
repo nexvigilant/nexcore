@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "Respiratory system for I/O management — Intake(inhale/filter) → Exchange(extract/exhale) → Rhythm(regulate)"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_respiratory"

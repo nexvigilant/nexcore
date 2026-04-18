@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 description = "Transformer attention mechanism modeled as data pipeline: token embedding → self-attention → feed-forward → prediction"
 authors = ["Matthew Campion, PharmD; NexVigilant"]
-license = "MIT"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [dependencies]
 tokio = { workspace = true }

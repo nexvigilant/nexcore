@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Regulatory compliance engine: SAM.gov integration, OSCAL-inspired DSL, FDA/ICH/CIOMS controls"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_compliance"

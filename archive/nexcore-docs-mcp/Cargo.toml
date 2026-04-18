@@ -4,7 +4,7 @@ name = "nexcore-docs-mcp"
 version = "1.0.0"
 edition = "2024"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 description = "MCP server for Claude Code documentation - consolidated from projects/claude-code-docs-mcp"
 
 [[bin]]

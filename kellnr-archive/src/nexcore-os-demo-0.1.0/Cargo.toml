@@ -21,7 +21,7 @@ autotests = false
 autobenches = false
 description = "NexCore OS init process — boots as PID 1 on bare Linux"
 readme = false
-license = "Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [[bin]]
 name = "nexcore-init"

@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "NexVigilant Core: The Vigilance Kernel - Theory of Vigilance, Guardian-AV, and consolidated domain modules"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [features]

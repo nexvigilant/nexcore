@@ -4,7 +4,7 @@
 
 **Effective Date:** [Date of First Publication]
 **Governing Entity:** Matthew Campion, PharmD, operating as NexVigilant
-**Contact:** legal@nexvigilant.com
+**Contact:** matthew@camp-corp.com
 **Website:** https://nexvigilant.com
 
 ---
@@ -282,7 +282,7 @@ You have the following rights under GDPR and applicable privacy law:
 - Right to object to processing based on legitimate interest
 - Right to lodge a complaint with your supervisory authority
 
-To exercise these rights, contact: privacy@nexvigilant.com
+To exercise these rights, contact: matthew@camp-corp.com
 
 ### 5.3 Input Data — What You Submit
 
@@ -318,7 +318,7 @@ NexVigilant may process your data on infrastructure located in the
 United States. If you are in the EEA or UK, transfers to the US are
 made pursuant to Standard Contractual Clauses (SCCs) approved by the
 European Commission, or successor transfer mechanisms as applicable.
-For a copy of the relevant SCCs, contact privacy@nexvigilant.com.
+For a copy of the relevant SCCs, contact matthew@camp-corp.com.
 
 ### 5.6 Third-Party Services
 
@@ -445,7 +445,7 @@ of any matter subject to indemnification at your expense.
 ### 9.1 Informal Resolution
 
 Before filing any formal legal proceeding, you agree to contact
-legal@nexvigilant.com with a written description of the dispute and
+matthew@camp-corp.com with a written description of the dispute and
 the relief you are seeking. NexVigilant will attempt to respond and
 resolve the dispute informally within 30 days.
 
@@ -524,12 +524,12 @@ disputes, governmental actions, or internet infrastructure failures.
 
 | Purpose               | Contact                                   |
 |-----------------------|-------------------------------------------|
-| General legal matters | legal@nexvigilant.com                     |
+| General legal matters | matthew@camp-corp.com                     |
 | Licensing inquiries   | licensing@nexvigilant.com                 |
 | Enterprise sales      | enterprise@nexvigilant.com                |
-| Privacy requests      | privacy@nexvigilant.com                   |
+| Privacy requests      | matthew@camp-corp.com                   |
 | Abuse reports         | abuse@nexvigilant.com                     |
-| General support       | support@nexvigilant.com                   |
+| General support       | matthew@camp-corp.com                   |
 
 NexVigilant
 Operated by: Matthew Campion, PharmD

@@ -625,3 +625,6 @@ pub mod web;
 
 // Workflow Intelligence (map, gaps, bottlenecks, live intel)
 pub mod workflow_intel;
+
+// nexcore-bio umbrella introspection — reads the biological organism
+pub mod bio_umbrella;

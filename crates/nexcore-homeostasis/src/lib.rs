@@ -23,3 +23,10 @@ pub mod traits;
 pub use nexcore_homeostasis_memory as memory;
 pub use nexcore_homeostasis_primitives as primitives;
 pub use nexcore_homeostasis_storm as storm;
+
+// Feedback loops require signaling molecules and sensory integration —
+// expose cytokines (acute inflammatory), hormones (persistent state),
+// and the nervous system (fast sensory integration).
+pub use nexcore_cytokine as cytokine;
+pub use nexcore_hormones as hormones;
+pub use nexcore_nervous as nervous;

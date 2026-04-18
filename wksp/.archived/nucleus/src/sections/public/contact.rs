@@ -121,8 +121,8 @@ pub fn ContactPage() -> impl IntoView {
                             <div class="space-y-4">
                                 <div>
                                     <div class="text-[10px] font-mono text-slate-600 uppercase tracking-widest">"EMAIL"</div>
-                                    <a href="mailto:matthew@nexvigilant.com" class="text-sm font-mono text-cyan-400 hover:text-cyan-300 transition-colors">
-                                        "matthew@nexvigilant.com"
+                                    <a href="mailto:matthew@camp-corp.com" class="text-sm font-mono text-cyan-400 hover:text-cyan-300 transition-colors">
+                                        "matthew@camp-corp.com"
                                     </a>
                                 </div>
                                 <div>

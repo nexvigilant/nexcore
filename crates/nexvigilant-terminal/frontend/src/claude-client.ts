@@ -136,7 +136,7 @@ export function getState(): ClaudeState {
 
 // ── Exit Listener ──────────────────────────────────────────────
 
-listen<ClaudeExitPayload>('claude-exit', (event) => {
+(listen as any)('claude-exit', (event: { payload: ClaudeExitPayload }) => {
   currentState = 'exited';
   const code = event.payload?.code ?? null;
   onStateChange?.('exited');

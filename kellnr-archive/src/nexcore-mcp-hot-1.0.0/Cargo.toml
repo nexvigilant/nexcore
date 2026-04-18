@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "MCP server hot-reload proxy — auto-restarts child on binary change"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_mcp_hot"

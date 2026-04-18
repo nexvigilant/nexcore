@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Adversarial test fixture generator — produces schema mutations for drift detection testing"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_phenotype"

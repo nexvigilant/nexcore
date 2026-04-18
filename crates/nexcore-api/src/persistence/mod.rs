@@ -388,6 +388,13 @@ pub struct ProjectRecord {
     pub description: String,
     pub project_type: ProjectType,
 
+    /// Optional loop method classifier — classifies a Project as part of the
+    /// Nucleus Loops epistemic pipeline (Question / Hypothesis / Thesis).
+    /// `None` means this project is a general R&D project, not a loop.
+    /// Surfaced in the Nucleus UI at `/nucleus/community/loops/*`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub loop_method: Option<LoopMethod>,
+
     // Lifecycle
     pub stage: ProjectStage,
     pub status: ProjectStatus,
@@ -409,6 +416,22 @@ pub struct ProjectRecord {
 
     pub created_at: DateTime,
     pub updated_at: DateTime,
+}
+
+/// Loop method — the epistemic pipeline stage a Project participates in.
+///
+/// Maps directly to the Nucleus UI at `/nucleus/community/loops/{slug}`:
+/// - `Question` → `/loops/questions` (collaborative decomposition)
+/// - `Hypothesis` → `/loops/hypotheses` (scientific method)
+/// - `Thesis` → `/loops/theses` (peer review)
+///
+/// The pipeline flows Question → Hypothesis → Thesis via explicit promotion.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum LoopMethod {
+    Question,
+    Hypothesis,
+    Thesis,
 }
 
 /// Record representing a Deliverable within a Project

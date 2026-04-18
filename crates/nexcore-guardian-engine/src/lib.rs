@@ -68,6 +68,18 @@ pub mod noncompensatory;
 pub mod insight_adapter;
 
 // =============================================================================
+// Biological System Re-exports
+// =============================================================================
+// Guardian is the top-level integrator. It already pulls in the organ-system
+// crates; here we round out the picture with immune, molecular, and adaptive
+// defense layers so downstream consumers get a cohesive biological surface.
+pub use nexcore_antibodies as antibodies;
+pub use nexcore_antivector as antivector;
+pub use nexcore_dna as dna;
+pub use nexcore_immunity as immunity;
+pub use nexcore_metabolite as metabolite;
+
+// =============================================================================
 // Originator Autonomy Model (GVR Framework)
 // =============================================================================
 
@@ -215,11 +227,26 @@ pub struct RiskScore {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RiskValidationError {
     /// Case count too low (must be ≥ MIN_N)
-    InsufficientCases { n: u64, min: u64 },
+    InsufficientCases {
+        /// Observed case count.
+        n: u64,
+        /// Minimum required count (`MIN_N`).
+        min: u64,
+    },
     /// Negative value where positive expected
-    NegativeValue { field: &'static str, value: String },
+    NegativeValue {
+        /// Name of the offending field (`"prr"`, `"n"`, etc.).
+        field: &'static str,
+        /// Rendered offending value (stringified for error display).
+        value: String,
+    },
     /// NaN or Infinity in numeric field
-    InvalidFloat { field: &'static str, value: String },
+    InvalidFloat {
+        /// Name of the offending field.
+        field: &'static str,
+        /// Rendered offending value (`"NaN"` / `"inf"` / stringified bad f64).
+        value: String,
+    },
 }
 
 impl std::fmt::Display for RiskValidationError {

@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "DNA chemistry analysis pipeline: nucleotide encoding, FFT spectral analysis, nearest-neighbor thermodynamics, 3D projection, resonance mapping, mutation stability, k-means clustering, and Theory of Vigilance safety margin computation."
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_statemind"

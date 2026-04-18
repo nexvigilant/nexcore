@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Ghost Mode — privacy-by-design pseudonymization, redaction audit, and PII leak detection for NexVigilant"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_ghost"

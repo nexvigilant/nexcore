@@ -29,7 +29,7 @@ keywords = [
     "code-quality",
 ]
 categories = ["development-tools"]
-license = "Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [lib]

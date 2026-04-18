@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "NexVigilant REPL — deterministic terminal interface for PV signal detection, patient safety, and system monitoring"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [[bin]]
 name = "nvrepl"

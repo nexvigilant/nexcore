@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Generic edit distance framework: pluggable operations, cost models, and solvers"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_edit_distance"

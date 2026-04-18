@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "MCP server for capturing lessons learned about hooks with primitive extraction"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "lessons_mcp"

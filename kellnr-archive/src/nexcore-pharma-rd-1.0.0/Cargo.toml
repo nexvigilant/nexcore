@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Predictive pharmaceutical R&D taxonomy: 24 T2-P primitives, 14 T2-C composites, 8 T3 domain concepts, Chomsky grammar classification, and cross-domain transfer confidence."
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_pharma_rd"

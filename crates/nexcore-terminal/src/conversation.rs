@@ -202,6 +202,38 @@ impl ConversationContext {
             self.estimated_tokens = self
                 .estimated_tokens
                 .saturating_sub(estimate_message_tokens(&msg));
+
+            // If we just dropped an assistant message with tool_calls,
+            // also drop all immediately following ToolResult messages
+            // (they reference the tool_use IDs we just removed).
+            if msg.role == AiRole::Assistant && !msg.tool_calls.is_empty() {
+                while self
+                    .messages
+                    .first()
+                    .is_some_and(|m| m.role == AiRole::ToolResult)
+                {
+                    let orphan = self.messages.remove(0);
+                    self.estimated_tokens = self
+                        .estimated_tokens
+                        .saturating_sub(estimate_message_tokens(&orphan));
+                }
+            }
+
+            // If we just dropped a ToolResult as the oldest message
+            // (shouldn't happen with well-formed history, but guard it),
+            // continue dropping to avoid orphaned tool_results at the front.
+            if msg.role == AiRole::ToolResult {
+                while self
+                    .messages
+                    .first()
+                    .is_some_and(|m| m.role == AiRole::ToolResult)
+                {
+                    let orphan = self.messages.remove(0);
+                    self.estimated_tokens = self
+                        .estimated_tokens
+                        .saturating_sub(estimate_message_tokens(&orphan));
+                }
+            }
         }
     }
 }

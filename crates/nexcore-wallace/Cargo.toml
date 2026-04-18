@@ -3,7 +3,7 @@ name = "nexcore-wallace"
 version = "0.1.0"
 edition = "2024"
 description = "Wallace Protocol — fearless Rust code quality scanner. Classifies unwrap/expect/clone violations across nexcore crates."
-license = "MIT OR Apache-2.0"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [[bin]]
 name = "wallace"

@@ -18,7 +18,7 @@ version = "0.1.0"
 rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "Ferrostack Unified Workspace — NexVigilant frontend and experimental applications"
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository = "https://github.com/nexvigilant/nexcore"
 
 [workspace.dependencies]

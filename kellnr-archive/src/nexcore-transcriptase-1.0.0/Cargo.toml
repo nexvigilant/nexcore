@@ -33,7 +33,7 @@ categories = [
     "data-structures",
     "command-line-utilities",
 ]
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_transcriptase"

@@ -246,10 +246,11 @@ fn parse_microgram_args(input: &str) -> serde_json::Value {
             if let Some((key, value)) = part.split_once('=') {
                 // key=value syntax
                 let json_val = if let Ok(n) = value.parse::<f64>() {
-                    serde_json::Value::Number(
-                        serde_json::Number::from_f64(n)
-                            .unwrap_or_else(|| serde_json::Number::from(0)),
-                    )
+                    // from_f64 returns None for NaN/Inf — preserve as string
+                    match serde_json::Number::from_f64(n) {
+                        Some(num) => serde_json::Value::Number(num),
+                        None => serde_json::Value::String(value.to_string()),
+                    }
                 } else if value == "true" {
                     serde_json::Value::Bool(true)
                 } else if value == "false" {

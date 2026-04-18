@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "T1/T2-P bedrock types: Confidence, Measured, Tier, Correction"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_constants"

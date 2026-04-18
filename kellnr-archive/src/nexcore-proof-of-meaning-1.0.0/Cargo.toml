@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Chemistry-inspired semantic transformation engine — provable regulatory terminology equivalence"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_proof_of_meaning"

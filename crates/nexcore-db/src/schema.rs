@@ -8,7 +8,7 @@ use rusqlite::Connection;
 use crate::error::{DbError, Result};
 
 /// Current schema version. Increment when adding migrations.
-pub const CURRENT_SCHEMA_VERSION: u32 = 13;
+pub const CURRENT_SCHEMA_VERSION: u32 = 14;
 
 /// Initialize the database schema (create all tables if they don't exist).
 ///
@@ -49,6 +49,7 @@ pub fn initialize(conn: &Connection) -> Result<()> {
             apply_v11(conn)?;
             apply_v12(conn)?;
             apply_v13(conn)?;
+            apply_v14(conn)?;
             conn.execute(
                 "INSERT INTO schema_version (version) VALUES (?1)",
                 [CURRENT_SCHEMA_VERSION],
@@ -244,6 +245,9 @@ fn migrate(conn: &Connection, from_version: u32) -> Result<()> {
     }
     if from_version < 13 {
         apply_v13(conn)?;
+    }
+    if from_version < 14 {
+        apply_v14(conn)?;
     }
 
     conn.execute(
@@ -813,6 +817,86 @@ fn apply_v13(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
+/// V14 schema: email thread and message state for the NexVigilant fleet-wide
+/// Gmail dispatcher.
+///
+/// Context: agents communicate via `matthew+{agent}@nexvigilant.com` aliases
+/// routed into per-agent Gmail labels. `mail-dispatcher.sh` polls those labels
+/// and stages `/vp-inbox-digest {agent}` prompts for the operator. Thread
+/// continuity (recognizing that message M is a reply in ongoing thread T and
+/// should resume the same task context) requires persistent state — hence this
+/// schema.
+///
+/// New tables:
+/// - `email_threads`  — one row per Gmail threadId; tracks conversation state,
+///                      scenario, participants, and optional heavy-context
+///                      artifact pointer.
+/// - `email_messages` — one row per Gmail messageId; tracks dispatch audit,
+///                      X-NV header snapshot, and receive timing.
+///
+/// Indexes target the dispatcher's two hot queries:
+///   1. "what threads are open for agent X?"
+///   2. "has message M been dispatched already?"
+fn apply_v14(conn: &Connection) -> Result<()> {
+    conn.execute_batch(
+        "
+        CREATE TABLE IF NOT EXISTS email_threads (
+            thread_id           TEXT    PRIMARY KEY,
+            agent_name          TEXT    NOT NULL,
+            first_message_id    TEXT    NOT NULL,
+            last_message_id     TEXT    NOT NULL,
+            first_seen          TEXT    NOT NULL DEFAULT (datetime('now')),
+            last_activity       TEXT    NOT NULL DEFAULT (datetime('now')),
+            message_count       INTEGER NOT NULL DEFAULT 1,
+            x_nv_scenario       TEXT    NOT NULL DEFAULT '',
+            x_nv_from           TEXT    NOT NULL DEFAULT '',
+            x_nv_to             TEXT    NOT NULL DEFAULT '',
+            subject             TEXT    NOT NULL DEFAULT '',
+            state               TEXT    NOT NULL DEFAULT 'open',
+            context_artifact_id INTEGER REFERENCES artifacts(id) ON DELETE SET NULL,
+            created_at          TEXT    NOT NULL DEFAULT (datetime('now')),
+            updated_at          TEXT    NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_email_threads_agent
+            ON email_threads(agent_name);
+        CREATE INDEX IF NOT EXISTS idx_email_threads_state
+            ON email_threads(state);
+        CREATE INDEX IF NOT EXISTS idx_email_threads_last_activity
+            ON email_threads(last_activity DESC);
+        CREATE INDEX IF NOT EXISTS idx_email_threads_scenario
+            ON email_threads(x_nv_scenario);
+
+        CREATE TABLE IF NOT EXISTS email_messages (
+            message_id           TEXT    PRIMARY KEY,
+            thread_id            TEXT    NOT NULL
+                                         REFERENCES email_threads(thread_id)
+                                         ON DELETE CASCADE,
+            agent_name           TEXT    NOT NULL,
+            direction            TEXT    NOT NULL DEFAULT 'inbound',
+            x_nv_scenario        TEXT    NOT NULL DEFAULT '',
+            x_nv_from            TEXT    NOT NULL DEFAULT '',
+            x_nv_to              TEXT    NOT NULL DEFAULT '',
+            x_nv_cc              TEXT    NOT NULL DEFAULT '',
+            subject              TEXT    NOT NULL DEFAULT '',
+            received_epoch       INTEGER NOT NULL DEFAULT 0,
+            dispatched_at        TEXT,
+            dispatched_to_prompt TEXT,
+            created_at           TEXT    NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_email_messages_thread
+            ON email_messages(thread_id);
+        CREATE INDEX IF NOT EXISTS idx_email_messages_agent
+            ON email_messages(agent_name);
+        CREATE INDEX IF NOT EXISTS idx_email_messages_dispatched
+            ON email_messages(dispatched_at);
+        CREATE INDEX IF NOT EXISTS idx_email_messages_received
+            ON email_messages(received_epoch DESC);
+        ",
+    )?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1126,7 +1210,7 @@ mod tests {
     }
 
     #[test]
-    fn test_v12_to_v13_migration() {
+    fn test_v12_to_current_migration() {
         let conn = Connection::open_in_memory().expect("open in-memory db");
         conn.execute_batch("PRAGMA journal_mode=WAL;").expect("wal");
         conn.execute_batch("PRAGMA foreign_keys=ON;").expect("fk");
@@ -1146,14 +1230,14 @@ mod tests {
         conn.execute("INSERT INTO schema_version (version) VALUES (12)", [])
             .expect("insert v12");
 
-        initialize(&conn).expect("migrate v12 -> v13");
+        initialize(&conn).expect("migrate v12 -> current");
 
         let version: u32 = conn
             .query_row("SELECT version FROM schema_version", [], |row| row.get(0))
             .expect("version");
-        assert_eq!(version, 13);
+        assert_eq!(version, CURRENT_SCHEMA_VERSION);
 
-        let exists: bool = conn
+        let perf_exists: bool = conn
             .query_row(
                 "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='table' AND name='perf_telemetry'",
                 [],
@@ -1161,8 +1245,107 @@ mod tests {
             )
             .expect("check perf_telemetry after migration");
         assert!(
-            exists,
-            "perf_telemetry should exist after v12->v13 migration"
+            perf_exists,
+            "perf_telemetry should exist after v13 migration"
+        );
+
+        let threads_exists: bool = conn
+            .query_row(
+                "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='table' AND name='email_threads'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("check email_threads after migration");
+        assert!(
+            threads_exists,
+            "email_threads should exist after v14 migration"
+        );
+
+        let messages_exists: bool = conn
+            .query_row(
+                "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='table' AND name='email_messages'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("check email_messages after migration");
+        assert!(
+            messages_exists,
+            "email_messages should exist after v14 migration"
+        );
+    }
+
+    #[test]
+    fn test_v14_email_threads_shape() {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        initialize(&conn).expect("init");
+
+        // Insert a thread + linked message to exercise the FK and defaults.
+        conn.execute(
+            "INSERT INTO email_threads (thread_id, agent_name, first_message_id, last_message_id, \
+             x_nv_scenario, subject) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            rusqlite::params![
+                "thread-abc",
+                "vp-engineering",
+                "msg-1",
+                "msg-1",
+                "cross-dept",
+                "[test] thread",
+            ],
+        )
+        .expect("insert thread");
+        conn.execute(
+            "INSERT INTO email_messages (message_id, thread_id, agent_name, x_nv_scenario, subject) \
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            rusqlite::params![
+                "msg-1",
+                "thread-abc",
+                "vp-engineering",
+                "cross-dept",
+                "[test] thread",
+            ],
+        )
+        .expect("insert message");
+
+        let default_state: String = conn
+            .query_row(
+                "SELECT state FROM email_threads WHERE thread_id = 'thread-abc'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("read state");
+        assert_eq!(
+            default_state, "open",
+            "default thread state should be 'open'"
+        );
+
+        let default_direction: String = conn
+            .query_row(
+                "SELECT direction FROM email_messages WHERE message_id = 'msg-1'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("read direction");
+        assert_eq!(
+            default_direction, "inbound",
+            "default message direction should be 'inbound'"
+        );
+
+        // Cascade delete: dropping the thread should remove the message.
+        conn.execute(
+            "DELETE FROM email_threads WHERE thread_id = 'thread-abc'",
+            [],
+        )
+        .expect("delete thread");
+        let remaining: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM email_messages WHERE message_id = 'msg-1'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("count");
+        assert_eq!(
+            remaining, 0,
+            "email_messages should cascade-delete with its thread"
         );
     }
 }

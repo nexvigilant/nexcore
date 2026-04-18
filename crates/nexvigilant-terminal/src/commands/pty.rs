@@ -101,6 +101,25 @@ pub async fn pty_spawn(
     let term_value = std::env::var("TERM").unwrap_or_else(|_| "xterm-256color".to_string());
     let lang_value = std::env::var("LANG").unwrap_or_else(|_| "en_US.UTF-8".to_string());
 
+    // Create the MCP bridge FIFO.
+    // The FIFO allows nvterm-mcp to send commands to this bash session.
+    let fifo_path = "/tmp/nvterm-cmd.fifo";
+    if !std::path::Path::new(fifo_path).exists() {
+        let _ = std::process::Command::new("mkfifo").arg(fifo_path).output();
+    }
+
+    // Bootstrap the FIFO monitor via PROMPT_COMMAND.
+    // On first prompt, bash sources our init script which starts the FIFO reader loop.
+    // After bootstrapping, PROMPT_COMMAND is cleared so it doesn't re-run.
+    let init_path = "/tmp/nvterm-init.sh";
+    let init_script = format!(
+        "#!/bin/bash\n\
+         _nvterm_fifo_loop() {{ while true; do if read -r cmd < {fifo_path}; then eval \"$cmd\"; fi; done; }}\n\
+         _nvterm_fifo_loop &\n\
+         unset PROMPT_COMMAND\n"
+    );
+    let _ = std::fs::write(init_path, &init_script);
+
     let config = PtyConfig::new(&shell, &working_dir)
         .with_size(PtySize::new(cols, rows))
         .with_env("PATH", &enriched_path)
@@ -110,7 +129,9 @@ pub async fn pty_spawn(
         .with_env("LC_ALL", &lang_value)
         // Claude Code TUI rendering hints
         .with_env("FORCE_COLOR", "1")
-        .with_env("CLICOLOR_FORCE", "1");
+        .with_env("CLICOLOR_FORCE", "1")
+        // MCP bridge FIFO bootstrap — sources init script on first prompt
+        .with_env("PROMPT_COMMAND", &format!("source {init_path}"));
 
     let process = PtyProcess::spawn(config).map_err(|e| format!("PTY spawn failed: {e}"))?;
 
@@ -163,6 +184,21 @@ pub async fn pty_spawn(
                 }
                 Some(Ok(Ok(bytes))) => {
                     let text = String::from_utf8_lossy(&bytes);
+                    // Diagnostic: log PTY reads to file
+                    if let Ok(mut f) = std::fs::OpenOptions::new()
+                        .create(true)
+                        .append(true)
+                        .open("/tmp/nvterm-pty-reads.log")
+                    {
+                        use std::io::Write as _;
+                        let _ = writeln!(
+                            f,
+                            "read {} bytes from sid={}: {:?}",
+                            bytes.len(),
+                            sid,
+                            &text[..text.len().min(80)]
+                        );
+                    }
                     if let Err(e) = app_handle.emit("pty-output", text.as_ref()) {
                         tracing::debug!(error = %e, "Failed to emit pty-output event");
                         break;

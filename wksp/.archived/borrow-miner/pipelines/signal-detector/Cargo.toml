@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 description = "Pharmacovigilance signal detection pipeline"
 authors = ["NexVigilant"]
-license = "MIT"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [dependencies]
 tokio = { version = "1.47", features = ["full"] }

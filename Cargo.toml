@@ -18,7 +18,7 @@ edition = "2024"
 rust-version = "1.85"
 authors = ["NexVigilant Team <team@nexvigilant.com>"]
 description = "NexVigilant Core (nexcore) — The Vigilance Kernel for pharmacovigilance and intelligent automation"
-license = "MIT OR Apache-2.0"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 repository = "https://github.com/nexvigilant/nexcore"
 homepage = "https://nexvigilant.com"
 readme = "README.md"
@@ -27,6 +27,11 @@ readme = "README.md"
 # anyhow — REMOVED: replaced by nexcore-error
 axum = { version = "0.8.0", features = ["macros", "ws"] }
 dag-publish = { path = "tools/dag-publish" }
+# Sibling project: RSK microgram decision tree runtime. Declared here once so
+# every consumer (`nexcore-terminal`, `nexcore-api`, `nexcore-mcp`) shares a
+# single resolved instance. Replaces the prior `rsk mcg run` subprocess bridge
+# — see crates/nexcore-terminal/src/microgram.rs.
+rsk = { path = "../rsk-core/rsk" }
 # base64 — REPLACED by nexcore-codec (sovereignty campaign Phase 2)
 burn = { version = "0.20", default-features = false, features = ["ndarray", "autodiff", "std"] }
 burn-ndarray = { version = "0.20", features = ["std"] }

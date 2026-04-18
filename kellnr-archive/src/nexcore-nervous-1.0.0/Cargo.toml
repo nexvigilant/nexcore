@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "Nervous system for event routing — Reflex arcs(hook dispatch) + Myelination(hot path caching) + Sensory integration(context assembly) + Motor coordination(tool chains)"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_nervous"

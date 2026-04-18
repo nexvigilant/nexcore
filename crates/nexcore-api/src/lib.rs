@@ -152,6 +152,8 @@ fn setup_api_routes(state: ApiState) -> Router<ApiState> {
         .nest("/learning", routes::learning::router())
         .nest("/marketplace", routes::marketplace::router())
         .nest("/mcp", routes::mcp::router())
+        // In-process microgram runtime (replaces rsk subprocess bridge)
+        .nest("/microgram", routes::microgram::router())
         .nest("/telemetry", routes::telemetry::router())
         .nest("/tenant", routes::tenant::router())
         .route(

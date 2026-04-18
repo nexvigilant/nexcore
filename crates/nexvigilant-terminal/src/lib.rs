@@ -37,12 +37,14 @@
 )]
 
 pub mod commands;
+pub mod mcp_bridge;
 
 #[cfg(test)]
 mod tests {
     use super::commands::cloud::{CloudState, ServiceInfo};
     use super::commands::health::HealthState;
     use super::commands::pty::PtyState;
+    use super::commands::repl::ReplState;
     use super::commands::shell::NexShellState;
     use super::commands::terminal::TerminalState;
 
@@ -162,6 +164,17 @@ mod tests {
         let _a = HealthState::new();
         let _b = HealthState::default();
         // Both should construct without panic
+    }
+
+    // ── ReplState ───────────────────────────────────────────
+
+    #[test]
+    fn repl_state_starts_idle() {
+        let state = ReplState::new();
+        let _default = ReplState::default();
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let busy = rt.block_on(async { *state.busy.lock().await });
+        assert!(!busy, "REPL should start idle");
     }
 
     // ── PtyState ────────────────────────────────────────────

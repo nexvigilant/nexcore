@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "Skeletal system for structural integrity — CLAUDE.md (skull), project structure (limbs), interfaces (joints), Wolff's Law (adaptive reinforcement)"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_skeletal"

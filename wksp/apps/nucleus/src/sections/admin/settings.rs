@@ -25,7 +25,7 @@ pub fn SettingsAdminPage() -> impl IntoView {
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-400">"Support Email"</label>
-                        <input type="email" placeholder="support@nexvigilant.com"
+                        <input type="email" placeholder="matthew@camp-corp.com"
                             class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder:text-slate-600 focus:border-amber-500 focus:outline-none"/>
                     </div>
                 </div>

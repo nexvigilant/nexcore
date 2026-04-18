@@ -1,3 +1,8 @@
+#![forbid(unsafe_code)]
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
+#![cfg_attr(not(test), deny(clippy::expect_used))]
+#![cfg_attr(not(test), deny(clippy::panic))]
+
 //! # Suit Primitives
 //! Shared data structures with minimal dependencies.
 #[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]

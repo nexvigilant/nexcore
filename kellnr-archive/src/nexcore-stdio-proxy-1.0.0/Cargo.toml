@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "Generic stdio proxy with hot-reload — protocol-agnostic child process management"
 readme = false
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
 
 [lib]
 name = "nexcore_stdio_proxy"

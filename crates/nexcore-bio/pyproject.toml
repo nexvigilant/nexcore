@@ -1,0 +1,32 @@
+# Build config for the nexcore-bio Python extension.
+# Build:   maturin build  --release -F python
+# Install: maturin develop --release -F python   (into active virtualenv)
+
+[build-system]
+requires = ["maturin>=1.5,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "nexcore-bio"
+version = "0.1.0"
+description = "Unified Python surface for all NexCore biological crates."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "LicenseRef-NexVigilant-Proprietary-1.0" }
+authors = [
+    { name = "NexVigilant", email = "team@nexvigilant.com" },
+]
+keywords = ["nexcore", "pharmacovigilance", "biology"]
+classifiers = [
+    "License :: Other/Proprietary License",
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+
+[tool.maturin]
+module-name = "nexcore_bio"
+features = ["python"]
+# Abi3 wheel — one build covers CPython >= 3.9.
+bindings = "pyo3"

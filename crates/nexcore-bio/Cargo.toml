@@ -1,0 +1,87 @@
+
+# Copyright © 2026 NexVigilant LLC. All Rights Reserved.
+# Intellectual Property of Matthew Alexander Campion, PharmD
+
+[package]
+name = "nexcore-bio"
+version = "0.1.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
+repository.workspace = true
+homepage.workspace = true
+description = "Biological systems aggregator — unified Rust re-exports of all nexcore bio crates, with optional PyO3 bindings exposing them as a single Python module `nexcore_bio`."
+
+keywords = ["nexcore", "biology", "pyo3"]
+categories = ["science"]
+
+[lib]
+name = "nexcore_bio"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# Optional PyO3 — enabled by `python` feature. Without the feature this crate
+# is a plain Rust re-export umbrella; with it, the `nexcore_bio` cdylib is a
+# Python extension module consumable via `import nexcore_bio`.
+pyo3 = { version = "0.22", features = ["extension-module", "abi3-py39"], optional = true }
+
+# --- Organ systems (14) -----------------------------------------------------
+nexcore-anatomy = { path = "../nexcore-anatomy" }
+nexcore-cardiovascular = { path = "../nexcore-cardiovascular" }
+nexcore-circulatory = { path = "../nexcore-circulatory" }
+nexcore-cns = { path = "../nexcore-cns" }
+nexcore-cortex = { path = "../nexcore-cortex" }
+nexcore-digestive = { path = "../nexcore-digestive" }
+nexcore-integumentary = { path = "../nexcore-integumentary" }
+nexcore-lymphatic = { path = "../nexcore-lymphatic" }
+nexcore-muscular = { path = "../nexcore-muscular" }
+nexcore-nervous = { path = "../nexcore-nervous" }
+nexcore-reproductive = { path = "../nexcore-reproductive" }
+nexcore-respiratory = { path = "../nexcore-respiratory" }
+nexcore-skeletal = { path = "../nexcore-skeletal" }
+nexcore-synapse = { path = "../nexcore-synapse" }
+nexcore-urinary = { path = "../nexcore-urinary" }
+
+# --- Molecular / adaptive defense (10) --------------------------------------
+nexcore-antibodies = { path = "../nexcore-antibodies" }
+nexcore-antivector = { path = "../nexcore-antivector" }
+nexcore-dna = { path = "../nexcore-dna" }
+nexcore-dna-ml = { path = "../nexcore-dna-ml" }
+nexcore-energy = { path = "../nexcore-energy" }
+nexcore-metabolite = { path = "../nexcore-metabolite" }
+nexcore-phenotype = { path = "../nexcore-phenotype" }
+nexcore-ribosome = { path = "../nexcore-ribosome" }
+nexcore-spliceosome = { path = "../nexcore-spliceosome" }
+nexcore-transcriptase = { path = "../nexcore-transcriptase" }
+
+# --- Signaling (3) ----------------------------------------------------------
+nexcore-cytokine = { path = "../nexcore-cytokine" }
+nexcore-hormones = { path = "../nexcore-hormones" }
+nexcore-hormone-types = { path = "../nexcore-hormone-types" }
+
+# --- Homeostasis cluster (6) ------------------------------------------------
+nexcore-homeostasis = { path = "../nexcore-homeostasis" }
+nexcore-homeostasis-memory = { path = "../nexcore-homeostasis-memory" }
+nexcore-homeostasis-primitives = { path = "../nexcore-homeostasis-primitives" }
+nexcore-homeostasis-sensing = { path = "../nexcore-homeostasis-sensing" }
+nexcore-homeostasis-storm = { path = "../nexcore-homeostasis-storm" }
+# nexcore-homeostat is a binary-only crate — not depended on here. Listed in
+# AGGREGATED_CRATES in lib.rs for documentation; reachable as a separate build
+# target via `cargo build -p nexcore-homeostat`.
+
+# --- Innate immunity + integrator (2) ---------------------------------------
+nexcore-immunity = { path = "../nexcore-immunity" }
+nexcore-guardian-engine = { path = "../nexcore-guardian-engine" }
+
+# --- Infrastructure (2) -----------------------------------------------------
+nexcore-organize = { path = "../nexcore-organize" }
+stem-bio = { path = "../stem-bio" }
+
+[features]
+default = []
+# Build the cdylib as a Python extension. Use `maturin develop -F python` to
+# install into the active virtualenv, or `maturin build -F python` for a wheel.
+python = ["dep:pyo3"]
+
+[lints]
+workspace = true

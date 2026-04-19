@@ -319,6 +319,125 @@ async fn _flush_stdin<W: tokio::io::AsyncWrite + Unpin>(mut w: W) -> std::io::Re
     w.flush().await
 }
 
+// -- Direct sovereign path (bypasses claude CLI) -----------------------------
+
+#[derive(Deserialize)]
+struct SovereignReq {
+    prompt: String,
+    #[serde(default = "default_max_tokens")]
+    max_tokens: usize,
+    #[serde(default)]
+    system: Option<String>,
+}
+
+#[derive(Serialize)]
+struct SovereignResp {
+    text: String,
+    model: String,
+    input_tokens: Option<u64>,
+    output_tokens: Option<u64>,
+    latency_ms: u128,
+}
+
+fn default_max_tokens() -> usize {
+    512
+}
+
+/// POST /sovereign — bypass the claude CLI entirely. Forwards directly to the
+/// Anthropic-compatible /v1/messages endpoint configured via ANTHROPIC_BASE_URL.
+///
+/// This is the autonomous-agent surface: no harness, no interactive TUI, no
+/// Node.js, no external auth. Pure Rust-to-Rust HTTP to the sovereign backend.
+async fn sovereign(
+    State(state): State<AppState>,
+    Json(req): Json<SovereignReq>,
+) -> Result<Json<SovereignResp>, (StatusCode, String)> {
+    state.touch().await;
+
+    let base = state
+        .anthropic_base_url
+        .as_ref()
+        .as_ref()
+        .ok_or_else(|| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "no ANTHROPIC_BASE_URL configured — sovereign path requires local serve".into(),
+            )
+        })?
+        .clone();
+
+    let url = format!("{}/v1/messages", base.trim_end_matches('/'));
+
+    let body = serde_json::json!({
+        "model": "vigil-qwen-v1",
+        "max_tokens": req.max_tokens,
+        "system": req.system.unwrap_or_default(),
+        "messages": [{"role": "user", "content": req.prompt}]
+    });
+
+    let started = Instant::now();
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(300))
+        .build()
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("http client: {e}"),
+            )
+        })?;
+
+    let resp = client.post(&url).json(&body).send().await.map_err(|e| {
+        error!(error = %e, url = %url, "sovereign POST failed");
+        (StatusCode::BAD_GATEWAY, format!("sovereign POST: {e}"))
+    })?;
+
+    let status = resp.status();
+    let json: serde_json::Value = resp.json().await.map_err(|e| {
+        (
+            StatusCode::BAD_GATEWAY,
+            format!("sovereign response parse: {e}"),
+        )
+    })?;
+
+    if !status.is_success() {
+        return Err((
+            StatusCode::BAD_GATEWAY,
+            format!("sovereign {status}: {json}"),
+        ));
+    }
+
+    let text = json
+        .get("content")
+        .and_then(|c| c.as_array())
+        .and_then(|arr| arr.first())
+        .and_then(|b| b.get("text"))
+        .and_then(|t| t.as_str())
+        .unwrap_or("")
+        .to_string();
+
+    let input_tokens = json
+        .get("usage")
+        .and_then(|u| u.get("input_tokens"))
+        .and_then(|v| v.as_u64());
+    let output_tokens = json
+        .get("usage")
+        .and_then(|u| u.get("output_tokens"))
+        .and_then(|v| v.as_u64());
+    let model = json
+        .get("model")
+        .and_then(|v| v.as_str())
+        .unwrap_or("vigil-qwen-v1")
+        .to_string();
+
+    Ok(Json(SovereignResp {
+        text,
+        model,
+        input_tokens,
+        output_tokens,
+        latency_ms: started.elapsed().as_millis(),
+    }))
+}
+
 // -- Entrypoint --------------------------------------------------------------
 
 #[tokio::main]
@@ -348,6 +467,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/health", get(health))
         .route("/prompt", post(prompt))
         .route("/wake", post(wake))
+        .route("/sovereign", post(sovereign))
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind(BIND_ADDR).await?;

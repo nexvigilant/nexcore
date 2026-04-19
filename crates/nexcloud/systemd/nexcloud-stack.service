@@ -1,0 +1,21 @@
+[Unit]
+Description=NexCloud sovereign stack supervisor (vigil-train + vigil-nexdev + nexcore-api)
+Documentation=file:/home/matthew/Projects/Active/nucleus/workspaces/nexcore/nexcloud-prod.toml
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/matthew/Projects/Active/nucleus/workspaces/nexcore
+ExecStart=/home/matthew/Projects/Active/nucleus/workspaces/nexcore/target/release/nexcloud --manifest nexcloud-prod.toml start
+Restart=always
+RestartSec=5
+# PATH so nexcloud can launch child binaries; HOME for ~/.claude/ resolution.
+Environment=PATH=/home/matthew/.cargo/bin:/home/matthew/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=/home/matthew
+Environment=RUST_LOG=info
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

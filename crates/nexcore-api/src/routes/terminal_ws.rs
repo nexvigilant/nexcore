@@ -154,9 +154,112 @@ pub async fn ws_terminal_handler(
 
     tracing::info!(
         mode = params.mode.as_deref().unwrap_or("hybrid"),
+        host = params.host.as_deref().unwrap_or("-"),
         "Terminal WS: authenticated, upgrading"
     );
-    Ok(ws.on_upgrade(move |socket| handle_terminal_socket(socket, params)))
+    // host=vigil routes to the sovereign daemon (no PTY, pure HTTP to
+    // vigil-nexdev :7823/sovereign). Everything else takes the PTY path.
+    if params.host.as_deref() == Some("vigil") {
+        Ok(ws.on_upgrade(move |socket| handle_sovereign_socket(socket, params)))
+    } else {
+        Ok(ws.on_upgrade(move |socket| handle_terminal_socket(socket, params)))
+    }
+}
+
+/// Sovereign-mode WebSocket handler. Instead of spawning a PTY, each client
+/// Input message is forwarded to vigil-nexdev's /sovereign endpoint and the
+/// response is streamed back as output frames. Turns the Nucleus terminal
+/// into a chat with Vigil-qwen-v1.
+///
+/// Line-buffered: we accumulate input until \r, then fire a POST. Echoes
+/// typed characters back so the user sees their own keystrokes.
+async fn handle_sovereign_socket(mut socket: WebSocket, _params: TerminalConnectParams) {
+    const SOVEREIGN_URL: &str = "http://127.0.0.1:7823/sovereign";
+    let client = match reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(120))
+        .build()
+    {
+        Ok(c) => c,
+        Err(e) => {
+            tracing::error!(error = %e, "Sovereign WS: failed to build http client");
+            return;
+        }
+    };
+
+    // Banner.
+    let banner = WsServerMessage::output(
+        "\x1b[36mVigil Sovereign Terminal\x1b[0m — direct chat with vigil-qwen-v1. \
+         Type a prompt, press Enter.\r\n\x1b[90m(zero external API — pure candle-core on nexdev)\x1b[0m\r\n\r\n> ",
+    );
+    if let Ok(json) = serde_json::to_string(&banner) {
+        if socket.send(Message::Text(json.into())).await.is_err() {
+            return;
+        }
+    }
+
+    let mut line = String::new();
+    loop {
+        let recv = socket.recv().await;
+        match recv {
+            Some(Ok(Message::Text(text))) => {
+                let Ok(client_msg) = serde_json::from_str::<WsClientMessage>(&text) else {
+                    continue;
+                };
+                if let WsClientMessage::Input { data } = client_msg {
+                    // Stream each typed byte back so xterm.js echoes it.
+                    let echo = data.replace('\r', "\r\n");
+                    let echo_msg = WsServerMessage::output(&echo);
+                    if let Ok(json) = serde_json::to_string(&echo_msg) {
+                        let _ = socket.send(Message::Text(json.into())).await;
+                    }
+                    for c in data.chars() {
+                        if c == '\r' || c == '\n' {
+                            let prompt = std::mem::take(&mut line);
+                            let prompt = prompt.trim().to_string();
+                            if prompt.is_empty() {
+                                let _ = socket
+                                    .send(Message::Text(
+                                        serde_json::to_string(&WsServerMessage::output("> "))
+                                            .unwrap_or_default()
+                                            .into(),
+                                    ))
+                                    .await;
+                                continue;
+                            }
+                            // Fire sovereign request.
+                            let body = serde_json::json!({"prompt": prompt, "max_tokens": 256});
+                            let resp = client.post(SOVEREIGN_URL).json(&body).send().await;
+                            let reply = match resp {
+                                Ok(r) => match r.json::<serde_json::Value>().await {
+                                    Ok(v) => v
+                                        .get("text")
+                                        .and_then(|t| t.as_str())
+                                        .unwrap_or("(empty)")
+                                        .to_string(),
+                                    Err(e) => format!("(parse error: {e})"),
+                                },
+                                Err(e) => format!("(sovereign error: {e})"),
+                            };
+                            let out = format!("\x1b[32m{reply}\x1b[0m\r\n\r\n> ");
+                            if let Ok(json) = serde_json::to_string(&WsServerMessage::output(&out))
+                            {
+                                if socket.send(Message::Text(json.into())).await.is_err() {
+                                    return;
+                                }
+                            }
+                        } else if c == '\x7f' || c == '\x08' {
+                            // Backspace.
+                            line.pop();
+                        } else if !c.is_control() {
+                            line.push(c);
+                        }
+                    }
+                }
+            }
+            Some(Ok(Message::Close(_))) | None => return,
+            _ => {}
+        }
+    }
 }
 
 /// Core terminal WebSocket loop.

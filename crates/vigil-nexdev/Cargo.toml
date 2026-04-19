@@ -1,0 +1,23 @@
+[package]
+name = "vigil-nexdev"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Autonomous Vigil node on nexdev — headless Claude Code CLI wrapped in an HTTP daemon"
+
+[[bin]]
+name = "vigil-nexdev"
+path = "src/main.rs"
+
+[dependencies]
+axum = { workspace = true }
+tokio = { workspace = true }
+tokio-stream = { version = "0.1", features = ["io-util"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+futures-util = "0.3"
+
+[lints]
+workspace = true

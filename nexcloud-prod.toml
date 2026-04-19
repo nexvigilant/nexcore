@@ -1,0 +1,37 @@
+# NexCloud Platform Manifest — Production (sovereign nexcore-api hosting)
+#
+# Intended host: nexdev (c3-highmem-22, us-central1-a)
+# Intended external hostname: api-sov.nexvigilant.com  (Phase C: CNAME cutover)
+#
+# Start:    nexdev 'cd ~/Projects/Active/nucleus/workspaces/nexcore && target/release/nexcloud --manifest nexcloud-prod.toml start'
+# Validate: nexdev 'cd ~/Projects/Active/nucleus/workspaces/nexcore && target/release/nexcloud --manifest nexcloud-prod.toml validate'
+
+[platform]
+name = "nexvigilant-sovereign-api"
+log_dir = "/home/matthew/.local/state/nexcloud/logs"
+
+[proxy]
+# Public-facing port. 8080 avoids privileged-port requirement; external TLS
+# will terminate at nexdev's reverse proxy / certbot in Phase C.
+http_port = 8080
+
+# ── Services ──────────────────────────────────────────────────────────
+
+[[service]]
+name = "nexcore-api"
+binary = "/home/matthew/Projects/Active/nucleus/workspaces/nexcore/target/release/nexcore-api"
+# Internal port the binary binds to (nexcloud proxies 8080 → 3030).
+port = 3030
+health = "/health"
+restart = "on-failure"
+max_restarts = 5
+backoff_ms = 2000
+env = { PORT = "3030", BIND_ADDR = "127.0.0.1", RUST_LOG = "nexcore_api=info,tower_http=info", HOME = "/home/matthew" }
+
+# ── Routes ────────────────────────────────────────────────────────────
+
+# Pin every public path to nexcore-api. The binary owns all /api/v1/*,
+# /health, /tools, and the WebSocket upgrade path at /api/v1/terminal/ws.
+[[route]]
+match_prefix = "/"
+backend = "nexcore-api"

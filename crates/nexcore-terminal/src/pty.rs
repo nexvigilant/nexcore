@@ -43,6 +43,10 @@ impl Default for PtySize {
 pub struct PtyConfig {
     /// Shell binary to execute (e.g., "/bin/bash").
     pub shell: String,
+    /// Extra argv entries passed after argv[0]. Each entry is forwarded verbatim
+    /// as a single argument — the spawn layer does not split on whitespace, so
+    /// shell-injection via embedded spaces is structurally impossible.
+    pub args: Vec<String>,
     /// Working directory for the shell process.
     pub working_dir: String,
     /// Environment variables to set (merged with inherited env).
@@ -57,10 +61,18 @@ impl PtyConfig {
     pub fn new(shell: impl Into<String>, working_dir: impl Into<String>) -> Self {
         Self {
             shell: shell.into(),
+            args: Vec::new(),
             working_dir: working_dir.into(),
             env: BTreeMap::new(),
             size: PtySize::default(),
         }
+    }
+
+    /// Append a single argument to argv (after argv[0]).
+    #[must_use]
+    pub fn with_arg(mut self, arg: impl Into<String>) -> Self {
+        self.args.push(arg.into());
+        self
     }
 
     /// Set the initial terminal dimensions.
@@ -82,6 +94,7 @@ impl Default for PtyConfig {
     fn default() -> Self {
         Self {
             shell: "/bin/bash".to_string(),
+            args: Vec::new(),
             working_dir: "/workspace".to_string(),
             env: BTreeMap::new(),
             size: PtySize::default(),
@@ -174,9 +187,17 @@ impl PtyProcess {
         .chain(config.env.iter().map(|(k, v)| (k.clone(), v.clone())))
         .collect();
 
+        // argv[0] is the program path by convention; any user-provided args
+        // follow as separate argv entries (never tokenized).
+        let mut argv: Vec<&str> = Vec::with_capacity(1 + config.args.len());
+        argv.push(&config.shell);
+        for a in &config.args {
+            argv.push(a.as_str());
+        }
+
         let spawn_config = nexcore_pty::SpawnConfig {
             program: &config.shell,
-            args: &[&config.shell],
+            args: &argv,
             working_dir: &config.working_dir,
             env: &env_pairs,
         };

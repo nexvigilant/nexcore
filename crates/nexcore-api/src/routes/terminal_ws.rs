@@ -108,6 +108,10 @@ pub struct TerminalConnectParams {
     pub mode: Option<String>,
     /// Subscription tier for resource limits (defaults to "explorer").
     pub tier: Option<String>,
+    /// Remote host key for SSH passthrough. MUST match a key in the allowlist
+    /// returned by `resolve_pty_command`; unknown values fall back to local bash.
+    /// The string is a lookup key only — never forwarded to the spawned process.
+    pub host: Option<String>,
 }
 
 // =============================================================================
@@ -267,13 +271,22 @@ async fn handle_terminal_socket(mut socket: WebSocket, params: TerminalConnectPa
         "Terminal WS: standalone mode — spawning local PTY"
     );
 
-    let mut pty_config = PtyConfig::new("/bin/bash", &working_dir)
+    // Resolve the PTY command. If a known `host` key was supplied, spawn a
+    // remote SSH session; otherwise fall back to local bash. The resolver
+    // enforces an allowlist — untrusted strings never reach the spawned process.
+    let (pty_program, pty_args, pty_banner) = resolve_pty_command(params.host.as_deref());
+
+    let mut pty_config = PtyConfig::new(pty_program, &working_dir)
         .with_env("HOME", &working_dir)
         .with_env("USER", "appuser")
         .with_env("TERM", "xterm-256color")
         .with_env("COLORTERM", "truecolor")
         .with_env("LANG", "en_US.UTF-8")
         .with_env("NEXVIGILANT_STATION_URL", "https://mcp.nexvigilant.com");
+
+    for arg in &pty_args {
+        pty_config = pty_config.with_arg(arg);
+    }
 
     // Inject Anthropic API key so `claude` works out of the box.
     // WS connection is Firebase-authenticated; only authed users reach this PTY.
@@ -306,11 +319,11 @@ async fn handle_terminal_socket(mut socket: WebSocket, params: TerminalConnectPa
         .update_status(&session_id, SessionStatus::Active)
         .await;
 
-    // Send welcome status
+    // Send welcome status (banner reflects local vs remote host)
     let welcome = WsServerMessage::Status {
         session: SessionStatusMsg::new(
             SessionStatus::Active,
-            "Terminal session active",
+            pty_banner,
             session_id.to_string(),
             mode,
         ),
@@ -539,9 +552,24 @@ async fn handle_client_message(
 ) {
     match msg {
         WsClientMessage::Input { data } => {
-            // Route based on current mode
-            let routed = route_command(&data, *current_mode);
-            dispatch_routed_command(routed, socket, pty, conversation).await;
+            // Input is a raw keystroke stream from xterm.js — every keypress,
+            // including control bytes (\r, \x03, arrow-key escape seqs, tabs).
+            // In Shell mode these MUST bypass the command router: route_command
+            // trims whitespace, which would eat the \r that submits commands.
+            // Structured whole-command routing belongs on the Command path.
+            if matches!(*current_mode, TerminalMode::Shell) {
+                if let Err(e) = pty.write(data.as_bytes()).await {
+                    let err = WsServerMessage::error("PTY_WRITE_ERROR", e.to_string());
+                    if let Ok(json) = serde_json::to_string(&err) {
+                        if socket.send(Message::Text(json.into())).await.is_err() {
+                            tracing::debug!("Terminal WS: client gone during PTY write error");
+                        }
+                    }
+                }
+            } else {
+                let routed = route_command(&data, *current_mode);
+                dispatch_routed_command(routed, socket, pty, conversation).await;
+            }
         }
         WsClientMessage::Command { command } => {
             // Explicit command — route with prefix detection
@@ -1359,6 +1387,50 @@ fn parse_tier(tier: Option<&str>) -> SubscriptionTier {
         Some("enterprise") => SubscriptionTier::Enterprise,
         _ => SubscriptionTier::Explorer,
     }
+}
+
+/// Allowlist of remote host keys the terminal can SSH into.
+///
+/// Each entry maps a client-supplied `host` key to a hardcoded (program, args,
+/// banner) triple. The key is the ONLY thing the client controls; program and
+/// args are compile-time constants, so shell-injection via the query string is
+/// structurally impossible.
+///
+/// To add a host: append a row. To revoke: remove the row and redeploy.
+#[allow(clippy::type_complexity)]
+const HOST_ALLOWLIST: &[(&str, &str, &[&str], &str)] = &[(
+    "nexdev",
+    "/usr/bin/gcloud",
+    &[
+        "compute",
+        "ssh",
+        "nexdev",
+        "--zone=us-central1-a",
+        "--ssh-flag=-tt",
+    ],
+    "Connecting to nexdev (c3-highmem-22, us-central1-a)...",
+)];
+
+/// Resolve the PTY command for a given host key.
+///
+/// Returns `(program, args, banner)`. Unknown or missing keys fall back to
+/// local `/bin/bash -l` (login shell — loads user profile). Lookup is linear
+/// over a 1–2 entry table, so the cost is negligible and the allowlist stays
+/// visible at the call site.
+fn resolve_pty_command(host: Option<&str>) -> (&'static str, Vec<String>, &'static str) {
+    if let Some(key) = host {
+        for (name, program, args, banner) in HOST_ALLOWLIST {
+            if *name == key {
+                let args_owned = args.iter().map(|s| (*s).to_string()).collect();
+                return (program, args_owned, banner);
+            }
+        }
+        tracing::warn!(
+            host = key,
+            "Terminal WS: unknown host key — falling back to local bash"
+        );
+    }
+    ("/bin/bash", vec!["-l".to_string()], "Local shell session.")
 }
 
 // =============================================================================

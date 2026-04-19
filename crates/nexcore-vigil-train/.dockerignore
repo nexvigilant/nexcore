@@ -1,0 +1,30 @@
+# Exclude build artifacts and non-essential files from docker context.
+# This is critical — the nexcore workspace has 307 crates; we only need a few.
+
+# Build outputs
+target/
+**/target/
+
+# Version control
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Docs / examples (not needed at runtime)
+**/README.md
+**/CHANGELOG.md
+**/examples/
+
+# Tests (not compiled in release)
+**/tests/fixtures/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# The model is copied explicitly — exclude stale dev copies
+node_modules/

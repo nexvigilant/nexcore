@@ -1,0 +1,6 @@
+[Unit]
+Description=NVNC Station /health watchdog (stops nvnc-station on 3 consecutive failures)
+
+[Service]
+Type=oneshot
+ExecStart=%h/nvnc/station/health-watchdog.sh

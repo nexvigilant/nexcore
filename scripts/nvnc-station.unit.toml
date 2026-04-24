@@ -1,0 +1,62 @@
+# NVNC ProcessSpec — mcp.nexvigilant.com NexVigilant Station under
+# nexcore-process-systemd.
+#
+# Station is a Rust binary (nexvigilant-station) from the ferroforge workspace
+# that reads JSON configs and serves MCP tools over combined transports
+# (SSE + streamable HTTP + REST + health).
+#
+# Status: TEMPLATE — binary path + port need per-host adjustment.
+# Retires: Cloud Run deploy of mcp.nexvigilant.com (migrating 2026-04-23+).
+
+[spec]
+# Stable unit name. systemd service will be nvnc-station.service.
+name = "station"
+
+# Rust binary — ships with static configs. Rebuild via:
+#   cd ~/Projects/Active/nucleus/ferroforge && cargo build --release
+# Canonical install path on nexdev:
+image = "/opt/nexvigilant-station/nexvigilant-station"
+
+# Transport + config flags. `combined` serves SSE + streamable HTTP
+# + REST + health on the same port. `--exclude-private` hides internal
+# tools; drop it for private/internal deployments.
+args = [
+  "--config-dir", "/opt/nexvigilant-station/configs",
+  "--transport", "combined",
+  "--port", "8082",
+  "--exclude-private",
+  "--host", "127.0.0.1",
+]
+
+[process]
+element = "Process"
+contract = "ProcessRuntime"
+retires = "mcp.nexvigilant.com (Cloud Run — retiring 2026-04-23+)"
+
+[environment]
+# Station reads RUST_LOG for tracing level.
+RUST_LOG = "info"
+# Production profile — enables optimized paths.
+NODE_ENV = "production"
+# Build-time commit SHA for /health endpoint provenance field.
+# NV_STATION_COMMIT_SHA = "<populated at build>"
+
+[gate]
+# Post-deploy smoke: GET http://127.0.0.1:8082/health must return 200
+# with {"status":"ok"} before the service is marked healthy.
+requires_smoke_test = true
+requires_live_traffic_window = "7d"
+requires_rollback_rehearsal = true
+# The NVNC front-door (nexcore-relay Transport) reverse-proxies
+# https://mcp.nexvigilant.com → 127.0.0.1:8082.
+requires_relay_ingress = true
+
+[watch]
+# rsk binary is invoked by some configs via subprocess. When the rsk
+# binary is rebuilt, the parent Station process must restart to flush
+# cached handles. nexcore-process-systemd honors path-change triggers.
+restart_on_change = [
+  "/opt/nexvigilant-station/nexvigilant-station",
+  "/opt/nexvigilant-station/bin/rsk",
+  "/opt/nexvigilant-station/configs",
+]

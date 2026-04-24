@@ -1,0 +1,24 @@
+# Vigil-monitored post-deploy smoke timer for mg-fleet dashboard.
+# Invoked by: nexcore-process-systemd after every nvnc-nucleus.service restart,
+# plus every 15 minutes for ambient health.
+[spec]
+name = "mg-fleet-smoke"
+image = "/home/matthew/Projects/Active/nucleus/scripts/nvnc-mg-fleet-smoke.sh"
+args = []
+
+[environment]
+NV_MG_FLEET_URL = "https://nexvigilant.com/nucleus/vigilance/mg-fleet"
+NV_MG_FLEET_TIMEOUT = "10"
+
+[schedule]
+OnCalendar = "*:0/15"
+OnUnitActiveSec = "15m"
+RandomizedDelaySec = "30s"
+
+[hook]
+after_unit = "nvnc-nucleus.service"
+
+[vigil]
+emit_on_failure = true
+cytokine_family = "deploy.smoke"
+guardian_signal_on = ["non_2xx", "timeout"]

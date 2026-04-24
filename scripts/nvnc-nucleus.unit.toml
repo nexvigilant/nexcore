@@ -1,0 +1,49 @@
+# NVNC ProcessSpec template — nexvigilant.com Nucleus frontend under
+# nexcore-process-systemd.
+#
+# Nucleus is Next.js 16 with standalone output. The standalone bundle
+# ships its own node_modules and can be run directly by `node server.js`.
+#
+# Status: TEMPLATE — binary path + HOSTNAME need per-host adjustment.
+# Retires: Vercel auto-deploy on push to nexvigilant/nucleus main.
+
+[spec]
+# Stable unit name. systemd service will be nvnc-nucleus.service.
+name = "nucleus"
+
+# Node binary executing the Next.js standalone server bundle.
+# Verified 2026-04-23 on nexdev host after npm-build step:
+#   /home/matthew/Projects/Active/nucleus/app/.next/standalone/server.js
+# Bundle ~3.0 GB total (includes full node_modules tree).
+# Regenerate via:
+#   nexdev --cwd '~/Projects/Active/nucleus/app' run -- npm run build
+image = "/usr/bin/node"
+
+# server.js is the Next.js standalone entry point; PORT + HOSTNAME
+# env vars control binding — see [environment] below.
+args = [
+  "/home/matthew/Projects/Active/nucleus/app/.next/standalone/server.js",
+]
+
+[process]
+element = "Process"
+contract = "ProcessRuntime"
+retires = "nexvigilant.com (Vercel — retired 2026-04-23)"
+
+[environment]
+# Next.js standalone reads PORT + HOSTNAME on startup.
+PORT = "9002"
+HOSTNAME = "0.0.0.0"
+# Production NODE_ENV — Next.js expects this at runtime.
+NODE_ENV = "production"
+# Build-time commit SHA for the /sovereignty page provenance footer.
+# Injected at `npm run build` via envsubst or direct substitution.
+# NEXT_PUBLIC_COMMIT_SHA = "<populated at build>"
+
+[gate]
+requires_smoke_test = true       # GET / returns 200
+requires_live_traffic_window = "7d"
+requires_rollback_rehearsal = true
+# Additional gate: the NVNC front-door (nexcore-relay Transport)
+# must be able to reverse-proxy to this process's PORT.
+requires_relay_ingress = true

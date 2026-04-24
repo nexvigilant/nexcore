@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Gemini CLI adapter for vigil-nexdev.
+#
+# vigil-nexdev calls its CLI with Claude's flag shape:
+#   --print --dangerously-skip-permissions --model <m>
+#   --output-format stream-json --verbose <prompt>
+#
+# Gemini CLI uses different flag names. This wrapper translates so an
+# operator can set VIGIL_CLI_BIN=~/nvnc/vigil-slim/gemini-wrap and the
+# same vigil-nexdev binary dispatches to Gemini instead of Claude.
+#
+# Prereq: `gemini` CLI on PATH (https://github.com/google/gemini-cli).
+# Auth:   GEMINI_API_KEY env or `gemini auth login`.
+#
+# Notes:
+#   - --dangerously-skip-permissions has no Gemini equivalent — dropped.
+#   - --output-format stream-json is claude-specific — dropped (Gemini
+#     streams plain text which vigil-nexdev's blocking /wake path
+#     handles fine; the /prompt SSE path assumes claude stream-json
+#     framing, so Gemini should only be used for /wake today).
+#   - Prompt is positional in Claude shape; Gemini reads stdin or -p.
+set -euo pipefail
+
+GEMINI_BIN="${GEMINI_BIN:-gemini}"
+model="gemini-1.5-pro-latest"
+prompt=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --print|--dangerously-skip-permissions|--verbose) shift;;
+    --output-format) shift 2;;
+    --model) model="$2"; shift 2;;
+    *) prompt="$1"; shift;;
+  esac
+done
+
+if [[ -n "$prompt" ]]; then
+  exec "$GEMINI_BIN" -m "$model" -p "$prompt"
+else
+  exec "$GEMINI_BIN" -m "$model"
+fi

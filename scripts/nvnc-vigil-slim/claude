@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Slim Claude shim for vigil-nexdev.
+#
+# The real /usr/bin/claude, when invoked inside a user's full harness,
+# serializes every plugin + skill + MCP tool definition into the first
+# API call. With 300+ skills + 3000+ MCP tools, the payload blows past
+# the 32MB client-side limit and every /wake fails before the prompt
+# even runs.
+#
+# This shim forces Claude into bare mode with a minimal MCP surface —
+# just nexcore-mcp (stdio), which carries cytokine_emit, brain_*,
+# guardian_*, and the rest of the operational tool set we actually
+# need for watchdog responses.
+#
+# Skills still resolve via /skill-name — nvnc-station-triage lives at
+# ~/.claude/skills/ and is reachable by the Skill tool inside the turn.
+set -euo pipefail
+
+# Strip any --add-dir/--settings from parent args that would re-expand
+# the harness. Keep vigil-nexdev's --print/--model/--output-format.
+exec /usr/bin/claude \
+  --bare \
+  --strict-mcp-config \
+  --mcp-config /home/matthew/nvnc/vigil-slim/mcp-nexcore.json \
+  "$@"

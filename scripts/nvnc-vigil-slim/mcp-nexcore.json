@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "nexcore": {
+      "type": "stdio",
+      "command": "/home/matthew/Projects/Active/nucleus/workspaces/nexcore/target/release/nexcore-mcp",
+      "args": [],
+      "env": {}
+    }
+  }
+}

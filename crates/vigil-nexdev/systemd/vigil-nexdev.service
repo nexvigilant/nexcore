@@ -1,0 +1,31 @@
+[Unit]
+Description=vigil-nexdev — autonomous Vigil node (headless Claude Code)
+Documentation=file:/home/matthew/Projects/Active/nucleus/workspaces/nexcore/crates/vigil-nexdev/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# NOTE: this is a --user unit — User/Group are implicit (owning user) and
+# explicit directives cause "Failed to determine supplementary groups" (216/GROUP).
+WorkingDirectory=/home/matthew/Projects/Active/nucleus/workspaces/nexcore
+ExecStart=/home/matthew/Projects/Active/nucleus/workspaces/nexcore/target/release/vigil-nexdev
+Restart=always
+RestartSec=3
+# Give the daemon access to gcloud, cargo, the claude CLI, and user binaries.
+Environment=PATH=/home/matthew/.cargo/bin:/home/matthew/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=RUST_LOG=vigil_nexdev=info,axum=info
+# HOME must be set so ~/.claude/ hook scripts resolve.
+Environment=HOME=/home/matthew
+# Sovereign inference endpoint. When nexcore-vigil-train serve is running,
+# this routes every claude subprocess away from Anthropic to the local model.
+# Comment out to fall back to Anthropic.
+Environment=ANTHROPIC_BASE_URL=http://127.0.0.1:8090
+# Journald captures stderr (tracing writes there).
+StandardOutput=journal
+StandardError=journal
+# No hardening — scope is intentionally unbounded.
+# Vigil needs to edit files, run cargo, commit, call gcloud, etc.
+
+[Install]
+WantedBy=default.target

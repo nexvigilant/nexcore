@@ -1,0 +1,76 @@
+# NexCloud Platform Manifest — Production (sovereign stack hosting)
+#
+# Intended host: nexdev (c3-highmem-22, us-central1-a)
+# Intended external hostname: api-sov.nexvigilant.com  (Phase C: CNAME cutover)
+#
+# Start:    nexdev 'cd ~/Projects/Active/nucleus/workspaces/nexcore && target/release/nexcloud --manifest nexcloud-prod.toml start'
+# Validate: nexdev 'cd ~/Projects/Active/nucleus/workspaces/nexcore && target/release/nexcloud --manifest nexcloud-prod.toml validate'
+#
+# Supervises three sovereign services:
+#   :3030  nexcore-api         — REST gateway (terminal WS, /v1/* routes)
+#   :7823  vigil-nexdev        — autonomous agent daemon
+#   :8090  nexcore-vigil-train — Anthropic-wire-compat inference (candle-core)
+#
+# Public proxy on :8080 routes all external traffic to nexcore-api.
+# vigil-nexdev + vigil-train bind loopback only — inter-service traffic
+# never leaves 127.0.0.1 on the VM.
+
+[platform]
+name = "nexvigilant-sovereign-stack"
+log_dir = "/home/matthew/.local/state/nexcloud/logs"
+
+[proxy]
+http_port = 8080
+
+# ── Services ──────────────────────────────────────────────────────────
+
+# Sovereign inference engine — pure Rust candle-core, Qwen 2.5 1.5B
+[[service]]
+name = "vigil-train"
+binary = "/home/matthew/Projects/Active/nucleus/workspaces/nexcore/target/release/nexcore-vigil-train"
+args = [
+    "serve",
+    "--bind", "127.0.0.1:8090",
+    "--model-dir", "/home/matthew/.claude/brain/vigil-qwen-v1",
+    "--dtype", "f32",
+    "--model-id", "vigil-qwen-v1",
+]
+port = 8090
+health = "/v1/models"
+restart = "on-failure"
+max_restarts = 5
+backoff_ms = 3000
+env = { RUST_LOG = "info" }
+
+# Autonomous Vigil daemon — HTTP surface on /prompt /wake /sovereign.
+# Depends on vigil-train so `/sovereign` requests have a backend.
+[[service]]
+name = "vigil-nexdev"
+binary = "/home/matthew/Projects/Active/nucleus/workspaces/nexcore/target/release/vigil-nexdev"
+port = 7823
+health = "/health"
+restart = "on-failure"
+max_restarts = 5
+backoff_ms = 2000
+depends_on = ["vigil-train"]
+env = { ANTHROPIC_BASE_URL = "http://127.0.0.1:8090", RUST_LOG = "vigil_nexdev=info", HOME = "/home/matthew", VIGIL_CLI_BIN = "/home/matthew/nvnc/vigil-slim/claude", PATH = "/home/matthew/.cargo/bin:/home/matthew/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" }
+
+# Public-facing REST gateway — what external callers hit on :8080.
+[[service]]
+name = "nexcore-api"
+binary = "/home/matthew/Projects/Active/nucleus/workspaces/nexcore/target/release/nexcore-api"
+port = 3030
+health = "/health"
+restart = "on-failure"
+max_restarts = 5
+backoff_ms = 2000
+env = { PORT = "3030", BIND_ADDR = "127.0.0.1", RUST_LOG = "nexcore_api=info,tower_http=info", HOME = "/home/matthew" }
+
+# ── Routes ────────────────────────────────────────────────────────────
+
+# Every public path to nexcore-api. vigil-nexdev and vigil-train are
+# internal services — accessed by nexcore-api or each other, never
+# exposed on the public :8080 port.
+[[route]]
+match_prefix = "/"
+backend = "nexcore-api"

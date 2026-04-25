@@ -71,8 +71,13 @@ impl From<Exception> for MoltError {
     }
 }
 
-// Note: From<MoltError> for NexError is provided by the blanket impl
-// `impl<E: Error + Send + Sync + 'static> From<E> for NexError` in nexcore-error.
+// Explicit From<MoltError> impl for nexcore_error::NexError.
+// (No blanket impl exists in nexcore-error — only typed conversions.)
+impl From<MoltError> for NexError {
+    fn from(err: MoltError) -> Self {
+        NexError::msg(err.to_string())
+    }
+}
 
 /// Convenience type alias for Molt operations.
 pub type Result<T> = std::result::Result<T, MoltError>;

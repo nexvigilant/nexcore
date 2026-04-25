@@ -97,8 +97,12 @@ pub async fn run_power(state: Arc<StationState>, source: Arc<dyn BmsSource>) {
                 snap.tick = tick;
                 snap.power_state = "Fault";
             }
-            Err(BmsError::Exhausted) => {
+            Err(BmsError::Exhausted | BmsError::ReplayExhausted) => {
                 warn!(tick, "bms source exhausted — halting power loop");
+                break;
+            }
+            Err(other) => {
+                warn!(tick, error = %other, "bms unexpected error — halting power loop");
                 break;
             }
         }

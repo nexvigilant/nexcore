@@ -9728,9 +9728,12 @@ version = "0.1.0"
 dependencies = [
  "nexcore-error-derive",
  "reqwest 0.12.28",
+ "rmcp",
  "rusqlite",
  "serde",
  "serde_json",
+ "tokio",
+ "tracing-subscriber",
 ]
 
 [[package]]

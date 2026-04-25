@@ -158,3 +158,59 @@ impl From<reqwest::Error> for NexError {
         }
     }
 }
+
+/// Conversion from `rmcp::service::ServerInitializeError`.
+///
+/// MCP server bootstrap errors map to a stringified context — the underlying
+/// rmcp error type is held in `source` for chained debug output.
+#[cfg(feature = "mcp")]
+impl From<rmcp::service::ServerInitializeError> for NexError {
+    fn from(err: rmcp::service::ServerInitializeError) -> Self {
+        Self {
+            inner: Box::new(format!("rmcp serve: {err}")),
+            source: Some(Box::new(err)),
+        }
+    }
+}
+
+/// Conversion from `tokio::task::JoinError`.
+///
+/// `service.waiting().await?` and other tokio task joins routinely produce
+/// these — short-circuit at the boundary instead of repeating .map_err glue.
+#[cfg(feature = "tokio_runtime")]
+impl From<tokio::task::JoinError> for NexError {
+    fn from(err: tokio::task::JoinError) -> Self {
+        Self {
+            inner: Box::new(format!("tokio join: {err}")),
+            source: Some(Box::new(err)),
+        }
+    }
+}
+
+/// Conversion from `tokio::time::error::Elapsed`.
+///
+/// `tokio::time::timeout` returns this on deadline expiry. `nexcore-mcp-stdio`
+/// hits this on read-response paths.
+#[cfg(feature = "tokio_runtime")]
+impl From<tokio::time::error::Elapsed> for NexError {
+    fn from(err: tokio::time::error::Elapsed) -> Self {
+        Self {
+            inner: Box::new(format!("tokio timeout: {err}")),
+            source: Some(Box::new(err)),
+        }
+    }
+}
+
+/// Conversion from `tracing_subscriber::filter::ParseError`.
+///
+/// EnvFilter directive parsing produces this; ubiquitous in MCP server
+/// `main.rs` files via `.add_directive("name=info".parse()?)`.
+#[cfg(feature = "tracing_filter")]
+impl From<tracing_subscriber::filter::ParseError> for NexError {
+    fn from(err: tracing_subscriber::filter::ParseError) -> Self {
+        Self {
+            inner: Box::new(format!("tracing filter parse: {err}")),
+            source: Some(Box::new(err)),
+        }
+    }
+}

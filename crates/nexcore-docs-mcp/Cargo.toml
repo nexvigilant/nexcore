@@ -26,7 +26,7 @@ serde_json = { version = "1.0.120" }
 
 # HTTP client for fetching docs
 reqwest = { version = "0.12", features = ["json"] }
-nexcore-error = { workspace = true }
+nexcore-error = { workspace = true, features = ["mcp", "tokio_runtime", "tracing_filter"] }
 
 # Caching
 moka = { version = "0.12", features = ["future"] }

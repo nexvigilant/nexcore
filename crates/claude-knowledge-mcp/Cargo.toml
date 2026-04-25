@@ -27,7 +27,7 @@ serde_json = { workspace = true }
 schemars = { version = "1.0" }
 
 # Error handling
-nexcore-error = { workspace = true }
+nexcore-error = { workspace = true, features = ["mcp", "tokio_runtime", "tracing_filter"] }
 
 # Logging
 tracing = { workspace = true }

@@ -42,7 +42,9 @@ pub struct GSheetsMcpServer {
 impl GSheetsMcpServer {
     /// Create the server, authenticating with Google on startup.
     pub async fn new() -> Result<Self, nexcore_error::NexError> {
-        let client = SheetsClient::new().await?;
+        let client = SheetsClient::new()
+            .await
+            .map_err(|e| nexcore_error::NexError::msg(e.to_string()))?;
         Ok(Self {
             tool_router: Self::tool_router(),
             client: Arc::new(client),

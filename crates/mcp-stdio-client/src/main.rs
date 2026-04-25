@@ -129,7 +129,9 @@ async fn read_response(
     timeout_ms: u64,
 ) -> Result<Value> {
     let deadline = Duration::from_millis(timeout_ms);
-    let resp = timeout(deadline, find_id_in_stream(reader, id)).await??;
+    let resp = timeout(deadline, find_id_in_stream(reader, id))
+        .await
+        .map_err(|e| nexcore_error::NexError::msg(format!("timeout: {e}")))??;
     Ok(resp)
 }
 

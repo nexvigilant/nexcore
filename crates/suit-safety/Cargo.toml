@@ -8,6 +8,7 @@ description = "Safety system — ballistic recovery, fire suppression, e-stop, r
 [dependencies]
 wksp-types = { path = "../wksp-types", version = "1.0.0" }
 nexcore-error = { workspace = true }
+serde = { workspace = true }
 tracing = { workspace = true }
 
 [lints]

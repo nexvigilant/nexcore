@@ -111,7 +111,7 @@ fn convert_all_crates(
     let mut count_errors = 0;
 
     for entry in walkdir::WalkDir::new(&crates_dir).min_depth(1).max_depth(2) {
-        let entry = entry?;
+        let entry = entry.map_err(|e| nexcore_error::NexError::msg(e.to_string()))?;
         if entry.file_name() != "Cargo.toml" {
             continue;
         }

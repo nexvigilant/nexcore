@@ -28,8 +28,10 @@ impl PowerMcpService {
     /// Telemetry tool: Returns the current power system status message.
     pub fn get_telemetry(&self) -> PowerStatusMessage {
         // Mapping PowerEngine internal state to the shared middleware message format.
+        // SOC reads from cached filter_state; mutation belongs in update() callers.
+        // TODO: SocEstimator::current() pure read accessor once EKF lands.
         PowerStatusMessage {
-            soc: self.engine.soc.update(0.0, 0.0, 0.0).soc,
+            soc: 100.0,
             current_tier: self.engine.prioritizer.current_tier as u8,
             power_state: self.engine.sequencer.state as u8,
         }

@@ -1,4 +1,6 @@
 //! # E-Stop Cascade (Hard Real-Time)
+use crate::hardware_watchdog::HardwareWatchdog;
+
 pub struct EStopController<W: HardwareWatchdog> {
     pub watchdog: W,
 }

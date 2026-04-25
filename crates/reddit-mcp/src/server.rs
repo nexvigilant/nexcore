@@ -75,8 +75,12 @@ impl RedditServer {
             .clone()
             .ok_or_else(|| nexerror!("Reddit credentials not configured"))?;
 
-        let mut client = RedditClient::new(config)?;
-        client.authenticate().await?;
+        let mut client = RedditClient::new(config)
+            .map_err(|e| nexcore_error::NexError::msg(e.to_string()))?;
+        client
+            .authenticate()
+            .await
+            .map_err(|e| nexcore_error::NexError::msg(e.to_string()))?;
 
         info!("Authenticated with Reddit API");
 

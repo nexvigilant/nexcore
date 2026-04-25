@@ -1,6 +1,6 @@
 use suit_flight::ControlBridge;
 use suit_perception::perception_engine::PerceptionEngine;
-use suit_power_core::engine::PowerEngine;
+use suit_power::engine::PowerEngine;
 use wksp_types::perception::InertialMessage;
 
 fn main() {
@@ -32,7 +32,7 @@ fn main() {
         10.0,
         25.0,
         8000.0,
-        &suit_power_core::mission::MissionForecast {
+        &suit_power::mission::MissionForecast {
             load_forecast: vec![],
         },
     );

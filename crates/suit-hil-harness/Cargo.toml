@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 wksp-types = { path = "../wksp-types" }
 suit-perception = { path = "../suit-perception" }
-suit-power-core = { path = "../suit-power-core" }
+suit-power = { path = "../suit-power" }
 suit-flight = { path = "../suit-flight" }
 suit-safety = { path = "../suit-safety" }
 tracing = { workspace = true }

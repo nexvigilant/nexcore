@@ -75,7 +75,9 @@ impl FileSystemResolver {
     fn read_workspace_version(&self) -> Result<String> {
         let root_toml = self.workspace_root.join("Cargo.toml");
         let contents = std::fs::read_to_string(&root_toml)?;
-        let doc: DocumentMut = contents.parse()?;
+        let doc: DocumentMut = contents
+            .parse()
+            .map_err(|e: toml_edit::TomlError| nexcore_error::NexError::msg(e.to_string()))?;
         doc["workspace"]["package"]["version"]
             .as_str()
             .map(|s| s.to_string())
@@ -817,7 +819,9 @@ pub fn convert_crate_file(
     let workspace_toml = std::fs::read_to_string(workspace_root.join("Cargo.toml"))
         .with_context(|| "Failed to read workspace Cargo.toml".to_string())?;
 
-    let workspace_doc: DocumentMut = workspace_toml.parse()?;
+    let workspace_doc: DocumentMut = workspace_toml
+        .parse()
+        .map_err(|e: toml_edit::TomlError| nexcore_error::NexError::msg(e.to_string()))?;
     let ws_deps = parse_workspace_deps(&workspace_doc)?;
     let fs_resolver = FileSystemResolver::new(workspace_root.to_path_buf());
 

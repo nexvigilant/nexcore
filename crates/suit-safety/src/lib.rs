@@ -11,6 +11,7 @@
 #![warn(missing_docs)]
 
 pub mod e_stop;
+pub mod hardware_watchdog;
 pub mod logger;
 pub mod recovery;
 pub mod suppression;

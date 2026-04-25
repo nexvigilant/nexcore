@@ -40,6 +40,27 @@ where
     }
 }
 
+/// Option impl: `.context(msg)` converts `None` into a `NexError` with the given message.
+impl<T> Context<T> for core::option::Option<T> {
+    fn context<C: fmt::Display + Send + Sync + 'static>(self, ctx: C) -> Result<T> {
+        match self {
+            Some(t) => Ok(t),
+            None => Err(NexError::msg(ctx)),
+        }
+    }
+
+    fn with_context<C, F>(self, f: F) -> Result<T>
+    where
+        C: fmt::Display + Send + Sync + 'static,
+        F: FnOnce() -> C,
+    {
+        match self {
+            Some(t) => Ok(t),
+            None => Err(NexError::msg(f())),
+        }
+    }
+}
+
 #[cfg(not(feature = "std"))]
 impl<T> Context<T> for Result<T, NexError> {
     fn context<C: fmt::Display + Send + Sync + 'static>(self, ctx: C) -> Result<T> {

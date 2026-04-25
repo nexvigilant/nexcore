@@ -43,8 +43,16 @@ async fn main() -> Result<()> {
         .with_writer(std::io::stderr)
         .with_env_filter(
             tracing_subscriber::EnvFilter::from_default_env()
-                .add_directive("reddit_mcp=info".parse()?)
-                .add_directive("rmcp=warn".parse()?),
+                .add_directive(
+                    "reddit_mcp=info"
+                        .parse()
+                        .map_err(|e| nexcore_error::NexError::msg(format!("filter parse: {e}")))?,
+                )
+                .add_directive(
+                    "rmcp=warn"
+                        .parse()
+                        .map_err(|e| nexcore_error::NexError::msg(format!("filter parse: {e}")))?,
+                ),
         )
         .init();
 
@@ -57,8 +65,14 @@ async fn main() -> Result<()> {
     let handler = server::RedditServer::new()?;
 
     // Run MCP server over stdio
-    let service = handler.serve(stdio()).await?;
-    service.waiting().await?;
+    let service = handler
+        .serve(stdio())
+        .await
+        .map_err(|e| nexcore_error::NexError::msg(format!("serve: {e}")))?;
+    service
+        .waiting()
+        .await
+        .map_err(|e| nexcore_error::NexError::msg(format!("waiting: {e}")))?;
 
     info!("Reddit MCP Server shutdown");
     Ok(())

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Represents the suit's internal sense of balance and absolute position.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct InertialState {
     /// Acceleration in X, Y, Z (m/s^2)
     pub acceleration: [f32; 3],

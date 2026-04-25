@@ -15,7 +15,7 @@ fn main() -> Result<()> {
 
     let skills_dir = dirs::home_dir()
         .map(|h| h.join(".claude/skills"))
-        .context("Cannot find home directory")?;
+        .ok_or_else(|| nexcore_error::NexError::msg("Cannot find home directory"))?;
 
     if !skills_dir.exists() {
         println!(

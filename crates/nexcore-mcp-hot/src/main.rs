@@ -40,7 +40,10 @@ async fn main() -> nexcore_error::Result<()> {
 
     let proxy_config = config.into_proxy_config();
     let mut proxy = StdioProxy::<McpCapture>::new(proxy_config);
-    proxy.run().await?;
+    proxy
+        .run()
+        .await
+        .map_err(|e| nexcore_error::NexError::msg(format!("proxy: {e}")))?;
 
     Ok(())
 }

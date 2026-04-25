@@ -13,8 +13,11 @@ use skills_mcp::SkillsMcpServer;
 async fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
-            tracing_subscriber::EnvFilter::from_default_env()
-                .add_directive("skills_mcp=info".parse()?),
+            tracing_subscriber::EnvFilter::from_default_env().add_directive(
+                "skills_mcp=info"
+                    .parse()
+                    .map_err(|e| nexcore_error::NexError::msg(format!("filter parse: {e}")))?,
+            ),
         )
         .with_writer(std::io::stderr)
         .init();
@@ -31,8 +34,14 @@ async fn main() -> Result<()> {
     tracing::info!("Starting Skills MCP server (stdio)");
 
     let server = SkillsMcpServer::new()?;
-    let service = server.serve(stdio()).await?;
-    service.waiting().await?;
+    let service = server
+        .serve(stdio())
+        .await
+        .map_err(|e| nexcore_error::NexError::msg(format!("serve: {e}")))?;
+    service
+        .waiting()
+        .await
+        .map_err(|e| nexcore_error::NexError::msg(format!("waiting: {e}")))?;
 
     Ok(())
 }

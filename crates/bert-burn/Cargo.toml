@@ -14,7 +14,7 @@ categories = ["science", "algorithms"]
 workspace = true
 
 [dependencies]
-burn = { workspace = true }
+burn = { workspace = true, features = ["std", "autodiff", "ndarray", "train"] }
 burn-ndarray = { workspace = true }
 rand = { workspace = true }
 serde = { workspace = true }

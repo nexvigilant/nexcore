@@ -1,0 +1,37 @@
+[package]
+name = "stark-suit-station"
+version = "0.1.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
+repository.workspace = true
+homepage.workspace = true
+description = "Iron Vigil Stark Suit station daemon — runs all 4 compounds as control loops and exposes them via MCP"
+
+keywords = ["nexcore", "stark", "suit", "daemon", "mcp"]
+categories = ["embedded", "hardware-support"]
+
+[[bin]]
+name = "stark-suit-station"
+path = "src/main.rs"
+
+[dependencies]
+stark-suit       = { path = "../stark-suit" }
+suit-perception  = { path = "../suit-perception" }
+suit-power       = { path = "../suit-power" }
+suit-flight      = { path = "../suit-flight" }
+suit-thermal     = { path = "../suit-thermal" }
+suit-safety      = { path = "../suit-safety" }
+
+nexcore-error = { workspace = true, features = ["mcp", "tokio_runtime", "tracing_filter", "json"] }
+tokio         = { workspace = true }
+serde         = { workspace = true }
+serde_json    = { workspace = true }
+schemars      = "1.2"
+rmcp          = { version = "0.14", features = ["server", "transport-io"] }
+tracing       = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+clap          = { workspace = true }
+
+[lints]
+workspace = true

@@ -1,0 +1,37 @@
+[package]
+name = "stark-suit"
+version = "0.1.0"
+edition = "2024"
+authors = ["NexVigilant Team <team@nexvigilant.com>"]
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
+repository.workspace = true
+homepage.workspace = true
+description = "Iron Vigil Stark Suit — unified umbrella for the 12 component crates organized into 4 compounds (perception, control, power, human-interface)"
+
+keywords = ["nexcore", "stark", "suit", "wearable"]
+categories = ["embedded", "hardware-support"]
+
+[dependencies]
+# Compound: PERCEPTION
+suit-primitives = { path = "../suit-primitives" }
+suit-sensors    = { path = "../suit-sensors" }
+suit-perception = { path = "../suit-perception" }
+
+# Compound: CONTROL
+suit-actuator   = { path = "../suit-actuator" }
+suit-flight     = { path = "../suit-flight" }
+suit-compute    = { path = "../suit-compute" }
+
+# Compound: POWER + THERMAL
+suit-power      = { path = "../suit-power" }
+suit-power-mcp  = { path = "../suit-power-mcp" }
+suit-thermal    = { path = "../suit-thermal" }
+
+# Compound: HUMAN-INTERFACE
+suit-hud        = { path = "../suit-hud" }
+suit-voice      = { path = "../suit-voice" }
+suit-comms      = { path = "../suit-comms" }
+suit-safety     = { path = "../suit-safety" }
+
+[lints]
+workspace = true

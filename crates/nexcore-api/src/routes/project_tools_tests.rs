@@ -3,6 +3,9 @@
 //! Happy-path tests require MCP server runtime (integration test territory).
 //! These tests cover all error paths: missing project, wrong circle, FORBIDDEN.
 
+#![cfg(test)]
+
+
 use super::circles;
 use super::project_tools::*;
 use super::projects;
@@ -113,6 +116,7 @@ async fn test_signal_detect_wrong_circle() {
             name: "P".to_string(),
             description: "D".to_string(),
             project_type: None,
+            loop_method: None,
             therapeutic_area: None,
             drug_names: None,
             indications: None,

@@ -1,5 +1,8 @@
 //! Tests for projects & deliverables endpoints (9 handlers → 26 tests)
 
+#![cfg(test)]
+
+
 use super::circles;
 use super::projects::*;
 use crate::ApiState;
@@ -59,6 +62,7 @@ fn project_req(user: &str) -> CreateProjectRequest {
         name: "Signal Detection Study".to_string(),
         description: "Investigating drug X adverse events".to_string(),
         project_type: Some("signal_detection".to_string()),
+        loop_method: None,
         therapeutic_area: Some("Oncology".to_string()),
         drug_names: Some(vec!["DrugX".to_string()]),
         indications: None,

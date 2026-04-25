@@ -802,7 +802,10 @@ mod tests {
             .with_pv_sensors()
             .with_default_actuators();
 
-        let result = loop_ctrl.tick().await?;
+        let result = loop_ctrl
+            .tick()
+            .await
+            .map_err(|e| nexcore_error::NexError::msg(e.to_string()))?;
         assert!(!result.cycle_id.is_empty());
         assert!(!result.signals.is_empty());
         Ok(())

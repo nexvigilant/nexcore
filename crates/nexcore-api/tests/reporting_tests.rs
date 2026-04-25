@@ -8,7 +8,7 @@ use std::sync::Arc;
 use tower::util::ServiceExt;
 
 #[tokio::test]
-async fn test_reporting_flow() -> nexcore_error::Result<()> {
+async fn test_reporting_flow() -> Result<(), Box<dyn std::error::Error>> {
     let persistence = Arc::new(Persistence::Mock(MockPersistence::new()));
     let skill_state = nexcore_api::routes::skills::SkillAppState::default();
     let state = ApiState {

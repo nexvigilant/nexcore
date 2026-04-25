@@ -1,5 +1,8 @@
 //! Tests for publications & collaboration endpoints (6 handlers → 14 tests)
 
+#![cfg(test)]
+
+
 use super::circles;
 use super::projects;
 use super::publications::*;
@@ -49,6 +52,7 @@ async fn seed_approved_deliverable(state: &ApiState) -> (String, String, String)
             name: "Study".to_string(),
             description: "Study desc".to_string(),
             project_type: None,
+            loop_method: None,
             therapeutic_area: None,
             drug_names: None,
             indications: None,
@@ -176,6 +180,7 @@ async fn test_publish_deliverable_not_approved() {
             name: "S".to_string(),
             description: "D".to_string(),
             project_type: None,
+            loop_method: None,
             therapeutic_area: None,
             drug_names: None,
             indications: None,

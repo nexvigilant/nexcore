@@ -10,18 +10,10 @@
 
 use stark_suit_test_pty::TestPty;
 
-// Re-export the BMS module from the binary crate's internal path. Cargo
-// integration tests cannot import bin-only modules directly, so we duplicate
-// the minimum necessary surface as `pub` re-export via a `lib.rs` would —
-// since this crate is bin-only, we route through `include!` of the actual
-// source. The cleaner path is to make stark-suit-station also a library
-// (lib + bin), but that's a follow-on refactor. For now we exercise the
-// contract via the binary's BmsFrame schema parsed from the wire.
+// v0.5: stark-suit-station is now lib + bin, so the BMS surface imports
+// through the public API instead of the v0.4 `#[path]` hack.
 
-#[path = "../src/bms.rs"]
-mod bms;
-
-use bms::{BmsFrame, BmsSource, FRAME_VERSION, PowerTier, SerialBmsSource};
+use stark_suit_station::bms::{BmsFrame, BmsSource, FRAME_VERSION, PowerTier, SerialBmsSource};
 
 fn frame(soc: f32, ts_ms: u64, tier: PowerTier) -> BmsFrame {
     BmsFrame {

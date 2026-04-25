@@ -14,14 +14,10 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
-mod bms;
-mod loops;
-mod mcp;
-mod state;
-
-use crate::bms::{BmsSource, MockBmsSource, ReplayBmsSource, SerialBmsSource};
-use crate::mcp::StarkSuitMcpServer;
-use crate::state::StationState;
+use stark_suit_station::bms::{BmsSource, MockBmsSource, ReplayBmsSource, SerialBmsSource};
+use stark_suit_station::mcp::StarkSuitMcpServer;
+use stark_suit_station::state::StationState;
+use stark_suit_station::loops;
 use clap::{Parser, Subcommand, ValueEnum};
 use nexcore_error::Result;
 use rmcp::ServiceExt;

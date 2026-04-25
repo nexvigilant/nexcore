@@ -1,0 +1,13 @@
+[package]
+name = "stark-suit-test-pty"
+version = "0.1.0"
+edition = "2024"
+license = "LicenseRef-NexVigilant-Proprietary-1.0"
+description = "PTY loopback fixture for stark-suit BMS serial backend testing"
+
+[dependencies]
+nix = { version = "=0.31.2", features = ["term"] }
+tokio = { workspace = true, features = ["fs", "io-util", "rt", "macros"] }
+
+[lints]
+workspace = true

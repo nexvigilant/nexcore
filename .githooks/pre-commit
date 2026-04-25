@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Workspace-level pre-commit hook.
+#
+# Activate via: `git config core.hooksPath .githooks` (run once per clone).
+#
+# Currently delegates to per-feature gates. Add new gates by appending lines
+# below — each gate must exit non-zero on failure and write to stderr.
+
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+# Stark Suit snapshot contract — runs only if the binary is present so first-time
+# clones don't fail the hook before the workspace has been built.
+BIN="${CARGO_TARGET_DIR:-${REPO_ROOT}/target}/release/stark-suit-station"
+if [[ -x "$BIN" ]]; then
+    "${REPO_ROOT}/crates/stark-suit-station/scripts/pre-commit-snapshot.sh"
+fi
+
+exit 0

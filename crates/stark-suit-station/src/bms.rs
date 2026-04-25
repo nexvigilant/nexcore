@@ -4,7 +4,10 @@
 //!
 //! - `MockBmsSource`   — baked-in 5-frame trace, smoke-stable default
 //! - `ReplayBmsSource` — NDJSON file replay at recorded cadence (or `--speedup N`)
-//! - `SerialBmsSource` — JSON-over-serial (`tokio-serial`); deferred when no hw
+//! - `SerialBmsSource` — JSON-over-serial via `tokio-serial`; loopback-validated
+//!                       through `stark-suit-test-pty`. Hardware fidelity
+//!                       (real USB-serial adapter) is a follow-on layer —
+//!                       same code path, different device argument.
 //!
 //! Wire format: NDJSON, UTF-8, one `BmsFrame` JSON object per line. Every frame
 //! carries a `version: u32` (currently `1`) and `ts_ms: u64` (epoch millis).
@@ -313,6 +316,69 @@ impl BmsSource for ReplayBmsSource {
         } else {
             SourceHealth::Alive
         }
+    }
+}
+
+/// Serial backend: opens any path the kernel exposes as a serial-class
+/// device (`/dev/ttyUSB0` for hardware, `/dev/pts/N` for pty fixtures) and
+/// reads NDJSON one line per `poll()`.
+///
+/// Validated against `stark-suit-test-pty` loopback. Hardware fidelity
+/// (USB-serial adapter) is a follow-on layer — same code, real device path.
+pub struct SerialBmsSource {
+    inner: tokio::sync::Mutex<SerialReader>,
+}
+
+struct SerialReader {
+    reader: tokio::io::BufReader<tokio_serial::SerialStream>,
+    line_buf: String,
+}
+
+impl SerialBmsSource {
+    /// Open the named serial device at `baud` baud, 8N1.
+    pub fn open(port: &str, baud: u32) -> Result<Self, BmsError> {
+        use tokio_serial::SerialPortBuilderExt;
+        let stream = tokio_serial::new(port, baud)
+            .data_bits(tokio_serial::DataBits::Eight)
+            .parity(tokio_serial::Parity::None)
+            .stop_bits(tokio_serial::StopBits::One)
+            .open_native_async()
+            .map_err(|e| BmsError::Io(format!("open {port}: {e}")))?;
+        Ok(Self {
+            inner: tokio::sync::Mutex::new(SerialReader {
+                reader: tokio::io::BufReader::new(stream),
+                line_buf: String::with_capacity(512),
+            }),
+        })
+    }
+}
+
+impl BmsSource for SerialBmsSource {
+    fn poll(&self) -> Pin<Box<dyn std::future::Future<Output = Result<BmsFrame, BmsError>> + Send + '_>> {
+        Box::pin(async move {
+            use tokio::io::AsyncBufReadExt;
+            let mut guard = self.inner.lock().await;
+            let SerialReader { reader, line_buf } = &mut *guard;
+            line_buf.clear();
+            let n = reader
+                .read_line(line_buf)
+                .await
+                .map_err(|e| BmsError::Io(format!("read_line: {e}")))?;
+            if n == 0 {
+                return Err(BmsError::Exhausted);
+            }
+            let trimmed = line_buf.trim();
+            let frame: BmsFrame = serde_json::from_str(trimmed)
+                .map_err(|e| BmsError::Io(format!("parse: {e}")))?;
+            if frame.version != FRAME_VERSION {
+                return Err(BmsError::UnsupportedVersion(frame.version));
+            }
+            Ok(frame)
+        })
+    }
+
+    fn health(&self) -> SourceHealth {
+        SourceHealth::Alive
     }
 }
 

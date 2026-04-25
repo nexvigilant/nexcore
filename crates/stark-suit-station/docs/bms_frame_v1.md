@@ -36,3 +36,27 @@ Every frame carries an explicit `version: u32` field. A reader that encounters a
 Bump `FRAME_VERSION` **only** when an existing field changes type, semantics, or required-ness. Adding a new optional field with a `#[serde(default)]` does not require a bump — old readers ignore unknown fields and new readers fall back. Removing a field requires a bump and a parser branch for the older version.
 
 Source: `crates/stark-suit-station/src/bms.rs`, `FRAME_VERSION` constant.
+
+## Hardware fidelity
+
+The `SerialBmsSource` backend is validated against `stark-suit-test-pty`, which spawns a kernel pseudoterminal pair via `nix::pty::openpty`. The slave path (`/dev/pts/N`) is opened by `tokio-serial::open_native_async` exactly as `/dev/ttyUSB0` would be — the kernel does not distinguish.
+
+What the pty round-trip proves:
+- **Protocol fidelity** — NDJSON framing, line-delimited reads, version handshake, schema parse compatibility across the byte stream boundary.
+- **Trait abstraction** — three backends (Mock, Replay, Serial) pass the same frame-for-frame equality contract test on the persisted fields.
+
+What the pty round-trip does NOT prove:
+- **Physical-layer fidelity** — baud-rate sync, parity drift, USB hot-unplug, electrical noise, CAN-vs-UART framing. These require silicon.
+- **Driver-level edge cases** — `tcdrain`, kernel buffer overruns at sustained 115200 baud, FTDI vs CH340 chip-specific quirks.
+
+When a USB-serial loopback adapter (~$8) or a microcontroller emitting test frames is on the bench, re-run `serial_pty_roundtrip.rs` against the real device path (`--port /dev/ttyUSB0`). The test code itself does not change — only the path argument. Until then, the Serial backend is **loopback-validated; hardware fidelity pending**.
+
+## Backend matrix
+
+| Backend | Wire path | Validation today | Pending |
+|---|---|---|---|
+| Mock | in-memory baked trace | unit (3 tests) | — |
+| Replay | NDJSON file | unit + round-trip equality | — |
+| Serial | `/dev/pts/*` (pty) or `/dev/tty*` (hardware) | pty round-trip | physical layer |
+| CAN | TBD | deferred to v0.5+ | codec, transport |
+

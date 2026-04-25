@@ -19,7 +19,7 @@ mod loops;
 mod mcp;
 mod state;
 
-use crate::bms::{BmsSource, MockBmsSource, ReplayBmsSource};
+use crate::bms::{BmsSource, MockBmsSource, ReplayBmsSource, SerialBmsSource};
 use crate::mcp::StarkSuitMcpServer;
 use crate::state::StationState;
 use clap::{Parser, Subcommand, ValueEnum};
@@ -39,8 +39,10 @@ enum BmsBackend {
     Mock,
     /// Replay an NDJSON trace file recorded earlier.
     Replay,
-    /// Live JSON-over-serial (deferred — requires hardware).
+    /// Live JSON-over-serial. Requires `--port` (real `/dev/ttyUSB*` or pty path).
     Serial,
+    /// CAN 11-bit identifier frames. Deferred to v0.5+ (no codec yet).
+    Can,
 }
 
 /// CLI entry.
@@ -57,7 +59,7 @@ enum Cmd {
     /// Spawn 4 control loops + serve MCP over stdio (default).
     Run {
         /// BMS backend. `mock` is default; `replay` requires `--trace`;
-        /// `serial` is deferred to v0.4 (returns an error).
+        /// `serial` requires `--port`; `can` is deferred to v0.5+.
         #[arg(long, value_enum, default_value_t = BmsBackend::Mock)]
         bms_source: BmsBackend,
         /// NDJSON file to replay (required when `--bms-source replay`).
@@ -66,6 +68,12 @@ enum Cmd {
         /// Replay speedup factor (1.0 = recorded cadence, 10.0 = 10x faster).
         #[arg(long, default_value_t = 1.0)]
         speedup: f64,
+        /// Serial device path (required when `--bms-source serial`).
+        #[arg(long)]
+        port: Option<String>,
+        /// Serial baud rate.
+        #[arg(long, default_value_t = 115200)]
+        baud: u32,
     },
     /// Spawn loops, wait 1 second, print snapshot, exit.
     Status,
@@ -103,8 +111,12 @@ async fn main() -> Result<()> {
         bms_source: BmsBackend::Mock,
         trace: None,
         speedup: 1.0,
+        port: None,
+        baud: 115200,
     }) {
-        Cmd::Run { bms_source, trace, speedup } => run_daemon(bms_source, trace, speedup).await,
+        Cmd::Run { bms_source, trace, speedup, port, baud } => {
+            run_daemon(bms_source, trace, speedup, port, baud).await
+        }
         Cmd::Status => run_status().await,
         Cmd::Tick => run_tick().await,
         Cmd::Record { out, seconds, bms_source, trace } => {
@@ -119,6 +131,8 @@ fn build_source(
     backend: BmsBackend,
     trace: Option<PathBuf>,
     speedup: f64,
+    port: Option<String>,
+    baud: u32,
 ) -> Result<Arc<dyn BmsSource>> {
     match backend {
         BmsBackend::Mock => Ok(Arc::new(MockBmsSource::new())),
@@ -131,14 +145,29 @@ fn build_source(
             })?;
             Ok(Arc::new(src))
         }
-        BmsBackend::Serial => Err(nexcore_error::NexError::msg(
-            "--bms-source serial is deferred to v0.4 (no live hardware available this session)",
+        BmsBackend::Serial => {
+            let p = port.ok_or_else(|| {
+                nexcore_error::NexError::msg("--bms-source serial requires --port <device>")
+            })?;
+            let src = SerialBmsSource::open(&p, baud).map_err(|e| {
+                nexcore_error::NexError::msg(format!("serial open failed: {e}"))
+            })?;
+            Ok(Arc::new(src))
+        }
+        BmsBackend::Can => Err(nexcore_error::NexError::msg(
+            "--bms-source can deferred to v0.5+ (no CAN codec yet)",
         )),
     }
 }
 
-async fn run_daemon(backend: BmsBackend, trace: Option<PathBuf>, speedup: f64) -> Result<()> {
-    let bms = build_source(backend, trace, speedup)?;
+async fn run_daemon(
+    backend: BmsBackend,
+    trace: Option<PathBuf>,
+    speedup: f64,
+    port: Option<String>,
+    baud: u32,
+) -> Result<()> {
+    let bms = build_source(backend, trace, speedup, port, baud)?;
     let state = StationState::new();
     spawn_loops(state.clone(), bms);
     info!("stark-suit-station: 4 loops spawned, MCP server starting on stdio");
@@ -185,7 +214,7 @@ async fn run_record(
     backend: BmsBackend,
     trace: Option<PathBuf>,
 ) -> Result<()> {
-    let source = build_source(backend, trace, 1.0)?;
+    let source = build_source(backend, trace, 1.0, None, 115200)?;
     let file = tokio::fs::File::create(&out).await?;
     let mut writer = tokio::io::BufWriter::new(file);
     let mut interval = tokio::time::interval(Duration::from_millis(100));

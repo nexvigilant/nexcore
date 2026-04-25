@@ -6,6 +6,7 @@
 //! real hardware bindings when available.
 
 use crate::bms::{BmsError, BmsSource};
+use crate::perception::{PerceptionError, PerceptionSource};
 use crate::state::{
     ControlSnapshot, HumanInterfaceSnapshot, PerceptionSnapshot, PowerSnapshot, StationState,
 };
@@ -20,8 +21,11 @@ const POWER_TICK_MS: u64 = 100; //   10 Hz
 const CONTROL_TICK_MS: u64 = 100; //   10 Hz
 const HI_TICK_MS: u64 = 200; //         5 Hz
 
-/// Perception loop — sensor fusion at 20 Hz.
-pub async fn run_perception(state: Arc<StationState>) {
+/// Perception loop — pulls one fused frame per tick from a `PerceptionSource`
+/// at 20 Hz, runs the fusion engine, writes a snapshot. v0.6: source is
+/// parameterized; default backend is `MockPerceptionSource`. Loop never
+/// panics — every error path preserves the last-known snapshot.
+pub async fn run_perception(state: Arc<StationState>, source: Arc<dyn PerceptionSource>) {
     let mut engine = suit_perception::perception_engine::PerceptionEngine::new(
         "model/intent.bin".to_string(),
     );
@@ -31,32 +35,48 @@ pub async fn run_perception(state: Arc<StationState>) {
         interval.tick().await;
         tick += 1;
 
-        let world = engine.update(
-            &InertialState::default(),
-            &MagnetometerData { field: [0.0; 3] },
-            &BarometricData {
-                pressure: 1013.25,
-                temperature: 20.0,
-            },
-            &BodyState {
-                joint_angles: vec![],
-                joint_velocities: vec![],
-                heart_rate: 60,
-                spo2: 98,
-                foot_pressure: vec![],
-            },
-            &None,
-        );
+        match source.poll().await {
+            Ok(frame) => {
+                let world = engine.update(
+                    &InertialState {
+                        acceleration: frame.accel_mps2,
+                        angular_velocity: frame.gyro_radps,
+                        ..Default::default()
+                    },
+                    &MagnetometerData { field: frame.mag_ut },
+                    &BarometricData {
+                        pressure: frame.pressure_hpa,
+                        temperature: frame.temp_c,
+                    },
+                    &BodyState {
+                        joint_angles: vec![],
+                        joint_velocities: vec![],
+                        heart_rate: frame.heart_rate_bpm as u8,
+                        spo2: frame.spo2_pct,
+                        foot_pressure: vec![],
+                    },
+                    &None,
+                );
 
-        let snap = PerceptionSnapshot {
-            tick,
-            heading_rad: world.attitude[2], // yaw
-            altitude_m: world.position[2],
-            intent: "Standing",
-        };
-        *state.perception.write().await = snap;
-        if tick % 20 == 0 {
-            info!(tick, "perception_loop");
+                let snap = PerceptionSnapshot {
+                    tick,
+                    heading_rad: world.attitude[2],
+                    altitude_m: world.position[2],
+                    intent: "Standing",
+                };
+                *state.perception.write().await = snap;
+                if tick % 20 == 0 {
+                    info!(tick, hr = frame.heart_rate_bpm, "perception_loop");
+                }
+            }
+            Err(PerceptionError::Exhausted | PerceptionError::ReplayExhausted) => {
+                warn!(tick, "perception source exhausted — halting loop");
+                break;
+            }
+            Err(other) => {
+                warn!(tick, error = %other, "perception unexpected error — halting loop");
+                break;
+            }
         }
     }
 }

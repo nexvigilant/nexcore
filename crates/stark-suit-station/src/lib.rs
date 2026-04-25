@@ -19,4 +19,5 @@
 pub mod bms;
 pub mod loops;
 pub mod mcp;
+pub mod perception;
 pub mod state;

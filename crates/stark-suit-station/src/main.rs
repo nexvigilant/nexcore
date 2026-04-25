@@ -15,9 +15,10 @@
 #![warn(missing_docs)]
 
 use stark_suit_station::bms::{BmsSource, MockBmsSource, ReplayBmsSource, SerialBmsSource};
-use stark_suit_station::mcp::StarkSuitMcpServer;
-use stark_suit_station::state::StationState;
 use stark_suit_station::loops;
+use stark_suit_station::mcp::StarkSuitMcpServer;
+use stark_suit_station::perception::{MockPerceptionSource, PerceptionSource};
+use stark_suit_station::state::StationState;
 use clap::{Parser, Subcommand, ValueEnum};
 use nexcore_error::Result;
 use rmcp::ServiceExt;
@@ -164,8 +165,9 @@ async fn run_daemon(
     baud: u32,
 ) -> Result<()> {
     let bms = build_source(backend, trace, speedup, port, baud)?;
+    let perception: Arc<dyn PerceptionSource> = Arc::new(MockPerceptionSource::new());
     let state = StationState::new();
-    spawn_loops(state.clone(), bms);
+    spawn_loops(state.clone(), bms, perception);
     info!("stark-suit-station: 4 loops spawned, MCP server starting on stdio");
 
     let server = StarkSuitMcpServer::new(state);
@@ -177,7 +179,8 @@ async fn run_daemon(
 async fn run_status() -> Result<()> {
     let state = StationState::new();
     let bms: Arc<dyn BmsSource> = Arc::new(MockBmsSource::new());
-    spawn_loops(state.clone(), bms);
+    let perception: Arc<dyn PerceptionSource> = Arc::new(MockPerceptionSource::new());
+    spawn_loops(state.clone(), bms, perception);
     tokio::time::sleep(Duration::from_secs(1)).await;
     let snap = state.snapshot().await;
     let s = serde_json::to_string_pretty(&snap)?;
@@ -188,8 +191,10 @@ async fn run_status() -> Result<()> {
 async fn run_tick() -> Result<()> {
     let state = StationState::new();
     let bms: Arc<dyn BmsSource> = Arc::new(MockBmsSource::new());
+    let perception: Arc<dyn PerceptionSource> = Arc::new(MockPerceptionSource::new());
     let s = state.clone();
-    tokio::spawn(async move { loops::run_perception(s).await });
+    let p = perception.clone();
+    tokio::spawn(async move { loops::run_perception(s, p).await });
     let s = state.clone();
     let b = bms.clone();
     tokio::spawn(async move { loops::run_power(s, b).await });
@@ -246,9 +251,14 @@ async fn run_record(
     Ok(())
 }
 
-fn spawn_loops(state: std::sync::Arc<StationState>, bms: Arc<dyn BmsSource>) {
+fn spawn_loops(
+    state: std::sync::Arc<StationState>,
+    bms: Arc<dyn BmsSource>,
+    perception: Arc<dyn PerceptionSource>,
+) {
     let s = state.clone();
-    tokio::spawn(async move { loops::run_perception(s).await });
+    let p = perception.clone();
+    tokio::spawn(async move { loops::run_perception(s, p).await });
     let s = state.clone();
     let b = bms.clone();
     tokio::spawn(async move { loops::run_power(s, b).await });

@@ -22,7 +22,7 @@ cd "$REPO_ROOT"
 
 BACKENDS=("$@")
 if [[ ${#BACKENDS[@]} -eq 0 ]]; then
-    BACKENDS=(mock replay serial-pty)
+    BACKENDS=(mock replay serial-pty perception-mock perception-replay perception-serial-pty)
 fi
 
 declare -A RESULTS
@@ -41,6 +41,15 @@ run_backend() {
             ;;
         serial-pty)
             cargo test -p stark-suit-station --test serial_pty_roundtrip
+            ;;
+        perception-mock)
+            cargo test -p stark-suit-station --lib -- perception::tests::mock_
+            ;;
+        perception-replay)
+            cargo test -p stark-suit-station --lib -- perception::tests::replay_
+            ;;
+        perception-serial-pty)
+            cargo test -p stark-suit-station --test perception_pty_roundtrip
             ;;
         *)
             echo "unknown backend: $name (expected mock|replay|serial-pty)" >&2

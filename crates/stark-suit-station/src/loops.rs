@@ -5,14 +5,15 @@
 //! Loops in v0.1 use mocked sensor inputs — replace `mock_*` calls with
 //! real hardware bindings when available.
 
+use crate::bms::{BmsError, BmsSource};
 use crate::state::{
     ControlSnapshot, HumanInterfaceSnapshot, PerceptionSnapshot, PowerSnapshot, StationState,
 };
 use std::sync::Arc;
 use std::time::Duration;
-use suit_perception::vestibular::{BarometricData, InertialState, MagnetometerData};
 use suit_perception::proprioceptive::BodyState;
-use tracing::info;
+use suit_perception::vestibular::{BarometricData, InertialState, MagnetometerData};
+use tracing::{info, warn};
 
 const PERCEPTION_TICK_MS: u64 = 50; // 20 Hz
 const POWER_TICK_MS: u64 = 100; //   10 Hz
@@ -60,31 +61,46 @@ pub async fn run_perception(state: Arc<StationState>) {
     }
 }
 
-/// Power loop — SOC / load prioritization at 10 Hz.
-pub async fn run_power(state: Arc<StationState>) {
-    let mut engine = suit_power::engine::PowerEngine::new();
-    let forecast = suit_power::mission::MissionForecast {
-        load_forecast: vec![],
-    };
+/// Power loop — pulls one frame from a `BmsSource` per tick at 10 Hz.
+///
+/// v0.2: source is parameterized; default backend is `MockBmsSource`. The
+/// loop never panics — every error path either preserves the last-known
+/// snapshot or marks `power_state` as `Fault`.
+pub async fn run_power(state: Arc<StationState>, source: Arc<dyn BmsSource>) {
     let mut tick = 0u64;
     let mut interval = tokio::time::interval(Duration::from_millis(POWER_TICK_MS));
     loop {
         interval.tick().await;
         tick += 1;
 
-        // Mock: 400 V bus, 10 A draw, 25 °C, 8 kW available.
-        let (soc, _shed) = engine.update(400.0, 10.0, 25.0, 8000.0, &forecast);
-
-        let snap = PowerSnapshot {
-            tick,
-            soc_pct: soc.soc,
-            health: soc.health,
-            current_tier: load_tier_label(engine.prioritizer.current_tier as u8),
-            power_state: power_state_label(engine.sequencer.state as u8),
-        };
-        *state.power.write().await = snap;
-        if tick % 10 == 0 {
-            info!(tick, soc = soc.soc, "power_loop");
+        match source.poll().await {
+            Ok(frame) => {
+                let snap = PowerSnapshot {
+                    tick,
+                    soc_pct: frame.soc_pct,
+                    health: frame.soh_pct / 100.0,
+                    current_tier: frame.tier.label(),
+                    power_state: classify_power_state(frame.cell_temp_c, frame.soc_pct),
+                };
+                *state.power.write().await = snap;
+                if tick % 10 == 0 {
+                    info!(tick, soc = frame.soc_pct, "power_loop");
+                }
+            }
+            Err(BmsError::Timeout) => {
+                warn!(tick, "bms timeout — degrading to last known");
+                state.power.write().await.tick = tick;
+            }
+            Err(BmsError::Fault(code)) => {
+                warn!(tick, code, "bms fault — marking power_state Fault");
+                let mut snap = state.power.write().await;
+                snap.tick = tick;
+                snap.power_state = "Fault";
+            }
+            Err(BmsError::Exhausted) => {
+                warn!(tick, "bms source exhausted — halting power loop");
+                break;
+            }
         }
     }
 }
@@ -145,22 +161,15 @@ impl suit_safety::hardware_watchdog::HardwareWatchdog for MockWatchdog {
     fn trigger_emergency_stop(&mut self) {}
 }
 
-fn load_tier_label(t: u8) -> &'static str {
-    match t {
-        0 => "Comms",
-        1 => "Compute",
-        2 => "Actuation",
-        3 => "Critical",
-        _ => "Unknown",
-    }
-}
-
-fn power_state_label(s: u8) -> &'static str {
-    match s {
-        0 => "Nominal",
-        1 => "Caution",
-        2 => "Critical",
-        3 => "Emergency",
-        _ => "Unknown",
+/// Classify power state from BMS frame readings.
+fn classify_power_state(cell_temp_c: f32, soc_pct: f32) -> &'static str {
+    if cell_temp_c >= 60.0 || soc_pct <= 5.0 {
+        "Emergency"
+    } else if cell_temp_c >= 45.0 || soc_pct <= 15.0 {
+        "Critical"
+    } else if cell_temp_c >= 35.0 || soc_pct <= 30.0 {
+        "Caution"
+    } else {
+        "Nominal"
     }
 }

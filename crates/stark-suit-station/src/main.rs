@@ -13,12 +13,15 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
+mod bms;
 mod loops;
 mod mcp;
 mod state;
 
+use crate::bms::{BmsSource, MockBmsSource};
 use crate::mcp::StarkSuitMcpServer;
 use crate::state::StationState;
+use std::sync::Arc;
 use clap::{Parser, Subcommand};
 use nexcore_error::Result;
 use rmcp::ServiceExt;
@@ -86,11 +89,12 @@ async fn run_status() -> Result<()> {
 
 async fn run_tick() -> Result<()> {
     let state = StationState::new();
-    // One-shot: spawn each loop, let one interval pass, then snapshot.
+    let bms: Arc<dyn BmsSource> = Arc::new(MockBmsSource::new());
     let s = state.clone();
     tokio::spawn(async move { loops::run_perception(s).await });
     let s = state.clone();
-    tokio::spawn(async move { loops::run_power(s).await });
+    let b = bms.clone();
+    tokio::spawn(async move { loops::run_power(s, b).await });
     let s = state.clone();
     tokio::spawn(async move { loops::run_control(s).await });
     let s = state.clone();
@@ -103,10 +107,12 @@ async fn run_tick() -> Result<()> {
 }
 
 fn spawn_loops(state: std::sync::Arc<StationState>) {
+    let bms: Arc<dyn BmsSource> = Arc::new(MockBmsSource::new());
     let s = state.clone();
     tokio::spawn(async move { loops::run_perception(s).await });
     let s = state.clone();
-    tokio::spawn(async move { loops::run_power(s).await });
+    let b = bms.clone();
+    tokio::spawn(async move { loops::run_power(s, b).await });
     let s = state.clone();
     tokio::spawn(async move { loops::run_control(s).await });
     tokio::spawn(async move { loops::run_human_interface(state).await });
